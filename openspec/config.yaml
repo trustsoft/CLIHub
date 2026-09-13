@@ -10,6 +10,7 @@ context: |
   с реестром проектов и динамическим списком агентов через плагины.
 
   Полное видение: docs/vision.md
+  Состав и поведение UI: docs/ui.md
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
