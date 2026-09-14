@@ -34,7 +34,7 @@ Do not write application code without an approved change/proposal.
   интероп (P/Invoke, tray, hotkey). Composition root — `App.xaml.cs`.
 - `tests/CLIHub.Core.Tests` — xUnit, ссылается только на Core; UI и интероп
   проверяются вручную.
-- `plugins/agents/<id>/` — встроенный плагин: манифест `agent.json`
+- `plugins/agents/<folder>/` — встроенный плагин: манифест `agent.json`
   (id/name/actions/detect) и ассеты (лого) рядом. `id` из JSON авторитетен, имя папки —
   конвенция. Папка целиком копируется в output через `Content`-glob в
   `CLIHub.App.csproj`.
