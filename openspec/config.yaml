@@ -1,9 +1,8 @@
 schema: spec-driven
 
 context: |
-  Language: ru
-  All artifacts must be written in ru.
-  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Language: en
+  All artifacts must be written in en.
 
   CLIHub — Windows-компаньон для запуска и обновления AI Agents CLI в папке
   проекта в один клик (system-tray + hotkey-попап, runtime ps/cmd/wt),
