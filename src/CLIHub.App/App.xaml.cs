@@ -5,6 +5,7 @@ using CLIHub.App.Views;
 using CLIHub.Core.Abstractions;
 using CLIHub.Core.Services;
 using CLIHub.Core.Models;
+using Velopack;
 
 namespace CLIHub.App;
 
@@ -13,6 +14,20 @@ public partial class App : System.Windows.Application
     private HotkeyManager? _hotkeyManager;
     private H.NotifyIcon.TaskbarIcon? _trayIcon;
     private PopupWindow? _popupWindow;
+    private UpdateService? _updateService;
+    private System.Windows.Controls.MenuItem? _updateMenuItem;
+
+    [STAThread]
+    private static void Main(string[] args)
+    {
+        VelopackApp.Build()
+            .SetAutoApplyOnStartup(false)
+            .Run();
+
+        var app = new App();
+        app.InitializeComponent();
+        app.Run();
+    }
 
     protected override void OnStartup(System.Windows.StartupEventArgs e)
     {
@@ -50,6 +65,7 @@ public partial class App : System.Windows.Application
 
         CreateTrayIcon();
         RegisterHotkey(registry.Hotkey);
+        RegisterUpdateCheck(configStore);
 
         detector.RoundCompleted += viewModel.OnProbeRoundCompleted;
         _ = System.Threading.Tasks.Task.Run(() => detector.RunStartupRound(
@@ -68,6 +84,15 @@ public partial class App : System.Windows.Application
     private void CreateTrayIcon()
     {
         var menu = new System.Windows.Controls.ContextMenu();
+
+        _updateMenuItem = new System.Windows.Controls.MenuItem
+        {
+            Header = "Установить обновление",
+            Visibility = System.Windows.Visibility.Collapsed
+        };
+        _updateMenuItem.Click += (_, _) => _updateService?.Apply();
+        menu.Items.Add(_updateMenuItem);
+
         var exitItem = new System.Windows.Controls.MenuItem { Header = "Выход" };
         exitItem.Click += (_, _) => Shutdown();
         menu.Items.Add(exitItem);
@@ -95,6 +120,37 @@ public partial class App : System.Windows.Application
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
         }
+    }
+
+    private void RegisterUpdateCheck(ConfigStore configStore)
+    {
+        var updateService = new UpdateService(new VelopackUpdateClient(), configStore);
+        _updateService = updateService;
+        updateService.UpdateReady += version => Dispatcher.Invoke(() => OnUpdateReady(version));
+
+        _ = System.Threading.Tasks.Task.Run(() => updateService.RunStartupCheckAsync());
+    }
+
+    private void OnUpdateReady(string version)
+    {
+        if (_updateMenuItem is not null)
+        {
+            _updateMenuItem.Header = string.IsNullOrWhiteSpace(version)
+                ? "Установить обновление"
+                : $"Установить обновление {version}";
+            _updateMenuItem.Visibility = System.Windows.Visibility.Visible;
+        }
+
+        ShowUpdateNotification(version);
+    }
+
+    private void ShowUpdateNotification(string version)
+    {
+        var message = string.IsNullOrWhiteSpace(version)
+            ? "Доступно обновление CLIHub. Нажмите, чтобы установить и перезапустить."
+            : $"Доступно обновление CLIHub {version}. Нажмите, чтобы установить и перезапустить.";
+
+        _trayIcon?.ShowNotification("CLIHub", message);
     }
 
     protected override void OnExit(System.Windows.ExitEventArgs e)

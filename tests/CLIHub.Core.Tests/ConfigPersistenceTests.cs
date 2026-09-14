@@ -121,4 +121,48 @@ public sealed class ConfigPersistenceTests
         Assert.Equal(ProbeConfig.DefaultTtlMinutes, loaded.Probe.EffectiveTtlMinutes);
         Assert.Equal(ProbeConfig.DefaultTimeoutSeconds, loaded.Probe.EffectiveTimeoutSeconds);
     }
+
+    [Fact]
+    public void Save_UpdateSection_RoundTrips()
+    {
+        using var temp = new TempDirectory();
+        var store = CreateStore(temp.Path);
+
+        store.Save(new Config { Update = new UpdateConfig { CheckOnStartup = false } });
+
+        Assert.False(store.Load().Update.CheckOnStartup);
+    }
+
+    [Fact]
+    public void Load_NoUpdateSection_DefaultsToEnabled()
+    {
+        using var temp = new TempDirectory();
+        var store = CreateStore(temp.Path);
+
+        Assert.True(store.Load().Update.EffectiveCheckOnStartup);
+    }
+
+    [Fact]
+    public void Load_EmptyUpdateSection_DefaultsToEnabled()
+    {
+        using var temp = new TempDirectory();
+        File.WriteAllText(Path.Combine(temp.Path, ConfigStore.FileName), """
+            { "update": {} }
+            """);
+        var store = CreateStore(temp.Path);
+
+        Assert.True(store.Load().Update.EffectiveCheckOnStartup);
+    }
+
+    [Fact]
+    public void Load_ExplicitFalse_DisablesStartupCheck()
+    {
+        using var temp = new TempDirectory();
+        File.WriteAllText(Path.Combine(temp.Path, ConfigStore.FileName), """
+            { "update": { "checkOnStartup": false } }
+            """);
+        var store = CreateStore(temp.Path);
+
+        Assert.False(store.Load().Update.EffectiveCheckOnStartup);
+    }
 }

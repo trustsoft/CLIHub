@@ -25,6 +25,9 @@ public sealed class Config
     [JsonPropertyName("agents")]
     public Dictionary<string, AgentProbeEntry> Agents { get; set; } = new();
 
+    [JsonPropertyName("update")]
+    public UpdateConfig Update { get; set; } = new();
+
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
 }
