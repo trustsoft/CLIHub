@@ -11,3 +11,6 @@ obj/
 # Test results
 TestResults/
 *.trx
+
+# CodeGraph index
+.codegraph/
