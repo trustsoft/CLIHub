@@ -8,5 +8,5 @@
     "update": { "command": "opencode upgrade", "runtime": "ps" },
     "version": { "command": "opencode --version" }
   },
-  "detect": { "project": ["opencode.json", "opencode.jsonc"] }
+  "detect": { "project": ["opencode.json", "opencode.jsonc", ".opencode"] }
 }
