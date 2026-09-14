@@ -11,8 +11,7 @@ instance.
 ### Requirement: Application host in the tray
 
 The system SHALL keep the application running through a system tray icon with an
-"Exit" item. Opening the popup by clicking the tray icon is not covered by this
-capability.
+"Exit" item.
 
 #### Scenario: Application start
 
