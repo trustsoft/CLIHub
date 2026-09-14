@@ -15,7 +15,8 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 - Автоматически определять доступность агента на хосте и в проекте по заданным для каждого агента папкам/файлам.
 - Строить список доступных агентов динамически (плагины) с учётом установленных на хосте.
 - Предоставлять доступ через popup-окно по hotkey.
-- Хранить все настройки в config.json.
+- Хранить настройки и состояние по файлам-владельцам: `settings.json`, `projects.json`,
+  `agents.json`.
 
 ## Не-цели
 
@@ -65,7 +66,8 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 - **Слои:** Core (чистый .NET, без зависимости от WPF) + тонкий UI-слой.
   Вся логика в Core, покрывается тестами.
 - **Core-сервисы:** LauncherCore (+ CommandBuilder, RuntimeResolver), PluginLoader,
-  ConfigStore, ProjectRegistry, AgentDetector, LogoResolver, UpdateService.
+  JsonDocumentStore<T> (+ SettingsStore), ConfigMigrator, ProjectRegistry,
+  AgentDetector, LogoResolver, UpdateService.
 - **MVVM-lite:**   ViewModel для попапа и окна настроек (`ObservableCollection` + `RelayCommand`);
   tray-иконка и hotkey — code-behind.
 - **DI:** ручной composition root в App.xaml.cs; внешний DI-контейнер подключить позже
@@ -106,8 +108,8 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 
 **Runtime:**
 
-- Глобальный дефолт в config.json + опциональный per-action override в плагине.
-- Разрешение: action.runtime (если != default) -> config.runtime -> дефолт.
+- Глобальный дефолт в settings.json + опциональный per-action override в плагине.
+- Разрешение: action.runtime (если != default) -> settings.runtime -> дефолт.
 
 **Детекция:**
 
@@ -119,9 +121,9 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 
 **Probe (гигиена и кэш):**
 
-- При старте приложения — ленивый фоновый прогон probe, обновляет раздел `agents` в config.json.
-- Настройки probe (TTL, timeout) — раздел `probe` в config.json.
-- Запись в config.json — один раз после раунда, не по агенту.
+- При старте приложения — ленивый фоновый прогон probe, обновляет `agents.json`.
+- Настройки probe (TTL, timeout) — раздел `probe` в settings.json.
+- Запись в agents.json — один раз после раунда, не по агенту.
 
 ## LauncherCore: запуск терминала (зафиксированные решения)
 
@@ -138,27 +140,34 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 - Терминальные запуски — fire-and-forget; probe — отдельный путь (скрытый argv,
   RedirectStandardOutput, ожидание с таймаутом).
 
-## Окно настроек, config.json и обновление (зафиксированные решения)
+## Окно настроек, конфигурация и обновление (зафиксированные решения)
 
-**Окно настроек** — UI для config.json:
+**Окно настроек** — UI для settings.json:
 
 - открывается из tray-меню, один экземпляр (повторный клик активирует открытое);
 - load при открытии -> правки -> «Сохранить» -> запись; валидация (TTL/timeout > 0,
   hotkey корректен);
-- редактируемые разделы: runtime, hotkey, probe, update, projects;
-- `agents` — машинный кэш, вручную не редактируется.
+- редактируемые разделы: runtime, hotkey, probe, update (settings.json), projects
+  (projects.json);
+- `agents.json` — машинный кэш, вручную не редактируется.
 
-**Расположение:** `%AppData%\CLIHub\config.json` — стабильная data-папка, НЕ каталог
-установки (Velopack заменяет каталог установки при обновлении). Эту папку открывает
-иконка «folder» в футере попапа.
+**Расположение и разделение хранения:** `%AppData%\CLIHub\` — стабильная data-папка,
+НЕ каталог установки (Velopack заменяет каталог установки при обновлении). Эту папку
+открывает иконка «folder» в футере попапа. Хранение разнесено по файлам-владельцам
+(один файл — один писатель, гонки писателей исключены структурно):
 
-**Схема config.json:**
+- `settings.json` — пользовательские настройки: `schemaVersion`, `runtime`, `hotkey`
+  (по умолчанию `Ctrl+Alt+Space`), `probe` { ttlMinutes, timeoutSeconds },
+  `update` { checkOnStartup };
+- `projects.json` — `schemaVersion`, `projects[]` { id (guid), name, path, logo };
+- `agents.json` — `schemaVersion`, `agents{}` — машинный кэш (hostInstalled, version,
+  lastProbed).
 
-- `schemaVersion`, `runtime`, `hotkey` (по умолчанию `Ctrl+Alt+Space`)
-- `probe` { ttlMinutes, timeoutSeconds }
-- `update` { checkOnStartup }
-- `projects[]` { id (guid), name, path, logo }
-- `agents{}` — машинный кэш (hostInstalled, version, lastProbed)
+Каждый файл имеет свой `schemaVersion`, пишется атомарно (tmp + replace) с бэкапом
+`.bak` при порче и сохраняет неизвестные поля (единый механизм `JsonDocumentStore<T>`).
+Миграция: при первом запуске старый единый `config.json` раскидывается по трём файлам
+(неизвестные ключи верхнего уровня — в settings.json) и остаётся как
+`config.json.migrated`; повторно миграция не выполняется.
 
 **Обновление CLIHub:**
 
@@ -202,4 +211,5 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 - Это производный артефакт: источник истины — документы CLIHub (`docs/vision.md`,
   `docs/ui.md`); синхронизация односторонняя (главный -> макет).
 - Общие данные: `agents.json` / `projects.json` макета зеркалят манифесты
-  агентов и `config.json` и должны быть выводимы из них.
+  агентов и конфигурацию CLIHub (`settings.json` / `projects.json`) и должны быть
+  выводимы из них.

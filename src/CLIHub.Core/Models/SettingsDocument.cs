@@ -3,8 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace CLIHub.Core.Models;
 
-public sealed class Config
+public sealed class SettingsDocument
 {
+    public const string FileName = "settings.json";
+    public const string DefaultHotkey = "Ctrl+Alt+Space";
+
     [JsonPropertyName("schemaVersion")]
     public int SchemaVersion { get; set; } = 1;
 
@@ -12,16 +15,10 @@ public sealed class Config
     public string? Runtime { get; set; }
 
     [JsonPropertyName("hotkey")]
-    public string Hotkey { get; set; } = SettingsDocument.DefaultHotkey;
-
-    [JsonPropertyName("projects")]
-    public List<ProjectConfig> Projects { get; set; } = new();
+    public string Hotkey { get; set; } = DefaultHotkey;
 
     [JsonPropertyName("probe")]
     public ProbeConfig Probe { get; set; } = new();
-
-    [JsonPropertyName("agents")]
-    public Dictionary<string, AgentProbeEntry> Agents { get; set; } = new();
 
     [JsonPropertyName("update")]
     public UpdateConfig Update { get; set; } = new();

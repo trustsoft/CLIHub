@@ -44,13 +44,12 @@ found on PATH. Such an agent SHALL have no version.
 
 ### Requirement: Probe cache with TTL
 
-The system SHALL persist per-agent probe results in the `agents` section of
-`config.json` (`hostInstalled`, `version`, `lastProbed`). Cached entries
-younger than the configured TTL SHALL be reused without re-probing; stale
-or missing entries SHALL be probed again. Probe settings (`ttlMinutes`,
-`timeoutSeconds`) SHALL come from the `probe` section of `config.json`,
-falling back to built-in defaults when the section is missing or contains
-non-positive values.
+The system SHALL persist per-agent probe results in `agents.json`
+(`hostInstalled`, `version`, `lastProbed`). Cached entries younger than the
+configured TTL SHALL be reused without re-probing; stale or missing entries
+SHALL be probed again. Probe settings (`ttlMinutes`, `timeoutSeconds`) SHALL
+come from the `probe` section of `settings.json`, falling back to built-in
+defaults when the section is missing or contains non-positive values.
 
 #### Scenario: Fresh cache skips probe
 
@@ -70,9 +69,8 @@ non-positive values.
 ### Requirement: Lazy background probe round at startup
 
 The system SHALL run one probe round at application startup in the
-background without blocking the UI. The round SHALL write the `agents`
-section of `config.json` exactly once, after all agents have been checked,
-not once per agent.
+background without blocking the UI. The round SHALL write `agents.json`
+exactly once, after all agents have been checked, not once per agent.
 
 #### Scenario: UI stays responsive
 
@@ -82,7 +80,7 @@ not once per agent.
 #### Scenario: Single write per round
 
 - **WHEN** the startup round finishes for all agents
-- **THEN** `config.json` is written once with all updated probe results
+- **THEN** `agents.json` is written once with all updated probe results
 
 ### Requirement: Project initialization detection
 

@@ -5,12 +5,12 @@ namespace CLIHub.Core.Services;
 public sealed class UpdateService
 {
     private readonly IUpdateClient _client;
-    private readonly ConfigStore _store;
+    private readonly SettingsStore _settings;
 
-    public UpdateService(IUpdateClient client, ConfigStore store)
+    public UpdateService(IUpdateClient client, SettingsStore settings)
     {
         _client = client;
-        _store = store;
+        _settings = settings;
     }
 
     public event Action<string>? UpdateReady;
@@ -19,7 +19,7 @@ public sealed class UpdateService
     {
         try
         {
-            if (!_client.IsInstalled || !_store.Load().Update.EffectiveCheckOnStartup)
+            if (!_client.IsInstalled || !_settings.Update.EffectiveCheckOnStartup)
             {
                 return false;
             }

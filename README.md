@@ -49,7 +49,10 @@ dotnet run --project src/CLIHub.App
 
 ## Конфигурация
 
-`%AppData%\CLIHub\config.json` (не в репозитории): `runtime`, `hotkey`, `projects`, `probe`, `update`, `agents` (машинный кэш). Создаётся автоматически.
+`%AppData%\CLIHub\` (не в репозитории), хранение по файлам-владельцам:
+`settings.json` (`runtime`, `hotkey`, `probe`, `update`), `projects.json` (`projects[]`),
+`agents.json` (машинный кэш). Создаются автоматически; старый единый `config.json`
+мигрируется в три файла и остаётся как `config.json.migrated`.
 
 ## Документация
 

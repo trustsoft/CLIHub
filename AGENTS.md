@@ -49,9 +49,12 @@ Do not write application code without an approved change/proposal.
 - Корневой `.gitignore` есть: игнорирует артефакты сборки и IDE (`bin/`, `obj/`,
   `.vs/`, `.idea/`, `*.user`, `*.suo`, `TestResults/`, `.codegraph/`). Всё равно
   стейджить файлы выборочно и не коммитить артефакты сборки.
-- Конфиг приложения — `%AppData%\CLIHub\config.json` (не в репо): `runtime`, `hotkey`
-  (дефолт `Ctrl+Alt+Space`), `projects[]`, `probe`, `update`, `agents` (машинный кэш).
-  Пишется через `ConfigStore.Save` — атомарно, с бэкапом `.bak` при порче файла.
+- Конфиг приложения — `%AppData%\CLIHub\`, хранение по файлам-владельцам:
+  `settings.json` (`runtime`, `hotkey` с дефолтом `Ctrl+Alt+Space`, `probe`, `update`),
+  `projects.json` (`projects[]`), `agents.json` (машинный кэш). Один файл — один
+  писатель; не смешивай их. Пишутся через `JsonDocumentStore<T>` — атомарно, с бэкапом
+  `.bak` при порче. Старый единый `config.json` автоматически мигрируется в три файла
+  (`ConfigMigrator`, остаётся как `config.json.migrated`).
 - При запуске окна нет: приложение живёт в трее (иконка + «Выход»), попап открывается
   по hotkey. `dotnet run` не завершается сам — запускай фоном, иначе терминал занят.
 - Точка входа — свой `Main` в `App.xaml.cs` с Velopack-бутстрапом

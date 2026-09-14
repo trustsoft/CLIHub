@@ -11,7 +11,8 @@ directory.
 ### Requirement: Runtime resolution
 
 The system SHALL choose the runtime by priority: per-action override from the
-manifest, then the global runtime from `config.json`, then the built-in default.
+manifest, then the global runtime from `settings.json`, then the built-in
+default.
 
 #### Scenario: Action override set
 

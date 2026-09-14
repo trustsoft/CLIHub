@@ -1,39 +1,39 @@
 using System.Text.Json;
 using CLIHub.Core.Abstractions;
-using CLIHub.Core.Models;
 
 namespace CLIHub.Core.Services;
 
-public sealed class ConfigStore
+public sealed class JsonDocumentStore<T> where T : class, new()
 {
-    public const string FileName = "config.json";
     public const string BackupSuffix = ".bak";
     public const string TempSuffix = ".tmp";
 
     private readonly IFileSystem _fileSystem;
     private readonly IPathProvider _paths;
+    private readonly string _fileName;
 
-    public ConfigStore(IFileSystem fileSystem, IPathProvider paths)
+    public JsonDocumentStore(IFileSystem fileSystem, IPathProvider paths, string fileName)
     {
         _fileSystem = fileSystem;
         _paths = paths;
+        _fileName = fileName;
     }
 
-    public string Path => System.IO.Path.Combine(_paths.ConfigDirectory, FileName);
+    public string Path => System.IO.Path.Combine(_paths.ConfigDirectory, _fileName);
 
     public string BackupPath => Path + BackupSuffix;
 
-    public Config Load()
+    public T Load()
     {
         if (!_fileSystem.FileExists(Path))
         {
-            return new Config();
+            return new T();
         }
 
-        return TryDeserialize(_fileSystem.ReadAllText(Path)) ?? new Config();
+        return TryDeserialize(_fileSystem.ReadAllText(Path)) ?? new T();
     }
 
-    public void Save(Config config)
+    public void Save(T document)
     {
         if (_fileSystem.FileExists(Path))
         {
@@ -45,15 +45,15 @@ public sealed class ConfigStore
         }
 
         var tempPath = Path + TempSuffix;
-        _fileSystem.WriteAllText(tempPath, JsonSerializer.Serialize(config, CoreJson.Options));
+        _fileSystem.WriteAllText(tempPath, JsonSerializer.Serialize(document, CoreJson.Options));
         _fileSystem.Move(tempPath, Path, overwrite: true);
     }
 
-    private static Config? TryDeserialize(string text)
+    private static T? TryDeserialize(string text)
     {
         try
         {
-            return JsonSerializer.Deserialize<Config>(text, CoreJson.Options);
+            return JsonSerializer.Deserialize<T>(text, CoreJson.Options);
         }
         catch (JsonException)
         {

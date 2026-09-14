@@ -10,18 +10,16 @@ public sealed class UpdateServiceTests
 
     private UpdateService CreateService(string configDirectory, bool? checkOnStartup = null)
     {
-        var store = new ConfigStore(
-            new PhysicalFileSystem(),
-            new StubPathProvider(configDirectory, configDirectory));
+        var fileSystem = new PhysicalFileSystem();
+        var paths = new StubPathProvider(configDirectory, configDirectory);
+        var store = new JsonDocumentStore<SettingsDocument>(fileSystem, paths, SettingsDocument.FileName);
 
         if (checkOnStartup is not null)
         {
-            var config = store.Load();
-            config.Update.CheckOnStartup = checkOnStartup;
-            store.Save(config);
+            store.Save(new SettingsDocument { Update = new UpdateConfig { CheckOnStartup = checkOnStartup } });
         }
 
-        return new UpdateService(_client, store);
+        return new UpdateService(_client, new SettingsStore(fileSystem, paths));
     }
 
     [Fact]

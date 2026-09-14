@@ -1,11 +1,4 @@
-# global-hotkey Specification
-
-## Purpose
-
-Allows invoking the CLIHub popup from anywhere in the system with a single key
-combination, without switching to the tray icon or a separate window.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Register global hotkey
 
@@ -21,12 +14,3 @@ comes from `settings.json`, defaulting to `Ctrl+Alt+Space`.
 
 - **WHEN** the combination is already registered by another application
 - **THEN** registration does not happen, the application reports the problem and keeps running without the hotkey
-
-### Requirement: Open popup via hotkey
-
-The system SHALL open the popup when the registered combination is pressed.
-
-#### Scenario: Hotkey pressed
-
-- **WHEN** the user presses the registered combination
-- **THEN** the popup is shown in hotkey mode

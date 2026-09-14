@@ -38,11 +38,15 @@ public partial class App : System.Windows.Application
         var paths = new SystemPathProvider();
         var processRunner = new SystemProcessRunner();
 
-        var configStore = new ConfigStore(fileSystem, paths);
+        new ConfigMigrator(fileSystem, paths).MigrateIfNeeded();
+
+        var settingsStore = new SettingsStore(fileSystem, paths);
+        var projectsStore = new JsonDocumentStore<ProjectsDocument>(fileSystem, paths, ProjectsDocument.FileName);
+        var agentsStore = new JsonDocumentStore<AgentsDocument>(fileSystem, paths, AgentsDocument.FileName);
         var pluginLoader = new PluginLoader(fileSystem, paths);
-        var registry = new ProjectRegistry(configStore, fileSystem);
+        var registry = new ProjectRegistry(projectsStore, fileSystem);
         var launcher = new LauncherCore(processRunner);
-        var detector = new AgentDetector(configStore, fileSystem, processRunner, new SystemClock());
+        var detector = new AgentDetector(settingsStore, agentsStore, fileSystem, processRunner, new SystemClock());
         var logoResolver = new LogoResolver(fileSystem);
         var logoImages = new LogoImageService();
 
@@ -51,6 +55,7 @@ public partial class App : System.Windows.Application
         _popupWindow = new PopupWindow();
         var viewModel = new PopupViewModel(
             registry,
+            settingsStore,
             plugins.Agents,
             detector,
             launcher,
@@ -64,8 +69,8 @@ public partial class App : System.Windows.Application
         new System.Windows.Interop.WindowInteropHelper(_popupWindow).EnsureHandle();
 
         CreateTrayIcon();
-        RegisterHotkey(registry.Hotkey);
-        RegisterUpdateCheck(configStore);
+        RegisterHotkey(settingsStore.Hotkey);
+        RegisterUpdateCheck(settingsStore);
 
         detector.RoundCompleted += viewModel.OnProbeRoundCompleted;
         _ = System.Threading.Tasks.Task.Run(() => detector.RunStartupRound(
@@ -122,9 +127,9 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private void RegisterUpdateCheck(ConfigStore configStore)
+    private void RegisterUpdateCheck(SettingsStore settingsStore)
     {
-        var updateService = new UpdateService(new VelopackUpdateClient(), configStore);
+        var updateService = new UpdateService(new VelopackUpdateClient(), settingsStore);
         _updateService = updateService;
         updateService.UpdateReady += version => Dispatcher.Invoke(() => OnUpdateReady(version));
 

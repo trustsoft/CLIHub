@@ -11,17 +11,17 @@ without disturbing users who run a non-installed development build.
 ### Requirement: Update settings in config
 
 The system SHALL store update settings in the `update` section of
-`config.json`, with `checkOnStartup` (boolean, default true) controlling
+`settings.json`, with `checkOnStartup` (boolean, default true) controlling
 whether the startup check runs.
 
 #### Scenario: Missing section uses the default
 
-- **WHEN** `config.json` has no `update` section
+- **WHEN** `settings.json` has no `update` section
 - **THEN** `checkOnStartup` is treated as true
 
 #### Scenario: Disabled startup check
 
-- **WHEN** `config.json` sets `update.checkOnStartup` to false
+- **WHEN** `settings.json` sets `update.checkOnStartup` to false
 - **THEN** no update check runs at startup
 
 ### Requirement: Startup update check

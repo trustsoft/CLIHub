@@ -11,7 +11,11 @@ public sealed class AgentDetectorTests
 
     private AgentDetector CreateDetector(string configDirectory) =>
         new(
-            new ConfigStore(new PhysicalFileSystem(), new StubPathProvider(configDirectory, configDirectory)),
+            new SettingsStore(new PhysicalFileSystem(), new StubPathProvider(configDirectory, configDirectory)),
+            new JsonDocumentStore<AgentsDocument>(
+                new PhysicalFileSystem(),
+                new StubPathProvider(configDirectory, configDirectory),
+                AgentsDocument.FileName),
             new PhysicalFileSystem(),
             _runner,
             _clock);
@@ -184,31 +188,51 @@ public sealed class AgentDetectorTests
         Assert.True(status.HostInstalled);
         Assert.Equal("9.9.9", status.Version);
 
-        var config = LoadConfig(temp.Path);
-        var entry = config.Agents["claude"];
+        var cache = LoadAgents(temp.Path);
+        var entry = cache.Agents["claude"];
         Assert.True(entry.HostInstalled);
         Assert.Equal("9.9.9", entry.Version);
         Assert.Equal(_clock.UtcNow, entry.LastProbed);
     }
 
     [Fact]
-    public void Round_WritesAllAgentsAndPreservesOtherSections()
+    public void Round_WritesAgentsCache_LeavesSettingsUntouched()
     {
         using var temp = new TempDirectory();
-        var store = new ConfigStore(
+        var settingsStore = new JsonDocumentStore<SettingsDocument>(
             new PhysicalFileSystem(),
-            new StubPathProvider(temp.Path, temp.Path));
-        store.Save(new Config { Hotkey = "Ctrl+Shift+K" });
+            new StubPathProvider(temp.Path, temp.Path),
+            SettingsDocument.FileName);
+        settingsStore.Save(new SettingsDocument { Hotkey = "Ctrl+Shift+K" });
+        var settingsBefore = File.ReadAllText(settingsStore.Path);
         _runner.ProbeHandler = (_, _, _) => new ProbeResult(0, "1.0.0", false);
         var detector = CreateDetector(temp.Path);
 
         detector.RunStartupRound(new[] { Manifest(id: "claude"), Manifest(id: "opencode", versionCommand: "opencode --version", runCommand: "opencode") });
 
-        var config = LoadConfig(temp.Path);
-        Assert.Equal(2, config.Agents.Count);
-        Assert.True(config.Agents["claude"].HostInstalled);
-        Assert.True(config.Agents["opencode"].HostInstalled);
-        Assert.Equal("Ctrl+Shift+K", config.Hotkey);
+        var cache = LoadAgents(temp.Path);
+        Assert.Equal(2, cache.Agents.Count);
+        Assert.True(cache.Agents["claude"].HostInstalled);
+        Assert.True(cache.Agents["opencode"].HostInstalled);
+        Assert.Equal(settingsBefore, File.ReadAllText(settingsStore.Path));
+    }
+
+    [Fact]
+    public void Round_ProbeSettings_ReadFromSettingsJson()
+    {
+        using var temp = new TempDirectory();
+        new JsonDocumentStore<SettingsDocument>(
+            new PhysicalFileSystem(),
+            new StubPathProvider(temp.Path, temp.Path),
+            SettingsDocument.FileName)
+            .Save(new SettingsDocument { Probe = new ProbeConfig { TimeoutSeconds = 3, TtlMinutes = 60 } });
+        _runner.ProbeHandler = (_, _, _) => new ProbeResult(0, "1.0.0", false);
+        var detector = CreateDetector(temp.Path);
+
+        detector.RunStartupRound(new[] { Manifest() });
+
+        var probe = Assert.Single(_runner.Probes);
+        Assert.Equal(3, probe.TimeoutSeconds);
     }
 
     [Fact]
@@ -221,12 +245,12 @@ public sealed class AgentDetectorTests
             Version = "cached",
             LastProbed = _clock.UtcNow
         });
-        var before = File.ReadAllText(Path.Combine(temp.Path, ConfigStore.FileName));
+        var before = File.ReadAllText(Path.Combine(temp.Path, AgentsDocument.FileName));
         var detector = CreateDetector(temp.Path);
 
         detector.RunStartupRound(new[] { Manifest() });
 
-        Assert.Equal(before, File.ReadAllText(Path.Combine(temp.Path, ConfigStore.FileName)));
+        Assert.Equal(before, File.ReadAllText(Path.Combine(temp.Path, AgentsDocument.FileName)));
     }
 
     [Fact]
@@ -355,16 +379,18 @@ public sealed class AgentDetectorTests
 
     private void SeedAgents(string configDirectory, AgentProbeEntry entry)
     {
-        var store = new ConfigStore(
+        var store = new JsonDocumentStore<AgentsDocument>(
             new PhysicalFileSystem(),
-            new StubPathProvider(configDirectory, configDirectory));
-        var config = store.Load();
-        config.Agents["claude"] = entry;
-        store.Save(config);
+            new StubPathProvider(configDirectory, configDirectory),
+            AgentsDocument.FileName);
+        var document = store.Load();
+        document.Agents["claude"] = entry;
+        store.Save(document);
     }
 
-    private static Config LoadConfig(string configDirectory) =>
-        new ConfigStore(
+    private static AgentsDocument LoadAgents(string configDirectory) =>
+        new JsonDocumentStore<AgentsDocument>(
             new PhysicalFileSystem(),
-            new StubPathProvider(configDirectory, configDirectory)).Load();
+            new StubPathProvider(configDirectory, configDirectory),
+            AgentsDocument.FileName).Load();
 }

@@ -11,6 +11,7 @@ namespace CLIHub.App.ViewModels;
 public sealed class PopupViewModel : INotifyPropertyChanged
 {
     private readonly ProjectRegistry _registry;
+    private readonly SettingsStore _settings;
     private readonly IReadOnlyList<AgentPlugin> _plugins;
     private readonly AgentDetector _detector;
     private readonly LauncherCore _launcher;
@@ -26,6 +27,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
     public PopupViewModel(
         ProjectRegistry registry,
+        SettingsStore settings,
         IReadOnlyList<AgentPlugin> plugins,
         AgentDetector detector,
         LauncherCore launcher,
@@ -36,6 +38,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         Action<Action> postToUi)
     {
         _registry = registry;
+        _settings = settings;
         _plugins = plugins;
         _detector = detector;
         _launcher = launcher;
@@ -195,7 +198,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
             return;
         }
 
-        var result = _launcher.Start(item.Manifest, "run", _registry.Runtime, project.Model.Path);
+        var result = _launcher.Start(item.Manifest, "run", _settings.Runtime, project.Model.Path);
         if (!result.Success)
         {
             StatusText = result.Error ?? "Не удалось запустить агента.";

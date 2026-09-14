@@ -1,13 +1,4 @@
-# app-config Specification
-
-## Purpose
-
-Owns the JSON document persistence contract for the application's per-owner
-configuration files, so that every document survives restarts atomically and
-without losing unknown or hand-edited data, and migrates the legacy
-single-file configuration to the owner layout.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Load configuration with defaults
 
@@ -54,6 +45,8 @@ copy the previous content aside with a `.bak` suffix.
 
 - **WHEN** a document file could not be parsed and the system saves that document
 - **THEN** the previous file is copied to `<file>.bak` before the new content is written
+
+## ADDED Requirements
 
 ### Requirement: Migrate legacy single-file configuration
 

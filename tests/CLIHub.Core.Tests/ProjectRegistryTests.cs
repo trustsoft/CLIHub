@@ -1,14 +1,18 @@
 using CLIHub.Core.Abstractions;
+using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 
 namespace CLIHub.Core.Tests;
 
 public sealed class ProjectRegistryTests
 {
-    private static (ProjectRegistry Registry, ConfigStore Store) Create(string configDirectory)
+    private static (ProjectRegistry Registry, JsonDocumentStore<ProjectsDocument> Store) Create(string configDirectory)
     {
         var fileSystem = new PhysicalFileSystem();
-        var store = new ConfigStore(fileSystem, new StubPathProvider(configDirectory, configDirectory));
+        var store = new JsonDocumentStore<ProjectsDocument>(
+            fileSystem,
+            new StubPathProvider(configDirectory, configDirectory),
+            ProjectsDocument.FileName);
         return (new ProjectRegistry(store, fileSystem), store);
     }
 

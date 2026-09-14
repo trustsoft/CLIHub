@@ -12,28 +12,24 @@ public sealed record ProjectAddResult(bool Success, ProjectConfig? Project, stri
 
 public sealed class ProjectRegistry
 {
-    private readonly ConfigStore _store;
+    private readonly JsonDocumentStore<ProjectsDocument> _store;
     private readonly IFileSystem _fileSystem;
 
-    private Config _config = new();
+    private ProjectsDocument _document = new();
 
-    public ProjectRegistry(ConfigStore store, IFileSystem fileSystem)
+    public ProjectRegistry(JsonDocumentStore<ProjectsDocument> store, IFileSystem fileSystem)
     {
         _store = store;
         _fileSystem = fileSystem;
         Load();
     }
 
-    public IReadOnlyList<ProjectConfig> Projects => _config.Projects;
-
-    public string? Runtime => _config.Runtime;
-
-    public string Hotkey => _config.Hotkey;
+    public IReadOnlyList<ProjectConfig> Projects => _document.Projects;
 
     public IReadOnlyList<ProjectConfig> Load()
     {
-        _config = _store.Load();
-        return _config.Projects;
+        _document = _store.Load();
+        return _document.Projects;
     }
 
     public ProjectAddResult Add(string path)
@@ -48,7 +44,7 @@ public sealed class ProjectRegistry
             return ProjectAddResult.Fail($"Папка не найдена: {path}");
         }
 
-        if (_config.Projects.Any(project => SamePath(project.Path, path)))
+        if (_document.Projects.Any(project => SamePath(project.Path, path)))
         {
             return ProjectAddResult.Fail("Проект с таким путём уже добавлен.");
         }
@@ -66,21 +62,21 @@ public sealed class ProjectRegistry
             Path = path
         };
 
-        _config.Projects.Add(project);
-        _store.Save(_config);
+        _document.Projects.Add(project);
+        _store.Save(_document);
         return ProjectAddResult.Ok(project);
     }
 
     public bool Remove(string id)
     {
-        var project = _config.Projects.FirstOrDefault(candidate => candidate.Id == id);
+        var project = _document.Projects.FirstOrDefault(candidate => candidate.Id == id);
         if (project is null)
         {
             return false;
         }
 
-        _config.Projects.Remove(project);
-        _store.Save(_config);
+        _document.Projects.Remove(project);
+        _store.Save(_document);
         return true;
     }
 

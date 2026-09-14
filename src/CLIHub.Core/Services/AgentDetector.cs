@@ -5,7 +5,8 @@ namespace CLIHub.Core.Services;
 
 public sealed class AgentDetector
 {
-    private readonly ConfigStore _store;
+    private readonly SettingsStore _settings;
+    private readonly JsonDocumentStore<AgentsDocument> _store;
     private readonly IFileSystem _fileSystem;
     private readonly IProcessRunner _processRunner;
     private readonly IClock _clock;
@@ -13,13 +14,19 @@ public sealed class AgentDetector
 
     private Dictionary<string, AgentHostStatus> _hostStatus = new();
 
-    public AgentDetector(ConfigStore store, IFileSystem fileSystem, IProcessRunner processRunner, IClock clock)
+    public AgentDetector(
+        SettingsStore settings,
+        JsonDocumentStore<AgentsDocument> store,
+        IFileSystem fileSystem,
+        IProcessRunner processRunner,
+        IClock clock)
     {
+        _settings = settings;
         _store = store;
         _fileSystem = fileSystem;
         _processRunner = processRunner;
         _clock = clock;
-        LoadFromConfig();
+        Load();
     }
 
     public event Action? RoundCompleted;
@@ -83,26 +90,26 @@ public sealed class AgentDetector
         Init: hostInstalled && !projectInitialized,
         Update: hostInstalled);
 
-    public void LoadFromConfig()
+    public void Load()
     {
-        var config = _store.Load();
+        var cache = _store.Load();
         lock (_gate)
         {
-            _hostStatus = ToStatusMap(config);
+            _hostStatus = ToStatusMap(cache);
         }
     }
 
     public void RunStartupRound(IReadOnlyList<AgentManifest> agents)
     {
-        var config = _store.Load();
-        var ttl = TimeSpan.FromMinutes(config.Probe.EffectiveTtlMinutes);
-        var timeoutSeconds = config.Probe.EffectiveTimeoutSeconds;
+        var cache = _store.Load();
+        var ttl = TimeSpan.FromMinutes(_settings.Probe.EffectiveTtlMinutes);
+        var timeoutSeconds = _settings.Probe.EffectiveTimeoutSeconds;
         var probed = new Dictionary<string, AgentProbeEntry>();
 
         foreach (var agent in agents)
         {
             var id = agent.Id ?? string.Empty;
-            if (config.Agents.TryGetValue(id, out var existing) && IsFresh(existing, ttl))
+            if (cache.Agents.TryGetValue(id, out var existing) && IsFresh(existing, ttl))
             {
                 continue;
             }
@@ -118,18 +125,17 @@ public sealed class AgentDetector
 
         if (probed.Count > 0)
         {
-            var latest = _store.Load();
             foreach (var entry in probed)
             {
-                latest.Agents[entry.Key] = entry.Value;
+                cache.Agents[entry.Key] = entry.Value;
             }
 
-            _store.Save(latest);
+            _store.Save(cache);
         }
 
         lock (_gate)
         {
-            var merged = ToStatusMap(config);
+            var merged = ToStatusMap(cache);
             foreach (var entry in probed)
             {
                 merged[entry.Key] = new AgentHostStatus(entry.Value.HostInstalled, entry.Value.Version);
@@ -172,8 +178,8 @@ public sealed class AgentDetector
         return new AgentHostStatus(true, FirstLine(result.Output));
     }
 
-    private Dictionary<string, AgentHostStatus> ToStatusMap(Config config) =>
-        config.Agents.ToDictionary(
+    private Dictionary<string, AgentHostStatus> ToStatusMap(AgentsDocument document) =>
+        document.Agents.ToDictionary(
             entry => entry.Key,
             entry => new AgentHostStatus(entry.Value.HostInstalled, entry.Value.Version));
 
