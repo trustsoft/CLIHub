@@ -34,8 +34,10 @@ Do not write application code without an approved change/proposal.
   интероп (P/Invoke, tray, hotkey). Composition root — `App.xaml.cs`.
 - `tests/CLIHub.Core.Tests` — xUnit, ссылается только на Core; UI и интероп
   проверяются вручную.
-- `plugins/agents/<id>/agent.json` — встроенные плагины. `id` из JSON авторитетен,
-  имя папки — конвенция. Копируются в output через `Content`-glob в `CLIHub.App.csproj`.
+- `plugins/agents/<id>/` — встроенный плагин: манифест `agent.json`
+  (id/name/actions/detect) и ассеты (лого) рядом. `id` из JSON авторитетен, имя папки —
+  конвенция. Папка целиком копируется в output через `Content`-glob в
+  `CLIHub.App.csproj`.
 
 ## Подводные камни
 
@@ -44,12 +46,19 @@ Do not write application code without an approved change/proposal.
 - WindowsDesktop SDK при `UseWindowsForms`: `System.Windows.Forms` и `System.Drawing`
   неявно подключаются (ломают однозначность типов WPF), а `System.IO` — НЕТ. В
   `CLIHub.App.csproj` это исправлено блоком `<Using Remove/Include>`; не удаляй его.
-- Корневого `.gitignore` нет: `bin/`/`obj/` не игнорируются. Не коммить артефакты
-  сборки, стейджить файлы выборочно.
-- Конфиг приложения — `%AppData%\CLIHub\config.json` (не в репо). Дефолтный hotkey
-  `Ctrl+Alt+Space`; запись в конфиг пока не реализована.
+- Корневой `.gitignore` есть: игнорирует артефакты сборки и IDE (`bin/`, `obj/`,
+  `.vs/`, `.idea/`, `*.user`, `*.suo`, `TestResults/`, `.codegraph/`). Всё равно
+  стейджить файлы выборочно и не коммитить артефакты сборки.
+- Конфиг приложения — `%AppData%\CLIHub\config.json` (не в репо): `runtime`, `hotkey`
+  (дефолт `Ctrl+Alt+Space`), `projects[]`, `probe`, `update`, `agents` (машинный кэш).
+  Пишется через `ConfigStore.Save` — атомарно, с бэкапом `.bak` при порче файла.
 - При запуске окна нет: приложение живёт в трее (иконка + «Выход»), попап открывается
   по hotkey. `dotnet run` не завершается сам — запускай фоном, иначе терминал занят.
+- Точка входа — свой `Main` в `App.xaml.cs` с Velopack-бутстрапом
+  (`VelopackApp.Build().SetAutoApplyOnStartup(false).Run()`). Поэтому `App.xaml`
+  собран как `Page` с `<StartupObject>CLIHub.App.App</StartupObject>` — не откатывай
+  это на `ApplicationDefinition`. `dotnet run` — не Velopack-установка: проверка
+  обновлений молча пропускается (см. `app-update`).
 - `.opencode/` и `.kilocode/` содержат OpenSpec-воркфлоу (skills/commands); их
   `node_modules` игнорируется через `.opencode/.gitignore`.
 
