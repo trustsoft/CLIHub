@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\default-logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\..\plugins\agents\**\*">
       <Link>plugins\agents\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

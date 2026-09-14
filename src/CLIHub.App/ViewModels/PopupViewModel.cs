@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using CLIHub.App.Platform;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 
@@ -10,37 +11,43 @@ namespace CLIHub.App.ViewModels;
 public sealed class PopupViewModel : INotifyPropertyChanged
 {
     private readonly ProjectRegistry _registry;
-    private readonly IReadOnlyList<AgentManifest> _manifests;
+    private readonly IReadOnlyList<AgentPlugin> _plugins;
     private readonly AgentDetector _detector;
     private readonly LauncherCore _launcher;
+    private readonly LogoResolver _logoResolver;
+    private readonly LogoImageService _logoImages;
     private readonly Func<string?> _pickFolder;
     private readonly Func<string, bool> _confirm;
     private readonly Action<Action> _postToUi;
     private readonly RelayCommand _removeProjectCommand;
 
-    private ProjectConfig? _selectedProject;
+    private ProjectItemViewModel? _selectedProject;
     private string _statusText = string.Empty;
 
     public PopupViewModel(
         ProjectRegistry registry,
-        IReadOnlyList<AgentManifest> manifests,
+        IReadOnlyList<AgentPlugin> plugins,
         AgentDetector detector,
         LauncherCore launcher,
+        LogoResolver logoResolver,
+        LogoImageService logoImages,
         Func<string?> pickFolder,
         Func<string, bool> confirm,
         Action<Action> postToUi)
     {
         _registry = registry;
-        _manifests = manifests;
+        _plugins = plugins;
         _detector = detector;
         _launcher = launcher;
+        _logoResolver = logoResolver;
+        _logoImages = logoImages;
         _pickFolder = pickFolder;
         _confirm = confirm;
         _postToUi = postToUi;
 
         foreach (var project in registry.Projects)
         {
-            Projects.Add(project);
+            Projects.Add(CreateProjectItem(project));
         }
 
         _selectedProject = Projects.FirstOrDefault();
@@ -52,7 +59,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         RebuildAgents();
     }
 
-    public ObservableCollection<ProjectConfig> Projects { get; } = new();
+    public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
 
     public ObservableCollection<AgentItemViewModel> Agents { get; } = new();
 
@@ -64,7 +71,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public ProjectConfig? SelectedProject
+    public ProjectItemViewModel? SelectedProject
     {
         get => _selectedProject;
         set
@@ -102,14 +109,15 @@ public sealed class PopupViewModel : INotifyPropertyChanged
     {
         Agents.Clear();
 
-        foreach (var manifest in _manifests.Where(IsInstalled))
+        foreach (var plugin in _plugins.Where(plugin => IsInstalled(plugin.Manifest)))
         {
-            Agents.Add(new AgentItemViewModel(manifest, Run));
+            var logo = _logoImages.GetImage(_logoResolver.Resolve(plugin.Folder));
+            Agents.Add(new AgentItemViewModel(plugin.Manifest, logo, Run));
         }
 
         RefreshAgentStates();
 
-        if (_manifests.Count == 0)
+        if (_plugins.Count == 0)
         {
             StatusText = "Агенты не найдены в plugins/agents.";
         }
@@ -119,12 +127,15 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         }
     }
 
+    private ProjectItemViewModel CreateProjectItem(ProjectConfig project) =>
+        new(project, _logoImages.GetImage(_logoResolver.ResolveProject(project)));
+
     private bool IsInstalled(AgentManifest manifest) =>
         _detector.GetHostStatus(manifest).HostInstalled;
 
     private void RefreshAgentStates()
     {
-        var projectPath = SelectedProject?.Path;
+        var projectPath = SelectedProject?.Model.Path;
 
         foreach (var item in Agents)
         {
@@ -148,42 +159,43 @@ public sealed class PopupViewModel : INotifyPropertyChanged
             return;
         }
 
-        Projects.Add(result.Project);
-        SelectedProject = result.Project;
+        var item = CreateProjectItem(result.Project);
+        Projects.Add(item);
+        SelectedProject = item;
         StatusText = $"Добавлен проект: {result.Project.Name}";
     }
 
     private void RemoveProject()
     {
-        var project = SelectedProject;
-        if (project is null)
+        var item = SelectedProject;
+        if (item is null)
         {
             return;
         }
 
-        if (!_confirm($"Удалить проект «{project.Name}» из списка?"))
+        if (!_confirm($"Удалить проект «{item.Name}» из списка?"))
         {
             return;
         }
 
-        if (_registry.Remove(project.Id ?? string.Empty))
+        if (_registry.Remove(item.Model.Id ?? string.Empty))
         {
-            Projects.Remove(project);
+            Projects.Remove(item);
             SelectedProject = Projects.FirstOrDefault();
-            StatusText = $"Удалён проект: {project.Name}";
+            StatusText = $"Удалён проект: {item.Name}";
         }
     }
 
     private void Run(AgentItemViewModel item)
     {
         var project = SelectedProject;
-        if (string.IsNullOrWhiteSpace(project?.Path))
+        if (string.IsNullOrWhiteSpace(project?.Model.Path))
         {
             StatusText = "Не выбран проект.";
             return;
         }
 
-        var result = _launcher.Start(item.Manifest, "run", _registry.Runtime, project.Path);
+        var result = _launcher.Start(item.Manifest, "run", _registry.Runtime, project.Model.Path);
         if (!result.Success)
         {
             StatusText = result.Error ?? "Не удалось запустить агента.";

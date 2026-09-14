@@ -28,6 +28,8 @@ public partial class App : System.Windows.Application
         var registry = new ProjectRegistry(configStore, fileSystem);
         var launcher = new LauncherCore(processRunner);
         var detector = new AgentDetector(configStore, fileSystem, processRunner, new SystemClock());
+        var logoResolver = new LogoResolver(fileSystem);
+        var logoImages = new LogoImageService();
 
         var plugins = pluginLoader.Load();
 
@@ -37,6 +39,8 @@ public partial class App : System.Windows.Application
             plugins.Agents,
             detector,
             launcher,
+            logoResolver,
+            logoImages,
             _popupWindow.PickFolder,
             _popupWindow.Confirm,
             action => Dispatcher.Invoke(action));
@@ -48,7 +52,8 @@ public partial class App : System.Windows.Application
         RegisterHotkey(registry.Hotkey);
 
         detector.RoundCompleted += viewModel.OnProbeRoundCompleted;
-        _ = System.Threading.Tasks.Task.Run(() => detector.RunStartupRound(plugins.Agents));
+        _ = System.Threading.Tasks.Task.Run(() => detector.RunStartupRound(
+            plugins.Agents.Select(plugin => plugin.Manifest).ToArray()));
 
         if (plugins.Warnings.Count > 0)
         {

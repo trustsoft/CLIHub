@@ -4,7 +4,7 @@ using CLIHub.Core.Models;
 
 namespace CLIHub.Core.Services;
 
-public sealed record PluginLoadResult(IReadOnlyList<AgentManifest> Agents, IReadOnlyList<string> Warnings);
+public sealed record PluginLoadResult(IReadOnlyList<AgentPlugin> Agents, IReadOnlyList<string> Warnings);
 
 public sealed class PluginLoader
 {
@@ -21,7 +21,7 @@ public sealed class PluginLoader
 
     public PluginLoadResult Load()
     {
-        var agents = new List<AgentManifest>();
+        var agents = new List<AgentPlugin>();
         var warnings = new List<string>();
         var root = Path.Combine(_paths.ApplicationDirectory, "plugins", "agents");
 
@@ -71,7 +71,7 @@ public sealed class PluginLoader
                 continue;
             }
 
-            agents.Add(manifest);
+            agents.Add(new AgentPlugin(manifest, directory));
         }
 
         return new PluginLoadResult(agents, warnings);

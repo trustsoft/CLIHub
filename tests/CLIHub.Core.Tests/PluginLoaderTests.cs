@@ -32,9 +32,12 @@ public sealed class PluginLoaderTests
         var result = CreateLoader(temp.Path).Load();
 
         var agent = Assert.Single(result.Agents);
-        Assert.Equal("claude", agent.Id);
-        Assert.Equal("Claude Code", agent.Name);
-        Assert.Equal("claude", agent.Actions["run"].Command);
+        Assert.Equal("claude", agent.Manifest.Id);
+        Assert.Equal("Claude Code", agent.Manifest.Name);
+        Assert.Equal("claude", agent.Manifest.Actions["run"].Command);
+        Assert.Equal(
+            Path.Combine(temp.Path, "plugins", "agents", "claude"),
+            agent.Folder);
         Assert.Empty(result.Warnings);
     }
 
@@ -55,8 +58,8 @@ public sealed class PluginLoaderTests
         var result = CreateLoader(temp.Path).Load();
 
         var agent = Assert.Single(result.Agents);
-        Assert.NotNull(agent.Detect);
-        Assert.Equal(new[] { ".claude", "CLAUDE.md" }, agent.Detect!.Project);
+        Assert.NotNull(agent.Manifest.Detect);
+        Assert.Equal(new[] { ".claude", "CLAUDE.md" }, agent.Manifest.Detect!.Project);
         Assert.Empty(result.Warnings);
     }
 
@@ -71,7 +74,7 @@ public sealed class PluginLoaderTests
         var result = CreateLoader(temp.Path).Load();
 
         var agent = Assert.Single(result.Agents);
-        Assert.Null(agent.Detect);
+        Assert.Null(agent.Manifest.Detect);
         Assert.Empty(result.Warnings);
     }
 

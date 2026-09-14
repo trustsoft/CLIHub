@@ -38,9 +38,17 @@
                         <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Name}" />
-                                        <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#FF888888" TextTrimming="CharacterEllipsis" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                                        <Image Source="{Binding Logo}"
+                                               Width="20"
+                                               Height="20"
+                                               Margin="0,0,8,0"
+                                               VerticalAlignment="Center"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" />
+                                            <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#FF888888" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -71,18 +79,26 @@
                             <DataTemplate>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Version}"
-                                               Margin="8,0,0,0"
-                                               FontSize="10"
-                                               Foreground="#FF888888"
-                                               VerticalAlignment="Center" />
-                                </StackPanel>
-                                <Button Grid.Column="1"
+                                    <Image Grid.Column="0"
+                                           Source="{Binding Logo}"
+                                           Width="20"
+                                           Height="20"
+                                           Margin="0,0,8,0"
+                                           VerticalAlignment="Center"
+                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Version}"
+                                                   Margin="8,0,0,0"
+                                                   FontSize="10"
+                                                   Foreground="#FF888888"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
                                             Content="Запустить"
                                             Padding="10,2"
                                             Command="{Binding RunCommand}"

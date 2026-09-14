@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows.Media;
 using CLIHub.Core.Models;
 
 namespace CLIHub.App.ViewModels;
@@ -11,15 +12,18 @@ public sealed class AgentItemViewModel : INotifyPropertyChanged
     private bool _canRun;
     private string? _version;
 
-    public AgentItemViewModel(AgentManifest manifest, Action<AgentItemViewModel> run)
+    public AgentItemViewModel(AgentManifest manifest, ImageSource logo, Action<AgentItemViewModel> run)
     {
         Manifest = manifest;
+        Logo = logo;
         _runCommand = new RelayCommand(_ => run(this), _ => CanRun);
     }
 
     public AgentManifest Manifest { get; }
 
     public string Name => Manifest.Name ?? Manifest.Id ?? "(без имени)";
+
+    public ImageSource Logo { get; }
 
     public bool CanRun
     {
