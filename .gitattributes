@@ -1,0 +1,11 @@
+# Normalize line endings on commit (LF in repository)
+* text=auto
+
+# Windows solution/project files
+*.sln text eol=crlf
+*.slnx text eol=crlf
+*.csproj text eol=crlf
+
+# Binary assets
+*.png binary
+*.ico binary
