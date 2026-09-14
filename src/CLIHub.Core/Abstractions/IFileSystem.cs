@@ -10,6 +10,8 @@ public interface IFileSystem
 
     void WriteAllText(string path, string contents);
 
+    void Move(string source, string destination, bool overwrite);
+
     IEnumerable<string> EnumerateDirectories(string path);
 
     IEnumerable<string> EnumerateFiles(string path, string searchPattern);

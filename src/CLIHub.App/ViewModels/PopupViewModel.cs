@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 
@@ -8,29 +9,37 @@ namespace CLIHub.App.ViewModels;
 
 public sealed class PopupViewModel : INotifyPropertyChanged
 {
+    private readonly ProjectRegistry _registry;
     private readonly LauncherCore _launcher;
-    private readonly string? _configRuntime;
+    private readonly Func<string?> _pickFolder;
+    private readonly Func<string, bool> _confirm;
+    private readonly RelayCommand _removeProjectCommand;
+
     private ProjectConfig? _selectedProject;
     private string _statusText = string.Empty;
 
-    public PopupViewModel(Config config, IReadOnlyList<AgentManifest> agents, LauncherCore launcher, string fallbackProjectPath)
+    public PopupViewModel(
+        ProjectRegistry registry,
+        IReadOnlyList<AgentManifest> agents,
+        LauncherCore launcher,
+        Func<string?> pickFolder,
+        Func<string, bool> confirm)
     {
+        _registry = registry;
         _launcher = launcher;
-        _configRuntime = config.Runtime;
+        _pickFolder = pickFolder;
+        _confirm = confirm;
 
-        if (config.Projects.Count > 0)
+        foreach (var project in registry.Projects)
         {
-            foreach (var project in config.Projects)
-            {
-                Projects.Add(project);
-            }
-        }
-        else
-        {
-            Projects.Add(new ProjectConfig { Name = DescribeFallbackProject(fallbackProjectPath), Path = fallbackProjectPath });
+            Projects.Add(project);
         }
 
         _selectedProject = Projects.FirstOrDefault();
+
+        AddProjectCommand = new RelayCommand(_ => AddProject());
+        _removeProjectCommand = new RelayCommand(_ => RemoveProject(), _ => SelectedProject is not null);
+        RemoveProjectCommand = _removeProjectCommand;
 
         foreach (var agent in agents)
         {
@@ -46,6 +55,10 @@ public sealed class PopupViewModel : INotifyPropertyChanged
     public ObservableCollection<ProjectConfig> Projects { get; } = new();
 
     public ObservableCollection<AgentItemViewModel> Agents { get; } = new();
+
+    public ICommand AddProjectCommand { get; }
+
+    public ICommand RemoveProjectCommand { get; }
 
     public event EventHandler? CloseRequested;
 
@@ -63,6 +76,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
             _selectedProject = value;
             OnPropertyChanged();
+            _removeProjectCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -81,6 +95,47 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         }
     }
 
+    private void AddProject()
+    {
+        var path = _pickFolder();
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return;
+        }
+
+        var result = _registry.Add(path);
+        if (!result.Success || result.Project is null)
+        {
+            StatusText = result.Error ?? "Не удалось добавить проект.";
+            return;
+        }
+
+        Projects.Add(result.Project);
+        SelectedProject = result.Project;
+        StatusText = $"Добавлен проект: {result.Project.Name}";
+    }
+
+    private void RemoveProject()
+    {
+        var project = SelectedProject;
+        if (project is null)
+        {
+            return;
+        }
+
+        if (!_confirm($"Удалить проект «{project.Name}» из списка?"))
+        {
+            return;
+        }
+
+        if (_registry.Remove(project.Id ?? string.Empty))
+        {
+            Projects.Remove(project);
+            SelectedProject = Projects.FirstOrDefault();
+            StatusText = $"Удалён проект: {project.Name}";
+        }
+    }
+
     private void Run(AgentItemViewModel item)
     {
         var project = SelectedProject;
@@ -90,7 +145,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
             return;
         }
 
-        var result = _launcher.Start(item.Manifest, "run", _configRuntime, project.Path);
+        var result = _launcher.Start(item.Manifest, "run", _registry.Runtime, project.Path);
         if (!result.Success)
         {
             StatusText = result.Error ?? "Не удалось запустить агента.";
@@ -105,19 +160,6 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
         StatusText = $"Запущено: {item.Name}";
         CloseRequested?.Invoke(this, EventArgs.Empty);
-    }
-
-    private static string DescribeFallbackProject(string path)
-    {
-        try
-        {
-            var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            return string.IsNullOrWhiteSpace(name) ? path : name;
-        }
-        catch (ArgumentException)
-        {
-            return path;
-        }
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>

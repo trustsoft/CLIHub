@@ -25,17 +25,43 @@
                 </Grid.ColumnDefinitions>
 
                 <DockPanel Grid.Column="0" Margin="0,0,12,0">
-                    <TextBlock DockPanel.Dock="Top" Text="Projects" FontWeight="SemiBold" Margin="0,0,0,8" />
-                    <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Name}" />
-                                    <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#FF888888" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock Text="Projects" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Menu HorizontalAlignment="Right" Background="Transparent">
+                            <MenuItem Header="Actions">
+                                <MenuItem Header="Add" Command="{Binding AddProjectCommand}" />
+                                <MenuItem Header="Remove" Command="{Binding RemoveProjectCommand}" />
+                            </MenuItem>
+                        </Menu>
+                    </DockPanel>
+                    <Grid>
+                        <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#FF888888" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Text="Нет проектов. Добавьте через Actions -> Add."
+                                   Foreground="#FF888888"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Projects.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
                 </DockPanel>
 
                 <DockPanel Grid.Column="1">

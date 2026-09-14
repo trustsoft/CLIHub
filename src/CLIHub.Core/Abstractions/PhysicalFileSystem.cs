@@ -21,6 +21,8 @@ public sealed class PhysicalFileSystem : IFileSystem
 
     public IEnumerable<string> EnumerateDirectories(string path) => Directory.EnumerateDirectories(path);
 
+    public void Move(string source, string destination, bool overwrite) =>
+        File.Move(source, destination, overwrite);
     public IEnumerable<string> EnumerateFiles(string path, string searchPattern) =>
         Directory.EnumerateFiles(path, searchPattern);
 }

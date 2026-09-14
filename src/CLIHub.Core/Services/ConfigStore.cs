@@ -7,6 +7,8 @@ namespace CLIHub.Core.Services;
 public sealed class ConfigStore
 {
     public const string FileName = "config.json";
+    public const string BackupSuffix = ".bak";
+    public const string TempSuffix = ".tmp";
 
     private readonly IFileSystem _fileSystem;
     private readonly IPathProvider _paths;
@@ -19,6 +21,8 @@ public sealed class ConfigStore
 
     public string Path => System.IO.Path.Combine(_paths.ConfigDirectory, FileName);
 
+    public string BackupPath => Path + BackupSuffix;
+
     public Config Load()
     {
         if (!_fileSystem.FileExists(Path))
@@ -26,13 +30,34 @@ public sealed class ConfigStore
             return new Config();
         }
 
+        return TryDeserialize(_fileSystem.ReadAllText(Path)) ?? new Config();
+    }
+
+    public void Save(Config config)
+    {
+        if (_fileSystem.FileExists(Path))
+        {
+            var contents = _fileSystem.ReadAllText(Path);
+            if (TryDeserialize(contents) is null)
+            {
+                _fileSystem.WriteAllText(BackupPath, contents);
+            }
+        }
+
+        var tempPath = Path + TempSuffix;
+        _fileSystem.WriteAllText(tempPath, JsonSerializer.Serialize(config, CoreJson.Options));
+        _fileSystem.Move(tempPath, Path, overwrite: true);
+    }
+
+    private static Config? TryDeserialize(string text)
+    {
         try
         {
-            return JsonSerializer.Deserialize<Config>(_fileSystem.ReadAllText(Path), CoreJson.Options) ?? new Config();
+            return JsonSerializer.Deserialize<Config>(text, CoreJson.Options);
         }
         catch (JsonException)
         {
-            return new Config();
+            return null;
         }
     }
 }

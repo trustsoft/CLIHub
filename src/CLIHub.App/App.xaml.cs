@@ -24,18 +24,24 @@ public partial class App : System.Windows.Application
 
         var configStore = new ConfigStore(fileSystem, paths);
         var pluginLoader = new PluginLoader(fileSystem, paths);
+        var registry = new ProjectRegistry(configStore, fileSystem);
         var launcher = new LauncherCore(processRunner);
 
-        var config = configStore.Load();
         var plugins = pluginLoader.Load();
 
-        var viewModel = new PopupViewModel(config, plugins.Agents, launcher, Environment.CurrentDirectory);
-        _popupWindow = new PopupWindow { DataContext = viewModel };
+        _popupWindow = new PopupWindow();
+        var viewModel = new PopupViewModel(
+            registry,
+            plugins.Agents,
+            launcher,
+            _popupWindow.PickFolder,
+            _popupWindow.Confirm);
+        _popupWindow.DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => _popupWindow?.Hide();
         new System.Windows.Interop.WindowInteropHelper(_popupWindow).EnsureHandle();
 
         CreateTrayIcon();
-        RegisterHotkey(config.Hotkey);
+        RegisterHotkey(registry.Hotkey);
 
         if (plugins.Warnings.Count > 0)
         {
