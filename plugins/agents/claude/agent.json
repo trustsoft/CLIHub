@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "claude",
+  "name": "Claude Code",
+  "actions": {
+    "run": { "command": "claude" },
+    "resume": { "command": "claude --continue" },
+    "init": { "command": "claude init" },
+    "update": { "command": "claude update", "runtime": "ps" },
+    "version": { "command": "claude --version" }
+  }
+}
