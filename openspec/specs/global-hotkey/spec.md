@@ -2,31 +2,31 @@
 
 ## Purpose
 
-Позволяет вызывать попап CLIHub из любого места системы одной комбинацией клавиш,
-не переключаясь в иконку трея или отдельное окно.
+Allows invoking the CLIHub popup from anywhere in the system with a single key
+combination, without switching to the tray icon or a separate window.
 
 ## Requirements
 
-### Requirement: Регистрация глобального hotkey
+### Requirement: Register global hotkey
 
-Система SHALL регистрировать глобальный hotkey при старте приложения. Комбинация
-берётся из `config.json`, по умолчанию `Ctrl+Alt+Space`.
+The system SHALL register a global hotkey on application startup. The combination
+comes from `config.json`, defaulting to `Ctrl+Alt+Space`.
 
-#### Scenario: Успешная регистрация
+#### Scenario: Successful registration
 
-- **WHEN** приложение стартует и комбинация не занята другим приложением
-- **THEN** hotkey зарегистрирован и срабатывает, пока приложение работает
+- **WHEN** the application starts and the combination is not taken by another application
+- **THEN** the hotkey is registered and fires while the application runs
 
-#### Scenario: Комбинация занята
+#### Scenario: Combination already taken
 
-- **WHEN** комбинация уже зарегистрирована другим приложением
-- **THEN** регистрация не выполняется, приложение сообщает о проблеме и продолжает работу без hotkey
+- **WHEN** the combination is already registered by another application
+- **THEN** registration does not happen, the application reports the problem and keeps running without the hotkey
 
-### Requirement: Открытие попапа по hotkey
+### Requirement: Open popup via hotkey
 
-Система SHALL открывать попап при нажатии зарегистрированной комбинации.
+The system SHALL open the popup when the registered combination is pressed.
 
-#### Scenario: Нажатие hotkey
+#### Scenario: Hotkey pressed
 
-- **WHEN** пользователь нажимает зарегистрированную комбинацию
-- **THEN** попап показывается в hotkey-режиме
+- **WHEN** the user presses the registered combination
+- **THEN** the popup is shown in hotkey mode

@@ -2,82 +2,83 @@
 
 ## Purpose
 
-Обеспечивает поверхность попапа: окно, которое по hotkey показывает проекты и
-агентов выбранного проекта, позиционируется у курсора и живёт как переиспользуемый
-экземпляр.
+Provides the popup surface: a window that on hotkey shows projects and the agents
+of the selected project, positions itself at the cursor, and lives as a reusable
+instance.
 
 ## Requirements
 
-### Requirement: Хост приложения в трее
+### Requirement: Application host in the tray
 
-Система SHALL держать приложение работающим через иконку в системном трее с пунктом
-«Выход». Пассивный режим попапа по клику на иконку в это изменение не входит.
+The system SHALL keep the application running through a system tray icon with an
+"Exit" item. The passive popup mode triggered by clicking the icon is out of scope
+for this change.
 
-#### Scenario: Запуск приложения
+#### Scenario: Application start
 
-- **WHEN** приложение запускается
-- **THEN** в системном трее появляется иконка CLIHub
+- **WHEN** the application starts
+- **THEN** a CLIHub icon appears in the system tray
 
-#### Scenario: Выход
+#### Scenario: Exit
 
-- **WHEN** пользователь выбирает «Выход» в меню иконки трея
-- **THEN** приложение завершается
+- **WHEN** the user selects "Exit" in the tray icon menu
+- **THEN** the application terminates
 
-### Requirement: Переиспользуемый экземпляр окна (warm singleton)
+### Requirement: Reusable window instance (warm singleton)
 
-Система SHALL создавать окно попапа один раз и переиспользовать его. Скрытие окна
-SHALL выполнять Hide, а не Close.
+The system SHALL create the popup window once and reuse it. Hiding the window
+SHALL call Hide, not Close.
 
-#### Scenario: Повторное открытие
+#### Scenario: Reopening
 
-- **WHEN** попап был скрыт и вызывается снова
-- **THEN** показывается тот же экземпляр окна без пересоздания
+- **WHEN** the popup was hidden and is invoked again
+- **THEN** the same window instance is shown without being recreated
 
-#### Scenario: Скрытие сохраняет окно
+#### Scenario: Hiding preserves the window
 
-- **WHEN** попап закрывается
-- **THEN** окно скрывается и остаётся готовым к показу
+- **WHEN** the popup is closed
+- **THEN** the window is hidden and stays ready to be shown
 
-### Requirement: Показ по hotkey у курсора
+### Requirement: Show at cursor on hotkey
 
-Система SHALL показывать попап в hotkey-режиме на экране, где находится курсор,
-и переводить на него фокус.
+The system SHALL show the popup in hotkey mode on the screen where the cursor is
+located and give it focus.
 
-#### Scenario: Показ у курсора
+#### Scenario: Show at cursor
 
-- **WHEN** срабатывает hotkey
-- **THEN** попап показывается на экране с курсором и получает фокус
+- **WHEN** the hotkey fires
+- **THEN** the popup is shown on the screen with the cursor and receives focus
 
-### Requirement: Удержание попапа в рабочей области
+### Requirement: Keep popup within the working area
 
-Система SHALL позиционировать попап так, чтобы он целиком оставался в рабочей
-области (WorkingArea) экрана с курсором, перекидывая его при нехватке места.
+The system SHALL position the popup so that it stays entirely within the working
+area (WorkingArea) of the screen with the cursor, shifting it when space is short.
 
-#### Scenario: Недостаточно места у курсора
+#### Scenario: Not enough room at the cursor
 
-- **WHEN** попап не помещается рядом с курсором
-- **THEN** попап перепозиционируется и остаётся целиком внутри WorkingArea
+- **WHEN** the popup does not fit next to the cursor
+- **THEN** the popup is repositioned and stays entirely within the WorkingArea
 
-### Requirement: Корректные координаты при разном DPI
+### Requirement: Correct coordinates across DPI
 
-Система SHALL переводить экранные пиксельные координаты в DIP при позиционировании
-окна.
+The system SHALL convert on-screen pixel coordinates to DIP when positioning the
+window.
 
-#### Scenario: Экран с масштабированием
+#### Scenario: Scaled screen
 
-- **WHEN** экран имеет масштабирование, отличное от 100%
-- **THEN** попап позиционируется у курсора без смещения
+- **WHEN** the screen has a scale other than 100%
+- **THEN** the popup is positioned at the cursor without offset
 
-### Requirement: Закрытие по Esc и потере фокуса
+### Requirement: Close on Esc and focus loss
 
-Система SHALL скрывать попап при нажатии Esc и при потере фокуса.
+The system SHALL hide the popup when Esc is pressed and when it loses focus.
 
 #### Scenario: Esc
 
-- **WHEN** попап виден и пользователь нажимает Esc
-- **THEN** попап скрывается
+- **WHEN** the popup is visible and the user presses Esc
+- **THEN** the popup is hidden
 
-#### Scenario: Потеря фокуса
+#### Scenario: Focus loss
 
-- **WHEN** попап виден и перестаёт быть активным окном
-- **THEN** попап скрывается
+- **WHEN** the popup is visible and stops being the active window
+- **THEN** the popup is hidden

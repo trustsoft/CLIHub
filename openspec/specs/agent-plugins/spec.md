@@ -2,59 +2,58 @@
 
 ## Purpose
 
-Строит список доступных агентов из встроенных папок-плагинов с манифестом, чтобы
-добавлять и описывать агентов декларативно, без изменения кода приложения.
+Builds the list of available agents from built-in plugin folders with a manifest,
+so agents can be described declaratively without changing application code.
 
 ## Requirements
 
-### Requirement: Загрузка плагинов из папки
+### Requirement: Load plugins from folder
 
-Система SHALL загружать агентов из встроенной папки `plugins/agents/<folder>/`,
-где манифест `agent.json` расположен рядом с ассетами агента.
+The system SHALL load agents from the built-in `plugins/agents/<folder>/` folder,
+where the `agent.json` manifest sits next to the agent assets.
 
-#### Scenario: Валидный плагин
+#### Scenario: Valid plugin
 
-- **WHEN** в папке присутствует корректный `agent.json`
-- **THEN** агент появляется в списке агентов
+- **WHEN** a valid `agent.json` is present in the folder
+- **THEN** the agent appears in the agent list
 
-#### Scenario: Битый или отсутствующий манифест
+#### Scenario: Broken or missing manifest
 
-- **WHEN** `agent.json` отсутствует или не разбирается
-- **THEN** папка пропускается, приложение продолжает работу и сообщает предупреждение
+- **WHEN** `agent.json` is missing or cannot be parsed
+- **THEN** the folder is skipped, the application keeps running and reports a warning
 
-### Requirement: Контракт манифеста агента
+### Requirement: Agent manifest contract
 
-Манифест SHALL содержать `schemaVersion` (int), `id` и `name`. Поле `id` SHALL
-считаться авторитетным идентификатором агента, а имя папки — лишь конвенцией.
-Неизвестные поля SHALL игнорироваться.
+The manifest SHALL contain `schemaVersion` (int), `id` and `name`. The `id` field
+SHALL be treated as the authoritative agent identifier, while the folder name is
+only a convention. Unknown fields SHALL be ignored.
 
-#### Scenario: Неизвестные поля
+#### Scenario: Unknown fields
 
-- **WHEN** манифест содержит поля, которых нет в контракте
-- **THEN** они игнорируются, и агент загружается
+- **WHEN** the manifest contains fields not present in the contract
+- **THEN** they are ignored and the agent loads
 
-#### Scenario: Неподдерживаемая версия схемы
+#### Scenario: Unsupported schema version
 
-- **WHEN** `schemaVersion` манифеста не поддерживается приложением
-- **THEN** плагин пропускается с предупреждением
+- **WHEN** the manifest's `schemaVersion` is not supported by the application
+- **THEN** the plugin is skipped with a warning
 
-### Requirement: Действия агента
+### Requirement: Agent actions
 
-Манифест SHALL поддерживать фиксированный набор из пяти опциональных действий:
-`run`, `resume`, `version`, `update`, `init`. Терминальные действия (`run`, `resume`,
-`update`, `init`) SHALL задаваться shell-агностичной строкой команды — исполняемый
-файл и аргументы.
+The manifest SHALL support a fixed set of five optional actions: `run`, `resume`,
+`version`, `update`, `init`. Terminal actions (`run`, `resume`, `update`, `init`)
+SHALL be defined as a shell-agnostic command string — executable and arguments.
 
-#### Scenario: Агент с действием запуска
+#### Scenario: Agent with a run action
 
-- **WHEN** манифест описывает действие `run`
-- **THEN** действие `run` доступно для агента
+- **WHEN** the manifest describes a `run` action
+- **THEN** the `run` action is available for the agent
 
-### Requirement: Переопределение runtime на уровне действия
+### Requirement: Per-action runtime override
 
-Манифест SHALL позволять задать опциональный runtime для отдельного действия.
+The manifest SHALL allow defining an optional runtime for an individual action.
 
-#### Scenario: Указан runtime действия
+#### Scenario: Action runtime specified
 
-- **WHEN** в действии манифеста задан runtime
-- **THEN** он используется вместо глобального значения из config
+- **WHEN** a runtime is specified in a manifest action
+- **THEN** it is used instead of the global value from config

@@ -2,68 +2,70 @@
 
 ## Purpose
 
-Запускает агента в папке выбранного проекта в терминале нужного runtime, избавляя
-пользователя от ручного ввода команд и открытия терминала в нужном каталоге.
+Launches an agent in the selected project folder in a terminal of the required
+runtime, sparing the user from typing commands and opening a terminal in the right
+directory.
 
 ## Requirements
 
-### Requirement: Разрешение runtime
+### Requirement: Runtime resolution
 
-Система SHALL выбирать runtime по приоритету: per-action override из манифеста,
-затем глобальный runtime из `config.json`, затем встроенный дефолт.
+The system SHALL choose the runtime by priority: per-action override from the
+manifest, then the global runtime from `config.json`, then the built-in default.
 
-#### Scenario: Задан override действия
+#### Scenario: Action override set
 
-- **WHEN** у запускаемого действия указан runtime
-- **THEN** используется этот runtime
+- **WHEN** the launched action specifies a runtime
+- **THEN** that runtime is used
 
-#### Scenario: Override отсутствует
+#### Scenario: No override
 
-- **WHEN** у действия runtime не указан, а в config задано глобальное значение
-- **THEN** используется глобальный runtime
+- **WHEN** the action does not specify a runtime and config has a global value
+- **THEN** the global runtime is used
 
-#### Scenario: Нет ни override, ни глобального значения
+#### Scenario: Neither override nor global value
 
-- **WHEN** ни действие, ни config не задают runtime
-- **THEN** используется встроенный дефолт приложения
+- **WHEN** neither the action nor config specifies a runtime
+- **THEN** the built-in application default is used
 
-### Requirement: Форма запуска терминала по runtime
+### Requirement: Terminal command form per runtime
 
-Система SHALL открывать терминал одной из команд:
+The system SHALL open the terminal with one of these commands:
 `cmd` — `cmd.exe /k "<command>"`; `ps` — `powershell.exe -NoExit -Command "<command>"`;
-`wt` — `wt.exe -d "<cwd>" cmd /k "<command>"`. Рабочей папкой SHALL быть папка проекта.
-Окно терминала SHALL оставаться открытым после выполнения команды.
+`wt` — `wt.exe -d "<cwd>" cmd /k "<command>"`. The working directory SHALL be the
+project folder. The terminal window SHALL stay open after the command completes.
 
-#### Scenario: Запуск в cmd
+#### Scenario: Launch in cmd
 
-- **WHEN** выбран runtime `cmd`
-- **THEN** открывается окно cmd в папке проекта и остаётся открытым после команды
+- **WHEN** the `cmd` runtime is chosen
+- **THEN** a cmd window opens in the project folder and stays open after the command
 
-#### Scenario: Запуск в ps
+#### Scenario: Launch in ps
 
-- **WHEN** выбран runtime `ps`
-- **THEN** открывается окно PowerShell в папке проекта и остаётся открытым после команды
+- **WHEN** the `ps` runtime is chosen
+- **THEN** a PowerShell window opens in the project folder and stays open after the command
 
-#### Scenario: Запуск в wt
+#### Scenario: Launch in wt
 
-- **WHEN** выбран runtime `wt` и Windows Terminal доступен
-- **THEN** открывается окно Windows Terminal в папке проекта с выполненной командой
+- **WHEN** the `wt` runtime is chosen and Windows Terminal is available
+- **THEN** a Windows Terminal window opens in the project folder with the command executed
 
-### Requirement: Откат при отсутствии Windows Terminal
+### Requirement: Fallback when Windows Terminal is missing
 
-Система SHALL, если `wt` недоступен, выполнять запуск через `ps` или `cmd` и
-сообщать предупреждение.
+The system SHALL, when `wt` is unavailable, launch through `ps` or `cmd` and report
+a warning.
 
-#### Scenario: wt недоступен
+#### Scenario: wt unavailable
 
-- **WHEN** выбран runtime `wt`, но Windows Terminal не установлен
-- **THEN** агент запускается через резервный runtime, и приложение сообщает предупреждение
+- **WHEN** the `wt` runtime is chosen but Windows Terminal is not installed
+- **THEN** the agent launches through the fallback runtime and the application reports a warning
 
-### Requirement: Асинхронный запуск без блокировки
+### Requirement: Asynchronous launch without blocking
 
-Система SHALL запускать терминал без ожидания завершения процесса и без блокировки UI.
+The system SHALL launch the terminal without waiting for the process to exit and
+without blocking the UI.
 
-#### Scenario: Запуск не блокирует интерфейс
+#### Scenario: Launch does not block the UI
 
-- **WHEN** пользователь запускает агента
-- **THEN** терминал стартует, а попап остаётся отзывчивым
+- **WHEN** the user launches an agent
+- **THEN** the terminal starts and the popup remains responsive
