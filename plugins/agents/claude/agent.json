@@ -8,5 +8,6 @@
     "init": { "command": "claude init" },
     "update": { "command": "claude update", "runtime": "ps" },
     "version": { "command": "claude --version" }
-  }
+  },
+  "detect": { "project": [".claude", "CLAUDE.md"] }
 }

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "pi",
+  "name": "pi",
+  "actions": {
+    "run": { "command": "pi" },
+    "resume": { "command": "pi --continue" },
+    "update": { "command": "pi update", "runtime": "ps" },
+    "version": { "command": "pi --version" }
+  },
+  "detect": { "project": [".pi"] }
+}

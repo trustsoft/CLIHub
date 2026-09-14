@@ -15,4 +15,7 @@ public sealed class AgentManifest
 
     [JsonPropertyName("actions")]
     public Dictionary<string, AgentActionSpec> Actions { get; set; } = new();
+
+    [JsonPropertyName("detect")]
+    public DetectSpec? Detect { get; set; }
 }

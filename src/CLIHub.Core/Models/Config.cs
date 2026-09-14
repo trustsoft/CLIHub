@@ -19,6 +19,12 @@ public sealed class Config
     [JsonPropertyName("projects")]
     public List<ProjectConfig> Projects { get; set; } = new();
 
+    [JsonPropertyName("probe")]
+    public ProbeConfig Probe { get; set; } = new();
+
+    [JsonPropertyName("agents")]
+    public Dictionary<string, AgentProbeEntry> Agents { get; set; } = new();
+
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
 }

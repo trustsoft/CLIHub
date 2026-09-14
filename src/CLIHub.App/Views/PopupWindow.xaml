@@ -74,8 +74,15 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" />
-                                    <Button Grid.Column="1"
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Version}"
+                                               Margin="8,0,0,0"
+                                               FontSize="10"
+                                               Foreground="#FF888888"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <Button Grid.Column="1"
                                             Content="Запустить"
                                             Padding="10,2"
                                             Command="{Binding RunCommand}"

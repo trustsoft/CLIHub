@@ -39,6 +39,43 @@ public sealed class PluginLoaderTests
     }
 
     [Fact]
+    public void Load_DetectProject_ExposesDetectionPaths()
+    {
+        using var temp = new TempDirectory();
+        WritePlugin(temp.Path, "claude", """
+            {
+              "schemaVersion": 1,
+              "id": "claude",
+              "name": "Claude Code",
+              "actions": { "run": { "command": "claude" } },
+              "detect": { "project": [".claude", "CLAUDE.md"], "unknownField": "ignored" }
+            }
+            """);
+
+        var result = CreateLoader(temp.Path).Load();
+
+        var agent = Assert.Single(result.Agents);
+        Assert.NotNull(agent.Detect);
+        Assert.Equal(new[] { ".claude", "CLAUDE.md" }, agent.Detect!.Project);
+        Assert.Empty(result.Warnings);
+    }
+
+    [Fact]
+    public void Load_NoDetectSection_LoadsNormally()
+    {
+        using var temp = new TempDirectory();
+        WritePlugin(temp.Path, "bare", """
+            { "schemaVersion": 1, "id": "bare", "name": "Bare" }
+            """);
+
+        var result = CreateLoader(temp.Path).Load();
+
+        var agent = Assert.Single(result.Agents);
+        Assert.Null(agent.Detect);
+        Assert.Empty(result.Warnings);
+    }
+
+    [Fact]
     public void Load_MissingManifest_SkipsWithWarning()
     {
         using var temp = new TempDirectory();

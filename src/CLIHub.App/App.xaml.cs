@@ -4,6 +4,7 @@ using CLIHub.App.ViewModels;
 using CLIHub.App.Views;
 using CLIHub.Core.Abstractions;
 using CLIHub.Core.Services;
+using CLIHub.Core.Models;
 
 namespace CLIHub.App;
 
@@ -26,6 +27,7 @@ public partial class App : System.Windows.Application
         var pluginLoader = new PluginLoader(fileSystem, paths);
         var registry = new ProjectRegistry(configStore, fileSystem);
         var launcher = new LauncherCore(processRunner);
+        var detector = new AgentDetector(configStore, fileSystem, processRunner, new SystemClock());
 
         var plugins = pluginLoader.Load();
 
@@ -33,15 +35,20 @@ public partial class App : System.Windows.Application
         var viewModel = new PopupViewModel(
             registry,
             plugins.Agents,
+            detector,
             launcher,
             _popupWindow.PickFolder,
-            _popupWindow.Confirm);
+            _popupWindow.Confirm,
+            action => Dispatcher.Invoke(action));
         _popupWindow.DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => _popupWindow?.Hide();
         new System.Windows.Interop.WindowInteropHelper(_popupWindow).EnsureHandle();
 
         CreateTrayIcon();
         RegisterHotkey(registry.Hotkey);
+
+        detector.RoundCompleted += viewModel.OnProbeRoundCompleted;
+        _ = System.Threading.Tasks.Task.Run(() => detector.RunStartupRound(plugins.Agents));
 
         if (plugins.Warnings.Count > 0)
         {
