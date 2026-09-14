@@ -11,8 +11,8 @@ instance.
 ### Requirement: Application host in the tray
 
 The system SHALL keep the application running through a system tray icon with an
-"Exit" item. The passive popup mode triggered by clicking the icon is out of scope
-for this change.
+"Exit" item. Opening the popup by clicking the tray icon is not covered by this
+capability.
 
 #### Scenario: Application start
 
