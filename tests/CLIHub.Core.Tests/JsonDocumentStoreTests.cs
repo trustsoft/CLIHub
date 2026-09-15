@@ -138,6 +138,22 @@ public sealed class JsonDocumentStoreTests
     }
 
     [Fact]
+    public void Projects_UnknownEntryFields_SurviveRoundTrip()
+    {
+        using var temp = new TempDirectory();
+        File.WriteAllText(Path.Combine(temp.Path, ProjectsDocument.FileName), """
+            { "schemaVersion": 1, "projects": [ { "id": "p1", "name": "Demo", "path": "C:\\demo", "custom": "keep" } ] }
+            """);
+        var store = CreateStore<ProjectsDocument>(temp.Path, ProjectsDocument.FileName);
+
+        store.Save(store.Load());
+
+        var written = File.ReadAllText(store.Path);
+        Assert.Contains("custom", written);
+        Assert.Contains("keep", written);
+    }
+
+    [Fact]
     public void AgentsDocument_Entries_RoundTrip()
     {
         using var temp = new TempDirectory();
@@ -220,5 +236,21 @@ public sealed class JsonDocumentStoreTests
         var store = CreateStore<SettingsDocument>(temp.Path, SettingsDocument.FileName);
 
         Assert.False(store.Load().Update.EffectiveCheckOnStartup);
+    }
+
+    [Fact]
+    public void Settings_NullSections_FallBackToDefaults()
+    {
+        using var temp = new TempDirectory();
+        File.WriteAllText(Path.Combine(temp.Path, SettingsDocument.FileName), """
+            { "probe": null, "update": null }
+            """);
+        var store = CreateStore<SettingsDocument>(temp.Path, SettingsDocument.FileName);
+
+        var loaded = store.Load();
+
+        Assert.Equal(ProbeConfig.DefaultTtlMinutes, loaded.Probe.EffectiveTtlMinutes);
+        Assert.Equal(ProbeConfig.DefaultTimeoutSeconds, loaded.Probe.EffectiveTimeoutSeconds);
+        Assert.True(loaded.Update.EffectiveCheckOnStartup);
     }
 }

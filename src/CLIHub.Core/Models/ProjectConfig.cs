@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace CLIHub.Core.Models;
@@ -15,4 +16,7 @@ public sealed class ProjectConfig
 
     [JsonPropertyName("logo")]
     public string? Logo { get; set; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? AdditionalData { get; set; }
 }

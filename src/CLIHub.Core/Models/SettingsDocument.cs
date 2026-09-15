@@ -17,11 +17,22 @@ public sealed class SettingsDocument
     [JsonPropertyName("hotkey")]
     public string Hotkey { get; set; } = DefaultHotkey;
 
+    private ProbeConfig _probe = new();
+    private UpdateConfig _update = new();
+
     [JsonPropertyName("probe")]
-    public ProbeConfig Probe { get; set; } = new();
+    public ProbeConfig Probe
+    {
+        get => _probe;
+        set => _probe = value ?? new();
+    }
 
     [JsonPropertyName("update")]
-    public UpdateConfig Update { get; set; } = new();
+    public UpdateConfig Update
+    {
+        get => _update;
+        set => _update = value ?? new();
+    }
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement>? AdditionalData { get; set; }
