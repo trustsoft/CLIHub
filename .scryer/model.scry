@@ -1,0 +1,1158 @@
+{
+  "version": "0.3",
+  "nodes": [
+    {
+      "id": "clihub",
+      "kind": "system",
+      "name": "CLIHub",
+      "technology": ".NET 10, Windows",
+      "description": "Windows companion for launching and updating AI agent CLIs in project folders."
+    },
+    {
+      "id": "core",
+      "kind": "container",
+      "name": "Core",
+      "parentId": "clihub",
+      "technology": ".NET 10",
+      "description": "Platform-neutral application logic and contracts."
+    },
+    {
+      "id": "app",
+      "kind": "container",
+      "name": "Desktop App",
+      "parentId": "clihub",
+      "technology": "WPF + WinForms",
+      "description": "Windows presentation shell and platform integrations."
+    },
+    {
+      "id": "tests",
+      "kind": "container",
+      "name": "Core Tests",
+      "parentId": "clihub",
+      "technology": "xUnit",
+      "description": "Automated verification of platform-neutral behavior."
+    },
+    {
+      "id": "node-9tfkdx",
+      "kind": "component",
+      "name": "Agent Runtime",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-1d7ad6",
+          "statement": "Detects installed agents and project initialization state.",
+          "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-6nw0yf",
+          "statement": "Builds and resolves terminal commands for agent actions.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-6fc644",
+      "kind": "symbol",
+      "name": "AgentDetector",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-6376w9",
+          "statement": "**Determines** whether an agent is installed and initialized for a project.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-vaf1g8",
+      "kind": "symbol",
+      "name": "PluginLoader",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-b73vnf",
+          "statement": "**Loads** embedded agent manifests and validates supported schemas.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-7xpmzf",
+      "kind": "symbol",
+      "name": "RuntimeResolver",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-mzz8v4",
+          "statement": "**Resolves** the terminal runtime for each agent action.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-crxzv9",
+      "kind": "symbol",
+      "name": "CommandBuilder",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-m015h2",
+          "statement": "**Builds** runtime-specific terminal commands.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-m30anq",
+      "kind": "symbol",
+      "name": "LauncherCore",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-0sfqd8",
+          "statement": "**Launches** agent commands in the selected project directory.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-n27vev",
+      "kind": "component",
+      "name": "Project Management",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-2vsbp0",
+          "statement": "Maintains registered projects and their resolved logos.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-tpnrqf",
+      "kind": "symbol",
+      "name": "ProjectRegistry",
+      "parentId": "node-n27vev",
+      "responsibilities": [
+        {
+          "id": "resp-qea6bf",
+          "statement": "**Maintains** the registered project list.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-zttn7c",
+      "kind": "symbol",
+      "name": "LogoResolver",
+      "parentId": "node-n27vev",
+      "responsibilities": [
+        {
+          "id": "resp-zgdmbz",
+          "statement": "**Resolves** project and agent logos from filesystem candidates.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-3c0t3t",
+      "kind": "component",
+      "name": "Configuration",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-77jset",
+          "statement": "Persists owned configuration documents.",
+          "lastTouchedAt": 1789468841
+        }
+      ]
+    },
+    {
+      "id": "node-q1353h",
+      "kind": "symbol",
+      "name": "JsonDocumentStore",
+      "parentId": "node-3c0t3t",
+      "responsibilities": [
+        {
+          "id": "resp-eb1d49",
+          "statement": "**Persists** JSON documents atomically with backup recovery.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-08e31p",
+      "kind": "symbol",
+      "name": "SettingsStore",
+      "parentId": "node-3c0t3t",
+      "responsibilities": [
+        {
+          "id": "resp-sfhkgf",
+          "statement": "**Owns** settings document loading and saving.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-efjsm4",
+      "kind": "component",
+      "name": "Application Updates",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-qetmqt",
+          "statement": "Checks and applies CLIHub updates through the update client.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-82j637",
+      "kind": "symbol",
+      "name": "UpdateService",
+      "parentId": "node-efjsm4",
+      "responsibilities": [
+        {
+          "id": "resp-g317r3",
+          "statement": "**Coordinates** update checks and explicit application of releases.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-s27rv9",
+      "kind": "component",
+      "name": "Core Service Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-ps0jyx",
+          "statement": "Verifies Core service behavior against documented contracts.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-9jv4xd",
+      "kind": "component",
+      "name": "Persistence Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-kteg3m",
+          "statement": "Verifies document storage and filesystem behavior.",
+          "lastTouchedAt": 1789468921
+        }
+      ]
+    },
+    {
+      "id": "node-v1tjkt",
+      "kind": "component",
+      "name": "Resolver Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-3agng5",
+          "statement": "Verifies runtime command and logo resolution.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-9cky1s",
+      "kind": "component",
+      "name": "Application Composition",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-xjb3rb",
+          "statement": "Composes Core services and owns application lifetime.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-x9pp0t",
+      "kind": "symbol",
+      "name": "App",
+      "parentId": "node-9cky1s",
+      "responsibilities": [
+        {
+          "id": "resp-xebv57",
+          "statement": "**Composes** the application services and manages the tray-hosted lifetime.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-120yxp",
+      "kind": "component",
+      "name": "Popup UI",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-wh6q9g",
+          "statement": "Presents project and agent actions in the hotkey popup.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-15efmk",
+      "kind": "symbol",
+      "name": "PopupViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-j9adf9",
+          "statement": "**Presents** projects, agents, and available actions.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-c5b27e",
+      "kind": "symbol",
+      "name": "PopupWindow",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-zc8h1e",
+          "statement": "**Displays** the popup surface and handles focus-based dismissal.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-karbe5",
+      "kind": "symbol",
+      "name": "AgentItemViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-mmqyhq",
+          "statement": "**Presents** an agent item and its actions.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-mvd4fd",
+      "kind": "symbol",
+      "name": "ProjectItemViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-2gb4ay",
+          "statement": "**Presents** a registered project item.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-yxwpkf",
+      "kind": "component",
+      "name": "Windows Integration",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-gsveyk",
+          "statement": "Connects global hotkeys, cursor positioning, tray behavior, and native APIs.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-74mzwk",
+      "kind": "symbol",
+      "name": "HotkeyManager",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-q1zf8b",
+          "statement": "**Registers** the global hotkey and signals activation.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-5jcnqa",
+      "kind": "symbol",
+      "name": "PopupPositioner",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-k3draa",
+          "statement": "**Positions** the popup within the working area near the cursor.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-a98386",
+      "kind": "symbol",
+      "name": "NativeMethods",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-9hhp0t",
+          "statement": "**Declares** the Win32 interop used by the launcher.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-dpa74c",
+      "kind": "component",
+      "name": "Platform Adapters",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-6sjcpm",
+          "statement": "Adapts Core abstractions to Windows and Velopack services.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-3anc0a",
+      "kind": "symbol",
+      "name": "SystemProcessRunner",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-0qsck2",
+          "statement": "**Runs** processes using Windows process APIs.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-ykkm7c",
+      "kind": "symbol",
+      "name": "VelopackUpdateClient",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-b6khw3",
+          "statement": "**Connects** UpdateService to Velopack releases.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-8dhbk2",
+      "kind": "symbol",
+      "name": "LogoImageService",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-4dkwrp",
+          "statement": "**Loads** resolved logo files for WPF display.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-mxcamt",
+      "kind": "symbol",
+      "name": "SystemPathProvider",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-fne16d",
+          "statement": "**Provides** the application data and install paths.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-kw72de",
+      "kind": "symbol",
+      "name": "SystemClock",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-j0m2xb",
+          "statement": "**Provides** wall-clock time to Core services.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "link-node-m30anq-node-7xpmzf",
+      "src": "node-m30anq",
+      "dst": "node-7xpmzf",
+      "label": ""
+    },
+    {
+      "id": "link-node-9cky1s-node-yxwpkf",
+      "src": "node-9cky1s",
+      "dst": "node-yxwpkf",
+      "label": ""
+    },
+    {
+      "id": "link-app-core",
+      "src": "app",
+      "dst": "core",
+      "label": "uses"
+    },
+    {
+      "id": "link-tests-core",
+      "src": "tests",
+      "dst": "core",
+      "label": "verifies"
+    },
+    {
+      "id": "link-node-9cky1s-node-120yxp",
+      "src": "node-9cky1s",
+      "dst": "node-120yxp",
+      "label": "hosts"
+    },
+    {
+      "id": "link-node-9cky1s-node-yxwpkf-2",
+      "src": "node-9cky1s",
+      "dst": "node-yxwpkf",
+      "label": "registers"
+    },
+    {
+      "id": "link-node-9cky1s-node-dpa74c",
+      "src": "node-9cky1s",
+      "dst": "node-dpa74c",
+      "label": "adapts"
+    },
+    {
+      "id": "link-node-9tfkdx-node-n27vev",
+      "src": "node-9tfkdx",
+      "dst": "node-n27vev",
+      "label": "uses"
+    },
+    {
+      "id": "link-node-9tfkdx-node-3c0t3t",
+      "src": "node-9tfkdx",
+      "dst": "node-3c0t3t",
+      "label": "persists"
+    },
+    {
+      "id": "link-node-efjsm4-node-3c0t3t",
+      "src": "node-efjsm4",
+      "dst": "node-3c0t3t",
+      "label": "persists"
+    },
+    {
+      "id": "link-node-s27rv9-node-9jv4xd",
+      "src": "node-s27rv9",
+      "dst": "node-9jv4xd",
+      "label": "complements"
+    },
+    {
+      "id": "link-node-s27rv9-node-v1tjkt",
+      "src": "node-s27rv9",
+      "dst": "node-v1tjkt",
+      "label": "complements"
+    }
+  ],
+  "groups": [],
+  "sourceMap": {
+    "resp-0qsck2": [
+      {
+        "pattern": "src/CLIHub.App/Platform/SystemProcessRunner.cs",
+        "symbol": "SystemProcessRunner"
+      }
+    ],
+    "resp-0sfqd8": [
+      {
+        "pattern": "src/CLIHub.Core/Services/LauncherCore.cs",
+        "symbol": "LauncherCore"
+      }
+    ],
+    "resp-2gb4ay": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/ProjectItemViewModel.cs",
+        "symbol": "ProjectItemViewModel"
+      }
+    ],
+    "resp-4dkwrp": [
+      {
+        "pattern": "src/CLIHub.App/Platform/LogoImageService.cs",
+        "symbol": "LogoImageService"
+      }
+    ],
+    "resp-6376w9": [
+      {
+        "pattern": "src/CLIHub.Core/Services/AgentDetector.cs",
+        "symbol": "AgentDetector"
+      }
+    ],
+    "resp-9hhp0t": [
+      {
+        "pattern": "src/CLIHub.App/Interop/NativeMethods.cs",
+        "symbol": "NativeMethods"
+      }
+    ],
+    "resp-b6khw3": [
+      {
+        "pattern": "src/CLIHub.App/Platform/VelopackUpdateClient.cs",
+        "symbol": "VelopackUpdateClient"
+      }
+    ],
+    "resp-b73vnf": [
+      {
+        "pattern": "src/CLIHub.Core/Services/PluginLoader.cs",
+        "symbol": "PluginLoader"
+      }
+    ],
+    "resp-eb1d49": [
+      {
+        "pattern": "src/CLIHub.Core/Services/JsonDocumentStore.cs",
+        "symbol": "JsonDocumentStore"
+      }
+    ],
+    "resp-fne16d": [
+      {
+        "pattern": "src/CLIHub.App/Platform/SystemPathProvider.cs",
+        "symbol": "SystemPathProvider"
+      }
+    ],
+    "resp-g317r3": [
+      {
+        "pattern": "src/CLIHub.Core/Services/UpdateService.cs",
+        "symbol": "UpdateService"
+      }
+    ],
+    "resp-j0m2xb": [
+      {
+        "pattern": "src/CLIHub.App/Platform/SystemClock.cs",
+        "symbol": "SystemClock"
+      }
+    ],
+    "resp-j9adf9": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/PopupViewModel.cs",
+        "symbol": "PopupViewModel"
+      }
+    ],
+    "resp-k3draa": [
+      {
+        "pattern": "src/CLIHub.App/Interop/PopupPositioner.cs",
+        "symbol": "PopupPositioner"
+      }
+    ],
+    "resp-m015h2": [
+      {
+        "pattern": "src/CLIHub.Core/Services/CommandBuilder.cs",
+        "symbol": "CommandBuilder"
+      }
+    ],
+    "resp-mmqyhq": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/AgentItemViewModel.cs",
+        "symbol": "AgentItemViewModel"
+      }
+    ],
+    "resp-mzz8v4": [
+      {
+        "pattern": "src/CLIHub.Core/Services/RuntimeResolver.cs",
+        "symbol": "RuntimeResolver"
+      }
+    ],
+    "resp-q1zf8b": [
+      {
+        "pattern": "src/CLIHub.App/Interop/HotkeyManager.cs",
+        "symbol": "HotkeyManager"
+      }
+    ],
+    "resp-qea6bf": [
+      {
+        "pattern": "src/CLIHub.Core/Services/ProjectRegistry.cs",
+        "symbol": "ProjectRegistry"
+      }
+    ],
+    "resp-sfhkgf": [
+      {
+        "pattern": "src/CLIHub.Core/Services/SettingsStore.cs",
+        "symbol": "SettingsStore"
+      }
+    ],
+    "resp-xebv57": [
+      {
+        "pattern": "src/CLIHub.App/App.xaml.cs",
+        "symbol": "App"
+      }
+    ],
+    "resp-zc8h1e": [
+      {
+        "pattern": "src/CLIHub.App/Views/PopupWindow.xaml.cs",
+        "symbol": "PopupWindow"
+      }
+    ],
+    "resp-zgdmbz": [
+      {
+        "pattern": "src/CLIHub.Core/Services/LogoResolver.cs",
+        "symbol": "LogoResolver"
+      }
+    ]
+  },
+  "testMap": {
+    "resp-0sfqd8": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs",
+        "symbol": "Start_DefaultRuntime_LaunchesCmdInProjectDirectory"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs",
+        "symbol": "Start_WtMissing_FallsBackWithWarning"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs",
+        "symbol": "Start_WtPresent_UsesWindowsTerminal"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs",
+        "symbol": "Start_MissingAction_ReturnsFailureWithoutLaunching"
+      }
+    ],
+    "resp-6376w9": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Probe_ExitZero_InstallsWithFirstLineVersion"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Probe_PaddedVersion_IsTrimmed"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Probe_NonZeroExit_NotInstalled"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Probe_Timeout_NotInstalled"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Probe_SplitsExecutableAndArguments"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "NoVersionAction_RunExecutableOnPath_InstalledWithoutVersion"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "NoVersionAction_RunExecutableMissing_NotInstalled"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_FreshCacheEntry_SkipsProbe"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_StaleCacheEntry_ProbesAgainAndUpdates"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_WritesAgentsCache_LeavesSettingsUntouched"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_ProbeSettings_ReadFromSettingsJson"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_AllEntriesFresh_DoesNotRewriteConfig"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Round_RaisesRoundCompleted"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Project_MarkerFilePresent_Initialized"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Project_MarkerDirectoryPresent_Initialized"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Project_NoMarkersPresent_NotInitialized"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Project_NoPathsDeclared_AlwaysInitialized"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Availability_InstalledAndInitialized_RunResumeUpdate"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Availability_InstalledNotInitialized_InitUpdate"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Availability_NotInstalled_Nothing"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Availability_RequiresActionInManifest"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs",
+        "symbol": "Availability_WithoutProject_InitOnly"
+      }
+    ],
+    "resp-b73vnf": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_ValidManifest_ReturnsAgentAndIgnoresUnknownFields"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_DetectProject_ExposesDetectionPaths"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_NoDetectSection_LoadsNormally"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_MissingManifest_SkipsWithWarning"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_InvalidJson_SkipsWithWarning"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_UnsupportedSchemaVersion_SkipsWithWarning"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs",
+        "symbol": "Load_MissingRequiredFields_SkipsWithWarning"
+      }
+    ],
+    "resp-eb1d49": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Load_MissingFile_ReturnsDefaults"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Load_InvalidJson_ReturnsDefaults"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Save_MissingFile_CreatesFileWithoutTempLeftover"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Save_UnknownFields_SurviveRoundTrip"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Save_CorruptFile_BacksUpBeforeWriting"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Save_OverExistingFile_ReplacesContent"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "SettingsDocument_Sections_RoundTrip"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "ProjectsDocument_Projects_RoundTrip"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "AgentsDocument_Entries_RoundTrip"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Settings_MissingOrInvalidProbe_FallBackToDefaults"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Settings_NoProbeSection_UsesDefaults"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Settings_NoUpdateSection_DefaultsToEnabled"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Settings_EmptyUpdateSection_DefaultsToEnabled"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs",
+        "symbol": "Settings_ExplicitFalse_DisablesStartupCheck"
+      }
+    ],
+    "resp-g317r3": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_NotInstalled_SkipsSilently"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_DisabledInConfig_Skips"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_NoUpdate_DoesNotDownloadOrNotify"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_UpdateAvailable_DownloadsAndRaisesReady"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_DownloadFailure_RaisesNothing"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Check_ClientThrows_SilentFalse"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "Apply_DelegatesToClient"
+      }
+    ],
+    "resp-m015h2": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/CommandBuilderTests.cs",
+        "symbol": "Build_Cmd_UsesCmdWithKeepOpen"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/CommandBuilderTests.cs",
+        "symbol": "Build_Ps_UsesPowershellNoExit"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/CommandBuilderTests.cs",
+        "symbol": "Build_Wt_WrapsCommandInCmd"
+      }
+    ],
+    "resp-mzz8v4": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
+        "symbol": "Resolve_ActionOverride_Wins"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
+        "symbol": "Resolve_NoActionOverride_UsesConfig"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
+        "symbol": "Resolve_NeitherSet_UsesDefault"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
+        "symbol": "Resolve_NormalizesValue(runtime: \"PS\")"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
+        "symbol": "Resolve_NormalizesValue(runtime: \"  ps  \")"
+      }
+    ],
+    "resp-qea6bf": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Add_ValidFolder_AddsAndPersists"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Add_NonexistentPath_RejectedAndNotPersisted"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Add_DuplicatePath_Rejected"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Add_TrailingSeparatorSameFolder_TreatedAsDuplicate"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Remove_ExistingProject_RemovesAndLeavesFolderOnDisk"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs",
+        "symbol": "Load_ExposesPersistedProjects"
+      }
+    ],
+    "resp-sfhkgf": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "MissingFile_DefaultsApply"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "UnparseableFile_DefaultsApply"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "ValidFile_ExposesParsedValues"
+      }
+    ],
+    "resp-zgdmbz": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_LogoBeatsIcon"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_PngPrecedesIcoWithinName"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_IcoOnly_UsesIco"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_FallbackToFavicon"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_NothingFound_ReturnsNull"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Resolve_EmptyRoot_ReturnsNull"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Project_AbsoluteOverrideWins"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Project_RelativeOverrideResolvesAgainstProjectRoot"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Project_BrokenOverrideFallsBackToChain"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
+        "symbol": "Project_NoOverride_UsesChain"
+      }
+    ]
+  },
+  "boundaries": {
+    "app": [
+      {
+        "pattern": "src/CLIHub.App/**"
+      }
+    ],
+    "core": [
+      {
+        "pattern": "src/CLIHub.Core/**"
+      }
+    ],
+    "node-120yxp": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/**"
+      },
+      {
+        "pattern": "src/CLIHub.App/Views/**"
+      }
+    ],
+    "node-3c0t3t": [
+      {
+        "pattern": "src/CLIHub.Core/Services/JsonDocumentStore.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/SettingsStore.cs"
+      }
+    ],
+    "node-9cky1s": [
+      {
+        "pattern": "src/CLIHub.App/App.xaml*"
+      }
+    ],
+    "node-9jv4xd": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/JsonDocumentStoreTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/ProjectRegistryTests.cs"
+      }
+    ],
+    "node-9tfkdx": [
+      {
+        "pattern": "src/CLIHub.Core/Services/AgentDetector.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/CommandBuilder.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/LauncherCore.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/PluginLoader.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/RuntimeResolver.cs"
+      }
+    ],
+    "node-dpa74c": [
+      {
+        "pattern": "src/CLIHub.App/Platform/**"
+      }
+    ],
+    "node-efjsm4": [
+      {
+        "pattern": "src/CLIHub.Core/Services/UpdateService.cs"
+      }
+    ],
+    "node-n27vev": [
+      {
+        "pattern": "src/CLIHub.Core/Services/ProjectRegistry.cs"
+      },
+      {
+        "pattern": "src/CLIHub.Core/Services/LogoResolver.cs"
+      }
+    ],
+    "node-s27rv9": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/AgentDetectorTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/CommandBuilderTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/PluginLoaderTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs"
+      }
+    ],
+    "node-v1tjkt": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs"
+      }
+    ],
+    "node-yxwpkf": [
+      {
+        "pattern": "src/CLIHub.App/Interop/**"
+      }
+    ],
+    "tests": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/**"
+      }
+    ]
+  }
+}

@@ -1,0 +1,566 @@
+{
+  "version": "0.3",
+  "nodes": [
+    {
+      "id": "clihub",
+      "kind": "system",
+      "name": "CLIHub",
+      "technology": ".NET 10, Windows",
+      "description": "Windows companion for launching and updating AI agent CLIs in project folders."
+    },
+    {
+      "id": "core",
+      "kind": "container",
+      "name": "Core",
+      "parentId": "clihub",
+      "technology": ".NET 10",
+      "description": "Platform-neutral application logic and contracts."
+    },
+    {
+      "id": "app",
+      "kind": "container",
+      "name": "Desktop App",
+      "parentId": "clihub",
+      "technology": "WPF + WinForms",
+      "description": "Windows presentation shell and platform integrations.",
+      "position": {
+        "x": -360.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "tests",
+      "kind": "container",
+      "name": "Core Tests",
+      "parentId": "clihub",
+      "technology": "xUnit",
+      "description": "Automated verification of platform-neutral behavior.",
+      "position": {
+        "x": 336.0,
+        "y": 0.0
+      }
+    },
+    {
+      "id": "node-9tfkdx",
+      "kind": "component",
+      "name": "Agent Runtime",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-1d7ad6",
+          "statement": "Detects installed agents and project initialization state.",
+          "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-6nw0yf",
+          "statement": "Builds and resolves terminal commands for agent actions.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-6fc644",
+      "kind": "symbol",
+      "name": "AgentDetector",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-6376w9",
+          "statement": "**Determines** whether an agent is installed and initialized for a project.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-vaf1g8",
+      "kind": "symbol",
+      "name": "PluginLoader",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-b73vnf",
+          "statement": "**Loads** embedded agent manifests and validates supported schemas.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-7xpmzf",
+      "kind": "symbol",
+      "name": "RuntimeResolver",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-mzz8v4",
+          "statement": "**Resolves** the terminal runtime for each agent action.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-crxzv9",
+      "kind": "symbol",
+      "name": "CommandBuilder",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-m015h2",
+          "statement": "**Builds** runtime-specific terminal commands.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-m30anq",
+      "kind": "symbol",
+      "name": "LauncherCore",
+      "parentId": "node-9tfkdx",
+      "responsibilities": [
+        {
+          "id": "resp-0sfqd8",
+          "statement": "**Launches** agent commands in the selected project directory.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-n27vev",
+      "kind": "component",
+      "name": "Project Management",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-2vsbp0",
+          "statement": "Maintains registered projects and their resolved logos.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-tpnrqf",
+      "kind": "symbol",
+      "name": "ProjectRegistry",
+      "parentId": "node-n27vev",
+      "responsibilities": [
+        {
+          "id": "resp-qea6bf",
+          "statement": "**Maintains** the registered project list.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-zttn7c",
+      "kind": "symbol",
+      "name": "LogoResolver",
+      "parentId": "node-n27vev",
+      "responsibilities": [
+        {
+          "id": "resp-zgdmbz",
+          "statement": "**Resolves** project and agent logos from filesystem candidates.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-3c0t3t",
+      "kind": "component",
+      "name": "Configuration",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-77jset",
+          "statement": "Persists owned configuration documents.",
+          "lastTouchedAt": 1789468646
+        }
+      ]
+    },
+    {
+      "id": "node-q1353h",
+      "kind": "symbol",
+      "name": "JsonDocumentStore",
+      "parentId": "node-3c0t3t",
+      "responsibilities": [
+        {
+          "id": "resp-eb1d49",
+          "statement": "**Persists** JSON documents atomically with backup recovery.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-08e31p",
+      "kind": "symbol",
+      "name": "SettingsStore",
+      "parentId": "node-3c0t3t",
+      "responsibilities": [
+        {
+          "id": "resp-sfhkgf",
+          "statement": "**Owns** settings document loading and saving.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-efjsm4",
+      "kind": "component",
+      "name": "Application Updates",
+      "parentId": "core",
+      "responsibilities": [
+        {
+          "id": "resp-qetmqt",
+          "statement": "Checks and applies CLIHub updates through the update client.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-82j637",
+      "kind": "symbol",
+      "name": "UpdateService",
+      "parentId": "node-efjsm4",
+      "responsibilities": [
+        {
+          "id": "resp-g317r3",
+          "statement": "**Coordinates** update checks and explicit application of releases.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-s27rv9",
+      "kind": "component",
+      "name": "Core Service Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-ps0jyx",
+          "statement": "Verifies Core service behavior against documented contracts.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-9jv4xd",
+      "kind": "component",
+      "name": "Persistence Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-kteg3m",
+          "statement": "Verifies document storage and filesystem behavior.",
+          "lastTouchedAt": 1789468909
+        }
+      ]
+    },
+    {
+      "id": "node-v1tjkt",
+      "kind": "component",
+      "name": "Resolver Tests",
+      "parentId": "tests",
+      "responsibilities": [
+        {
+          "id": "resp-3agng5",
+          "statement": "Verifies runtime command and logo resolution.",
+          "lastTouchedAt": 1789432435
+        }
+      ]
+    },
+    {
+      "id": "node-9cky1s",
+      "kind": "component",
+      "name": "Application Composition",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-xjb3rb",
+          "statement": "Composes Core services and owns application lifetime.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-x9pp0t",
+      "kind": "symbol",
+      "name": "App",
+      "parentId": "node-9cky1s",
+      "responsibilities": [
+        {
+          "id": "resp-xebv57",
+          "statement": "**Composes** the application services and manages the tray-hosted lifetime.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-120yxp",
+      "kind": "component",
+      "name": "Popup UI",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-wh6q9g",
+          "statement": "Presents project and agent actions in the hotkey popup.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-15efmk",
+      "kind": "symbol",
+      "name": "PopupViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-j9adf9",
+          "statement": "**Presents** projects, agents, and available actions.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-c5b27e",
+      "kind": "symbol",
+      "name": "PopupWindow",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-zc8h1e",
+          "statement": "**Displays** the popup surface and handles focus-based dismissal.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-karbe5",
+      "kind": "symbol",
+      "name": "AgentItemViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-mmqyhq",
+          "statement": "**Presents** an agent item and its actions.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-mvd4fd",
+      "kind": "symbol",
+      "name": "ProjectItemViewModel",
+      "parentId": "node-120yxp",
+      "responsibilities": [
+        {
+          "id": "resp-2gb4ay",
+          "statement": "**Presents** a registered project item.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-yxwpkf",
+      "kind": "component",
+      "name": "Windows Integration",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-gsveyk",
+          "statement": "Connects global hotkeys, cursor positioning, tray behavior, and native APIs.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-74mzwk",
+      "kind": "symbol",
+      "name": "HotkeyManager",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-q1zf8b",
+          "statement": "**Registers** the global hotkey and signals activation.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-5jcnqa",
+      "kind": "symbol",
+      "name": "PopupPositioner",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-k3draa",
+          "statement": "**Positions** the popup within the working area near the cursor.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-a98386",
+      "kind": "symbol",
+      "name": "NativeMethods",
+      "parentId": "node-yxwpkf",
+      "responsibilities": [
+        {
+          "id": "resp-9hhp0t",
+          "statement": "**Declares** the Win32 interop used by the launcher.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-dpa74c",
+      "kind": "component",
+      "name": "Platform Adapters",
+      "parentId": "app",
+      "responsibilities": [
+        {
+          "id": "resp-6sjcpm",
+          "statement": "Adapts Core abstractions to Windows and Velopack services.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-3anc0a",
+      "kind": "symbol",
+      "name": "SystemProcessRunner",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-0qsck2",
+          "statement": "**Runs** processes using Windows process APIs.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-ykkm7c",
+      "kind": "symbol",
+      "name": "VelopackUpdateClient",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-b6khw3",
+          "statement": "**Connects** UpdateService to Velopack releases.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-8dhbk2",
+      "kind": "symbol",
+      "name": "LogoImageService",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-4dkwrp",
+          "statement": "**Loads** resolved logo files for WPF display.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-mxcamt",
+      "kind": "symbol",
+      "name": "SystemPathProvider",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-fne16d",
+          "statement": "**Provides** the application data and install paths.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    },
+    {
+      "id": "node-kw72de",
+      "kind": "symbol",
+      "name": "SystemClock",
+      "parentId": "node-dpa74c",
+      "responsibilities": [
+        {
+          "id": "resp-j0m2xb",
+          "statement": "**Provides** wall-clock time to Core services.",
+          "lastTouchedAt": 1789432447
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "id": "link-node-m30anq-node-7xpmzf",
+      "src": "node-m30anq",
+      "dst": "node-7xpmzf",
+      "label": ""
+    },
+    {
+      "id": "link-node-9cky1s-node-yxwpkf",
+      "src": "node-9cky1s",
+      "dst": "node-yxwpkf",
+      "label": ""
+    },
+    {
+      "id": "link-app-core",
+      "src": "app",
+      "dst": "core",
+      "label": "uses"
+    },
+    {
+      "id": "link-tests-core",
+      "src": "tests",
+      "dst": "core",
+      "label": "verifies"
+    },
+    {
+      "id": "link-node-9cky1s-node-120yxp",
+      "src": "node-9cky1s",
+      "dst": "node-120yxp",
+      "label": "hosts"
+    },
+    {
+      "id": "link-node-9cky1s-node-yxwpkf-2",
+      "src": "node-9cky1s",
+      "dst": "node-yxwpkf",
+      "label": "registers"
+    },
+    {
+      "id": "link-node-9cky1s-node-dpa74c",
+      "src": "node-9cky1s",
+      "dst": "node-dpa74c",
+      "label": "adapts"
+    },
+    {
+      "id": "link-node-9tfkdx-node-n27vev",
+      "src": "node-9tfkdx",
+      "dst": "node-n27vev",
+      "label": "uses"
+    },
+    {
+      "id": "link-node-9tfkdx-node-3c0t3t",
+      "src": "node-9tfkdx",
+      "dst": "node-3c0t3t",
+      "label": "persists"
+    },
+    {
+      "id": "link-node-efjsm4-node-3c0t3t",
+      "src": "node-efjsm4",
+      "dst": "node-3c0t3t",
+      "label": "persists"
+    },
+    {
+      "id": "link-node-s27rv9-node-9jv4xd",
+      "src": "node-s27rv9",
+      "dst": "node-9jv4xd",
+      "label": "complements"
+    },
+    {
+      "id": "link-node-s27rv9-node-v1tjkt",
+      "src": "node-s27rv9",
+      "dst": "node-v1tjkt",
+      "label": "complements"
+    }
+  ],
+  "groups": []
+}

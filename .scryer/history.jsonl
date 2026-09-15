@@ -1,0 +1,21 @@
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-9tfkdx","rows":[{"marker":"+","text":"2 responsibilities · 5 symbols · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-n27vev","rows":[{"marker":"+","text":"1 responsibility · 2 symbols · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-3c0t3t","rows":[{"marker":"+","text":"1 responsibility · 3 symbols · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-efjsm4","rows":[{"marker":"+","text":"1 responsibility · 1 symbol · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-s27rv9","rows":[{"marker":"+","text":"1 responsibility · 5 symbols · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-9jv4xd","rows":[{"marker":"+","text":"1 responsibility · 4 symbols · component"}]}
+{"at":1789432435,"by":"agent","driver":"build","kind":"born","nodeId":"node-v1tjkt","rows":[{"marker":"+","text":"1 responsibility · 3 symbols · component"}]}
+{"at":1789432447,"by":"agent","driver":"build","kind":"born","nodeId":"node-9cky1s","rows":[{"marker":"+","text":"1 responsibility · 1 symbol · component"}]}
+{"at":1789432447,"by":"agent","driver":"build","kind":"born","nodeId":"node-120yxp","rows":[{"marker":"+","text":"1 responsibility · 4 symbols · component"}]}
+{"at":1789432447,"by":"agent","driver":"build","kind":"born","nodeId":"node-yxwpkf","rows":[{"marker":"+","text":"1 responsibility · 3 symbols · component"}]}
+{"at":1789432447,"by":"agent","driver":"build","kind":"born","nodeId":"node-dpa74c","rows":[{"marker":"+","text":"1 responsibility · 5 symbols · component"}]}
+{"at":1789432488,"by":"agent","driver":"folded","kind":"change","nodeId":"","changeId":"chg-gwe96k","rows":[{"marker":"✓","text":"Connect the modeled CLIHub architecture boundaries and dependencies."}]}
+{"at":1789432526,"by":"agent","driver":"abandoned","kind":"change","nodeId":"","changeId":"chg-htf8tv","rows":[{"marker":"✓","text":"Finalize the modeled CLIHub architecture relationships."}]}
+{"at":1789432526,"by":"agent","driver":"abandoned","kind":"change","nodeId":"","changeId":"chg-9m50v5","rows":[{"marker":"✓","text":"Remove non-architectural empty test symbols and cover the test container boundary."}]}
+{"at":1789466805,"by":"agent","driver":"abandoned","kind":"change","nodeId":"","changeId":"chg-q3qmgx","rows":[{"marker":"✓","text":"Attach the existing Core xUnit tests to their modeled claims and map each OpenSpec capability to its model node."}]}
+{"at":1789466968,"by":"agent","driver":"abandoned","kind":"change","nodeId":"","changeId":"chg-1r64j8","rows":[{"marker":"✓","text":"Record test verdicts for the attached Core claims by adding a JUnit reporter and ingesting the run."}]}
+{"at":1789468613,"by":"agent","driver":"abandoned","kind":"change","nodeId":"","changeId":"chg-3cabtg","rows":[{"marker":"✓","text":"Remove ConfigMigrator and its legacy config migration from the model and the code."}]}
+{"at":1789468841,"by":"agent","driver":"folded","kind":"change","nodeId":"","changeId":"chg-2v8ksx","rows":[{"marker":"✓","text":"Remove ConfigMigrator and its legacy config migration from the model and the code."}]}
+{"at":1789468841,"by":"agent","driver":"fill","kind":"impl","nodeId":"node-3c0t3t","changeId":"chg-2v8ksx","rows":[{"marker":"~","text":"Persists owned configuration documents."}]}
+{"at":1789468921,"by":"agent","driver":"folded","kind":"change","nodeId":"","changeId":"chg-15b8sp","rows":[{"marker":"✓","text":"Clean up the stale Persistence Tests claim and boundary left by the ConfigMigrator removal."}]}
+{"at":1789468922,"by":"agent","driver":"fill","kind":"impl","nodeId":"node-9jv4xd","changeId":"chg-15b8sp","rows":[{"marker":"~","text":"Verifies document storage and filesystem behavior."}]}
