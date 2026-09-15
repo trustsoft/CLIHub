@@ -47,7 +47,7 @@ Do not write application code without an approved change/proposal.
   неявно подключаются (ломают однозначность типов WPF), а `System.IO` — НЕТ. В
   `CLIHub.App.csproj` это исправлено блоком `<Using Remove/Include>`; не удаляй его.
 - Корневой `.gitignore` есть: игнорирует артефакты сборки и IDE (`bin/`, `obj/`,
-  `.vs/`, `.idea/`, `*.user`, `*.suo`, `TestResults/`, `.codegraph/`). Всё равно
+  `.vs/`, `.idea/`, `*.user`, `*.suo`, `TestResults/`, `*.trx`, `.codegraph/`). Всё равно
   стейджить файлы выборочно и не коммитить артефакты сборки.
 - Конфиг приложения — `%AppData%\CLIHub\`, хранение по файлам-владельцам:
   `settings.json` (`runtime`, `hotkey` с дефолтом `Ctrl+Alt+Space`, `probe`, `update`),
@@ -61,8 +61,8 @@ Do not write application code without an approved change/proposal.
   собран как `Page` с `<StartupObject>CLIHub.App.App</StartupObject>` — не откатывай
   это на `ApplicationDefinition`. `dotnet run` — не Velopack-установка: проверка
   обновлений молча пропускается (см. `app-update`).
-- `.opencode/` и `.kilocode/` содержат OpenSpec-воркфлоу (skills/commands); их
-  `node_modules` игнорируется через `.opencode/.gitignore`.
+- `.opencode/` (skills/commands) и `.kilocode/` (skills/workflows) содержат
+  OpenSpec-воркфлоу; их `node_modules` игнорируется через `.opencode/.gitignore`.
 
 ## OpenSpec
 
@@ -86,6 +86,20 @@ Do not write application code without an approved change/proposal.
 - Read-only вердикт по изменению: субагент `architecture-review`.
 - Модель меняется только через scryer-инструменты — не редактируй
   `.scryer/*.scry` руками.
+
+## Субагенты (авто-делегирование)
+
+Делегируй через tool `task` (`subagent_type`); не делай сам то, что вынесено в роль:
+
+- `researcher` — найти/понять код перед правкой (read-only).
+- `scryer-modeler` — любые изменения модели Scryer (узлы, claims, links, boundaries, фолды, дрейф).
+- `test-author` — писать/чинить тесты и гонять JUnit-прогон.
+- `docs-writer` — обновлять README/docs/AGENTS/карту после смены поведения.
+- `probe-runner` — mutation-пробы Scryer на claims с зелёными тестами.
+- `architecture-review` — read-only вердикт по изменению.
+
+Правило: независимые задачи делегируй параллельно (один `task`-вызов на роль).
+Результат субагента пользователю не виден — перескажи его в своём ответе.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
