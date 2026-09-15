@@ -486,6 +486,46 @@
           "lastTouchedAt": 1789432447
         }
       ]
+    },
+    {
+      "id": "node-pc793y",
+      "kind": "person",
+      "name": "Developer",
+      "responsibilities": [
+        {
+          "id": "resp-bfmvqs",
+          "statement": "Launches and updates AI agent CLIs in project folders through CLIHub.",
+          "lastTouchedAt": 1789469810
+        }
+      ]
+    },
+    {
+      "id": "node-ckbff1",
+      "kind": "system",
+      "name": "AI Agent CLIs",
+      "external": true,
+      "technology": "Claude Code, Codex, Copilot, OpenCode",
+      "responsibilities": [
+        {
+          "id": "resp-t2jmht",
+          "statement": "Provide installable CLIs that run agent sessions in a project folder.",
+          "lastTouchedAt": 1789469810
+        }
+      ]
+    },
+    {
+      "id": "node-vp697j",
+      "kind": "system",
+      "name": "GitHub Releases",
+      "external": true,
+      "technology": "Velopack feed",
+      "responsibilities": [
+        {
+          "id": "resp-73pf3q",
+          "statement": "Publish CLIHub releases and update packages.",
+          "lastTouchedAt": 1789469810
+        }
+      ]
     }
   ],
   "links": [
@@ -560,6 +600,42 @@
       "src": "node-s27rv9",
       "dst": "node-v1tjkt",
       "label": "complements"
+    },
+    {
+      "id": "link-node-120yxp-node-yxwpkf",
+      "src": "node-120yxp",
+      "dst": "node-yxwpkf",
+      "label": "positions via"
+    },
+    {
+      "id": "link-node-120yxp-node-dpa74c",
+      "src": "node-120yxp",
+      "dst": "node-dpa74c",
+      "label": "renders logos via"
+    },
+    {
+      "id": "link-node-n27vev-node-3c0t3t",
+      "src": "node-n27vev",
+      "dst": "node-3c0t3t",
+      "label": "persists"
+    },
+    {
+      "id": "link-node-pc793y-clihub",
+      "src": "node-pc793y",
+      "dst": "clihub",
+      "label": "uses"
+    },
+    {
+      "id": "link-clihub-node-ckbff1",
+      "src": "clihub",
+      "dst": "node-ckbff1",
+      "label": "launches"
+    },
+    {
+      "id": "link-clihub-node-vp697j",
+      "src": "clihub",
+      "dst": "node-vp697j",
+      "label": "updates from"
     }
   ],
   "groups": []
