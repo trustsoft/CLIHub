@@ -38,8 +38,6 @@ public partial class App : System.Windows.Application
         var paths = new SystemPathProvider();
         var processRunner = new SystemProcessRunner();
 
-        new ConfigMigrator(fileSystem, paths).MigrateIfNeeded();
-
         var settingsStore = new SettingsStore(fileSystem, paths);
         var projectsStore = new JsonDocumentStore<ProjectsDocument>(fileSystem, paths, ProjectsDocument.FileName);
         var agentsStore = new JsonDocumentStore<AgentsDocument>(fileSystem, paths, AgentsDocument.FileName);

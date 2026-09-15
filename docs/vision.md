@@ -66,7 +66,7 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 - **Слои:** Core (чистый .NET, без зависимости от WPF) + тонкий UI-слой.
   Вся логика в Core, покрывается тестами.
 - **Core-сервисы:** LauncherCore (+ CommandBuilder, RuntimeResolver), PluginLoader,
-  JsonDocumentStore<T> (+ SettingsStore), ConfigMigrator, ProjectRegistry,
+  JsonDocumentStore<T> (+ SettingsStore), ProjectRegistry,
   AgentDetector, LogoResolver, UpdateService.
 - **MVVM-lite:**   ViewModel для попапа и окна настроек (`ObservableCollection` + `RelayCommand`);
   tray-иконка и hotkey — code-behind.
@@ -165,9 +165,6 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
 
 Каждый файл имеет свой `schemaVersion`, пишется атомарно (tmp + replace) с бэкапом
 `.bak` при порче и сохраняет неизвестные поля (единый механизм `JsonDocumentStore<T>`).
-Миграция: при первом запуске старый единый `config.json` раскидывается по трём файлам
-(неизвестные ключи верхнего уровня — в settings.json) и остаётся как
-`config.json.migrated`; повторно миграция не выполняется.
 
 **Обновление CLIHub:**
 

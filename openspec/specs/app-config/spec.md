@@ -4,8 +4,7 @@
 
 Owns the JSON document persistence contract for the application's per-owner
 configuration files, so that every document survives restarts atomically and
-without losing unknown or hand-edited data, and migrates the legacy
-single-file configuration to the owner layout.
+without losing unknown or hand-edited data.
 
 ## Requirements
 
@@ -54,27 +53,3 @@ copy the previous content aside with a `.bak` suffix.
 
 - **WHEN** a document file could not be parsed and the system saves that document
 - **THEN** the previous file is copied to `<file>.bak` before the new content is written
-
-### Requirement: Migrate legacy single-file configuration
-
-The system SHALL, on load, when the legacy `config.json` exists and
-`settings.json` does not, split the legacy file into `settings.json`,
-`projects.json`, and `agents.json` according to the owner layout, and keep
-the original aside as `config.json.migrated`. The split SHALL run once:
-when `settings.json` already exists, a present legacy `config.json` SHALL be
-ignored.
-
-#### Scenario: First launch after upgrade
-
-- **WHEN** `config.json` exists and `settings.json` does not
-- **THEN** the three owner files are written with the corresponding legacy sections and `config.json` is kept as `config.json.migrated`
-
-#### Scenario: Unknown top-level fields survive the split
-
-- **WHEN** the legacy `config.json` contains top-level fields the application does not model
-- **THEN** those fields are carried into `settings.json`
-
-#### Scenario: Split is one-time
-
-- **WHEN** `settings.json` already exists and a legacy `config.json` is also present
-- **THEN** no split runs and the current owner files are used unchanged
