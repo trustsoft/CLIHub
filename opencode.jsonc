@@ -9,6 +9,13 @@
         "--mcp"
       ],
       "enabled": true
+    },
+    "scryer": {
+      "type": "local",
+      "command": [
+        "scryer-mcp"
+      ],
+      "enabled": true
     }
   }
 }

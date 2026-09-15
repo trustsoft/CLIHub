@@ -52,9 +52,8 @@ Do not write application code without an approved change/proposal.
 - Конфиг приложения — `%AppData%\CLIHub\`, хранение по файлам-владельцам:
   `settings.json` (`runtime`, `hotkey` с дефолтом `Ctrl+Alt+Space`, `probe`, `update`),
   `projects.json` (`projects[]`), `agents.json` (машинный кэш). Один файл — один
-  писатель; не смешивай их. Пишутся через `JsonDocumentStore<T>` — атомарно, с бэкапом
-  `.bak` при порче. Старый единый `config.json` автоматически мигрируется в три файла
-  (`ConfigMigrator`, остаётся как `config.json.migrated`).
+   писатель; не смешивай их. Пишутся через `JsonDocumentStore<T>` — атомарно, с бэкапом
+   `.bak` при порче.
 - При запуске окна нет: приложение живёт в трее (иконка + «Выход»), попап открывается
   по hotkey. `dotnet run` не завершается сам — запускай фоном, иначе терминал занят.
 - Точка входа — свой `Main` в `App.xaml.cs` с Velopack-бутстрапом
@@ -71,6 +70,22 @@ Do not write application code without an approved change/proposal.
 - Не создавай папки изменений вручную — только `openspec new change "<name>"`.
 - Delta-спеки сливаются в `openspec/specs/<capability-path>/spec.md`; main-спеки не
   содержат заголовков `## ADDED/MODIFIED/REMOVED/RENAMED Requirements`.
+
+## Architecture model (Scryer)
+
+Архитектура описана в `.scryer/` и отдаётся по MCP (сервер `scryer` в
+`opencode.jsonc`). Это авторская спека пользователя, а не фон: перед правками
+ориентируйся по ней (`orient`/`locate`), после сборки сворачивай работу обратно
+(`ingest_test_report` → `mark_implemented` → `flag_drift`/`reconcile_drift`).
+Если `orient` не находит узел под задачу/файлы — работа вне архитектуры: не
+кодь, а выноси это на решение.
+
+- Полный цикл и гейт: skill `scryer-architecture` в `.opencode/skills/`.
+- Полный цикл одной командой: `/arch-change <задача>` (gate → план → sign-off →
+  сборка → ревью → закрытие).
+- Read-only вердикт по изменению: субагент `architecture-review`.
+- Модель меняется только через scryer-инструменты — не редактируй
+  `.scryer/*.scry` руками.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
