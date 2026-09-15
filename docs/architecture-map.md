@@ -23,6 +23,12 @@ model is authoritative — when in doubt, re-read it with `orient`/`read_model`.
 | `popup` | Popup UI / PopupWindow — `node-c5b27e`, PopupViewModel — `node-15efmk`, AgentItemViewModel — `node-karbe5`, ProjectItemViewModel — `node-mvd4fd`; Windows Integration / PopupPositioner — `node-5jcnqa` | `src/CLIHub.App/Views/**`, `src/CLIHub.App/ViewModels/**`, `src/CLIHub.App/Interop/PopupPositioner.cs` | manual (UI/interop) |
 | `project-registry` | Project Management / ProjectRegistry — `node-tpnrqf` | `src/CLIHub.Core/Services/ProjectRegistry.cs` | `ProjectRegistryTests.cs` |
 
+## System context
+
+- Person **Developer** (`node-pc793y`) —uses→ **CLIHub**.
+- External **AI Agent CLIs** (`node-ckbff1`) —launched by→ CLIHub.
+- External **GitHub Releases** (`node-vp697j`) —CLIHub updates from→.
+
 ## Container boundaries
 
 The model carries directory/file globs per node (`boundaries` in the source map). A change
@@ -49,6 +55,9 @@ modeled architecture** — stop and plan the node/claim first, or get a decision
   modeled yet.
 - Desktop App UI and interop are verified manually (see `AGENTS.md`), so their claims stay
   untested by design.
+- The remaining `src/CLIHub.Core/Abstractions/*.cs` interfaces (`IFileSystem`,
+  `IPathProvider`, `IProcessRunner`, `IClock`, `IUpdateClient`), `ViewModels/RelayCommand.cs`,
+  and `AssemblyInfo.cs` are dark under their containers too.
 
 ## Using it
 
