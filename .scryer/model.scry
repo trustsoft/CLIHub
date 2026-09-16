@@ -396,8 +396,8 @@
       "responsibilities": [
         {
           "id": "resp-9hhp0t",
-          "statement": "**Declares** the Win32 interop used by the launcher.",
-          "lastTouchedAt": 1789432447
+          "statement": "**Declares** the Win32 interop for hotkeys, cursor position, and foreground activation.",
+          "lastTouchedAt": 1789552906
         }
       ]
     },

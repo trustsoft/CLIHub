@@ -13,9 +13,10 @@ public partial class App : System.Windows.Application
 {
     private HotkeyManager? _hotkeyManager;
     private H.NotifyIcon.TaskbarIcon? _trayIcon;
+    private System.Windows.Forms.ContextMenuStrip? _trayMenu;
     private PopupWindow? _popupWindow;
     private UpdateService? _updateService;
-    private System.Windows.Controls.MenuItem? _updateMenuItem;
+    private System.Windows.Forms.ToolStripMenuItem? _updateMenuItem;
 
     [STAThread]
     private static void Main(string[] args)
@@ -23,6 +24,8 @@ public partial class App : System.Windows.Application
         VelopackApp.Build()
             .SetAutoApplyOnStartup(false)
             .Run();
+
+        System.Windows.Forms.Application.EnableVisualStyles();
 
         var app = new App();
         app.InitializeComponent();
@@ -86,28 +89,40 @@ public partial class App : System.Windows.Application
 
     private void CreateTrayIcon()
     {
-        var menu = new System.Windows.Controls.ContextMenu();
+        var menu = new System.Windows.Forms.ContextMenuStrip();
 
-        _updateMenuItem = new System.Windows.Controls.MenuItem
+        _updateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Установить обновление")
         {
-            Header = "Установить обновление",
-            Visibility = System.Windows.Visibility.Collapsed
+            Visible = false
         };
         _updateMenuItem.Click += (_, _) => _updateService?.Apply();
         menu.Items.Add(_updateMenuItem);
 
-        var exitItem = new System.Windows.Controls.MenuItem { Header = "Выход" };
+        var exitItem = new System.Windows.Forms.ToolStripMenuItem("Выход");
         exitItem.Click += (_, _) => Shutdown();
         menu.Items.Add(exitItem);
+
+        _trayMenu = menu;
 
         _trayIcon = new H.NotifyIcon.TaskbarIcon
         {
             ToolTipText = "CLIHub",
-            Icon = System.Drawing.SystemIcons.Application,
-            ContextMenu = menu
+            Icon = System.Drawing.SystemIcons.Application
         };
+        _trayIcon.TrayRightMouseUp += (_, _) => ShowTrayMenu();
 
         _trayIcon.ForceCreate(false);
+    }
+
+    private void ShowTrayMenu()
+    {
+        if (_trayMenu is null)
+        {
+            return;
+        }
+
+        _trayMenu.Show(System.Windows.Forms.Cursor.Position);
+        NativeMethods.SetForegroundWindow(_trayMenu.Handle);
     }
 
     private void RegisterHotkey(string hotkey)
@@ -138,10 +153,10 @@ public partial class App : System.Windows.Application
     {
         if (_updateMenuItem is not null)
         {
-            _updateMenuItem.Header = string.IsNullOrWhiteSpace(version)
+            _updateMenuItem.Text = string.IsNullOrWhiteSpace(version)
                 ? "Установить обновление"
                 : $"Установить обновление {version}";
-            _updateMenuItem.Visibility = System.Windows.Visibility.Visible;
+            _updateMenuItem.Visible = true;
         }
 
         ShowUpdateNotification(version);
@@ -159,6 +174,7 @@ public partial class App : System.Windows.Application
     protected override void OnExit(System.Windows.ExitEventArgs e)
     {
         _hotkeyManager?.Dispose();
+        _trayMenu?.Dispose();
         _trayIcon?.Dispose();
         base.OnExit(e);
     }
