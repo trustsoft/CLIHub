@@ -35,7 +35,9 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         LogoImageService logoImages,
         Func<string?> pickFolder,
         Func<string, bool> confirm,
-        Action<Action> postToUi)
+        Action<Action> postToUi,
+        string appVersion,
+        Action openDataFolder)
     {
         _registry = registry;
         _settings = settings;
@@ -47,6 +49,10 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         _pickFolder = pickFolder;
         _confirm = confirm;
         _postToUi = postToUi;
+
+        AppVersion = appVersion;
+        OpenDataFolderCommand = new RelayCommand(_ => openDataFolder());
+        ExitCommand = new RelayCommand(_ => ExitRequested?.Invoke(this, EventArgs.Empty));
 
         foreach (var project in registry.Projects)
         {
@@ -70,7 +76,15 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
     public ICommand RemoveProjectCommand { get; }
 
+    public ICommand OpenDataFolderCommand { get; }
+
+    public ICommand ExitCommand { get; }
+
+    public string AppVersion { get; }
+
     public event EventHandler? CloseRequested;
+
+    public event EventHandler? ExitRequested;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

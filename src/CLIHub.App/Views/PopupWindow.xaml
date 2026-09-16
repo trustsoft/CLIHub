@@ -111,8 +111,60 @@
             </Grid>
 
             <Grid Grid.Row="1" Margin="0,8,0,0">
-                <TextBlock Text="CLIHub" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding StatusText}" HorizontalAlignment="Right" Foreground="#FF666666" />
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="CLIHub" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <Border Background="#FFE2E2E2"
+                            CornerRadius="8"
+                            Margin="8,0,0,0"
+                            Padding="8,1">
+                        <TextBlock Text="{Binding AppVersion}"
+                                   FontSize="11"
+                                   Foreground="#FF555555" />
+                    </Border>
+                </StackPanel>
+
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusText}"
+                           Margin="12,0"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="#FF666666" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <StackPanel.Resources>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Foreground" Value="#FF444444" />
+                            <Setter Property="Width" Value="30" />
+                            <Setter Property="Height" Value="26" />
+                            <Setter Property="Padding" Value="0" />
+                        </Style>
+                    </StackPanel.Resources>
+                    <Button Command="{Binding OpenDataFolderCommand}" ToolTip="Открыть папку данных">
+                        <TextBlock Text="&#xE8B7;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" />
+                    </Button>
+                    <Button IsEnabled="False" ToolTip="Настройки — скоро">
+                        <TextBlock Text="&#xE713;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" />
+                    </Button>
+                    <Button Command="{Binding ExitCommand}" ToolTip="Выход">
+                        <TextBlock Text="&#xE7E8;"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="14" />
+                    </Button>
+                </StackPanel>
             </Grid>
         </Grid>
     </Border>

@@ -1,4 +1,5 @@
 ﻿using CLIHub.App.Interop;
+using System.Reflection;
 using CLIHub.App.Platform;
 using CLIHub.App.ViewModels;
 using CLIHub.App.Views;
@@ -64,9 +65,12 @@ public partial class App : System.Windows.Application
             logoImages,
             _popupWindow.PickFolder,
             _popupWindow.Confirm,
-            action => Dispatcher.Invoke(action));
+            action => Dispatcher.Invoke(action),
+            ResolveAppVersion(),
+            () => processRunner.StartDetached("explorer.exe", $"\"{paths.ConfigDirectory}\"", string.Empty));
         _popupWindow.DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => _popupWindow?.Hide();
+        viewModel.ExitRequested += (_, _) => Shutdown();
         new System.Windows.Interop.WindowInteropHelper(_popupWindow).EnsureHandle();
 
         CreateTrayIcon();
@@ -85,6 +89,29 @@ public partial class App : System.Windows.Application
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
         }
+    }
+
+    private static string ResolveAppVersion()
+    {
+        try
+        {
+            var manager = VelopackUpdateClient.CreateManager();
+            if (manager.IsInstalled)
+            {
+                return manager.CurrentVersion.ToString();
+            }
+        }
+        catch (Exception)
+        {
+        }
+
+        var informational = System.Reflection.Assembly.GetEntryAssembly()?
+            .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion;
+
+        return string.IsNullOrWhiteSpace(informational)
+            ? "dev"
+            : informational.Split('+')[0];
     }
 
     private void CreateTrayIcon()

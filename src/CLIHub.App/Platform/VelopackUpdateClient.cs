@@ -54,7 +54,7 @@ public sealed class VelopackUpdateClient : IUpdateClient
         }
     }
 
-    private static UpdateManager CreateManager()
+    internal static UpdateManager CreateManager()
     {
         var feed = Environment.GetEnvironmentVariable(FeedOverrideVariable);
         if (!string.IsNullOrWhiteSpace(feed))

@@ -281,6 +281,16 @@
           "id": "resp-xebv57",
           "statement": "**Composes** the application services and manages the tray-hosted lifetime.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-a1vgxw",
+          "statement": "**Resolves** the displayed app version at startup.",
+          "lastTouchedAt": 1789580032
+        },
+        {
+          "id": "resp-aae6hd",
+          "statement": "**Wires** the footer's open-data-folder and exit actions.",
+          "lastTouchedAt": 1789580032
         }
       ]
     },
@@ -294,6 +304,11 @@
           "id": "resp-wh6q9g",
           "statement": "Presents project and agent actions in the hotkey popup.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-p503v5",
+          "statement": "**Presents** the footer: brand, version, status, and system actions.",
+          "lastTouchedAt": 1789580032
         }
       ]
     },
@@ -307,6 +322,11 @@
           "id": "resp-j9adf9",
           "statement": "**Presents** projects, agents, and available actions.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-akdmg5",
+          "statement": "**Exposes** the footer's version and system actions.",
+          "lastTouchedAt": 1789580032
         }
       ]
     },
@@ -678,6 +698,30 @@
         "symbol": "NativeMethods"
       }
     ],
+    "resp-a1vgxw": [
+      {
+        "pattern": "src/CLIHub.App/App.xaml.cs",
+        "symbol": "ResolveAppVersion",
+        "line": 94,
+        "endLine": 107
+      }
+    ],
+    "resp-aae6hd": [
+      {
+        "pattern": "src/CLIHub.App/App.xaml.cs",
+        "symbol": "App",
+        "line": 57,
+        "endLine": 73
+      }
+    ],
+    "resp-akdmg5": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/PopupViewModel.cs",
+        "symbol": "PopupViewModel",
+        "line": 53,
+        "endLine": 87
+      }
+    ],
     "resp-b6khw3": [
       {
         "pattern": "src/CLIHub.App/Platform/VelopackUpdateClient.cs",
@@ -756,6 +800,13 @@
       {
         "pattern": "src/CLIHub.Core/Services/RuntimeResolver.cs",
         "symbol": "RuntimeResolver"
+      }
+    ],
+    "resp-p503v5": [
+      {
+        "pattern": "src/CLIHub.App/Views/PopupWindow.xaml",
+        "line": 113,
+        "endLine": 165
       }
     ],
     "resp-ps0jyx": [

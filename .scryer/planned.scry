@@ -289,6 +289,16 @@
           "id": "resp-xebv57",
           "statement": "**Composes** the application services and manages the tray-hosted lifetime.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-a1vgxw",
+          "statement": "**Resolves** the displayed app version at startup.",
+          "lastTouchedAt": 1789579537
+        },
+        {
+          "id": "resp-aae6hd",
+          "statement": "**Wires** the footer's open-data-folder and exit actions.",
+          "lastTouchedAt": 1789579537
         }
       ]
     },
@@ -302,6 +312,11 @@
           "id": "resp-wh6q9g",
           "statement": "Presents project and agent actions in the hotkey popup.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-p503v5",
+          "statement": "**Presents** the footer: brand, version, status, and system actions.",
+          "lastTouchedAt": 1789579537
         }
       ]
     },
@@ -315,6 +330,11 @@
           "id": "resp-j9adf9",
           "statement": "**Presents** projects, agents, and available actions.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-akdmg5",
+          "statement": "**Exposes** the footer's version and system actions.",
+          "lastTouchedAt": 1789579537
         }
       ]
     },
