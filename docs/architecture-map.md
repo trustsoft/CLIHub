@@ -22,6 +22,7 @@ model is authoritative — when in doubt, re-read it with `orient`/`read_model`.
 | `logo-resolution` | Project Management / LogoResolver — `node-zttn7c`; Platform Adapters / LogoImageService — `node-8dhbk2` | `src/CLIHub.Core/Services/LogoResolver.cs`, `src/CLIHub.App/Platform/LogoImageService.cs` | `LogoResolverTests.cs` |
 | `popup` | Popup UI / PopupWindow — `node-c5b27e`, PopupViewModel — `node-15efmk`, AgentItemViewModel — `node-karbe5`, ProjectItemViewModel — `node-mvd4fd`; Windows Integration / PopupPositioner — `node-5jcnqa` | `src/CLIHub.App/Views/**`, `src/CLIHub.App/ViewModels/**`, `src/CLIHub.App/Interop/PopupPositioner.cs` | manual (UI/interop) |
 | `project-registry` | Project Management / ProjectRegistry — `node-tpnrqf` | `src/CLIHub.Core/Services/ProjectRegistry.cs` | `ProjectRegistryTests.cs` |
+| `settings-window` | Desktop App / Settings UI / SettingsWindow — `node-b1t5j4`, SettingsViewModel — `node-5apkye`, HotkeyCaptureBox — `node-e5q1f8`; Core / Configuration / SettingsStore — `node-08e31p` (save+validation) | `src/CLIHub.App/Views/SettingsWindow.xaml*`, `src/CLIHub.App/Views/HotkeyCaptureBox.cs`, `src/CLIHub.App/ViewModels/SettingsViewModel.cs`, `src/CLIHub.Core/Services/SettingsStore.cs` | `SettingsStoreTests.cs` (save/validation); window, capture, tray entry — manual |
 
 ## System context
 
@@ -49,7 +50,7 @@ modeled architecture** — stop and plan the node/claim first, or get a decision
 
 - `PhysicalFileSystem` (`src/CLIHub.Core/Abstractions/PhysicalFileSystem.cs`) and its test
   `PhysicalFileSystemTests.cs` have no node — an unmapped abstraction.
-- `HotkeyParser.cs` (`src/CLIHub.App/Interop/`) has no node.
+- `HotkeyParser.cs` (`src/CLIHub.Core/Services/`, moved from `src/CLIHub.App/Interop/`) has no node.
 - `src/CLIHub.Core/Models/**` (data shapes) and `CoreJson.cs` are owned by the `Core`
   container but not decomposed — data shapes would be schema nodes (`properties`), none
   modeled yet.

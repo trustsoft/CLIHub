@@ -198,6 +198,11 @@
           "id": "resp-sfhkgf",
           "statement": "**Owns** settings document loading and saving.",
           "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-4cqnvg",
+          "statement": "**If** probe values are non-positive or the hotkey is unparseable, **reject** the save.",
+          "lastTouchedAt": 1789585135
         }
       ]
     },
@@ -224,6 +229,11 @@
           "id": "resp-g317r3",
           "statement": "**Coordinates** update checks and explicit application of releases.",
           "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-fywb0k",
+          "statement": "**When** triggered from the settings window, **check** for updates bypassing the startup toggle.",
+          "lastTouchedAt": 1789585135
         }
       ]
     },
@@ -299,6 +309,11 @@
           "id": "resp-aae6hd",
           "statement": "**Wires** the footer's open-data-folder and exit actions.",
           "lastTouchedAt": 1789579537
+        },
+        {
+          "id": "resp-j9be3a",
+          "statement": "**When** the tray settings item is activated, **show** the single settings window.",
+          "lastTouchedAt": 1789585135
         }
       ]
     },
@@ -400,6 +415,11 @@
           "id": "resp-q1zf8b",
           "statement": "**Registers** the global hotkey and signals activation.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-ngc4py",
+          "statement": "**When** the saved combination changes, **replace** the registered combination.",
+          "lastTouchedAt": 1789585135
         }
       ]
     },
@@ -546,6 +566,74 @@
           "lastTouchedAt": 1789469810
         }
       ]
+    },
+    {
+      "id": "node-6mb925",
+      "kind": "component",
+      "name": "Settings UI",
+      "parentId": "app",
+      "description": "Settings window surface opened from the tray menu: edits global preferences, saves them, and hosts the manual update check.",
+      "responsibilities": [
+        {
+          "id": "resp-wb4q0z",
+          "statement": "**Presents** the settings surface for editing and saving global preferences.",
+          "lastTouchedAt": 1789585048
+        }
+      ]
+    },
+    {
+      "id": "node-b1t5j4",
+      "kind": "symbol",
+      "name": "SettingsWindow",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-vgybz5",
+          "statement": "**Displays** the settings window and closes it on user action.",
+          "lastTouchedAt": 1789585060
+        }
+      ]
+    },
+    {
+      "id": "node-5apkye",
+      "kind": "symbol",
+      "name": "SettingsViewModel",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-b5kh3z",
+          "statement": "**Presents** the editable settings values and actions.",
+          "lastTouchedAt": 1789585060
+        },
+        {
+          "id": "resp-sb6607",
+          "statement": "**When** the user saves, **hand** the edited document to the settings store.",
+          "lastTouchedAt": 1789585060
+        },
+        {
+          "id": "resp-2tsmx0",
+          "statement": "**If** validation or hotkey registration fails, **report** the problem inline.",
+          "lastTouchedAt": 1789585060
+        },
+        {
+          "id": "resp-1ypr58",
+          "statement": "**When** the user requests an update check, **relay** it to the update service.",
+          "lastTouchedAt": 1789585060
+        }
+      ]
+    },
+    {
+      "id": "node-e5q1f8",
+      "kind": "symbol",
+      "name": "HotkeyCaptureBox",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-1j4tmd",
+          "statement": "**Captures** the pressed key combination into the canonical hotkey string.",
+          "lastTouchedAt": 1789585060
+        }
+      ]
     }
   ],
   "links": [
@@ -656,6 +744,12 @@
       "src": "clihub",
       "dst": "node-vp697j",
       "label": "updates from"
+    },
+    {
+      "id": "link-node-9cky1s-node-6mb925",
+      "src": "node-9cky1s",
+      "dst": "node-6mb925",
+      "label": "hosts"
     }
   ],
   "groups": []

@@ -118,4 +118,96 @@ public sealed class UpdateServiceTests
 
         Assert.Equal(1, _client.ApplyCalls);
     }
+
+    [Fact]
+    public async Task CheckNow_NotInstalled_ReturnsOutcomeWithoutChecking()
+    {
+        using var temp = new TempDirectory();
+        _client.IsInstalled = false;
+        var service = CreateService(temp.Path);
+
+        var outcome = await service.CheckNowAsync();
+
+        Assert.Equal(UpdateCheckOutcome.NotInstalled, outcome);
+        Assert.Equal(0, _client.CheckCalls);
+    }
+
+    [Fact]
+    public async Task CheckNow_BypassesStartupToggle()
+    {
+        using var temp = new TempDirectory();
+        var service = CreateService(temp.Path, checkOnStartup: false);
+
+        var outcome = await service.CheckNowAsync();
+
+        Assert.Equal(UpdateCheckOutcome.UpToDate, outcome);
+        Assert.Equal(1, _client.CheckCalls);
+    }
+
+    [Fact]
+    public async Task CheckNow_Found_DownloadsRaisesReadyAndOutcome()
+    {
+        using var temp = new TempDirectory();
+        _client.CheckResult = UpdateCheckResult.Found("2.0.0");
+        var service = CreateService(temp.Path);
+        string? readyVersion = null;
+        service.UpdateReady += version => readyVersion = version;
+
+        var outcome = await service.CheckNowAsync();
+
+        Assert.Equal(UpdateCheckOutcome.Ready, outcome);
+        Assert.Equal(1, _client.DownloadCalls);
+        Assert.Equal("2.0.0", readyVersion);
+    }
+
+    [Fact]
+    public async Task CheckNow_DownloadFails_ReturnsFailed()
+    {
+        using var temp = new TempDirectory();
+        _client.CheckResult = UpdateCheckResult.Found("2.0.0");
+        _client.DownloadResult = false;
+        var service = CreateService(temp.Path);
+        var ready = false;
+        service.UpdateReady += _ => ready = true;
+
+        var outcome = await service.CheckNowAsync();
+
+        Assert.Equal(UpdateCheckOutcome.Failed, outcome);
+        Assert.False(ready);
+    }
+
+    [Fact]
+    public async Task CheckNow_ClientThrows_ReturnsFailed()
+    {
+        using var temp = new TempDirectory();
+        _client.CheckException = new InvalidOperationException("offline");
+        var service = CreateService(temp.Path);
+
+        var outcome = await service.CheckNowAsync();
+
+        Assert.Equal(UpdateCheckOutcome.Failed, outcome);
+    }
+
+    [Fact]
+    public async Task CheckNow_ConcurrentCalls_ShareOneCheck()
+    {
+        using var temp = new TempDirectory();
+        _client.CheckResult = UpdateCheckResult.Found("3.0.0");
+        _client.CheckGate = new TaskCompletionSource();
+        var service = CreateService(temp.Path);
+        var readyCount = 0;
+        service.UpdateReady += _ => readyCount++;
+
+        var first = service.CheckNowAsync();
+        var second = service.CheckNowAsync();
+
+        Assert.Equal(1, _client.CheckCalls);
+        _client.CheckGate.SetResult();
+        var outcomes = await Task.WhenAll(first, second);
+
+        Assert.Equal(new[] { UpdateCheckOutcome.Ready, UpdateCheckOutcome.Ready }, outcomes);
+        Assert.Equal(1, _client.CheckCalls);
+        Assert.Equal(1, _client.DownloadCalls);
+        Assert.Equal(1, readyCount);
+    }
 }

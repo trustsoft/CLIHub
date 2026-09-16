@@ -1,4 +1,5 @@
 using System.Windows.Interop;
+using CLIHub.Core.Services;
 
 namespace CLIHub.App.Interop;
 
@@ -60,6 +61,16 @@ public sealed class HotkeyManager : IDisposable
         }
 
         return IntPtr.Zero;
+    }
+
+    public void Unregister()
+    {
+        if (_source is null)
+        {
+            return;
+        }
+
+        NativeMethods.UnregisterHotKey(_source.Handle, HotkeyId);
     }
 
     public void Dispose()

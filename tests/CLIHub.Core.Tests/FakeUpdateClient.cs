@@ -13,21 +13,28 @@ internal sealed class FakeUpdateClient : IUpdateClient
 
     public Exception? CheckException { get; set; }
 
+    public TaskCompletionSource? CheckGate { get; set; }
+
     public int CheckCalls { get; private set; }
 
     public int DownloadCalls { get; private set; }
 
     public int ApplyCalls { get; private set; }
 
-    public Task<UpdateCheckResult> CheckAsync()
+    public async Task<UpdateCheckResult> CheckAsync()
     {
         CheckCalls++;
+        if (CheckGate is not null)
+        {
+            await CheckGate.Task;
+        }
+
         if (CheckException is not null)
         {
             throw CheckException;
         }
 
-        return Task.FromResult(CheckResult);
+        return CheckResult;
     }
 
     public Task<bool> DownloadAsync()

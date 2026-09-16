@@ -1,4 +1,4 @@
-namespace CLIHub.App.Interop;
+namespace CLIHub.Core.Services;
 
 public static class HotkeyParser
 {

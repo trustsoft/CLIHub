@@ -6,3 +6,11 @@ public sealed record UpdateCheckResult(bool Available, string? Version)
 
     public static UpdateCheckResult Found(string version) => new(true, version);
 }
+
+public enum UpdateCheckOutcome
+{
+    NotInstalled,
+    UpToDate,
+    Ready,
+    Failed
+}

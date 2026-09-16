@@ -16,8 +16,11 @@ public partial class App : System.Windows.Application
     private H.NotifyIcon.TaskbarIcon? _trayIcon;
     private System.Windows.Forms.ContextMenuStrip? _trayMenu;
     private PopupWindow? _popupWindow;
+    private SettingsWindow? _settingsWindow;
+    private SettingsStore? _settingsStore;
     private UpdateService? _updateService;
     private System.Windows.Forms.ToolStripMenuItem? _updateMenuItem;
+    private string? _readyVersion;
 
     [STAThread]
     private static void Main(string[] args)
@@ -43,6 +46,7 @@ public partial class App : System.Windows.Application
         var processRunner = new SystemProcessRunner();
 
         var settingsStore = new SettingsStore(fileSystem, paths);
+        _settingsStore = settingsStore;
         var projectsStore = new JsonDocumentStore<ProjectsDocument>(fileSystem, paths, ProjectsDocument.FileName);
         var agentsStore = new JsonDocumentStore<AgentsDocument>(fileSystem, paths, AgentsDocument.FileName);
         var pluginLoader = new PluginLoader(fileSystem, paths);
@@ -125,6 +129,10 @@ public partial class App : System.Windows.Application
         _updateMenuItem.Click += (_, _) => _updateService?.Apply();
         menu.Items.Add(_updateMenuItem);
 
+        var settingsItem = new System.Windows.Forms.ToolStripMenuItem("Настройки");
+        settingsItem.Click += (_, _) => ShowSettings();
+        menu.Items.Add(settingsItem);
+
         var exitItem = new System.Windows.Forms.ToolStripMenuItem("Выход");
         exitItem.Click += (_, _) => Shutdown();
         menu.Items.Add(exitItem);
@@ -152,10 +160,60 @@ public partial class App : System.Windows.Application
         NativeMethods.SetForegroundWindow(_trayMenu.Handle);
     }
 
+    private void ShowSettings()
+    {
+        if (_settingsWindow is not null)
+        {
+            _settingsWindow.Activate();
+            return;
+        }
+
+        var window = new SettingsWindow();
+        var viewModel = new SettingsViewModel(
+            _settingsStore ?? throw new InvalidOperationException("Settings are not initialized."),
+            TryApplyHotkey,
+            () => _updateService!.CheckNowAsync(),
+            action => Dispatcher.Invoke(action));
+        if (_readyVersion is not null)
+        {
+            viewModel.OnUpdateReady(_readyVersion);
+        }
+
+        window.DataContext = viewModel;
+        window.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow = window;
+        window.Show();
+    }
+
+    private string? TryApplyHotkey(string hotkey)
+    {
+        if (_hotkeyManager is null || _settingsStore is null)
+        {
+            return "Hotkey ещё не инициализирован.";
+        }
+
+        if (hotkey == _settingsStore.Hotkey)
+        {
+            return null;
+        }
+
+        _hotkeyManager.Unregister();
+        if (_hotkeyManager.TryRegister(hotkey, out var error))
+        {
+            return null;
+        }
+
+        _hotkeyManager.TryRegister(_settingsStore.Hotkey, out _);
+        return error ?? $"Не удалось зарегистрировать hotkey '{hotkey}'.";
+    }
+
     private void RegisterHotkey(string hotkey)
     {
-        _hotkeyManager = new HotkeyManager();
-        _hotkeyManager.Pressed += () => _popupWindow?.ShowForHotkey();
+        if (_hotkeyManager is null)
+        {
+            _hotkeyManager = new HotkeyManager();
+            _hotkeyManager.Pressed += () => _popupWindow?.ShowForHotkey();
+        }
 
         if (!_hotkeyManager.TryRegister(hotkey, out var error))
         {
@@ -178,6 +236,13 @@ public partial class App : System.Windows.Application
 
     private void OnUpdateReady(string version)
     {
+        _readyVersion = string.IsNullOrWhiteSpace(version) ? "" : version;
+
+        if (_settingsWindow?.DataContext is ViewModels.SettingsViewModel settingsViewModel)
+        {
+            settingsViewModel.OnUpdateReady(version);
+        }
+
         if (_updateMenuItem is not null)
         {
             _updateMenuItem.Text = string.IsNullOrWhiteSpace(version)

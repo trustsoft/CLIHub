@@ -1,0 +1,72 @@
+<Window x:Class="CLIHub.App.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:CLIHub.App.Views"
+        Title="CLIHub — Настройки"
+        Width="520"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        ShowInTaskbar="True"
+        KeyDown="OnKeyDown">
+    <StackPanel Margin="16">
+
+        <TextBlock Text="Runtime по умолчанию" FontWeight="SemiBold" Margin="0,0,0,4" />
+        <ComboBox ItemsSource="{Binding RuntimeOptions}"
+                  SelectedItem="{Binding Runtime}"
+                  Width="160"
+                  HorizontalAlignment="Left" />
+
+        <TextBlock Text="Глобальный hotkey" FontWeight="SemiBold" Margin="0,16,0,4" />
+        <views:HotkeyCaptureBox Hotkey="{Binding Hotkey}"
+                                Width="260"
+                                HorizontalAlignment="Left" />
+        <TextBlock Text="Нажмите сочетание в поле. Esc — отмена захвата."
+                   FontSize="11"
+                   Foreground="#FF888888"
+                   Margin="0,4,0,0" />
+
+        <TextBlock Text="Проба агентов" FontWeight="SemiBold" Margin="0,16,0,4" />
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="TTL, минут:" VerticalAlignment="Center" />
+            <TextBox Text="{Binding TtlMinutes}"
+                     Width="80"
+                     Margin="8,0,16,0"
+                     VerticalContentAlignment="Center" />
+            <TextBlock Text="Таймаут, секунд:" VerticalAlignment="Center" />
+            <TextBox Text="{Binding TimeoutSeconds}"
+                     Width="80"
+                     Margin="8,0,0,0"
+                     VerticalContentAlignment="Center" />
+        </StackPanel>
+        <TextBlock Text="Пусто — использовать значения по умолчанию."
+                   FontSize="11"
+                   Foreground="#FF888888"
+                   Margin="0,4,0,0" />
+
+        <TextBlock Text="Обновления" FontWeight="SemiBold" Margin="0,16,0,4" />
+        <CheckBox Content="Проверять обновления при запуске"
+                  IsChecked="{Binding CheckOnStartup}" />
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Content="Проверить обновления"
+                    Padding="10,3"
+                    Command="{Binding CheckUpdatesCommand}" />
+        </StackPanel>
+
+        <TextBlock Text="{Binding StatusText}"
+                   Foreground="#FF666666"
+                   TextWrapping="Wrap"
+                   Margin="0,16,0,0" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Сохранить"
+                    Padding="14,4"
+                    Margin="0,0,8,0"
+                    Command="{Binding SaveCommand}" />
+            <Button Content="Отмена"
+                    Padding="14,4"
+                    Click="OnCancel" />
+        </StackPanel>
+
+    </StackPanel>
+</Window>

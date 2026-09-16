@@ -3,6 +3,13 @@ using CLIHub.Core.Models;
 
 namespace CLIHub.Core.Services;
 
+public sealed record SettingsSaveResult(bool Saved, IReadOnlyList<string> Errors)
+{
+    public static SettingsSaveResult Ok() => new(true, Array.Empty<string>());
+
+    public static SettingsSaveResult Fail(IReadOnlyList<string> errors) => new(false, errors);
+}
+
 public sealed class SettingsStore
 {
     private readonly JsonDocumentStore<SettingsDocument> _store;
@@ -24,5 +31,40 @@ public sealed class SettingsStore
 
     public UpdateConfig Update => _document.Update;
 
+    public SettingsSaveResult Save(SettingsDocument document)
+    {
+        var errors = Validate(document);
+        if (errors.Count > 0)
+        {
+            return SettingsSaveResult.Fail(errors);
+        }
+
+        _document = document;
+        _store.Save(document);
+        return SettingsSaveResult.Ok();
+    }
+
     public void Reload() => _document = _store.Load();
+
+    private static List<string> Validate(SettingsDocument document)
+    {
+        var errors = new List<string>();
+
+        if (document.Probe.TtlMinutes is <= 0)
+        {
+            errors.Add("TTL пробы должен быть положительным числом.");
+        }
+
+        if (document.Probe.TimeoutSeconds is <= 0)
+        {
+            errors.Add("Таймаут пробы должен быть положительным числом.");
+        }
+
+        if (!HotkeyParser.TryParse(document.Hotkey, out _, out _, out var hotkeyError))
+        {
+            errors.Add(hotkeyError ?? "Некорректная комбинация hotkey.");
+        }
+
+        return errors;
+    }
 }

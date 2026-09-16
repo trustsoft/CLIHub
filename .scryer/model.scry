@@ -190,6 +190,11 @@
           "id": "resp-sfhkgf",
           "statement": "**Owns** settings document loading and saving.",
           "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-4cqnvg",
+          "statement": "**If** probe values are non-positive or the hotkey is unparseable, **reject** the save.",
+          "lastTouchedAt": 1789586832
         }
       ]
     },
@@ -216,6 +221,11 @@
           "id": "resp-g317r3",
           "statement": "**Coordinates** update checks and explicit application of releases.",
           "lastTouchedAt": 1789432435
+        },
+        {
+          "id": "resp-fywb0k",
+          "statement": "**When** triggered from the settings window, **check** for updates bypassing the startup toggle.",
+          "lastTouchedAt": 1789586832
         }
       ]
     },
@@ -291,6 +301,11 @@
           "id": "resp-aae6hd",
           "statement": "**Wires** the footer's open-data-folder and exit actions.",
           "lastTouchedAt": 1789580032
+        },
+        {
+          "id": "resp-j9be3a",
+          "statement": "**When** the tray settings item is activated, **show** the single settings window.",
+          "lastTouchedAt": 1789586832
         }
       ]
     },
@@ -392,6 +407,11 @@
           "id": "resp-q1zf8b",
           "statement": "**Registers** the global hotkey and signals activation.",
           "lastTouchedAt": 1789432447
+        },
+        {
+          "id": "resp-ngc4py",
+          "statement": "**When** the saved combination changes, **replace** the registered combination.",
+          "lastTouchedAt": 1789586832
         }
       ]
     },
@@ -538,6 +558,74 @@
           "lastTouchedAt": 1789469833
         }
       ]
+    },
+    {
+      "id": "node-6mb925",
+      "kind": "component",
+      "name": "Settings UI",
+      "parentId": "app",
+      "description": "Settings window surface opened from the tray menu: edits global preferences, saves them, and hosts the manual update check.",
+      "responsibilities": [
+        {
+          "id": "resp-wb4q0z",
+          "statement": "**Presents** the settings surface for editing and saving global preferences.",
+          "lastTouchedAt": 1789586832
+        }
+      ]
+    },
+    {
+      "id": "node-5apkye",
+      "kind": "symbol",
+      "name": "SettingsViewModel",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-b5kh3z",
+          "statement": "**Presents** the editable settings values and actions.",
+          "lastTouchedAt": 1789586832
+        },
+        {
+          "id": "resp-sb6607",
+          "statement": "**When** the user saves, **hand** the edited document to the settings store.",
+          "lastTouchedAt": 1789586832
+        },
+        {
+          "id": "resp-2tsmx0",
+          "statement": "**If** validation or hotkey registration fails, **report** the problem inline.",
+          "lastTouchedAt": 1789586832
+        },
+        {
+          "id": "resp-1ypr58",
+          "statement": "**When** the user requests an update check, **relay** it to the update service.",
+          "lastTouchedAt": 1789586832
+        }
+      ]
+    },
+    {
+      "id": "node-b1t5j4",
+      "kind": "symbol",
+      "name": "SettingsWindow",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-vgybz5",
+          "statement": "**Displays** the settings window and closes it on user action.",
+          "lastTouchedAt": 1789586832
+        }
+      ]
+    },
+    {
+      "id": "node-e5q1f8",
+      "kind": "symbol",
+      "name": "HotkeyCaptureBox",
+      "parentId": "node-6mb925",
+      "responsibilities": [
+        {
+          "id": "resp-1j4tmd",
+          "statement": "**Captures** the pressed key combination into the canonical hotkey string.",
+          "lastTouchedAt": 1789586832
+        }
+      ]
     }
   ],
   "links": [
@@ -648,6 +736,12 @@
       "src": "node-pc793y",
       "dst": "clihub",
       "label": "uses"
+    },
+    {
+      "id": "link-node-9cky1s-node-6mb925",
+      "src": "node-9cky1s",
+      "dst": "node-6mb925",
+      "label": "hosts"
     }
   ],
   "groups": [],
@@ -664,10 +758,34 @@
         "symbol": "LauncherCore"
       }
     ],
+    "resp-1j4tmd": [
+      {
+        "pattern": "src/CLIHub.App/Views/HotkeyCaptureBox.cs",
+        "symbol": "HotkeyCaptureBox",
+        "line": 58,
+        "endLine": 129
+      }
+    ],
+    "resp-1ypr58": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/SettingsViewModel.cs",
+        "symbol": "SettingsViewModel",
+        "line": 249,
+        "endLine": 272
+      }
+    ],
     "resp-2gb4ay": [
       {
         "pattern": "src/CLIHub.App/ViewModels/ProjectItemViewModel.cs",
         "symbol": "ProjectItemViewModel"
+      }
+    ],
+    "resp-2tsmx0": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/SettingsViewModel.cs",
+        "symbol": "SettingsViewModel",
+        "line": 190,
+        "endLine": 204
       }
     ],
     "resp-3agng5": [
@@ -678,6 +796,14 @@
       {
         "pattern": "tests/CLIHub.Core.Tests/LogoResolverTests.cs",
         "symbol": "LogoResolverTests"
+      }
+    ],
+    "resp-4cqnvg": [
+      {
+        "pattern": "src/CLIHub.Core/Services/SettingsStore.cs",
+        "symbol": "SettingsStore",
+        "line": 49,
+        "endLine": 69
       }
     ],
     "resp-4dkwrp": [
@@ -702,8 +828,8 @@
       {
         "pattern": "src/CLIHub.App/App.xaml.cs",
         "symbol": "ResolveAppVersion",
-        "line": 94,
-        "endLine": 107
+        "line": 98,
+        "endLine": 119
       }
     ],
     "resp-aae6hd": [
@@ -720,6 +846,12 @@
         "symbol": "PopupViewModel",
         "line": 53,
         "endLine": 87
+      }
+    ],
+    "resp-b5kh3z": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/SettingsViewModel.cs",
+        "symbol": "SettingsViewModel"
       }
     ],
     "resp-b6khw3": [
@@ -746,6 +878,14 @@
         "symbol": "SystemPathProvider"
       }
     ],
+    "resp-fywb0k": [
+      {
+        "pattern": "src/CLIHub.Core/Services/UpdateService.cs",
+        "symbol": "UpdateService",
+        "line": 38,
+        "endLine": 46
+      }
+    ],
     "resp-g317r3": [
       {
         "pattern": "src/CLIHub.Core/Services/UpdateService.cs",
@@ -762,6 +902,14 @@
       {
         "pattern": "src/CLIHub.App/ViewModels/PopupViewModel.cs",
         "symbol": "PopupViewModel"
+      }
+    ],
+    "resp-j9be3a": [
+      {
+        "pattern": "src/CLIHub.App/App.xaml.cs",
+        "symbol": "App",
+        "line": 163,
+        "endLine": 186
       }
     ],
     "resp-k3draa": [
@@ -800,6 +948,14 @@
       {
         "pattern": "src/CLIHub.Core/Services/RuntimeResolver.cs",
         "symbol": "RuntimeResolver"
+      }
+    ],
+    "resp-ngc4py": [
+      {
+        "pattern": "src/CLIHub.App/Interop/HotkeyManager.cs",
+        "symbol": "HotkeyManager",
+        "line": 66,
+        "endLine": 74
       }
     ],
     "resp-p503v5": [
@@ -843,10 +999,29 @@
         "symbol": "ProjectRegistry"
       }
     ],
+    "resp-sb6607": [
+      {
+        "pattern": "src/CLIHub.App/ViewModels/SettingsViewModel.cs",
+        "symbol": "SettingsViewModel",
+        "line": 167,
+        "endLine": 205
+      }
+    ],
     "resp-sfhkgf": [
       {
         "pattern": "src/CLIHub.Core/Services/SettingsStore.cs",
         "symbol": "SettingsStore"
+      }
+    ],
+    "resp-vgybz5": [
+      {
+        "pattern": "src/CLIHub.App/Views/SettingsWindow.xaml.cs",
+        "symbol": "SettingsWindow"
+      }
+    ],
+    "resp-wb4q0z": [
+      {
+        "pattern": "src/CLIHub.App/Views/SettingsWindow.xaml"
       }
     ],
     "resp-xebv57": [
@@ -885,6 +1060,20 @@
       {
         "pattern": "tests/CLIHub.Core.Tests/LauncherCoreTests.cs",
         "symbol": "Start_MissingAction_ReturnsFailureWithoutLaunching"
+      }
+    ],
+    "resp-4cqnvg": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "Save_ZeroTtl_Rejected"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "Save_NonPositiveTimeout_Rejected"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
+        "symbol": "Save_UnparseableHotkey_Rejected"
       }
     ],
     "resp-6376w9": [
@@ -1073,6 +1262,32 @@
         "symbol": "Projects_UnknownEntryFields_SurviveRoundTrip"
       }
     ],
+    "resp-fywb0k": [
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_NotInstalled_ReturnsOutcomeWithoutChecking"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_BypassesStartupToggle"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_Found_DownloadsRaisesReadyAndOutcome"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_DownloadFails_ReturnsFailed"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_ClientThrows_ReturnsFailed"
+      },
+      {
+        "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
+        "symbol": "CheckNow_ConcurrentCalls_ShareOneCheck"
+      }
+    ],
     "resp-g317r3": [
       {
         "pattern": "tests/CLIHub.Core.Tests/UpdateServiceTests.cs",
@@ -1168,15 +1383,15 @@
     "resp-sfhkgf": [
       {
         "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
-        "symbol": "MissingFile_DefaultsApply"
+        "symbol": "Save_ValidDocument_WritesFileAndUpdatesCache"
       },
       {
         "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
-        "symbol": "UnparseableFile_DefaultsApply"
+        "symbol": "Save_RejectedSave_KeepsPreviousValues"
       },
       {
         "pattern": "tests/CLIHub.Core.Tests/SettingsStoreTests.cs",
-        "symbol": "ValidFile_ExposesParsedValues"
+        "symbol": "Save_UpdatesRuntimeForConsumers"
       }
     ],
     "resp-zgdmbz": [
@@ -1247,6 +1462,18 @@
       },
       {
         "pattern": "src/CLIHub.Core/Services/SettingsStore.cs"
+      }
+    ],
+    "node-6mb925": [
+      {
+        "pattern": "src/CLIHub.App/Views/SettingsWindow.xaml*",
+        "comment": "Settings window surface: XAML + code-behind, capture control, view model"
+      },
+      {
+        "pattern": "src/CLIHub.App/Views/HotkeyCaptureBox.cs"
+      },
+      {
+        "pattern": "src/CLIHub.App/ViewModels/SettingsViewModel.cs"
       }
     ],
     "node-9cky1s": [
