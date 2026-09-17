@@ -764,25 +764,5 @@
       "label": "applies window chrome via"
     }
   ],
-  "groups": [],
-  "changes": [
-    {
-      "id": "chg-grsr0j",
-      "rationale": "Enable the popup footer settings button to open the single-instance settings window (amendment to the popup restyle, per user request)",
-      "createdAt": 1789611692,
-      "signedOff": {
-        "at": 1789629785,
-        "entries": {
-          "resp:resp-j9be3a": {
-            "hash": "e5827448935254e4",
-            "statement": "**Shows** the single settings window from the tray menu and the popup footer.",
-            "host": "node-x9pp0t"
-          }
-        }
-      }
-    }
-  ],
-  "changeMap": {
-    "resp:resp-j9be3a": "chg-grsr0j"
-  }
+  "groups": []
 }

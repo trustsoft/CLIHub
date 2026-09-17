@@ -304,8 +304,8 @@
         },
         {
           "id": "resp-j9be3a",
-          "statement": "**When** the tray settings item is activated, **show** the single settings window.",
-          "lastTouchedAt": 1789586832
+          "statement": "**Shows** the single settings window from the tray menu and the popup footer.",
+          "lastTouchedAt": 1789647401
         }
       ]
     },
