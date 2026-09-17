@@ -37,7 +37,7 @@ public sealed class PluginLoader
 
             if (!_fileSystem.FileExists(manifestPath))
             {
-                warnings.Add($"Плагин '{folder}': отсутствует agent.json — пропущен.");
+                warnings.Add($"Plugin '{folder}': agent.json is missing — skipped.");
                 continue;
             }
 
@@ -48,26 +48,26 @@ public sealed class PluginLoader
             }
             catch (JsonException)
             {
-                warnings.Add($"Плагин '{folder}': agent.json не разбирается — пропущен.");
+                warnings.Add($"Plugin '{folder}': agent.json cannot be parsed — skipped.");
                 continue;
             }
 
             if (manifest is null)
             {
-                warnings.Add($"Плагин '{folder}': agent.json пуст — пропущен.");
+                warnings.Add($"Plugin '{folder}': agent.json is empty — skipped.");
                 continue;
             }
 
             if (manifest.SchemaVersion != SupportedSchemaVersion)
             {
                 warnings.Add(
-                    $"Плагин '{folder}': неподдерживаемая schemaVersion {manifest.SchemaVersion} — пропущен.");
+                    $"Plugin '{folder}': unsupported schemaVersion {manifest.SchemaVersion} — skipped.");
                 continue;
             }
 
             if (string.IsNullOrWhiteSpace(manifest.Id) || string.IsNullOrWhiteSpace(manifest.Name))
             {
-                warnings.Add($"Плагин '{folder}': не заданы обязательные id/name — пропущен.");
+                warnings.Add($"Plugin '{folder}': required id/name are not set — skipped.");
                 continue;
             }
 

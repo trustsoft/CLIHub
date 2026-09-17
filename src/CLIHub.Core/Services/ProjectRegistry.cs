@@ -36,23 +36,23 @@ public sealed class ProjectRegistry
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return ProjectAddResult.Fail("Путь проекта не задан.");
+            return ProjectAddResult.Fail("Project path is not set.");
         }
 
         if (!_fileSystem.DirectoryExists(path))
         {
-            return ProjectAddResult.Fail($"Папка не найдена: {path}");
+            return ProjectAddResult.Fail($"Folder not found: {path}");
         }
 
         if (_document.Projects.Any(project => SamePath(project.Path, path)))
         {
-            return ProjectAddResult.Fail("Проект с таким путём уже добавлен.");
+            return ProjectAddResult.Fail("A project with this path is already added.");
         }
 
         var name = DeriveName(path);
         if (string.IsNullOrWhiteSpace(name))
         {
-            return ProjectAddResult.Fail("Не удалось определить имя проекта.");
+            return ProjectAddResult.Fail("Could not determine the project name.");
         }
 
         var project = new ProjectConfig

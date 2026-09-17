@@ -21,7 +21,6 @@ public sealed class PopupViewModel : INotifyPropertyChanged
     private readonly Func<string, bool> _confirm;
     private readonly Action<Action> _postToUi;
     private readonly RelayCommand _removeProjectCommand;
-
     private ProjectItemViewModel? _selectedProject;
     private string _statusText = string.Empty;
 
@@ -37,7 +36,8 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         Func<string, bool> confirm,
         Action<Action> postToUi,
         string appVersion,
-        Action openDataFolder)
+        Action openDataFolder,
+        Action openSettings)
     {
         _registry = registry;
         _settings = settings;
@@ -52,6 +52,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
         AppVersion = appVersion;
         OpenDataFolderCommand = new RelayCommand(_ => openDataFolder());
+        OpenSettingsCommand = new RelayCommand(_ => openSettings());
         ExitCommand = new RelayCommand(_ => ExitRequested?.Invoke(this, EventArgs.Empty));
 
         foreach (var project in registry.Projects)
@@ -77,6 +78,8 @@ public sealed class PopupViewModel : INotifyPropertyChanged
     public ICommand RemoveProjectCommand { get; }
 
     public ICommand OpenDataFolderCommand { get; }
+
+    public ICommand OpenSettingsCommand { get; }
 
     public ICommand ExitCommand { get; }
 
@@ -136,11 +139,11 @@ public sealed class PopupViewModel : INotifyPropertyChanged
 
         if (_plugins.Count == 0)
         {
-            StatusText = "Агенты не найдены в plugins/agents.";
+            StatusText = "No agents found in plugins/agents.";
         }
         else if (Agents.Count == 0)
         {
-            StatusText = "Нет установленных агентов.";
+            StatusText = "No installed agents.";
         }
     }
 
@@ -172,14 +175,14 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         var result = _registry.Add(path);
         if (!result.Success || result.Project is null)
         {
-            StatusText = result.Error ?? "Не удалось добавить проект.";
+            StatusText = result.Error ?? "Could not add the project.";
             return;
         }
 
         var item = CreateProjectItem(result.Project);
         Projects.Add(item);
         SelectedProject = item;
-        StatusText = $"Добавлен проект: {result.Project.Name}";
+        StatusText = $"Project added: {result.Project.Name}";
     }
 
     private void RemoveProject()
@@ -190,7 +193,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
             return;
         }
 
-        if (!_confirm($"Удалить проект «{item.Name}» из списка?"))
+        if (!_confirm($"Remove project '{item.Name}' from the list?"))
         {
             return;
         }
@@ -199,7 +202,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         {
             Projects.Remove(item);
             SelectedProject = Projects.FirstOrDefault();
-            StatusText = $"Удалён проект: {item.Name}";
+            StatusText = $"Project removed: {item.Name}";
         }
     }
 
@@ -208,14 +211,14 @@ public sealed class PopupViewModel : INotifyPropertyChanged
         var project = SelectedProject;
         if (string.IsNullOrWhiteSpace(project?.Model.Path))
         {
-            StatusText = "Не выбран проект.";
+            StatusText = "No project selected.";
             return;
         }
 
         var result = _launcher.Start(item.Manifest, "run", _settings.Runtime, project.Model.Path);
         if (!result.Success)
         {
-            StatusText = result.Error ?? "Не удалось запустить агента.";
+            StatusText = result.Error ?? "Could not launch the agent.";
             return;
         }
 
@@ -225,7 +228,7 @@ public sealed class PopupViewModel : INotifyPropertyChanged
             return;
         }
 
-        StatusText = $"Запущено: {item.Name}";
+        StatusText = $"Launched: {item.Name}";
         CloseRequested?.Invoke(this, EventArgs.Empty);
     }
 

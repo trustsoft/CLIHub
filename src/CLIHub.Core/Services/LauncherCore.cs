@@ -20,7 +20,7 @@ public sealed class LauncherCore
             !agent.Actions.TryGetValue(actionKey, out var action) ||
             string.IsNullOrWhiteSpace(action.Command))
         {
-            return LaunchResult.Failed($"Действие '{actionKey}' недоступно для агента '{agent.Id}'.");
+            return LaunchResult.Failed($"Action '{actionKey}' is not available for agent '{agent.Id}'.");
         }
 
         var runtime = _runtimeResolver.Resolve(action, configRuntime);
@@ -29,7 +29,7 @@ public sealed class LauncherCore
         if (runtime == "wt" && !_processRunner.CommandExists("wt.exe"))
         {
             runtime = RuntimeResolver.DefaultRuntime;
-            warning = "Windows Terminal (wt) не найден — запуск через резервный runtime.";
+            warning = "Windows Terminal (wt) not found — launching via the fallback runtime.";
         }
 
         var command = CommandBuilder.Build(runtime, action.Command!, projectPath);

@@ -71,7 +71,8 @@ public partial class App : System.Windows.Application
             _popupWindow.Confirm,
             action => Dispatcher.Invoke(action),
             ResolveAppVersion(),
-            () => processRunner.StartDetached("explorer.exe", $"\"{paths.ConfigDirectory}\"", string.Empty));
+            () => processRunner.StartDetached("explorer.exe", $"\"{paths.ConfigDirectory}\"", string.Empty),
+            ShowSettings);
         _popupWindow.DataContext = viewModel;
         viewModel.CloseRequested += (_, _) => _popupWindow?.Hide();
         viewModel.ExitRequested += (_, _) => Shutdown();
@@ -89,20 +90,24 @@ public partial class App : System.Windows.Application
         {
             System.Windows.MessageBox.Show(
                 string.Join(Environment.NewLine, plugins.Warnings),
-                "CLIHub — предупреждения плагинов",
+                "CLIHub — plugin warnings",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
         }
     }
 
-    private static string ResolveAppVersion()
+    internal static string ResolveAppVersion()
     {
         try
         {
             var manager = VelopackUpdateClient.CreateManager();
             if (manager.IsInstalled)
             {
-                return manager.CurrentVersion.ToString();
+                var current = manager.CurrentVersion?.ToString();
+                if (!string.IsNullOrEmpty(current))
+                {
+                    return current;
+                }
             }
         }
         catch (Exception)
@@ -122,18 +127,18 @@ public partial class App : System.Windows.Application
     {
         var menu = new System.Windows.Forms.ContextMenuStrip();
 
-        _updateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Установить обновление")
+        _updateMenuItem = new System.Windows.Forms.ToolStripMenuItem("Install update")
         {
             Visible = false
         };
         _updateMenuItem.Click += (_, _) => _updateService?.Apply();
         menu.Items.Add(_updateMenuItem);
 
-        var settingsItem = new System.Windows.Forms.ToolStripMenuItem("Настройки");
+        var settingsItem = new System.Windows.Forms.ToolStripMenuItem("Settings");
         settingsItem.Click += (_, _) => ShowSettings();
         menu.Items.Add(settingsItem);
 
-        var exitItem = new System.Windows.Forms.ToolStripMenuItem("Выход");
+        var exitItem = new System.Windows.Forms.ToolStripMenuItem("Exit");
         exitItem.Click += (_, _) => Shutdown();
         menu.Items.Add(exitItem);
 
@@ -189,7 +194,7 @@ public partial class App : System.Windows.Application
     {
         if (_hotkeyManager is null || _settingsStore is null)
         {
-            return "Hotkey ещё не инициализирован.";
+            return "Hotkey is not initialized yet.";
         }
 
         if (hotkey == _settingsStore.Hotkey)
@@ -204,7 +209,7 @@ public partial class App : System.Windows.Application
         }
 
         _hotkeyManager.TryRegister(_settingsStore.Hotkey, out _);
-        return error ?? $"Не удалось зарегистрировать hotkey '{hotkey}'.";
+        return error ?? $"Failed to register hotkey '{hotkey}'.";
     }
 
     private void RegisterHotkey(string hotkey)
@@ -218,7 +223,7 @@ public partial class App : System.Windows.Application
         if (!_hotkeyManager.TryRegister(hotkey, out var error))
         {
             System.Windows.MessageBox.Show(
-                error ?? $"Не удалось зарегистрировать hotkey '{hotkey}'.",
+                error ?? $"Failed to register hotkey '{hotkey}'.",
                 "CLIHub — hotkey",
                 System.Windows.MessageBoxButton.OK,
                 System.Windows.MessageBoxImage.Warning);
@@ -246,8 +251,8 @@ public partial class App : System.Windows.Application
         if (_updateMenuItem is not null)
         {
             _updateMenuItem.Text = string.IsNullOrWhiteSpace(version)
-                ? "Установить обновление"
-                : $"Установить обновление {version}";
+                ? "Install update"
+                : $"Install update {version}";
             _updateMenuItem.Visible = true;
         }
 
@@ -257,8 +262,8 @@ public partial class App : System.Windows.Application
     private void ShowUpdateNotification(string version)
     {
         var message = string.IsNullOrWhiteSpace(version)
-            ? "Доступно обновление CLIHub. Нажмите, чтобы установить и перезапустить."
-            : $"Доступно обновление CLIHub {version}. Нажмите, чтобы установить и перезапустить.";
+            ? "A CLIHub update is available. Click to install and restart."
+            : $"CLIHub {version} is available. Click to install and restart.";
 
         _trayIcon?.ShowNotification("CLIHub", message);
     }

@@ -24,7 +24,7 @@ public sealed class HotkeyManager : IDisposable
 
         if (!NativeMethods.RegisterHotKey(_source!.Handle, HotkeyId, modifiers, virtualKey))
         {
-            error = $"Комбинация '{hotkey}' уже используется другим приложением.";
+            error = $"The combination '{hotkey}' is already in use by another application.";
             return false;
         }
 

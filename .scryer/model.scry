@@ -436,8 +436,8 @@
       "responsibilities": [
         {
           "id": "resp-9hhp0t",
-          "statement": "**Declares** the Win32 interop for hotkeys, cursor position, and foreground activation.",
-          "lastTouchedAt": 1789552906
+          "statement": "**Declares** the Win32 interop for hotkeys, cursor position, foreground activation, and DWM window chrome.",
+          "lastTouchedAt": 1789593232
         }
       ]
     },
@@ -828,8 +828,8 @@
       {
         "pattern": "src/CLIHub.App/App.xaml.cs",
         "symbol": "ResolveAppVersion",
-        "line": 98,
-        "endLine": 119
+        "line": 99,
+        "endLine": 124
       }
     ],
     "resp-aae6hd": [
@@ -908,8 +908,8 @@
       {
         "pattern": "src/CLIHub.App/App.xaml.cs",
         "symbol": "App",
-        "line": 163,
-        "endLine": 186
+        "line": 39,
+        "endLine": 96
       }
     ],
     "resp-k3draa": [
@@ -961,8 +961,8 @@
     "resp-p503v5": [
       {
         "pattern": "src/CLIHub.App/Views/PopupWindow.xaml",
-        "line": 113,
-        "endLine": 165
+        "line": 169,
+        "endLine": 169
       }
     ],
     "resp-ps0jyx": [

@@ -161,14 +161,14 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
     public void OnUpdateReady(string version) => _postToUi(() =>
         StatusText = string.IsNullOrWhiteSpace(version)
-            ? "Обновление готово к установке — смотрите трей."
-            : $"Обновление {version} готово к установке — смотрите трей.");
+            ? "Update ready to install — see the tray."
+            : $"Update {version} is ready to install — see the tray.");
 
     private void Save()
     {
         if (!TryBuildDocument(out var document, out var error))
         {
-            StatusText = error ?? "Проверьте введённые значения.";
+            StatusText = error ?? "Check the entered values.";
             return;
         }
 
@@ -197,19 +197,19 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
         if (hotkeyError is not null)
         {
             Hotkey = document.Hotkey;
-            StatusText = $"Сохранено. Hotkey не изменён: {hotkeyError}";
+            StatusText = $"Saved. Hotkey unchanged: {hotkeyError}";
             return;
         }
 
-        StatusText = "Настройки сохранены.";
+        StatusText = "Settings saved.";
     }
 
     private bool TryBuildDocument(out SettingsDocument document, out string? error)
     {
         error = null;
 
-        if (!TryParseProbeValue(TtlMinutes, "TTL пробы", out var ttl, out error) ||
-            !TryParseProbeValue(TimeoutSeconds, "Таймаут пробы", out var timeout, out error))
+        if (!TryParseProbeValue(TtlMinutes, "Probe TTL", out var ttl, out error) ||
+            !TryParseProbeValue(TimeoutSeconds, "Probe timeout", out var timeout, out error))
         {
             document = new SettingsDocument();
             return false;
@@ -238,7 +238,7 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
 
         if (!int.TryParse(trimmed, out var parsed) || parsed <= 0)
         {
-            error = $"{label} должен быть положительным числом.";
+            error = $"{label} must be a positive number.";
             return false;
         }
 
@@ -249,21 +249,21 @@ public sealed class SettingsViewModel : INotifyPropertyChanged
     private async Task RunCheckAsync()
     {
         CheckRunning = true;
-        StatusText = "Проверяем обновления…";
+        StatusText = "Checking for updates…";
         try
         {
             var outcome = await _checkUpdates();
             StatusText = outcome switch
             {
-                UpdateCheckOutcome.UpToDate => "У вас последняя версия.",
-                UpdateCheckOutcome.Ready => "Обновление готово к установке — смотрите трей.",
-                UpdateCheckOutcome.NotInstalled => "Проверка обновлений доступна только в установленном приложении.",
-                _ => "Не удалось проверить обновления."
+                UpdateCheckOutcome.UpToDate => "You have the latest version.",
+                UpdateCheckOutcome.Ready => "Update ready to install — see the tray.",
+                UpdateCheckOutcome.NotInstalled => "Update checks are available only in the installed app.",
+                _ => "Could not check for updates."
             };
         }
         catch (Exception)
         {
-            StatusText = "Не удалось проверить обновления.";
+            StatusText = "Could not check for updates.";
         }
         finally
         {

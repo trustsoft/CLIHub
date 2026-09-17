@@ -46,7 +46,7 @@ public sealed class HotkeyCaptureBox : TextBox
     private void OnGotFocus(object sender, KeyboardFocusChangedEventArgs e)
     {
         _capturing = true;
-        Text = "Нажмите сочетание клавиш…";
+        Text = "Press a key combination…";
     }
 
     private void OnLostFocus(object sender, KeyboardFocusChangedEventArgs e)
@@ -87,14 +87,14 @@ public sealed class HotkeyCaptureBox : TextBox
 
         if (Keyboard.Modifiers == ModifierKeys.None)
         {
-            Text = "Добавьте Ctrl, Alt, Shift или Win";
+            Text = "Add Ctrl, Alt, Shift or Win";
             e.Handled = true;
             return;
         }
 
         if (!TryGetKeyName(key, out var name))
         {
-            Text = "Клавиша не поддерживается";
+            Text = "Key is not supported";
             e.Handled = true;
             return;
         }

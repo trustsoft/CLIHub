@@ -16,7 +16,7 @@ public static class HotkeyParser
 
         if (string.IsNullOrWhiteSpace(hotkey))
         {
-            error = "Комбинация hotkey не задана.";
+            error = "Hotkey combination is not set.";
             return false;
         }
 
@@ -41,7 +41,7 @@ public static class HotkeyParser
                 default:
                     if (!TryParseKey(part, out virtualKey))
                     {
-                        error = $"Неизвестная клавиша '{part}' в комбинации hotkey.";
+                        error = $"Unknown key '{part}' in the hotkey combination.";
                         return false;
                     }
 
@@ -51,7 +51,7 @@ public static class HotkeyParser
 
         if (virtualKey == 0)
         {
-            error = $"В комбинации '{hotkey}' не задана основная клавиша.";
+            error = $"The hotkey '{hotkey}' has no main key.";
             return false;
         }
 

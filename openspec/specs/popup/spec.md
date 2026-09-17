@@ -143,7 +143,9 @@ update when a probe round completes.
 ### Requirement: Footer with version and system actions
 
 The popup footer SHALL display the application brand and version, and SHALL
-offer three actions: open the data folder, settings, and exit. The status
+offer three actions: open the data folder, settings, and exit. The settings
+action SHALL open the settings window, activating the existing instance when
+one is already open. The status
 text SHALL be shown in the footer center, between the brand/version area and
 the action area.
 
@@ -167,6 +169,18 @@ the action area.
 
 - **WHEN** no settings surface exists
 - **THEN** the settings action is visible in the footer but unavailable
+
+#### Scenario: Settings action opens the settings window
+
+- **WHEN** the user activates the footer settings action
+- **THEN** the settings window opens showing the current settings
+
+#### Scenario: Settings action with the window already open
+
+- **WHEN** the user activates the footer settings action while the settings
+  window is already open
+- **THEN** the existing settings window is activated and no second window
+  appears
 
 #### Scenario: Exit from the footer
 

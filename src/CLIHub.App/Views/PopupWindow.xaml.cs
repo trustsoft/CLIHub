@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Interop;
 using System.Windows.Input;
 using CLIHub.App.Interop;
 
@@ -6,11 +7,32 @@ namespace CLIHub.App.Views;
 
 public partial class PopupWindow : Window
 {
+    private const int DwmwaWindowCornerPreference = 33;
+    private const int DwmwcpRound = 2;
+
     private bool _suppressHide;
 
     public PopupWindow()
     {
         InitializeComponent();
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        var preference = DwmwcpRound;
+        _ = NativeMethods.DwmSetWindowAttribute(hwnd, DwmwaWindowCornerPreference, ref preference, sizeof(int));
+    }
+
+    private void OnOpenProjectsMenu(object sender, RoutedEventArgs e)
+    {
+        if (ProjectsActionsButton.ContextMenu is { } menu)
+        {
+            menu.PlacementTarget = ProjectsActionsButton;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+            menu.HorizontalOffset = ProjectsActionsButton.ActualWidth - menu.ActualWidth;
+        }
     }
 
     public void ShowForHotkey()
@@ -26,7 +48,7 @@ public partial class PopupWindow : Window
         _suppressHide = true;
         try
         {
-            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Выберите папку проекта" };
+            var dialog = new Microsoft.Win32.OpenFolderDialog { Title = "Choose a project folder" };
             return dialog.ShowDialog(this) == true ? dialog.FolderName : null;
         }
         finally

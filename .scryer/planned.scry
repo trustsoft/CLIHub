@@ -312,8 +312,8 @@
         },
         {
           "id": "resp-j9be3a",
-          "statement": "**When** the tray settings item is activated, **show** the single settings window.",
-          "lastTouchedAt": 1789585135
+          "statement": "**Shows** the single settings window from the tray menu and the popup footer.",
+          "lastTouchedAt": 1789613402
         }
       ]
     },
@@ -444,8 +444,8 @@
       "responsibilities": [
         {
           "id": "resp-9hhp0t",
-          "statement": "**Declares** the Win32 interop for hotkeys, cursor position, and foreground activation.",
-          "lastTouchedAt": 1789552898
+          "statement": "**Declares** the Win32 interop for hotkeys, cursor position, foreground activation, and DWM window chrome.",
+          "lastTouchedAt": 1789592693
         }
       ]
     },
@@ -752,5 +752,25 @@
       "label": "hosts"
     }
   ],
-  "groups": []
+  "groups": [],
+  "changes": [
+    {
+      "id": "chg-grsr0j",
+      "rationale": "Enable the popup footer settings button to open the single-instance settings window (amendment to the popup restyle, per user request)",
+      "createdAt": 1789611692,
+      "signedOff": {
+        "at": 1789629466,
+        "entries": {
+          "resp:resp-j9be3a": {
+            "hash": "e5827448935254e4",
+            "statement": "**Shows** the single settings window from the tray menu and the popup footer.",
+            "host": "node-x9pp0t"
+          }
+        }
+      }
+    }
+  ],
+  "changeMap": {
+    "resp:resp-j9be3a": "chg-grsr0j"
+  }
 }

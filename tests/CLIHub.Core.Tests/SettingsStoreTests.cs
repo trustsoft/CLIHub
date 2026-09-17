@@ -112,7 +112,7 @@ public sealed class SettingsStoreTests
         var result = store.Save(document);
 
         Assert.False(result.Saved);
-        Assert.Contains(result.Errors, error => error.Contains("Таймаут", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Errors, error => error.Contains("timeout", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

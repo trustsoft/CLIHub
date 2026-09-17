@@ -1,72 +1,145 @@
 <Window x:Class="CLIHub.App.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:views="clr-namespace:CLIHub.App.Views"
-        Title="CLIHub — Настройки"
-        Width="520"
+        Title="CLIHub — Settings"
+        Width="480"
         SizeToContent="Height"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         ShowInTaskbar="True"
-        KeyDown="OnKeyDown">
-    <StackPanel Margin="16">
+        WindowStyle="None"
+        Background="{StaticResource ChromeBgBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        KeyDown="OnKeyDown"
+        SourceInitialized="OnSourceInitialized">
+    <WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="36"
+                            ResizeBorderThickness="0"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
 
-        <TextBlock Text="Runtime по умолчанию" FontWeight="SemiBold" Margin="0,0,0,4" />
-        <ComboBox ItemsSource="{Binding RuntimeOptions}"
-                  SelectedItem="{Binding Runtime}"
-                  Width="160"
-                  HorizontalAlignment="Left" />
+    <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
+        <StackPanel>
 
-        <TextBlock Text="Глобальный hotkey" FontWeight="SemiBold" Margin="0,16,0,4" />
-        <views:HotkeyCaptureBox Hotkey="{Binding Hotkey}"
-                                Width="260"
-                                HorizontalAlignment="Left" />
-        <TextBlock Text="Нажмите сочетание в поле. Esc — отмена захвата."
-                   FontSize="11"
-                   Foreground="#FF888888"
-                   Margin="0,4,0,0" />
+            <!-- Title bar (custom chrome) -->
+            <Grid Height="36" Background="{StaticResource StripBgBrush}">
+                <TextBlock Text="Settings"
+                           Style="{StaticResource BrandText}"
+                           VerticalAlignment="Center"
+                           Margin="14,0,0,0" />
+                <Button Style="{StaticResource TitleBarCloseButton}"
+                        Click="OnCancel"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Right"
+                        Margin="0,0,6,0"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True" />
+            </Grid>
+            <Rectangle Height="1" Fill="{StaticResource HairlineBrush}" Margin="12,0" />
 
-        <TextBlock Text="Проба агентов" FontWeight="SemiBold" Margin="0,16,0,4" />
-        <StackPanel Orientation="Horizontal">
-            <TextBlock Text="TTL, минут:" VerticalAlignment="Center" />
-            <TextBox Text="{Binding TtlMinutes}"
-                     Width="80"
-                     Margin="8,0,16,0"
-                     VerticalContentAlignment="Center" />
-            <TextBlock Text="Таймаут, секунд:" VerticalAlignment="Center" />
-            <TextBox Text="{Binding TimeoutSeconds}"
-                     Width="80"
-                     Margin="8,0,0,0"
-                     VerticalContentAlignment="Center" />
+            <!-- Content -->
+            <StackPanel Margin="14,12,14,14">
+
+                <StackPanel>
+                    <TextBlock Text="DEFAULT RUNTIME" Style="{StaticResource SectionLabel}" />
+                    <ListBox Style="{StaticResource SegmentedList}"
+                             ItemsSource="{Binding RuntimeOptions}"
+                             SelectedItem="{Binding Runtime}"
+                             Width="220"
+                             HorizontalAlignment="Left" />
+                </StackPanel>
+
+                <StackPanel Margin="0,16,0,0">
+                    <TextBlock Text="GLOBAL HOTKEY" Style="{StaticResource SectionLabel}" />
+                    <views:HotkeyCaptureBox Hotkey="{Binding Hotkey}"
+                                            Style="{StaticResource DarkField}"
+                                            Width="240"
+                                            HorizontalAlignment="Left" />
+                    <TextBlock Style="{StaticResource HintText}"
+                               Text="Press a combination in the field. Esc cancels capture." />
+                </StackPanel>
+
+                <StackPanel Margin="0,16,0,0">
+                    <TextBlock Text="AGENT PROBE" Style="{StaticResource SectionLabel}" />
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Margin="0,0,16,0">
+                            <TextBlock Text="TTL, minutes"
+                                       FontSize="12"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource DarkField}"
+                                     Width="96"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding TtlMinutes}" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Timeout, seconds"
+                                       FontSize="12"
+                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Margin="0,0,0,4" />
+                            <TextBox Style="{StaticResource DarkField}"
+                                     Width="96"
+                                     HorizontalAlignment="Left"
+                                     Text="{Binding TimeoutSeconds}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource HintText}"
+                               Text="Empty — use the default values." />
+                </StackPanel>
+
+                <StackPanel Margin="0,16,0,0">
+                    <TextBlock Text="UPDATES" Style="{StaticResource SectionLabel}" />
+                    <CheckBox Style="{StaticResource DarkCheck}"
+                               Content="Check for updates on startup"
+                               IsChecked="{Binding CheckOnStartup}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Style="{StaticResource GhostButton}"
+                                Content="Check for updates"
+                                Command="{Binding CheckUpdatesCommand}" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusText}"
+                               FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0" />
+                </StackPanel>
+
+            </StackPanel>
+
+            <Rectangle Height="1" Fill="{StaticResource HairlineBrush}" Margin="12,0" />
+
+            <!-- Footer: brand left, actions right -->
+            <Grid Height="48" Background="{StaticResource StripBgBrush}">
+                <StackPanel Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="14,0,0,0">
+                    <TextBlock Text="CLIHub"
+                               Style="{StaticResource BrandText}"
+                               VerticalAlignment="Center" />
+                    <Border Style="{StaticResource VersionChipBorder}"
+                            VerticalAlignment="Center"
+                            Margin="12,0,0,0">
+                        <TextBlock x:Name="VersionChipText"
+                                   Style="{StaticResource VersionChipText}" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="0,0,12,0">
+                    <Button Style="{StaticResource AccentButton}"
+                            Content="Save"
+                            Command="{Binding SaveCommand}"
+                            Margin="0,0,8,0" />
+                    <Button Style="{StaticResource GhostButton}"
+                            Content="Cancel"
+                            Click="OnCancel" />
+                </StackPanel>
+            </Grid>
+
         </StackPanel>
-        <TextBlock Text="Пусто — использовать значения по умолчанию."
-                   FontSize="11"
-                   Foreground="#FF888888"
-                   Margin="0,4,0,0" />
-
-        <TextBlock Text="Обновления" FontWeight="SemiBold" Margin="0,16,0,4" />
-        <CheckBox Content="Проверять обновления при запуске"
-                  IsChecked="{Binding CheckOnStartup}" />
-        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-            <Button Content="Проверить обновления"
-                    Padding="10,3"
-                    Command="{Binding CheckUpdatesCommand}" />
-        </StackPanel>
-
-        <TextBlock Text="{Binding StatusText}"
-                   Foreground="#FF666666"
-                   TextWrapping="Wrap"
-                   Margin="0,16,0,0" />
-
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Сохранить"
-                    Padding="14,4"
-                    Margin="0,0,8,0"
-                    Command="{Binding SaveCommand}" />
-            <Button Content="Отмена"
-                    Padding="14,4"
-                    Click="OnCancel" />
-        </StackPanel>
-
-    </StackPanel>
+    </Border>
 </Window>

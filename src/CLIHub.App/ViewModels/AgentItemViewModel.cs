@@ -21,7 +21,7 @@ public sealed class AgentItemViewModel : INotifyPropertyChanged
 
     public AgentManifest Manifest { get; }
 
-    public string Name => Manifest.Name ?? Manifest.Id ?? "(без имени)";
+    public string Name => Manifest.Name ?? Manifest.Id ?? "(unnamed)";
 
     public ImageSource Logo { get; }
 

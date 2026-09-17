@@ -52,17 +52,17 @@ public sealed class SettingsStore
 
         if (document.Probe.TtlMinutes is <= 0)
         {
-            errors.Add("TTL пробы должен быть положительным числом.");
+            errors.Add("Probe TTL must be a positive number.");
         }
 
         if (document.Probe.TimeoutSeconds is <= 0)
         {
-            errors.Add("Таймаут пробы должен быть положительным числом.");
+            errors.Add("Probe timeout must be a positive number.");
         }
 
         if (!HotkeyParser.TryParse(document.Hotkey, out _, out _, out var hotkeyError))
         {
-            errors.Add(hotkeyError ?? "Некорректная комбинация hotkey.");
+            errors.Add(hotkeyError ?? "Invalid hotkey combination.");
         }
 
         return errors;

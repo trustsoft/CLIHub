@@ -1,171 +1,260 @@
 <Window x:Class="CLIHub.App.Views.PopupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:CLIHub.App.ViewModels"
         Title="CLIHub"
-        Width="720"
-        Height="420"
-        WindowStyle="None"
+        Width="543"
+        Background="{StaticResource ChromeBgBrush}"
+        Deactivated="OnDeactivated"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        KeyDown="OnKeyDown"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        WindowStartupLocation="Manual"
+        SizeToContent="Height"
+        SourceInitialized="OnSourceInitialized"
         Topmost="True"
-        KeyDown="OnKeyDown"
-        Deactivated="OnDeactivated">
-    <Border BorderBrush="#FF3C3C3C" BorderThickness="1" Background="#FFF7F7F7">
-        <Grid Margin="12">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+        WindowStartupLocation="Manual"
+        WindowStyle="None">
+    <Window.Resources>
 
-            <Grid Grid.Row="0">
+        <DataTemplate x:Key="ProjectItemTemplate" DataType="{x:Type vm:ProjectItemViewModel}">
+            <Grid Height="42">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Width="42"
+                        Height="42"
+                        Background="{StaticResource ThumbBgBrush}"
+                        BorderBrush="{StaticResource FieldStrokeBrush}"
+                        BorderThickness="1"
+                        ClipToBounds="True"
+                        CornerRadius="9">
+                    <Image RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="{Binding Logo}"
+                           Stretch="Uniform" />
+                </Border>
+                <StackPanel Grid.Column="1"
+                            Margin="15,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock FontSize="14.5"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Margin="0,3,0,0"
+                               FontSize="12"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Text="{Binding Path, Converter={StaticResource PathLeftTrim}}"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="AgentItemTemplate" DataType="{x:Type vm:AgentItemViewModel}">
+            <Grid Height="60">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Image Width="28"
+                       Height="28"
+                       VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       Source="{Binding Logo}"
+                       Stretch="Uniform" />
+                <StackPanel Grid.Column="1"
+                            Margin="14,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock FontSize="14.5"
+                               Foreground="{StaticResource TextPrimaryBrush}"
+                               Text="{Binding Name}"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Margin="0,1,0,0"
+                               FontSize="11"
+                               Foreground="{StaticResource TextMutedBrush}"
+                               Text="{Binding Version}" />
+                </StackPanel>
+                <Button Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Command="{Binding RunCommand}"
+                        IsEnabled="{Binding CanRun}"
+                        Style="{StaticResource AgentActionButton}"
+                        ToolTip="Run">
+                    <Path Width="20"
+                          Height="20"
+                          Data="M6.5,4.5 L6.5,15.5 L15.5,10 Z"
+                          Fill="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                          Stretch="Uniform" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+
+    </Window.Resources>
+
+    <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
+        <StackPanel>
+
+            <!--  Inset top highlight (mockup chrome)  -->
+            <Rectangle Height="1" Fill="#0DFFFFFF" />
+
+            <!--  Panes row  -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <DockPanel Grid.Column="0" Margin="0,0,12,0">
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <TextBlock Text="Projects" FontWeight="SemiBold" VerticalAlignment="Center" />
-                        <Menu HorizontalAlignment="Right" Background="Transparent">
-                            <MenuItem Header="Actions">
-                                <MenuItem Header="Add" Command="{Binding AddProjectCommand}" />
-                                <MenuItem Header="Remove" Command="{Binding RemoveProjectCommand}" />
-                            </MenuItem>
-                        </Menu>
+                <!--  Projects pane  -->
+                <Border Grid.Column="0" Background="{StaticResource StripBgBrush}">
+                    <DockPanel Margin="10">
+                        <Grid Height="32"
+                              Margin="0,0,0,4"
+                              DockPanel.Dock="Top">
+                            <TextBlock Margin="2,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Style="{StaticResource SectionLabel}"
+                                       Text="PROJECTS" />
+                            <Button x:Name="ProjectsActionsButton"
+                                    HorizontalAlignment="Right"
+                                    Click="OnOpenProjectsMenu"
+                                    Content="Actions"
+                                    Style="{StaticResource PaneActionsButton}">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                        <MenuItem Command="{Binding AddProjectCommand}"
+                                                  Header="Add"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="16"
+                                                           Foreground="#FFB0B0B0"
+                                                           Text="&#xE710;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding RemoveProjectCommand}"
+                                                  Header="Remove"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="16"
+                                                           Foreground="#FFB0B0B0"
+                                                           Text="&#xE74D;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </Grid>
+                        <ListBox MaxHeight="434"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 ItemContainerStyle="{StaticResource ProjectRowContainer}"
+                                 ItemTemplate="{StaticResource ProjectItemTemplate}"
+                                 ItemsSource="{Binding Projects}"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 SelectedItem="{Binding SelectedProject}"
+                                 VirtualizingPanel.VirtualizationMode="Standard" />
                     </DockPanel>
-                    <Grid>
-                        <ListBox ItemsSource="{Binding Projects}" SelectedItem="{Binding SelectedProject}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                                        <Image Source="{Binding Logo}"
-                                               Width="20"
-                                               Height="20"
-                                               Margin="0,0,8,0"
-                                               VerticalAlignment="Center"
-                                               RenderOptions.BitmapScalingMode="HighQuality" />
-                                        <StackPanel VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" />
-                                            <TextBlock Text="{Binding Path}" FontSize="10" Foreground="#FF888888" TextTrimming="CharacterEllipsis" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                        <TextBlock Text="Нет проектов. Добавьте через Actions -> Add."
-                                   Foreground="#FF888888"
-                                   TextWrapping="Wrap"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Projects.Count}" Value="0">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </DockPanel>
+                </Border>
 
-                <DockPanel Grid.Column="1">
-                    <TextBlock DockPanel.Dock="Top" Text="Agents" FontWeight="SemiBold" Margin="0,0,0,8" />
-                    <ListBox ItemsSource="{Binding Agents}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Image Grid.Column="0"
-                                           Source="{Binding Logo}"
-                                           Width="20"
-                                           Height="20"
-                                           Margin="0,0,8,0"
-                                           VerticalAlignment="Center"
-                                           RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Version}"
-                                                   Margin="8,0,0,0"
-                                                   FontSize="10"
-                                                   Foreground="#FF888888"
-                                                   VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <Button Grid.Column="2"
-                                            Content="Запустить"
-                                            Padding="10,2"
-                                            Command="{Binding RunCommand}"
-                                            IsEnabled="{Binding CanRun}" />
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                <!--  Divider  -->
+                <Rectangle Grid.Column="1"
+                           Width="1"
+                           Fill="{StaticResource FieldStrokeBrush}" />
+
+                <!--  Agents pane  -->
+                <DockPanel Grid.Column="2" Margin="10">
+                    <Grid Height="32"
+                          Margin="0,0,0,4"
+                          DockPanel.Dock="Top">
+                        <TextBlock Margin="2,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource SectionLabel}"
+                                   Text="AGENTS" />
+                        <Button HorizontalAlignment="Right"
+                                Content="Actions"
+                                IsEnabled="False"
+                                Style="{StaticResource PaneActionsButton}"
+                                ToolTip="Coming with Update and Init" />
+                    </Grid>
+                    <ListBox MaxHeight="434"
+                             AlternationCount="100000"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             ItemContainerStyle="{StaticResource AgentRowContainer}"
+                             ItemTemplate="{StaticResource AgentItemTemplate}"
+                             ItemsSource="{Binding Agents}"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             VirtualizingPanel.VirtualizationMode="Standard" />
                 </DockPanel>
             </Grid>
 
-            <Grid Grid.Row="1" Margin="0,8,0,0">
+            <Rectangle Height="1"
+                       Margin="12,0"
+                       Fill="{StaticResource HairlineBrush}" />
+
+            <!--  Footer: brand left, status center, system actions right  -->
+            <Grid Height="42" Background="{StaticResource StripBgBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="CLIHub" FontWeight="SemiBold" VerticalAlignment="Center" />
-                    <Border Background="#FFE2E2E2"
-                            CornerRadius="8"
-                            Margin="8,0,0,0"
-                            Padding="8,1">
-                        <TextBlock Text="{Binding AppVersion}"
-                                   FontSize="11"
-                                   Foreground="#FF555555" />
+                <StackPanel Grid.Column="0"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Style="{StaticResource BrandText}"
+                               Text="CLIHub" />
+                    <Border Margin="12,2,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource VersionChipBorder}">
+                        <TextBlock Style="{StaticResource VersionChipText}">
+                            <Run Text="v" /><Run Text="{Binding AppVersion, Mode=OneWay}" />
+                        </TextBlock>
                     </Border>
                 </StackPanel>
-
                 <TextBlock Grid.Column="1"
-                           Text="{Binding StatusText}"
                            Margin="12,0"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Text="{Binding StatusText}"
                            TextAlignment="Center"
-                           TextTrimming="CharacterEllipsis"
-                           Foreground="#FF666666" />
-
-                <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <StackPanel.Resources>
-                        <Style TargetType="Button">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Setter Property="Foreground" Value="#FF444444" />
-                            <Setter Property="Width" Value="30" />
-                            <Setter Property="Height" Value="26" />
-                            <Setter Property="Padding" Value="0" />
-                        </Style>
-                    </StackPanel.Resources>
-                    <Button Command="{Binding OpenDataFolderCommand}" ToolTip="Открыть папку данных">
-                        <TextBlock Text="&#xE8B7;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="14" />
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Grid.Column="2"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <Button Command="{Binding OpenDataFolderCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Open data folder">
+                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   FontSize="18"
+                                   Text="&#xE8B7;" />
                     </Button>
-                    <Button IsEnabled="False" ToolTip="Настройки — скоро">
-                        <TextBlock Text="&#xE713;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="14" />
+                    <Button Command="{Binding OpenSettingsCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Settings">
+                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   FontSize="18"
+                                   Text="&#xE713;" />
                     </Button>
-                    <Button Command="{Binding ExitCommand}" ToolTip="Выход">
-                        <TextBlock Text="&#xE7E8;"
-                                   FontFamily="Segoe MDL2 Assets"
-                                   FontSize="14" />
+                    <Button Command="{Binding ExitCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Exit">
+                        <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   FontSize="18"
+                                   Text="&#xE7E8;" />
                     </Button>
                 </StackPanel>
             </Grid>
-        </Grid>
+
+        </StackPanel>
     </Border>
 </Window>
