@@ -742,6 +742,18 @@
       "src": "node-9cky1s",
       "dst": "node-6mb925",
       "label": "hosts"
+    },
+    {
+      "id": "link-node-120yxp-node-6mb925",
+      "src": "node-120yxp",
+      "dst": "node-6mb925",
+      "label": "opens settings"
+    },
+    {
+      "id": "link-node-6mb925-node-yxwpkf",
+      "src": "node-6mb925",
+      "dst": "node-yxwpkf",
+      "label": "applies window chrome via"
     }
   ],
   "groups": [],
@@ -827,9 +839,7 @@
     "resp-a1vgxw": [
       {
         "pattern": "src/CLIHub.App/App.xaml.cs",
-        "symbol": "ResolveAppVersion",
-        "line": 99,
-        "endLine": 124
+        "symbol": "ResolveAppVersion"
       }
     ],
     "resp-aae6hd": [
@@ -1344,14 +1354,6 @@
       {
         "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
         "symbol": "Resolve_NeitherSet_UsesDefault"
-      },
-      {
-        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
-        "symbol": "Resolve_NormalizesValue(runtime: \"PS\")"
-      },
-      {
-        "pattern": "tests/CLIHub.Core.Tests/RuntimeResolverTests.cs",
-        "symbol": "Resolve_NormalizesValue(runtime: \"  ps  \")"
       }
     ],
     "resp-qea6bf": [

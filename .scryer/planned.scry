@@ -750,6 +750,18 @@
       "src": "node-9cky1s",
       "dst": "node-6mb925",
       "label": "hosts"
+    },
+    {
+      "id": "link-node-120yxp-node-6mb925",
+      "src": "node-120yxp",
+      "dst": "node-6mb925",
+      "label": "opens settings"
+    },
+    {
+      "id": "link-node-6mb925-node-yxwpkf",
+      "src": "node-6mb925",
+      "dst": "node-yxwpkf",
+      "label": "applies window chrome via"
     }
   ],
   "groups": [],
@@ -759,7 +771,7 @@
       "rationale": "Enable the popup footer settings button to open the single-instance settings window (amendment to the popup restyle, per user request)",
       "createdAt": 1789611692,
       "signedOff": {
-        "at": 1789629466,
+        "at": 1789629785,
         "entries": {
           "resp:resp-j9be3a": {
             "hash": "e5827448935254e4",
