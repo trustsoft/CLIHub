@@ -67,7 +67,7 @@ CLIHub — приложение-компаньон для Windows (10/11), ко�
   Вся логика в Core, покрывается тестами.
 - **Core-сервисы:** LauncherCore (+ CommandBuilder, RuntimeResolver), PluginLoader,
   JsonDocumentStore<T> (+ SettingsStore), ProjectRegistry,
-  AgentDetector, LogoResolver, UpdateService.
+  AgentDetector, LogoResolver, UpdateService, HotkeyParser.
 - **MVVM-lite:**   ViewModel для попапа и окна настроек (`ObservableCollection` + `RelayCommand`);
   tray-иконка и hotkey — code-behind.
 - **DI:** ручной composition root в App.xaml.cs; внешний DI-контейнер подключить позже

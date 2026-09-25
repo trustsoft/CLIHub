@@ -11,6 +11,7 @@ AI Agents CLI в папке проекта. .NET 10, WPF + WinForms, Windows-onl
 - Сборка: `dotnet build CLIHub.sln`
 - Все тесты: `dotnet test CLIHub.sln`
 - Один тест: `dotnet test tests/CLIHub.Core.Tests --filter FullyQualifiedName~PluginLoaderTests`
+- Тесты с JUnit-отчётом (нужен для фолда в Scryer): `dotnet test tests/CLIHub.Core.Tests --logger "junit;LogFilePath=TestResults/junit.xml"`
 - Запуск приложения: `dotnet run --project src/CLIHub.App`
 - OpenSpec: `openspec list`, `openspec status --change "<name>" --json`, `openspec validate --specs`
 
@@ -19,12 +20,15 @@ Work flows through the OpenSpec commands and their matching skills in `.opencode
 - `/opsx-explore` — think through capabilities before formalizing them
 - `/opsx-propose` — formalize a feature into a change (proposal + spec deltas + tasks)
 - `/opsx-apply` — implement an approved change
+- `/opsx-update` — revise artifacts of an existing change (never edits code)
+- `/opsx-sync` — sync delta specs to main specs without archiving
 - `/opsx-archive` — archive a completed change
 
 Do not write application code without an approved change/proposal.
 
 ## Artifact conventions
 - Write all OpenSpec artifacts (proposals, specs, design, tasks) in **English**. Authoritative source: `openspec/config.yaml`.
+- UI-строки в XAML — тоже **English** (русский остаётся языком docs/README/AGENTS).
 - The `context` block in `openspec/config.yaml` is injected into every `openspec instructions` call — keep it compressed and do not add un-reviewed capability sketches there.
 
 ## Структура и границы
@@ -52,8 +56,8 @@ Do not write application code without an approved change/proposal.
 - Конфиг приложения — `%AppData%\CLIHub\`, хранение по файлам-владельцам:
   `settings.json` (`runtime`, `hotkey` с дефолтом `Ctrl+Alt+Space`, `probe`, `update`),
   `projects.json` (`projects[]`), `agents.json` (машинный кэш). Один файл — один
-   писатель; не смешивай их. Пишутся через `JsonDocumentStore<T>` — атомарно, с бэкапом
-   `.bak` при порче.
+  писатель; не смешивай их. Пишутся через `JsonDocumentStore<T>` — атомарно, с бэкапом
+  `.bak` при порче.
 - При запуске окна нет: приложение живёт в трее (иконка + «Выход»), попап открывается
   по hotkey. `dotnet run` не завершается сам — запускай фоном, иначе терминал занят.
 - Точка входа — свой `Main` в `App.xaml.cs` с Velopack-бутстрапом
@@ -61,8 +65,8 @@ Do not write application code without an approved change/proposal.
   собран как `Page` с `<StartupObject>CLIHub.App.App</StartupObject>` — не откатывай
   это на `ApplicationDefinition`. `dotnet run` — не Velopack-установка: проверка
   обновлений молча пропускается (см. `app-update`).
-- `.opencode/` (skills/commands) и `.kilocode/` (skills/workflows) содержат
-  OpenSpec-воркфлоу; их `node_modules` игнорируется через `.opencode/.gitignore`.
+- `.opencode/` (skills/commands/agents) и `.kilocode/` (skills/workflows) содержат
+  OpenSpec-воркфлоу; их `node_modules` игнорируются через их собственные `.gitignore`.
 
 ## OpenSpec
 
@@ -83,6 +87,8 @@ Do not write application code without an approved change/proposal.
 - Полный цикл и гейт: skill `scryer-architecture` в `.opencode/skills/`.
 - Полный цикл одной командой: `/arch-change <задача>` (gate → план → sign-off →
   сборка → ревью → закрытие).
+- Мост OpenSpec → модель: `docs/architecture-map.md` (capability → узел модели +
+  код + тесты); начинай поиск узла с него, подтверждай через `orient`.
 - Read-only вердикт по изменению: субагент `architecture-review`.
 - Модель меняется только через scryer-инструменты — не редактируй
   `.scryer/*.scry` руками.
