@@ -231,6 +231,15 @@
                             Margin="0,0,12,0"
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
+                    <ToggleButton x:Name="PinToggleButton"
+                                  Click="OnTogglePin"
+                                  Style="{StaticResource PopupToggleIconButton}"
+                                  ToolTip="Pin">
+                        <TextBlock x:Name="PinGlyph"
+                                   FontFamily="Segoe MDL2 Assets"
+                                   FontSize="18"
+                                   Text="&#xE718;" />
+                    </ToggleButton>
                     <Button Command="{Binding OpenDataFolderCommand}"
                             Style="{StaticResource PopupIconButton}"
                             ToolTip="Open data folder">

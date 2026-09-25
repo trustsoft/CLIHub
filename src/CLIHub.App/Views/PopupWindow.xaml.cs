@@ -11,6 +11,7 @@ public partial class PopupWindow : Window
     private const int DwmwcpRound = 2;
 
     private bool _suppressHide;
+    private bool _pinned;
 
     public PopupWindow()
     {
@@ -71,6 +72,13 @@ public partial class PopupWindow : Window
         }
     }
 
+    private void OnTogglePin(object sender, RoutedEventArgs e)
+    {
+        _pinned = PinToggleButton.IsChecked == true;
+        PinGlyph.Text = _pinned ? "" : "";
+        PinToggleButton.ToolTip = _pinned ? "Unpin" : "Pin";
+    }
+
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
@@ -82,7 +90,7 @@ public partial class PopupWindow : Window
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
-        if (!_suppressHide)
+        if (!_suppressHide && !_pinned)
         {
             Hide();
         }
