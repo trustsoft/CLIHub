@@ -110,3 +110,6 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# CodeGraph index (local to each machine)
+.codegraph/
