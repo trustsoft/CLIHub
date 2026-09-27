@@ -10,7 +10,11 @@ The system SHALL retrieve an agent's version by running its declared `version` c
 
 #### Scenario: Version command defined
 - **WHEN** an agent declares a `version` command
-- **THEN** the command is executed and its trimmed standard output is returned as the version
+- **THEN** the command is executed and the version number found in its output is returned (for example `1.0.88` from `GitHub Copilot CLI 1.0.88.`)
+
+#### Scenario: No version number in output
+- **WHEN** the output contains no version-like number
+- **THEN** the first non-empty line of the output is returned as-is
 
 #### Scenario: No version command
 - **WHEN** an agent does not declare a `version` command

@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProcessLauncher, ProcessLauncher>();
         services.AddSingleton<IAgentCommandService, AgentCommandService>();
         services.AddSingleton<IAgentDetectionService, AgentDetectionService>();
+        services.AddSingleton<IAgentVersionService, AgentVersionService>();
 
         return services;
     }

@@ -92,6 +92,7 @@
                                            Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Version, StringFormat='Version: {0}'}" FontSize="11" Foreground="#2C3E50"/>
                                         <TextBlock Text="{Binding Status}" FontSize="11" Foreground="Gray"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -104,6 +105,7 @@
                         <Button Content="Init" Margin="0,0,5,5" Padding="10,5" Click="Init_Click"/>
                         <Button Content="Update" Margin="0,0,5,5" Padding="10,5" Click="Update_Click"/>
                         <Button Content="Version" Margin="0,0,5,5" Padding="10,5" Click="Version_Click"/>
+                        <Button Content="Refresh" Margin="0,0,5,5" Padding="10,5" Click="Refresh_Click"/>
                     </WrapPanel>
                 </Grid>
             </GroupBox>

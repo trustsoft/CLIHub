@@ -14,12 +14,14 @@ public partial class MainWindow : Window
     private readonly IProjectService _projectService;
     private readonly IAgentCommandService _agentCommandService;
     private readonly IAgentDetectionService _agentDetectionService;
+    private readonly IAgentVersionService _agentVersionService;
 
     public MainWindow(
         IPluginManager pluginManager,
         IProjectService projectService,
         IAgentCommandService agentCommandService,
-        IAgentDetectionService agentDetectionService)
+        IAgentDetectionService agentDetectionService,
+        IAgentVersionService agentVersionService)
     {
         InitializeComponent();
 
@@ -27,6 +29,7 @@ public partial class MainWindow : Window
         _projectService = projectService;
         _agentCommandService = agentCommandService;
         _agentDetectionService = agentDetectionService;
+        _agentVersionService = agentVersionService;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
@@ -75,6 +78,24 @@ public partial class MainWindow : Window
 
         if (items.Count == 0)
             StatusText.Text = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
+        else
+            _ = PopulateVersionsAsync(items);
+    }
+
+    private async Task PopulateVersionsAsync(IReadOnlyList<AgentItem> items)
+    {
+        await Task.WhenAll(items.Select(async item =>
+        {
+            var version = await _agentVersionService.GetVersionAsync(item.Plugin);
+            item.Version = version ?? "unknown";
+        }));
+    }
+
+    private void Refresh_Click(object sender, RoutedEventArgs e)
+    {
+        _agentVersionService.Invalidate();
+        RefreshAgents();
+        StatusText.Text = "Refreshed agents and versions.";
     }
 
     private void ProjectList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
