@@ -12,11 +12,16 @@
     <PackageReference Include="Serilog" Version="4.2.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="System.Text.Json" Version="9.0.1" />
+    <PackageReference Include="Velopack" Version="1.2.158" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="SeedPlugins\**\*.json" />
     <EmbeddedResource Include="SeedPlugins\**\*.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CLIHub.Tests" />
   </ItemGroup>
 
 </Project>

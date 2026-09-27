@@ -16,6 +16,7 @@ public partial class MainWindow : Window
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
     private readonly IConfigService _configService;
+    private readonly IUpdateService _updateService;
     private bool _suppressFilterEvent;
 
     public MainWindow(
@@ -24,7 +25,8 @@ public partial class MainWindow : Window
         IAgentCommandService agentCommandService,
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
-        IConfigService configService)
+        IConfigService configService,
+        IUpdateService updateService)
     {
         InitializeComponent();
 
@@ -34,6 +36,7 @@ public partial class MainWindow : Window
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
         _configService = configService;
+        _updateService = updateService;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
@@ -41,8 +44,25 @@ public partial class MainWindow : Window
         FilterUnavailableCheckBox.IsChecked = _configService.Load().Preferences.ShowOnlyProjectAgents;
         _suppressFilterEvent = false;
 
+        AppVersionText.Text = $"v{_updateService.GetCurrentVersion()}";
+
         RefreshProjects();
         RefreshAgents();
+    }
+
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        StatusText.Text = "Checking for updates...";
+
+        var result = await _updateService.CheckForUpdatesAsync();
+
+        StatusText.Text = result.Status switch
+        {
+            UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
+            UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
+            UpdateStatus.NotInstalled => "Updates apply to installed builds only.",
+            _ => "Update check failed or timed out."
+        };
     }
 
     private void Filter_Toggled(object sender, RoutedEventArgs e)

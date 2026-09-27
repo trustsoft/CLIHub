@@ -120,11 +120,30 @@
 
         <!-- Status Bar -->
         <Border Grid.Row="2" Background="#34495E" Padding="10,5">
-            <TextBlock x:Name="StatusText" 
-                      Text="CLIHub ready" 
-                      Foreground="#BDC3C7" 
-                      FontSize="12"
-                      TextTrimming="CharacterEllipsis"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText"
+                          Grid.Column="0"
+                          Text="CLIHub ready"
+                          Foreground="#BDC3C7"
+                          FontSize="12"
+                          VerticalAlignment="Center"
+                          TextTrimming="CharacterEllipsis"/>
+                <TextBlock x:Name="AppVersionText"
+                          Grid.Column="1"
+                          Foreground="#BDC3C7"
+                          FontSize="12"
+                          Margin="10,0"
+                          VerticalAlignment="Center"/>
+                <Button Grid.Column="2"
+                        Content="Check for updates"
+                        Padding="10,3"
+                        Click="CheckForUpdates_Click"/>
+            </Grid>
         </Border>
     </Grid>
 </Window>

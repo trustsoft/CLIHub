@@ -1,6 +1,7 @@
 ﻿using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Logging;
+using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 using CLIHub.Hotkeys;
 using CLIHub.Windows;
@@ -57,7 +58,24 @@ public partial class App : Application
 
         RegisterGlobalHotkey(mainWindow);
 
+        _ = CheckForUpdatesAsync();
+
         Log.Information("CLIHub started");
+    }
+
+    private async Task CheckForUpdatesAsync()
+    {
+        try
+        {
+            var result = await _services!.GetRequiredService<IUpdateService>().CheckForUpdatesAsync();
+
+            if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
+                Dispatcher.Invoke(() => _tray?.NotifyUpdateAvailable(version));
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Update check failed");
+        }
     }
 
     private static void ConfigureLogging()

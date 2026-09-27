@@ -66,6 +66,21 @@ public sealed class TrayIconController : IDisposable
             ShowMainWindow();
     }
 
+    /// <summary>
+    /// Shows a tray notification that a new version is available.
+    /// </summary>
+    public void NotifyUpdateAvailable(string version)
+    {
+        try
+        {
+            _taskbarIcon.ShowNotification("Update available", $"CLIHub {version} is available.");
+        }
+        catch
+        {
+            // Notifications can be disabled by the OS; ignore failures.
+        }
+    }
+
     private void RefreshMenu()
     {
         _taskbarIcon.ContextMenu = BuildContextMenu();

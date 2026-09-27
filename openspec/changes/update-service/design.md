@@ -44,13 +44,21 @@ public interface IUpdateService
 
 **Alternatives considered:** Relying only on catching `NotInstalledException` — rejected (exception-driven control flow for an expected state).
 
-### Decision 3: Source URL as a configurable constant
+### Decision 3: GitHub Releases source via `GithubSource`
 
-**Chosen:** `UpdateService` builds `new UpdateManager(<repositoryUrl>)` from a constant (default points at the project's GitHub releases) that must be finalized when packaging is added.
+**Chosen:** `UpdateService` builds `new UpdateManager(new GithubSource(<repositoryUrl>, null, false))` from a constant that must be finalized when packaging is added. Per the Velopack docs, GitHub Releases use `GithubSource` (a plain `github.com` URL is not a Velopack feed).
 
-**Rationale:** Velopack needs a feed URL; today the check is skipped in dev anyway (not installed), so a placeholder is safe and the seam is obvious.
+**Rationale:** Matches the documented source for GitHub-hosted releases; the constant is the single place to set the owner/repo.
 
-**Alternatives considered:** A preference field for the URL — rejected as unnecessary for users.
+**Alternatives considered:** A plain URL string — rejected (only valid for a hosted `releases.{channel}.json` feed, not a GitHub repo).
+
+### Decision 8: Testable manager seam
+
+**Chosen:** Keep the public `UpdateService(ILogger<UpdateService>)` constructor (default GitHub manager, tolerant when the locator is absent), and add an `internal UpdateService(ILogger, UpdateManager)` seam so tests can inject a manager built with `TestVelopackLocator` and a `SimpleFileSource` — the approach the Velopack testing docs recommend. `CLIHub.Core` exposes internals to `CLIHub.Tests` via `InternalsVisibleTo`.
+
+**Rationale:** Exercises the "installed" branch (up-to-date, and later update-available) without a full install, while production code stays simple.
+
+**Alternatives considered:** Testing only the not-installed path — rejected (leaves the real update path untested).
 
 ### Decision 4: Bounded, exception-safe check
 
@@ -73,6 +81,14 @@ public interface IUpdateService
 **Rationale:** Matches the spec (startup + manual + notify + version display) with the UI available today; no Settings window needed.
 
 **Alternatives considered:** A Settings window (deferred to `preferences-ui`).
+
+### Decision 7: Velopack bootstrap via a custom entry point
+
+**Chosen:** Add `Program.Main` that calls `VelopackApp.Build().Run()` before starting WPF (and set `<StartupObject>CLIHub.Program</StartupObject>`).
+
+**Rationale:** Velopack requires its locator to be initialized before any `UpdateManager` is constructed; calling `new UpdateManager(...)` first throws `InvalidOperationException: No VelopackLocator has been set`. A custom entry point is the documented way to run `VelopackApp.Build().Run()` first. In a non-installed run it installs a "not installed" locator, so the service short-circuits to `NotInstalled` instead of throwing.
+
+**Alternatives considered:** Initializing the locator lazily inside `UpdateService` — rejected; Velopack's guidance is to bootstrap first, and the bootstrap also handles install/uninstall hooks.
 
 ## Risks / Trade-offs
 
@@ -104,8 +120,13 @@ Rollback: revert code; no persisted state changes.
 
 ## Reference (Velopack API)
 
-- `new UpdateManager("<url>")`
+- `VelopackApp.Build().Run()` — bootstrap; must be the **first** call in `Main` (Run contract)
+- `new UpdateManager(new GithubSource("<repoUrl>", null, false))` — GitHub Releases source
+- `new UpdateManager(source, options, locator)` — locator injection (testing)
 - `UpdateManager.CurrentVersion : SemanticVersion?` — null when not installed
 - `await UpdateManager.CheckForUpdatesAsync() : UpdateInfo?` — null when up to date
 - `UpdateInfo.TargetFullRelease.Version`
 - `Velopack.Exceptions.NotInstalledException`
+- `TestVelopackLocator(appId, version, packagesDir)` / `SimpleFileSource(DirectoryInfo)` — development/CI testing
+
+Reviewed against https://docs.velopack.io/integrating/overview and https://docs.velopack.io/integrating/testing.
