@@ -1,4 +1,4 @@
-﻿using CLIHub.Core.Hotkeys;
+using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;

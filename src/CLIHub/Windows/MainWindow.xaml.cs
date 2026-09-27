@@ -1,4 +1,4 @@
-﻿using CLIHub.Core.Interfaces;
+using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Win32;
 using System.Windows;
