@@ -24,6 +24,9 @@
 
   <ItemGroup>
     <Resource Include="app.ico" />
+    <Content Include="default-project.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
