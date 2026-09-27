@@ -59,6 +59,7 @@
 - **Naming**: PascalCase for public members, `_camelCase` for private fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
 - **Async patterns**: `async Task` / `ValueTask` used extensively; avoid `async void`.
 - **Reactive extensions (if needed)**: R3 (`ObservableCollections.R3`, `R3`) used for reactive patterns in ViewModels.
+- **MVVM**: Use the Model-View-ViewModel pattern for the WPF UI — keep views (XAML) and code-behind thin; put state, commands, and logic in view models under `src/CLIHub/ViewModels/`. (Some existing windows still carry logic in code-behind and are being migrated as they change.)
 
 ## Build & Run
 
