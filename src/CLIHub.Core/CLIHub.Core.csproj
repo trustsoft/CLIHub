@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="SeedPlugins\**\*.json" />
+    <EmbeddedResource Include="SeedPlugins\**\*.png" />
   </ItemGroup>
 
 </Project>

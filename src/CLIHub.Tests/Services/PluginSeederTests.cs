@@ -33,6 +33,34 @@ public class PluginSeederTests : IDisposable
     }
 
     [Fact]
+    public void SeedIfEmpty_EmptyFolder_WritesLogoForEachAgent()
+    {
+        CreateSeeder().SeedIfEmpty();
+
+        foreach (var id in new[] { "opencode", "pi", "cline-cli", "github-copilot", "openclaude", "qwen-code" })
+        {
+            var logo = Path.Combine(_pluginsPath, id, "logo.png");
+            Assert.True(File.Exists(logo), $"missing logo for {id}");
+            Assert.True(new FileInfo(logo).Length > 0, $"empty logo for {id}");
+        }
+    }
+
+    [Fact]
+    public void SeedIfEmpty_DoesNotOverwriteExistingLogo()
+    {
+        var opencodeDir = Path.Combine(_pluginsPath, "opencode");
+        Directory.CreateDirectory(opencodeDir);
+        File.WriteAllText(Path.Combine(opencodeDir, "plugin.json"),
+            """{ "id": "opencode", "name": "OpenCode", "commands": { "launch": { "executable": "opencode" } } }""");
+        var customLogo = Path.Combine(opencodeDir, "logo.png");
+        File.WriteAllBytes(customLogo, new byte[] { 1, 2, 3, 4 });
+
+        CreateSeeder().SeedIfEmpty();
+
+        Assert.Equal(new byte[] { 1, 2, 3, 4 }, File.ReadAllBytes(customLogo));
+    }
+
+    [Fact]
     public void SeedIfEmpty_ExistingPlugin_DoesNothing()
     {
         var existingDir = Path.Combine(_pluginsPath, "custom");
