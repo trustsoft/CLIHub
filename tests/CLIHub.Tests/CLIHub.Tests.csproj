@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CLIHub.Core\CLIHub.Core.csproj" />
+    <ProjectReference Include="..\..\src\CLIHub.Core\CLIHub.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

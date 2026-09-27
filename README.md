@@ -75,9 +75,9 @@ Only `launch` is required. Built-in descriptors for the six supported agents are
 ## Project layout
 
 ```
-src/CLIHub.Core/   # business logic (net8.0, no WPF)
-src/CLIHub/        # WPF app (net8.0-windows)
-src/CLIHub.Tests/  # xUnit tests
+src/CLIHub.Core/       # business logic (net8.0, no WPF)
+src/CLIHub/            # WPF app (net8.0-windows)
+tests/CLIHub.Tests/    # xUnit tests
 ```
 
 ## Documentation

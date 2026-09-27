@@ -2,9 +2,10 @@
 
 ```
 .
-├── src/                     # Source code (three projects)
+├── src/                     # Application source (two projects)
 │   ├── CLIHub.Core/         # Business logic, services, models (no WPF dependencies)
-│   ├── CLIHub/              # WPF application, UI, system tray, hotkey
+│   └── CLIHub/              # WPF application, UI, system tray, hotkey
+├── tests/                   # Test projects
 │   └── CLIHub.Tests/        # Unit tests (xUnit)
 ├── docs/                    # Project documentation
 ├── assets/                  # Application icon source files (not in the build)
@@ -23,11 +24,11 @@
 
 ## Source Code
 
-**`src/`** — three projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
+**`src/`** — application projects; **`tests/`** — test projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
-- **`CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
-- **`CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
-- **`CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
+- **`src/CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
+- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
+- **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
 
 ## Documentation
 
@@ -59,7 +60,7 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 
 ## Solution Files
 
-**`CLIHub.sln`** — solution at the repository root, referencing the three projects under `src/`.
+**`CLIHub.sln`** — solution at the repository root, referencing the two application projects under `src/` and the test project under `tests/`.
 
 **`Directory.Build.props`** — MSBuild properties configuring build output for all projects:
 - `BaseOutputPath` → `artifacts/` (compiled binaries)

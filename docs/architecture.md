@@ -2,7 +2,7 @@
 
 ## Solution Structure
 
-CLIHub is a three-project solution under `src/`: `CLIHub.Core` (logic), `CLIHub` (WPF UI), and `CLIHub.Tests`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
+CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) under `src/`, plus `CLIHub.Tests` under `tests/`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
 
 ## Project Responsibilities
 

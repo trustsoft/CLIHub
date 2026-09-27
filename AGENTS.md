@@ -16,13 +16,13 @@ Single source of truth for each topic — link, don't duplicate:
 
 ## Project Structure
 
-Source lives under `src/`; the solution is `CLIHub.sln` at the repository root. Do not create projects in the repo root. Full layout: [docs/repo-structure.md](docs/repo-structure.md).
+Application source lives under `src/` and tests under `tests/`; the solution is `CLIHub.sln` at the repository root. Do not create projects in the repo root. Full layout: [docs/repo-structure.md](docs/repo-structure.md).
 
 | Project | Path | Purpose |
 |---------|------|---------|
 | `CLIHub.Core` | `src/CLIHub.Core` | Platform-independent core logic: models, services, interfaces, plugin/agent handling, config, logging, hotkey parsing. No WPF. |
 | `CLIHub` | `src/CLIHub` | WPF application: startup/DI, system tray, global hotkey, windows, converters. |
-| `CLIHub.Tests` | `src/CLIHub.Tests` | xUnit tests for `CLIHub.Core`; references Core only. |
+| `CLIHub.Tests` | `tests/CLIHub.Tests` | xUnit tests for `CLIHub.Core`; references Core only. |
 
 ## Technology Stack
 
