@@ -1,5 +1,6 @@
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace CLIHub.Tests.Services;
 
@@ -27,7 +28,7 @@ public class ProjectServiceTests : IDisposable
     public void AddProject_CreatesProject_WithFolderDerivedName()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
 
         var project = service.AddProject(folder);
 
@@ -40,7 +41,7 @@ public class ProjectServiceTests : IDisposable
     public void AddProject_DuplicatePath_ReturnsExisting()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
 
         var first = service.AddProject(folder);
         var second = service.AddProject(folder + Path.DirectorySeparatorChar);
@@ -52,7 +53,7 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddProject_MissingFolder_Throws()
     {
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
         var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
 
         Assert.Throws<DirectoryNotFoundException>(() => service.AddProject(missing));
@@ -62,7 +63,7 @@ public class ProjectServiceTests : IDisposable
     public void SetCurrentProject_UpdatesCurrentAndRaisesEvent()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
         var project = service.AddProject(folder);
 
         var raised = false;
@@ -83,7 +84,7 @@ public class ProjectServiceTests : IDisposable
             Projects = { new Project { Id = "real", Name = "Real", Path = "C:\\real" } }
         };
 
-        var service = new ProjectService(new FakeConfigService(config));
+        var service = new ProjectService(new FakeConfigService(config), NullLogger<ProjectService>.Instance);
 
         Assert.Null(service.GetCurrentProject());
     }
@@ -101,7 +102,7 @@ public class ProjectServiceTests : IDisposable
             }
         };
 
-        var service = new ProjectService(new FakeConfigService(config));
+        var service = new ProjectService(new FakeConfigService(config), NullLogger<ProjectService>.Instance);
 
         var recent = service.GetRecentProjects(2);
 
@@ -112,7 +113,7 @@ public class ProjectServiceTests : IDisposable
     public void ToggleFavorite_TogglesFlag()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
         var project = service.AddProject(folder);
 
         service.ToggleFavorite(project.Id);
@@ -126,7 +127,7 @@ public class ProjectServiceTests : IDisposable
     public void RemoveProject_ClearsCurrent_AndKeepsFolderOnDisk()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
         var project = service.AddProject(folder);
         service.SetCurrentProject(project.Id);
 
@@ -144,7 +145,7 @@ public class ProjectServiceTests : IDisposable
         File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
 
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
 
         var logo = service.ResolveLogo(folder);
 
@@ -157,7 +158,7 @@ public class ProjectServiceTests : IDisposable
         var folder = CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
 
-        var service = new ProjectService(new FakeConfigService());
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance);
 
         var logo = service.ResolveLogo(folder);
 
@@ -168,7 +169,7 @@ public class ProjectServiceTests : IDisposable
     public void ResolveLogo_NoMatch_ReturnsDefault()
     {
         var folder = CreateTempDir();
-        var service = new ProjectService(new FakeConfigService()) { DefaultLogoPath = "default.png" };
+        var service = new ProjectService(new FakeConfigService(), NullLogger<ProjectService>.Instance) { DefaultLogoPath = "default.png" };
 
         var logo = service.ResolveLogo(folder);
 

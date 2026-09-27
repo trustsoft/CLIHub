@@ -1,5 +1,6 @@
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace CLIHub.Core.Services;
@@ -9,12 +10,18 @@ namespace CLIHub.Core.Services;
 /// </summary>
 public class PluginManager : IPluginManager
 {
+    private readonly ILogger<PluginManager> _logger;
     private readonly List<Plugin> _plugins = new();
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
+
+    public PluginManager(ILogger<PluginManager> logger)
+    {
+        _logger = logger;
+    }
 
     public void LoadPlugins()
     {
@@ -30,6 +37,7 @@ public class PluginManager : IPluginManager
         }
 
         var pluginDirectories = Directory.GetDirectories(pluginsPath);
+        _logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
 
         foreach (var pluginDir in pluginDirectories)
         {
@@ -48,7 +56,7 @@ public class PluginManager : IPluginManager
                     // Check for duplicate ID
                     if (IsDuplicateId(plugin.Id, pluginDir))
                     {
-                        Console.WriteLine($"Warning: Duplicate plugin ID '{plugin.Id}' found in {pluginDir}. Plugin skipped.");
+                        _logger.LogWarning("Duplicate plugin ID {PluginId} in {Directory}; skipped", plugin.Id, pluginDir);
                         continue;
                     }
 
@@ -58,14 +66,16 @@ public class PluginManager : IPluginManager
                     plugin.LogoPath = LoadPluginLogo(pluginDir);
 
                     _plugins.Add(plugin);
+                    _logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
                 }
             }
             catch (Exception ex)
             {
-                // Log error but continue loading other plugins
-                Console.WriteLine($"Warning: Failed to load plugin.json from {pluginDir}: {ex.Message}");
+                _logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", pluginDir);
             }
         }
+
+        _logger.LogInformation("Loaded {Count} plugin(s)", _plugins.Count);
     }
 
     public IEnumerable<Plugin> GetAllPlugins()
@@ -94,11 +104,7 @@ public class PluginManager : IPluginManager
 
         if (errors.Count > 0)
         {
-            Console.WriteLine($"Warning: Invalid plugin in {pluginDirectory}:");
-            foreach (var error in errors)
-            {
-                Console.WriteLine($"  - {error}");
-            }
+            _logger.LogWarning("Invalid plugin in {Directory}: {Errors}", pluginDirectory, string.Join("; ", errors));
             return false;
         }
 

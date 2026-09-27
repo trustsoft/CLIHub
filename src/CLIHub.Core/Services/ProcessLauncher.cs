@@ -1,5 +1,6 @@
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace CLIHub.Core.Services;
@@ -9,10 +10,12 @@ namespace CLIHub.Core.Services;
 /// </summary>
 public class ProcessLauncher : IProcessLauncher
 {
+    private readonly ILogger<ProcessLauncher> _logger;
     private string _terminalExecutable;
 
-    public ProcessLauncher()
+    public ProcessLauncher(ILogger<ProcessLauncher> logger)
     {
+        _logger = logger;
         // Default to Windows Terminal
         _terminalExecutable = "wt.exe";
     }
@@ -33,59 +36,64 @@ public class ProcessLauncher : IProcessLauncher
     {
         if (command == null)
         {
-            Console.WriteLine("Error: Plugin command cannot be null");
+            _logger.LogError("Plugin command cannot be null");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(command.Executable))
         {
-            Console.WriteLine("Error: Executable path is required in plugin command");
+            _logger.LogError("Executable path is required in plugin command {CommandName}", command.Name);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(workingDirectory))
         {
-            Console.WriteLine("Error: Working directory cannot be null or empty");
+            _logger.LogError("Working directory cannot be null or empty");
             return false;
         }
 
         if (!Directory.Exists(workingDirectory))
         {
-            Console.WriteLine($"Error: Working directory does not exist: {workingDirectory}");
+            _logger.LogError("Working directory does not exist: {WorkingDirectory}", workingDirectory);
             return false;
         }
+
+        var arguments = BuildTerminalArguments(command, workingDirectory);
+        _logger.LogInformation(
+            "Launching {CommandName} ({Executable}) in {WorkingDirectory}",
+            command.Name, command.Executable, workingDirectory);
 
         try
         {
             var startInfo = new ProcessStartInfo
             {
                 FileName = _terminalExecutable,
-                Arguments = BuildTerminalArguments(command, workingDirectory),
+                Arguments = arguments,
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = true // Required for wt.exe to work properly
             };
 
             Process.Start(startInfo);
-            Console.WriteLine($"Successfully launched: {command.Name} in {workingDirectory}");
+            _logger.LogInformation("Launched {CommandName} in {WorkingDirectory}", command.Name, workingDirectory);
             return true;
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
-            Console.WriteLine($"Error: Failed to start {command.Executable} - {ex.Message}");
+            _logger.LogError(ex, "Failed to start {Executable}", command.Executable);
             if (ex.Message.Contains("not found"))
             {
-                Console.WriteLine("Hint: Make sure the executable is in your PATH or provide a full path");
+                _logger.LogWarning("Make sure {Executable} is on PATH or provide a full path", command.Executable);
             }
             return false;
         }
         catch (UnauthorizedAccessException ex)
         {
-            Console.WriteLine($"Error: Access denied when starting {command.Executable} - {ex.Message}");
+            _logger.LogError(ex, "Access denied when starting {Executable}", command.Executable);
             return false;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Unexpected error launching process: {ex.GetType().Name} - {ex.Message}");
+            _logger.LogError(ex, "Unexpected error launching process");
             return false;
         }
     }

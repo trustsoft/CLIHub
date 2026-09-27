@@ -2,6 +2,8 @@ using CLIHub.Core;
 using CLIHub.Core.Services;
 using CLIHub.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 using System.IO;
 
 namespace CLIHub;
@@ -15,6 +17,8 @@ public static class ServiceRegistration
     {
         services.AddClIHubCoreServices(
             Path.Combine(AppContext.BaseDirectory, "default-project.png"));
+
+        services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
         services.AddSingleton<TrayIconController>();

@@ -1,6 +1,7 @@
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace CLIHub.Core;
 
@@ -11,6 +12,8 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds configuration, project, plugin, and process-launch services as singletons.
+    /// Logging is registered so services can resolve <c>ILogger&lt;T&gt;</c>; the host may
+    /// add providers (for example Serilog) to the same logging pipeline.
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
     /// <param name="defaultLogoPath">Path to the fallback project logo, or null.</param>
@@ -18,10 +21,13 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string? defaultLogoPath = null)
     {
+        services.AddLogging();
+
         services.AddSingleton<IConfigService, ConfigService>();
 
         services.AddSingleton<IProjectService>(sp => new ProjectService(
-            sp.GetRequiredService<IConfigService>())
+            sp.GetRequiredService<IConfigService>(),
+            sp.GetRequiredService<ILogger<ProjectService>>())
         {
             DefaultLogoPath = defaultLogoPath
         });

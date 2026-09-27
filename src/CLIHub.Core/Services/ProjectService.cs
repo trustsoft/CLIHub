@@ -1,5 +1,6 @@
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CLIHub.Core.Services;
 
@@ -15,15 +16,17 @@ public class ProjectService : IProjectService
     };
 
     private readonly IConfigService _configService;
+    private readonly ILogger<ProjectService> _logger;
     private readonly AppConfig _config;
 
     public event EventHandler? ProjectsChanged;
 
     public string? DefaultLogoPath { get; set; }
 
-    public ProjectService(IConfigService configService)
+    public ProjectService(IConfigService configService, ILogger<ProjectService> logger)
     {
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _config = _configService.Load();
         ClearStaleCurrentProject();
     }
@@ -100,6 +103,7 @@ public class ProjectService : IProjectService
             project.Name = normalized;
 
         _config.Projects.Add(project);
+        _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
         Persist();
         return project;
     }
@@ -111,6 +115,7 @@ public class ProjectService : IProjectService
             return;
 
         _config.Projects.Remove(project);
+        _logger.LogInformation("Removed project {ProjectName}", project.Name);
 
         if (_config.CurrentProjectId == projectId)
             _config.CurrentProjectId = null;
@@ -126,6 +131,7 @@ public class ProjectService : IProjectService
 
         _config.CurrentProjectId = projectId;
         project.LastUsed = DateTime.UtcNow;
+        _logger.LogDebug("Current project set to {ProjectName}", project.Name);
         Persist();
     }
 
@@ -172,6 +178,7 @@ public class ProjectService : IProjectService
         var matches = _config.Projects.Any(p => p.Id == _config.CurrentProjectId);
         if (!matches)
         {
+            _logger.LogDebug("Clearing stale current project id {ProjectId}", _config.CurrentProjectId);
             _config.CurrentProjectId = null;
             Persist();
         }
