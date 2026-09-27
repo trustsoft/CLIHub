@@ -12,7 +12,9 @@
 ├── .idea/              # JetBrains Rider project settings
 ├── .git/               # Git version control metadata
 ├── artifacts/          # Build output (git-ignored)
-│   └── bin/            # Compiled binaries
+│   ├── CLIHub/         # WPF application binaries
+│   ├── CLIHub.Core/    # Core library binaries
+│   └── CLIHub.Tests/   # Test binaries
 ├── obj/                # Intermediate build artifacts (git-ignored)
 ├── CLIHub.sln          # Visual Studio solution file
 ├── Directory.Build.props # MSBuild properties for all projects
@@ -76,14 +78,15 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 **`CLIHub.sln`** - Visual Studio solution file at repository root, referencing all projects under `src/`.
 
 **`Directory.Build.props`** - MSBuild properties file at repository root that configures build output paths for all projects:
-- Sets `BaseOutputPath` to `artifacts/bin/` for compiled binaries
+- Sets `BaseOutputPath` to `artifacts/` for compiled binaries
 - Sets `BaseIntermediateOutputPath` to `obj/` for intermediate build files
 
 ## Build Output (git-ignored)
 
 **Centralized build structure:**
-- **`artifacts/bin/`** - Final compiled binaries (DLLs, EXEs) organized by project and configuration
-  - Example: `artifacts/bin/CLIHub/Debug/net8.0-windows/CLIHub.dll`
+- **`artifacts/`** - Final compiled binaries (DLLs, EXEs) organized by project and configuration
+  - Example: `artifacts/CLIHub/Debug/net8.0-windows/CLIHub.dll`
+  - Example: `artifacts/CLIHub.Core/Debug/net8.0/CLIHub.Core.dll`
 - **`obj/`** - Intermediate build artifacts at repository root (MSBuild temporary files, generated code)
   - Example: `obj/CLIHub/Debug/net8.0-windows/`
 

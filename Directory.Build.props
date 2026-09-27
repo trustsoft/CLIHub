@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Centralize build output -->
-    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\$(MSBuildProjectName)\</BaseOutputPath>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
   </PropertyGroup>
 </Project>

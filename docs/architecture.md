@@ -27,7 +27,9 @@ CLIHub/
 │       └── Models/            (model tests)
 │
 ├── artifacts/                 (build output - git ignored)
-│   └── bin/                   (compiled binaries)
+│   ├── CLIHub/                (WPF application binaries)
+│   ├── CLIHub.Core/           (core library binaries)
+│   └── CLIHub.Tests/          (test binaries)
 ├── obj/                       (intermediate build - git ignored)
 ├── docs/                      (documentation)
 ├── openspec/                  (planning artifacts)
