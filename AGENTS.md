@@ -2,25 +2,35 @@
 
 ## Project Status
 
-**Greenfield WPF project** - currently in scaffold phase with planning artifacts in `openspec/changes/application-scaffold/`.
+**Active WPF application** with three projects under `src/`: `CLIHub.Core` (logic), `CLIHub` (WPF UI), `CLIHub.Tests` (xUnit). Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management.
 
 ## Critical Structure Requirements
 
 1. **Source code MUST live in `src/` subdirectory** - do not create projects in the repo root
-2. **Solution file required** - create `CLIHub.sln` at repo root with projects under `src/`
+2. **Solution file** - `CLIHub.sln` at repo root with projects under `src/`
 3. **Project structure:**
    ```
-   CLIHub/              (repo root)
-   ├── CLIHub.sln       (solution file)
+   CLIHub/                      (repo root)
+   ├── CLIHub.sln               (solution file)
+   ├── Directory.Build.props    (build output paths)
    ├── src/
-   │   └── CLIHub/      (WPF application project)
-   │       ├── CLIHub.csproj
-   │       ├── Models/
-   │       ├── Services/
-   │       ├── Windows/
-   │       └── Resources/
+   │   ├── CLIHub.Core/         (business logic; no WPF references)
+   │   │   ├── Models/          (Plugin, Project, AppConfig, Agent* models)
+   │   │   ├── Services/        (config, projects, plugins, agents, logging)
+   │   │   ├── Interfaces/      (service contracts)
+   │   │   ├── Hotkeys/         (HotkeyParser)
+   │   │   ├── Logging/         (LoggingSetup, LogLevelParser)
+   │   │   └── SeedPlugins/     (embedded built-in agent descriptors + logos)
+   │   ├── CLIHub/              (WPF app; references CLIHub.Core)
+   │   │   ├── Windows/         (MainWindow)
+   │   │   ├── ViewModels/
+   │   │   ├── Hotkeys/         (GlobalHotkeyService)
+   │   │   ├── Converters/
+   │   │   └── App.xaml(.cs)    (startup, DI, tray)
+   │   └── CLIHub.Tests/        (xUnit; references CLIHub.Core only)
    ├── docs/
-   └── openspec/
+   ├── openspec/                (specs + archived changes)
+   └── artifacts/ + obj/        (build output; git-ignored)
    ```
 
 ## Technology Stack (per design.md)
@@ -40,6 +50,16 @@
 - **Plugin system** uses JSON descriptors in `%APPDATA%\CLIHub\plugins\<plugin-id>/plugin.json`
 - **Log location:** `%APPDATA%\CLIHub\logs\clihub-YYYYMMDD.log` with 7-day retention
 
+## Code Style
+
+- **File-scoped namespaces** (`namespace X;` not block-scoped).
+- **Nullable reference types** enabled globally.
+- **Implicit usings** enabled — no need for `using System;` etc.
+- **Braces** Use curly braces for if statements and loops.
+- **Naming**: PascalCase for public members, `_camelCase` for private fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
+- **Async patterns**: `async Task` / `ValueTask` used extensively; avoid `async void`.
+- **Reactive extensions (if needed)**: R3 (`ObservableCollections.R3`, `R3`) used for reactive patterns in ViewModels.
+
 ## Build & Run
 
 ```powershell
@@ -50,20 +70,21 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 
 ## OpenSpec Workflow
 
-Active change: `application-scaffold`
+No active change. Work is proposed and archived one change at a time.
 
 ```bash
-# Check planning status
-openspec status --change application-scaffold
+# List main specs (durable capabilities)
+openspec list --specs
 
-# View implementation instructions
-openspec instructions apply --change application-scaffold --json
+# Propose the next change
+openspec new change "<name>"
+openspec validate "<name>"
 
-# Continue implementation
-# Use /opsx-apply skill or manually implement from tasks.md
+# Implement, then archive (syncs specs)
+openspec archive "<name>"
 ```
 
-**Before implementing:** Discuss structure decisions first. User wants to review architecture before code generation.
+Authored specs live in `openspec/specs/`; completed changes in `openspec/changes/archive/`.
 
 ## Known Constraints
 
