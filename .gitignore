@@ -1,5 +1,6 @@
-# Build results - centralized in artifacts/
+# Build results - centralized
 artifacts/
+obj/
 
 # Legacy build paths (if any projects still use default paths)
 [Dd]ebug/
@@ -13,7 +14,6 @@ x86/
 [Aa][Rr][Mm]64/
 bld/
 [Bb]in/
-[Oo]bj/
 [Ll]og/
 [Ll]ogs/
 
