@@ -1,4 +1,4 @@
-namespace CLIHub.Models;
+namespace CLIHub.Core.Models;
 
 /// <summary>
 /// Application configuration persisted to config.json

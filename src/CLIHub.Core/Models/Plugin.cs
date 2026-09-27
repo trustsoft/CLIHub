@@ -1,4 +1,4 @@
-namespace CLIHub.Models;
+namespace CLIHub.Core.Models;
 
 /// <summary>
 /// Represents an AI agent CLI tool plugin loaded from plugin.json

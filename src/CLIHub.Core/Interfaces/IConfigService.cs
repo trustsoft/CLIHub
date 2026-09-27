@@ -1,6 +1,6 @@
-using CLIHub.Models;
+using CLIHub.Core.Models;
 
-namespace CLIHub.Services;
+namespace CLIHub.Core.Interfaces;
 
 /// <summary>
 /// Service for loading and saving application configuration

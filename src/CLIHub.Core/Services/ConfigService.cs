@@ -1,8 +1,8 @@
-using CLIHub.Models;
-using System.IO;
+using CLIHub.Core.Models;
+using CLIHub.Core.Interfaces;
 using System.Text.Json;
 
-namespace CLIHub.Services;
+namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Service for loading and saving application configuration to config.json

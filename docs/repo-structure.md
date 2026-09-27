@@ -2,43 +2,47 @@
 
 ```
 .
-├── src/                # Source code (not yet created)
+├── src/                # Source code
 │   ├── CLIHub.Core/    # Business logic, services, models (no WPF dependencies)
 │   ├── CLIHub/         # WPF application, UI, system tray integration
 │   └── CLIHub.Tests/   # Unit and integration tests
 ├── docs/               # Project documentation
-├── assets/             # Application icon sources (PNG, design files)
 ├── openspec/           # Spec-driven planning artifacts (OpenSpec CLI)
 ├── .opencode/          # OpenCode CLI configuration and skills
 ├── .idea/              # JetBrains Rider project settings
 ├── .git/               # Git version control metadata
-├── bin/                # Build output (git-ignored)
+├── artifacts/          # Build output (git-ignored)
+│   └── bin/            # Compiled binaries
 ├── obj/                # Intermediate build artifacts (git-ignored)
-├── CLIHub.sln          # Solution file (to be created)
-└── [temp files]        # Temporary scaffold files (to be relocated)
-```
+├── CLIHub.sln          # Visual Studio solution file
+├── Directory.Build.props # MSBuild properties for all projects
+├── .gitignore          # Git exclusions
+└── AGENTS.md           # OpenCode agent instructions```
 
 ## Source Code
 
-**`src/`** (planned structure, not yet created)
+**`src/`** - Three-project solution architecture:
 
-Three-project solution architecture:
-
-- **`CLIHub.Core/`** - Core business logic layer
-  - Models, services, configuration management
-  - Plugin discovery and validation
-  - Process spawning and Windows Terminal integration
+- **`CLIHub.Core/`** - Core business logic layer (class library, .NET 8)
+  - `Models/` - Domain models: Plugin, Project, AppConfig, PluginCommand
+  - `Services/` - Core services: ConfigService
+  - `Interfaces/` - Service contracts: IConfigService
   - No dependencies on WPF or UI frameworks
+  - Dependencies: Serilog, System.Text.Json
   
-- **`CLIHub/`** - WPF application layer
-  - System tray integration (H.NotifyIcon.Wpf)
-  - UI windows and dialogs
-  - Dependency injection setup
-  - Application entry point and lifetime management
+- **`CLIHub/`** - WPF application layer (.NET 8 Windows)
+  - `Windows/` - WPF windows: MainWindow
+  - `ViewModels/` - MVVM view models (to be created)
+  - `Resources/` - Icons, images, styles
+  - `App.xaml` - Application entry point
+  - Dependencies: H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Serilog
+  - Project reference to CLIHub.Core
   
-- **`CLIHub.Tests/`** - Automated tests
-  - Unit tests for Core services
-  - Integration tests for configuration and plugin loading
+- **`CLIHub.Tests/`** - Automated tests (xUnit, .NET 8)
+  - `Services/` - Service tests
+  - `Models/` - Model tests
+  - Dependencies: xUnit, Moq, coverlet
+  - Project reference to CLIHub.Core
 
 See [architecture.md](architecture.md) for detailed design decisions, technology stack, and dependency flow.
 
@@ -49,10 +53,6 @@ See [architecture.md](architecture.md) for detailed design decisions, technology
 - `vision.md` - Project vision, goals, audience, capability roadmap
 - `architecture.md` - Solution architecture, technology decisions, conventions
 - `repo-structure.md` - This file
-
-## Assets
-
-**`assets/`** - Application icon source files in various formats and sizes, including PNG images used to generate the final `.ico` for the WPF application and system tray.
 
 ## Planning Artifacts
 
@@ -71,27 +71,20 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 
 **`.git/`** - Git version control metadata.
 
-## Solution Files (to be created)
+## Solution Files
 
 **`CLIHub.sln`** - Visual Studio solution file at repository root, referencing all projects under `src/`.
 
-Optional future additions:
-- `Directory.build.props` - Common MSBuild properties for all projects
-- `src/Directory.build.props` - Source-specific build configuration
-
-## Temporary Root Files (to be relocated)
-
-The following files currently exist in the repository root from an early scaffold attempt and will be **moved into `src/CLIHub/`** once the solution structure is finalized:
-
-- `App.xaml`, `App.xaml.cs` - WPF application entry point
-- `AssemblyInfo.cs` - Assembly metadata
-- `CLIHub.csproj` - Project file (will move under `src/CLIHub/`)
-- `MainWindow.xaml`, `MainWindow.xaml.cs` - Default WPF window template
-- `Models/`, `Services/`, `Windows/`, `Resources/` - Scaffolded code directories
-
-**Do not treat these as the final structure** - they predate the `src/` reorganization decision documented in `architecture.md`.
+**`Directory.Build.props`** - MSBuild properties file at repository root that configures build output paths for all projects:
+- Sets `BaseOutputPath` to `artifacts/bin/` for compiled binaries
+- Sets `BaseIntermediateOutputPath` to `obj/` for intermediate build files
 
 ## Build Output (git-ignored)
 
-- **`bin/`** - Compiled binaries (per-project output for each target framework)
-- **`obj/`** - Intermediate build artifacts (MSBuild temporary files)
+**Centralized build structure:**
+- **`artifacts/bin/`** - Final compiled binaries (DLLs, EXEs) organized by project and configuration
+  - Example: `artifacts/bin/CLIHub/Debug/net8.0-windows/CLIHub.dll`
+- **`obj/`** - Intermediate build artifacts at repository root (MSBuild temporary files, generated code)
+  - Example: `obj/CLIHub/Debug/net8.0-windows/`
+
+Both directories are excluded from version control via `.gitignore`.

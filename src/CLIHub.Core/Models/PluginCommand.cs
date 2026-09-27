@@ -1,4 +1,4 @@
-namespace CLIHub.Models;
+namespace CLIHub.Core.Models;
 
 /// <summary>
 /// Represents a command provided by a plugin

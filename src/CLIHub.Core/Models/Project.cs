@@ -1,4 +1,4 @@
-namespace CLIHub.Models;
+namespace CLIHub.Core.Models;
 
 /// <summary>
 /// Represents a project directory tracked by CLIHub

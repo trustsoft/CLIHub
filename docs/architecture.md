@@ -2,7 +2,7 @@
 
 ## Solution Structure
 
-CLIHub uses a two-layer architecture separating business logic from UI concerns:
+CLIHub uses a three-project architecture separating business logic from UI concerns:
 
 ```
 CLIHub/
@@ -11,23 +11,27 @@ CLIHub/
 │   ├── CLIHub.Core/           (business logic, services, models)
 │   │   ├── CLIHub.Core.csproj
 │   │   ├── Models/            (domain models: Plugin, Project, AppConfig)
-│   │   ├── Services/          (core services: config, plugin manager, process launcher)
-│   │   └── Interfaces/        (service contracts)
+│   │   ├── Services/          (core services: ConfigService)
+│   │   └── Interfaces/        (service contracts: IConfigService)
 │   │
 │   ├── CLIHub/                (WPF application)
 │   │   ├── CLIHub.csproj
 │   │   ├── App.xaml           (application entry point)
-│   │   ├── Windows/           (WPF windows: LaunchWindow, SettingsWindow)
+│   │   ├── Windows/           (WPF windows: MainWindow)
 │   │   ├── ViewModels/        (MVVM view models)
-│   │   └── Resources/         (icons, styles, assets)
+│   │   └── Resources/         (icons, images, styles)
 │   │
-│   └── CLIHub.Tests/          (unit tests)
+│   └── CLIHub.Tests/          (unit and integration tests)
 │       ├── CLIHub.Tests.csproj
 │       ├── Services/          (service layer tests)
 │       └── Models/            (model tests)
 │
+├── artifacts/                 (build output - git ignored)
+│   └── bin/                   (compiled binaries)
+├── obj/                       (intermediate build - git ignored)
 ├── docs/                      (documentation)
-└── openspec/                  (planning artifacts)
+├── openspec/                  (planning artifacts)
+└── Directory.Build.props      (centralized build configuration)
 ```
 
 ## Project Responsibilities
@@ -176,6 +180,10 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Location:** `%APPDATA%\CLIHub\config.json`
 - **Atomic writes:** Write to `.tmp` file, then rename to avoid corruption
 - **Schema:** AppConfig with projects list, preferences, and currentProjectId
+- **Versioning:** Config includes `schemaVersion` field for forward/backward compatibility
+  - Current version: `1.0`
+  - Version mismatch handling: attempt migration for older versions, fail safely for newer unknown versions
+  - Migration strategy: preserve unknown fields when upgrading, log warnings for deprecated fields
 
 ## Logging Strategy
 
@@ -184,6 +192,46 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Rotation:** Daily files with 7-day retention
 - **Levels:** Configurable via `AppPreferences.LogLevel` (default: Information)
 - **Format:** Structured logging with timestamps, levels, and context
+
+## Error Handling Strategy
+
+### Configuration Errors
+
+- **Missing config.json:** Generate default configuration with empty projects list on first run
+- **Corrupted config.json:** Log error, backup corrupted file to `config.json.backup`, create fresh default config
+- **Invalid JSON schema:** Attempt best-effort parsing, fill missing fields with defaults, log warnings
+- **Version mismatch:** See Configuration Persistence versioning strategy above
+
+### File System Errors
+
+- **%APPDATA% write access denied:** Display error dialog to user, fall back to read-only mode (no settings persistence)
+- **Log directory creation failure:** Continue operation without file logging, log to Windows Event Log instead
+- **Plugin directory missing:** Create on demand when first plugin is added, log info message
+
+### Plugin Errors
+
+- **Invalid plugin.json:** Skip plugin during discovery, log warning with file path and validation error
+- **Missing executable path:** Mark plugin as unavailable in UI, display warning icon with tooltip
+- **Duplicate plugin IDs:** Load first occurrence, ignore duplicates, log warning
+
+### Process Spawning Errors
+
+- **Windows Terminal (wt.exe) not found:** Display error dialog with download link, offer fallback to cmd.exe
+- **Working directory doesn't exist:** Show warning, offer to launch in user's home directory or cancel
+- **Command execution failure:** Log full error details, display user-friendly error dialog with command that failed
+
+### System Integration Errors
+
+- **Mutex acquisition failure (single instance):** Activate existing instance window and exit gracefully
+- **System tray registration failure:** Log error, display error dialog, terminate application (tray is core functionality)
+- **Hotkey registration failure:** Log warning, continue without hotkeys, display notification to user
+
+### General Error Handling Principles
+
+- **User-facing errors:** Display clear, actionable error messages in dialogs (never raw exception text)
+- **Developer errors:** Log full stack traces to file for debugging
+- **Graceful degradation:** Continue operation when non-critical features fail
+- **Fail-fast for critical errors:** Terminate cleanly when core functionality (tray, mutex, config) fails
 
 ## Testing Strategy
 
@@ -214,9 +262,9 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Naming:** PascalCase for classes/methods, camelCase for JSON properties
 
 ### Namespace Structure
-- `CLIHub.Models` - domain models
-- `CLIHub.Services` - service implementations
-- `CLIHub.Interfaces` - service contracts (alternative: `CLIHub.Services.Abstractions`)
+- `CLIHub.Core.Models` - domain models
+- `CLIHub.Core.Services` - service implementations
+- `CLIHub.Core.Interfaces` - service contracts
 - `CLIHub.Windows` - WPF windows
 - `CLIHub.ViewModels` - MVVM view models
 
@@ -248,3 +296,39 @@ dotnet test CLIHub.sln
 - **No in-app terminal** - delegates to Windows Terminal
 - **No Windows Forms** - banned, use WPF equivalents
 - **No DLL plugins** - plugins are JSON descriptors only
+
+## Security Considerations
+
+### Single Instance Enforcement
+
+- **Mechanism:** Named mutex `Global\CLIHub` created at application startup
+- **Purpose:** Prevent multiple instances from conflicting during config file writes
+- **Behavior:** 
+  - First instance: Acquires mutex, runs normally
+  - Subsequent instances: Detect existing mutex, activate first instance window via named pipe or window enumeration, exit gracefully
+- **Security scope:** Global namespace (visible across user sessions) to prevent conflicts even with multiple users
+
+### File System Security
+
+- **Config directory permissions:** Use default Windows ACLs for `%APPDATA%\CLIHub\` (user-only read/write)
+- **Atomic writes:** Prevent corruption from crashes or power loss via temp-file-then-rename pattern
+- **Log file access:** Restricted to current user via %APPDATA% location
+- **Plugin directory:** User-controlled location, no privilege elevation
+
+### Process Spawning Security
+
+- **Command injection prevention:** All command arguments passed to Windows Terminal via properly escaped arguments, never via shell string concatenation
+- **Working directory validation:** Validate directory exists and is accessible before spawning process
+- **No elevation:** CLIHub runs with standard user privileges, never requests admin rights
+
+### Secrets and Credentials
+
+- **No credential storage:** CLIHub does not store API keys, tokens, or passwords
+- **Plugin executables:** Users responsible for securing their AI CLI tool credentials
+- **Config file contents:** Project paths and preferences only, no sensitive data
+
+### Update Mechanism (Future)
+
+- **HTTPS only:** Future update checks must use HTTPS endpoints with certificate validation
+- **Signature verification:** Downloaded updates must be signed and verified before installation
+- **User consent:** Updates require explicit user approval, never auto-install
