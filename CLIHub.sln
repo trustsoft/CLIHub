@@ -5,8 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub", "src\CLIHub\CLIHub.csproj", "{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
-EndProject
+
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Core", "src\CLIHub.Core\CLIHub.Core.csproj", "{4EAD803B-4EDF-4044-9C82-ADAF9CFB332D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Tests", "src\CLIHub.Tests\CLIHub.Tests.csproj", "{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E}"
@@ -60,9 +59,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{4EAD803B-4EDF-4044-9C82-ADAF9CFB332D} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
-		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

@@ -5,8 +5,87 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CLIHub.Windows"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="CLIHub - AI Agent Launcher" 
+        Height="600" Width="800"
+        WindowStartupLocation="CenterScreen">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="20,10">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                <TextBlock Text="CLIHub" 
+                          FontSize="24" 
+                          FontWeight="Bold" 
+                          Foreground="White" 
+                          VerticalAlignment="Center"/>
+                <TextBlock Text="AI Agent Launcher" 
+                          FontSize="14" 
+                          Foreground="#BDC3C7" 
+                          VerticalAlignment="Center"
+                          Margin="10,0,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="1" Margin="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Projects List -->
+            <GroupBox Grid.Column="0" Header="Projects" Margin="0,0,10,0">
+                <StackPanel>
+                    <TextBlock Text="No projects loaded yet." 
+                              Margin="10" 
+                              TextWrapping="Wrap"
+                              Foreground="Gray"/>
+                    <TextBlock Text="Plugins and projects will be loaded here." 
+                              Margin="10,0,10,10" 
+                              TextWrapping="Wrap"
+                              FontSize="12"
+                              Foreground="LightGray"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Plugins List -->
+            <GroupBox Grid.Column="1" Header="Available AI Agents">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0">
+                        <TextBlock Text="Plugins are loaded from %APPDATA%\CLIHub\plugins\" 
+                                  Margin="10" 
+                                  TextWrapping="Wrap"
+                                  FontSize="12"
+                                  Foreground="Gray"/>
+                        <TextBlock x:Name="PluginListText" 
+                                  Margin="10" 
+                                  TextWrapping="Wrap"
+                                  Foreground="#2C3E50"/>
+                    </StackPanel>
+                    <Button Grid.Row="1" 
+                            Content="Launch First Agent" 
+                            Margin="10" 
+                            Padding="10,5"
+                            Click="LaunchPlugin_Click"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#34495E" Padding="10,5">
+            <TextBlock x:Name="StatusText" 
+                      Text="CLIHub ready" 
+                      Foreground="#BDC3C7" 
+                      FontSize="12"/>
+        </Border>
     </Grid>
 </Window>
