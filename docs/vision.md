@@ -4,7 +4,7 @@
 A Windows system tray companion application that streamlines access to multiple AI agent CLI tools within project directories.
 
 ## Problem
-Developers working with multiple AI agent CLI tools (like OpenCode, Aider, Cursor, etc.) need a convenient way to launch these tools in the context of their current project without manually navigating to project directories and typing commands. Windows 10/11 users lack a unified, accessible launcher for AI development tools that respects project context.
+Developers working with multiple AI agent CLI tools (such as OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code) need a convenient way to launch these tools in the context of their current project without manually navigating to project directories and typing commands. Windows 10/11 users lack a unified, accessible launcher for AI development tools that respects project context.
 
 ## Goals
 - Provide quick, one-click access to AI agent CLI tools from the Windows system tray
@@ -17,7 +17,7 @@ Developers working with multiple AI agent CLI tools (like OpenCode, Aider, Curso
 - Replace the CLI tools themselves
 - Provide AI capabilities directly
 - Support macOS or Linux (Windows-only focus)
-- Manage AI tool installation or updates
+- Install or manage the AI tools on the user's behalf (CLIHub can invoke a tool's own self-update command, but does not manage installations)
 - Serve as a full IDE or code editor
 
 ## Audience
@@ -25,12 +25,25 @@ Developers working with multiple AI agent CLI tools (like OpenCode, Aider, Curso
 - Teams standardizing on multiple AI agent CLI workflows
 - Solo developers juggling several AI coding assistants
 
-## Directions (draft — subject to review)
-- System tray icon with context menu showing available AI agent CLIs
-- Project directory detection and management (recent projects, favorites)
-- Quick launch for configured AI tools in selected project context
-- Configuration UI for adding/removing AI CLI tools and their launch parameters
-- Windows Terminal integration for spawning CLI sessions
-- Keyboard shortcuts for power users
-- Notification support for background AI agent activities
-- Settings persistence across sessions
+## Direction & Status
+
+The capability sketch below began as a draft. Delivered capabilities are tracked as durable specs under `openspec/specs/`; the rest remain directions.
+
+**Delivered**
+- Windows system tray icon with a context menu (current project, recent projects, add project, launch agent, exit) — `project-management`
+- Project management with logos, recents, and a current-project launch context — `project-management`
+- Dynamic agent plugins described by JSON descriptors, seeded on first run with logos — `plugin-seeding`
+- Agent command set: launch, resume last session, version, update, initialize — `agent-commands`
+- Agent availability detection (installed on host / used in project) — `agent-detection`
+- Agent version display and availability dimming/filtering — `agent-version`, `agent-availability-display`
+- Windows Terminal integration for spawning sessions — `agent-commands`
+- Global keyboard shortcut (Ctrl+Shift+A) to toggle the window — `hotkey-support`
+- File logging with configurable levels and rotation — `logging`
+- Single-instance enforcement and dependency injection — `app-lifecycle`
+
+**Remaining directions**
+- A dedicated launch-window layout (split projects/agents pane per the UI mockup)
+- Settings UI for preferences (terminal executable, log level, hotkey, filters)
+- Application update checking and notification (Velopack)
+- Notification support for background agent activities
+- Per-agent project filtering refinements beyond dim/hide
