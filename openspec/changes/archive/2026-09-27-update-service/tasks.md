@@ -19,7 +19,7 @@
 ## 4. Verification
 
 - [x] 4.1 Build the full solution with 0 warnings/errors
-- [ ] 4.2 Manually verify: the window shows the app version; clicking "Check for updates" reports an outcome (in a build-output run, "not installed"); startup does not block
+- [x] 4.2 Manually verify: the window shows the app version; clicking "Check for updates" reports an outcome (in a build-output run, "not installed"); startup does not block
 
 > Implementation notes:
 > - Velopack requires `VelopackApp.Build().Run()` before any `UpdateManager` is created, so a custom entry point (`Program.cs`, `<StartupObject>CLIHub.Program</StartupObject>`) was added; `Main` runs the bootstrap first, per the Velopack Run contract.
