@@ -1,8 +1,15 @@
 <Project>
   <PropertyGroup>
+    <!-- Route the WPF temporary markup-compilation project into a single stable
+         folder instead of a new hashed folder per build. -->
+    <_IsWpfTemp>false</_IsWpfTemp>
+    <_IsWpfTemp Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">true</_IsWpfTemp>
+    <_ProjectFolderName Condition="'$(_IsWpfTemp)' != 'true'">$(MSBuildProjectName)</_ProjectFolderName>
+    <_ProjectFolderName Condition="'$(_IsWpfTemp)' == 'true'">_wpftmp</_ProjectFolderName>
+
     <!-- Centralize build output -->
-    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\$(MSBuildProjectName)\</BaseOutputPath>
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\$(_ProjectFolderName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(_ProjectFolderName)\</BaseIntermediateOutputPath>
 
     <!-- Product version and a clean informational version (no +commit hash) -->
     <Version>1.0.0</Version>
