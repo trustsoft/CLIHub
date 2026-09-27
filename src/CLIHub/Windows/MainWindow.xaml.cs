@@ -14,13 +14,16 @@ public partial class MainWindow : Window
     private readonly IProcessLauncher _processLauncher;
     private readonly IProjectService _projectService;
 
-    public MainWindow()
+    public MainWindow(
+        IPluginManager pluginManager,
+        IProcessLauncher processLauncher,
+        IProjectService projectService)
     {
         InitializeComponent();
 
-        _pluginManager = AppServices.Plugins;
-        _processLauncher = AppServices.Launcher;
-        _projectService = AppServices.Projects;
+        _pluginManager = pluginManager;
+        _processLauncher = processLauncher;
+        _projectService = projectService;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 

@@ -1,0 +1,48 @@
+using CLIHub.Core;
+using CLIHub.Core.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CLIHub.Tests;
+
+public class ServiceCollectionExtensionsTests
+{
+    [Fact]
+    public void AddClIHubCoreServices_ResolvesCoreServices()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<IConfigService>());
+        Assert.NotNull(provider.GetRequiredService<IProjectService>());
+        Assert.NotNull(provider.GetRequiredService<IPluginManager>());
+        Assert.NotNull(provider.GetRequiredService<IProcessLauncher>());
+    }
+
+    [Fact]
+    public void ConfigService_IsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+
+        using var provider = services.BuildServiceProvider();
+
+        var first = provider.GetRequiredService<IConfigService>();
+        var second = provider.GetRequiredService<IConfigService>();
+
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void ProjectService_UsesInjectedDefaultLogoPath()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices(defaultLogoPath: "custom-logo.png");
+
+        using var provider = services.BuildServiceProvider();
+
+        var projects = provider.GetRequiredService<IProjectService>();
+        Assert.Equal("custom-logo.png", projects.DefaultLogoPath);
+    }
+}
