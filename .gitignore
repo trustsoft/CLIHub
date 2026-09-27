@@ -1,4 +1,7 @@
-# Build results
+# Build results - centralized in artifacts/
+artifacts/
+
+# Legacy build paths (if any projects still use default paths)
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
