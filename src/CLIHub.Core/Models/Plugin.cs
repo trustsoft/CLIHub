@@ -21,9 +21,14 @@ public class Plugin
     public string? Description { get; set; }
 
     /// <summary>
-    /// List of commands provided by this plugin
+    /// The named command set exposed by this agent.
     /// </summary>
-    public List<PluginCommand> Commands { get; set; } = new();
+    public AgentCommands Commands { get; set; } = new();
+
+    /// <summary>
+    /// Folder/file markers used to detect host and project availability.
+    /// </summary>
+    public AgentDetection Detection { get; set; } = new();
 
     /// <summary>
     /// Path to the plugin's logo image (typically logo.png in plugin directory)

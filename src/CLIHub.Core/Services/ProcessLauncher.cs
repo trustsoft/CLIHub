@@ -98,6 +98,65 @@ public class ProcessLauncher : IProcessLauncher
         }
     }
 
+    public async Task<ProcessCaptureResult> CaptureOutputAsync(
+        string executable,
+        string? arguments,
+        string workingDirectory,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(executable))
+            return new ProcessCaptureResult(false, -1, string.Empty, "Executable is required");
+
+        try
+        {
+            // Run through the command interpreter so PATHEXT resolution works for
+            // npm/shim executables (.cmd/.bat/.ps1), which CreateProcess cannot resolve.
+            var commandLine = string.IsNullOrWhiteSpace(arguments)
+                ? executable
+                : $"{executable} {arguments}";
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
+                Arguments = $"/c {commandLine}",
+                WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+                return new ProcessCaptureResult(false, -1, string.Empty, "Process did not start");
+
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            var stderrTask = process.StandardError.ReadToEndAsync();
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromSeconds(10));
+
+            try
+            {
+                await process.WaitForExitAsync(timeout.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                try { process.Kill(entireProcessTree: true); } catch { /* ignore */ }
+                return new ProcessCaptureResult(false, -1, string.Empty, "Timed out waiting for the command");
+            }
+
+            var stdout = (await stdoutTask).Trim();
+            var stderr = (await stderrTask).Trim();
+            return new ProcessCaptureResult(true, process.ExitCode, stdout, stderr);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to capture output from {Executable}", executable);
+            return new ProcessCaptureResult(false, -1, string.Empty, ex.Message);
+        }
+    }
+
     private string BuildTerminalArguments(PluginCommand command, string workingDirectory)
     {
         // Windows Terminal syntax: wt.exe -d "path" cmd /k "command arguments"

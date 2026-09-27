@@ -11,6 +11,7 @@ namespace CLIHub.Core.Services;
 public class PluginManager : IPluginManager
 {
     private readonly ILogger<PluginManager> _logger;
+    private readonly string _pluginsPath;
     private readonly List<Plugin> _plugins = new();
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -18,17 +19,20 @@ public class PluginManager : IPluginManager
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public PluginManager(ILogger<PluginManager> logger)
+    public PluginManager(ILogger<PluginManager> logger, string? pluginsPath = null)
     {
         _logger = logger;
+        _pluginsPath = pluginsPath ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "CLIHub",
+            "plugins");
     }
 
     public void LoadPlugins()
     {
         _plugins.Clear();
 
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var pluginsPath = Path.Combine(appDataPath, "CLIHub", "plugins");
+        var pluginsPath = _pluginsPath;
 
         if (!Directory.Exists(pluginsPath))
         {
@@ -97,9 +101,9 @@ public class PluginManager : IPluginManager
             errors.Add("Plugin Name is required");
         }
 
-        if (plugin.Commands == null || plugin.Commands.Count == 0)
+        if (plugin.Commands == null || plugin.Commands.Launch == null)
         {
-            errors.Add("Plugin must have at least one command");
+            errors.Add("Plugin must define a launch command");
         }
 
         if (errors.Count > 0)

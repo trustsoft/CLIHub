@@ -11,24 +11,27 @@ namespace CLIHub.Windows;
 public partial class MainWindow : Window
 {
     private readonly IPluginManager _pluginManager;
-    private readonly IProcessLauncher _processLauncher;
     private readonly IProjectService _projectService;
+    private readonly IAgentCommandService _agentCommandService;
+    private readonly IAgentDetectionService _agentDetectionService;
 
     public MainWindow(
         IPluginManager pluginManager,
-        IProcessLauncher processLauncher,
-        IProjectService projectService)
+        IProjectService projectService,
+        IAgentCommandService agentCommandService,
+        IAgentDetectionService agentDetectionService)
     {
         InitializeComponent();
 
         _pluginManager = pluginManager;
-        _processLauncher = processLauncher;
         _projectService = projectService;
+        _agentCommandService = agentCommandService;
+        _agentDetectionService = agentDetectionService;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
         RefreshProjects();
-        LoadPlugins();
+        RefreshAgents();
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -49,29 +52,29 @@ public partial class MainWindow : Window
             ProjectList.SelectedItem = projects.FirstOrDefault(p => p.Id == current.Id);
     }
 
-    private void LoadPlugins()
+    private void RefreshAgents()
     {
-        try
-        {
-            _pluginManager.LoadPlugins();
-            var plugins = _pluginManager.GetAllPlugins().ToList();
+        var currentProject = _projectService.GetCurrentProject()?.Path;
+        var items = new List<AgentItem>();
 
-            if (plugins.Count > 0)
-            {
-                StatusText.Text = $"Loaded {plugins.Count} plugin(s) - Ready to launch AI agents";
-                PluginListText.Text = string.Join("\n", plugins.Select(p => $"- {p.Name}"));
-            }
-            else
-            {
-                StatusText.Text = "No plugins found. Check %APPDATA%\\CLIHub\\plugins\\";
-                PluginListText.Text = "No plugins loaded.";
-            }
-        }
-        catch (Exception ex)
+        foreach (var plugin in _pluginManager.GetAllPlugins())
         {
-            StatusText.Text = $"Error loading plugins: {ex.Message}";
-            PluginListText.Text = "Error loading plugins.";
+            var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
+            var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
+
+            items.Add(new AgentItem
+            {
+                Plugin = plugin,
+                Name = plugin.Name,
+                LogoPath = plugin.LogoPath,
+                Status = $"System: {(inSystem ? "yes" : "no")}  |  Project: {(inProject ? "yes" : "no")}"
+            });
         }
+
+        AgentList.ItemsSource = items;
+
+        if (items.Count == 0)
+            StatusText.Text = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
     }
 
     private void ProjectList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -80,7 +83,14 @@ public partial class MainWindow : Window
         {
             _projectService.SetCurrentProject(project.Id);
             StatusText.Text = $"Current project: {project.Name}";
+            RefreshAgents();
         }
+    }
+
+    private void AgentList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (AgentList.SelectedItem is AgentItem item)
+            StatusText.Text = $"Selected agent: {item.Name}";
     }
 
     private void AddProject_Click(object sender, RoutedEventArgs e)
@@ -109,35 +119,55 @@ public partial class MainWindow : Window
         }
     }
 
-    private void LaunchPlugin_Click(object sender, RoutedEventArgs e)
+    private void Launch_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Launch);
+    private void Resume_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Resume);
+    private void Init_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Init);
+    private void Update_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Update);
+    private void Version_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Version);
+
+    private async void ExecuteAsync(AgentCommandKind kind)
     {
-        var currentProject = _projectService.GetCurrentProject();
-        if (currentProject == null)
+        if (AgentList.SelectedItem is not AgentItem item)
         {
-            StatusText.Text = "Select a project before launching an agent.";
+            StatusText.Text = "Select an agent first.";
+            return;
+        }
+
+        var project = _projectService.GetCurrentProject();
+        if (project == null)
+        {
+            StatusText.Text = "Select a project before running an agent command.";
             MessageBox.Show(
-                "Select a project before launching an agent.",
+                "Select a project before running an agent command.",
                 "CLIHub",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
             return;
         }
 
-        var plugin = _pluginManager.GetAllPlugins().FirstOrDefault();
-        var command = plugin?.Commands?.FirstOrDefault();
+        StatusText.Text = $"{kind} {item.Name}...";
 
-        if (plugin == null || command == null)
+        var result = await _agentCommandService.ExecuteAsync(item.Plugin, kind, project.Path);
+
+        if (kind == AgentCommandKind.Version)
         {
-            StatusText.Text = "No plugins available to launch.";
-            return;
+            if (result.Success)
+            {
+                StatusText.Text = $"{item.Name} version: {result.Output}";
+                MessageBox.Show(result.Output ?? string.Empty, $"{item.Name} version");
+            }
+            else
+            {
+                StatusText.Text = $"{item.Name} version failed: {result.Error}";
+            }
+        }
+        else
+        {
+            StatusText.Text = result.Success
+                ? $"{kind} started for {item.Name}"
+                : $"{kind} failed: {result.Error}";
         }
 
-        _projectService.TouchProject(currentProject.Id);
-
-        var success = _processLauncher.LaunchProcess(command, currentProject.Path);
-
-        StatusText.Text = success
-            ? $"Launched {plugin.Name} in {currentProject.Name}"
-            : $"Failed to launch {plugin.Name}";
+        RefreshAgents();
     }
 }

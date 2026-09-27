@@ -44,6 +44,8 @@ public partial class App : Application
         services.AddClIHubServices();
         _services = services.BuildServiceProvider();
 
+        _services.GetRequiredService<IPluginManager>().LoadPlugins();
+
         _tray = _services.GetRequiredService<TrayIconController>();
 
         _guard.ActivationRequested += () =>

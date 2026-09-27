@@ -1,4 +1,5 @@
 using CLIHub.Core.Interfaces;
+using CLIHub.Core.Models;
 using CLIHub.Windows;
 using H.NotifyIcon;
 using Microsoft.Win32;
@@ -14,12 +15,20 @@ namespace CLIHub;
 public sealed class TrayIconController : IDisposable
 {
     private readonly IProjectService _projects;
+    private readonly IPluginManager _pluginManager;
+    private readonly IAgentCommandService _agentCommands;
     private readonly MainWindow _mainWindow;
     private readonly TaskbarIcon _taskbarIcon;
 
-    public TrayIconController(IProjectService projects, MainWindow mainWindow)
+    public TrayIconController(
+        IProjectService projects,
+        IPluginManager pluginManager,
+        IAgentCommandService agentCommands,
+        MainWindow mainWindow)
     {
         _projects = projects;
+        _pluginManager = pluginManager;
+        _agentCommands = agentCommands;
         _mainWindow = mainWindow;
 
         _taskbarIcon = new TaskbarIcon
@@ -94,6 +103,8 @@ public sealed class TrayIconController : IDisposable
         }
         menu.Items.Add(recentMenu);
 
+        menu.Items.Add(BuildLaunchAgentMenu());
+
         var addItem = new MenuItem { Header = "Add Project..." };
         addItem.Click += (_, _) => AddProject();
         menu.Items.Add(addItem);
@@ -109,6 +120,48 @@ public sealed class TrayIconController : IDisposable
         menu.Items.Add(exitItem);
 
         return menu;
+    }
+
+    private MenuItem BuildLaunchAgentMenu()
+    {
+        var agentsMenu = new MenuItem { Header = "Launch Agent" };
+
+        var current = _projects.GetCurrentProject();
+        if (current == null)
+        {
+            agentsMenu.Items.Add(new MenuItem { Header = "(select a project)", IsEnabled = false });
+            return agentsMenu;
+        }
+
+        var launchable = _pluginManager.GetAllPlugins()
+            .Where(p => p.Commands?.Launch != null)
+            .ToList();
+
+        if (launchable.Count == 0)
+        {
+            agentsMenu.Items.Add(new MenuItem { Header = "(no agents)", IsEnabled = false });
+            return agentsMenu;
+        }
+
+        foreach (var plugin in launchable)
+        {
+            var item = new MenuItem { Header = plugin.Name };
+            item.Click += async (_, _) =>
+            {
+                var result = await _agentCommands.ExecuteAsync(plugin, AgentCommandKind.Launch, current.Path);
+                if (!result.Success)
+                {
+                    MessageBox.Show(
+                        result.Error ?? $"Failed to launch {plugin.Name}",
+                        "CLIHub",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+            };
+            agentsMenu.Items.Add(item);
+        }
+
+        return agentsMenu;
     }
 
     private void AddProject()

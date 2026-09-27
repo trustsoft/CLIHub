@@ -34,6 +34,8 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IPluginManager, PluginManager>();
         services.AddSingleton<IProcessLauncher, ProcessLauncher>();
+        services.AddSingleton<IAgentCommandService, AgentCommandService>();
+        services.AddSingleton<IAgentDetectionService, AgentDetectionService>();
 
         return services;
     }

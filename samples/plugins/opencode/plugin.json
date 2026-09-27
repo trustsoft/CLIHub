@@ -1,0 +1,21 @@
+{
+  "id": "opencode",
+  "name": "OpenCode",
+  "description": "AI coding agent CLI",
+  "commands": {
+    "launch": { "executable": "opencode" },
+    "resume": { "executable": "opencode", "arguments": "--continue" },
+    "version": { "executable": "opencode", "arguments": "--version" },
+    "update": { "executable": "opencode", "arguments": "upgrade" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.opencode",
+      "%USERPROFILE%\\.config\\opencode"
+    ],
+    "projectIndicators": [
+      ".opencode",
+      "openspec"
+    ]
+  }
+}

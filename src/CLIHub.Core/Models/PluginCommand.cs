@@ -1,22 +1,23 @@
 namespace CLIHub.Core.Models;
 
 /// <summary>
-/// Represents a command provided by a plugin
+/// Represents a single command exposed by an agent.
 /// </summary>
 public class PluginCommand
 {
     /// <summary>
-    /// Display name of the command
+    /// Optional display label. Command identity comes from its position in
+    /// <see cref="AgentCommands"/>.
     /// </summary>
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 
     /// <summary>
-    /// Executable to launch (e.g., "aider", "claude", "copilot")
+    /// Executable to launch (for example "opencode", "npm").
     /// </summary>
     public required string Executable { get; set; }
 
     /// <summary>
-    /// Optional command-line arguments to pass to the executable
+    /// Optional command-line arguments to pass to the executable.
     /// </summary>
     public string? Arguments { get; set; }
 }
