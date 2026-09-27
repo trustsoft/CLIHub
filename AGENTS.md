@@ -68,7 +68,7 @@ openspec instructions apply --change application-scaffold --json
 ## Known Constraints
 
 - **Windows 10/11 only** - no cross-platform
-- **Single instance enforcement** via named mutex `Global\CLIHub`
+- **Single instance enforcement** via named mutex `Local\CLIHub.SingleInstance` (session-scoped) with named-pipe activation signaling
 - **No in-app terminal** - delegate to Windows Terminal
 - **Plugins are descriptors only** - no DLL loading, no in-process execution
 - **No Windows Forms** - banned, use WPF equivalents
