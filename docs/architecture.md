@@ -36,7 +36,7 @@ CLIHub is a three-project solution under `src/`: `CLIHub.Core` (logic), `CLIHub`
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`App.xaml`, `ServiceRegistration`, `Program`-less startup), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`. UI logic is migrating to `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`App.xaml`, `ServiceRegistration`, `Program`-less startup), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, and `Interop/User32` (source-generated `user32.dll` P/Invoke). UI logic is migrating to `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -88,6 +88,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 ### External Integration
 - **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
+- **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
 
 ## Plugin Descriptor Format
 
@@ -185,7 +186,7 @@ See [AGENTS.md → Code Style](../AGENTS.md#code-style) (file-scoped namespaces,
 
 ### Namespace Structure
 - `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`
-- `CLIHub` (App, controllers), `CLIHub.Windows`, `CLIHub.Hotkeys`, `CLIHub.Converters`, `CLIHub.ViewModels`
+- `CLIHub` (App, controllers), `CLIHub.Windows`, `CLIHub.Hotkeys`, `CLIHub.Interop`, `CLIHub.Converters`, `CLIHub.ViewModels`
 
 ### Resource Organization
 - Application icon: `src/CLIHub/app.ico` (embedded; also the exe icon)

@@ -26,7 +26,7 @@
 **`src/`** — three projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
 - **`CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
-- **`CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
+- **`CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
 - **`CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
 
 ## Documentation
