@@ -2,44 +2,7 @@
 
 ## Solution Structure
 
-CLIHub uses a three-project architecture separating business logic, UI, and tests:
-
-```
-CLIHub/
-├── CLIHub.sln                 (solution file)
-├── Directory.Build.props      (centralized build output paths)
-├── src/
-│   ├── CLIHub.Core/           (business logic; no WPF references)
-│   │   ├── CLIHub.Core.csproj
-│   │   ├── Models/            (Plugin, AgentCommands, AgentDetection, Project, AppConfig, ...)
-│   │   ├── Services/          (config, projects, plugins, agents, seeding)
-│   │   ├── Interfaces/        (service contracts)
-│   │   ├── Hotkeys/           (HotkeyParser, HotkeyModifiers, HotkeyDefinition)
-│   │   ├── Logging/           (LoggingSetup, LogLevelParser, PreferenceReader)
-│   │   └── SeedPlugins/       (embedded built-in agent descriptors + logos)
-│   │
-│   ├── CLIHub/                (WPF application)
-│   │   ├── CLIHub.csproj
-│   │   ├── App.xaml(.cs)      (startup, DI container, single instance, logging)
-│   │   ├── ServiceRegistration.cs (DI registrations)
-│   │   ├── TrayIconController.cs  (system tray icon + context menu)
-│   │   ├── Windows/           (MainWindow, AgentItem)
-│   │   ├── Hotkeys/           (GlobalHotkeyService - Win32 RegisterHotKey)
-│   │   ├── Converters/        (PathToImageConverter)
-│   │   └── ViewModels/        (MVVM view models - target for UI logic)
-│   │
-│   └── CLIHub.Tests/          (xUnit unit tests; references CLIHub.Core only)
-│       ├── Services/          (service tests + fakes)
-│       ├── Hotkeys/           (HotkeyParser tests)
-│       ├── Logging/           (logging tests)
-│       └── Models/
-│
-├── artifacts/                 (build output - git ignored)
-├── obj/                       (intermediate build - git ignored)
-├── assets/                    (app icon source files - not in the build)
-├── docs/                      (documentation)
-└── openspec/                  (specs + archived changes)
-```
+CLIHub is a three-project solution under `src/`: `CLIHub.Core` (logic), `CLIHub` (WPF UI), and `CLIHub.Tests`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
 
 ## Project Responsibilities
 
@@ -217,14 +180,8 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 ## Conventions
 
 ### Code Style
-- **Language:** all code, comments, and UI text in English
-- **Nullable types:** enabled project-wide (`?`)
-- **Implicit usings:** enabled
-- **Namespaces:** file-scoped
-- **Braces:** always use braces for `if`/loops
-- **Naming:** PascalCase for public members, `_camelCase` for private fields; test methods use `MethodOrScenario_Condition_ExpectedResult`
-- **Async:** `async Task`/`ValueTask`; avoid `async void`
-- **MVVM:** keep views/code-behind thin; put state and logic in `ViewModels/` (existing code-behind is being migrated)
+
+See [AGENTS.md → Code Style](../AGENTS.md#code-style) (file-scoped namespaces, nullable, implicit usings, braces, naming, async, MVVM).
 
 ### Namespace Structure
 - `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`
@@ -249,11 +206,7 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 
 ## Known Constraints
 
-- **Windows 10/11 only** — no cross-platform support
-- **Single instance** — named mutex `Local\CLIHub.SingleInstance` (session-scoped)
-- **No in-app terminal** — delegates to Windows Terminal
-- **No Windows Forms** — banned, use WPF equivalents
-- **Plugins are descriptors** — no DLL loading or in-process execution
+See [AGENTS.md → Known Constraints](../AGENTS.md#known-constraints). The single-instance and security implications are detailed under [Security Considerations](#security-considerations) below.
 
 ## Security Considerations
 

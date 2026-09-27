@@ -2,45 +2,31 @@
 
 ## Project Status
 
-**Active WPF application** with three projects under `src/`: `CLIHub.Core` (logic), `CLIHub` (WPF UI), `CLIHub.Tests` (xUnit). Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management.
+**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management.
 
-## Critical Structure Requirements
+## Documentation
 
-1. **Source code MUST live in `src/` subdirectory** - do not create projects in the repo root
-2. **Solution file** - `CLIHub.sln` at repo root with projects under `src/`
-3. **Project structure:**
-   ```
-   CLIHub/                      (repo root)
-   ├── CLIHub.sln               (solution file)
-   ├── Directory.Build.props    (build output paths)
-   ├── src/
-   │   ├── CLIHub.Core/         (business logic; no WPF references)
-   │   │   ├── Models/          (Plugin, Project, AppConfig, Agent* models)
-   │   │   ├── Services/        (config, projects, plugins, agents, logging)
-   │   │   ├── Interfaces/      (service contracts)
-   │   │   ├── Hotkeys/         (HotkeyParser)
-   │   │   ├── Logging/         (LoggingSetup, LogLevelParser)
-   │   │   └── SeedPlugins/     (embedded built-in agent descriptors + logos)
-   │   ├── CLIHub/              (WPF app; references CLIHub.Core)
-   │   │   ├── Windows/         (MainWindow)
-   │   │   ├── ViewModels/
-   │   │   ├── Hotkeys/         (GlobalHotkeyService)
-   │   │   ├── Converters/
-   │   │   └── App.xaml(.cs)    (startup, DI, tray)
-   │   └── CLIHub.Tests/        (xUnit; references CLIHub.Core only)
-   ├── docs/
-   ├── openspec/                (specs + archived changes)
-   └── artifacts/ + obj/        (build output; git-ignored)
-   ```
+Single source of truth for each topic — link, don't duplicate:
 
-## Technology Stack (per design.md)
+- `README.md` — user-facing overview and quickstart. **Keep it self-contained** (include the full data layout, plugin format, and preferences) and update it whenever user-facing behavior changes.
+- `docs/vision.md` — vision, goals, roadmap
+- `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
+- `docs/repo-structure.md` — repository layout (where everything lives)
+- `openspec/specs/` — durable capability specs; `openspec/changes/archive/` — completed changes
 
-- **.NET 8 LTS** targeting `net8.0-windows`
-- **WPF** (not Windows Forms, not WinUI 3)
-- **H.NotifyIcon.Wpf** for system tray (not Hardcodet, not WinForms NotifyIcon)
-- **Serilog** with file sink (not NLog)
-- **Microsoft.Extensions.DependencyInjection** (not Autofac)
-- **Windows Terminal integration** via `wt.exe` spawning
+## Project Structure
+
+Source lives under `src/`; the solution is `CLIHub.sln` at the repository root. Do not create projects in the repo root. Full layout: [docs/repo-structure.md](docs/repo-structure.md).
+
+| Project | Path | Purpose |
+|---------|------|---------|
+| `CLIHub.Core` | `src/CLIHub.Core` | Platform-independent core logic: models, services, interfaces, plugin/agent handling, config, logging, hotkey parsing. No WPF. |
+| `CLIHub` | `src/CLIHub` | WPF application: startup/DI, system tray, global hotkey, windows, converters. |
+| `CLIHub.Tests` | `src/CLIHub.Tests` | xUnit tests for `CLIHub.Core`; references Core only. |
+
+## Technology Stack
+
+.NET 8 (WPF for UI) · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
 
 ## Key Conventions
 
@@ -97,9 +83,7 @@ Authored specs live in `openspec/specs/`; completed changes in `openspec/changes
 
 ## File System Layout
 
-- **User data:** `%APPDATA%\CLIHub\` with subdirs: `logs/`, `plugins/`, `cache/`
-- **Config persistence:** `config.json` with atomic write (temp file → rename)
-- **Plugin discovery:** subdirectories under `plugins/`, each with `plugin.json` + optional `logo.png`
+User data lives under `%APPDATA%\CLIHub\` (config, logs, plugins, cache). Full layout: [docs/architecture.md](docs/architecture.md#file-system-layout). Repository layout: [docs/repo-structure.md](docs/repo-structure.md).
 
 ## What to Avoid
 

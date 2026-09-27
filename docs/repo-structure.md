@@ -23,43 +23,18 @@
 
 ## Source Code
 
-**`src/`** — three-project solution architecture:
+**`src/`** — three projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
-- **`CLIHub.Core/`** — core business logic (class library, `net8.0`; no WPF)
-  - `Models/` — `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `AppConfig`, `AppPreferences`
-  - `Services/` — `ConfigService`, `ProjectService`, `PluginManager`, `PluginSeeder`, `AgentCommandService`, `AgentDetectionService`, `AgentVersionService`, `ProcessLauncher`, `SingleInstanceGuard`, `DirectoryInitializer`
-  - `Interfaces/` — `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`
-  - `Hotkeys/` — `HotkeyParser`, `HotkeyModifiers`, `HotkeyDefinition`
-  - `Logging/` — `LoggingSetup`, `LogLevelParser`, `PreferenceReader`
-  - `SeedPlugins/` — embedded built-in descriptors + logos (opencode, pi, cline-cli, github-copilot, openclaude, qwen-code)
-  - `ServiceCollectionExtensions` — `AddClIHubCoreServices`
-  - Dependencies: Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Extensions.Logging, Serilog, System.Text.Json
-
-- **`CLIHub/`** — WPF application (`net8.0-windows`)
-  - `App.xaml(.cs)` — startup: single instance, AppData init, logging, DI container
-  - `ServiceRegistration.cs` — DI registrations (core + guard, tray, window)
-  - `TrayIconController.cs` — system tray icon and context menu
-  - `Windows/` — `MainWindow`, `AgentItem`
-  - `Hotkeys/` — `GlobalHotkeyService` (Win32 `RegisterHotKey`, `HwndSource` hook)
-  - `Converters/` — `PathToImageConverter`
-  - `ViewModels/` — MVVM view models (target for UI logic)
-  - `app.ico`, `default-project.png`
-  - Dependencies: CLIHub.Core, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Serilog
-
-- **`CLIHub.Tests/`** — unit tests (`net8.0`, xUnit)
-  - `Services/` — service tests and fakes (`FakeConfigService`, `FakeProcessLauncher`)
-  - `Hotkeys/`, `Logging/`, `Models/`
-  - Dependencies: xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection, coverlet
-  - References CLIHub.Core only (not the UI)
-
-See [architecture.md](architecture.md) for design decisions and the plugin descriptor format.
+- **`CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
+- **`CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
+- **`CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
 
 ## Documentation
 
 **`docs/`** — project documentation (markdown):
 
 - `vision.md` — vision, goals, audience, capability roadmap
-- `architecture.md` — solution architecture, plugin format, technology decisions, conventions
+- `architecture.md` — architecture, responsibilities, plugin format, technology decisions, conventions
 - `repo-structure.md` — this file
 
 ## Assets
