@@ -38,7 +38,7 @@ public class HotkeyParserTests
     }
 
     [Fact]
-    public void TryParse_AltF4()
+    public void TryParse_AltF4_ReturnsAltAndVk()
     {
         Assert.True(HotkeyParser.TryParse("Alt+F4", out var definition));
         Assert.Equal(HotkeyModifiers.Alt, definition!.Modifiers);
@@ -46,7 +46,7 @@ public class HotkeyParserTests
     }
 
     [Fact]
-    public void TryParse_WinD()
+    public void TryParse_WinD_ReturnsWinAndVk()
     {
         Assert.True(HotkeyParser.TryParse("Win+D", out var definition));
         Assert.Equal(HotkeyModifiers.Win, definition!.Modifiers);
@@ -54,7 +54,7 @@ public class HotkeyParserTests
     }
 
     [Fact]
-    public void TryParse_DigitKey()
+    public void TryParse_DigitKey_ReturnsDigitVk()
     {
         Assert.True(HotkeyParser.TryParse("Ctrl+1", out var definition));
         Assert.Equal(0x31, definition!.VirtualKey);
