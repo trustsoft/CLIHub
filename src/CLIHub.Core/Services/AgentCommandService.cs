@@ -39,7 +39,9 @@ public class AgentCommandService : IAgentCommandService
         }
 
         if (kind == AgentCommandKind.Version)
+        {
             return await RunVersionAsync(plugin, command, projectPath, cancellationToken);
+        }
 
         var started = _processLauncher.LaunchProcess(command, projectPath);
         return started

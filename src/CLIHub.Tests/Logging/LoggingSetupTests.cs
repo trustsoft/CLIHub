@@ -21,7 +21,9 @@ public class LoggingSetupTests : IDisposable
     private string? ReadSingleLogFile()
     {
         if (!Directory.Exists(_dir))
+        {
             return null;
+        }
 
         var file = Directory.GetFiles(_dir, "clihub-*.log").FirstOrDefault();
         return file == null ? null : File.ReadAllText(file);

@@ -21,11 +21,15 @@ public static class HotkeyParser
         definition = null;
 
         if (string.IsNullOrWhiteSpace(value))
+        {
             return false;
+        }
 
         var tokens = value.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length < 2)
+        {
             return false;
+        }
 
         var modifiers = HotkeyModifiers.None;
         string? keyToken = null;
@@ -50,17 +54,24 @@ public static class HotkeyParser
                     break;
                 default:
                     if (keyToken != null)
+                    {
                         return false; // more than one key token
+                    }
+
                     keyToken = token;
                     break;
             }
         }
 
         if (modifiers == HotkeyModifiers.None || keyToken == null)
+        {
             return false;
+        }
 
         if (!TryGetVirtualKey(keyToken, out var virtualKey))
+        {
             return false;
+        }
 
         definition = new HotkeyDefinition(modifiers, virtualKey);
         return true;

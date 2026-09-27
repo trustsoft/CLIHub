@@ -61,9 +61,13 @@ public sealed class TrayIconController : IDisposable
     public void ToggleMainWindow()
     {
         if (_mainWindow.IsVisible)
+        {
             _mainWindow.Hide();
+        }
         else
+        {
             ShowMainWindow();
+        }
     }
 
     /// <summary>
@@ -187,7 +191,9 @@ public sealed class TrayIconController : IDisposable
         };
 
         if (dialog.ShowDialog() != true)
+        {
             return;
+        }
 
         try
         {

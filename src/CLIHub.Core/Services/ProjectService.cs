@@ -40,7 +40,9 @@ public class ProjectService : IProjectService
     public IReadOnlyList<Project> GetRecentProjects(int limit)
     {
         if (limit <= 0)
+        {
             return Array.Empty<Project>();
+        }
 
         RefreshLogos();
         return _config.Projects
@@ -58,11 +60,15 @@ public class ProjectService : IProjectService
     public Project? GetCurrentProject()
     {
         if (_config.CurrentProjectId == null)
+        {
             return null;
+        }
 
         var project = _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
         if (project != null)
+        {
             project.LogoPath = ResolveLogo(project.Path);
+        }
 
         return project;
     }
@@ -78,16 +84,22 @@ public class ProjectService : IProjectService
     public Project AddProject(string folderPath)
     {
         if (string.IsNullOrWhiteSpace(folderPath))
+        {
             throw new ArgumentException("Folder path is required.", nameof(folderPath));
+        }
 
         var normalized = NormalizePath(folderPath);
 
         if (!Directory.Exists(normalized))
+        {
             throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
+        }
 
         var existing = _config.Projects.FirstOrDefault(p => PathsEqual(p.Path, normalized));
         if (existing != null)
+        {
             return existing;
+        }
 
         var project = new Project
         {
@@ -100,7 +112,9 @@ public class ProjectService : IProjectService
         };
 
         if (string.IsNullOrEmpty(project.Name))
+        {
             project.Name = normalized;
+        }
 
         _config.Projects.Add(project);
         _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
@@ -112,13 +126,17 @@ public class ProjectService : IProjectService
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
+        {
             return;
+        }
 
         _config.Projects.Remove(project);
         _logger.LogInformation("Removed project {ProjectName}", project.Name);
 
         if (_config.CurrentProjectId == projectId)
+        {
             _config.CurrentProjectId = null;
+        }
 
         Persist();
     }
@@ -127,7 +145,9 @@ public class ProjectService : IProjectService
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
+        {
             return;
+        }
 
         _config.CurrentProjectId = projectId;
         project.LastUsed = DateTime.UtcNow;
@@ -139,7 +159,9 @@ public class ProjectService : IProjectService
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
+        {
             return;
+        }
 
         project.IsFavorite = !project.IsFavorite;
         Persist();
@@ -149,7 +171,9 @@ public class ProjectService : IProjectService
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
+        {
             return;
+        }
 
         project.LastUsed = DateTime.UtcNow;
         Persist();
@@ -158,13 +182,17 @@ public class ProjectService : IProjectService
     public string? ResolveLogo(string projectPath)
     {
         if (string.IsNullOrWhiteSpace(projectPath))
+        {
             return DefaultLogoPath;
+        }
 
         foreach (var candidate in CandidateLogoNames)
         {
             var candidatePath = Path.Combine(projectPath, candidate);
             if (File.Exists(candidatePath))
+            {
                 return candidatePath;
+            }
         }
 
         return DefaultLogoPath;
@@ -173,7 +201,9 @@ public class ProjectService : IProjectService
     private void ClearStaleCurrentProject()
     {
         if (_config.CurrentProjectId == null)
+        {
             return;
+        }
 
         var matches = _config.Projects.Any(p => p.Id == _config.CurrentProjectId);
         if (!matches)

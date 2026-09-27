@@ -48,7 +48,9 @@ public class PluginManager : IPluginManager
             var pluginJsonPath = Path.Combine(pluginDir, "plugin.json");
             
             if (!File.Exists(pluginJsonPath))
+            {
                 continue;
+            }
 
             try
             {

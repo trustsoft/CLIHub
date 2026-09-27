@@ -30,7 +30,9 @@ public class PluginSeeder : IPluginSeeder
         try
         {
             if (HasAnyPlugin(_pluginsPath))
+            {
                 return 0;
+            }
 
             Directory.CreateDirectory(_pluginsPath);
 
@@ -49,7 +51,9 @@ public class PluginSeeder : IPluginSeeder
             {
                 using var stream = assembly.GetManifestResourceStream(name);
                 if (stream == null)
+                {
                     continue;
+                }
 
                 using var reader = new StreamReader(stream);
                 var json = reader.ReadToEnd();
@@ -72,7 +76,9 @@ public class PluginSeeder : IPluginSeeder
                 var id = ReadPluginId(json)!; // validated above
                 var directory = Path.Combine(_pluginsPath, id);
                 if (File.Exists(Path.Combine(directory, "plugin.json")))
+                {
                     continue;
+                }
 
                 Directory.CreateDirectory(directory);
                 File.WriteAllText(Path.Combine(directory, "plugin.json"), json);
@@ -92,11 +98,15 @@ public class PluginSeeder : IPluginSeeder
                 var directory = Path.Combine(_pluginsPath, id);
                 var target = Path.Combine(directory, "logo.png");
                 if (File.Exists(target))
+                {
                     continue;
+                }
 
                 using var source = assembly.GetManifestResourceStream(name);
                 if (source == null)
+                {
                     continue;
+                }
 
                 Directory.CreateDirectory(directory);
                 using var destination = File.Create(target);
@@ -105,7 +115,9 @@ public class PluginSeeder : IPluginSeeder
             }
 
             if (descriptorsWritten > 0)
+            {
                 _logger.LogInformation("Seeded {Count} plugin descriptor(s)", descriptorsWritten);
+            }
 
             return descriptorsWritten;
         }
@@ -132,7 +144,9 @@ public class PluginSeeder : IPluginSeeder
         {
             using var document = JsonDocument.Parse(json);
             if (document.RootElement.TryGetProperty("id", out var id))
+            {
                 return id.GetString();
+            }
         }
         catch
         {

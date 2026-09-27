@@ -34,7 +34,9 @@ public class ConfigService : IConfigService
     public AppConfig Load()
     {
         if (_cachedConfig != null)
+        {
             return _cachedConfig;
+        }
 
         if (!File.Exists(ConfigFilePath))
         {
@@ -75,7 +77,9 @@ public class ConfigService : IConfigService
     {
         var config = Load();
         if (config.CurrentProjectId == null)
+        {
             return null;
+        }
 
         return config.Projects.FirstOrDefault(p => p.Id == config.CurrentProjectId);
     }

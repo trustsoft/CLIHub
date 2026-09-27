@@ -45,7 +45,9 @@ public sealed class GlobalHotkeyService : IDisposable
     public bool Register(HotkeyDefinition definition)
     {
         if (_registered)
+        {
             return true;
+        }
 
         _registered = RegisterHotKey(_handle, HotkeyId, (uint)definition.Modifiers, (uint)definition.VirtualKey);
 

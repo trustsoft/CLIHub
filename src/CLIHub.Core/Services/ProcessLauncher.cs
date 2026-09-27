@@ -105,7 +105,9 @@ public class ProcessLauncher : IProcessLauncher
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(executable))
+        {
             return new ProcessCaptureResult(false, -1, string.Empty, "Executable is required");
+        }
 
         try
         {
@@ -128,7 +130,9 @@ public class ProcessLauncher : IProcessLauncher
 
             using var process = Process.Start(startInfo);
             if (process == null)
+            {
                 return new ProcessCaptureResult(false, -1, string.Empty, "Process did not start");
+            }
 
             var stdoutTask = process.StandardOutput.ReadToEndAsync();
             var stderrTask = process.StandardError.ReadToEndAsync();

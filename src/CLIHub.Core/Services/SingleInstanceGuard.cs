@@ -81,7 +81,9 @@ public sealed class SingleInstanceGuard : IDisposable
                 var message = await reader.ReadLineAsync(token);
 
                 if (string.Equals(message, "SHOW", StringComparison.OrdinalIgnoreCase))
+                {
                     ActivationRequested?.Invoke();
+                }
             }
             catch (OperationCanceledException)
             {

@@ -70,7 +70,9 @@ public partial class App : Application
             var result = await _services!.GetRequiredService<IUpdateService>().CheckForUpdatesAsync();
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
+            {
                 Dispatcher.Invoke(() => _tray?.NotifyUpdateAvailable(version));
+            }
         }
         catch (Exception ex)
         {

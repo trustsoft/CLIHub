@@ -17,7 +17,9 @@ public static class PreferenceReader
         try
         {
             if (!File.Exists(configFilePath))
+            {
                 return null;
+            }
 
             using var document = JsonDocument.Parse(File.ReadAllText(configFilePath));
             if (document.RootElement.TryGetProperty("preferences", out var preferences) &&

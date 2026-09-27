@@ -18,7 +18,9 @@ public class AgentVersionServiceTests
             Launch = new PluginCommand { Executable = "agent" }
         };
         if (includeVersion)
+        {
             commands.Version = new PluginCommand { Executable = "agent", Arguments = "--version" };
+        }
 
         return new Plugin { Id = "agent", Name = "Agent", Commands = commands };
     }

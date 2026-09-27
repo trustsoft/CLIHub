@@ -35,7 +35,9 @@ public sealed class AgentItem : INotifyPropertyChanged
         set
         {
             if (_version == value)
+            {
                 return;
+            }
 
             _version = value;
             OnPropertyChanged();

@@ -62,7 +62,9 @@ public class UpdateService : IUpdateService
     public string GetCurrentVersion()
     {
         if (Manager?.CurrentVersion is { } version)
+        {
             return Normalize(version.ToString());
+        }
 
         var informational = Assembly.GetEntryAssembly()
             ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()

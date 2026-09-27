@@ -26,7 +26,9 @@ public class AgentVersionService : IAgentVersionService
     public async Task<string?> GetVersionAsync(Plugin plugin, CancellationToken cancellationToken = default)
     {
         if (_cache.TryGetValue(plugin.Id, out var cached))
+        {
             return cached;
+        }
 
         var command = plugin.Commands?.Version;
         if (command == null || string.IsNullOrWhiteSpace(command.Executable))
@@ -66,7 +68,9 @@ public class AgentVersionService : IAgentVersionService
             .FirstOrDefault();
 
         if (string.IsNullOrEmpty(line))
+        {
             return null;
+        }
 
         var match = VersionPattern.Match(line);
         return match.Success ? match.Value : line;

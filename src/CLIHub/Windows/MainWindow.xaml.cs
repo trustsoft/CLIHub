@@ -68,7 +68,9 @@ public partial class MainWindow : Window
     private void Filter_Toggled(object sender, RoutedEventArgs e)
     {
         if (_suppressFilterEvent)
+        {
             return;
+        }
 
         var config = _configService.Load();
         config.Preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true;
@@ -92,7 +94,9 @@ public partial class MainWindow : Window
 
         var current = _projectService.GetCurrentProject();
         if (current != null)
+        {
             ProjectList.SelectedItem = projects.FirstOrDefault(p => p.Id == current.Id);
+        }
     }
 
     private void RefreshAgents()
@@ -107,7 +111,9 @@ public partial class MainWindow : Window
             var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
 
             if (filterUnavailable && !inProject)
+            {
                 continue;
+            }
 
             var available = currentProject == null || inProject;
 
@@ -124,9 +130,13 @@ public partial class MainWindow : Window
         AgentList.ItemsSource = items;
 
         if (items.Count == 0)
+        {
             StatusText.Text = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
+        }
         else
+        {
             _ = PopulateVersionsAsync(items);
+        }
     }
 
     private async Task PopulateVersionsAsync(IReadOnlyList<AgentItem> items)
@@ -158,7 +168,9 @@ public partial class MainWindow : Window
     private void AgentList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (AgentList.SelectedItem is AgentItem item)
+        {
             StatusText.Text = $"Selected agent: {item.Name}";
+        }
     }
 
     private void AddProject_Click(object sender, RoutedEventArgs e)

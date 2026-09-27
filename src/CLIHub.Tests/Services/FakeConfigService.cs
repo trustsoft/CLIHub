@@ -30,7 +30,10 @@ public class FakeConfigService : IConfigService
     public Project? GetCurrentProject()
     {
         if (_config.CurrentProjectId == null)
+        {
             return null;
+        }
+
         return _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
     }
 
