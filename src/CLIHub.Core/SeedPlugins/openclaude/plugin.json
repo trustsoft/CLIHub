@@ -1,0 +1,19 @@
+{
+  "id": "openclaude",
+  "name": "OpenClaude",
+  "description": "OpenClaude CLI",
+  "commands": {
+    "launch": { "executable": "openclaude" },
+    "resume": { "executable": "openclaude", "arguments": "--continue" },
+    "version": { "executable": "openclaude", "arguments": "--version" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.openclaude"
+    ],
+    "projectIndicators": [
+      ".claude",
+      "CLAUDE.md"
+    ]
+  }
+}

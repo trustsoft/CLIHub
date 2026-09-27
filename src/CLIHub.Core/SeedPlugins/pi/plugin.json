@@ -1,0 +1,19 @@
+{
+  "id": "pi",
+  "name": "Pi",
+  "description": "AI coding assistant CLI",
+  "commands": {
+    "launch": { "executable": "pi" },
+    "resume": { "executable": "pi", "arguments": "--continue" },
+    "version": { "executable": "pi", "arguments": "--version" },
+    "update": { "executable": "pi", "arguments": "update" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.pi"
+    ],
+    "projectIndicators": [
+      ".pi"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "github-copilot",
+  "name": "GitHub Copilot",
+  "description": "GitHub Copilot CLI",
+  "commands": {
+    "launch": { "executable": "copilot" },
+    "version": { "executable": "copilot", "arguments": "--version" },
+    "update": { "executable": "copilot", "arguments": "update" },
+    "init": { "executable": "copilot", "arguments": "init" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.copilot",
+      "%LOCALAPPDATA%\\GitHubCopilotCLI"
+    ],
+    "projectIndicators": [
+      ".github/copilot-instructions.md"
+    ]
+  }
+}

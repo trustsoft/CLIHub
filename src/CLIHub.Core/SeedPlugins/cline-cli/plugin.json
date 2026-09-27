@@ -1,0 +1,18 @@
+{
+  "id": "cline-cli",
+  "name": "Cline CLI",
+  "description": "Cline AI coding assistant CLI",
+  "commands": {
+    "launch": { "executable": "cline" },
+    "version": { "executable": "cline", "arguments": "--version" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.cline",
+      "%LOCALAPPDATA%\\cline"
+    ],
+    "projectIndicators": [
+      ".clinerules"
+    ]
+  }
+}

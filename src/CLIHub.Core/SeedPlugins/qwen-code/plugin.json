@@ -1,0 +1,20 @@
+{
+  "id": "qwen-code",
+  "name": "Qwen Code",
+  "description": "Qwen Code CLI",
+  "commands": {
+    "launch": { "executable": "qwen" },
+    "version": { "executable": "qwen", "arguments": "--version" },
+    "update": { "executable": "qwen", "arguments": "update" }
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.qwen",
+      "%LOCALAPPDATA%\\qwen-code"
+    ],
+    "projectIndicators": [
+      ".qwen",
+      "QWEN.md"
+    ]
+  }
+}

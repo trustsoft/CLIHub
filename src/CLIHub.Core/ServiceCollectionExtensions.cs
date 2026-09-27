@@ -33,6 +33,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.AddSingleton<IPluginManager, PluginManager>();
+        services.AddSingleton<IPluginSeeder, PluginSeeder>();
         services.AddSingleton<IProcessLauncher, ProcessLauncher>();
         services.AddSingleton<IAgentCommandService, AgentCommandService>();
         services.AddSingleton<IAgentDetectionService, AgentDetectionService>();
