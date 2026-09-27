@@ -15,13 +15,16 @@ public partial class MainWindow : Window
     private readonly IAgentCommandService _agentCommandService;
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
+    private readonly IConfigService _configService;
+    private bool _suppressFilterEvent;
 
     public MainWindow(
         IPluginManager pluginManager,
         IProjectService projectService,
         IAgentCommandService agentCommandService,
         IAgentDetectionService agentDetectionService,
-        IAgentVersionService agentVersionService)
+        IAgentVersionService agentVersionService,
+        IConfigService configService)
     {
         InitializeComponent();
 
@@ -30,10 +33,27 @@ public partial class MainWindow : Window
         _agentCommandService = agentCommandService;
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
+        _configService = configService;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
+        _suppressFilterEvent = true;
+        FilterUnavailableCheckBox.IsChecked = _configService.Load().Preferences.ShowOnlyProjectAgents;
+        _suppressFilterEvent = false;
+
         RefreshProjects();
+        RefreshAgents();
+    }
+
+    private void Filter_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_suppressFilterEvent)
+            return;
+
+        var config = _configService.Load();
+        config.Preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true;
+        _configService.Save(config);
+
         RefreshAgents();
     }
 
@@ -58,12 +78,17 @@ public partial class MainWindow : Window
     private void RefreshAgents()
     {
         var currentProject = _projectService.GetCurrentProject()?.Path;
+        var filterUnavailable = FilterUnavailableCheckBox.IsChecked == true && currentProject != null;
         var items = new List<AgentItem>();
 
         foreach (var plugin in _pluginManager.GetAllPlugins())
         {
             var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
             var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
+
+            if (filterUnavailable && !inProject)
+                continue;
+
             var available = currentProject == null || inProject;
 
             items.Add(new AgentItem

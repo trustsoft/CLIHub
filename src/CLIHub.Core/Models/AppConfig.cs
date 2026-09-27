@@ -45,4 +45,10 @@ public class AppPreferences
     /// Log level (Debug, Info, Warning, Error)
     /// </summary>
     public string LogLevel { get; set; } = "Information";
+
+    /// <summary>
+    /// When true, the agent list shows only agents available in the current project.
+    /// When false (default), unavailable agents are shown dimmed.
+    /// </summary>
+    public bool ShowOnlyProjectAgents { get; set; }
 }
