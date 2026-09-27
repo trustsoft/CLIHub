@@ -33,6 +33,7 @@ public partial class App : Application
 
         _taskbarIcon.TrayLeftMouseUp += (_, _) => ShowMainWindow();
         RefreshTrayMenu();
+        _taskbarIcon.ForceCreate();
     }
 
     private void RefreshTrayMenu()

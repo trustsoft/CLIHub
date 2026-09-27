@@ -18,6 +18,8 @@ public class PluginManager : IPluginManager
 
     public void LoadPlugins()
     {
+        _plugins.Clear();
+
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var pluginsPath = Path.Combine(appDataPath, "CLIHub", "plugins");
 

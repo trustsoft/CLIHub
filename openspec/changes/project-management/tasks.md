@@ -37,8 +37,8 @@
 ## 7. Verification
 
 - [x] 7.1 Build the full solution with 0 warnings/errors
-- [ ] 7.2 Manually verify: add a project, select it, launch an agent → Windows Terminal opens in the project folder
-- [ ] 7.3 Manually verify: restart the app and confirm the project and current selection persist
-- [ ] 7.4 Manually verify: drop a `logo.png` into a project folder and confirm the logo is used; remove it and confirm the default logo is used
+- [x] 7.2 Manually verify: add a project, select it, launch an agent → Windows Terminal opens in the project folder
+- [x] 7.3 Manually verify: restart the app and confirm the project and current selection persist
+- [x] 7.4 Manually verify: drop a `logo.png` into a project folder and confirm the logo is used; remove it and confirm the default logo is used
 
-> Note: 7.2–7.4 require interactive GUI verification and are left for the user. The app builds, starts, and stays resident; all automated tests pass.
+> Note: 7.2–7.4 confirmed by user. Interactive fixes verified: tray icon visible (ForceCreate), duplicate agents resolved (LoadPlugins clears list), dynamic logo resolution.

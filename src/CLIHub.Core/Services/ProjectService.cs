@@ -28,28 +28,48 @@ public class ProjectService : IProjectService
         ClearStaleCurrentProject();
     }
 
-    public IReadOnlyList<Project> GetAllProjects() => _config.Projects.ToList();
+    public IReadOnlyList<Project> GetAllProjects()
+    {
+        RefreshLogos();
+        return _config.Projects.ToList();
+    }
 
     public IReadOnlyList<Project> GetRecentProjects(int limit)
     {
         if (limit <= 0)
             return Array.Empty<Project>();
 
+        RefreshLogos();
         return _config.Projects
             .OrderByDescending(p => p.LastUsed)
             .Take(limit)
             .ToList();
     }
 
-    public IReadOnlyList<Project> GetFavorites() =>
-        _config.Projects.Where(p => p.IsFavorite).ToList();
+    public IReadOnlyList<Project> GetFavorites()
+    {
+        RefreshLogos();
+        return _config.Projects.Where(p => p.IsFavorite).ToList();
+    }
 
     public Project? GetCurrentProject()
     {
         if (_config.CurrentProjectId == null)
             return null;
 
-        return _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
+        var project = _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
+        if (project != null)
+            project.LogoPath = ResolveLogo(project.Path);
+
+        return project;
+    }
+
+    private void RefreshLogos()
+    {
+        foreach (var project in _config.Projects)
+        {
+            project.LogoPath = ResolveLogo(project.Path);
+        }
     }
 
     public Project AddProject(string folderPath)
