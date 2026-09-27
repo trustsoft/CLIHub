@@ -8,7 +8,7 @@
 
 Single source of truth for each topic — link, don't duplicate:
 
-- `README.md` — user-facing overview and quickstart. **Keep it self-contained** (include the full data layout, plugin format, and preferences) and update it whenever user-facing behavior changes.
+- `README.md` — user-facing overview and quickstart
 - `docs/vision.md` — vision, goals, roadmap
 - `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
 - `docs/repo-structure.md` — repository layout (where everything lives)
