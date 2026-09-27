@@ -1,6 +1,6 @@
-using CLIHub.Core.Models;
-
 namespace CLIHub.Core.Interfaces;
+
+using CLIHub.Core.Models;
 
 /// <summary>
 /// Retrieves and caches the version of an agent, independent of any project.

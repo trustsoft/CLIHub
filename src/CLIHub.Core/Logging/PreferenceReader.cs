@@ -1,6 +1,6 @@
-using System.Text.Json;
-
 namespace CLIHub.Core.Logging;
+
+using System.Text.Json;
 
 /// <summary>
 /// Reads individual preference values from config.json without constructing services.

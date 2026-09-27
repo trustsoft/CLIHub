@@ -1,9 +1,9 @@
+namespace CLIHub.Windows;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Win32;
 using System.Windows;
-
-namespace CLIHub.Windows;
 
 /// <summary>
 /// Interaction logic for MainWindow.xaml

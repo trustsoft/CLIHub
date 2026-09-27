@@ -1,9 +1,9 @@
+namespace CLIHub.Converters;
+
 using System.Globalization;
 using System.IO;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
-
-namespace CLIHub.Converters;
 
 /// <summary>
 /// Converts a file path to an <see cref="BitmapImage"/>, or null when the path is empty/missing.

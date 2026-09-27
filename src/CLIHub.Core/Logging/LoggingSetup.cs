@@ -1,8 +1,8 @@
+namespace CLIHub.Core.Logging;
+
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-
-namespace CLIHub.Core.Logging;
 
 /// <summary>
 /// Configures the Serilog file-logging pipeline.

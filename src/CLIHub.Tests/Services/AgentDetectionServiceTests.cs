@@ -1,7 +1,7 @@
+namespace CLIHub.Tests.Services;
+
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
-
-namespace CLIHub.Tests.Services;
 
 public class AgentDetectionServiceTests : IDisposable
 {

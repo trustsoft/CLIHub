@@ -1,3 +1,5 @@
+namespace CLIHub;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Windows;
@@ -6,8 +8,6 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-
-namespace CLIHub;
 
 /// <summary>
 /// Owns the system tray icon, its context menu, and main-window visibility.

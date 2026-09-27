@@ -1,6 +1,6 @@
-using CLIHub.Core.Models;
-
 namespace CLIHub.Core.Interfaces;
+
+using CLIHub.Core.Models;
 
 /// <summary>
 /// Executes a named agent command in the context of a project directory.

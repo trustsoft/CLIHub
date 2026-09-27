@@ -1,11 +1,11 @@
+namespace CLIHub.Tests.Services;
+
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Velopack;
 using Velopack.Locators;
 using Velopack.Sources;
-
-namespace CLIHub.Tests.Services;
 
 public class UpdateServiceTests : IDisposable
 {

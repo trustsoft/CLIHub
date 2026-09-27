@@ -1,6 +1,6 @@
-using System.IO.Pipes;
-
 namespace CLIHub.Core.Services;
+
+using System.IO.Pipes;
 
 /// <summary>
 /// Ensures a single application instance. The first instance owns a named mutex and

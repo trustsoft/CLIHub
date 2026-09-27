@@ -1,8 +1,8 @@
+namespace CLIHub.Core.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
-
-namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Tracks project directories backed by <see cref="IConfigService"/>.

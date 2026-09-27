@@ -1,6 +1,6 @@
-using CLIHub.Core.Hotkeys;
-
 namespace CLIHub.Tests.Hotkeys;
+
+using CLIHub.Core.Hotkeys;
 
 public class HotkeyParserTests
 {

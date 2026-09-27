@@ -1,10 +1,10 @@
+namespace CLIHub.Core.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-
-namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Retrieves an agent's version by running its version command, with per-agent caching.

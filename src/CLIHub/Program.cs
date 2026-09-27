@@ -1,6 +1,6 @@
-using Velopack;
-
 namespace CLIHub;
+
+using Velopack;
 
 /// <summary>
 /// Application entry point. Velopack must run before anything else in the process.

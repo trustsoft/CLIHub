@@ -38,9 +38,10 @@ Source lives under `src/`; the solution is `CLIHub.sln` at the repository root. 
 
 ## Code Style
 
-- **File-scoped namespaces** (`namespace X;` not block-scoped).
 - **Nullable reference types** enabled globally.
 - **Implicit usings** enabled — no need for `using System;` etc.
+- **File-scoped namespaces** (`namespace X;` not block-scoped).
+- **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`).
 - **Braces** Use curly braces for if statements and loops.
 - **Naming**: PascalCase for public members, `_camelCase` for private fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
 - **Async patterns**: `async Task` / `ValueTask` used extensively; avoid `async void`.

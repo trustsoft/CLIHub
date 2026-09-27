@@ -1,8 +1,8 @@
+namespace CLIHub.Tests;
+
 using CLIHub.Core;
 using CLIHub.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-
-namespace CLIHub.Tests;
 
 public class ServiceCollectionExtensionsTests
 {

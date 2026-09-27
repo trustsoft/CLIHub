@@ -1,3 +1,5 @@
+namespace CLIHub.Core.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
@@ -5,8 +7,6 @@ using System.Reflection;
 using Velopack;
 using Velopack.Exceptions;
 using Velopack.Sources;
-
-namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Checks for updates via Velopack and reports the current version.

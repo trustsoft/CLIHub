@@ -1,6 +1,6 @@
-using System.Runtime.InteropServices;
-
 namespace CLIHub.Interop;
+
+using System.Runtime.InteropServices;
 
 /// <summary>
 /// Win32 declarations from user32.dll.

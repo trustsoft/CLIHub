@@ -1,6 +1,6 @@
-using CLIHub.Core.Models;
-
 namespace CLIHub.Core.Interfaces;
+
+using CLIHub.Core.Models;
 
 /// <summary>
 /// Checks for application updates and reports the current version.

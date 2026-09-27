@@ -1,6 +1,6 @@
-using CLIHub.Core.Services;
-
 namespace CLIHub.Tests.Services;
+
+using CLIHub.Core.Services;
 
 public class SingleInstanceGuardTests
 {

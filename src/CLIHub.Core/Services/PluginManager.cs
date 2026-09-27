@@ -1,9 +1,9 @@
+namespace CLIHub.Core.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-
-namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Service for discovering and managing AI agent CLI tool plugins

@@ -1,7 +1,7 @@
+namespace CLIHub.Core.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-
-namespace CLIHub.Core.Services;
 
 /// <summary>
 /// Detects agent availability using only file-system checks.

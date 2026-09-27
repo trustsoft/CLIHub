@@ -1,7 +1,7 @@
+namespace CLIHub.Tests.Services;
+
 using CLIHub.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
-
-namespace CLIHub.Tests.Services;
 
 public class ProcessLauncherTests
 {

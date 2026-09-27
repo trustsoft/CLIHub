@@ -1,7 +1,7 @@
+namespace CLIHub.Tests.Services;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-
-namespace CLIHub.Tests.Services;
 
 /// <summary>
 /// In-memory IConfigService for tests; no file system access.

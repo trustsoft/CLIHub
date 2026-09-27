@@ -1,3 +1,5 @@
+namespace CLIHub;
+
 using CLIHub.Core;
 using CLIHub.Core.Services;
 using CLIHub.Windows;
@@ -5,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using System.IO;
-
-namespace CLIHub;
 
 /// <summary>
 /// Registers CLIHub services for the WPF application.

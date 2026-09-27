@@ -1,10 +1,10 @@
+namespace CLIHub.Hotkeys;
+
 using CLIHub.Core.Hotkeys;
 using CLIHub.Interop;
 using Microsoft.Extensions.Logging;
 using System.Windows;
 using System.Windows.Interop;
-
-namespace CLIHub.Hotkeys;
 
 /// <summary>
 /// Registers a global hotkey against a window and invokes a callback when it is pressed.

@@ -1,8 +1,8 @@
+namespace CLIHub.Windows;
+
 using CLIHub.Core.Models;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-
-namespace CLIHub.Windows;
 
 /// <summary>
 /// Display item for an agent in the main window.

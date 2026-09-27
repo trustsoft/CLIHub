@@ -1,6 +1,6 @@
-using Serilog.Events;
-
 namespace CLIHub.Core.Logging;
+
+using Serilog.Events;
 
 /// <summary>
 /// Maps configured level names to <see cref="LogEventLevel"/>.
