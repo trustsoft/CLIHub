@@ -17,6 +17,16 @@ public sealed class AgentItem : INotifyPropertyChanged
     public string? LogoPath { get; init; }
 
     /// <summary>
+    /// Whether the agent is available in the current project (or no project is selected).
+    /// </summary>
+    public bool IsAvailable { get; init; } = true;
+
+    /// <summary>
+    /// Row opacity: normal when available, dimmed when not.
+    /// </summary>
+    public double RowOpacity => IsAvailable ? 1.0 : 0.4;
+
+    /// <summary>
     /// Version string; starts as a placeholder and updates when resolved.
     /// </summary>
     public string Version

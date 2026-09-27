@@ -64,12 +64,14 @@ public partial class MainWindow : Window
         {
             var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
             var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
+            var available = currentProject == null || inProject;
 
             items.Add(new AgentItem
             {
                 Plugin = plugin,
                 Name = plugin.Name,
                 LogoPath = plugin.LogoPath,
+                IsAvailable = available,
                 Status = $"System: {(inSystem ? "yes" : "no")}  |  Project: {(inProject ? "yes" : "no")}"
             });
         }

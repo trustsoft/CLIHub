@@ -86,9 +86,9 @@
                              Margin="5"
                              SelectionChanged="AgentList_SelectionChanged">
                         <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="2">
-                                    <Image Width="24" Height="24" Margin="0,0,8,0"
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal" Margin="2" Opacity="{Binding RowOpacity}">
+                            <Image Width="24" Height="24" Margin="0,0,8,0"
                                            Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
