@@ -1,7 +1,11 @@
-﻿using CLIHub.Core.Logging;
+﻿using CLIHub.Core.Hotkeys;
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Logging;
 using CLIHub.Core.Services;
+using CLIHub.Hotkeys;
 using CLIHub.Windows;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using System.IO;
 using System.Windows;
@@ -16,6 +20,7 @@ public partial class App : Application
     private ServiceProvider? _services;
     private SingleInstanceGuard? _guard;
     private TrayIconController? _tray;
+    private GlobalHotkeyService? _hotkey;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -44,7 +49,11 @@ public partial class App : Application
         _guard.ActivationRequested += () =>
             Dispatcher.Invoke(() => _tray?.ShowMainWindow());
 
-        _services.GetRequiredService<MainWindow>().Show();
+        var mainWindow = _services.GetRequiredService<MainWindow>();
+        mainWindow.Show();
+
+        RegisterGlobalHotkey(mainWindow);
+
         Log.Information("CLIHub started");
     }
 
@@ -58,10 +67,31 @@ public partial class App : Application
         Log.Logger = LoggingSetup.CreateLogger(logsDirectory, level);
     }
 
+    private void RegisterGlobalHotkey(MainWindow mainWindow)
+    {
+        var configured = _services!.GetRequiredService<IConfigService>().Load().Preferences.Hotkey;
+
+        HotkeyDefinition definition;
+        if (HotkeyParser.TryParse(configured, out var parsed) && parsed != null)
+        {
+            definition = parsed;
+        }
+        else
+        {
+            Log.Warning("Invalid hotkey '{Hotkey}' in config; using default Ctrl+Shift+A", configured);
+            definition = HotkeyParser.Default;
+        }
+
+        var logger = _services!.GetRequiredService<ILoggerFactory>().CreateLogger<GlobalHotkeyService>();
+        _hotkey = new GlobalHotkeyService(mainWindow, () => _tray?.ToggleMainWindow(), logger);
+        _hotkey.Register(definition);
+    }
+
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("CLIHub shutting down");
 
+        _hotkey?.Dispose();
         _tray?.Dispose();
         _services?.Dispose();
         _guard?.Dispose();

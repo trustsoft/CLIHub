@@ -46,6 +46,17 @@ public sealed class TrayIconController : IDisposable
         _mainWindow.Activate();
     }
 
+    /// <summary>
+    /// Shows the window when hidden; hides it when visible.
+    /// </summary>
+    public void ToggleMainWindow()
+    {
+        if (_mainWindow.IsVisible)
+            _mainWindow.Hide();
+        else
+            ShowMainWindow();
+    }
+
     private void RefreshMenu()
     {
         _taskbarIcon.ContextMenu = BuildContextMenu();
