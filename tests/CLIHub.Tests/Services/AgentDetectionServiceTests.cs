@@ -118,6 +118,26 @@ public class AgentDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void Invalidate_ForcesReCheck()
+    {
+        var marker = Path.Combine(_projectDir, "invalidate-marker");
+        File.WriteAllText(marker, string.Empty);
+        var plugin = new Plugin
+        {
+            Id = "inval", Name = "I",
+            Detection = new AgentDetection { SystemPaths = { marker } }
+        };
+
+        Assert.True(_service.IsInstalledInSystem(plugin));
+
+        File.Delete(marker);
+        Assert.True(_service.IsInstalledInSystem(plugin)); // served from cache
+
+        _service.Invalidate();
+        Assert.False(_service.IsInstalledInSystem(plugin)); // re-checked after invalidation
+    }
+
+    [Fact]
     public void IsInstalledInSystem_RespectsConfiguredTtl()
     {
         _config.Load().Preferences.AgentProbeTtlMinutes = 1;

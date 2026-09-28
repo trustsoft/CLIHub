@@ -16,4 +16,9 @@ public interface IAgentDetectionService
     /// True when any declared project indicator exists in the project folder.
     /// </summary>
     bool IsAvailableInProject(Plugin plugin, string projectPath);
+
+    /// <summary>
+    /// Clears cached detection results so the next detection re-checks the file system.
+    /// </summary>
+    void Invalidate();
 }

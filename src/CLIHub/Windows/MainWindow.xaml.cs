@@ -151,8 +151,9 @@ public partial class MainWindow : Window
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
         _agentVersionService.Invalidate();
+        _agentDetectionService.Invalidate();
         RefreshAgents();
-        StatusText.Text = "Refreshed agents and versions.";
+        StatusText.Text = "Refreshed agents, versions and availability.";
     }
 
     private void ProjectList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

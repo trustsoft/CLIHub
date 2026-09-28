@@ -28,6 +28,8 @@ public class AgentDetectionService : IAgentDetectionService
     public bool IsAvailableInProject(Plugin plugin, string projectPath) =>
         GetOrCheck($"proj:{plugin.Id}:{projectPath}", () => CheckProject(plugin, projectPath));
 
+    public void Invalidate() => _cache.Clear();
+
     private bool GetOrCheck(string key, Func<bool> compute)
     {
         var now = _timeProvider.GetUtcNow();
