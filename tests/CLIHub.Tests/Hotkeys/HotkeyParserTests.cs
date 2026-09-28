@@ -75,7 +75,6 @@ public class HotkeyParserTests
     [InlineData("Ctrl")]       // no key
     [InlineData("Ctrl+Foo")]   // unknown key
     [InlineData("Ctrl+Shift")] // no key
-    [InlineData("Win+Space")]  // unsupported key
     [InlineData("Ctrl+A+B")]   // two keys
     [InlineData("Alt+F25")]    // out of F-key range
     [InlineData("")]
@@ -86,12 +85,29 @@ public class HotkeyParserTests
         Assert.Null(definition);
     }
 
+    [Fact]
+    public void TryParse_Space_ReturnsSpaceVirtualKey()
+    {
+        Assert.True(HotkeyParser.TryParse("Ctrl+Alt+Space", out var definition));
+        Assert.Equal(HotkeyModifiers.Control | HotkeyModifiers.Alt, definition!.Modifiers);
+        Assert.Equal(0x20, definition.VirtualKey);
+    }
+
+    [Fact]
+    public void Format_SpaceKey_IsNamed()
+    {
+        var definition = new HotkeyDefinition(HotkeyModifiers.Control | HotkeyModifiers.Alt, 0x20);
+
+        Assert.Equal("Ctrl+Alt+Space", HotkeyParser.Format(definition));
+    }
+
     [Theory]
     [InlineData("Ctrl+Shift+A")]
     [InlineData("Alt+F4")]
     [InlineData("Ctrl+1")]
     [InlineData("Win+D")]
     [InlineData("Ctrl+Alt+F12")]
+    [InlineData("Ctrl+Alt+Space")]
     public void Format_RoundTripsThroughTryParse(string input)
     {
         Assert.True(HotkeyParser.TryParse(input, out var definition));

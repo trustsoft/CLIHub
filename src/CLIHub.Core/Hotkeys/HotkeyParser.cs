@@ -116,6 +116,11 @@ public static class HotkeyParser
 
     private static string VirtualKeyName(int virtualKey)
     {
+        if (virtualKey == 0x20)
+        {
+            return "Space";
+        }
+
         if ((virtualKey >= 0x41 && virtualKey <= 0x5A) || (virtualKey >= 0x30 && virtualKey <= 0x39))
         {
             return ((char)virtualKey).ToString();
@@ -132,6 +137,12 @@ public static class HotkeyParser
     private static bool TryGetVirtualKey(string token, out int virtualKey)
     {
         virtualKey = 0;
+
+        if (token.Equals("space", StringComparison.OrdinalIgnoreCase))
+        {
+            virtualKey = 0x20; // VK_SPACE
+            return true;
+        }
 
         if (token.Length == 1)
         {
