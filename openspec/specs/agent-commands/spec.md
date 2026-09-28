@@ -40,11 +40,19 @@ The system SHALL execute an agent command using the current project's folder as 
 
 ### Requirement: Terminal vs captured execution
 
-The system SHALL run interactive commands in Windows Terminal and capture the output of the version command.
+The system SHALL run interactive commands in the configured runtime and capture the output of the version command.
 
 #### Scenario: Interactive command opens a terminal
 - **WHEN** `launch`, `resume`, `init`, or `update` is executed
-- **THEN** it opens in Windows Terminal in the project folder
+- **THEN** it opens in the configured runtime in the project folder
+
+#### Scenario: Default runtime
+- **WHEN** no runtime preference is configured
+- **THEN** Windows Terminal is used
+
+#### Scenario: Alternative runtime
+- **WHEN** the configured runtime is Command Prompt (`cmd`) or PowerShell (`ps`)
+- **THEN** the interactive command opens in that runtime in the project folder
 
 #### Scenario: Version is captured
 - **WHEN** the `version` command is executed

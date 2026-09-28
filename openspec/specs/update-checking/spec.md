@@ -8,11 +8,15 @@ Checks for application updates via Velopack, notifies users of available updates
 
 ### Requirement: Automatic update check on startup
 
-The system SHALL check for updates asynchronously when the application starts.
+The system SHALL check for updates asynchronously when the application starts, unless the startup check is disabled in preferences.
 
 #### Scenario: Update check at startup
-- **WHEN** the application starts
+- **WHEN** the application starts and the startup check is enabled
 - **THEN** an update check runs in the background without blocking the UI
+
+#### Scenario: Startup check disabled
+- **WHEN** the application starts and the startup check is disabled in preferences
+- **THEN** no automatic update check runs
 
 #### Scenario: No update available
 - **WHEN** the update check completes and no update is available
