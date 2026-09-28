@@ -67,11 +67,21 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-                    <Button Grid.Row="1"
-                            Content="Add Project..."
-                            Margin="5"
-                            Padding="10,5"
-                            Click="AddProject_Click"/>
+                    <Grid Grid.Row="1" Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0"
+                                Content="Add Project..."
+                                Margin="0,0,5,0"
+                                Padding="10,5"
+                                Click="AddProject_Click"/>
+                        <Button Grid.Column="1"
+                                Content="Remove Project"
+                                Padding="10,5"
+                                Click="RemoveProject_Click"/>
+                    </Grid>
                 </Grid>
             </GroupBox>
 

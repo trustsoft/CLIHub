@@ -199,6 +199,30 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RemoveProject_Click(object sender, RoutedEventArgs e)
+    {
+        if (ProjectList.SelectedItem is not Project project)
+        {
+            StatusText.Text = "Select a project to remove.";
+            return;
+        }
+
+        var confirm = MessageBox.Show(
+            $"Remove \"{project.Name}\" from CLIHub?\n\nThe folder and its files are not deleted.",
+            "CLIHub",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _projectService.RemoveProject(project.Id);
+        StatusText.Text = $"Removed project: {project.Name}";
+        RefreshAgents();
+    }
+
     private void Launch_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Launch);
     private void Resume_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Resume);
     private void Init_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Init);
