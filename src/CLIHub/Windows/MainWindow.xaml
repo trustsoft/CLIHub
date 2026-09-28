@@ -38,12 +38,13 @@
         <!-- Main Content -->
         <Grid Grid.Row="1" Margin="20">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="250"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250" MinWidth="180"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="300"/>
             </Grid.ColumnDefinitions>
 
             <!-- Projects List -->
-            <GroupBox Grid.Column="0" Header="Projects" Margin="0,0,10,0">
+            <GroupBox Grid.Column="0" Header="Projects" Margin="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
@@ -74,8 +75,16 @@
                 </Grid>
             </GroupBox>
 
+            <!-- Pane Splitter -->
+            <GridSplitter Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          ResizeBehavior="PreviousAndNext"
+                          Background="Transparent"/>
+
             <!-- Agents List -->
-            <GroupBox Grid.Column="1" Header="AI Agents">
+            <GroupBox Grid.Column="2" Header="AI Agents" Margin="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -107,12 +116,12 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                     <WrapPanel Grid.Row="2" Margin="5">
-                        <Button Content="Launch" Margin="0,0,5,5" Padding="10,5" Click="Launch_Click"/>
-                        <Button Content="Resume" Margin="0,0,5,5" Padding="10,5" Click="Resume_Click"/>
-                        <Button Content="Init" Margin="0,0,5,5" Padding="10,5" Click="Init_Click"/>
-                        <Button Content="Update" Margin="0,0,5,5" Padding="10,5" Click="Update_Click"/>
-                        <Button Content="Version" Margin="0,0,5,5" Padding="10,5" Click="Version_Click"/>
-                        <Button Content="Refresh" Margin="0,0,5,5" Padding="10,5" Click="Refresh_Click"/>
+                        <Button Content="Launch" Margin="0,0,5,0" Padding="10,5" Click="Launch_Click"/>
+                        <Button Content="Resume" Margin="0,0,5,0" Padding="10,5" Click="Resume_Click"/>
+                        <Button Content="Init" Margin="0,0,5,0" Padding="10,5" Click="Init_Click"/>
+                        <Button Content="Update" Margin="0,0,5,0" Padding="10,5" Click="Update_Click"/>
+                        <Button Content="Version" Margin="0,0,5,0" Padding="10,5" Click="Version_Click"/>
+                        <Button Content="Refresh" Margin="0,0,5,0" Padding="10,5" Click="Refresh_Click"/>
                     </WrapPanel>
                 </Grid>
             </GroupBox>
