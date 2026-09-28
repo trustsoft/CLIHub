@@ -20,11 +20,13 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `AgentCommandService` — execute named commands (launch/resume/version/update/init)
 - `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
 - `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
+- `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
 - `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
+- `StartupService` — per-user Windows Run registration for start-with-Windows (via an `IStartupRegistry` seam)
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
-**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`.
+**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
@@ -91,6 +93,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
 - **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
 - **Velopack** — update checks against GitHub Releases; the current version comes from the Velopack locator (falling back to the assembly informational version)
+- **Registry (HKCU Run)** — the per-user `Software\Microsoft\Windows\CurrentVersion\Run` value `CLIHub` controls start-with-Windows
 
 ## Plugin Descriptor Format
 
@@ -138,7 +141,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Format:** JSON with camelCase property names
 - **Location:** `%APPDATA%\CLIHub\config.json`
 - **Atomic writes:** write to a `.tmp` file, then rename (temp-file-then-rename)
-- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `defaultRuntime` (`wt`/`cmd`/`ps`), `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, and `checkForUpdatesOnStartup` (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
+- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `defaultRuntime` (`wt`/`cmd`/`ps`), `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, and `showWindowOnStartup` (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
 - **Forward compatibility:** missing fields deserialize to defaults; unknown fields are ignored. There is no explicit schema-version field yet (adding one is deferred).
 
 ## Logging Strategy
@@ -179,7 +182,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 **Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, process output capture, logging setup/level parsing, hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, the update-available tray notification, and the Settings window (runtime/hotkey/probe/updates changes applied without restart; Cancel discards).
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, the update-available tray notification, the Settings window (runtime/hotkey/probe/updates changes applied without restart; Cancel discards), and start-with-Windows plus window-visibility-on-startup.
 
 ## Conventions
 

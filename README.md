@@ -14,6 +14,7 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 - **Resizable layout** — drag the divider between the Projects and AI Agents panes
 - **Runtime selection** — open agents in Windows Terminal, Command Prompt, or PowerShell
 - **Settings window** — change the runtime, global hotkey, agent probe caching/timeout, and the startup update check from the tray; changes apply without restart
+- **Autostart** — start with Windows, and choose whether the window opens on startup (otherwise CLIHub starts in the tray)
 - **Updates** — checks for a new version on startup (with a tray notification) and on demand, and shows the current version
 - **Single instance** — a second launch activates the running instance
 - **Logging** — structured file logs with configurable level and 7-day retention
@@ -51,7 +52,7 @@ Everything lives under `%APPDATA%\CLIHub\`:
 └── cache\
 ```
 
-Key preferences in `config.json` → `preferences`: `startWithWindows`, `hotkey`, `defaultRuntime`, `logLevel`, `terminalExecutable` (legacy), `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`. Most are editable from the **Settings** window (tray menu). Full layout and configuration details: [`docs/architecture.md`](docs/architecture.md).
+Key preferences in `config.json` → `preferences`: `startWithWindows`, `showWindowOnStartup`, `hotkey`, `defaultRuntime`, `logLevel`, `terminalExecutable` (legacy), `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`. Most are editable from the **Settings** window (tray menu). Full layout and configuration details: [`docs/architecture.md`](docs/architecture.md).
 
 ## Adding an agent plugin
 
