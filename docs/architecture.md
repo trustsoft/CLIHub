@@ -18,10 +18,9 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `PluginManager` — plugin discovery/validation from `plugins\<id>\plugin.json`
 - `PluginSeeder` — first-run seeding of built-in descriptors + logos
 - `AgentCommandService` — execute named commands (launch/resume/version/update/init)
-- `AgentDetectionService` — host install + per-project availability (file checks)
-- `AgentVersionService` — version lookup with caching
-- `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
-- `ProcessLauncher` — Windows Terminal spawning + output capture
+- `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
+- `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
+- `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
@@ -37,7 +36,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, and `Interop/User32` (source-generated `user32.dll` P/Invoke). Startup also runs a background update check that raises a tray notification when an update is available. UI logic is migrating to `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `Interop/User32` (source-generated `user32.dll` P/Invoke), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM) with `IPreferenceApplier`/`PreferenceApplier`. Startup wires the configured runtime and (when enabled) runs a background update check that raises a tray notification when an update is available. UI logic is migrating to `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -71,7 +70,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 
 ## Capabilities (per `openspec/specs/`)
 
-`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`. Each spec defines observable behavior; see the corresponding spec for requirements.
+`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `preferences-ui`. Each spec defines observable behavior; see the corresponding spec for requirements.
 
 ## Technology Stack
 
@@ -139,7 +138,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Format:** JSON with camelCase property names
 - **Location:** `%APPDATA%\CLIHub\config.json`
 - **Atomic writes:** write to a `.tmp` file, then rename (temp-file-then-rename)
-- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`
+- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `defaultRuntime` (`wt`/`cmd`/`ps`), `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, and `checkForUpdatesOnStartup` (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
 - **Forward compatibility:** missing fields deserialize to defaults; unknown fields are ignored. There is no explicit schema-version field yet (adding one is deferred).
 
 ## Logging Strategy
@@ -180,7 +179,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 **Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, process output capture, logging setup/level parsing, hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in Windows Terminal, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, and the update-available tray notification.
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, the update-available tray notification, and the Settings window (runtime/hotkey/probe/updates changes applied without restart; Cancel discards).
 
 ## Conventions
 
