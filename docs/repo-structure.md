@@ -9,6 +9,7 @@
 │   └── CLIHub.Tests/        # Unit tests (xUnit)
 ├── docs/                    # Project documentation
 ├── assets/                  # Application icon source files (not in the build)
+├── ui/                      # UI mockups and design references (not in the build)
 ├── openspec/                # Specs (openspec/specs) + archived changes
 ├── .opencode/               # OpenCode CLI configuration and skills
 ├── .idea/                   # JetBrains Rider project settings
@@ -27,7 +28,7 @@
 **`src/`** — application projects; **`tests/`** — test projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
 - **`src/CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
-- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `app.ico`, `default-project.png`
+- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`
 - **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
 
 ## Documentation
@@ -41,6 +42,12 @@
 ## Assets
 
 **`assets/`** — application icon source files (design-tool output): `appIcon/DS4.1F/` and `appIcon/GLM5.3F/` with PNG sizes and `.ico` files. Used as source material; the final `app.ico` is copied into `src/CLIHub/`, and agent logos are embedded under `src/CLIHub.Core/SeedPlugins/`. Not included in the build.
+
+## UI References
+
+**`ui/`** — reference mockups for upcoming UI work (not part of the build):
+
+- `ui/mockups/` — `popup-split.png` (launch window) and `settings.png` (Settings window), with a `README.md` describing each; see that README before `launch-window-ui` / `preferences-ui` work
 
 ## Planning Artifacts
 

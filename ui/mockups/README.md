@@ -44,3 +44,4 @@ New UI/logic implied:
 
 - `launch-window-ui` — the split layout and agent actions.
 - `preferences-ui` — the Settings window and the new preferences above.
+- `main-window-layout` (delivered) — resizable Projects/Agents panes and aligned pane layout; the full dark redesign, per-pane Actions menus, and footer are still upcoming.

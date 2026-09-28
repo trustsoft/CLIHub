@@ -11,7 +11,9 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 - **Agent commands** — launch, resume last session, version, update, initialize (per agent)
 - **Availability** — detects whether an agent is installed on the host and used in a project; dim or hide unavailable agents
 - **Versions** — each agent's version is captured and shown in the list
+- **Resizable layout** — drag the divider between the Projects and AI Agents panes
 - **Windows Terminal integration** — agents run in Windows Terminal in the project folder
+- **Updates** — checks for a new version on startup (with a tray notification) and on demand, and shows the current version
 - **Single instance** — a second launch activates the running instance
 - **Logging** — structured file logs with configurable level and 7-day retention
 
@@ -48,7 +50,7 @@ Everything lives under `%APPDATA%\CLIHub\`:
 └── cache\
 ```
 
-Key preferences in `config.json` → `preferences`: `hotkey`, `logLevel`, `terminalExecutable`, `showOnlyProjectAgents`. Full layout and configuration details: [`docs/architecture.md`](docs/architecture.md).
+Key preferences in `config.json` → `preferences`: `startWithWindows`, `hotkey`, `logLevel`, `terminalExecutable`, `showOnlyProjectAgents`. Full layout and configuration details: [`docs/architecture.md`](docs/architecture.md).
 
 ## Adding an agent plugin
 

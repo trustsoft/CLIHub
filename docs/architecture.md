@@ -10,7 +10,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** Platform-agnostic business logic and services.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `AppConfig`, `AppPreferences`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`.
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
@@ -20,15 +20,16 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `AgentCommandService` — execute named commands (launch/resume/version/update/init)
 - `AgentDetectionService` — host install + per-project availability (file checks)
 - `AgentVersionService` — version lookup with caching
+- `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
 - `ProcessLauncher` — Windows Terminal spawning + output capture
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
-**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`.
+**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
-**Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`. No WPF dependency.
+**Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency.
 
 **Target:** `net8.0`.
 
@@ -36,7 +37,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`App.xaml`, `ServiceRegistration`, `Program`-less startup), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, and `Interop/User32` (source-generated `user32.dll` P/Invoke). UI logic is migrating to `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, and `Interop/User32` (source-generated `user32.dll` P/Invoke). Startup also runs a background update check that raises a tray notification when an update is available. UI logic is migrating to `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -46,7 +47,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** unit tests (xUnit) for Core behavior.
 
-**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `LoggingSetupTests`, `LogLevelParserTests`, `SingleInstanceGuardTests`, `DirectoryInitializerTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`.
+**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`.
 
 **Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
 
@@ -70,7 +71,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 
 ## Capabilities (per `openspec/specs/`)
 
-`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`. Each spec defines observable behavior; see the corresponding spec for requirements.
+`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`. Each spec defines observable behavior; see the corresponding spec for requirements.
 
 ## Technology Stack
 
@@ -84,11 +85,13 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Serilog** with file sink (+ `Serilog.Extensions.Logging`) — structured logging, bridged into `Microsoft.Extensions.Logging`
 - **H.NotifyIcon.Wpf** — system tray icon
 - **System.Text.Json** — JSON serialization with camelCase policy
+- **Velopack** — application update checking and packaging (GitHub Releases source)
 
 ### External Integration
 - **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
 - **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
+- **Velopack** — update checks against GitHub Releases; the current version comes from the Velopack locator (falling back to the assembly informational version)
 
 ## Plugin Descriptor Format
 
@@ -171,12 +174,13 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Second instance:** signal the running instance (named pipe) and exit; the running instance shows its window
 - **Hotkey unavailable:** log a warning and continue without a hotkey
 - **Seeding failure:** log and continue
+- **Update check failure/timeout:** log and continue; reported as a failed check, never blocking the app
 
 ## Testing Strategy
 
-**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, process output capture, logging setup/level parsing, hotkey parsing, single-instance guard, DI composition.
+**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, process output capture, logging setup/level parsing, hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in Windows Terminal, seeded logos/versions, availability dimming/filtering.
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in Windows Terminal, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, and the update-available tray notification.
 
 ## Conventions
 
@@ -235,6 +239,8 @@ See [AGENTS.md → Known Constraints](../AGENTS.md#known-constraints). The singl
 - **Agent credentials:** the responsibility of the individual CLI tools
 - **Config contents:** project paths and preferences only
 
-### Update Mechanism (Future)
+### Update Mechanism
 
-- **HTTPS only**, signature verification, and explicit user consent for any future auto-update (Velopack integration is not implemented yet)
+- **Checks:** startup and manual checks run through Velopack against the configured GitHub Releases source over HTTPS; failures and timeouts are logged and never block the app
+- **Not installed:** when the app does not run from a Velopack install, checks are skipped and reported as `NotInstalled`
+- **Scope:** the current implementation only *checks* and notifies (tray notification / status bar); applying an update is deferred to the packaging change

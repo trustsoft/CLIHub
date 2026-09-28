@@ -40,10 +40,11 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Global keyboard shortcut (Ctrl+Shift+A) to toggle the window — `hotkey-support`
 - File logging with configurable levels and rotation — `logging`
 - Single-instance enforcement and dependency injection — `app-lifecycle`
+- Application update checking and notification via Velopack — `update-checking`
+- Resizable Projects/AI Agents panes with an aligned pane layout — `main-window-layout`
 
 **Remaining directions**
-- A dedicated launch-window layout (split projects/agents pane per the UI mockup)
+- A dedicated launch-window layout (full split projects/agents mockup; resizable panes and alignment already delivered — `main-window-layout`)
 - Settings UI for preferences (terminal executable, log level, hotkey, filters)
-- Application update checking and notification (Velopack)
 - Notification support for background agent activities
 - Per-agent project filtering refinements beyond dim/hide
