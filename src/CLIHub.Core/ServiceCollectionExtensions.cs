@@ -47,6 +47,10 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IUpdateService, UpdateService>();
 
+        services.AddSingleton<IStartupService>(sp => new StartupService(
+            new CurrentUserRegistryStartup(),
+            sp.GetRequiredService<ILogger<StartupService>>()));
+
         return services;
     }
 }

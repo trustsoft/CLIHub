@@ -75,4 +75,10 @@ public class AppPreferences
     /// When true (default), the application checks for updates on startup.
     /// </summary>
     public bool CheckForUpdatesOnStartup { get; set; } = true;
+
+    /// <summary>
+    /// When true (default), the main window is shown at startup; when false, the
+    /// application starts in the system tray. Applies to manual and Windows starts.
+    /// </summary>
+    public bool ShowWindowOnStartup { get; set; } = true;
 }

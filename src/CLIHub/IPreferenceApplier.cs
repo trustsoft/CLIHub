@@ -19,4 +19,10 @@ public interface IPreferenceApplier
 
     /// <summary>Applies the startup update-check preference (takes effect on next start).</summary>
     void ApplyStartupUpdateCheck(bool enabled);
+
+    /// <summary>
+    /// Creates or removes the per-user Windows startup registration.
+    /// Returns false when the registration could not be updated.
+    /// </summary>
+    bool ApplyStartWithWindows(bool enabled);
 }

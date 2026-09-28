@@ -25,7 +25,15 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,15">
             <StackPanel>
 
-                <TextBlock Text="DEFAULT RUNTIME" FontSize="11" FontWeight="Bold" Foreground="#7F8C8D"/>
+                <TextBlock Text="STARTUP" FontSize="11" FontWeight="Bold" Foreground="#7F8C8D"/>
+                <CheckBox Margin="0,6,0,0"
+                          Content="Start with Windows"
+                          IsChecked="{Binding StartWithWindows, Mode=TwoWay}"/>
+                <CheckBox Margin="0,6,0,0"
+                          Content="Show window on startup"
+                          IsChecked="{Binding ShowWindowOnStartup, Mode=TwoWay}"/>
+
+                <TextBlock Text="DEFAULT RUNTIME" FontSize="11" FontWeight="Bold" Foreground="#7F8C8D" Margin="0,20,0,0"/>
                 <ComboBox x:Name="RuntimeBox"
                           Margin="0,6,0,0"
                           Width="260"

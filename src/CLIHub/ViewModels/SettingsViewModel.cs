@@ -26,8 +26,11 @@ public sealed class SettingsViewModel : ObservableObject
 
     private readonly IConfigService _configService;
     private readonly IUpdateService _updateService;
+    private readonly IStartupService _startupService;
     private readonly IPreferenceApplier _applier;
 
+    private bool _startWithWindows;
+    private bool _showWindowOnStartup = true;
     private RuntimeOption _selectedRuntime = RuntimeOptions[2];
     private string _hotkeyText = string.Empty;
     private string _probeTtlText = string.Empty;
@@ -39,10 +42,12 @@ public sealed class SettingsViewModel : ObservableObject
     public SettingsViewModel(
         IConfigService configService,
         IUpdateService updateService,
+        IStartupService startupService,
         IPreferenceApplier applier)
     {
         _configService = configService;
         _updateService = updateService;
+        _startupService = startupService;
         _applier = applier;
 
         Version = _updateService.GetCurrentVersion();
@@ -56,6 +61,18 @@ public sealed class SettingsViewModel : ObservableObject
     public event EventHandler? RequestClose;
 
     public IReadOnlyList<RuntimeOption> Runtimes => RuntimeOptions;
+
+    public bool StartWithWindows
+    {
+        get => _startWithWindows;
+        set => SetProperty(ref _startWithWindows, value);
+    }
+
+    public bool ShowWindowOnStartup
+    {
+        get => _showWindowOnStartup;
+        set => SetProperty(ref _showWindowOnStartup, value);
+    }
 
     public RuntimeOption SelectedRuntime
     {
@@ -118,9 +135,13 @@ public sealed class SettingsViewModel : ObservableObject
         _probeTtlText = prefs.AgentProbeTtlMinutes?.ToString() ?? string.Empty;
         _probeTimeoutText = prefs.AgentProbeTimeoutSeconds?.ToString() ?? string.Empty;
         _checkForUpdatesOnStartup = prefs.CheckForUpdatesOnStartup;
+        _startWithWindows = _startupService.IsEnabled();
+        _showWindowOnStartup = prefs.ShowWindowOnStartup;
         _updateMessage = string.Empty;
         _validationError = null;
 
+        OnPropertyChanged(nameof(StartWithWindows));
+        OnPropertyChanged(nameof(ShowWindowOnStartup));
         OnPropertyChanged(nameof(SelectedRuntime));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(ProbeTtlText));
@@ -164,6 +185,13 @@ public sealed class SettingsViewModel : ObservableObject
             return;
         }
 
+        if (!_applier.ApplyStartWithWindows(StartWithWindows))
+        {
+            ValidationError = "Could not update the Windows startup registration. Changes were not saved.";
+            StartWithWindows = _startupService.IsEnabled();
+            return;
+        }
+
         var config = _configService.Load();
         var prefs = config.Preferences;
         prefs.DefaultRuntime = RuntimeKinds.ToToken(SelectedRuntime.Kind);
@@ -171,6 +199,8 @@ public sealed class SettingsViewModel : ObservableObject
         prefs.AgentProbeTtlMinutes = ttl;
         prefs.AgentProbeTimeoutSeconds = timeout;
         prefs.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
+        prefs.StartWithWindows = StartWithWindows;
+        prefs.ShowWindowOnStartup = ShowWindowOnStartup;
         _configService.Save(config);
 
         _applier.ApplyRuntime(SelectedRuntime.Kind);

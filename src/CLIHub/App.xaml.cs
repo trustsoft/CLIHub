@@ -50,6 +50,7 @@ public partial class App : Application
 
         var preferences = _services.GetRequiredService<IConfigService>().Load().Preferences;
         _services.GetRequiredService<IProcessLauncher>().SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
+        _services.GetRequiredService<IStartupService>().SetEnabled(preferences.StartWithWindows);
 
         _tray = _services.GetRequiredService<TrayIconController>();
 
@@ -57,7 +58,15 @@ public partial class App : Application
             Dispatcher.Invoke(() => _tray?.ShowMainWindow());
 
         var mainWindow = _services.GetRequiredService<MainWindow>();
-        mainWindow.Show();
+
+        if (preferences.ShowWindowOnStartup)
+        {
+            mainWindow.Show();
+        }
+        else
+        {
+            Log.Information("Starting in the system tray (show window on startup disabled)");
+        }
 
         RegisterGlobalHotkey();
 
