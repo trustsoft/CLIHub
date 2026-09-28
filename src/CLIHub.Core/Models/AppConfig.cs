@@ -37,9 +37,16 @@ public class AppPreferences
     public string Hotkey { get; set; } = "Ctrl+Shift+A";
 
     /// <summary>
-    /// Path to terminal executable (default: wt.exe for Windows Terminal)
+    /// Legacy path to the terminal executable. Superseded by <see cref="DefaultRuntime"/>;
+    /// kept for backward compatibility and read once to migrate existing configurations.
     /// </summary>
     public string TerminalExecutable { get; set; } = "wt.exe";
+
+    /// <summary>
+    /// Runtime used to launch interactive agent commands: "wt" (Windows Terminal,
+    /// default), "cmd" (Command Prompt), or "ps" (PowerShell).
+    /// </summary>
+    public string DefaultRuntime { get; set; } = "wt";
 
     /// <summary>
     /// Log level (Debug, Info, Warning, Error)
@@ -51,4 +58,21 @@ public class AppPreferences
     /// When false (default), unavailable agents are shown dimmed.
     /// </summary>
     public bool ShowOnlyProjectAgents { get; set; }
+
+    /// <summary>
+    /// Time-to-live, in minutes, for cached agent detection results.
+    /// Null uses the built-in default.
+    /// </summary>
+    public int? AgentProbeTtlMinutes { get; set; }
+
+    /// <summary>
+    /// Timeout, in seconds, for a single agent version probe.
+    /// Null uses the built-in default.
+    /// </summary>
+    public int? AgentProbeTimeoutSeconds { get; set; }
+
+    /// <summary>
+    /// When true (default), the application checks for updates on startup.
+    /// </summary>
+    public bool CheckForUpdatesOnStartup { get; set; } = true;
 }

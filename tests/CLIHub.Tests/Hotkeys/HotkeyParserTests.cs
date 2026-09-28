@@ -86,6 +86,28 @@ public class HotkeyParserTests
         Assert.Null(definition);
     }
 
+    [Theory]
+    [InlineData("Ctrl+Shift+A")]
+    [InlineData("Alt+F4")]
+    [InlineData("Ctrl+1")]
+    [InlineData("Win+D")]
+    [InlineData("Ctrl+Alt+F12")]
+    public void Format_RoundTripsThroughTryParse(string input)
+    {
+        Assert.True(HotkeyParser.TryParse(input, out var definition));
+
+        var formatted = HotkeyParser.Format(definition!);
+
+        Assert.True(HotkeyParser.TryParse(formatted, out var reparsed));
+        Assert.Equal(definition, reparsed);
+    }
+
+    [Fact]
+    public void Format_Default_IsCanonical()
+    {
+        Assert.Equal("Ctrl+Shift+A", HotkeyParser.Format(HotkeyParser.Default));
+    }
+
     [Fact]
     public void ParseOrDefault_InvalidInput_ReturnsFallback()
     {

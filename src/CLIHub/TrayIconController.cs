@@ -18,18 +18,22 @@ public sealed class TrayIconController : IDisposable
     private readonly IPluginManager _pluginManager;
     private readonly IAgentCommandService _agentCommands;
     private readonly MainWindow _mainWindow;
+    private readonly Func<SettingsWindow> _settingsFactory;
     private readonly TaskbarIcon _taskbarIcon;
+    private SettingsWindow? _settingsWindow;
 
     public TrayIconController(
         IProjectService projects,
         IPluginManager pluginManager,
         IAgentCommandService agentCommands,
-        MainWindow mainWindow)
+        MainWindow mainWindow,
+        Func<SettingsWindow> settingsFactory)
     {
         _projects = projects;
         _pluginManager = pluginManager;
         _agentCommands = agentCommands;
         _mainWindow = mainWindow;
+        _settingsFactory = settingsFactory;
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -128,6 +132,10 @@ public sealed class TrayIconController : IDisposable
         addItem.Click += (_, _) => AddProject();
         menu.Items.Add(addItem);
 
+        var settingsItem = new MenuItem { Header = "Settings" };
+        settingsItem.Click += (_, _) => ShowSettings();
+        menu.Items.Add(settingsItem);
+
         menu.Items.Add(new Separator());
 
         var showItem = new MenuItem { Header = "Show CLIHub" };
@@ -181,6 +189,17 @@ public sealed class TrayIconController : IDisposable
         }
 
         return agentsMenu;
+    }
+
+    private void ShowSettings()
+    {
+        if (_settingsWindow is null)
+        {
+            _settingsWindow = _settingsFactory();
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        }
+
+        _settingsWindow.ShowSettings();
     }
 
     private void AddProject()

@@ -2,6 +2,8 @@ namespace CLIHub;
 
 using CLIHub.Core;
 using CLIHub.Core.Services;
+using CLIHub.Hotkeys;
+using CLIHub.ViewModels;
 using CLIHub.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,8 +23,18 @@ public static class ServiceRegistration
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
-        services.AddSingleton<TrayIconController>();
         services.AddSingleton<MainWindow>();
+        services.AddSingleton<TrayIconController>();
+
+        services.AddSingleton<GlobalHotkeyService>(sp => new GlobalHotkeyService(
+            sp.GetRequiredService<MainWindow>(),
+            () => sp.GetRequiredService<TrayIconController>().ToggleMainWindow(),
+            sp.GetRequiredService<ILogger<GlobalHotkeyService>>()));
+
+        services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<SettingsWindow>();
+        services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
 
         return services;
     }

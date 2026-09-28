@@ -48,6 +48,9 @@ public partial class App : Application
         _services.GetRequiredService<IPluginSeeder>().SeedIfEmpty();
         _services.GetRequiredService<IPluginManager>().LoadPlugins();
 
+        var preferences = _services.GetRequiredService<IConfigService>().Load().Preferences;
+        _services.GetRequiredService<IProcessLauncher>().SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
+
         _tray = _services.GetRequiredService<TrayIconController>();
 
         _guard.ActivationRequested += () =>
@@ -56,9 +59,16 @@ public partial class App : Application
         var mainWindow = _services.GetRequiredService<MainWindow>();
         mainWindow.Show();
 
-        RegisterGlobalHotkey(mainWindow);
+        RegisterGlobalHotkey();
 
-        _ = CheckForUpdatesAsync();
+        if (preferences.CheckForUpdatesOnStartup)
+        {
+            _ = CheckForUpdatesAsync();
+        }
+        else
+        {
+            Log.Information("Startup update check disabled in preferences");
+        }
 
         Log.Information("CLIHub started");
     }
@@ -90,7 +100,7 @@ public partial class App : Application
         Log.Logger = LoggingSetup.CreateLogger(logsDirectory, level);
     }
 
-    private void RegisterGlobalHotkey(MainWindow mainWindow)
+    private void RegisterGlobalHotkey()
     {
         var configured = _services!.GetRequiredService<IConfigService>().Load().Preferences.Hotkey;
 
@@ -105,8 +115,7 @@ public partial class App : Application
             definition = HotkeyParser.Default;
         }
 
-        var logger = _services!.GetRequiredService<ILoggerFactory>().CreateLogger<GlobalHotkeyService>();
-        _hotkey = new GlobalHotkeyService(mainWindow, () => _tray?.ToggleMainWindow(), logger);
+        _hotkey = _services!.GetRequiredService<GlobalHotkeyService>();
         _hotkey.Register(definition);
     }
 

@@ -10,27 +10,25 @@ using System.Diagnostics;
 /// </summary>
 public class ProcessLauncher : IProcessLauncher
 {
+    private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);
+
     private readonly ILogger<ProcessLauncher> _logger;
-    private string _terminalExecutable;
+    private RuntimeKind _runtime = RuntimeKind.WindowsTerminal;
 
     public ProcessLauncher(ILogger<ProcessLauncher> logger)
     {
         _logger = logger;
-        // Default to Windows Terminal
-        _terminalExecutable = "wt.exe";
     }
 
     /// <summary>
-    /// Sets the terminal executable to use for launching processes
+    /// Sets the runtime used to launch interactive agent commands.
     /// </summary>
-    /// <param name="terminalExecutable">Path to the terminal executable (e.g., "wt.exe", "cmd.exe")</param>
-    public void SetTerminalExecutable(string terminalExecutable)
-    {
-        if (!string.IsNullOrWhiteSpace(terminalExecutable))
-        {
-            _terminalExecutable = terminalExecutable;
-        }
-    }
+    public void SetRuntime(RuntimeKind runtime) => _runtime = runtime;
+
+    /// <summary>
+    /// Gets the configured runtime.
+    /// </summary>
+    public RuntimeKind GetRuntime() => _runtime;
 
     public bool LaunchProcess(PluginCommand command, string workingDirectory)
     {
@@ -58,16 +56,16 @@ public class ProcessLauncher : IProcessLauncher
             return false;
         }
 
-        var arguments = BuildTerminalArguments(command, workingDirectory);
+        var (fileName, arguments) = BuildStartInfo(_runtime, command, workingDirectory);
         _logger.LogInformation(
-            "Launching {CommandName} ({Executable}) in {WorkingDirectory}",
-            command.Name, command.Executable, workingDirectory);
+            "Launching {CommandName} ({Executable}) in {WorkingDirectory} via {Runtime}",
+            command.Name, command.Executable, workingDirectory, _runtime);
 
         try
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = _terminalExecutable,
+                FileName = fileName,
                 Arguments = arguments,
                 WorkingDirectory = workingDirectory,
                 UseShellExecute = true // Required for wt.exe to work properly
@@ -102,7 +100,8 @@ public class ProcessLauncher : IProcessLauncher
         string executable,
         string? arguments,
         string workingDirectory,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        TimeSpan? timeout = null)
     {
         if (string.IsNullOrWhiteSpace(executable))
         {
@@ -137,12 +136,12 @@ public class ProcessLauncher : IProcessLauncher
             var stdoutTask = process.StandardOutput.ReadToEndAsync();
             var stderrTask = process.StandardError.ReadToEndAsync();
 
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeout.CancelAfter(TimeSpan.FromSeconds(10));
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(timeout ?? DefaultCaptureTimeout);
 
             try
             {
-                await process.WaitForExitAsync(timeout.Token);
+                await process.WaitForExitAsync(timeoutCts.Token);
             }
             catch (OperationCanceledException)
             {
@@ -161,25 +160,37 @@ public class ProcessLauncher : IProcessLauncher
         }
     }
 
-    private string BuildTerminalArguments(PluginCommand command, string workingDirectory)
+    /// <summary>
+    /// Builds the process file name and arguments for the given runtime.
+    /// </summary>
+    internal static (string FileName, string Arguments) BuildStartInfo(
+        RuntimeKind runtime,
+        PluginCommand command,
+        string workingDirectory)
     {
-        // Windows Terminal syntax: wt.exe -d "path" cmd /k "command arguments"
-        var executable = string.IsNullOrEmpty(command.Executable) ? "cmd" : command.Executable;
-        
-        // Handle arguments: if they exist, escape quotes and add them
-        var arguments = string.Empty;
-        if (!string.IsNullOrEmpty(command.Arguments))
+        var commandLine = BuildCommandLine(command);
+
+        return runtime switch
         {
-            // Escape quotes in arguments for command line
-            var escapedArgs = command.Arguments.Replace("\"", "\\\"");
-            arguments = $" {escapedArgs}";
-        }
-        
-        return $"-d \"{workingDirectory}\" cmd /k {executable}{arguments}";
+            RuntimeKind.CommandPrompt => ("cmd.exe", $"/k \"{commandLine}\""),
+            RuntimeKind.PowerShell => ("powershell.exe", $"-NoExit -Command \"{commandLine}\""),
+            _ => ("wt.exe", $"-d \"{workingDirectory}\" cmd /k {commandLine}")
+        };
     }
 
-    public string GetTerminalExecutable()
+    /// <summary>
+    /// Builds the shell command line for a plugin command (executable plus escaped arguments).
+    /// </summary>
+    internal static string BuildCommandLine(PluginCommand command)
     {
-        return _terminalExecutable;
+        var executable = string.IsNullOrEmpty(command.Executable) ? "cmd" : command.Executable;
+
+        if (string.IsNullOrEmpty(command.Arguments))
+        {
+            return executable;
+        }
+
+        var escapedArgs = command.Arguments.Replace("\"", "\\\"");
+        return $"{executable} {escapedArgs}";
     }
 }

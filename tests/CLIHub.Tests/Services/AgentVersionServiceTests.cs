@@ -7,9 +7,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 public class AgentVersionServiceTests
 {
     private readonly FakeProcessLauncher _launcher = new();
+    private readonly FakeConfigService _config = new();
+    private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
 
     private AgentVersionService CreateService() =>
-        new(_launcher, NullLogger<AgentVersionService>.Instance);
+        new(_launcher, _config, NullLogger<AgentVersionService>.Instance, _time);
 
     private static Plugin PluginWithVersion(bool includeVersion)
     {
@@ -108,5 +110,52 @@ public class AgentVersionServiceTests
         await service.GetVersionAsync(plugin);
 
         Assert.Equal(2, _launcher.Captures.Count);
+    }
+
+    [Fact]
+    public async Task GetVersion_WithinTtl_IsCached()
+    {
+        var service = CreateService();
+        var plugin = PluginWithVersion(true);
+
+        await service.GetVersionAsync(plugin);
+        _time.Advance(TimeSpan.FromMinutes(5));
+        await service.GetVersionAsync(plugin);
+
+        Assert.Single(_launcher.Captures);
+    }
+
+    [Fact]
+    public async Task GetVersion_AfterTtlExpires_ReRuns()
+    {
+        var service = CreateService();
+        var plugin = PluginWithVersion(true);
+
+        await service.GetVersionAsync(plugin);
+        _time.Advance(AgentVersionService.DefaultTtl + TimeSpan.FromMinutes(1));
+        await service.GetVersionAsync(plugin);
+
+        Assert.Equal(2, _launcher.Captures.Count);
+    }
+
+    [Fact]
+    public async Task GetVersion_PassesConfiguredProbeTimeout()
+    {
+        _config.Load().Preferences.AgentProbeTimeoutSeconds = 4;
+        var service = CreateService();
+
+        await service.GetVersionAsync(PluginWithVersion(true));
+
+        Assert.Equal(TimeSpan.FromSeconds(4), _launcher.LastCaptureTimeout);
+    }
+
+    [Fact]
+    public async Task GetVersion_UsesDefaultProbeTimeout()
+    {
+        var service = CreateService();
+
+        await service.GetVersionAsync(PluginWithVersion(true));
+
+        Assert.Equal(AgentVersionService.DefaultProbeTimeout, _launcher.LastCaptureTimeout);
     }
 }

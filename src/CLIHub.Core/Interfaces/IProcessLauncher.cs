@@ -22,21 +22,21 @@ public interface IProcessLauncher
     /// <param name="arguments">Optional command-line arguments.</param>
     /// <param name="workingDirectory">Working directory for the process.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="timeout">Optional maximum run time; null uses the built-in default.</param>
     Task<ProcessCaptureResult> CaptureOutputAsync(
         string executable,
         string? arguments,
         string workingDirectory,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        TimeSpan? timeout = null);
 
     /// <summary>
-    /// Sets the terminal executable to use for launching processes
+    /// Sets the runtime used to launch interactive agent commands.
     /// </summary>
-    /// <param name="terminalExecutable">Path to the terminal executable</param>
-    void SetTerminalExecutable(string terminalExecutable);
+    void SetRuntime(RuntimeKind runtime);
 
     /// <summary>
-    /// Gets the configured terminal executable
+    /// Gets the configured runtime.
     /// </summary>
-    /// <returns>Path to the terminal executable</returns>
-    string GetTerminalExecutable();
+    RuntimeKind GetRuntime();
 }

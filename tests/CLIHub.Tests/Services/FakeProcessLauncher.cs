@@ -20,14 +20,20 @@ public class FakeProcessLauncher : IProcessLauncher
         return LaunchResult;
     }
 
+    public TimeSpan? LastCaptureTimeout { get; private set; }
+
     public Task<ProcessCaptureResult> CaptureOutputAsync(
-        string executable, string? arguments, string workingDirectory, CancellationToken cancellationToken = default)
+        string executable, string? arguments, string workingDirectory,
+        CancellationToken cancellationToken = default, TimeSpan? timeout = null)
     {
         Captures.Add((executable, arguments, workingDirectory));
+        LastCaptureTimeout = timeout;
         return Task.FromResult(CaptureResult);
     }
 
-    public void SetTerminalExecutable(string terminalExecutable) { }
+    public void SetRuntime(RuntimeKind runtime) => Runtime = runtime;
 
-    public string GetTerminalExecutable() => "wt.exe";
+    public RuntimeKind GetRuntime() => Runtime;
+
+    public RuntimeKind Runtime { get; private set; } = RuntimeKind.WindowsTerminal;
 }

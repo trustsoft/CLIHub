@@ -18,6 +18,7 @@ public sealed class GlobalHotkeyService : IDisposable
     private readonly IntPtr _handle;
     private readonly Action _onPressed;
     private bool _registered;
+    private HotkeyDefinition? _current;
 
     public bool IsRegistered => _registered;
 
@@ -46,6 +47,7 @@ public sealed class GlobalHotkeyService : IDisposable
 
         if (_registered)
         {
+            _current = definition;
             _logger.LogInformation(
                 "Registered global hotkey (modifiers {Modifiers}, vk 0x{VirtualKey:X2})",
                 definition.Modifiers, definition.VirtualKey);
@@ -58,6 +60,34 @@ public sealed class GlobalHotkeyService : IDisposable
         }
 
         return _registered;
+    }
+
+    /// <summary>
+    /// Swaps the registered hotkey for a new combination. If the new combination cannot
+    /// be registered (for example it is already in use), the previous combination is
+    /// restored and false is returned.
+    /// </summary>
+    public bool ReRegister(HotkeyDefinition definition)
+    {
+        var previous = _current;
+
+        if (_registered)
+        {
+            User32.UnregisterHotKey(_handle, HotkeyId);
+            _registered = false;
+        }
+
+        if (Register(definition))
+        {
+            return true;
+        }
+
+        if (previous is not null)
+        {
+            Register(previous);
+        }
+
+        return false;
     }
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)

@@ -83,6 +83,52 @@ public static class HotkeyParser
     public static HotkeyDefinition ParseOrDefault(string? value, HotkeyDefinition fallback) =>
         TryParse(value, out var definition) && definition != null ? definition : fallback;
 
+    /// <summary>
+    /// Formats a definition back into the canonical string form (for example <c>Ctrl+Shift+A</c>).
+    /// </summary>
+    public static string Format(HotkeyDefinition definition)
+    {
+        var parts = new List<string>();
+
+        if ((definition.Modifiers & HotkeyModifiers.Control) != 0)
+        {
+            parts.Add("Ctrl");
+        }
+
+        if ((definition.Modifiers & HotkeyModifiers.Shift) != 0)
+        {
+            parts.Add("Shift");
+        }
+
+        if ((definition.Modifiers & HotkeyModifiers.Alt) != 0)
+        {
+            parts.Add("Alt");
+        }
+
+        if ((definition.Modifiers & HotkeyModifiers.Win) != 0)
+        {
+            parts.Add("Win");
+        }
+
+        parts.Add(VirtualKeyName(definition.VirtualKey));
+        return string.Join("+", parts);
+    }
+
+    private static string VirtualKeyName(int virtualKey)
+    {
+        if ((virtualKey >= 0x41 && virtualKey <= 0x5A) || (virtualKey >= 0x30 && virtualKey <= 0x39))
+        {
+            return ((char)virtualKey).ToString();
+        }
+
+        if (virtualKey >= 0x70 && virtualKey <= 0x87)
+        {
+            return $"F{virtualKey - 0x70 + 1}";
+        }
+
+        return "0x" + virtualKey.ToString("X2");
+    }
+
     private static bool TryGetVirtualKey(string token, out int virtualKey)
     {
         virtualKey = 0;

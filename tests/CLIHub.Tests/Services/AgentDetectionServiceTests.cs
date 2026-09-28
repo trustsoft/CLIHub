@@ -6,12 +6,15 @@ using CLIHub.Core.Services;
 public class AgentDetectionServiceTests : IDisposable
 {
     private readonly string _projectDir;
-    private readonly AgentDetectionService _service = new();
+    private readonly FakeConfigService _config = new();
+    private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+    private readonly AgentDetectionService _service;
 
     public AgentDetectionServiceTests()
     {
         _projectDir = Path.Combine(Path.GetTempPath(), "clihub-detect-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_projectDir);
+        _service = new AgentDetectionService(_config, _time);
     }
 
     public void Dispose()
@@ -92,5 +95,44 @@ public class AgentDetectionServiceTests : IDisposable
         };
 
         Assert.False(_service.IsAvailableInProject(plugin, Path.Combine(_projectDir, "nope")));
+    }
+
+    [Fact]
+    public void IsInstalledInSystem_WithinTtl_ReturnsCachedValue()
+    {
+        var marker = Path.Combine(_projectDir, "cached-marker");
+        File.WriteAllText(marker, string.Empty);
+        var plugin = new Plugin
+        {
+            Id = "cache", Name = "C",
+            Detection = new AgentDetection { SystemPaths = { marker } }
+        };
+
+        Assert.True(_service.IsInstalledInSystem(plugin));
+
+        File.Delete(marker);
+        Assert.True(_service.IsInstalledInSystem(plugin)); // served from cache
+
+        _time.Advance(AgentDetectionService.DefaultTtl + TimeSpan.FromMinutes(1));
+        Assert.False(_service.IsInstalledInSystem(plugin)); // TTL expired -> re-checked
+    }
+
+    [Fact]
+    public void IsInstalledInSystem_RespectsConfiguredTtl()
+    {
+        _config.Load().Preferences.AgentProbeTtlMinutes = 1;
+        var marker = Path.Combine(_projectDir, "short-ttl-marker");
+        File.WriteAllText(marker, string.Empty);
+        var plugin = new Plugin
+        {
+            Id = "short", Name = "S",
+            Detection = new AgentDetection { SystemPaths = { marker } }
+        };
+
+        Assert.True(_service.IsInstalledInSystem(plugin));
+        File.Delete(marker);
+
+        _time.Advance(TimeSpan.FromMinutes(2));
+        Assert.False(_service.IsInstalledInSystem(plugin));
     }
 }
