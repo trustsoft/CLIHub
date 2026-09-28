@@ -1,0 +1,6 @@
+# Normalize line endings: store LF in the repository and check out LF.
+* text=auto eol=lf
+
+# Binary assets are never converted.
+*.png binary
+*.ico binary
