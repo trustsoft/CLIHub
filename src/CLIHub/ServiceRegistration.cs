@@ -23,18 +23,20 @@ public static class ServiceRegistration
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
-        services.AddSingleton<MainWindow>();
+        services.AddSingleton<LaunchWindow>();
+        services.AddTransient<LaunchWindowViewModel>();
         services.AddSingleton<TrayIconController>();
 
         services.AddSingleton<GlobalHotkeyService>(sp => new GlobalHotkeyService(
-            sp.GetRequiredService<MainWindow>(),
-            () => sp.GetRequiredService<TrayIconController>().ToggleMainWindow(),
+            sp.GetRequiredService<LaunchWindow>(),
+            () => sp.GetRequiredService<TrayIconController>().ToggleLaunchWindow(),
             sp.GetRequiredService<ILogger<GlobalHotkeyService>>()));
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
+        services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
 
         return services;
     }

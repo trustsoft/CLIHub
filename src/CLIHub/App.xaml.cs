@@ -55,13 +55,13 @@ public partial class App : Application
         _tray = _services.GetRequiredService<TrayIconController>();
 
         _guard.ActivationRequested += () =>
-            Dispatcher.Invoke(() => _tray?.ShowMainWindow());
+            Dispatcher.Invoke(() => _tray?.ShowLaunchWindow());
 
-        var mainWindow = _services.GetRequiredService<MainWindow>();
+        var launchWindow = _services.GetRequiredService<LaunchWindow>();
 
         if (preferences.ShowWindowOnStartup)
         {
-            mainWindow.Show();
+            launchWindow.Show();
         }
         else
         {

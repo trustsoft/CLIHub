@@ -42,9 +42,10 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Single-instance enforcement and dependency injection — `app-lifecycle`
 - Application update checking and notification via Velopack — `update-checking`
 - Resizable Projects/AI Agents panes with an aligned pane layout — `main-window-layout`
+- Dark two-pane launch window matching the approved mockup: pane headers with Actions menus, project rows with rounded logos and middle-ellipsized paths, agent rows with inline launch/resume, a footer with the version pill, update check and add-project/settings/exit actions, scrolling lists, and a `LaunchWindowViewModel` behind the window — `main-window-layout`, `launch-window-theme`
 - Settings window for runtime, global hotkey, agent probe caching/timeout, and the startup update check — `preferences-ui`
 
 **Remaining directions**
-- A dedicated launch-window layout (full split projects/agents mockup; resizable panes and alignment already delivered — `main-window-layout`)
 - Notification support for background agent activities
 - Per-agent project filtering refinements beyond dim/hide
+- Downloading and applying updates from the tray (deferred packaging work)

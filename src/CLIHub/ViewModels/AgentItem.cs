@@ -1,11 +1,11 @@
-namespace CLIHub.Windows;
+namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Models;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 /// <summary>
-/// Display item for an agent in the main window.
+/// Display item for an agent row in the launch window.
 /// </summary>
 public sealed class AgentItem : INotifyPropertyChanged
 {
@@ -13,13 +13,28 @@ public sealed class AgentItem : INotifyPropertyChanged
 
     public required Plugin Plugin { get; init; }
     public required string Name { get; init; }
-    public required string Status { get; init; }
+
+    /// <summary>
+    /// Availability summary (host install and project usage).
+    /// </summary>
+    public string Status { get; init; } = string.Empty;
+
     public string? LogoPath { get; init; }
 
     /// <summary>
     /// Whether the agent is available in the current project (or no project is selected).
     /// </summary>
     public bool IsAvailable { get; init; } = true;
+
+    /// <summary>
+    /// Whether the agent defines the launch command.
+    /// </summary>
+    public bool CanLaunch => Plugin.Commands?.Get(AgentCommandKind.Launch) != null;
+
+    /// <summary>
+    /// Whether the agent defines the resume command.
+    /// </summary>
+    public bool CanResume => Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
 
     /// <summary>
     /// Row opacity: normal when available, dimmed when not.

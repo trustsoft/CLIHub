@@ -2,6 +2,7 @@ namespace CLIHub.Windows;
 
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using CLIHub.ViewModels;
 using Microsoft.Win32;
 using System.Windows;
 

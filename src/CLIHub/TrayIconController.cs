@@ -17,23 +17,22 @@ public sealed class TrayIconController : IDisposable
     private readonly IProjectService _projects;
     private readonly IPluginManager _pluginManager;
     private readonly IAgentCommandService _agentCommands;
-    private readonly MainWindow _mainWindow;
-    private readonly Func<SettingsWindow> _settingsFactory;
+    private readonly LaunchWindow _launchWindow;
+    private readonly ISettingsLauncher _settingsLauncher;
     private readonly TaskbarIcon _taskbarIcon;
-    private SettingsWindow? _settingsWindow;
 
     public TrayIconController(
         IProjectService projects,
         IPluginManager pluginManager,
         IAgentCommandService agentCommands,
-        MainWindow mainWindow,
-        Func<SettingsWindow> settingsFactory)
+        LaunchWindow launchWindow,
+        ISettingsLauncher settingsLauncher)
     {
         _projects = projects;
         _pluginManager = pluginManager;
         _agentCommands = agentCommands;
-        _mainWindow = mainWindow;
-        _settingsFactory = settingsFactory;
+        _launchWindow = launchWindow;
+        _settingsLauncher = settingsLauncher;
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -41,7 +40,7 @@ public sealed class TrayIconController : IDisposable
             ToolTipText = "CLIHub - AI Agent Launcher"
         };
 
-        _taskbarIcon.TrayLeftMouseUp += (_, _) => ShowMainWindow();
+        _taskbarIcon.TrayLeftMouseUp += (_, _) => ShowLaunchWindow();
 
         _projects.ProjectsChanged += (_, _) => RefreshMenu();
 
@@ -50,27 +49,27 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows and activates the main window.
+    /// Shows and activates the launch window.
     /// </summary>
-    public void ShowMainWindow()
+    public void ShowLaunchWindow()
     {
-        _mainWindow.Show();
-        _mainWindow.WindowState = WindowState.Normal;
-        _mainWindow.Activate();
+        _launchWindow.Show();
+        _launchWindow.WindowState = WindowState.Normal;
+        _launchWindow.Activate();
     }
 
     /// <summary>
-    /// Shows the window when hidden; hides it when visible.
+    /// Shows the launch window when hidden; hides it when visible.
     /// </summary>
-    public void ToggleMainWindow()
+    public void ToggleLaunchWindow()
     {
-        if (_mainWindow.IsVisible)
+        if (_launchWindow.IsVisible)
         {
-            _mainWindow.Hide();
+            _launchWindow.Hide();
         }
         else
         {
-            ShowMainWindow();
+            ShowLaunchWindow();
         }
     }
 
@@ -139,7 +138,7 @@ public sealed class TrayIconController : IDisposable
         menu.Items.Add(new Separator());
 
         var showItem = new MenuItem { Header = "Show CLIHub" };
-        showItem.Click += (_, _) => ShowMainWindow();
+        showItem.Click += (_, _) => ShowLaunchWindow();
         menu.Items.Add(showItem);
 
         var exitItem = new MenuItem { Header = "Exit" };
@@ -193,13 +192,7 @@ public sealed class TrayIconController : IDisposable
 
     private void ShowSettings()
     {
-        if (_settingsWindow is null)
-        {
-            _settingsWindow = _settingsFactory();
-            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
-        }
-
-        _settingsWindow.ShowSettings();
+        _settingsLauncher.ShowSettings();
     }
 
     private void AddProject()

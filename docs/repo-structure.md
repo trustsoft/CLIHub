@@ -27,9 +27,9 @@
 
 **`src/`** — application projects; **`tests/`** — test projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
-- **`src/CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
-- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `IPreferenceApplier.cs`, `PreferenceApplier.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`
-- **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`; references `CLIHub.Core` only
+- **`src/CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `Formatting/` (display formatting helpers such as `MiddleEllipsisFormatter`), `SeedPlugins/` (embedded built-in agent descriptors + logos)
+- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`, `Themes/` (`LaunchTheme.xaml` palette, `LaunchWindowStyles.xaml` window-scoped styles); files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `IPreferenceApplier.cs`, `PreferenceApplier.cs`, `ISettingsLauncher.cs`, `SettingsLauncher.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`. `Windows/LaunchWindow.xaml(.cs)` is the application window; `Windows/MainWindow.xaml(.cs)` is the pre-redesign window, retained for reference and no longer wired
+- **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Formatting/`; references `CLIHub.Core` only
 
 ## Documentation
 
@@ -46,9 +46,9 @@
 
 ## UI References
 
-**`ui/`** — reference mockups for upcoming UI work (not part of the build):
+**`ui/`** — reference mockups for UI work (not part of the build):
 
-- `ui/mockups/` — `popup-split.png` (launch window) and `settings.png` (Settings window), with a `README.md` describing each; see that README before `launch-window-ui` / `preferences-ui` work
+- `ui/mockups/` — `popup-split.png` (launch window, delivered) and `settings.png` (Settings window), with a `README.md` describing each; see that README before further UI work
 
 ## Planning Artifacts
 

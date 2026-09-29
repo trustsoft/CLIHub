@@ -28,7 +28,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IStartupService`.
 
-**Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
+**Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` (path shortening for display), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
 **Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency.
 
@@ -38,7 +38,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `MainWindow`, `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `Interop/User32` (source-generated `user32.dll` P/Invoke), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM) with `IPreferenceApplier`/`PreferenceApplier`. Startup wires the configured runtime and (when enabled) runs a background update check that raises a tray notification when an update is available. UI logic is migrating to `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `LaunchWindow` + `LaunchWindowViewModel` (the application window, shown from the tray, the hotkey, and startup), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `MiddleEllipsisConverter`, `Themes/` (dark launch-window palette and styles), `Interop/User32` (source-generated `user32.dll` P/Invoke), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM) with `IPreferenceApplier`/`PreferenceApplier`. Startup wires the configured runtime and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -48,7 +48,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** unit tests (xUnit) for Core behavior.
 
-**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
+**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `MiddleEllipsisFormatterTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
 
 **Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
 
@@ -182,7 +182,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 **Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, process output capture, logging setup/level parsing, hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the resizable/aligned window layout, the update-available tray notification, the Settings window (runtime/hotkey/probe/updates changes applied without restart; Cancel discards), and start-with-Windows plus window-visibility-on-startup.
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the launch window (dark theme, pane headers with Actions menus, footer actions and version pill, project/agent rows, middle-ellipsized paths, scrolling), the update-available tray notification, the Settings window (runtime/hotkey/probe/updates changes applied without restart; Cancel discards), and start-with-Windows plus window-visibility-on-startup.
 
 ## Conventions
 
@@ -191,8 +191,9 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 See [AGENTS.md → Code Style](../AGENTS.md#code-style) (file-scoped namespaces, nullable, implicit usings, braces, naming, async, MVVM).
 
 ### Namespace Structure
-- `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`
+- `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`, `CLIHub.Core.Formatting`
 - `CLIHub` (App, controllers), `CLIHub.Windows`, `CLIHub.Hotkeys`, `CLIHub.Interop`, `CLIHub.Converters`, `CLIHub.ViewModels`
+- `CLIHub.Themes` (XAML resource dictionaries, no code namespace)
 
 ### Resource Organization
 - Application icon: `src/CLIHub/app.ico` (embedded; also the exe icon)
