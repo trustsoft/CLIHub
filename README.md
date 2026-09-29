@@ -5,7 +5,7 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 ## Features
 
 - **System tray launcher** — current project, recent projects, add project, launch agent, exit
-- **Global hotkey** — `Ctrl+Shift+A` toggles the window from any application
+- **Global hotkey** — `Ctrl+Shift+A` toggles the window from any application; the combination is configurable (letters, digits, `F1`–`F24`, and named keys such as Enter, Tab, Esc, and the arrows)
 - **Projects** — track folders with auto-detected logos, recents, and a current-project context
 - **Agents as plugins** — JSON descriptors; built-in agents are seeded on first run with logos
 - **Agent commands** — launch, resume last session, version, update, initialize (per agent)
@@ -89,5 +89,6 @@ tests/CLIHub.Tests/    # xUnit tests
 - [`docs/vision.md`](docs/vision.md) — vision and roadmap
 - [`docs/architecture.md`](docs/architecture.md) — architecture, plugin format, conventions
 - [`docs/repo-structure.md`](docs/repo-structure.md) — repository layout
+- [`docs/changelog-and-release-notes.md`](docs/changelog-and-release-notes.md) — changelog & release-notes plan (draft)
 - [`AGENTS.md`](AGENTS.md) — guidance for AI coding agents
 - `openspec/specs/` — durable capability specs

@@ -10,7 +10,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** Platform-agnostic business logic and services.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`.
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
@@ -22,7 +22,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
 - `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
 - `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
-- `StartupService` — per-user Windows Run registration for start-with-Windows (via an `IStartupRegistry` seam)
+- `StartupService` — per-user Windows Run registration for start-with-Windows (via an internal `IStartupRegistry` seam backed by `StartupRegistry`)
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
@@ -48,7 +48,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** unit tests (xUnit) for Core behavior.
 
-**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`.
+**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
 
 **Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
 
@@ -141,7 +141,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Format:** JSON with camelCase property names
 - **Location:** `%APPDATA%\CLIHub\config.json`
 - **Atomic writes:** write to a `.tmp` file, then rename (temp-file-then-rename)
-- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `defaultRuntime` (`wt`/`cmd`/`ps`), `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, and `showWindowOnStartup` (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
+- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `hotkey` (`Ctrl+Shift+A` by default), `defaultRuntime` (`wt`/`cmd`/`ps`), `logLevel`, `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, and `showWindowOnStartup` (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
 - **Forward compatibility:** missing fields deserialize to defaults; unknown fields are ignored. There is no explicit schema-version field yet (adding one is deferred).
 
 ## Logging Strategy

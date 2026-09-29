@@ -28,8 +28,8 @@
 **`src/`** — application projects; **`tests/`** — test projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
 
 - **`src/CLIHub.Core/`** (`net8.0`, no WPF) — folders: `Models/`, `Services/`, `Interfaces/`, `Hotkeys/`, `Logging/`, `SeedPlugins/` (embedded built-in agent descriptors + logos)
-- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`
-- **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Models/`; references `CLIHub.Core` only
+- **`src/CLIHub/`** (`net8.0-windows`) — folders: `Windows/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `IPreferenceApplier.cs`, `PreferenceApplier.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`
+- **`tests/CLIHub.Tests/`** (`net8.0`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`; references `CLIHub.Core` only
 
 ## Documentation
 
@@ -38,6 +38,7 @@
 - `vision.md` — vision, goals, audience, capability roadmap
 - `architecture.md` — architecture, responsibilities, plugin format, technology decisions, conventions
 - `repo-structure.md` — this file
+- `changelog-and-release-notes.md` — changelog & release-notes plan (draft, decision pending)
 
 ## Assets
 
@@ -69,9 +70,11 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 
 **`CLIHub.sln`** — solution at the repository root, referencing the two application projects under `src/` and the test project under `tests/`.
 
-**`Directory.Build.props`** — MSBuild properties configuring build output for all projects:
+**`Directory.Build.props`** — MSBuild properties shared by all projects:
 - `BaseOutputPath` → `artifacts/` (compiled binaries)
 - `BaseIntermediateOutputPath` → `obj/` (intermediate files)
+- `Version` → `0.5.0` (product version; drives the version shown in the UI and update checks)
+- `EnforceCodeStyleInBuild` → `true` (code style checked as part of the build)
 
 ## Build Output (git-ignored)
 

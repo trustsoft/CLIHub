@@ -1,6 +1,6 @@
 # UI Mockups
 
-Reference images for upcoming UI work. Descriptions below are a snapshot to guide the `launch-window-ui` and `preferences-ui` changes; the images are the source of truth and may be updated.
+Reference images for upcoming UI work. Descriptions below are a snapshot to guide the `launch-window-ui` change (`preferences-ui` is delivered); the images are the source of truth and may be updated.
 
 ## `popup-split.png` — launch window (Popup)
 

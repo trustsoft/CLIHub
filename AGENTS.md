@@ -2,7 +2,7 @@
 
 ## Project Status
 
-**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking, window layout.
+**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking, preferences window, window layout.
 
 ## Documentation
 
@@ -12,6 +12,7 @@ Single source of truth for each topic — link, don't duplicate:
 - `docs/vision.md` — vision, goals, roadmap
 - `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
 - `docs/repo-structure.md` — repository layout (where everything lives)
+- `docs/changelog-and-release-notes.md` — changelog & release-notes plan (draft, decision pending)
 - `openspec/specs/` — durable capability specs; `openspec/changes/archive/` — completed changes
 
 ## Project Structure
@@ -26,7 +27,7 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 
 ## Technology Stack
 
-.NET 8 (WPF for UI) · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
+.NET 8 (WPF for UI) · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI) · Velopack (updates). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
 
 ## Key Conventions
 
