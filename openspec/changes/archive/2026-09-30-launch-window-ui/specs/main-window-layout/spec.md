@@ -1,38 +1,14 @@
-# main-window-layout Specification
+# Spec Delta
 
-## Purpose
+## REMOVED Requirements
 
-Defines the main window's two-pane layout — a Projects pane and an AI Agents pane — including how the user can resize their proportions and how the panes stay visually aligned.
+### Requirement: Consistent pane alignment
 
-## Requirements
+**Reason**: The per-pane bottom action rows it aligned no longer exist — the Projects pane's "Add Project..." action and the Agents pane's command row moved into the pane headers' Actions menus and the window footer.
 
-### Requirement: Resizable pane split
+**Migration**: Replaced by the "Pane and footer alignment" requirement, which aligns the pane headers with each other and the pane bodies with the footer.
 
-The system SHALL provide a draggable vertical splitter between the Projects pane and the AI Agents pane that lets the user change the width ratio of the two panes.
-
-#### Scenario: Splitter is available
-- **WHEN** the main window is shown
-- **THEN** a vertical splitter is present in the gap between the Projects pane and the AI Agents pane
-
-#### Scenario: Dragging changes pane widths
-- **WHEN** the user drags the splitter horizontally
-- **THEN** the Projects pane and the AI Agents pane resize so that the boundary follows the pointer
-
-#### Scenario: Dragging does not overlap content
-- **WHEN** the splitter is dragged
-- **THEN** the panes are resized rather than overlapped, and the total available width is preserved
-
-### Requirement: Pane width limits
-
-The system SHALL enforce minimum widths for both panes so that neither pane can be collapsed to zero or made unusable.
-
-#### Scenario: Minimum width respected
-- **WHEN** the user drags the splitter toward either pane beyond its minimum width
-- **THEN** the splitter stops at the minimum width and the pane remains usable
-
-#### Scenario: Initial proportions
-- **WHEN** the main window first opens
-- **THEN** the Projects pane starts at its default width and the AI Agents pane takes the remaining width
+## ADDED Requirements
 
 ### Requirement: Pane and footer alignment
 
