@@ -12,6 +12,28 @@ public static class HotkeyParser
     public static HotkeyDefinition Default { get; } =
         new(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x41);
 
+    private static readonly (string Name, int VirtualKey, string[] Aliases)[] NamedKeys =
+    [
+        ("Space", 0x20, []),
+        ("Enter", 0x0D, ["Return"]),
+        ("Tab", 0x09, []),
+        ("Escape", 0x1B, ["Esc"]),
+        ("Backspace", 0x08, ["Back"]),
+        ("Delete", 0x2E, ["Del"]),
+        ("Insert", 0x2D, ["Ins"]),
+        ("Home", 0x24, []),
+        ("End", 0x23, []),
+        ("PageUp", 0x21, ["PgUp"]),
+        ("PageDown", 0x22, ["PgDn"]),
+        ("Up", 0x26, []),
+        ("Down", 0x28, []),
+        ("Left", 0x25, []),
+        ("Right", 0x27, []),
+    ];
+
+    private static readonly IReadOnlyDictionary<string, int> NamedKeyLookup = BuildNameLookup();
+    private static readonly IReadOnlyDictionary<int, string> VirtualKeyLookup = BuildVirtualKeyLookup();
+
     /// <summary>
     /// Attempts to parse a hotkey string. Requires at least one modifier and exactly
     /// one recognized key. Returns false for null, empty, modifier-less, or unknown input.
@@ -114,11 +136,40 @@ public static class HotkeyParser
         return string.Join("+", parts);
     }
 
+    private static IReadOnlyDictionary<string, int> BuildNameLookup()
+    {
+        var lookup = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (name, virtualKey, aliases) in NamedKeys)
+        {
+            lookup[name] = virtualKey;
+
+            foreach (var alias in aliases)
+            {
+                lookup[alias] = virtualKey;
+            }
+        }
+
+        return lookup;
+    }
+
+    private static IReadOnlyDictionary<int, string> BuildVirtualKeyLookup()
+    {
+        var lookup = new Dictionary<int, string>();
+
+        foreach (var (name, virtualKey, _) in NamedKeys)
+        {
+            lookup.TryAdd(virtualKey, name);
+        }
+
+        return lookup;
+    }
+
     private static string VirtualKeyName(int virtualKey)
     {
-        if (virtualKey == 0x20)
+        if (VirtualKeyLookup.TryGetValue(virtualKey, out var name))
         {
-            return "Space";
+            return name;
         }
 
         if ((virtualKey >= 0x41 && virtualKey <= 0x5A) || (virtualKey >= 0x30 && virtualKey <= 0x39))
@@ -138,9 +189,8 @@ public static class HotkeyParser
     {
         virtualKey = 0;
 
-        if (token.Equals("space", StringComparison.OrdinalIgnoreCase))
+        if (NamedKeyLookup.TryGetValue(token, out virtualKey))
         {
-            virtualKey = 0x20; // VK_SPACE
             return true;
         }
 

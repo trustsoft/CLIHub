@@ -102,12 +102,106 @@ public class HotkeyParserTests
     }
 
     [Theory]
+    [InlineData("Enter", 0x0D)]
+    [InlineData("Tab", 0x09)]
+    [InlineData("Escape", 0x1B)]
+    [InlineData("Backspace", 0x08)]
+    [InlineData("Delete", 0x2E)]
+    [InlineData("Insert", 0x2D)]
+    [InlineData("Home", 0x24)]
+    [InlineData("End", 0x23)]
+    [InlineData("PageUp", 0x21)]
+    [InlineData("PageDown", 0x22)]
+    [InlineData("Up", 0x26)]
+    [InlineData("Down", 0x28)]
+    [InlineData("Left", 0x25)]
+    [InlineData("Right", 0x27)]
+    [InlineData("Space", 0x20)]
+    public void TryParse_NamedKey_ReturnsExpectedVirtualKey(string key, int expectedVk)
+    {
+        Assert.True(HotkeyParser.TryParse($"Ctrl+{key}", out var definition));
+        Assert.Equal(HotkeyModifiers.Control, definition!.Modifiers);
+        Assert.Equal(expectedVk, definition.VirtualKey);
+    }
+
+    [Theory]
+    [InlineData("cTrL+eNtEr", 0x0D)]
+    [InlineData("CTRL+ESCAPE", 0x1B)]
+    [InlineData("alt+PAGEUP", 0x21)]
+    public void TryParse_NamedKey_IsCaseInsensitive(string input, int expectedVk)
+    {
+        Assert.True(HotkeyParser.TryParse(input, out var definition));
+        Assert.Equal(expectedVk, definition!.VirtualKey);
+    }
+
+    [Theory]
+    [InlineData("Return", 0x0D)]
+    [InlineData("Esc", 0x1B)]
+    [InlineData("Back", 0x08)]
+    [InlineData("Del", 0x2E)]
+    [InlineData("Ins", 0x2D)]
+    [InlineData("PgUp", 0x21)]
+    [InlineData("PgDn", 0x22)]
+    public void TryParse_Alias_ResolvesToCanonicalVirtualKey(string alias, int expectedVk)
+    {
+        Assert.True(HotkeyParser.TryParse($"Ctrl+{alias}", out var definition));
+        Assert.Equal(expectedVk, definition!.VirtualKey);
+    }
+
+    [Theory]
+    [InlineData("Enter")]
+    [InlineData("Tab")]
+    [InlineData("Escape")]
+    [InlineData("Backspace")]
+    [InlineData("Delete")]
+    [InlineData("Insert")]
+    [InlineData("Home")]
+    [InlineData("End")]
+    [InlineData("PageUp")]
+    [InlineData("PageDown")]
+    [InlineData("Up")]
+    [InlineData("Down")]
+    [InlineData("Left")]
+    [InlineData("Right")]
+    public void Format_NamedKey_UsesCanonicalName(string key)
+    {
+        Assert.True(HotkeyParser.TryParse($"Ctrl+{key}", out var definition));
+
+        Assert.Equal($"Ctrl+{key}", HotkeyParser.Format(definition!));
+    }
+
+    [Theory]
+    [InlineData("Return", "Enter")]
+    [InlineData("Esc", "Escape")]
+    [InlineData("Back", "Backspace")]
+    [InlineData("Del", "Delete")]
+    [InlineData("Ins", "Insert")]
+    [InlineData("PgUp", "PageUp")]
+    [InlineData("PgDn", "PageDown")]
+    public void Format_AliasInput_UsesCanonicalName(string alias, string canonical)
+    {
+        Assert.True(HotkeyParser.TryParse($"Ctrl+{alias}", out var definition));
+
+        var formatted = HotkeyParser.Format(definition!);
+
+        Assert.Equal($"Ctrl+{canonical}", formatted);
+        Assert.True(HotkeyParser.TryParse(formatted, out var reparsed));
+        Assert.Equal(definition, reparsed);
+    }
+
+    [Theory]
     [InlineData("Ctrl+Shift+A")]
     [InlineData("Alt+F4")]
     [InlineData("Ctrl+1")]
     [InlineData("Win+D")]
     [InlineData("Ctrl+Alt+F12")]
     [InlineData("Ctrl+Alt+Space")]
+    [InlineData("Ctrl+Enter")]
+    [InlineData("Alt+Tab")]
+    [InlineData("Ctrl+Left")]
+    [InlineData("Ctrl+PageUp")]
+    [InlineData("Alt+Backspace")]
+    [InlineData("Ctrl+Delete")]
     public void Format_RoundTripsThroughTryParse(string input)
     {
         Assert.True(HotkeyParser.TryParse(input, out var definition));

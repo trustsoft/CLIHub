@@ -64,7 +64,7 @@ public partial class SettingsWindow : Window
         var definition = new HotkeyDefinition(modifiers, KeyInterop.VirtualKeyFromKey(key));
         if (!HotkeyParser.TryParse(HotkeyParser.Format(definition), out _))
         {
-            _viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, or F1-F24 with a modifier.");
+            _viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1-F24, or a named key (Enter, Tab, Escape, arrows, and so on) with a modifier.");
             return;
         }
 

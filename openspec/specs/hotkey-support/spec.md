@@ -74,14 +74,22 @@ The system SHALL unregister the global hotkey on shutdown.
 - **WHEN** the application terminates unexpectedly
 - **THEN** Windows automatically releases the hotkey registration
 
-### Requirement: Space key support
+### Requirement: Named key support
 
-The system SHALL accept the Space key in a hotkey combination, in addition to letters, digits, and function keys.
+The system SHALL accept a defined set of named, non-character keys in a hotkey combination, in addition to letters, digits, and function keys. The recognized canonical names SHALL be `Enter`, `Tab`, `Escape`, `Backspace`, `Delete`, `Insert`, `Home`, `End`, `PageUp`, `PageDown`, `Up`, `Down`, `Left`, `Right`, and `Space`, each mapped to its Windows virtual key. The system SHALL also accept the aliases `Return` (Enter), `Esc` (Escape), `Back` (Backspace), `Del` (Delete), `Ins` (Insert), `PgUp` (PageUp), and `PgDn` (PageDown). Name matching SHALL be case-insensitive.
 
-#### Scenario: Space combined with a modifier
-- **WHEN** a hotkey combines at least one modifier with the Space key (for example `Ctrl+Alt+Space`)
+#### Scenario: Named key combined with a modifier
+- **WHEN** a hotkey combines at least one modifier with a recognized named key (for example `Ctrl+Enter` or `Ctrl+Alt+Space`)
 - **THEN** the combination is accepted as a valid hotkey
 
-#### Scenario: Space round-trips through formatting
-- **WHEN** a combination that includes the Space key is formatted back to text
-- **THEN** the Space key is written as `Space` and the result parses back to the same combination
+#### Scenario: Named key aliases
+- **WHEN** a hotkey uses an alias such as `Return`, `Esc`, `Back`, `Del`, `Ins`, `PgUp`, or `PgDn`
+- **THEN** it is accepted and resolves to the same key as the canonical name
+
+#### Scenario: Named key round-trips through formatting
+- **WHEN** a combination that includes a named key is formatted back to text
+- **THEN** the key is written using its canonical name and the result parses back to the same combination
+
+#### Scenario: Unknown key is rejected
+- **WHEN** a hotkey contains a token that is neither a modifier, a letter, a digit, a function key, nor a recognized named key
+- **THEN** the combination is rejected
