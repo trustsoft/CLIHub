@@ -4,6 +4,7 @@ using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
+using CLIHub.ViewModels;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
@@ -14,17 +15,20 @@ public sealed class PreferenceApplier : IPreferenceApplier
     private readonly IProcessLauncher _processLauncher;
     private readonly GlobalHotkeyService _hotkey;
     private readonly IStartupService _startupService;
+    private readonly LaunchWindowViewModel _launchWindow;
     private readonly ILogger<PreferenceApplier> _logger;
 
     public PreferenceApplier(
         IProcessLauncher processLauncher,
         GlobalHotkeyService hotkey,
         IStartupService startupService,
+        LaunchWindowViewModel launchWindow,
         ILogger<PreferenceApplier> logger)
     {
         _processLauncher = processLauncher;
         _hotkey = hotkey;
         _startupService = startupService;
+        _launchWindow = launchWindow;
         _logger = logger;
     }
 
@@ -32,6 +36,12 @@ public sealed class PreferenceApplier : IPreferenceApplier
     {
         _processLauncher.SetRuntime(runtime);
         _logger.LogInformation("Default runtime set to {Runtime}", runtime);
+    }
+
+    public void ApplyPathDisplayStyle(PathDisplayStyle style)
+    {
+        _launchWindow.ApplyPathDisplayStyle(style);
+        _logger.LogInformation("Path display style set to {Style}", style);
     }
 
     public bool ApplyHotkey(HotkeyDefinition definition)

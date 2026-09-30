@@ -81,4 +81,16 @@ public class AppPreferences
     /// application starts in the system tray. Applies to manual and Windows starts.
     /// </summary>
     public bool ShowWindowOnStartup { get; set; } = true;
+
+    /// <summary>
+    /// When true, the launch window stays visible when it loses focus instead of hiding.
+    /// The footer's pin control toggles this.
+    /// </summary>
+    public bool PinLaunchWindow { get; set; }
+
+    /// <summary>
+    /// How long project paths are shortened in the launch window: "leftTrim" (default) keeps
+    /// the end of the path, "middleEllipsis" keeps both ends.
+    /// </summary>
+    public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
 }

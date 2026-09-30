@@ -58,10 +58,11 @@ public partial class App : Application
             Dispatcher.Invoke(() => _tray?.ShowLaunchWindow());
 
         var launchWindow = _services.GetRequiredService<LaunchWindow>();
+        MainWindow = launchWindow;
 
         if (preferences.ShowWindowOnStartup)
         {
-            launchWindow.Show();
+            launchWindow.ShowOnPointerMonitor();
         }
         else
         {

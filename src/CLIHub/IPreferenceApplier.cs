@@ -11,6 +11,9 @@ public interface IPreferenceApplier
     /// <summary>Applies the launch runtime to the process launcher.</summary>
     void ApplyRuntime(RuntimeKind runtime);
 
+    /// <summary>Applies the launch window's path display style.</summary>
+    void ApplyPathDisplayStyle(PathDisplayStyle style);
+
     /// <summary>
     /// Re-registers the global hotkey. Returns false when the new combination could not
     /// be registered (the previous one is restored in that case).

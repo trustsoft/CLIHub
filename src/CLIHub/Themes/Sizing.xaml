@@ -1,0 +1,57 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!--
+        Sizing tokens for the launch window. Structural metrics live here so layout changes are
+        made in one place; naming follows Sizing.<Group>.<Token>.
+    -->
+
+    <!-- Font sizes -->
+    <sys:Double x:Key="Sizing.FontSize.Section">11</sys:Double>
+    <sys:Double x:Key="Sizing.FontSize.Body">12</sys:Double>
+    <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
+
+    <!-- Panes and window -->
+    <sys:Double x:Key="Sizing.Height.PaneHeader">32</sys:Double>
+    <Thickness x:Key="Sizing.PaneMargin">10</Thickness>
+    <Thickness x:Key="Sizing.Margin.PaneHeader">0,0,0,4</Thickness>
+    <sys:Double x:Key="Sizing.MaxListHeight">434</sys:Double>
+    <sys:Double x:Key="Sizing.SplitterHitWidth">9</sys:Double>
+    <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->
+    <sys:Double x:Key="Sizing.Width.MinProjectList">300</sys:Double>
+    <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
+    <sys:Double x:Key="Sizing.Width.MinProjectPane">320</sys:Double>
+    <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
+    <sys:Double x:Key="Sizing.Width.MinAgentPane">260</sys:Double>
+    <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->
+    <sys:Double x:Key="Sizing.Width.MaxAgentText">240</sys:Double>
+
+    <!-- Rows -->
+    <sys:Double x:Key="Sizing.Height.AgentRow">60</sys:Double>
+    <sys:Double x:Key="Sizing.Height.Thumb">42</sys:Double>
+    <sys:Double x:Key="Sizing.Width.Thumb">42</sys:Double>
+    <sys:Double x:Key="Sizing.Height.AgentLogo">28</sys:Double>
+    <sys:Double x:Key="Sizing.Width.AgentLogo">28</sys:Double>
+    <!-- Right inset of row content: 12px, so row text uses the full row width. -->
+    <Thickness x:Key="Sizing.Padding.ProjectRow">12,9</Thickness>
+    <Thickness x:Key="Sizing.Padding.AgentRow">10,0,10,0</Thickness>
+    <!-- Gap between an agent's text and its action buttons. -->
+    <Thickness x:Key="Sizing.Margin.AgentRowText">14,0,24,0</Thickness>
+    <!-- Insets the project row's text does not get: row padding, thumbnail and text margin. The
+         favourite marker's width is added by PathDisplayConverter when the project is a favourite. -->
+    <sys:Double x:Key="Sizing.ProjectRowTextInsets">81</sys:Double>
+
+    <!-- Buttons and footer -->
+    <sys:Double x:Key="Sizing.Height.ActionButton">28</sys:Double>
+    <sys:Double x:Key="Sizing.Width.ActionButton">28</sys:Double>
+    <sys:Double x:Key="Sizing.Height.IconButton">26</sys:Double>
+    <sys:Double x:Key="Sizing.Width.IconButton">30</sys:Double>
+    <sys:Double x:Key="Sizing.Height.Footer">42</sys:Double>
+
+    <!-- Corner radii -->
+    <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
+    <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
+    <CornerRadius x:Key="Sizing.CornerRadius.Thumb">9</CornerRadius>
+
+</ResourceDictionary>

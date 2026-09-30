@@ -12,6 +12,13 @@ using CLIHub.Core.Models;
 public sealed record RuntimeOption(RuntimeKind Kind, string Name);
 
 /// <summary>
+/// A selectable path display style with a friendly label.
+/// </summary>
+/// <param name="Style">The path display style.</param>
+/// <param name="Name">Display name shown in the selector.</param>
+public sealed record PathDisplayOption(PathDisplayStyle Style, string Name);
+
+/// <summary>
 /// View model for the Settings window: loads preferences, validates input, and applies
 /// changes on save.
 /// </summary>
@@ -24,6 +31,12 @@ public sealed class SettingsViewModel : ObservableObject
         new(RuntimeKind.WindowsTerminal, "wt — Windows Terminal")
     };
 
+    private static readonly PathDisplayOption[] PathDisplayOptions =
+    {
+        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path"),
+        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends")
+    };
+
     private readonly IConfigService _configService;
     private readonly IUpdateService _updateService;
     private readonly IStartupService _startupService;
@@ -32,6 +45,7 @@ public sealed class SettingsViewModel : ObservableObject
     private bool _startWithWindows;
     private bool _showWindowOnStartup = true;
     private RuntimeOption _selectedRuntime = RuntimeOptions[2];
+    private PathDisplayOption _selectedPathDisplay = PathDisplayOptions[0];
     private string _hotkeyText = string.Empty;
     private string _probeTtlText = string.Empty;
     private string _probeTimeoutText = string.Empty;
@@ -61,6 +75,14 @@ public sealed class SettingsViewModel : ObservableObject
     public event EventHandler? RequestClose;
 
     public IReadOnlyList<RuntimeOption> Runtimes => RuntimeOptions;
+
+    public IReadOnlyList<PathDisplayOption> PathDisplays => PathDisplayOptions;
+
+    public PathDisplayOption SelectedPathDisplay
+    {
+        get => _selectedPathDisplay;
+        set => SetProperty(ref _selectedPathDisplay, value);
+    }
 
     public bool StartWithWindows
     {
@@ -129,6 +151,8 @@ public sealed class SettingsViewModel : ObservableObject
 
         _selectedRuntime = RuntimeOptions
             .FirstOrDefault(o => o.Kind == RuntimeKinds.Parse(prefs.DefaultRuntime)) ?? RuntimeOptions[2];
+        _selectedPathDisplay = PathDisplayOptions
+            .FirstOrDefault(o => o.Style == PathDisplayStyles.Parse(prefs.PathDisplayStyle)) ?? PathDisplayOptions[0];
         _hotkeyText = string.IsNullOrWhiteSpace(prefs.Hotkey)
             ? HotkeyParser.Format(HotkeyParser.Default)
             : prefs.Hotkey;
@@ -143,6 +167,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(StartWithWindows));
         OnPropertyChanged(nameof(ShowWindowOnStartup));
         OnPropertyChanged(nameof(SelectedRuntime));
+        OnPropertyChanged(nameof(SelectedPathDisplay));
         OnPropertyChanged(nameof(HotkeyText));
         OnPropertyChanged(nameof(ProbeTtlText));
         OnPropertyChanged(nameof(ProbeTimeoutText));
@@ -201,9 +226,11 @@ public sealed class SettingsViewModel : ObservableObject
         prefs.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
         prefs.StartWithWindows = StartWithWindows;
         prefs.ShowWindowOnStartup = ShowWindowOnStartup;
+        prefs.PathDisplayStyle = PathDisplayStyles.ToToken(SelectedPathDisplay.Style);
         _configService.Save(config);
 
         _applier.ApplyRuntime(SelectedRuntime.Kind);
+        _applier.ApplyPathDisplayStyle(SelectedPathDisplay.Style);
         _applier.ApplyHotkey(hotkeyDefinition!);
         _applier.ApplyStartupUpdateCheck(CheckForUpdatesOnStartup);
 

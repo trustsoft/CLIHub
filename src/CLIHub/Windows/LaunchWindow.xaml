@@ -5,308 +5,410 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:conv="clr-namespace:CLIHub.Converters"
         mc:Ignorable="d"
-        Title="CLIHub - AI Agent Launcher"
-        Height="640" Width="980"
-        MinHeight="440" MinWidth="760"
-        Background="{StaticResource WindowBackgroundBrush}"
-        WindowStartupLocation="CenterScreen">
+        Title="CLIHub"
+        Background="{StaticResource ChromeBgBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        KeyDown="OnKeyDown"
+        Deactivated="OnDeactivated"
+        PreviewMouseLeftButtonDown="OnWindowMouseDown"
+        PreviewMouseLeftButtonUp="OnSplitterMouseUp"
+        PreviewMouseMove="OnSplitterMouseMove"
+        MinHeight="240"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SizeToContent="WidthAndHeight"
+        SourceInitialized="OnSourceInitialized"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        WindowStyle="None">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- Window-scoped implicit styles: the dark theme applies to this window only. -->
+                <!-- Window-scoped styles: the dark theme applies to this window only. -->
                 <ResourceDictionary Source="/Themes/LaunchWindowStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <conv:PathToImageConverter x:Key="PathToImage"/>
-            <conv:MiddleEllipsisConverter x:Key="MiddleEllipsis"/>
+            <conv:PathDisplayConverter x:Key="PathDisplay"/>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="10,10,10,0">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
+        <StackPanel>
 
-        <!-- Panes -->
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" MinWidth="220"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="1.6*" MinWidth="320"/>
-            </Grid.ColumnDefinitions>
+            <!-- Inset top highlight (mockup chrome) -->
+            <Rectangle Height="1" Fill="#0DFFFFFF"/>
 
-            <!-- PROJECTS pane -->
-            <Border Grid.Column="0"
-                    Background="{StaticResource SurfaceBrush}"
-                    CornerRadius="10"
-                    Padding="12,10">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                        <TextBlock Text="PROJECTS"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource SecondaryTextBrush}"
-                                   VerticalAlignment="Center"/>
-                        <Menu HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <MenuItem Header="Actions">
-                                <MenuItem Header="Add Project..."
-                                          Command="{Binding AddProjectCommand}"/>
-                                <MenuItem Header="Remove Project"
-                                          Command="{Binding RemoveProjectCommand}"/>
-                                <MenuItem Header="Toggle Favorite"
-                                          Command="{Binding ToggleFavoriteCommand}"/>
-                                <Separator/>
-                                <MenuItem Header="Refresh"
-                                          Command="{Binding RefreshCommand}"/>
-                            </MenuItem>
-                        </Menu>
-                    </Grid>
-
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Projects}"
-                             SelectedItem="{Binding SelectedProject, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Column="0"
-                                            Width="40"
-                                            Height="40"
-                                            CornerRadius="8">
-                                        <Border.Background>
-                                            <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
-                                                        Stretch="Uniform"/>
-                                        </Border.Background>
-                                    </Border>
-
-                                    <StackPanel x:Name="ProjectRowText" Grid.Column="1" Margin="10,0,6,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontWeight="SemiBold"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock FontSize="11"
-                                                   Foreground="{StaticResource DimmedTextBrush}">
-                                            <TextBlock.Text>
-                                                <MultiBinding Converter="{StaticResource MiddleEllipsis}">
-                                                    <Binding Path="Path"/>
-                                                    <Binding Path="ActualWidth" ElementName="ProjectRowText"/>
-                                                </MultiBinding>
-                                            </TextBlock.Text>
-                                        </TextBlock>
-                                    </StackPanel>
-
-                                    <TextBlock Grid.Column="2"
-                                               Text="★"
-                                               FontSize="13"
-                                               Foreground="{StaticResource AccentBrush}"
-                                               VerticalAlignment="Center"
-                                               Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}"/>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
-
-            <GridSplitter Grid.Column="1"
-                          Width="5"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Stretch"
-                          ResizeBehavior="PreviousAndNext"/>
-
-            <!-- AGENTS pane -->
-            <Border Grid.Column="2"
-                    Background="{StaticResource SurfaceBrush}"
-                    CornerRadius="10"
-                    Padding="12,10">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Grid Grid.Row="0" Margin="0,0,0,6">
-                        <TextBlock Text="AGENTS"
-                                   FontSize="12"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource SecondaryTextBrush}"
-                                   VerticalAlignment="Center"/>
-                        <Menu HorizontalAlignment="Right" VerticalAlignment="Center">
-                            <MenuItem Header="Actions">
-                                <MenuItem Header="Launch"
-                                          Command="{Binding LaunchCommand}"/>
-                                <MenuItem Header="Resume Session"
-                                          Command="{Binding ResumeCommand}"/>
-                                <MenuItem Header="Initialize"
-                                          Command="{Binding InitCommand}"/>
-                                <MenuItem Header="Update"
-                                          Command="{Binding UpdateCommand}"/>
-                                <MenuItem Header="Show Version"
-                                          Command="{Binding VersionCommand}"/>
-                                <Separator/>
-                                <MenuItem Header="Only agents available in project"
-                                          IsCheckable="True"
-                                          IsChecked="{Binding ShowOnlyProjectAgents, Mode=TwoWay}"/>
-                                <Separator/>
-                                <MenuItem Header="Refresh"
-                                          Command="{Binding RefreshCommand}"/>
-                            </MenuItem>
-                        </Menu>
-                    </Grid>
-
-                    <ListBox Grid.Row="1"
-                             ItemsSource="{Binding Agents}"
-                             SelectedItem="{Binding SelectedAgent, Mode=TwoWay}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Opacity="{Binding RowOpacity}">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Border Grid.Column="0"
-                                            Width="28"
-                                            Height="28"
-                                            CornerRadius="6"
-                                            VerticalAlignment="Center">
-                                        <Border.Background>
-                                            <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
-                                                        Stretch="Uniform"/>
-                                        </Border.Background>
-                                    </Border>
-
-                                    <StackPanel Grid.Column="1" Margin="10,0,8,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontWeight="SemiBold"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Version}"
-                                                   FontSize="11"
-                                                   Foreground="{StaticResource SecondaryTextBrush}"
-                                                   TextTrimming="CharacterEllipsis"/>
-                                    </StackPanel>
-
-                                    <StackPanel Grid.Column="2"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center">
-                                        <Button Content="▶"
-                                                Width="32"
-                                                Height="28"
-                                                Padding="0"
-                                                Focusable="False"
-                                                FontSize="12"
-                                                ToolTip="Launch"
-                                                Command="{Binding DataContext.LaunchAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                CommandParameter="{Binding}"/>
-                                        <Button Content="↻"
-                                                Width="32"
-                                                Height="28"
-                                                Padding="0"
-                                                Margin="6,0,0,0"
-                                                Focusable="False"
-                                                FontSize="12"
-                                                ToolTip="Resume session"
-                                                Command="{Binding DataContext.ResumeAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
-                                                CommandParameter="{Binding}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                </Grid>
-            </Border>
-        </Grid>
-
-        <!-- Footer -->
-        <Border Grid.Row="1"
-                Margin="0,10,0,0"
-                Padding="10,8"
-                Background="{StaticResource SurfaceRaisedBrush}"
-                BorderBrush="{StaticResource SeparatorBrush}"
-                BorderThickness="0,1,0,0">
-            <Grid>
+            <!-- Panes -->
+            <Grid x:Name="PanesGrid">
                 <Grid.ColumnDefinitions>
+                    <!-- Projects pane hugs its list; the splitter still resizes it on drag, but never
+                         below the width its list needs. -->
+                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.Width.MinProjectPane}"/>
+                    <!-- Optional splitter column: sized by the thumb, so the drag area is wider than the hairline. -->
                     <ColumnDefinition Width="Auto"/>
+                    <!-- Agents pane and its rows are content sized too, so the window fits its content. -->
+                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.Width.MinAgentPane}"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Projects pane -->
+                <Border Grid.Column="0" Style="{StaticResource PaneSurface}">
+                    <DockPanel Margin="{StaticResource Sizing.PaneMargin}">
+                        <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
+                            <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="PROJECTS"/>
+                            <Button x:Name="ProjectsActionsButton"
+                                    HorizontalAlignment="Right"
+                                    Click="OnOpenProjectsMenu"
+                                    Content="Actions"
+                                    Style="{StaticResource PaneActionsButton}">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                        <MenuItem Command="{Binding AddProjectCommand}"
+                                                  Header="Add Project..."
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE710;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding RemoveProjectCommand}"
+                                                  Header="Remove Project"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74D;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
+                                                  Header="Toggle Favorite"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE734;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding RefreshCommand}"
+                                                  Header="Refresh"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </Grid>
+
+                        <ListBox ItemContainerStyle="{StaticResource ProjectRowContainer}"
+                                 ItemsSource="{Binding Projects}"
+                                 MinWidth="{StaticResource Sizing.Width.MinProjectList}"
+                                 SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
+                                 Style="{StaticResource PaneList}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="{StaticResource Sizing.Height.Thumb}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <!-- Star column so the row fills the list width, while the
+                                                 item's own desired width stays content driven. -->
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Width="{StaticResource Sizing.Width.Thumb}"
+                                                Height="{StaticResource Sizing.Height.Thumb}"
+                                                Background="{StaticResource ThumbBgBrush}"
+                                                BorderBrush="{StaticResource FieldStrokeBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="{StaticResource Sizing.CornerRadius.Thumb}">
+                                            <Border Margin="1" CornerRadius="{StaticResource Sizing.CornerRadius.Thumb}">
+                                                <Border.Background>
+                                                    <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                                                Stretch="Uniform"/>
+                                                </Border.Background>
+                                            </Border>
+                                        </Border>
+
+                                        <StackPanel
+                                                    Grid.Column="1"
+                                                    Margin="15,0,0,0"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Margin="0,3,0,0"
+                                                       FontSize="{StaticResource Sizing.FontSize.Body}"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       TextTrimming="CharacterEllipsis">
+                                                <TextBlock.Text>
+                                                    <MultiBinding Converter="{StaticResource PathDisplay}"
+                                                                  ConverterParameter="{StaticResource Sizing.ProjectRowTextInsets}">
+                                                        <Binding Path="Path"/>
+                                                        <!-- The list's measured width: the path is the elastic part of a row,
+                                                             so it is trimmed to whatever the list currently offers. The list's
+                                                             own width converges to its 300px minimum (or to a manually dragged
+                                                             pane width), because each layout pass trims the path a little more. -->
+                                                        <Binding Path="ActualWidth"
+                                                                 RelativeSource="{RelativeSource AncestorType={x:Type ListBox}}"/>
+                                                        <Binding Path="DataContext.DisplayStyle"
+                                                                 RelativeSource="{RelativeSource AncestorType={x:Type Window}}"/>
+                                                        <!-- Favourite marker widens the row, the TextBlock measures the text. -->
+                                                        <Binding Path="IsFavorite"/>
+                                                        <Binding RelativeSource="{RelativeSource Self}"/>
+                                                    </MultiBinding>
+                                                </TextBlock.Text>
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="3"
+                                                   Margin="8,0,0,0"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="13"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   Text="★"
+                                                   Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+
+                <!-- Pane divider: hairline with a wider splitter hit area -->
+                <Border Grid.Column="1" Background="{StaticResource StripBgBrush}"/>
+                <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center" Fill="{StaticResource FieldStrokeBrush}"/>
+                <Rectangle x:Name="PaneSplitter"
+                           Grid.Column="1"
+                           Width="{StaticResource Sizing.SplitterHitWidth}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Stretch"
+                           Cursor="SizeWE"
+                           Fill="Transparent"/>
+
+                <!-- Agents pane -->
+                <Border Grid.Column="2" Style="{StaticResource PaneSurface}">
+                    <DockPanel Margin="{StaticResource Sizing.PaneMargin}">
+                        <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
+                            <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="AGENTS"/>
+                            <Button x:Name="AgentsActionsButton"
+                                    HorizontalAlignment="Right"
+                                    Click="OnOpenAgentsMenu"
+                                    Content="Actions"
+                                    Style="{StaticResource PaneActionsButton}">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                        <MenuItem Command="{Binding LaunchCommand}"
+                                                  Header="Launch"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE768;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding ResumeCommand}"
+                                                  Header="Resume Session"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding InitCommand}"
+                                                  Header="Initialize"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8F4;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding UpdateCommand}"
+                                                  Header="Update"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE896;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding VersionCommand}"
+                                                  Header="Show Version"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE946;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator Style="{StaticResource MenuSeparator}"/>
+                                        <MenuItem Header="Only agents available in project"
+                                                  IsCheckable="True"
+                                                  IsChecked="{Binding ShowOnlyProjectAgents, Mode=TwoWay}"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE71C;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator Style="{StaticResource MenuSeparator}"/>
+                                        <MenuItem Command="{Binding RefreshCommand}"
+                                                  Header="Refresh"
+                                                  Style="{StaticResource DarkMenuItem}">
+                                            <MenuItem.Icon>
+                                                <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                        </Grid>
+
+                        <ListBox AlternationCount="100000"
+                                 ItemContainerStyle="{StaticResource AgentRowContainer}"
+                                 ItemsSource="{Binding Agents}"
+                                 SelectedItem="{Binding SelectedAgent, Mode=TwoWay}"
+                                 Style="{StaticResource PaneList}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Height="{StaticResource Sizing.Height.AgentRow}" Opacity="{Binding RowOpacity}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <!-- Spacer: pushes the action buttons to the row's right edge,
+                                                 while the row's own width stays content driven. -->
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Image Width="{StaticResource Sizing.Width.AgentLogo}"
+                                               Height="{StaticResource Sizing.Height.AgentLogo}"
+                                               VerticalAlignment="Center"
+                                               RenderOptions.BitmapScalingMode="HighQuality"
+                                               Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                               Stretch="Uniform"/>
+
+                                        <StackPanel Grid.Column="1"
+                                                    Margin="{StaticResource Sizing.Margin.AgentRowText}"
+                                                    MaxWidth="{StaticResource Sizing.Width.MaxAgentText}"
+                                                    VerticalAlignment="Center">
+                                            <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
+                                                       Foreground="{StaticResource TextPrimaryBrush}"
+                                                       Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis"/>
+                                            <TextBlock Margin="0,1,0,0"
+                                                       FontSize="{StaticResource Sizing.FontSize.Section}"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       Text="{Binding Version}"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3"
+                                                    VerticalAlignment="Center"
+                                                    Orientation="Horizontal">
+                                            <Button Margin="0,0,6,0"
+                                                    Command="{Binding DataContext.LaunchAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource AgentActionButton}"
+                                                    ToolTip="Launch">
+                                                <Path Width="10"
+                                                      Height="10"
+                                                      Data="{StaticResource PlayGlyph}"
+                                                      Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                      Stretch="Uniform"/>
+                                            </Button>
+                                            <Button Command="{Binding DataContext.ResumeAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource AgentActionButton}"
+                                                    ToolTip="Resume session">
+                                                <Grid Width="14" Height="14">
+                                                    <Ellipse Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                             StrokeThickness="1.4"/>
+                                                    <Path Width="6"
+                                                          Height="6"
+                                                          Margin="1.5,0,0,0"
+                                                          HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"
+                                                          Data="{StaticResource PlayGlyph}"
+                                                          Fill="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                                          Stretch="Uniform"/>
+                                                </Grid>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <Rectangle Height="1" Margin="12,0" Fill="{StaticResource HairlineBrush}"/>
+
+            <!-- Footer: brand and version left, update check beside it, status centered, actions right -->
+            <Grid Height="{StaticResource Sizing.Height.Footer}" Background="{StaticResource StripBgBrush}">
+                <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
-                           Text="CLIHub"
-                           FontSize="15"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="0"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource BrandText}" Text="CLIHub"/>
+                    <Border Margin="12,2,0,0"
+                            VerticalAlignment="Center"
+                            Style="{StaticResource VersionChipBorder}">
+                        <TextBlock Style="{StaticResource VersionChipText}" Text="{Binding VersionText}"/>
+                    </Border>
+                </StackPanel>
 
-                <Border Grid.Column="1"
+                <Button Grid.Column="1"
                         Margin="10,0,0,0"
-                        Padding="8,2"
                         VerticalAlignment="Center"
-                        Background="{StaticResource ControlSurfaceBrush}"
-                        CornerRadius="10">
-                    <TextBlock Text="{Binding VersionText}"
-                               FontSize="11"
-                               Foreground="{StaticResource SecondaryTextBrush}"/>
-                </Border>
-
-                <Button Grid.Column="2"
-                        Margin="10,0,0,0"
-                        Padding="10,4"
-                        VerticalAlignment="Center"
+                        Command="{Binding CheckForUpdatesCommand}"
                         Content="Check for updates"
-                        Command="{Binding CheckForUpdatesCommand}"/>
+                        Style="{StaticResource FooterTextButton}"/>
 
-                <TextBlock Grid.Column="3"
+                <TextBlock Grid.Column="2"
                            Margin="12,0"
-                           Text="{Binding StatusMessage}"
-                           FontSize="12"
-                           Foreground="{StaticResource SecondaryTextBrush}"
+                           HorizontalAlignment="Center"
                            VerticalAlignment="Center"
+                           FontSize="{StaticResource Sizing.FontSize.Body}"
+                           Foreground="{StaticResource TextMutedBrush}"
+                           Text="{Binding StatusMessage}"
+                           TextAlignment="Center"
                            TextTrimming="CharacterEllipsis"/>
 
-                <StackPanel Grid.Column="4"
-                            Orientation="Horizontal"
-                            VerticalAlignment="Center">
-                    <Button Width="34"
-                            Height="28"
-                            Padding="0"
-                            FontFamily="Segoe MDL2 Assets"
-                            FontSize="14"
-                            ToolTip="Add project"
-                            Content="&#xE8B7;"
-                            Command="{Binding AddProjectCommand}"/>
-                    <Button Width="34"
-                            Height="28"
-                            Padding="0"
-                            Margin="6,0,0,0"
-                            FontFamily="Segoe MDL2 Assets"
-                            FontSize="14"
-                            ToolTip="Settings"
-                            Content="&#xE713;"
-                            Command="{Binding OpenSettingsCommand}"/>
-                    <Button Width="34"
-                            Height="28"
-                            Padding="0"
-                            Margin="6,0,0,0"
-                            FontFamily="Segoe MDL2 Assets"
-                            FontSize="14"
-                            ToolTip="Exit CLIHub"
-                            Content="&#xE7E8;"
-                            Command="{Binding ExitCommand}"/>
+                <StackPanel Grid.Column="3"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <Button Command="{Binding OpenDataFolderCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Open data folder">
+                        <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE8B7;"/>
+                    </Button>
+                    <Button Command="{Binding OpenSettingsCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Settings">
+                        <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE713;"/>
+                    </Button>
+                    <ToggleButton IsChecked="{Binding IsPinned, Mode=TwoWay}"
+                                  Style="{StaticResource PopupToggleIconButton}"
+                                  ToolTip="Keep the window open when it loses focus">
+                        <TextBlock>
+                            <TextBlock.Style>
+                                <Style BasedOn="{StaticResource FooterIcon}" TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#xE718;"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                            <Setter Property="Text" Value="&#xE77A;"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </ToggleButton>
+                    <Button Command="{Binding ExitCommand}"
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Exit CLIHub">
+                        <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE7E8;"/>
+                    </Button>
                 </StackPanel>
             </Grid>
-        </Border>
-    </Grid>
+
+        </StackPanel>
+    </Border>
 </Window>

@@ -23,8 +23,9 @@ public static class ServiceRegistration
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
+        services.AddSingleton<PromptState>();
+        services.AddSingleton<LaunchWindowViewModel>();
         services.AddSingleton<LaunchWindow>();
-        services.AddTransient<LaunchWindowViewModel>();
         services.AddSingleton<TrayIconController>();
 
         services.AddSingleton<GlobalHotkeyService>(sp => new GlobalHotkeyService(

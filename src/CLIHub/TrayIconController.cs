@@ -49,13 +49,11 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows and activates the launch window.
+    /// Shows and activates the launch window on the pointer's monitor.
     /// </summary>
     public void ShowLaunchWindow()
     {
-        _launchWindow.Show();
-        _launchWindow.WindowState = WindowState.Normal;
-        _launchWindow.Activate();
+        _launchWindow.ShowOnPointerMonitor();
     }
 
     /// <summary>

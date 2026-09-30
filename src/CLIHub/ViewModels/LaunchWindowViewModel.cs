@@ -1,14 +1,18 @@
 namespace CLIHub.ViewModels;
 
+using CLIHub.Core.Formatting;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using CLIHub.Core.Services;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Windows;
 
 /// <summary>
 /// State and commands for the launch window: the project and agent lists, the current
-/// selection, the availability filter, the status message, and every window action.
+/// selection, the availability filter, the path display style, the pin state, the status
+/// message, and every window action.
 /// </summary>
 public sealed class LaunchWindowViewModel : ObservableObject
 {
@@ -24,10 +28,13 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IConfigService _configService;
     private readonly IUpdateService _updateService;
     private readonly ISettingsLauncher _settingsLauncher;
+    private readonly PromptState _promptState;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
     private bool _showOnlyProjectAgents;
+    private bool _isPinned;
+    private PathDisplayStyle _displayStyle = PathDisplayStyles.Default;
     private bool _suppressSelectionChange;
     private bool _suppressFilterChange;
     private string _statusMessage = "CLIHub ready";
@@ -40,7 +47,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IAgentVersionService agentVersionService,
         IConfigService configService,
         IUpdateService updateService,
-        ISettingsLauncher settingsLauncher)
+        ISettingsLauncher settingsLauncher,
+        PromptState promptState)
     {
         _projectService = projectService;
         _pluginManager = pluginManager;
@@ -50,6 +58,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _configService = configService;
         _updateService = updateService;
         _settingsLauncher = settingsLauncher;
+        _promptState = promptState;
 
         VersionText = $"v{_updateService.GetCurrentVersion()}";
 
@@ -58,6 +67,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         ToggleFavoriteCommand = new RelayCommand(ToggleFavorite, () => SelectedProject != null);
         RefreshCommand = new RelayCommand(Refresh);
         CheckForUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync());
+        OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
         ExitCommand = new RelayCommand(() => Application.Current.Shutdown());
 
@@ -76,9 +86,14 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
+        var preferences = _configService.Load().Preferences;
+
         _suppressFilterChange = true;
-        ShowOnlyProjectAgents = _configService.Load().Preferences.ShowOnlyProjectAgents;
+        ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents;
         _suppressFilterChange = false;
+
+        _isPinned = preferences.PinLaunchWindow;
+        _displayStyle = PathDisplayStyles.Parse(preferences.PathDisplayStyle);
 
         RefreshProjects();
         RefreshAgents();
@@ -144,6 +159,35 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Whether the window stays visible when it loses focus. Persisted so the window keeps the
+    /// user's intent across restarts.
+    /// </summary>
+    public bool IsPinned
+    {
+        get => _isPinned;
+        set
+        {
+            if (!SetProperty(ref _isPinned, value))
+            {
+                return;
+            }
+
+            var config = _configService.Load();
+            config.Preferences.PinLaunchWindow = value;
+            _configService.Save(config);
+
+            StatusMessage = value ? "Window pinned open" : "Window unpinned";
+        }
+    }
+
+    /// <summary>How long project paths are shortened in the project rows.</summary>
+    public PathDisplayStyle DisplayStyle
+    {
+        get => _displayStyle;
+        private set => SetProperty(ref _displayStyle, value);
+    }
+
     /// <summary>Transient status or error text shown in the footer.</summary>
     public string StatusMessage
     {
@@ -156,6 +200,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     public RelayCommand ToggleFavoriteCommand { get; }
     public RelayCommand RefreshCommand { get; }
     public RelayCommand CheckForUpdatesCommand { get; }
+    public RelayCommand OpenDataFolderCommand { get; }
     public RelayCommand OpenSettingsCommand { get; }
     public RelayCommand ExitCommand { get; }
 
@@ -171,6 +216,11 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <summary>Resumes the agent of the activated row.</summary>
     public RelayCommand<AgentItem> ResumeAgentCommand { get; }
 
+    /// <summary>
+    /// Applies a path display style changed in Settings to the running window.
+    /// </summary>
+    public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
+
     private bool HasSelectedAgent() => SelectedAgent is not null;
 
     private void AddProject()
@@ -180,9 +230,12 @@ public sealed class LaunchWindowViewModel : ObservableObject
             Title = "Select Project Folder"
         };
 
-        if (dialog.ShowDialog() != true)
+        using (_promptState.Begin())
         {
-            return;
+            if (dialog.ShowDialog(Application.Current?.MainWindow) != true)
+            {
+                return;
+            }
         }
 
         try
@@ -194,11 +247,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = $"Could not add project: {ex.Message}";
-            MessageBox.Show(
-                $"Could not add project: {ex.Message}",
-                "CLIHub",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+            ShowWarning($"Could not add project: {ex.Message}");
         }
     }
 
@@ -210,15 +259,14 @@ public sealed class LaunchWindowViewModel : ObservableObject
             return;
         }
 
-        var confirm = MessageBox.Show(
-            $"Remove \"{project.Name}\" from CLIHub?\n\nThe folder and its files are not deleted.",
-            "CLIHub",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-
-        if (confirm != MessageBoxResult.Yes)
+        using (_promptState.Begin())
         {
-            return;
+            var confirmed = Confirm($"Remove \"{project.Name}\" from CLIHub?\n\nThe folder and its files are not deleted.");
+
+            if (!confirmed)
+            {
+                return;
+            }
         }
 
         _projectService.RemoveProject(project.Id);
@@ -246,6 +294,21 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _agentDetectionService.Invalidate();
         RefreshAgents();
         StatusMessage = "Refreshed agents, versions and availability.";
+    }
+
+    private void OpenDataFolder()
+    {
+        var root = DirectoryInitializer.GetAppDataRoot();
+
+        try
+        {
+            Process.Start(new ProcessStartInfo(root) { UseShellExecute = true });
+            StatusMessage = $"Opened {root}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not open {root}: {ex.Message}";
+        }
     }
 
     private async Task CheckForUpdatesAsync()
@@ -294,7 +357,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
             if (result.Success)
             {
                 StatusMessage = $"{item.Name} version: {result.Output}";
-                MessageBox.Show(result.Output ?? string.Empty, $"{item.Name} version");
+                ShowInfo(result.Output ?? string.Empty, $"{item.Name} version");
             }
             else
             {
@@ -343,7 +406,6 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         foreach (var plugin in _pluginManager.GetAllPlugins())
         {
-            var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
             var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
 
             if (filterUnavailable && !inProject)
@@ -356,8 +418,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 Plugin = plugin,
                 Name = plugin.Name,
                 LogoPath = plugin.LogoPath,
-                IsAvailable = currentProject == null || inProject,
-                Status = $"System: {(inSystem ? "yes" : "no")}  |  Project: {(inProject ? "yes" : "no")}"
+                IsAvailable = currentProject == null || inProject
             });
         }
 
@@ -392,4 +453,25 @@ public sealed class LaunchWindowViewModel : ObservableObject
             item.Version = version ?? "unknown";
         }));
     }
+
+    /// <summary>
+    /// Shows a dialog owned by the launch window, so it appears above the always-on-top shell.
+    /// </summary>
+    private static MessageBoxResult Prompt(string message, string title, MessageBoxButton buttons, MessageBoxImage image)
+    {
+        var owner = Application.Current?.MainWindow;
+
+        return owner is null
+            ? MessageBox.Show(message, title, buttons, image)
+            : MessageBox.Show(owner, message, title, buttons, image);
+    }
+
+    private static bool Confirm(string message) =>
+        Prompt(message, "CLIHub", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+
+    private static void ShowInfo(string message, string title) =>
+        _ = Prompt(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
+
+    private static void ShowWarning(string message) =>
+        _ = Prompt(message, "CLIHub", MessageBoxButton.OK, MessageBoxImage.Warning);
 }

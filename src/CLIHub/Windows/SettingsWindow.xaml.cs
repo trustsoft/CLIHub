@@ -27,6 +27,14 @@ public partial class SettingsWindow : Window
     public void ShowSettings()
     {
         _viewModel.Load();
+
+        // The launch window stays on top of other windows, so the Settings window has to be owned
+        // by it to be visible above it.
+        if (Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
+        {
+            Owner = owner;
+        }
+
         Show();
 
         if (WindowState == WindowState.Minimized)

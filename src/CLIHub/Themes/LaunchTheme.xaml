@@ -2,33 +2,38 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Launch window palette. Brushes only: the palette is shared application-wide, while the
+        Launch window palette. Colours only: the palette is shared application-wide, while the
         launch window's styles live in LaunchWindowStyles.xaml so other windows keep their own look.
+        Values follow the approved popup design (the mockup and the reference implementation).
     -->
 
     <!-- Surfaces -->
-    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#0E1116"/>
-    <SolidColorBrush x:Key="SurfaceBrush" Color="#14181E"/>
-    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="#1A1F27"/>
-    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="#212733"/>
-    <SolidColorBrush x:Key="SurfaceSelectedBrush" Color="#16232E"/>
-    <SolidColorBrush x:Key="SeparatorBrush" Color="#232A33"/>
+    <SolidColorBrush x:Key="ChromeBgBrush" Color="#FF26262C"/>
+    <SolidColorBrush x:Key="StripBgBrush" Color="#24000000"/>
+    <SolidColorBrush x:Key="PopoverBgBrush" Color="#FF2B2B31"/>
+    <SolidColorBrush x:Key="HairlineBrush" Color="#0FFFFFFF"/>
+
+    <!-- Strokes and overlays -->
+    <SolidColorBrush x:Key="FieldStrokeBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="ControlStrokeBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="ChipBgBrush" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="ChipStrokeBrush" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="ThumbBgBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1A4CC2FF"/>
 
     <!-- Text -->
-    <SolidColorBrush x:Key="PrimaryTextBrush" Color="#E6EAF0"/>
-    <SolidColorBrush x:Key="SecondaryTextBrush" Color="#9AA4B2"/>
-    <SolidColorBrush x:Key="DimmedTextBrush" Color="#6B7280"/>
-    <SolidColorBrush x:Key="DisabledTextBrush" Color="#55606E"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#FF9A9A9A"/>
+    <SolidColorBrush x:Key="SectionLabelBrush" Color="#FF8B8B8B"/>
+    <SolidColorBrush x:Key="BrandBrush" Color="#FFB0B0B0"/>
+    <SolidColorBrush x:Key="IconBrush" Color="#FFD8D8D8"/>
+    <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE6E6E6"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5C5C63"/>
 
-    <!-- Accent and interaction -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#38BDF8"/>
-    <SolidColorBrush x:Key="AccentMutedBrush" Color="#1E4A63"/>
-    <SolidColorBrush x:Key="FocusBrush" Color="#7DD3FC"/>
-
-    <!-- Controls -->
-    <SolidColorBrush x:Key="ControlSurfaceBrush" Color="#1E242E"/>
-    <SolidColorBrush x:Key="ControlHoverBrush" Color="#2A323F"/>
-    <SolidColorBrush x:Key="ControlPressedBrush" Color="#161B22"/>
-    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#39414D"/>
+    <!-- Accent -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF4CC2FF"/>
 
 </ResourceDictionary>
