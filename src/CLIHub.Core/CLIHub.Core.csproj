@@ -18,6 +18,12 @@
   <ItemGroup>
     <EmbeddedResource Include="SeedPlugins\**\*.json" />
     <EmbeddedResource Include="SeedPlugins\**\*.png" />
+
+    <!-- The user-facing release notes live at the repository root (next to CHANGELOG.md) and are
+         embedded by link, so there is one copy of the document rather than a duplicate under src/. -->
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\..\RELEASE-NOTES.md"
+                      Link="ReleaseNotes\RELEASE-NOTES.md"
+                      LogicalName="CLIHub.Core.ReleaseNotes.RELEASE-NOTES.md" />
   </ItemGroup>
 
   <ItemGroup>

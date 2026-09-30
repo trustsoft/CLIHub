@@ -71,6 +71,8 @@ public partial class App : Application
 
         RegisterGlobalHotkey();
 
+        ShowReleaseNotesOnce();
+
         if (preferences.CheckForUpdatesOnStartup)
         {
             _ = CheckForUpdatesAsync();
@@ -81,6 +83,42 @@ public partial class App : Application
         }
 
         Log.Information("CLIHub started");
+    }
+
+    /// <summary>
+    /// Opens the What's New window once when the running version differs from the one whose notes
+    /// were already shown; a version that has no notes is recorded without opening anything, so
+    /// the check does not repeat on every start.
+    /// </summary>
+    private void ShowReleaseNotesOnce()
+    {
+        try
+        {
+            var services = _services!;
+            var currentVersion = services.GetRequiredService<IUpdateService>().GetCurrentVersion();
+            var notes = services.GetRequiredService<IReleaseNotesService>();
+            var recordedVersion = services.GetRequiredService<IConfigService>()
+                .Load().Preferences.LastSeenReleaseNotesVersion;
+            var launcher = services.GetRequiredService<IReleaseNotesLauncher>();
+
+            var action = ReleaseNotesPrompt.Decide(
+                recordedVersion,
+                currentVersion,
+                notes.GetNote(currentVersion) != null);
+
+            if (action == ReleaseNotesPromptAction.Show)
+            {
+                launcher.ShowReleaseNotes();
+            }
+            else if (action == ReleaseNotesPromptAction.RecordOnly)
+            {
+                launcher.MarkReleaseNotesSeen();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "The release notes check failed");
+        }
     }
 
     private async Task CheckForUpdatesAsync()

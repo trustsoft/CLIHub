@@ -44,7 +44,7 @@ Launch window and Settings elements:
 - The update check stays reachable from the launch window footer next to the version pill. *(delivered)*
 - Path shortening is selectable in Settings: **Left trim** (the mockup's `...tail` look) or **Middle ellipsis**. *(delivered)*
 - Downloading and applying updates with install "from tray" — still deferred to the packaging work.
-- The dark palette is currently applied to the launch window only; the Settings window keeps its light styling (owned by the launch window so it stays visible above it).
+- The dark palette is applied to the launch window and to the What's New window (which draws its own chrome), while the Settings window keeps its light styling (owned by the launch window so it stays visible above it).
 
 ## Related changes
 

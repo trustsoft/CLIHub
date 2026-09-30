@@ -1,6 +1,10 @@
-# Changelog & Release Notes — Plan (draft, decision pending)
+# Changelog & Release Notes — Plan
 
-**Status:** Discussion draft. Nothing here is implemented; this captures the options for a later decision, which will then become an OpenSpec change.
+**Status:** Implemented by the `release-notes` change (`openspec/changes/release-notes/`): the two documents,
+the embedded notes and their parser, the **What's New** window, and the one-time display after an upgrade.
+This document remains the rationale behind the decisions below; the durable behavior lives in the
+`release-notes` and `release-notes-display` specs, and the file format is described in
+[architecture.md](architecture.md#release-notes).
 
 ## Goal
 
@@ -66,20 +70,22 @@ RELEASE-NOTES.md ──(embedded resource)──> CLIHub.Core
 
 **Current leaning:** start with (1); revisit tooling if it becomes tedious.
 
-## Open questions (to decide)
+## Open questions (all decided 2026-09-30)
+
+The list below is kept as the agenda the decisions answered; the answers are in the decision log.
 
 1. **Filename/location of the user notes** — `RELEASE-NOTES.md` at the repo root, or `docs/release-notes.md`?
 2. **Auto-show "What's New"?** — open automatically once after an update, or only from the tray menu?
 3. **Technical changelog source** — hand-written, or generated (Conventional Commits + git-cliff) from the start?
-4. **Seed content** — should `CHANGELOG.md` / `RELEASE-NOTES.md` be seeded now with a `1.0.0` section summarizing everything delivered so far (from the archived changes)?
+4. **Seed content** — should `CHANGELOG.md` / `RELEASE-NOTES.md` be seeded now with a first section summarizing everything delivered so far (from the archived changes)?
 5. **Localization** — user notes are English now; will they ever need translation?
 6. **History depth in the UI** — show only the latest version, or full scrollable history?
 
-## Proposed next step (once decided)
+## Delivered as (the decision log above)
 
-An OpenSpec change, e.g. `release-notes`, that:
+An OpenSpec change, `release-notes`, that:
 
-- adds `CHANGELOG.md` (technical) and the user-facing notes file, seeded with `1.0.0`;
+- adds `CHANGELOG.md` (technical) and `RELEASE-NOTES.md` (user-facing), seeded with the current version;
 - adds a capability `release-notes-display`: embed the notes, `IReleaseNotesService` (parse), and a **"What's New"** window reachable from the tray;
 - defers CI / `vpk --releaseNotes` wiring to the packaging change.
 
@@ -87,9 +93,17 @@ An OpenSpec change, e.g. `release-notes`, that:
 
 | # | Question | Decision | Date |
 |---|----------|----------|------|
-| 1 | User-notes filename/location | _pending_ | |
-| 2 | Auto-show What's New | _pending_ | |
-| 3 | Technical changelog source | _pending_ | |
-| 4 | Seed with 1.0.0 | _pending_ | |
-| 5 | Localization | _pending_ | |
-| 6 | UI history depth | _pending_ | |
+| 1 | User-notes filename/location | `RELEASE-NOTES.md` at the repository root, next to `CHANGELOG.md`; embedded into `CLIHub.Core` by link (no copy under `src/`) | 2026-09-30 |
+| 2 | Auto-show What's New | Yes, once: the window opens when the running version differs from `lastSeenReleaseNotesVersion` in `config.json`. The tray item reopens it any time, and opening it manually records the version too | 2026-09-30 |
+| 3 | Technical changelog source | Hand-written (option 1). Tooling (`git-cliff`) is deferred until it becomes tedious | 2026-09-30 |
+| 4 | Seed with a first section | Yes: one section seeded from the archived changes | 2026-09-30 |
+| 5 | Localization | English only, like the rest of the UI; no localization infrastructure | 2026-09-30 |
+| 6 | UI history depth | Full history, scrollable, newest version first | 2026-09-30 |
+
+Decisions taken while implementing (recorded here because they were open in this document):
+
+| # | Question | Decision | Date |
+|---|----------|----------|------|
+| 7 | Version for the seeded section | `0.5.0` — the version in `Directory.Build.props`, not the illustrative `1.0.0` in the examples above | 2026-09-30 |
+| 8 | First run vs. upgrade | A missing recorded version means "first run": the window is not opened automatically, and the version is recorded | 2026-09-30 |
+| 9 | What's New window chrome | Follows the Settings window's lifecycle (single instance, owned by the launch window) but draws its own dark chrome like the launch window; it stays an ordinary resizable window, not a popup | 2026-09-30 |

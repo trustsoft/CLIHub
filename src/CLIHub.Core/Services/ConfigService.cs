@@ -10,7 +10,10 @@ using System.Text.Json;
 /// </summary>
 public class ConfigService : IConfigService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    /// <summary>
+    /// Serializer options used for <c>config.json</c>; internal so tests can assert the on-disk key names.
+    /// </summary>
+    internal static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase

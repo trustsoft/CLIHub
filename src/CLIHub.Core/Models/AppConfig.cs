@@ -93,4 +93,11 @@ public class AppPreferences
     /// the end of the path, "middleEllipsis" keeps both ends.
     /// </summary>
     public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
+
+    /// <summary>
+    /// The application version whose release notes the user has already been shown. Null (or
+    /// missing) means the notes have never been shown — a first run, which does not open the
+    /// What's New window automatically. Written by the application; not exposed in Settings.
+    /// </summary>
+    public string? LastSeenReleaseNotesVersion { get; set; }
 }

@@ -45,6 +45,7 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Dark two-pane launch window matching the approved mockup — `main-window-layout`, `launch-window-theme`
 - Chromeless popup shell for the launch window: no OS chrome with rounded corners, always on top, hides when it loses focus unless pinned, Escape to hide, opens on the pointer's monitor, reference palette and metrics, Actions menus with icons, and a selectable path display style — `main-window-layout`, `app-lifecycle`, `preferences-ui`
 - Settings window for runtime, global hotkey, agent probe caching/timeout, and the startup update check — `preferences-ui`
+- Release notes in the app: hand-written user-facing notes shipped inside the build, a **What's New** window reachable from the tray, and a one-time display after an upgrade — `release-notes`, `release-notes-display`
 
 **Remaining directions**
 - Notification support for background agent activities

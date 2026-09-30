@@ -39,6 +39,11 @@ public static class ServiceRegistration
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
 
+        services.AddTransient<WhatsNewViewModel>();
+        services.AddTransient<WhatsNewWindow>();
+        services.AddSingleton<Func<WhatsNewWindow>>(sp => () => sp.GetRequiredService<WhatsNewWindow>());
+        services.AddSingleton<IReleaseNotesLauncher, ReleaseNotesLauncher>();
+
         return services;
     }
 }

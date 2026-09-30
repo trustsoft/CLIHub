@@ -18,6 +18,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
         Assert.NotNull(provider.GetRequiredService<IPluginManager>());
         Assert.NotNull(provider.GetRequiredService<IProcessLauncher>());
+        Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
     }
 
     [Fact]

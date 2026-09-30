@@ -10,7 +10,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** Platform-agnostic business logic and services.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`, `ReleaseNote`.
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
@@ -21,12 +21,13 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
 - `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
 - `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
+- `ReleaseNotesService` — parses the embedded user-facing release notes, newest version first
 - `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
 - `StartupService` — per-user Windows Run registration for start-with-Windows (via an internal `IStartupRegistry` seam backed by `StartupRegistry`)
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
-**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IStartupService`.
+**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
@@ -38,7 +39,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `PromptState` (keeps the popup visible while a prompt is open), `LaunchWindow` + `LaunchWindowViewModel` (the chromeless popup shell: no OS chrome, always on top, hides when it loses focus unless pinned, Escape hides it, centred on the pointer's monitor on every show; shown from the tray, the hotkey, a second-instance activation and startup), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `PathDisplayConverter`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `LaunchWindowStyles.xaml` window-scoped styles), `Interop/User32` (source-generated `user32.dll` P/Invoke), `Interop/DwmApi` (window corner rounding), `Interop/WindowPositioner` (pointer-monitor placement), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM, owned by the launch window so it stays visible above it) with `IPreferenceApplier`/`PreferenceApplier`. Startup wires the configured runtime and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `PromptState` (keeps the popup visible while a prompt is open), `LaunchWindow` + `LaunchWindowViewModel` (the chromeless popup shell: no OS chrome, always on top, hides when it loses focus unless pinned, Escape hides it, centred on the pointer's monitor on every show; shown from the tray, the hotkey, a second-instance activation and startup), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `PathDisplayConverter`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles), `Interop/User32` (source-generated `user32.dll` P/Invoke), `Interop/DwmApi` (window corner rounding), `Interop/WindowPositioner` (pointer-monitor placement), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM, owned by the launch window so it stays visible above it) with `IPreferenceApplier`/`PreferenceApplier`. The What's New window (`WhatsNewWindow` + `WhatsNewViewModel`, MVVM) shows the embedded release notes newest-first and is reached from the tray or shown once after an upgrade (`IReleaseNotesLauncher`/`ReleaseNotesLauncher`, single instance, owned by the launch window like Settings). It draws its own dark chrome — no OS title bar, a header that drags the window, and a close button — but stays an ordinary resizable window rather than a popup: not always on top, no hide-on-focus-loss. Startup wires the configured runtime, refreshes the start-with-Windows registration, creates the tray icon, shows the launch window when the preference asks for it, registers the global hotkey, shows the What's New window once when the running version differs from the recorded one (recording a version that has no notes — and a first run — without showing anything), and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -48,7 +49,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** unit tests (xUnit) for Core behavior.
 
-**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `LoggingSetupTests`, `MiddleEllipsisFormatterTests`, `PathLeftTrimFormatterTests`, `PathDisplayStyleTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
+**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `ReleaseNotesServiceTests`, `LoggingSetupTests`, `MiddleEllipsisFormatterTests`, `PathLeftTrimFormatterTests`, `PathDisplayStyleTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
 
 **Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
 
@@ -121,6 +122,20 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - `detection.systemPaths` are host install markers (env vars expanded); `detection.projectIndicators` are project-relative markers.
 - Built-in descriptors for OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code are embedded and seeded on first run.
 
+## Release Notes
+
+- **Files:** `CHANGELOG.md` (technical, for developers) and `RELEASE-NOTES.md` (user-facing) at the repository root; both use the same `## <version> — <date>` headings so a release lines up across them.
+- **Audience split and rationale:** see [changelog-and-release-notes.md](changelog-and-release-notes.md).
+- **Format** of `RELEASE-NOTES.md` (the application parses only this one):
+  - a version section heading `## <version> — <date>`, where the separator may be an em dash, an en dash, or a spaced hyphen (so a prerelease such as `0.6.0-beta.1` is never split at its hyphen);
+  - the groups `### New`, `### Improved`, and `### Fixed`, whose entries are `-`/`*` list items; a missing group is simply empty;
+  - anything else — the title, the preamble, prose outside a group, an unknown group, a deeper heading — is ignored;
+  - a line that is neither a heading nor a list item continues the previous entry, so a hand-wrapped sentence stays one entry.
+- **Authoring rules:** entries are plain text — no Markdown emphasis, since nothing renders it — and one entry per list item, written in short user-facing sentences. Markdown is fine in `CHANGELOG.md`, which is not rendered in the application.
+- **Delivery:** `RELEASE-NOTES.md` is embedded into `CLIHub.Core` by link with the logical name `CLIHub.Core.ReleaseNotes.RELEASE-NOTES.md`, so the notes are available offline and independently of the update mechanism. There is no duplicate copy under `src/`.
+- **Parsing:** `ReleaseNotesService` (`IReleaseNotesService`) reads the embedded document once, orders notes by version descending (`System.Version`), and keeps a version that does not parse in its document position at the end rather than failing. Malformed, empty, or missing notes are logged and yield no notes; the application continues normally.
+- **Failure modes:** an unparseable version heading drops that section only, and the remaining sections still parse.
+
 ## File System Layout
 
 ```
@@ -141,7 +156,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Format:** JSON with camelCase property names
 - **Location:** `%APPDATA%\CLIHub\config.json`
 - **Atomic writes:** write to a `.tmp` file, then rename (temp-file-then-rename)
-- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `hotkey` (`Ctrl+Shift+A` by default), `defaultRuntime` (`wt`/`cmd`/`ps`), `logLevel`, `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, `showWindowOnStartup`, `pinLaunchWindow`, and `pathDisplayStyle` (`leftTrim` by default, `middleEllipsis` as the alternative; unrecognized values fall back to the default) (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
+- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `hotkey` (`Ctrl+Shift+A` by default), `defaultRuntime` (`wt`/`cmd`/`ps`), `logLevel`, `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, `showWindowOnStartup`, `pinLaunchWindow`, `pathDisplayStyle` (`leftTrim` by default, `middleEllipsis` as the alternative; unrecognized values fall back to the default), and `lastSeenReleaseNotesVersion` (the version whose release notes were last shown — written by the application, not editable in Settings; missing or null means the notes have never been shown, which is treated as a first run without opening the What's New window) (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
 - **Forward compatibility:** missing fields deserialize to defaults; unknown fields are ignored. There is no explicit schema-version field yet (adding one is deferred).
 
 ## Logging Strategy
@@ -180,9 +195,9 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 ## Testing Strategy
 
-**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, process output capture, logging setup/level parsing, path shortening (middle ellipsis, left trim, style parsing), hotkey parsing, single-instance guard, DI composition.
+**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, release-notes parsing (ordering, groups, malformed headings, embedded document), process output capture, logging setup/level parsing, path shortening (middle ellipsis, left trim, style parsing), hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, the popup shell (chromeless chrome, hide on focus loss, pin, Escape, pointer-monitor placement), agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the launch window (dark theme, pane headers with Actions menus, footer actions, version chip, update check, open data folder, project/agent rows, path display style, scrolling), the update-available tray notification, the Settings window (runtime/hotkey/probe/updates/path-display changes applied without restart; Cancel discards), and start-with-Windows plus window-visibility-on-startup.
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, the popup shell (chromeless chrome, hide on focus loss, pin, Escape, pointer-monitor placement), agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the launch window (dark theme, pane headers with Actions menus, footer actions, version chip, update check, open data folder, project/agent rows, path display style, scrolling), the update-available tray notification, the Settings window (runtime/hotkey/probe/updates/path-display changes applied without restart; Cancel discards), the What's New window (tray entry, notes newest first in the drawn dark chrome, header drag, resize, Escape and the close button), the one-time release-notes display after a version change, and start-with-Windows plus window-visibility-on-startup.
 
 ## Conventions
 

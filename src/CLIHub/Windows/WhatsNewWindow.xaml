@@ -1,0 +1,112 @@
+<Window x:Class="CLIHub.Windows.WhatsNewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="What's New"
+        Background="{StaticResource ChromeBgBrush}"
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        Height="620" Width="520"
+        MinHeight="280" MinWidth="380"
+        KeyDown="OnKeyDown"
+        ResizeMode="CanResize"
+        ShowInTaskbar="True"
+        SourceInitialized="OnSourceInitialized"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Window-scoped styles: this window's drawn chrome and notes typography. -->
+                <ResourceDictionary Source="/Themes/WhatsNewStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Inset top highlight (launch window chrome) -->
+            <Rectangle Grid.Row="0" Height="1" Fill="#0DFFFFFF"/>
+
+            <!-- Drawn header: the title bar a chromeless window does not get from the OS -->
+            <Grid Grid.Row="1"
+                  MouseLeftButtonDown="OnHeaderMouseDown"
+                  Style="{StaticResource NotesHeader}">
+                <TextBlock Style="{StaticResource NotesTitle}" Text="What's New"/>
+                <Button HorizontalAlignment="Right"
+                        Click="OnCloseClick"
+                        Style="{StaticResource NotesCloseButton}"
+                        ToolTip="Close">
+                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
+                </Button>
+            </Grid>
+
+            <Rectangle Grid.Row="1"
+                       Height="1"
+                       VerticalAlignment="Bottom"
+                       Fill="{StaticResource HairlineBrush}"/>
+
+            <!-- Notes: one section per version, newest first -->
+            <ScrollViewer Grid.Row="2"
+                          Padding="20,16,16,16"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Versions}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,20">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Style="{StaticResource NotesVersionHeading}" Text="{Binding Version}"/>
+                                        <TextBlock Style="{StaticResource NotesVersionDate}" Text="{Binding Date}"/>
+                                    </StackPanel>
+
+                                    <!-- Empty groups are absent from the view model, so nothing is rendered for them -->
+                                    <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding Groups}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Margin="0,0,0,10">
+                                                    <TextBlock Style="{StaticResource NotesGroupLabel}" Text="{Binding Label}"/>
+                                                    <ItemsControl ItemsSource="{Binding Entries}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <Grid Margin="0,0,0,5">
+                                                                    <Grid.ColumnDefinitions>
+                                                                        <ColumnDefinition Width="Auto"/>
+                                                                        <ColumnDefinition Width="*"/>
+                                                                    </Grid.ColumnDefinitions>
+                                                                    <TextBlock Grid.Column="0"
+                                                                               Style="{StaticResource NotesEntryBullet}"
+                                                                               Text="•"/>
+                                                                    <TextBlock Grid.Column="1"
+                                                                               Style="{StaticResource NotesEntry}"
+                                                                               Text="{Binding}"/>
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock Style="{StaticResource NotesEmptyText}"
+                               Text="No release notes are available."
+                               Visibility="{Binding HasNoNotes, Converter={StaticResource BoolToVisibility}}"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

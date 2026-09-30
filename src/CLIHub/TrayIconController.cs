@@ -19,6 +19,7 @@ public sealed class TrayIconController : IDisposable
     private readonly IAgentCommandService _agentCommands;
     private readonly LaunchWindow _launchWindow;
     private readonly ISettingsLauncher _settingsLauncher;
+    private readonly IReleaseNotesLauncher _releaseNotesLauncher;
     private readonly TaskbarIcon _taskbarIcon;
 
     public TrayIconController(
@@ -26,13 +27,15 @@ public sealed class TrayIconController : IDisposable
         IPluginManager pluginManager,
         IAgentCommandService agentCommands,
         LaunchWindow launchWindow,
-        ISettingsLauncher settingsLauncher)
+        ISettingsLauncher settingsLauncher,
+        IReleaseNotesLauncher releaseNotesLauncher)
     {
         _projects = projects;
         _pluginManager = pluginManager;
         _agentCommands = agentCommands;
         _launchWindow = launchWindow;
         _settingsLauncher = settingsLauncher;
+        _releaseNotesLauncher = releaseNotesLauncher;
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -132,6 +135,10 @@ public sealed class TrayIconController : IDisposable
         var settingsItem = new MenuItem { Header = "Settings" };
         settingsItem.Click += (_, _) => ShowSettings();
         menu.Items.Add(settingsItem);
+
+        var whatsNewItem = new MenuItem { Header = "What's New" };
+        whatsNewItem.Click += (_, _) => _releaseNotesLauncher.ShowReleaseNotes();
+        menu.Items.Add(whatsNewItem);
 
         menu.Items.Add(new Separator());
 

@@ -1,0 +1,99 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        What's New styles. Merged from WhatsNewWindow.xaml (not from App.xaml) so styling stays
+        scoped to this window, which draws its own chrome: a header with the title and a close
+        button, and a scrolling body of release notes.
+    -->
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
+        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Drawn header: the title bar this window does not get from the OS -->
+    <Style x:Key="NotesHeader" TargetType="Grid">
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesTitle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="14,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Close button, the counterpart of the OS close box the drawn chrome replaces -->
+    <Style x:Key="NotesCloseButton" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Width" Value="{StaticResource Sizing.Width.IconButton}"/>
+        <Setter Property="Height" Value="{StaticResource Sizing.Height.IconButton}"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                            Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Release note section: version, its date, then its non-empty groups -->
+    <Style x:Key="NotesVersionHeading" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesVersionDate" TargetType="TextBlock">
+        <Setter Property="Margin" Value="8,0,0,2"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesGroupLabel" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesEntry" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="NotesEntryBullet" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesEmptyText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+</ResourceDictionary>

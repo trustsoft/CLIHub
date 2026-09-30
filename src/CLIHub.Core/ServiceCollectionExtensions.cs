@@ -46,6 +46,7 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
 
         services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IReleaseNotesService, ReleaseNotesService>();
 
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
