@@ -15,6 +15,15 @@
         SourceInitialized="OnSourceInitialized"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None">
+    <WindowChrome.WindowChrome>
+        <!-- Removes the native WS_THICKFRAME border the DWM draws around a resizable
+             borderless window, so the visible border matches the launch window's 1px line. -->
+        <WindowChrome CaptionHeight="0"
+                      CornerRadius="0"
+                      GlassFrameThickness="0"
+                      ResizeBorderThickness="6"
+                      UseAeroCaptionButtons="False"/>
+    </WindowChrome.WindowChrome>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -29,15 +38,11 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- Inset top highlight (launch window chrome) -->
-            <Rectangle Grid.Row="0" Height="1" Fill="#0DFFFFFF"/>
-
             <!-- Drawn header: the title bar a chromeless window does not get from the OS -->
-            <Grid Grid.Row="1"
+            <Grid Grid.Row="0"
                   MouseLeftButtonDown="OnHeaderMouseDown"
                   Style="{StaticResource NotesHeader}">
                 <TextBlock Style="{StaticResource NotesTitle}" Text="What's New"/>
@@ -67,7 +72,7 @@
                        Fill="{StaticResource HairlineBrush}"/>
 
             <!-- Notes: one section per version, newest first -->
-            <ScrollViewer Grid.Row="2"
+            <ScrollViewer Grid.Row="1"
                           Padding="20,16,16,16"
                           HorizontalScrollBarVisibility="Disabled"
                           VerticalScrollBarVisibility="Auto">
