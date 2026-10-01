@@ -37,14 +37,6 @@ The system SHALL keep interaction states distinguishable on the dark surfaces.
 - **WHEN** a control receives keyboard focus
 - **THEN** a focus indicator is visible against the dark surface
 
-### Requirement: Theme scope
-
-The dark theme SHALL be limited to the launch window in this capability.
-
-#### Scenario: Settings window unchanged
-- **WHEN** the user opens the Settings window
-- **THEN** it keeps its existing light styling
-
 ### Requirement: Themed tooltips
 
 Tooltips shown over controls in the launch window SHALL use the dark popover style consistent with the window's chrome, rather than the system light tooltip style.
