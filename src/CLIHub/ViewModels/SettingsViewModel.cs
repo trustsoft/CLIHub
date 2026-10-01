@@ -5,18 +5,20 @@ using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// A selectable default runtime with a friendly label.
+/// A selectable default runtime with a friendly label and a short segment label.
 /// </summary>
 /// <param name="Kind">The runtime kind.</param>
-/// <param name="Name">Display name shown in the selector.</param>
-public sealed record RuntimeOption(RuntimeKind Kind, string Name);
+/// <param name="Name">Display name shown in tooltips and diagnostics.</param>
+/// <param name="Segment">Short label rendered by the segmented selector.</param>
+public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment);
 
 /// <summary>
-/// A selectable path display style with a friendly label.
+/// A selectable path display style with a friendly label and a short segment label.
 /// </summary>
 /// <param name="Style">The path display style.</param>
-/// <param name="Name">Display name shown in the selector.</param>
-public sealed record PathDisplayOption(PathDisplayStyle Style, string Name);
+/// <param name="Name">Display name shown in tooltips and diagnostics.</param>
+/// <param name="Segment">Short label rendered by the segmented selector.</param>
+public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, string Segment);
 
 /// <summary>
 /// View model for the Settings window: loads preferences, validates input, and applies
@@ -26,15 +28,15 @@ public sealed class SettingsViewModel : ObservableObject
 {
     private static readonly RuntimeOption[] RuntimeOptions =
     {
-        new(RuntimeKind.CommandPrompt, "cmd — Command Prompt"),
-        new(RuntimeKind.PowerShell, "ps — PowerShell"),
-        new(RuntimeKind.WindowsTerminal, "wt — Windows Terminal")
+        new(RuntimeKind.CommandPrompt, "cmd — Command Prompt", "cmd"),
+        new(RuntimeKind.PowerShell, "ps — PowerShell", "ps"),
+        new(RuntimeKind.WindowsTerminal, "wt — Windows Terminal", "wt")
     };
 
     private static readonly PathDisplayOption[] PathDisplayOptions =
     {
-        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path"),
-        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends")
+        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path", "Left trim"),
+        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends", "Middle ellipsis")
     };
 
     private readonly IConfigService _configService;
@@ -47,6 +49,7 @@ public sealed class SettingsViewModel : ObservableObject
     private RuntimeOption _selectedRuntime = RuntimeOptions[2];
     private PathDisplayOption _selectedPathDisplay = PathDisplayOptions[0];
     private string _hotkeyText = string.Empty;
+    private IReadOnlyList<string> _hotkeyParts = [];
     private string _probeTtlText = string.Empty;
     private string _probeTimeoutText = string.Empty;
     private bool _checkForUpdatesOnStartup = true;
@@ -105,8 +108,28 @@ public sealed class SettingsViewModel : ObservableObject
     public string HotkeyText
     {
         get => _hotkeyText;
-        set => SetProperty(ref _hotkeyText, value);
+        set
+        {
+            if (SetProperty(ref _hotkeyText, value))
+            {
+                HotkeyParts = SplitHotkeyParts(value);
+            }
+        }
     }
+
+    /// <summary>
+    /// The captured combination split into key-chip tokens, for the segmented hotkey field.
+    /// </summary>
+    public IReadOnlyList<string> HotkeyParts
+    {
+        get => _hotkeyParts;
+        private set => SetProperty(ref _hotkeyParts, value);
+    }
+
+    private static IReadOnlyList<string> SplitHotkeyParts(string? text) =>
+        string.IsNullOrWhiteSpace(text)
+            ? []
+            : text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
     public string ProbeTtlText
     {
@@ -156,6 +179,7 @@ public sealed class SettingsViewModel : ObservableObject
         _hotkeyText = string.IsNullOrWhiteSpace(prefs.Hotkey)
             ? HotkeyParser.Format(HotkeyParser.Default)
             : prefs.Hotkey;
+        _hotkeyParts = SplitHotkeyParts(_hotkeyText);
         _probeTtlText = prefs.AgentProbeTtlMinutes?.ToString() ?? string.Empty;
         _probeTimeoutText = prefs.AgentProbeTimeoutSeconds?.ToString() ?? string.Empty;
         _checkForUpdatesOnStartup = prefs.CheckForUpdatesOnStartup;
@@ -169,6 +193,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedRuntime));
         OnPropertyChanged(nameof(SelectedPathDisplay));
         OnPropertyChanged(nameof(HotkeyText));
+        OnPropertyChanged(nameof(HotkeyParts));
         OnPropertyChanged(nameof(ProbeTtlText));
         OnPropertyChanged(nameof(ProbeTimeoutText));
         OnPropertyChanged(nameof(CheckForUpdatesOnStartup));

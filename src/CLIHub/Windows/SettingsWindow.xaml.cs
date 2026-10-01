@@ -1,12 +1,14 @@
 namespace CLIHub.Windows;
 
 using CLIHub.Core.Hotkeys;
+using CLIHub.Interop;
 using CLIHub.ViewModels;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 
 /// <summary>
-/// Interaction logic for SettingsWindow.xaml
+/// The Settings window: dark drawn chrome (no OS title bar) around the preference sections.
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -22,7 +24,8 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>
-    /// Reloads the stored preferences and shows (or re-activates) the window.
+    /// Reloads the stored preferences and shows (or re-activates) the window. The height matches
+    /// the launch window's current height, so the two windows read as the same surface.
     /// </summary>
     public void ShowSettings()
     {
@@ -35,6 +38,11 @@ public partial class SettingsWindow : Window
             Owner = owner;
         }
 
+        if (Application.Current?.MainWindow is { } launch)
+        {
+            Height = Math.Max(MinHeight, launch.ActualHeight);
+        }
+
         Show();
 
         if (WindowState == WindowState.Minimized)
@@ -45,7 +53,44 @@ public partial class SettingsWindow : Window
         Activate();
     }
 
-    private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    private void OnSourceInitialized(object? sender, EventArgs e) =>
+        DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
+
+    /// <summary>
+    /// Moves the window while the drawn header is dragged. The close button handles the press
+    /// itself, so a click on it never starts a drag.
+    /// </summary>
+    private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left)
+        {
+            return;
+        }
+
+        try
+        {
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // The button was released before the move started.
+        }
+    }
+
+    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+
+    private void OnKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape)
+        {
+            return;
+        }
+
+        Close();
+        e.Handled = true;
+    }
+
+    private void HotkeyField_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;
 

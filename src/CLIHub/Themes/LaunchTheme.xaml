@@ -36,4 +36,7 @@
     <!-- Accent -->
     <SolidColorBrush x:Key="AccentBrush" Color="#FF4CC2FF"/>
 
+    <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFD97B7B"/>
+
 </ResourceDictionary>

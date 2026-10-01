@@ -8,6 +8,12 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Palette only: shared brushes, no implicit styles, so other windows are unaffected. -->
                 <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
+                <!--
+                    The slim dark scrollbar lives here, not in a window dictionary: implicit styles
+                    from window resources do not reach the scrollbars inside ScrollViewer and ListBox
+                    templates — only application-level implicit styles do.
+                -->
+                <ResourceDictionary Source="/Themes/DarkScrollBar.xaml"/>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
