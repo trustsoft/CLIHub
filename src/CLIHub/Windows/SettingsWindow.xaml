@@ -169,7 +169,7 @@
                     </Grid>
                     <TextBlock Margin="0,8,0,0"
                                Style="{StaticResource HintText}"
-                               Text="Empty â€” use defaults."/>
+                               Text="Empty — use defaults."/>
 
                     <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="UPDATES"/>
                     <CheckBox HorizontalAlignment="Left"
