@@ -297,8 +297,10 @@
                                             <Button Margin="0,0,6,0"
                                                     Command="{Binding DataContext.LaunchAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource AgentActionButton}"
-                                                    ToolTip="Launch">
+                                                    Style="{StaticResource AgentActionButton}">
+                                                <Button.ToolTip>
+                                                    <ToolTip Content="Launch" Style="{StaticResource DarkToolTip}"/>
+                                                </Button.ToolTip>
                                                 <Path Width="10"
                                                       Height="10"
                                                       Data="{StaticResource PlayGlyph}"
@@ -307,8 +309,10 @@
                                             </Button>
                                             <Button Command="{Binding DataContext.ResumeAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource AgentActionButton}"
-                                                    ToolTip="Resume session">
+                                                    Style="{StaticResource AgentActionButton}">
+                                                <Button.ToolTip>
+                                                    <ToolTip Content="Resume session" Style="{StaticResource DarkToolTip}"/>
+                                                </Button.ToolTip>
                                                 <Grid Width="14" Height="14">
                                                     <Ellipse Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                              StrokeThickness="1.4"/>
@@ -376,18 +380,24 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                     <Button Command="{Binding OpenDataFolderCommand}"
-                            Style="{StaticResource PopupIconButton}"
-                            ToolTip="Open data folder">
+                            Style="{StaticResource PopupIconButton}">
+                        <Button.ToolTip>
+                            <ToolTip Content="Open data folder" Style="{StaticResource DarkToolTip}"/>
+                        </Button.ToolTip>
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE8B7;"/>
                     </Button>
                     <Button Command="{Binding OpenSettingsCommand}"
-                            Style="{StaticResource PopupIconButton}"
-                            ToolTip="Settings">
+                            Style="{StaticResource PopupIconButton}">
+                        <Button.ToolTip>
+                            <ToolTip Content="Settings" Style="{StaticResource DarkToolTip}"/>
+                        </Button.ToolTip>
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE713;"/>
                     </Button>
                     <ToggleButton IsChecked="{Binding IsPinned, Mode=TwoWay}"
-                                  Style="{StaticResource PopupToggleIconButton}"
-                                  ToolTip="Keep the window open when it loses focus">
+                                  Style="{StaticResource PopupToggleIconButton}">
+                        <ToggleButton.ToolTip>
+                            <ToolTip Content="Keep the window open when it loses focus" Style="{StaticResource DarkToolTip}"/>
+                        </ToggleButton.ToolTip>
                         <TextBlock>
                             <TextBlock.Style>
                                 <Style BasedOn="{StaticResource FooterIcon}" TargetType="TextBlock">
@@ -402,8 +412,10 @@
                         </TextBlock>
                     </ToggleButton>
                     <Button Command="{Binding ExitCommand}"
-                            Style="{StaticResource PopupIconButton}"
-                            ToolTip="Exit CLIHub">
+                            Style="{StaticResource PopupIconButton}">
+                        <Button.ToolTip>
+                            <ToolTip Content="Exit CLIHub" Style="{StaticResource DarkToolTip}"/>
+                        </Button.ToolTip>
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE7E8;"/>
                     </Button>
                 </StackPanel>

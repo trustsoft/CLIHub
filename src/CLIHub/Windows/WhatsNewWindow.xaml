@@ -46,11 +46,16 @@
                             Content="{Binding InstallActionText}"
                             IsEnabled="{Binding CanDownloadUpdate}"
                             Style="{StaticResource NotesInstallButton}"
-                            ToolTip="Download the update and restart CLIHub"
-                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"/>
+                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
+                        <Button.ToolTip>
+                            <ToolTip Content="Download the update and restart CLIHub" Style="{StaticResource DarkToolTip}"/>
+                        </Button.ToolTip>
+                    </Button>
                     <Button Click="OnCloseClick"
-                            Style="{StaticResource NotesCloseButton}"
-                            ToolTip="Close">
+                            Style="{StaticResource NotesCloseButton}">
+                        <Button.ToolTip>
+                            <ToolTip Content="Close" Style="{StaticResource DarkToolTip}"/>
+                        </Button.ToolTip>
                         <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
                     </Button>
                 </StackPanel>

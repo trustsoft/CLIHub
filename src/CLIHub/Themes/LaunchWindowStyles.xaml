@@ -11,6 +11,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <conv:IndexToDividerVisibilityConverter x:Key="IndexToDividerVisibility"/>

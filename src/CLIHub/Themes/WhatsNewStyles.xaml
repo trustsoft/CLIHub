@@ -10,6 +10,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Drawn header: the title bar this window does not get from the OS -->
