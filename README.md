@@ -13,7 +13,7 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 - **Versions** — each agent's version is captured and shown in the list
 - **Resizable layout** — drag the divider between the Projects and AI Agents panes
 - **Runtime selection** — open agents in Windows Terminal, Command Prompt, or PowerShell
-- **Settings window** — change the runtime, global hotkey, agent probe caching/timeout, and the startup update check from the tray; changes apply without restart
+- **Settings window** — a dark window matching the launch theme; change the runtime, global hotkey, agent probe caching/timeout, and the startup update check from the tray; changes apply without restart
 - **What's New** — read the release notes for each version from the tray; after an update, the notes for the new version open once
 - **Autostart** — start with Windows, and choose whether the window opens on startup (otherwise CLIHub starts in the tray)
 - **Updates** — checks for a new version on startup (with a tray notification) and on demand, shows the current version, and offers a one-click "Download and restart" action in the tray menu and the What's New window

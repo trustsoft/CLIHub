@@ -7,6 +7,35 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.6.0 — 2026-10-02
+
+### Added
+
+- Downloading and applying updates from the tray: a one-click download-and-restart action in the tray menu
+  and the What's New window, with a downloading state in the menu, completion and failure notifications, and
+  a guard against concurrent downloads (`update-checking`)
+- Dark theme for the Settings window: drawn chrome like the launch window (no OS title bar, header drag,
+  Escape to close, DWM-rounded corners), an uppercase section rhythm with hint lines, segmented runtime and
+  path-display selectors, a chip-styled hotkey capture field, themed inputs, checkboxes, and footer — with
+  the window's height following the launch window's (`settings-theme`)
+- Themed tooltips in the launch window, Settings, and What's New, sharing one slim dark style
+  (`launch-window-theme`)
+
+### Changed
+
+- The slim dark scrollbar is now an application-level style (it must live there to reach the scrollbars
+  inside templates) and shrank to 4px, so the launch window lists, Settings, and What's New scroll
+  consistently
+- The Settings window opens at its 420px minimum width with a 30px probe input pair sized to the
+  "Timeout, seconds" caption, auto-width checkboxes, an auto-width hotkey field with equal 8px insets, and
+  segment groups with 2px gaps
+- The Settings footer's brand and version chip reuse the launch window's styles
+
+### Fixed
+
+- The What's New window no longer draws the native frame of a resizable window around its own border and
+  drops the top highlight, so its chrome matches the launch window's
+
 ## 0.5.0 — 2026-09-30
 
 ### Added

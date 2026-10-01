@@ -3,6 +3,23 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.6.0 — 2026-10-02
+
+### New
+
+- Install updates with one click: download the new version from the tray or the What's New window and CLIHub restarts into it
+- The Settings window now shares the launch window's dark look — a drawn header, segmented runtime and path selectors, and a key-chip hotkey field
+- The What's New, Settings, and launch windows all share slim dark scrollbars and matching tooltips
+
+### Improved
+
+- The Settings window opens at the same height as the launch window, with its inputs sized and aligned to the new layout
+- Hotkey capture happens in a compact chip field: press a combination, see it as keys, press Esc to cancel
+
+### Fixed
+
+- The What's New window's border no longer shows the native frame of a resizable window and now matches the launch window's
+
 ## 0.5.0 — 2026-09-30
 
 ### New
