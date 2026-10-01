@@ -6,6 +6,7 @@ using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 using CLIHub.Hotkeys;
+using CLIHub.ViewModels;
 using CLIHub.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,13 @@ public partial class App : Application
         _services.GetRequiredService<IStartupService>().SetEnabled(preferences.StartWithWindows);
 
         _tray = _services.GetRequiredService<TrayIconController>();
+
+        var updates = _services.GetRequiredService<IUpdateService>();
+        updates.UpdateStateChanged += (_, _) =>
+            Dispatcher.Invoke(() => _tray?.RefreshMenu());
+        _tray.UpdateDownloadRequested += (_, _) => _ = DownloadAndApplyUpdateAsync();
+        _services.GetRequiredService<WhatsNewViewModel>().UpdateRequested += (_, _) =>
+            _ = DownloadAndApplyUpdateAsync();
 
         _guard.ActivationRequested += () =>
             Dispatcher.Invoke(() => _tray?.ShowLaunchWindow());
@@ -135,6 +143,57 @@ public partial class App : Application
         catch (Exception ex)
         {
             Log.Warning(ex, "Update check failed");
+        }
+    }
+
+    /// <summary>
+    /// Downloads the available update and restarts into it. Started from the tray menu or the
+    /// What's New window; the restart needs no confirmation because the user explicitly invoked
+    /// the action, and failures are reported via a tray notification.
+    /// </summary>
+    private async Task DownloadAndApplyUpdateAsync()
+    {
+        var updates = _services!.GetRequiredService<IUpdateService>();
+
+        try
+        {
+            var result = await updates.DownloadUpdateAsync();
+
+            if (result.Status == UpdateDownloadStatus.Downloaded && result.AvailableVersion is { } version)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    _tray?.NotifyUpdateDownloaded(version);
+                    _tray?.RefreshMenu();
+                });
+
+                // Give the notification a moment before the process exits.
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                updates.ApplyDownloadedUpdateAndRestart();
+            }
+            else if (result.Status == UpdateDownloadStatus.Failed)
+            {
+                Log.Warning("Update download failed (version {Version})", result.AvailableVersion);
+                Dispatcher.Invoke(() =>
+                {
+                    if (result.AvailableVersion is { } failedVersion)
+                    {
+                        _tray?.NotifyUpdateFailed(failedVersion);
+                    }
+
+                    _tray?.RefreshMenu();
+                });
+            }
+            else
+            {
+                Log.Information("Update download not applied: {Status}", result.Status);
+                Dispatcher.Invoke(() => _tray?.RefreshMenu());
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Applying the downloaded update failed");
+            Dispatcher.Invoke(() => _tray?.RefreshMenu());
         }
     }
 

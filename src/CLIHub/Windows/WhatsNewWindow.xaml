@@ -41,12 +41,19 @@
                   MouseLeftButtonDown="OnHeaderMouseDown"
                   Style="{StaticResource NotesHeader}">
                 <TextBlock Style="{StaticResource NotesTitle}" Text="What's New"/>
-                <Button HorizontalAlignment="Right"
-                        Click="OnCloseClick"
-                        Style="{StaticResource NotesCloseButton}"
-                        ToolTip="Close">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
-                </Button>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Click="OnInstallClick"
+                            Content="{Binding InstallActionText}"
+                            IsEnabled="{Binding CanDownloadUpdate}"
+                            Style="{StaticResource NotesInstallButton}"
+                            ToolTip="Download the update and restart CLIHub"
+                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"/>
+                    <Button Click="OnCloseClick"
+                            Style="{StaticResource NotesCloseButton}"
+                            ToolTip="Close">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <Rectangle Grid.Row="1"

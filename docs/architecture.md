@@ -10,7 +10,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** Platform-agnostic business logic and services.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`, `ReleaseNote`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `ReleaseNote`.
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
@@ -20,7 +20,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `AgentCommandService` — execute named commands (launch/resume/version/update/init)
 - `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
 - `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
-- `UpdateService` — Velopack update check (GitHub Releases source) and current-version lookup
+- `UpdateService` — Velopack update check, download, and apply-and-restart (GitHub Releases source), current-version lookup, and shared download state
 - `ReleaseNotesService` — parses the embedded user-facing release notes, newest version first
 - `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
 - `StartupService` — per-user Windows Run registration for start-with-Windows (via an internal `IStartupRegistry` seam backed by `StartupRegistry`)
@@ -39,7 +39,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Purpose:** WPF user interface and Windows-specific integration.
 
-**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `PromptState` (keeps the popup visible while a prompt is open), `LaunchWindow` + `LaunchWindowViewModel` (the chromeless popup shell: no OS chrome, always on top, hides when it loses focus unless pinned, Escape hides it, centred on the pointer's monitor on every show; shown from the tray, the hotkey, a second-instance activation and startup), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `PathDisplayConverter`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles), `Interop/User32` (source-generated `user32.dll` P/Invoke), `Interop/DwmApi` (window corner rounding), `Interop/WindowPositioner` (pointer-monitor placement), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM, owned by the launch window so it stays visible above it) with `IPreferenceApplier`/`PreferenceApplier`. The What's New window (`WhatsNewWindow` + `WhatsNewViewModel`, MVVM) shows the embedded release notes newest-first and is reached from the tray or shown once after an upgrade (`IReleaseNotesLauncher`/`ReleaseNotesLauncher`, single instance, owned by the launch window like Settings). It draws its own dark chrome — no OS title bar, a header that drags the window, and a close button — but stays an ordinary resizable window rather than a popup: not always on top, no hide-on-focus-loss. Startup wires the configured runtime, refreshes the start-with-Windows registration, creates the tray icon, shows the launch window when the preference asks for it, registers the global hotkey, shows the What's New window once when the running version differs from the recorded one (recording a version that has no notes — and a first run — without showing anything), and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
+**Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `PromptState` (keeps the popup visible while a prompt is open), `LaunchWindow` + `LaunchWindowViewModel` (the chromeless popup shell: no OS chrome, always on top, hides when it loses focus unless pinned, Escape hides it, centred on the pointer's monitor on every show; shown from the tray, the hotkey, a second-instance activation and startup), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `PathDisplayConverter`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles), `Interop/User32` (source-generated `user32.dll` P/Invoke), `Interop/DwmApi` (window corner rounding), `Interop/WindowPositioner` (pointer-monitor placement), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM, owned by the launch window so it stays visible above it) with `IPreferenceApplier`/`PreferenceApplier`. The What's New window (`WhatsNewWindow` + `WhatsNewViewModel`, MVVM) shows the embedded release notes newest-first and is reached from the tray or shown once after an upgrade (`IReleaseNotesLauncher`/`ReleaseNotesLauncher`, single instance, owned by the launch window like Settings); when an update is available its header offers the same download-and-restart action as the tray menu, sharing the update state. It draws its own dark chrome — no OS title bar, a header that drags the window, and a close button — but stays an ordinary resizable window rather than a popup: not always on top, no hide-on-focus-loss. Startup wires the configured runtime, refreshes the start-with-Windows registration, creates the tray icon, shows the launch window when the preference asks for it, registers the global hotkey, shows the What's New window once when the running version differs from the recorded one (recording a version that has no notes — and a first run — without showing anything), and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
@@ -87,13 +87,13 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Serilog** with file sink (+ `Serilog.Extensions.Logging`) — structured logging, bridged into `Microsoft.Extensions.Logging`
 - **H.NotifyIcon.Wpf** — system tray icon
 - **System.Text.Json** — JSON serialization with camelCase policy
-- **Velopack** — application update checking and packaging (GitHub Releases source)
+- **Velopack** — application update checking, downloading, and packaging (GitHub Releases source)
 
 ### External Integration
 - **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
 - **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
-- **Velopack** — update checks against GitHub Releases; the current version comes from the Velopack locator (falling back to the assembly informational version)
+- **Velopack** — update checks, package downloads, and apply-and-restart against GitHub Releases; the current version comes from the Velopack locator (falling back to the assembly informational version)
 - **Registry (HKCU Run)** — the per-user `Software\Microsoft\Windows\CurrentVersion\Run` value `CLIHub` controls start-with-Windows
 
 ## Plugin Descriptor Format
@@ -195,9 +195,9 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 ## Testing Strategy
 
-**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling, release-notes parsing (ordering, groups, malformed headings, embedded document), process output capture, logging setup/level parsing, path shortening (middle ellipsis, left trim, style parsing), hotkey parsing, single-instance guard, DI composition.
+**Unit tests (CLIHub.Tests):** project tracking/logo resolution, plugin discovery/validation, seeding, agent command routing, availability detection, version extraction/caching, update check status/version handling and download guard paths (no update, not installed, already downloading, never throws), release-notes parsing (ordering, groups, malformed headings, embedded document), process output capture, logging setup/level parsing, path shortening (middle ellipsis, left trim, style parsing), hotkey parsing, single-instance guard, DI composition.
 
-**Manual verification:** system tray behavior, window show/hide and hotkey toggle, the popup shell (chromeless chrome, hide on focus loss, pin, Escape, pointer-monitor placement), agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the launch window (dark theme, pane headers with Actions menus, footer actions, version chip, update check, open data folder, project/agent rows, path display style, scrolling), the update-available tray notification, the Settings window (runtime/hotkey/probe/updates/path-display changes applied without restart; Cancel discards), the What's New window (tray entry, notes newest first in the drawn dark chrome, header drag, resize, Escape and the close button), the one-time release-notes display after a version change, and start-with-Windows plus window-visibility-on-startup.
+**Manual verification:** system tray behavior, window show/hide and hotkey toggle, the popup shell (chromeless chrome, hide on focus loss, pin, Escape, pointer-monitor placement), agent launch in the selected runtime, seeded logos/versions, availability dimming/filtering, the launch window (dark theme, pane headers with Actions menus, footer actions, version chip, update check, open data folder, project/agent rows, path display style, scrolling), the update-available tray notification, the Settings window (runtime/hotkey/probe/updates/path-display changes applied without restart; Cancel discards), the What's New window (tray entry, notes newest first in the drawn dark chrome, header drag, resize, Escape and the close button), the one-time release-notes display after a version change, the download-and-restart update flow (tray menu item, downloading state, completion and failure balloons, restart into the new version, What's New install action), and start-with-Windows plus window-visibility-on-startup.
 
 ## Conventions
 
@@ -260,5 +260,6 @@ See [AGENTS.md → Known Constraints](../AGENTS.md#known-constraints). The singl
 ### Update Mechanism
 
 - **Checks:** startup and manual checks run through Velopack against the configured GitHub Releases source over HTTPS; failures and timeouts are logged and never block the app
-- **Not installed:** when the app does not run from a Velopack install, checks are skipped and reported as `NotInstalled`
-- **Scope:** the current implementation only *checks* and notifies (tray notification / status bar); applying an update is deferred to the packaging change
+- **Download and apply:** when a check finds an update, the tray menu and the What's New window offer a one-click "Download and restart" action; the download runs once (concurrent requests are ignored), a balloon announces the restart, and the app applies the downloaded package and relaunches
+- **Failure handling:** a failed download or restart is logged and reported via a tray notification; the current version keeps running and the action becomes available again
+- **Not installed:** when the app does not run from a Velopack install, checks are skipped, no update action is offered, and results are reported as `NotInstalled`

@@ -70,6 +70,14 @@ public partial class WhatsNewWindow : Window
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 
+    private void OnInstallClick(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is WhatsNewViewModel viewModel)
+        {
+            viewModel.RequestInstallUpdate();
+        }
+    }
+
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.Escape)

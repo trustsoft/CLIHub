@@ -9,11 +9,12 @@ using Velopack.Exceptions;
 using Velopack.Sources;
 
 /// <summary>
-/// Checks for updates via Velopack and reports the current version.
+/// Checks for, downloads, and applies updates via Velopack and reports the current version.
 /// </summary>
 public class UpdateService : IUpdateService
 {
     // Set to the release repository when packaging with Velopack (GitHub Releases).
+    // A non-GitHub URL or local folder is also supported (see CreateDefaultManager).
     internal const string RepositoryUrl = "https://github.com/your-org/clihub";
 
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
@@ -21,6 +22,10 @@ public class UpdateService : IUpdateService
     private readonly ILogger<UpdateService> _logger;
     private readonly UpdateManager? _injectedManager;
     private readonly Lazy<UpdateManager?> _defaultManager;
+    private readonly object _downloadGate = new();
+    private bool _isDownloading;
+    private VelopackAsset? _downloadedAsset;
+    private string? _lastKnownAvailableVersion;
 
     /// <summary>
     /// Creates the service using the default GitHub update source.
@@ -48,7 +53,14 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            return new UpdateManager(new GithubSource(RepositoryUrl, null, false));
+            // A GitHub repository URL uses the GitHub Releases source; any other URL or a local
+            // folder (useful for testing and self-hosted mirrors) uses Velopack's default source.
+            if (RepositoryUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return new UpdateManager(new GithubSource(RepositoryUrl, null, false));
+            }
+
+            return new UpdateManager(RepositoryUrl);
         }
         catch (Exception ex)
         {
@@ -75,13 +87,128 @@ public class UpdateService : IUpdateService
 
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
+        var (result, _) = await CheckForUpdateCoreAsync(cancellationToken);
+        return result;
+    }
+
+    public bool IsDownloading
+    {
+        get
+        {
+            lock (_downloadGate)
+            {
+                return _isDownloading;
+            }
+        }
+    }
+
+    public string? LastKnownAvailableVersion => _lastKnownAvailableVersion;
+
+    public event EventHandler? UpdateStateChanged;
+
+    public async Task<UpdateDownloadResult> DownloadUpdateAsync(CancellationToken cancellationToken = default)
+    {
+        lock (_downloadGate)
+        {
+            if (_isDownloading)
+            {
+                _logger.LogInformation("Update download requested while another download is running");
+                return new UpdateDownloadResult(UpdateDownloadStatus.AlreadyDownloading, null);
+            }
+
+            _isDownloading = true;
+        }
+
+        try
+        {
+            var (result, update) = await CheckForUpdateCoreAsync(cancellationToken);
+
+            if (result.Status != UpdateStatus.UpdateAvailable || update?.TargetFullRelease is not { } asset)
+            {
+                var status = result.Status switch
+                {
+                    UpdateStatus.NotInstalled => UpdateDownloadStatus.NotInstalled,
+                    UpdateStatus.UpToDate => UpdateDownloadStatus.NoUpdate,
+                    _ => UpdateDownloadStatus.Failed,
+                };
+
+                _logger.LogInformation("Update download not started: {Status}", status);
+                return new UpdateDownloadResult(status, null);
+            }
+
+            try
+            {
+                await Manager!.DownloadUpdatesAsync(update, null, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Update download cancelled");
+                return new UpdateDownloadResult(UpdateDownloadStatus.Failed, result.AvailableVersion);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Update download failed");
+                return new UpdateDownloadResult(UpdateDownloadStatus.Failed, result.AvailableVersion);
+            }
+
+            lock (_downloadGate)
+            {
+                _downloadedAsset = asset;
+            }
+
+            var version = result.AvailableVersion;
+            _logger.LogInformation("Update downloaded: {Version}", version);
+            return new UpdateDownloadResult(UpdateDownloadStatus.Downloaded, version);
+        }
+        finally
+        {
+            lock (_downloadGate)
+            {
+                _isDownloading = false;
+            }
+
+            RaiseStateChanged();
+        }
+    }
+
+    public void ApplyDownloadedUpdateAndRestart()
+    {
+        var manager = Manager;
+        VelopackAsset? asset;
+
+        lock (_downloadGate)
+        {
+            asset = _downloadedAsset;
+        }
+
+        if (manager is null || asset is null)
+        {
+            _logger.LogInformation("No downloaded update to apply; restart skipped");
+            return;
+        }
+
+        try
+        {
+            manager.ApplyUpdatesAndRestart(asset);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to apply the downloaded update");
+            throw;
+        }
+    }
+
+    private async Task<(UpdateCheckResult Result, UpdateInfo? Update)> CheckForUpdateCoreAsync(
+        CancellationToken cancellationToken)
+    {
         var current = GetCurrentVersion();
         var manager = Manager;
 
         if (manager?.CurrentVersion == null)
         {
             _logger.LogInformation("Update check skipped: the application is not a Velopack install");
-            return new UpdateCheckResult(UpdateStatus.NotInstalled, current, null);
+            SetAvailableVersion(null);
+            return (new UpdateCheckResult(UpdateStatus.NotInstalled, current, null), null);
         }
 
         try
@@ -92,7 +219,8 @@ public class UpdateService : IUpdateService
             if (completed != checkTask)
             {
                 _logger.LogWarning("Update check timed out after {Seconds}s", CheckTimeout.TotalSeconds);
-                return new UpdateCheckResult(UpdateStatus.Failed, current, null);
+                SetAvailableVersion(null);
+                return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
             }
 
             var update = await checkTask;
@@ -100,28 +228,45 @@ public class UpdateService : IUpdateService
             {
                 var available = Normalize(version.ToString());
                 _logger.LogInformation("Update available: {Version}", available);
-                return new UpdateCheckResult(UpdateStatus.UpdateAvailable, current, available);
+                SetAvailableVersion(available);
+                return (new UpdateCheckResult(UpdateStatus.UpdateAvailable, current, available), update);
             }
 
             _logger.LogInformation("No update available");
-            return new UpdateCheckResult(UpdateStatus.UpToDate, current, null);
+            SetAvailableVersion(null);
+            return (new UpdateCheckResult(UpdateStatus.UpToDate, current, null), null);
         }
         catch (NotInstalledException)
         {
             _logger.LogInformation("Update check skipped: the application is not a Velopack install");
-            return new UpdateCheckResult(UpdateStatus.NotInstalled, current, null);
+            SetAvailableVersion(null);
+            return (new UpdateCheckResult(UpdateStatus.NotInstalled, current, null), null);
         }
         catch (OperationCanceledException)
         {
             _logger.LogWarning("Update check cancelled");
-            return new UpdateCheckResult(UpdateStatus.Failed, current, null);
+            SetAvailableVersion(null);
+            return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Update check failed");
-            return new UpdateCheckResult(UpdateStatus.Failed, current, null);
+            SetAvailableVersion(null);
+            return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
         }
     }
+
+    private void SetAvailableVersion(string? version)
+    {
+        var changed = !string.Equals(Interlocked.Exchange(ref _lastKnownAvailableVersion, version), version, StringComparison.Ordinal);
+
+        if (changed)
+        {
+            RaiseStateChanged();
+        }
+    }
+
+    private void RaiseStateChanged() => UpdateStateChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     /// Strips build metadata (for example, the "+commit" suffix) so the version

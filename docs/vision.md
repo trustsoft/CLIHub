@@ -46,8 +46,8 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Chromeless popup shell for the launch window: no OS chrome with rounded corners, always on top, hides when it loses focus unless pinned, Escape to hide, opens on the pointer's monitor, reference palette and metrics, Actions menus with icons, and a selectable path display style — `main-window-layout`, `app-lifecycle`, `preferences-ui`
 - Settings window for runtime, global hotkey, agent probe caching/timeout, and the startup update check — `preferences-ui`
 - Release notes in the app: hand-written user-facing notes shipped inside the build, a **What's New** window reachable from the tray, and a one-time display after an upgrade — `release-notes`, `release-notes-display`
+- Downloading and applying updates from the tray: a one-click download-and-restart action in the tray menu and the What's New window, with progress state and completion/failure notifications — `update-checking`
 
 **Remaining directions**
 - Notification support for background agent activities
 - Per-agent project filtering refinements beyond dim/hide
-- Downloading and applying updates from the tray (deferred packaging work)

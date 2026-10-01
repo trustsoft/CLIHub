@@ -16,7 +16,7 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 - **Settings window** — change the runtime, global hotkey, agent probe caching/timeout, and the startup update check from the tray; changes apply without restart
 - **What's New** — read the release notes for each version from the tray; after an update, the notes for the new version open once
 - **Autostart** — start with Windows, and choose whether the window opens on startup (otherwise CLIHub starts in the tray)
-- **Updates** — checks for a new version on startup (with a tray notification) and on demand, and shows the current version
+- **Updates** — checks for a new version on startup (with a tray notification) and on demand, shows the current version, and offers a one-click "Download and restart" action in the tray menu and the What's New window
 - **Single instance** — a second launch activates the running instance
 - **Logging** — structured file logs with configurable level and 7-day retention
 
@@ -41,6 +41,7 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 3. Select the project, then choose an agent and click **Launch** (or **Resume**, **Init**, **Update**, **Version**).
 4. Agents not used in the current project are dimmed, or hidden via **Only agents available in project**.
 5. After CLIHub updates itself, **What's New** opens once with the notes for the new version; you can reopen it any time from the tray menu.
+6. When a newer version is available, install it from the tray menu or the What's New window: **Download and restart** fetches the update and relaunches CLIHub into it.
 
 ## Data & configuration
 

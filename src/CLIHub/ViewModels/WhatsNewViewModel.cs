@@ -2,19 +2,35 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using System.ComponentModel;
+using System.Windows;
 
 /// <summary>
 /// View model for the What's New window: the release notes in display order, with empty groups
-/// dropped so the window only shows what a version actually changed.
+/// dropped so the window only shows what a version actually changed, plus the download-and-restart
+/// action for an available update. The action itself runs in <see cref="App"/>, so the tray menu
+/// and this window share one flow and one state.
 /// </summary>
-public sealed class WhatsNewViewModel : ObservableObject
+public sealed class WhatsNewViewModel : ObservableObject, IDisposable
 {
     /// <summary>The group headings, in the order they are displayed.</summary>
     private static readonly string[] GroupLabels = { "New", "Improved", "Fixed" };
 
-    public WhatsNewViewModel(IReleaseNotesService releaseNotes)
+    private readonly IUpdateService _updates;
+    private bool _isUpdateAvailable;
+    private bool _isDownloading;
+
+    /// <summary>Raised when the user asks to download the update and restart.</summary>
+    public event EventHandler? UpdateRequested;
+
+    public WhatsNewViewModel(IReleaseNotesService releaseNotes, IUpdateService updates)
     {
+        _updates = updates;
+
         Versions = BuildVersions(releaseNotes.GetNotes());
+
+        updates.UpdateStateChanged += OnUpdateStateChanged;
+        RefreshUpdateState();
     }
 
     /// <summary>
@@ -26,6 +42,63 @@ public sealed class WhatsNewViewModel : ObservableObject
     /// Whether there is nothing to show, so the window displays its empty message instead.
     /// </summary>
     public bool HasNoNotes => Versions.Count == 0;
+
+    /// <summary>
+    /// Whether an update is available to download.
+    /// </summary>
+    public bool IsUpdateAvailable
+    {
+        get => _isUpdateAvailable;
+        private set => SetProperty(ref _isUpdateAvailable, value);
+    }
+
+    /// <summary>
+    /// Whether the update download is currently running; the install action is disabled then.
+    /// </summary>
+    public bool IsDownloading
+    {
+        get => _isDownloading;
+        private set => SetProperty(ref _isDownloading, value);
+    }
+
+    /// <summary>
+    /// Whether the install action can start a download right now.
+    /// </summary>
+    public bool CanDownloadUpdate => IsUpdateAvailable && !IsDownloading;
+
+    /// <summary>
+    /// The caption of the install action, naming the version or the running download.
+    /// </summary>
+    public string InstallActionText => IsDownloading
+        ? "Downloading update…"
+        : $"Download {_updates.LastKnownAvailableVersion} and restart";
+
+    /// <summary>
+    /// Asks the application to download the update and restart; ignored while a download runs.
+    /// </summary>
+    public void RequestInstallUpdate()
+    {
+        if (!IsDownloading && IsUpdateAvailable)
+        {
+            UpdateRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public void Dispose()
+    {
+        _updates.UpdateStateChanged -= OnUpdateStateChanged;
+    }
+
+    private void OnUpdateStateChanged(object? sender, EventArgs e) =>
+        Application.Current?.Dispatcher.BeginInvoke(RefreshUpdateState);
+
+    private void RefreshUpdateState()
+    {
+        IsUpdateAvailable = _updates.LastKnownAvailableVersion != null;
+        IsDownloading = _updates.IsDownloading;
+        OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(InstallActionText));
+    }
 
     private static IReadOnlyList<WhatsNewVersion> BuildVersions(IReadOnlyList<ReleaseNote> notes)
     {
