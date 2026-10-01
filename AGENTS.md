@@ -2,7 +2,7 @@
 
 ## Project Status
 
-**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking (check, download, apply), preferences window, window layout, launch window theme, release notes.
+**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking (check, download, apply), preferences window, window layout, launch window theme, settings theme, release notes.
 
 ## Documentation
 

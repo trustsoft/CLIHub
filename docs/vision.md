@@ -47,6 +47,7 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Settings window for runtime, global hotkey, agent probe caching/timeout, and the startup update check — `preferences-ui`
 - Release notes in the app: hand-written user-facing notes shipped inside the build, a **What's New** window reachable from the tray, and a one-time display after an upgrade — `release-notes`, `release-notes-display`
 - Downloading and applying updates from the tray: a one-click download-and-restart action in the tray menu and the What's New window, with progress state and completion/failure notifications — `update-checking`
+- Dark theme for the Settings window: drawn chrome like the other windows, segmented runtime/path selectors, hotkey chip field, themed inputs and footer, sharing the launch window's palette — `settings-theme`
 
 **Remaining directions**
 - Notification support for background agent activities
