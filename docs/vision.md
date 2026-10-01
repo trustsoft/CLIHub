@@ -51,3 +51,4 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 **Remaining directions**
 - Notification support for background agent activities
 - Per-agent project filtering refinements beyond dim/hide
+- Packaging and release setup: the real release repository for the update feed (the `RepositoryUrl` placeholder) and CI packaging with `vpk`

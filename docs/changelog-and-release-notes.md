@@ -1,6 +1,6 @@
 # Changelog & Release Notes — Plan
 
-**Status:** Implemented by the `release-notes` change (`openspec/changes/release-notes/`): the two documents,
+**Status:** Implemented by the `release-notes` change (`openspec/changes/archive/2026-09-30-release-notes/`): the two documents,
 the embedded notes and their parser, the **What's New** window, and the one-time display after an upgrade.
 This document remains the rationale behind the decisions below; the durable behavior lives in the
 `release-notes` and `release-notes-display` specs, and the file format is described in
