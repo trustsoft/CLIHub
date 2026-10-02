@@ -67,6 +67,33 @@
     </Style>
 
     <!--
+        Dark popover tooltip: the little sibling of DarkContextMenu. Keyed here as the base for
+        the application-level implicit ToolTip style in App.xaml — tooltips live outside the
+        window visual tree, so only an application-level implicit style reaches them.
+    -->
+    <Style x:Key="DarkToolTip" TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
+                            Background="{StaticResource PopoverBgBrush}"
+                            BorderBrush="{StaticResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            Padding="10,6">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="5" Opacity="0.4"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
         Buttons
     -->
 

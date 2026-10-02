@@ -4,14 +4,13 @@
     <!--
         Settings window styles. Merged from SettingsWindow.xaml (not from App.xaml) so styling
         stays scoped to this window. Reuses the launch-window palette: the only dedicated tokens
-        are structural (no new colors beyond the shared DangerBrush).
+        are structural (no new colors beyond the shared DangerBrush). Merging Controls.xaml brings
+        the palette and sizing tokens transitively: StaticResource inside a dictionary resolves
+        only against that dictionary's own merged dictionaries.
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
         <ResourceDictionary Source="/Themes/Controls.xaml"/>
-        <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Section rhythm: uppercase muted label, optional hint under the fields -->

@@ -24,13 +24,8 @@
                       UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Window-scoped styles: this window's dark form styling. -->
-                <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-        </ResourceDictionary>
+        <!-- Window-scoped styles: this window's dark form styling. -->
+        <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
     </Window.Resources>
 
     <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
@@ -52,10 +47,8 @@
                 <TextBlock Style="{StaticResource WindowTitle}" Text="Settings"/>
                 <Button HorizontalAlignment="Right"
                         Click="OnCloseClick"
-                        Style="{StaticResource WindowCloseButton}">
-                    <Button.ToolTip>
-                        <ToolTip Content="Close" Style="{StaticResource DarkToolTip}"/>
-                    </Button.ToolTip>
+                        Style="{StaticResource WindowCloseButton}"
+                        ToolTip="Close">
                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
                 </Button>
             </Grid>

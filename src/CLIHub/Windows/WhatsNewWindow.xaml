@@ -25,13 +25,8 @@
                       UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Window-scoped styles: this window's drawn chrome and notes typography. -->
-                <ResourceDictionary Source="/Themes/WhatsNewStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-        </ResourceDictionary>
+        <!-- Window-scoped styles: this window's drawn chrome and notes typography. -->
+        <ResourceDictionary Source="/Themes/WhatsNewStyles.xaml"/>
     </Window.Resources>
 
     <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
@@ -51,16 +46,11 @@
                             Content="{Binding InstallActionText}"
                             IsEnabled="{Binding CanDownloadUpdate}"
                             Style="{StaticResource NotesInstallButton}"
-                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
-                        <Button.ToolTip>
-                            <ToolTip Content="Download the update and restart CLIHub" Style="{StaticResource DarkToolTip}"/>
-                        </Button.ToolTip>
-                    </Button>
+                            ToolTip="Download the update and restart CLIHub"
+                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"/>
                     <Button Click="OnCloseClick"
-                            Style="{StaticResource WindowCloseButton}">
-                        <Button.ToolTip>
-                            <ToolTip Content="Close" Style="{StaticResource DarkToolTip}"/>
-                        </Button.ToolTip>
+                            Style="{StaticResource WindowCloseButton}"
+                            ToolTip="Close">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
                     </Button>
                 </StackPanel>

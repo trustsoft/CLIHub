@@ -6,13 +6,12 @@
         Launch window styles. Merged from LaunchWindow.xaml (not from App.xaml) so that styling is
         scoped to this window and other windows keep their own look. Styles are keyed, because a
         ContextMenu lives outside the window's visual tree and cannot use implicit window styles.
+        Merging Controls.xaml brings the palette and sizing tokens transitively: StaticResource
+        inside a dictionary resolves only against that dictionary's own merged dictionaries.
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
         <ResourceDictionary Source="/Themes/Controls.xaml"/>
-        <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <conv:IndexToDividerVisibilityConverter x:Key="IndexToDividerVisibility"/>

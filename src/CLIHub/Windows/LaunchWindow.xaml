@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:conv="clr-namespace:CLIHub.Converters"
         mc:Ignorable="d"
         Title="CLIHub"
         Background="{StaticResource ChromeBgBrush}"
@@ -22,15 +21,8 @@
         WindowStartupLocation="Manual"
         WindowStyle="None">
     <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <!-- Window-scoped styles: the dark theme applies to this window only. -->
-                <ResourceDictionary Source="/Themes/LaunchWindowStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-            <conv:PathToImageConverter x:Key="PathToImage"/>
-            <conv:PathDisplayConverter x:Key="PathDisplay"/>
-            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-        </ResourceDictionary>
+        <!-- Window-scoped styles: the dark theme applies to this window only. -->
+        <ResourceDictionary Source="/Themes/LaunchWindowStyles.xaml"/>
     </Window.Resources>
 
     <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
@@ -63,30 +55,30 @@
                                     Style="{StaticResource PaneActionsButton}">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                        <ContextMenu.Resources>
+                                            <!-- Items are styled implicitly; MenuSeparator keeps its explicit style -->
+                                            <Style TargetType="MenuItem" BasedOn="{StaticResource DarkMenuItem}"/>
+                                        </ContextMenu.Resources>
                                         <MenuItem Command="{Binding AddProjectCommand}"
-                                                  Header="Add Project..."
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Add Project...">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE710;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding RemoveProjectCommand}"
-                                                  Header="Remove Project"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Remove Project">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE74D;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding ToggleFavoriteCommand}"
-                                                  Header="Toggle Favorite"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Toggle Favorite">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE734;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding RefreshCommand}"
-                                                  Header="Refresh"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Refresh">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
                                             </MenuItem.Icon>
@@ -196,37 +188,36 @@
                                     Style="{StaticResource PaneActionsButton}">
                                 <Button.ContextMenu>
                                     <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                        <ContextMenu.Resources>
+                                            <!-- Items are styled implicitly; MenuSeparator keeps its explicit style -->
+                                            <Style TargetType="MenuItem" BasedOn="{StaticResource DarkMenuItem}"/>
+                                        </ContextMenu.Resources>
                                         <MenuItem Command="{Binding LaunchCommand}"
-                                                  Header="Launch"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Launch">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE768;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding ResumeCommand}"
-                                                  Header="Resume Session"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Resume Session">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding InitCommand}"
-                                                  Header="Initialize"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Initialize">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE8F4;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding UpdateCommand}"
-                                                  Header="Update"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Update">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE896;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <MenuItem Command="{Binding VersionCommand}"
-                                                  Header="Show Version"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Show Version">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE946;"/>
                                             </MenuItem.Icon>
@@ -234,16 +225,14 @@
                                         <Separator Style="{StaticResource MenuSeparator}"/>
                                         <MenuItem Header="Only agents available in project"
                                                   IsCheckable="True"
-                                                  IsChecked="{Binding ShowOnlyProjectAgents, Mode=TwoWay}"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  IsChecked="{Binding ShowOnlyProjectAgents, Mode=TwoWay}">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE71C;"/>
                                             </MenuItem.Icon>
                                         </MenuItem>
                                         <Separator Style="{StaticResource MenuSeparator}"/>
                                         <MenuItem Command="{Binding RefreshCommand}"
-                                                  Header="Refresh"
-                                                  Style="{StaticResource DarkMenuItem}">
+                                                  Header="Refresh">
                                             <MenuItem.Icon>
                                                 <TextBlock Style="{StaticResource MenuIcon}" Text="&#xE72C;"/>
                                             </MenuItem.Icon>
@@ -297,10 +286,8 @@
                                             <Button Margin="0,0,6,0"
                                                     Command="{Binding DataContext.LaunchAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource AgentActionButton}">
-                                                <Button.ToolTip>
-                                                    <ToolTip Content="Launch" Style="{StaticResource DarkToolTip}"/>
-                                                </Button.ToolTip>
+                                                    Style="{StaticResource AgentActionButton}"
+                                                    ToolTip="Launch">
                                                 <Path Width="10"
                                                       Height="10"
                                                       Data="{StaticResource PlayGlyph}"
@@ -309,10 +296,8 @@
                                             </Button>
                                             <Button Command="{Binding DataContext.ResumeAgentCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
                                                     CommandParameter="{Binding}"
-                                                    Style="{StaticResource AgentActionButton}">
-                                                <Button.ToolTip>
-                                                    <ToolTip Content="Resume session" Style="{StaticResource DarkToolTip}"/>
-                                                </Button.ToolTip>
+                                                    Style="{StaticResource AgentActionButton}"
+                                                    ToolTip="Resume session">
                                                 <Grid Width="14" Height="14">
                                                     <Ellipse Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
                                                              StrokeThickness="1.4"/>
@@ -380,24 +365,18 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                     <Button Command="{Binding OpenDataFolderCommand}"
-                            Style="{StaticResource PopupIconButton}">
-                        <Button.ToolTip>
-                            <ToolTip Content="Open data folder" Style="{StaticResource DarkToolTip}"/>
-                        </Button.ToolTip>
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Open data folder">
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE8B7;"/>
                     </Button>
                     <Button Command="{Binding OpenSettingsCommand}"
-                            Style="{StaticResource PopupIconButton}">
-                        <Button.ToolTip>
-                            <ToolTip Content="Settings" Style="{StaticResource DarkToolTip}"/>
-                        </Button.ToolTip>
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Settings">
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE713;"/>
                     </Button>
                     <ToggleButton IsChecked="{Binding IsPinned, Mode=TwoWay}"
-                                  Style="{StaticResource PopupToggleIconButton}">
-                        <ToggleButton.ToolTip>
-                            <ToolTip Content="Keep the window open when it loses focus" Style="{StaticResource DarkToolTip}"/>
-                        </ToggleButton.ToolTip>
+                                  Style="{StaticResource PopupToggleIconButton}"
+                                  ToolTip="Keep the window open when it loses focus">
                         <TextBlock>
                             <TextBlock.Style>
                                 <Style BasedOn="{StaticResource FooterIcon}" TargetType="TextBlock">
@@ -412,10 +391,8 @@
                         </TextBlock>
                     </ToggleButton>
                     <Button Command="{Binding ExitCommand}"
-                            Style="{StaticResource PopupIconButton}">
-                        <Button.ToolTip>
-                            <ToolTip Content="Exit CLIHub" Style="{StaticResource DarkToolTip}"/>
-                        </Button.ToolTip>
+                            Style="{StaticResource PopupIconButton}"
+                            ToolTip="Exit CLIHub">
                         <TextBlock Style="{StaticResource FooterIcon}" Text="&#xE7E8;"/>
                     </Button>
                 </StackPanel>

@@ -3,8 +3,8 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!--
-        Sizing tokens for the launch window. Structural metrics live here so layout changes are
-        made in one place; naming follows Sizing.<Group>.<Token>.
+        Sizing tokens shared by the dark-chrome windows. Structural metrics live here so layout
+        changes are made in one place; naming follows Sizing.<Group>.<Token>.
     -->
 
     <!-- Font sizes -->

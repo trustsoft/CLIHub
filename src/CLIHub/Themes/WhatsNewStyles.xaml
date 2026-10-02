@@ -4,14 +4,13 @@
     <!--
         What's New styles. Merged from WhatsNewWindow.xaml (not from App.xaml) so styling stays
         scoped to this window, which draws its own chrome: a header with the title and a close
-        button, and a scrolling body of release notes.
+        button, and a scrolling body of release notes. Merging Controls.xaml brings the palette
+        and sizing tokens transitively: StaticResource inside a dictionary resolves only against
+        that dictionary's own merged dictionaries.
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
         <ResourceDictionary Source="/Themes/Controls.xaml"/>
-        <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Install action for an available update: a quiet chip that turns into the accent color -->
