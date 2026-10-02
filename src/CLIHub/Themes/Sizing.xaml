@@ -11,9 +11,12 @@
     <sys:Double x:Key="Sizing.FontSize.Section">11</sys:Double>
     <sys:Double x:Key="Sizing.FontSize.Body">12</sys:Double>
     <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
+    <!-- Font for Segoe MDL2 Assets glyphs (menu icons, footer icons, drawn glyph buttons) -->
+    <FontFamily x:Key="Sizing.FontFamily.Icon">Segoe MDL2 Assets</FontFamily>
 
     <!-- Panes and window -->
     <sys:Double x:Key="Sizing.Height.PaneHeader">32</sys:Double>
+    <sys:Double x:Key="Sizing.Height.WindowHeader">40</sys:Double>
     <Thickness x:Key="Sizing.PaneMargin">10</Thickness>
     <Thickness x:Key="Sizing.Margin.PaneHeader">0,0,0,4</Thickness>
     <sys:Double x:Key="Sizing.MaxListHeight">434</sys:Double>

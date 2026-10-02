@@ -7,6 +7,10 @@
         resources do not reach the scrollbars inside ScrollViewer and ListBox templates.
     -->
 
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Width" Value="4"/>
@@ -29,7 +33,7 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border CornerRadius="2" Background="#33FFFFFF" Margin="0.5"/>
+                                            <Border CornerRadius="2" Background="{StaticResource ScrollThumbBrush}" Margin="0.5"/>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>

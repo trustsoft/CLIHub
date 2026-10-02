@@ -23,6 +23,10 @@
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
     <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1A4CC2FF"/>
+    <!-- 1px highlight line drawn across the top edge of the dark-chrome windows -->
+    <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
+    <!-- Thumb of the slim application-level scrollbar -->
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF"/>
 
     <!-- Text -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFFFF"/>
