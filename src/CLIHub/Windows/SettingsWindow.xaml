@@ -43,20 +43,20 @@
             </Grid.RowDefinitions>
 
             <!-- Inset top highlight (shared chrome) -->
-            <Rectangle Grid.Row="0" Height="1" Fill="#0DFFFFFF"/>
+            <Rectangle Grid.Row="0" Height="1" Fill="{StaticResource TopHighlightBrush}"/>
 
             <!-- Drawn header: title, close button, drag -->
             <Grid Grid.Row="1"
                   MouseLeftButtonDown="OnHeaderMouseDown"
-                  Style="{StaticResource SettingsHeader}">
-                <TextBlock Style="{StaticResource SettingsTitle}" Text="Settings"/>
+                  Style="{StaticResource WindowHeader}">
+                <TextBlock Style="{StaticResource WindowTitle}" Text="Settings"/>
                 <Button HorizontalAlignment="Right"
                         Click="OnCloseClick"
-                        Style="{StaticResource SettingsCloseButton}">
+                        Style="{StaticResource WindowCloseButton}">
                     <Button.ToolTip>
                         <ToolTip Content="Close" Style="{StaticResource DarkToolTip}"/>
                     </Button.ToolTip>
-                    <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
+                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
                 </Button>
             </Grid>
 

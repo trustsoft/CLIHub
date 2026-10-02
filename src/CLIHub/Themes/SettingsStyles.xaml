@@ -10,59 +10,11 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Controls.xaml"/>
         <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
-    <!-- Drawn header: the title bar this window does not get from the OS -->
-    <Style x:Key="SettingsHeader" TargetType="Grid">
-        <Setter Property="Height" Value="40"/>
-        <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
-    </Style>
-
-    <Style x:Key="SettingsTitle" TargetType="TextBlock">
-        <Setter Property="Margin" Value="20,0,0,0"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-    </Style>
-
-    <Style x:Key="SettingsCloseButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Width" Value="{StaticResource Sizing.Width.IconButton}"/>
-        <Setter Property="Height" Value="{StaticResource Sizing.Height.IconButton}"/>
-        <Setter Property="Margin" Value="0,0,8,0"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="Transparent">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- Section rhythm: uppercase muted label, optional hint under the fields -->
-    <Style x:Key="SectionLabel" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
-    </Style>
-
     <Style x:Key="FieldLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
@@ -174,7 +126,7 @@
                             <TextBlock x:Name="Check"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
-                                       FontFamily="Segoe MDL2 Assets"
+                                       FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                        FontSize="11"
                                        Foreground="{StaticResource AccentBrush}"
                                        Text="&#xE73E;"
@@ -300,38 +252,10 @@
         </Setter>
     </Style>
 
-    <Style x:Key="NeutralButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Style x:Key="NeutralButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="Padding" Value="18,7"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="{StaticResource ChipBgBrush}"
-                            BorderBrush="{StaticResource FieldStrokeBrush}"
-                            BorderThickness="1"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ControlStrokeBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!-- Footer strip: brand + version chip on the left, Save/Cancel on the right -->
@@ -340,26 +264,6 @@
         <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}"/>
         <Setter Property="BorderThickness" Value="0,1,0,0"/>
         <Setter Property="Padding" Value="20,10"/>
-    </Style>
-
-    <Style x:Key="BrandText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-
-    <Style x:Key="VersionChipBorder" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Padding" Value="8,1"/>
-        <Setter Property="Background" Value="{StaticResource ChipBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-    </Style>
-
-    <Style x:Key="VersionChipText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
     </Style>
 
 </ResourceDictionary>
