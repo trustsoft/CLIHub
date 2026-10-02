@@ -11,6 +11,7 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Controls.xaml"/>
         <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
@@ -31,27 +32,19 @@
 
     <!-- Icons and separators inside the Actions menus -->
     <Style x:Key="MenuIcon" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Icon}"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
     </Style>
 
     <!-- Footer icon glyphs (open data folder, settings, pin, exit) -->
     <Style x:Key="FooterIcon" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+        <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Icon}"/>
         <Setter Property="FontSize" Value="16"/>
     </Style>
 
     <Style x:Key="MenuSeparator" TargetType="Separator">
         <Setter Property="Margin" Value="4,4"/>
-    </Style>
-
-    <!-- Pane header: section label -->
-    <Style x:Key="SectionLabel" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <!-- Pane header "Actions" button: chrome appears on hover only -->
@@ -169,34 +162,9 @@
     </Style>
 
     <!-- Footer icon button (open data folder / settings / exit) -->
-    <Style x:Key="PopupIconButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Style x:Key="PopupIconButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
         <Setter Property="Width" Value="{StaticResource Sizing.Width.IconButton}"/>
         <Setter Property="Height" Value="{StaticResource Sizing.Height.IconButton}"/>
-        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="Transparent">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!-- Footer pin toggle -->
@@ -232,74 +200,23 @@
     </Style>
 
     <!-- Footer text button (update check) -->
-    <Style x:Key="FooterTextButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Style x:Key="FooterTextButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Padding" Value="10,3"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="{StaticResource ChipBgBrush}"
-                            BorderBrush="{StaticResource ChipStrokeBrush}"
-                            BorderThickness="1"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ControlStrokeBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
 
-    <!-- Agent row action button (launch / resume) -->
-    <Style x:Key="AgentActionButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <!-- Agent row action button (launch / resume); disabled rows dim to the divider tone -->
+    <Style x:Key="AgentActionButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Width" Value="{StaticResource Sizing.Width.ActionButton}"/>
         <Setter Property="Height" Value="{StaticResource Sizing.Height.ActionButton}"/>
         <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="{StaticResource ChipBgBrush}"
-                            BorderBrush="{StaticResource ChipStrokeBrush}"
-                            BorderThickness="1">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ControlStrokeBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource RowDividerBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource RowDividerBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Background" Value="{StaticResource RowDividerBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource RowDividerBrush}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Project row: accent bar on the selected row -->
@@ -373,26 +290,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-    </Style>
-
-    <!-- Brand and version chip -->
-    <Style x:Key="BrandText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
-    </Style>
-
-    <Style x:Key="VersionChipBorder" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Padding" Value="8,1"/>
-        <Setter Property="Background" Value="{StaticResource ChipBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-    </Style>
-
-    <Style x:Key="VersionChipText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
     </Style>
 
     <!-- List defaults (the lists themselves are declared in the window) -->

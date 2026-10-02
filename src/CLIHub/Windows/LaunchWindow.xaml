@@ -37,7 +37,7 @@
         <StackPanel>
 
             <!-- Inset top highlight (mockup chrome) -->
-            <Rectangle Height="1" Fill="#0DFFFFFF"/>
+            <Rectangle Height="1" Fill="{StaticResource TopHighlightBrush}"/>
 
             <!-- Panes -->
             <Grid x:Name="PanesGrid">
