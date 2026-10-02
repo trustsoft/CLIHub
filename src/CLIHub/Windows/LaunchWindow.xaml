@@ -1,4 +1,4 @@
-﻿<Window x:Class="CLIHub.Windows.LaunchWindow"
+<Window x:Class="CLIHub.Windows.LaunchWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -37,16 +37,16 @@
                 <Grid.ColumnDefinitions>
                     <!-- Projects pane hugs its list; the splitter still resizes it on drag, but never
                          below the width its list needs. -->
-                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.Width.MinProjectPane}"/>
+                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.ProjectPane.MinWidth}"/>
                     <!-- Optional splitter column: sized by the thumb, so the drag area is wider than the hairline. -->
                     <ColumnDefinition Width="Auto"/>
                     <!-- Agents pane and its rows are content sized too, so the window fits its content. -->
-                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.Width.MinAgentPane}"/>
+                    <ColumnDefinition Width="Auto" MinWidth="{StaticResource Sizing.AgentPane.MinWidth}"/>
                 </Grid.ColumnDefinitions>
 
                 <!-- Projects pane -->
                 <Border Grid.Column="0" Style="{StaticResource PaneSurface}">
-                    <DockPanel Margin="{StaticResource Sizing.PaneMargin}">
+                    <DockPanel Margin="{StaticResource Sizing.Pane.Margin}">
                         <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="PROJECTS"/>
                             <Button x:Name="ProjectsActionsButton"
@@ -91,12 +91,12 @@
 
                         <ListBox ItemContainerStyle="{StaticResource ProjectRowContainer}"
                                  ItemsSource="{Binding Projects}"
-                                 MinWidth="{StaticResource Sizing.Width.MinProjectList}"
+                                 MinWidth="{StaticResource Sizing.ProjectList.MinWidth}"
                                  SelectedItem="{Binding SelectedProject, Mode=TwoWay}"
                                  Style="{StaticResource PaneList}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="{StaticResource Sizing.Height.ProjectLogo}">
+                                    <Grid Height="{StaticResource Sizing.ProjectLogo.Height}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -106,13 +106,13 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Width="{StaticResource Sizing.Width.ProjectLogo}"
-                                                Height="{StaticResource Sizing.Height.ProjectLogo}"
+                                        <Border Width="{StaticResource Sizing.ProjectLogo.Width}"
+                                                Height="{StaticResource Sizing.ProjectLogo.Height}"
                                                 Background="{StaticResource ThumbBgBrush}"
                                                 BorderBrush="{StaticResource FieldStrokeBrush}"
                                                 BorderThickness="1"
-                                                CornerRadius="{StaticResource Sizing.CornerRadius.ProjectLogo}">
-                                            <Border Margin="1" CornerRadius="{StaticResource Sizing.CornerRadius.ProjectLogo}">
+                                                CornerRadius="{StaticResource Sizing.ProjectLogo.CornerRadius}">
+                                            <Border Margin="1" CornerRadius="{StaticResource Sizing.ProjectLogo.CornerRadius}">
                                                 <Border.Background>
                                                     <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
                                                                 Stretch="Uniform"/>
@@ -134,7 +134,7 @@
                                                        TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Text>
                                                     <MultiBinding Converter="{StaticResource PathDisplay}"
-                                                                  ConverterParameter="{StaticResource Sizing.ProjectRowTextInsets}">
+                                                                  ConverterParameter="{StaticResource Sizing.ProjectRow.TextInsets}">
                                                         <Binding Path="Path"/>
                                                         <!-- The list's measured width: the path is the elastic part of a row,
                                                              so it is trimmed to whatever the list currently offers. The list's
@@ -157,7 +157,7 @@
                                                    VerticalAlignment="Center"
                                                    FontSize="13"
                                                    Foreground="{StaticResource AccentBrush}"
-                                                   Text="â˜…"
+                                                   Text="★"
                                                    Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}"/>
                                     </Grid>
                                 </DataTemplate>
@@ -171,7 +171,7 @@
                 <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center" Fill="{StaticResource FieldStrokeBrush}"/>
                 <Rectangle x:Name="PaneSplitter"
                            Grid.Column="1"
-                           Width="{StaticResource Sizing.SplitterHitWidth}"
+                           Width="{StaticResource Sizing.Splitter.HitWidth}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Stretch"
                            Cursor="SizeWE"
@@ -179,7 +179,7 @@
 
                 <!-- Agents pane -->
                 <Border Grid.Column="2" Style="{StaticResource PaneSurface}">
-                    <DockPanel Margin="{StaticResource Sizing.PaneMargin}">
+                    <DockPanel Margin="{StaticResource Sizing.Pane.Margin}">
                         <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="AGENTS"/>
                             <Button x:Name="AgentsActionsButton"
@@ -250,7 +250,7 @@
                                  Style="{StaticResource PaneList}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="{StaticResource Sizing.Height.AgentRow}" Opacity="{Binding RowOpacity}">
+                                    <Grid Height="{StaticResource Sizing.AgentRow.Height}" Opacity="{Binding RowOpacity}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -260,16 +260,16 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Image Width="{StaticResource Sizing.Width.AgentLogo}"
-                                               Height="{StaticResource Sizing.Height.AgentLogo}"
+                                        <Image Width="{StaticResource Sizing.AgentLogo.Width}"
+                                               Height="{StaticResource Sizing.AgentLogo.Height}"
                                                VerticalAlignment="Center"
                                                RenderOptions.BitmapScalingMode="HighQuality"
                                                Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
                                                Stretch="Uniform"/>
 
                                         <StackPanel Grid.Column="1"
-                                                    Margin="{StaticResource Sizing.Margin.AgentRowText}"
-                                                    MaxWidth="{StaticResource Sizing.Width.MaxAgentText}"
+                                                    Margin="{StaticResource Sizing.AgentRow.TextMargin}"
+                                                    MaxWidth="{StaticResource Sizing.AgentRow.TextMaxWidth}"
                                                     VerticalAlignment="Center">
                                             <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
                                                        Foreground="{StaticResource TextPrimaryBrush}"
@@ -324,7 +324,7 @@
             <Rectangle Height="1" Margin="12,0" Fill="{StaticResource HairlineBrush}"/>
 
             <!-- Footer: brand and version left, update check beside it, status centered, actions right -->
-            <Grid Height="{StaticResource Sizing.Height.Footer}" Background="{StaticResource StripBgBrush}">
+            <Grid Height="{StaticResource Sizing.Footer.Height}" Background="{StaticResource StripBgBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>

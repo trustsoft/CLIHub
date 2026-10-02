@@ -4,10 +4,12 @@
 
     <!--
         Sizing tokens shared by the dark-chrome windows. Structural metrics live here so layout
-        changes are made in one place; naming follows Sizing.<Group>.<Token>.
+        changes are made in one place. Naming: Sizing.<Object>.<Property> for object-bound tokens
+        (Sizing.ActionButton.Height), Sizing.<Role> for shared roles (Sizing.FontSize.Body,
+        Sizing.CornerRadius.Chip).
     -->
 
-    <!-- Font sizes -->
+    <!-- Typographic roles -->
     <sys:Double x:Key="Sizing.FontSize.Section">11</sys:Double>
     <sys:Double x:Key="Sizing.FontSize.Body">12</sys:Double>
     <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
@@ -16,48 +18,50 @@
     <!-- Text font of the dark-chrome windows; Segoe UI Variable with a Segoe UI fallback -->
     <FontFamily x:Key="Sizing.FontFamily.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
 
-    <!-- Panes and window -->
-    <sys:Double x:Key="Sizing.Height.PaneHeader">32</sys:Double>
-    <sys:Double x:Key="Sizing.Height.WindowHeader">40</sys:Double>
-    <Thickness x:Key="Sizing.PaneMargin">10</Thickness>
-    <Thickness x:Key="Sizing.Margin.PaneHeader">0,0,0,4</Thickness>
-    <sys:Double x:Key="Sizing.MaxListHeight">434</sys:Double>
-    <sys:Double x:Key="Sizing.SplitterHitWidth">9</sys:Double>
-    <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->
-    <sys:Double x:Key="Sizing.Width.MinProjectList">300</sys:Double>
-    <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
-    <sys:Double x:Key="Sizing.Width.MinProjectPane">320</sys:Double>
-    <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
-    <sys:Double x:Key="Sizing.Width.MinAgentPane">260</sys:Double>
-    <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->
-    <sys:Double x:Key="Sizing.Width.MaxAgentText">240</sys:Double>
+    <!-- Panes, headers, footer and window chrome -->
+    <Thickness x:Key="Sizing.Pane.Margin">10</Thickness>
+    <sys:Double x:Key="Sizing.PaneHeader.Height">32</sys:Double>
+    <Thickness x:Key="Sizing.PaneHeader.Margin">0,0,0,4</Thickness>
+    <sys:Double x:Key="Sizing.WindowHeader.Height">40</sys:Double>
+    <sys:Double x:Key="Sizing.Footer.Height">42</sys:Double>
+    <sys:Double x:Key="Sizing.Splitter.HitWidth">9</sys:Double>
+    <sys:Double x:Key="Sizing.PaneList.MaxHeight">434</sys:Double>
 
-    <!-- Rows -->
-    <sys:Double x:Key="Sizing.Height.AgentRow">60</sys:Double>
+    <!-- Pane and list minimums -->
+    <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->
+    <sys:Double x:Key="Sizing.ProjectList.MinWidth">300</sys:Double>
+    <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
+    <sys:Double x:Key="Sizing.ProjectPane.MinWidth">320</sys:Double>
+    <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
+    <sys:Double x:Key="Sizing.AgentPane.MinWidth">260</sys:Double>
+
+    <!-- List rows -->
+    <sys:Double x:Key="Sizing.AgentRow.Height">60</sys:Double>
     <!-- Square project-logo thumbnail in a Projects list row -->
-    <sys:Double x:Key="Sizing.Height.ProjectLogo">42</sys:Double>
-    <sys:Double x:Key="Sizing.Width.ProjectLogo">42</sys:Double>
-    <sys:Double x:Key="Sizing.Height.AgentLogo">28</sys:Double>
-    <sys:Double x:Key="Sizing.Width.AgentLogo">28</sys:Double>
+    <sys:Double x:Key="Sizing.ProjectLogo.Height">42</sys:Double>
+    <sys:Double x:Key="Sizing.ProjectLogo.Width">42</sys:Double>
+    <CornerRadius x:Key="Sizing.ProjectLogo.CornerRadius">9</CornerRadius>
+    <sys:Double x:Key="Sizing.AgentLogo.Height">28</sys:Double>
+    <sys:Double x:Key="Sizing.AgentLogo.Width">28</sys:Double>
     <!-- Right inset of row content: 12px, so row text uses the full row width. -->
-    <Thickness x:Key="Sizing.Padding.ProjectRow">12,9</Thickness>
-    <Thickness x:Key="Sizing.Padding.AgentRow">10,0,10,0</Thickness>
+    <Thickness x:Key="Sizing.ProjectRow.Padding">12,9</Thickness>
+    <Thickness x:Key="Sizing.AgentRow.Padding">10,0,10,0</Thickness>
     <!-- Gap between an agent's text and its action buttons. -->
-    <Thickness x:Key="Sizing.Margin.AgentRowText">14,0,24,0</Thickness>
+    <Thickness x:Key="Sizing.AgentRow.TextMargin">14,0,24,0</Thickness>
+    <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->
+    <sys:Double x:Key="Sizing.AgentRow.TextMaxWidth">240</sys:Double>
     <!-- Insets the project row's text does not get: row padding, thumbnail and text margin. The
          favourite marker's width is added by PathDisplayConverter when the project is a favourite. -->
-    <sys:Double x:Key="Sizing.ProjectRowTextInsets">81</sys:Double>
+    <sys:Double x:Key="Sizing.ProjectRow.TextInsets">81</sys:Double>
 
-    <!-- Buttons and footer -->
-    <sys:Double x:Key="Sizing.Height.ActionButton">28</sys:Double>
-    <sys:Double x:Key="Sizing.Width.ActionButton">28</sys:Double>
-    <sys:Double x:Key="Sizing.Height.IconButton">26</sys:Double>
-    <sys:Double x:Key="Sizing.Width.IconButton">30</sys:Double>
-    <sys:Double x:Key="Sizing.Height.Footer">42</sys:Double>
+    <!-- Buttons -->
+    <sys:Double x:Key="Sizing.ActionButton.Height">28</sys:Double>
+    <sys:Double x:Key="Sizing.ActionButton.Width">28</sys:Double>
+    <sys:Double x:Key="Sizing.IconButton.Height">26</sys:Double>
+    <sys:Double x:Key="Sizing.IconButton.Width">30</sys:Double>
 
-    <!-- Corner radii -->
+    <!-- Shape roles (shared corner-radius vocabulary) -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
-    <CornerRadius x:Key="Sizing.CornerRadius.ProjectLogo">9</CornerRadius>
 
 </ResourceDictionary>

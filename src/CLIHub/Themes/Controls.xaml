@@ -62,7 +62,7 @@
 
     <!-- Header strip of a drawn-chrome window: drag area behind the title and close button -->
     <Style x:Key="WindowHeader" TargetType="Grid">
-        <Setter Property="Height" Value="{StaticResource Sizing.Height.WindowHeader}"/>
+        <Setter Property="Height" Value="{StaticResource Sizing.WindowHeader.Height}"/>
         <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
     </Style>
 
@@ -131,8 +131,8 @@
 
     <!-- Close button of a drawn-chrome window: the counterpart of the OS close box -->
     <Style x:Key="WindowCloseButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
-        <Setter Property="Width" Value="{StaticResource Sizing.Width.IconButton}"/>
-        <Setter Property="Height" Value="{StaticResource Sizing.Height.IconButton}"/>
+        <Setter Property="Width" Value="{StaticResource Sizing.IconButton.Width}"/>
+        <Setter Property="Height" Value="{StaticResource Sizing.IconButton.Height}"/>
         <Setter Property="Margin" Value="0,0,8,0"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
