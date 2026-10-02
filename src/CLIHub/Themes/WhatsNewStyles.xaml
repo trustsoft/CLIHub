@@ -10,88 +10,17 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Controls.xaml"/>
         <ResourceDictionary Source="/Themes/DarkTooltips.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
-    <!-- Drawn header: the title bar this window does not get from the OS -->
-    <Style x:Key="NotesHeader" TargetType="Grid">
-        <Setter Property="Height" Value="40"/>
-        <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
-    </Style>
-
-    <Style x:Key="NotesTitle" TargetType="TextBlock">
-        <Setter Property="Margin" Value="14,0,0,0"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-    </Style>
-
-    <!-- Close button, the counterpart of the OS close box the drawn chrome replaces -->
-    <Style x:Key="NotesCloseButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Width" Value="{StaticResource Sizing.Width.IconButton}"/>
-        <Setter Property="Height" Value="{StaticResource Sizing.Height.IconButton}"/>
-        <Setter Property="Margin" Value="0,0,8,0"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Background="Transparent">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
     <!-- Install action for an available update: a quiet chip that turns into the accent color -->
-    <Style x:Key="NotesInstallButton" TargetType="Button">
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Style x:Key="NotesInstallButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Margin" Value="0,0,8,0"/>
         <Setter Property="Padding" Value="12,5"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            BorderBrush="{StaticResource ChipStrokeBrush}"
-                            BorderThickness="1"
-                            Background="{StaticResource ChipBgBrush}"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                            <Setter Property="Cursor" Value="Arrow"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!-- Release note section: version, its date, then its non-empty groups -->

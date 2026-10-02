@@ -44,8 +44,8 @@
             <!-- Drawn header: the title bar a chromeless window does not get from the OS -->
             <Grid Grid.Row="0"
                   MouseLeftButtonDown="OnHeaderMouseDown"
-                  Style="{StaticResource NotesHeader}">
-                <TextBlock Style="{StaticResource NotesTitle}" Text="What's New"/>
+                  Style="{StaticResource WindowHeader}">
+                <TextBlock Style="{StaticResource WindowTitle}" Text="What's New"/>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                     <Button Click="OnInstallClick"
                             Content="{Binding InstallActionText}"
@@ -57,11 +57,11 @@
                         </Button.ToolTip>
                     </Button>
                     <Button Click="OnCloseClick"
-                            Style="{StaticResource NotesCloseButton}">
+                            Style="{StaticResource WindowCloseButton}">
                         <Button.ToolTip>
                             <ToolTip Content="Close" Style="{StaticResource DarkToolTip}"/>
                         </Button.ToolTip>
-                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="14" Text="&#xE711;"/>
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
                     </Button>
                 </StackPanel>
             </Grid>
