@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:themes="clr-namespace:CLIHub.Themes"
         mc:Ignorable="d"
         Title="Settings"
         Background="{StaticResource ChromeBgBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="{StaticResource Sizing.FontFamily.Text}"
         Height="480" Width="420"
         MinHeight="480" MinWidth="420"
         KeyDown="OnKeyDown"
@@ -49,7 +50,7 @@
                         Click="OnCloseClick"
                         Style="{StaticResource WindowCloseButton}"
                         ToolTip="Close">
-                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
+                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="{x:Static themes:IconGlyphs.Close}"/>
                 </Button>
             </Grid>
 

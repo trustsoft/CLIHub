@@ -13,6 +13,8 @@
     <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
     <!-- Font for Segoe MDL2 Assets glyphs (menu icons, footer icons, drawn glyph buttons) -->
     <FontFamily x:Key="Sizing.FontFamily.Icon">Segoe MDL2 Assets</FontFamily>
+    <!-- Text font of the dark-chrome windows; Segoe UI Variable with a Segoe UI fallback -->
+    <FontFamily x:Key="Sizing.FontFamily.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
 
     <!-- Panes and window -->
     <sys:Double x:Key="Sizing.Height.PaneHeader">32</sys:Double>

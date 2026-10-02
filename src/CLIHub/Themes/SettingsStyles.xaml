@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:themes="clr-namespace:CLIHub.Themes">
 
     <!--
         Settings window styles. Merged from SettingsWindow.xaml (not from App.xaml) so styling
@@ -128,7 +129,7 @@
                                        FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                        FontSize="11"
                                        Foreground="{StaticResource AccentBrush}"
-                                       Text="&#xE73E;"
+                                       Text="{x:Static themes:IconGlyphs.Checkmark}"
                                        Visibility="Collapsed"/>
                         </Border>
                         <ContentPresenter Margin="9,0,0,0"

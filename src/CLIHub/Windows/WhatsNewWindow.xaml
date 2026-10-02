@@ -3,10 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:themes="clr-namespace:CLIHub.Themes"
         mc:Ignorable="d"
         Title="What's New"
         Background="{StaticResource ChromeBgBrush}"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="{StaticResource Sizing.FontFamily.Text}"
         Height="620" Width="520"
         MinHeight="280" MinWidth="380"
         KeyDown="OnKeyDown"
@@ -51,7 +52,7 @@
                     <Button Click="OnCloseClick"
                             Style="{StaticResource WindowCloseButton}"
                             ToolTip="Close">
-                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="&#xE711;"/>
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="{x:Static themes:IconGlyphs.Close}"/>
                     </Button>
                 </StackPanel>
             </Grid>
