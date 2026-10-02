@@ -34,8 +34,9 @@
 
     <!-- Rows -->
     <sys:Double x:Key="Sizing.Height.AgentRow">60</sys:Double>
-    <sys:Double x:Key="Sizing.Height.Thumb">42</sys:Double>
-    <sys:Double x:Key="Sizing.Width.Thumb">42</sys:Double>
+    <!-- Square project-logo thumbnail in a Projects list row -->
+    <sys:Double x:Key="Sizing.Height.ProjectLogo">42</sys:Double>
+    <sys:Double x:Key="Sizing.Width.ProjectLogo">42</sys:Double>
     <sys:Double x:Key="Sizing.Height.AgentLogo">28</sys:Double>
     <sys:Double x:Key="Sizing.Width.AgentLogo">28</sys:Double>
     <!-- Right inset of row content: 12px, so row text uses the full row width. -->
@@ -57,6 +58,6 @@
     <!-- Corner radii -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
-    <CornerRadius x:Key="Sizing.CornerRadius.Thumb">9</CornerRadius>
+    <CornerRadius x:Key="Sizing.CornerRadius.ProjectLogo">9</CornerRadius>
 
 </ResourceDictionary>

@@ -96,7 +96,7 @@
                                  Style="{StaticResource PaneList}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid Height="{StaticResource Sizing.Height.Thumb}">
+                                    <Grid Height="{StaticResource Sizing.Height.ProjectLogo}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
@@ -106,13 +106,13 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <Border Width="{StaticResource Sizing.Width.Thumb}"
-                                                Height="{StaticResource Sizing.Height.Thumb}"
+                                        <Border Width="{StaticResource Sizing.Width.ProjectLogo}"
+                                                Height="{StaticResource Sizing.Height.ProjectLogo}"
                                                 Background="{StaticResource ThumbBgBrush}"
                                                 BorderBrush="{StaticResource FieldStrokeBrush}"
                                                 BorderThickness="1"
-                                                CornerRadius="{StaticResource Sizing.CornerRadius.Thumb}">
-                                            <Border Margin="1" CornerRadius="{StaticResource Sizing.CornerRadius.Thumb}">
+                                                CornerRadius="{StaticResource Sizing.CornerRadius.ProjectLogo}">
+                                            <Border Margin="1" CornerRadius="{StaticResource Sizing.CornerRadius.ProjectLogo}">
                                                 <Border.Background>
                                                     <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
                                                                 Stretch="Uniform"/>
