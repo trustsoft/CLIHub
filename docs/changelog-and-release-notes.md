@@ -2,6 +2,9 @@
 
 **Status:** Implemented by the `release-notes` change (`openspec/changes/archive/2026-09-30-release-notes/`): the two documents,
 the embedded notes and their parser, the **What's New** window, and the one-time display after an upgrade.
+The deferred CI / `vpk --releaseNotes` wiring was delivered by the `ci-cd-release` change
+(`openspec/changes/archive/2026-10-03-ci-cd-release/`); the release procedure itself lives in
+[releasing.md](releasing.md).
 This document remains the rationale behind the decisions below; the durable behavior lives in the
 `release-notes` and `release-notes-display` specs, and the file format is described in
 [architecture.md](architecture.md#release-notes).
@@ -87,7 +90,7 @@ An OpenSpec change, `release-notes`, that:
 
 - adds `CHANGELOG.md` (technical) and `RELEASE-NOTES.md` (user-facing), seeded with the current version;
 - adds a capability `release-notes-display`: embed the notes, `IReleaseNotesService` (parse), and a **"What's New"** window reachable from the tray;
-- defers CI / `vpk --releaseNotes` wiring to the packaging change.
+- defers CI / `vpk --releaseNotes` wiring to the packaging change (delivered: `ci-cd-release`, 2026-10-03).
 
 ## Decision log
 

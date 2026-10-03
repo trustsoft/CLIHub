@@ -104,3 +104,9 @@ use these terms with these meanings.
 - **Update** — the Velopack-based self-update: a check on startup (with a tray notification) and
   on demand; **Download and restart** fetches the update and relaunches CLIHub into it. See
   [update-checking](../openspec/specs/update-checking/spec.md).
+- **Release pipeline** — the tag-driven GitHub Actions workflow (`release.yml`) that tests the tagged
+  commit, packages it with `vpk`, and publishes the release to GitHub Releases; the update feed the
+  application checks against. See [release-pipeline](../openspec/specs/release-pipeline/spec.md) and
+  [releasing.md](releasing.md).
+- **Release runbook** — the maintainer procedure for cutting a release: write the notes, push the
+  `v*` tag, verify. See [releasing.md](releasing.md).

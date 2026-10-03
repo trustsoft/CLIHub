@@ -2,7 +2,7 @@
 
 ## Project Status
 
-**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking (check, download, apply), preferences window, window layout, launch window theme, settings theme, release notes, release notes display.
+**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, detection, version display, availability display/filtering, app lifecycle, hotkey support, logging, plugin seeding, project management, update checking (check, download, apply), preferences window, window layout, launch window theme, settings theme, release notes, release notes display, CI build checks, tag-driven release pipeline.
 
 ## Documentation
 
@@ -13,7 +13,8 @@ Single source of truth for each topic — link, don't duplicate:
 - `docs/glossary.md` — canonical terminology (project, agent, plugin, agent command, availability); use these terms in docs, specs, and code
 - `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
 - `docs/repo-structure.md` — repository layout (where everything lives)
-- `docs/changelog-and-release-notes.md` — changelog & release-notes plan (draft, decision pending)
+- `docs/changelog-and-release-notes.md` — changelog & release-notes rationale and decision log (implemented)
+- `docs/releasing.md` — step-by-step release runbook (notes, tag, verification, rollback)
 - `openspec/specs/` — durable capability specs; `openspec/changes/archive/` — completed changes
 
 ## Project Structure

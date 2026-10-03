@@ -11,6 +11,10 @@ configuration is marked `**BREAKING**`. Capability names in parentheses refer to
 
 ### Added
 
+- CI and release pipeline: build-and-test workflow on every pull request and push to `master`, and a
+  tag-driven release workflow that tests, packages with `vpk` (framework-dependent win-x64 with a
+  .NET 8 Desktop Runtime bootstrap), and publishes to GitHub Releases (`ci-build`, `release-pipeline`)
+- Release runbook and pipeline documentation (`docs/releasing.md`, `docs/architecture.md → Packaging & CI/CD`)
 - Downloading and applying updates from the tray: a one-click download-and-restart action in the tray menu
   and the What's New window, with a downloading state in the menu, completion and failure notifications, and
   a guard against concurrent downloads (`update-checking`)
@@ -23,6 +27,8 @@ configuration is marked `**BREAKING**`. Capability names in parentheses refer to
 
 ### Changed
 
+- The update feed points at the real repository (`trustsoft/clihub`) instead of the `your-org/clihub`
+  placeholder, so installed builds resolve the live GitHub Releases source (`update-checking`)
 - The slim dark scrollbar is now an application-level style (it must live there to reach the scrollbars
   inside templates) and shrank to 4px, so the launch window lists, Settings, and What's New scroll
   consistently
