@@ -15,14 +15,18 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB7D91EA-850B-4DE3-8820-649DBE3026AE}"
 	ProjectSection(SolutionItems) = preProject
 		AGENTS.md = AGENTS.md
-		CHANGELOG.md = CHANGELOG.md
 		docs\architecture.md = docs\architecture.md
-		docs\changelog-and-release-notes.md = docs\changelog-and-release-notes.md
 		docs\glossary.md = docs\glossary.md
-		docs\releasing.md = docs\releasing.md
 		docs\repo-structure.md = docs\repo-structure.md
 		docs\vision.md = docs\vision.md
 		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "release", "release", "{1E76BAC6-7F4E-4E5D-A93A-24BE5B1D032C}"
+	ProjectSection(SolutionItems) = preProject
+		CHANGELOG.md = CHANGELOG.md
+		docs\changelog-and-release-notes.md = docs\changelog-and-release-notes.md
+		docs\releasing.md = docs\releasing.md
 		RELEASE-NOTES.md = RELEASE-NOTES.md
 	EndProjectSection
 EndProject
@@ -75,6 +79,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E} = {6E1BB30C-BDF9-4AE0-93F6-EA07A032CF26}
+		{1E76BAC6-7F4E-4E5D-A93A-24BE5B1D032C} = {BB7D91EA-850B-4DE3-8820-649DBE3026AE}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
