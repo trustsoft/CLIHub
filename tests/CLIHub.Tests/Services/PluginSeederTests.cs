@@ -113,3 +113,4 @@ public class PluginSeederTests : IDisposable
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Name)));
     }
 }
+

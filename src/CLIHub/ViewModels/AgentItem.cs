@@ -5,44 +5,54 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 /// <summary>
-/// Display item for an agent row in the launch window.
+///   Display item for an agent row in the launch window.
 /// </summary>
 public sealed class AgentItem : INotifyPropertyChanged
 {
     private string _version = "…";
 
+    /// <summary>
+    ///   The agent plugin this row represents.
+    /// </summary>
     public required Plugin Plugin { get; init; }
+
+    /// <summary>
+    ///   The agent display name.
+    /// </summary>
     public required string Name { get; init; }
 
     /// <summary>
-    /// Availability summary (host install and project usage).
+    ///   Availability summary (host install and project usage).
     /// </summary>
     public string Status { get; init; } = string.Empty;
 
+    /// <summary>
+    ///   Optional path to the agent's logo image.
+    /// </summary>
     public string? LogoPath { get; init; }
 
     /// <summary>
-    /// Whether the agent is available in the current project (or no project is selected).
+    ///   Whether the agent is available in the current project (or no project is selected).
     /// </summary>
     public bool IsAvailable { get; init; } = true;
 
     /// <summary>
-    /// Whether the agent defines the launch command.
+    ///   Whether the agent defines the launch command.
     /// </summary>
     public bool CanLaunch => Plugin.Commands?.Get(AgentCommandKind.Launch) != null;
 
     /// <summary>
-    /// Whether the agent defines the resume command.
+    ///   Whether the agent defines the resume command.
     /// </summary>
     public bool CanResume => Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
 
     /// <summary>
-    /// Row opacity: normal when available, dimmed when not.
+    ///   Row opacity: normal when available, dimmed when not.
     /// </summary>
     public double RowOpacity => IsAvailable ? 1.0 : 0.4;
 
     /// <summary>
-    /// Version string; starts as a placeholder and updates when resolved.
+    ///   Version string; starts as a placeholder and updates when resolved.
     /// </summary>
     public string Version
     {
@@ -59,6 +69,7 @@ public sealed class AgentItem : INotifyPropertyChanged
         }
     }
 
+    /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>

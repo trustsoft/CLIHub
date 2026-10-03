@@ -3,7 +3,7 @@ namespace CLIHub.Tests.Services;
 using CLIHub.Core.Services;
 
 /// <summary>
-/// In-memory <see cref="IStartupRegistry"/> for tests.
+///   In-memory <see cref="IStartupRegistry"/> for tests.
 /// </summary>
 public sealed class FakeStartupRegistry : IStartupRegistry
 {

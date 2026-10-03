@@ -5,8 +5,8 @@ using System.Windows;
 using System.Windows.Interop;
 
 /// <summary>
-/// Places the launch window on the monitor that currently contains the pointer, without
-/// depending on Windows Forms.
+///   Places the launch window on the monitor that currently contains the pointer, without
+///   depending on Windows Forms.
 /// </summary>
 internal static class WindowPositioner
 {
@@ -17,7 +17,7 @@ internal static class WindowPositioner
     private const double MinimumHeight = 240d;
 
     /// <summary>
-    /// Returns the work area of the monitor containing the pointer, in device-independent units.
+    ///   Returns the work area of the monitor containing the pointer, in device-independent units.
     /// </summary>
     internal static Rect GetPointerMonitorWorkArea(Window window)
     {
@@ -36,10 +36,10 @@ internal static class WindowPositioner
     }
 
     /// <summary>
-    /// Centres the window in the pointer's monitor work area and caps its height to that area.
-    /// The move itself is done in native screen coordinates: the window and the monitor work area
-    /// are both measured by the operating system, so the result stays correct when the monitors
-    /// use different scale factors.
+    ///   Centres the window in the pointer's monitor work area and caps its height to that area.
+    ///   The move itself is done in native screen coordinates: the window and the monitor work area
+    ///   are both measured by the operating system, so the result stays correct when the monitors
+    ///   use different scale factors.
     /// </summary>
     internal static void PlaceOnPointerMonitor(Window window)
     {
@@ -76,8 +76,8 @@ internal static class WindowPositioner
     }
 
     /// <summary>
-    /// Fallback used before layout has produced a window rectangle: places the window using its
-    /// own device-independent size.
+    ///   Fallback used before layout has produced a window rectangle: places the window using its
+    ///   own device-independent size.
     /// </summary>
     private static void PlaceUsingLayout(Window window)
     {

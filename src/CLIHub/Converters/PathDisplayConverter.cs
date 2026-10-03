@@ -9,23 +9,33 @@ using System.Windows.Data;
 using System.Windows.Media;
 
 /// <summary>
-/// Shortens a project path so that it fits the width available in a row, using the configured
-/// path display style. The longest fitting form is found by measuring candidate texts with the
-/// row's own typeface, so the row is filled without clipping.
+///   Shortens a project path so that it fits the width available in a row, using the configured
+///   path display style. The longest fitting form is found by measuring candidate texts with the
+///   row's own typeface, so the row is filled without clipping.
 /// </summary>
 public sealed class PathDisplayConverter : IMultiValueConverter
 {
     /// <summary>
-    /// Width reserved for the favourite marker when the project is a favourite, so the path never
-    /// runs into it: the 13px glyph plus its 8px margin in the project row template.
+    ///   Width reserved for the favourite marker when the project is a favourite, so the path never
+    ///   runs into it: the 13px glyph plus its 8px margin in the project row template.
     /// </summary>
     private const double FavouriteMarkerWidth = 21d;
 
     /// <summary>
-    /// Fallback character width, used only when no text element is available for measuring.
+    ///   Fallback character width, used only when no text element is available for measuring.
     /// </summary>
     private const double FallbackCharacterWidth = 6.5d;
 
+    /// <summary>
+    ///   Shortens the path text to the available row width using the configured display style.
+    /// </summary>
+    /// <param name="values">
+    ///   Path text, list width, display style, favourite flag, and the measuring <see cref="TextBlock"/>.
+    /// </param>
+    /// <param name="targetType"> The target type of the binding. </param>
+    /// <param name="parameter"> Row insets as a comma-separated list of pixel widths. </param>
+    /// <param name="culture"> Unused. </param>
+    /// <returns> The text, shortened when needed; empty for missing text. </returns>
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
     {
         if (values.Length == 0 || values[0] is not string text || string.IsNullOrEmpty(text))
@@ -66,6 +76,9 @@ public sealed class PathDisplayConverter : IMultiValueConverter
             : Format(text, budget, style);
     }
 
+    /// <summary>
+    ///   Not supported; the converter is used in one-way bindings only.
+    /// </summary>
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 
@@ -75,7 +88,7 @@ public sealed class PathDisplayConverter : IMultiValueConverter
             : PathLeftTrimFormatter.Format(text, budget);
 
     /// <summary>
-    /// Returns the largest character budget whose formatted text still fits the available width.
+    ///   Returns the largest character budget whose formatted text still fits the available width.
     /// </summary>
     private static int FindLargestFittingBudget(string text, double available, PathDisplayStyle style, TextBlock textBlock)
     {

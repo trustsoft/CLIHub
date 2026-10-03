@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 /// <summary>
-/// Seeds the plugins folder from descriptors and logos embedded in this assembly.
+///   Seeds the plugins folder from descriptors and logos embedded in this assembly.
 /// </summary>
 public class PluginSeeder : IPluginSeeder
 {
@@ -16,6 +16,9 @@ public class PluginSeeder : IPluginSeeder
     private readonly ILogger<PluginSeeder> _logger;
     private readonly string _pluginsPath;
 
+    /// <summary>
+    ///   Creates the seeder for the given plugins root.
+    /// </summary>
     public PluginSeeder(ILogger<PluginSeeder> logger, string? pluginsPath = null)
     {
         _logger = logger;
@@ -25,6 +28,7 @@ public class PluginSeeder : IPluginSeeder
             "plugins");
     }
 
+    /// <inheritdoc />
     public int SeedIfEmpty()
     {
         try

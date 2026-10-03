@@ -1,22 +1,22 @@
 namespace CLIHub.Core.Formatting;
 
 /// <summary>
-/// Shortens text to fit a maximum length while keeping both the beginning and the end
-/// of the original text visible. Preferred break characters (path separators) are used
-/// to cut at a segment boundary when one is available inside the trimmed region.
+///   Shortens text to fit a maximum length while keeping both the beginning and the end
+///   of the original text visible. Preferred break characters (path separators) are used
+///   to cut at a segment boundary when one is available inside the trimmed region.
 /// </summary>
 public static class MiddleEllipsisFormatter
 {
     /// <summary>
-    /// Character that marks the removed middle part.
+    ///   Character that marks the removed middle part.
     /// </summary>
     public const char Ellipsis = '…';
 
     private static readonly char[] BreakCharacters = ['\\', '/'];
 
     /// <summary>
-    /// Returns <paramref name="text"/> shortened to at most <paramref name="maxLength"/>
-    /// characters, or the text unchanged when it already fits.
+    ///   Returns <paramref name="text"/> shortened to at most <paramref name="maxLength"/>
+    ///   characters, or the text unchanged when it already fits.
     /// </summary>
     public static string Format(string? text, int maxLength)
     {
@@ -52,8 +52,8 @@ public static class MiddleEllipsisFormatter
     }
 
     /// <summary>
-    /// Keeps the head up to and including its last break character, so the shortened
-    /// text does not show a partially cut segment name.
+    ///   Keeps the head up to and including its last break character, so the shortened
+    ///   text does not show a partially cut segment name.
     /// </summary>
     private static string ShortenHead(ReadOnlySpan<char> head)
     {
@@ -65,8 +65,8 @@ public static class MiddleEllipsisFormatter
     }
 
     /// <summary>
-    /// Drops everything up to and including the first break character of the tail, so the
-    /// shortened text resumes at a segment boundary.
+    ///   Drops everything up to and including the first break character of the tail, so the
+    ///   shortened text resumes at a segment boundary.
     /// </summary>
     private static string ShortenTail(ReadOnlySpan<char> tail)
     {

@@ -47,3 +47,4 @@ public class ServiceCollectionExtensionsTests
         Assert.Equal("custom-logo.png", projects.DefaultLogoPath);
     }
 }
+

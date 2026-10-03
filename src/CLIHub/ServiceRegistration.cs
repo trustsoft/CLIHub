@@ -11,10 +11,15 @@ using Serilog;
 using System.IO;
 
 /// <summary>
-/// Registers CLIHub services for the WPF application.
+///   Registers CLIHub services for the WPF application.
 /// </summary>
 public static class ServiceRegistration
 {
+    /// <summary>
+    ///   Registers the WPF application's services (windows, view models, tray, hotkey).
+    /// </summary>
+    /// <param name="services"> The service collection to configure. </param>
+    /// <returns> The configured service collection. </returns>
     public static IServiceCollection AddClIHubServices(this IServiceCollection services)
     {
         services.AddClIHubCoreServices(

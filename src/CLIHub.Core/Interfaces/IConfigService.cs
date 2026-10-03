@@ -3,36 +3,36 @@ namespace CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// Service for loading and saving application configuration
+///   Provides access to the application configuration.
 /// </summary>
 public interface IConfigService
 {
     /// <summary>
-    /// Load configuration from disk
+    ///   Loads the configuration from disk.
     /// </summary>
-    /// <returns>Loaded configuration, or default config if file doesn't exist</returns>
+    /// <returns> The loaded configuration, or the default configuration when the file does not exist. </returns>
     AppConfig Load();
 
     /// <summary>
-    /// Save configuration to disk
+    ///   Saves the configuration to disk.
     /// </summary>
-    /// <param name="config">Configuration to save</param>
+    /// <param name="config"> The configuration to save. </param>
     void Save(AppConfig config);
 
     /// <summary>
-    /// Get the currently selected project
+    ///   Gets the currently selected project.
     /// </summary>
-    /// <returns>Current project, or null if none selected</returns>
+    /// <returns> The current project, or null when none is selected. </returns>
     Project? GetCurrentProject();
 
     /// <summary>
-    /// Set the currently selected project
+    ///   Sets the currently selected project.
     /// </summary>
-    /// <param name="projectId">ID of project to select, or null to clear selection</param>
+    /// <param name="projectId"> The ID of the project to select, or null to clear the selection. </param>
     void SetCurrentProject(string? projectId);
 
     /// <summary>
-    /// Path to the config.json file
+    ///   The path to the config.json file.
     /// </summary>
     string ConfigFilePath { get; }
 }

@@ -6,23 +6,32 @@ using System.ComponentModel;
 using System.Windows;
 
 /// <summary>
-/// View model for the What's New window: the release notes in display order, with empty groups
-/// dropped so the window only shows what a version actually changed, plus the download-and-restart
-/// action for an available update. The action itself runs in <see cref="App"/>, so the tray menu
-/// and this window share one flow and one state.
+///   View model for the What's New window: the release notes in display order, with empty groups
+///   dropped so the window only shows what a version actually changed, plus the download-and-restart
+///   action for an available update. The action itself runs in <see cref="App"/>, so the tray menu
+///   and this window share one flow and one state.
 /// </summary>
 public sealed class WhatsNewViewModel : ObservableObject, IDisposable
 {
-    /// <summary>The group headings, in the order they are displayed.</summary>
+    /// <summary>
+    ///   The group headings, in the order they are displayed.
+    /// </summary>
     private static readonly string[] GroupLabels = { "New", "Improved", "Fixed" };
 
     private readonly IUpdateService _updates;
     private bool _isUpdateAvailable;
     private bool _isDownloading;
 
-    /// <summary>Raised when the user asks to download the update and restart.</summary>
+    /// <summary>
+    ///   Raised when the user asks to download the update and restart.
+    /// </summary>
     public event EventHandler? UpdateRequested;
 
+    /// <summary>
+    ///   Loads the release notes and subscribes to update-state changes.
+    /// </summary>
+    /// <param name="releaseNotes"> Release notes service. </param>
+    /// <param name="updates"> Update service used for the download action state. </param>
     public WhatsNewViewModel(IReleaseNotesService releaseNotes, IUpdateService updates)
     {
         _updates = updates;
@@ -34,17 +43,17 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// The release notes, newest version first.
+    ///   The release notes, newest version first.
     /// </summary>
     public IReadOnlyList<WhatsNewVersion> Versions { get; }
 
     /// <summary>
-    /// Whether there is nothing to show, so the window displays its empty message instead.
+    ///   Whether there is nothing to show, so the window displays its empty message instead.
     /// </summary>
     public bool HasNoNotes => Versions.Count == 0;
 
     /// <summary>
-    /// Whether an update is available to download.
+    ///   Whether an update is available to download.
     /// </summary>
     public bool IsUpdateAvailable
     {
@@ -53,7 +62,7 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Whether the update download is currently running; the install action is disabled then.
+    ///   Whether the update download is currently running; the install action is disabled then.
     /// </summary>
     public bool IsDownloading
     {
@@ -62,19 +71,19 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    /// Whether the install action can start a download right now.
+    ///   Whether the install action can start a download right now.
     /// </summary>
     public bool CanDownloadUpdate => IsUpdateAvailable && !IsDownloading;
 
     /// <summary>
-    /// The caption of the install action, naming the version or the running download.
+    ///   The caption of the install action, naming the version or the running download.
     /// </summary>
     public string InstallActionText => IsDownloading
         ? "Downloading update…"
         : $"Download {_updates.LastKnownAvailableVersion} and restart";
 
     /// <summary>
-    /// Asks the application to download the update and restart; ignored while a download runs.
+    ///   Asks the application to download the update and restart; ignored while a download runs.
     /// </summary>
     public void RequestInstallUpdate()
     {
@@ -84,6 +93,9 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>
+    ///   Unsubscribes from update-state changes.
+    /// </summary>
     public void Dispose()
     {
         _updates.UpdateStateChanged -= OnUpdateStateChanged;

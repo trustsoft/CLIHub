@@ -7,8 +7,8 @@ using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 /// <summary>
-/// Retrieves an agent's version by running its version command, with per-agent caching
-/// that expires after a configurable time-to-live, and a configurable probe timeout.
+///   Retrieves an agent's version by running its version command, with per-agent caching
+///   that expires after a configurable time-to-live, and a configurable probe timeout.
 /// </summary>
 public class AgentVersionService : IAgentVersionService
 {
@@ -23,6 +23,9 @@ public class AgentVersionService : IAgentVersionService
     private readonly TimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
 
+    /// <summary>
+    ///   Creates the service.
+    /// </summary>
     public AgentVersionService(
         IProcessLauncher processLauncher,
         IConfigService configService,
@@ -35,6 +38,7 @@ public class AgentVersionService : IAgentVersionService
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
+    /// <inheritdoc />
     public async Task<string?> GetVersionAsync(Plugin plugin, CancellationToken cancellationToken = default)
     {
         var now = _timeProvider.GetUtcNow();
@@ -68,6 +72,7 @@ public class AgentVersionService : IAgentVersionService
         return version;
     }
 
+    /// <inheritdoc />
     public void Invalidate() => _cache.Clear();
 
     private TimeSpan Ttl
@@ -89,8 +94,8 @@ public class AgentVersionService : IAgentVersionService
     }
 
     /// <summary>
-    /// Extracts the version number from command output (for example "1.0.88" from
-    /// "GitHub Copilot CLI 1.0.88."). Falls back to the first non-empty line.
+    ///   Extracts the version number from command output (for example "1.0.88" from
+    ///   "GitHub Copilot CLI 1.0.88."). Falls back to the first non-empty line.
     /// </summary>
     private static string? ExtractVersion(string output)
     {

@@ -5,15 +5,15 @@ using Serilog.Core;
 using Serilog.Events;
 
 /// <summary>
-/// Configures the Serilog file-logging pipeline.
+///   Configures the Serilog file-logging pipeline.
 /// </summary>
 public static class LoggingSetup
 {
     /// <summary>
-    /// Creates a file logger writing daily-rotated logs into <paramref name="logsDirectory"/>.
+    ///   Creates a file logger writing daily-rotated logs into <paramref name="logsDirectory"/>.
     /// </summary>
-    /// <param name="logsDirectory">Directory that receives the log files.</param>
-    /// <param name="minimumLevel">Minimum level to record.</param>
+    /// <param name="logsDirectory"> Directory that receives the log files. </param>
+    /// <param name="minimumLevel"> Minimum level to record. </param>
     public static Logger CreateLogger(string logsDirectory, LogEventLevel minimumLevel)
     {
         Directory.CreateDirectory(logsDirectory);

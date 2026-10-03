@@ -1,33 +1,48 @@
 namespace CLIHub.Core.Models;
 
 /// <summary>
-/// The shell/terminal used to run interactive agent commands.
+///   The shell/terminal used to run interactive agent commands.
 /// </summary>
 public enum RuntimeKind
 {
-    /// <summary>Windows Terminal (default).</summary>
+    /// <summary>
+    ///   Windows Terminal (default).
+    /// </summary>
     WindowsTerminal,
 
-    /// <summary>Windows Command Prompt.</summary>
+    /// <summary>
+    ///   Windows Command Prompt.
+    /// </summary>
     CommandPrompt,
 
-    /// <summary>PowerShell.</summary>
+    /// <summary>
+    ///   PowerShell.
+    /// </summary>
     PowerShell
 }
 
 /// <summary>
-/// Maps <see cref="RuntimeKind"/> to and from its stored token and resolves legacy
-/// terminal-executable values.
+///   Maps <see cref="RuntimeKind"/> to and from its stored token and resolves legacy
+///   terminal-executable values.
 /// </summary>
 public static class RuntimeKinds
 {
+    /// <summary>
+    ///   The configuration token for the Windows Terminal runtime.
+    /// </summary>
     public const string WindowsTerminalToken = "wt";
+    /// <summary>
+    ///   The configuration token for the Command Prompt runtime.
+    /// </summary>
     public const string CommandPromptToken = "cmd";
+    /// <summary>
+    ///   The configuration token for the PowerShell runtime.
+    /// </summary>
     public const string PowerShellToken = "ps";
 
     /// <summary>
-    /// Parses a runtime token or a legacy terminal executable name. Returns false for
-    /// null, empty, or unknown values.
+    ///   Parses a runtime token or a legacy terminal executable name. Returns false for
+    ///   null, empty, or unknown values.
     /// </summary>
     public static bool TryParse(string? value, out RuntimeKind kind)
     {
@@ -66,13 +81,13 @@ public static class RuntimeKinds
     }
 
     /// <summary>
-    /// Parses a runtime token, falling back to <see cref="RuntimeKind.WindowsTerminal"/>.
+    ///   Parses a runtime token, falling back to <see cref="RuntimeKind.WindowsTerminal"/>.
     /// </summary>
     public static RuntimeKind Parse(string? value) =>
         TryParse(value, out var kind) ? kind : RuntimeKind.WindowsTerminal;
 
     /// <summary>
-    /// Returns the stored token for a runtime.
+    ///   Returns the stored token for a runtime.
     /// </summary>
     public static string ToToken(RuntimeKind kind) => kind switch
     {

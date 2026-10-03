@@ -5,19 +5,23 @@ using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Executes named agent commands in a project folder.
+///   Executes named agent commands in a project folder.
 /// </summary>
 public class AgentCommandService : IAgentCommandService
 {
     private readonly IProcessLauncher _processLauncher;
     private readonly ILogger<AgentCommandService> _logger;
 
+    /// <summary>
+    ///   Creates the service.
+    /// </summary>
     public AgentCommandService(IProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
     {
         _processLauncher = processLauncher;
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public async Task<AgentCommandResult> ExecuteAsync(
         Plugin plugin,
         AgentCommandKind kind,

@@ -5,8 +5,8 @@ using CLIHub.Core.Models;
 using System.Collections.Concurrent;
 
 /// <summary>
-/// Detects agent availability using only file-system checks, caching results for a
-/// configurable time-to-live.
+///   Detects agent availability using only file-system checks, caching results for a
+///   configurable time-to-live.
 /// </summary>
 public class AgentDetectionService : IAgentDetectionService
 {
@@ -16,18 +16,24 @@ public class AgentDetectionService : IAgentDetectionService
     private readonly TimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
 
+    /// <summary>
+    ///   Creates the service with an optional time source for tests.
+    /// </summary>
     public AgentDetectionService(IConfigService configService, TimeProvider? timeProvider = null)
     {
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
+    /// <inheritdoc />
     public bool IsInstalledInSystem(Plugin plugin) =>
         GetOrCheck($"sys:{plugin.Id}", () => CheckSystem(plugin));
 
+    /// <inheritdoc />
     public bool IsAvailableInProject(Plugin plugin, string projectPath) =>
         GetOrCheck($"proj:{plugin.Id}:{projectPath}", () => CheckProject(plugin, projectPath));
 
+    /// <inheritdoc />
     public void Invalidate() => _cache.Clear();
 
     private bool GetOrCheck(string key, Func<bool> compute)

@@ -5,19 +5,21 @@ using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Reads the user-facing release notes embedded in this assembly and parses them into
-/// <see cref="ReleaseNote"/> records, ordered from the newest version to the oldest.
+///   Reads the user-facing release notes embedded in this assembly and parses them into
+///   <see cref="ReleaseNote"/> records, ordered from the newest version to the oldest.
 /// </summary>
 /// <remarks>
-/// The parser understands one shape only: a version section heading
-/// (<c>## &lt;version&gt; — &lt;date&gt;</c>, with an em dash, an en dash, or a hyphen as the separator)
-/// followed by the groups <c>### New</c>, <c>### Improved</c>, and <c>### Fixed</c> whose entries are
-/// list items. Titles, preambles, prose outside those groups, and prose under an unknown group are
-/// ignored. Entry text is kept as written.
+///   The parser understands one shape only: a version section heading
+///   (<c>## &lt;version&gt; — &lt;date&gt;</c>, with an em dash, an en dash, or a hyphen as the separator)
+///   followed by the groups <c>### New</c>, <c>### Improved</c>, and <c>### Fixed</c> whose entries are
+///   list items. Titles, preambles, prose outside those groups, and prose under an unknown group are
+///   ignored. Entry text is kept as written.
 /// </remarks>
 public class ReleaseNotesService : IReleaseNotesService
 {
-    /// <summary>Logical name of the embedded notes document, set by the project file.</summary>
+    /// <summary>
+    ///   Logical name of the embedded notes document, set by the project file.
+    /// </summary>
     internal const string ResourceName = "CLIHub.Core.ReleaseNotes.RELEASE-NOTES.md";
 
     private const string ResourceSuffix = "RELEASE-NOTES.md";
@@ -35,7 +37,7 @@ public class ReleaseNotesService : IReleaseNotesService
     private readonly Lazy<IReadOnlyList<ReleaseNote>> _notes;
 
     /// <summary>
-    /// Creates the service, reading the notes embedded in this assembly.
+    ///   Creates the service, reading the notes embedded in this assembly.
     /// </summary>
     public ReleaseNotesService(ILogger<ReleaseNotesService> logger)
         : this(logger, () => ReadEmbeddedNotes(logger))
@@ -43,7 +45,7 @@ public class ReleaseNotesService : IReleaseNotesService
     }
 
     /// <summary>
-    /// Test seam: parses caller-provided note text instead of the embedded document.
+    ///   Test seam: parses caller-provided note text instead of the embedded document.
     /// </summary>
     internal ReleaseNotesService(ILogger<ReleaseNotesService> logger, string? noteText)
         : this(logger, () => noteText)
@@ -56,14 +58,17 @@ public class ReleaseNotesService : IReleaseNotesService
         _notes = new Lazy<IReadOnlyList<ReleaseNote>>(() => Parse(readNotes()));
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<ReleaseNote> GetNotes() => _notes.Value;
 
+    /// <inheritdoc />
     public ReleaseNote? GetLatestNote()
     {
         var notes = GetNotes();
         return notes.Count > 0 ? notes[0] : null;
     }
 
+    /// <inheritdoc />
     public ReleaseNote? GetNote(string version)
     {
         if (string.IsNullOrWhiteSpace(version))
@@ -180,9 +185,9 @@ public class ReleaseNotesService : IReleaseNotesService
     }
 
     /// <summary>
-    /// Splits a section heading into its version and date. The documented separator is an em dash;
-    /// an en dash or a spaced hyphen is accepted as well so a hand-edited file still parses. A
-    /// version stays in one piece, so a prerelease such as "0.6.0-beta.1" is not split at its hyphen.
+    ///   Splits a section heading into its version and date. The documented separator is an em dash;
+    ///   an en dash or a spaced hyphen is accepted as well so a hand-edited file still parses. A
+    ///   version stays in one piece, so a prerelease such as "0.6.0-beta.1" is not split at its hyphen.
     /// </summary>
     private static bool TrySplitHeading(string heading, out string version, out string date)
     {
@@ -227,8 +232,8 @@ public class ReleaseNotesService : IReleaseNotesService
     }
 
     /// <summary>
-    /// Orders notes by version descending. A version that does not parse as a semantic version
-    /// keeps its document position at the end of the list instead of breaking the ordering.
+    ///   Orders notes by version descending. A version that does not parse as a semantic version
+    ///   keeps its document position at the end of the list instead of breaking the ordering.
     /// </summary>
     private static List<ReleaseNote> OrderByVersion(List<ReleaseNote> notes) =>
         notes
@@ -278,7 +283,7 @@ public class ReleaseNotesService : IReleaseNotesService
     }
 
     /// <summary>
-    /// A version section while it is being read from the document.
+    ///   A version section while it is being read from the document.
     /// </summary>
     private sealed class PendingNote
     {
@@ -297,8 +302,8 @@ public class ReleaseNotesService : IReleaseNotesService
         public string Date { get; }
 
         /// <summary>
-        /// Returns the list that a group heading collects into, or null for a group the
-        /// application does not show.
+        ///   Returns the list that a group heading collects into, or null for a group the
+        ///   application does not show.
         /// </summary>
         public List<string>? GroupFor(string name)
         {

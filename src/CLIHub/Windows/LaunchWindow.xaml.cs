@@ -12,15 +12,15 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 /// <summary>
-/// Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on
-/// top, hides when it loses focus unless pinned, and is centred on the pointer's monitor.
+///   Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on
+///   top, hides when it loses focus unless pinned, and is centred on the pointer's monitor.
 /// </summary>
 public partial class LaunchWindow : Window
 {
     /// <summary>
-    /// Window during which a deactivation right after showing is ignored: when Windows denies
-    /// foreground activation (showing from the tray or the hotkey), the freshly shown window would
-    /// otherwise hide itself immediately.
+    ///   Window during which a deactivation right after showing is ignored: when Windows denies
+    ///   foreground activation (showing from the tray or the hotkey), the freshly shown window would
+    ///   otherwise hide itself immediately.
     /// </summary>
     private const long DeactivationGraceMilliseconds = 400;
 
@@ -33,6 +33,11 @@ public partial class LaunchWindow : Window
     private double _dragStartX;
     private double _dragStartProjectsWidth;
 
+    /// <summary>
+    ///   Creates the window and binds it to the shared view model.
+    /// </summary>
+    /// <param name="viewModel"> The launch window view model. </param>
+    /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
     public LaunchWindow(LaunchWindowViewModel viewModel, PromptState promptState)
     {
         InitializeComponent();
@@ -43,7 +48,7 @@ public partial class LaunchWindow : Window
     }
 
     /// <summary>
-    /// Shows the window centred in the work area of the monitor that contains the pointer.
+    ///   Shows the window centred in the work area of the monitor that contains the pointer.
     /// </summary>
     public void ShowOnPointerMonitor()
     {
@@ -96,8 +101,8 @@ public partial class LaunchWindow : Window
     }
 
     /// <summary>
-    /// Starts a pane resize when the press lands next to the divider. The press is handled on the
-    /// window (with a hit tolerance) because a 1px divider is hard to hit exactly.
+    ///   Starts a pane resize when the press lands next to the divider. The press is handled on the
+    ///   window (with a hit tolerance) because a 1px divider is hard to hit exactly.
     /// </summary>
     private void OnWindowMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -122,8 +127,8 @@ public partial class LaunchWindow : Window
     }
 
     /// <summary>
-    /// True when the pressed element belongs to one of the two panes, so only presses on the
-    /// divider area itself start a resize.
+    ///   True when the pressed element belongs to one of the two panes, so only presses on the
+    ///   divider area itself start a resize.
     /// </summary>
     private bool IsInsidePane(DependencyObject source)
     {
@@ -144,9 +149,9 @@ public partial class LaunchWindow : Window
     }
 
     /// <summary>
-    /// Sizes the Projects pane from a drag: the Agents pane stays content sized, so the window
-    /// (which sizes itself to its content) follows the dragged width. The width is clamped to the
-    /// pane minimum, so its list is never clipped.
+    ///   Sizes the Projects pane from a drag: the Agents pane stays content sized, so the window
+    ///   (which sizes itself to its content) follows the dragged width. The width is clamped to the
+    ///   pane minimum, so its list is never clipped.
     /// </summary>
     private void ApplyProjectsPaneWidth(double width)
     {
@@ -201,6 +206,10 @@ public partial class LaunchWindow : Window
         menu.HorizontalOffset = button.ActualWidth - menu.ActualWidth;
     }
 
+    /// <summary>
+    ///   Hides the window instead of closing it; the application lives in the tray.
+    /// </summary>
+    /// <param name="e"> Closing event arguments, always cancelled. </param>
     protected override void OnClosing(CancelEventArgs e)
     {
         // Hide instead of exiting: the window is put away with Escape, the tray menu, or Exit.

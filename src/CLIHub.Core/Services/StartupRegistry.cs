@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Services;
 
 /// <summary>
-/// Thin seam over the current user's Run registry key, so startup registration is testable.
+///   Thin seam over the current user's Run registry key, so startup registration is testable.
 /// </summary>
 internal interface IStartupRegistry
 {
@@ -13,8 +13,8 @@ internal interface IStartupRegistry
 }
 
 /// <summary>
-/// Default <see cref="IStartupRegistry"/> backed by
-/// <c>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</c>.
+///   Default <see cref="IStartupRegistry"/> backed by
+///   <c>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</c>.
 /// </summary>
 internal sealed class CurrentUserRegistryStartup : IStartupRegistry
 {

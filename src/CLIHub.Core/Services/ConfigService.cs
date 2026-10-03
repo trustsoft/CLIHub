@@ -6,12 +6,12 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 /// <summary>
-/// Service for loading and saving application configuration to config.json
+///   Loads and saves the application configuration to config.json.
 /// </summary>
 public class ConfigService : IConfigService
 {
     /// <summary>
-    /// Serializer options used for <c>config.json</c>; internal so tests can assert the on-disk key names.
+    ///   Serializer options used for <c>config.json</c>; internal so tests can assert the on-disk key names.
     /// </summary>
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,8 +22,12 @@ public class ConfigService : IConfigService
     private readonly ILogger<ConfigService> _logger;
     private AppConfig? _cachedConfig;
 
+    /// <inheritdoc />
     public string ConfigFilePath { get; }
 
+    /// <summary>
+    ///   Creates the service.
+    /// </summary>
     public ConfigService(ILogger<ConfigService> logger)
     {
         _logger = logger;
@@ -34,6 +38,7 @@ public class ConfigService : IConfigService
         ConfigFilePath = Path.Combine(clihubFolder, "config.json");
     }
 
+    /// <inheritdoc />
     public AppConfig Load()
     {
         if (_cachedConfig != null)
@@ -64,6 +69,7 @@ public class ConfigService : IConfigService
         }
     }
 
+    /// <inheritdoc />
     public void Save(AppConfig config)
     {
         _cachedConfig = config;
@@ -76,6 +82,7 @@ public class ConfigService : IConfigService
         _logger.LogDebug("Saved configuration to {Path}", ConfigFilePath);
     }
 
+    /// <inheritdoc />
     public Project? GetCurrentProject()
     {
         var config = Load();
@@ -87,6 +94,7 @@ public class ConfigService : IConfigService
         return config.Projects.FirstOrDefault(p => p.Id == config.CurrentProjectId);
     }
 
+    /// <inheritdoc />
     public void SetCurrentProject(string? projectId)
     {
         var config = Load();

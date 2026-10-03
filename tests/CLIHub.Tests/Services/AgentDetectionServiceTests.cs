@@ -156,3 +156,4 @@ public class AgentDetectionServiceTests : IDisposable
         Assert.False(_service.IsInstalledInSystem(plugin));
     }
 }
+

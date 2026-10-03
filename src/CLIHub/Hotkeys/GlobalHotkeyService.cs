@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Interop;
 
 /// <summary>
-/// Registers a global hotkey against a window and invokes a callback when it is pressed.
+///   Registers a global hotkey against a window and invokes a callback when it is pressed.
 /// </summary>
 public sealed class GlobalHotkeyService : IDisposable
 {
@@ -20,8 +20,17 @@ public sealed class GlobalHotkeyService : IDisposable
     private bool _registered;
     private HotkeyDefinition? _current;
 
+    /// <summary>
+    ///   True when a hotkey is currently registered.
+    /// </summary>
     public bool IsRegistered => _registered;
 
+    /// <summary>
+    ///   Hooks the window's message loop so hotkey messages can be observed.
+    /// </summary>
+    /// <param name="window"> The window that receives <c>WM_HOTKEY</c>. </param>
+    /// <param name="onPressed"> Callback invoked when the hotkey is pressed. </param>
+    /// <param name="logger"> Logger. </param>
     public GlobalHotkeyService(Window window, Action onPressed, ILogger<GlobalHotkeyService> logger)
     {
         _logger = logger;
@@ -34,7 +43,7 @@ public sealed class GlobalHotkeyService : IDisposable
     }
 
     /// <summary>
-    /// Registers the hotkey. Returns false (and logs) when the combination is unavailable.
+    ///   Registers the hotkey. Returns false (and logs) when the combination is unavailable.
     /// </summary>
     public bool Register(HotkeyDefinition definition)
     {
@@ -63,9 +72,9 @@ public sealed class GlobalHotkeyService : IDisposable
     }
 
     /// <summary>
-    /// Swaps the registered hotkey for a new combination. If the new combination cannot
-    /// be registered (for example it is already in use), the previous combination is
-    /// restored and false is returned.
+    ///   Swaps the registered hotkey for a new combination. If the new combination cannot
+    ///   be registered (for example it is already in use), the previous combination is
+    ///   restored and false is returned.
     /// </summary>
     public bool ReRegister(HotkeyDefinition definition)
     {
@@ -101,6 +110,9 @@ public sealed class GlobalHotkeyService : IDisposable
         return IntPtr.Zero;
     }
 
+    /// <summary>
+    ///   Unregisters the hotkey and unhooks from the window's message loop.
+    /// </summary>
     public void Dispose()
     {
         if (_registered)
@@ -112,3 +124,4 @@ public sealed class GlobalHotkeyService : IDisposable
         _source.RemoveHook(WndProc);
     }
 }
+

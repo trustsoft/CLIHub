@@ -24,8 +24,8 @@ public class UpdateServiceTests : IDisposable
     }
 
     /// <summary>
-    /// A source whose release feed takes a while to answer, so a download request stays
-    /// in flight long enough to observe the concurrent-request guard.
+    ///   A source whose release feed takes a while to answer, so a download request stays
+    ///   in flight long enough to observe the concurrent-request guard.
     /// </summary>
     private sealed class DelayedSource : IUpdateSource
     {
@@ -169,3 +169,4 @@ public class UpdateServiceTests : IDisposable
         Assert.Null(exception);
     }
 }
+

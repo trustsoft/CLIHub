@@ -4,7 +4,7 @@ using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// In-memory IConfigService for tests; no file system access.
+///   In-memory IConfigService for tests; no file system access.
 /// </summary>
 public class FakeConfigService : IConfigService
 {
@@ -42,3 +42,4 @@ public class FakeConfigService : IConfigService
         _config.CurrentProjectId = projectId;
     }
 }
+

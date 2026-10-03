@@ -159,3 +159,4 @@ public class AgentVersionServiceTests
         Assert.Equal(AgentVersionService.DefaultProbeTimeout, _launcher.LastCaptureTimeout);
     }
 }
+

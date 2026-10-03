@@ -10,9 +10,9 @@ using System.Diagnostics;
 using System.Windows;
 
 /// <summary>
-/// State and commands for the launch window: the project and agent lists, the current
-/// selection, the availability filter, the path display style, the pin state, the status
-/// message, and every window action.
+///   State and commands for the launch window: the project and agent lists, the current
+///   selection, the availability filter, the path display style, the pin state, the status
+///   message, and every window action.
 /// </summary>
 public sealed class LaunchWindowViewModel : ObservableObject
 {
@@ -39,6 +39,18 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private bool _suppressFilterChange;
     private string _statusMessage = "CLIHub ready";
 
+    /// <summary>
+    ///   Creates the view model with its services and loads projects and agents.
+    /// </summary>
+    /// <param name="projectService"> Project service backing the Projects pane. </param>
+    /// <param name="pluginManager"> Plugin manager backing the Agents pane. </param>
+    /// <param name="agentCommandService"> Service executing agent commands. </param>
+    /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
+    /// <param name="agentVersionService"> Service resolving agent versions. </param>
+    /// <param name="configService"> Configuration service for persisted preferences. </param>
+    /// <param name="updateService"> Update service for the version text and update checks. </param>
+    /// <param name="settingsLauncher"> Settings window launcher. </param>
+    /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
     public LaunchWindowViewModel(
         IProjectService projectService,
         IPluginManager pluginManager,
@@ -99,16 +111,24 @@ public sealed class LaunchWindowViewModel : ObservableObject
         RefreshAgents();
     }
 
-    /// <summary>Registered projects shown in the Projects pane.</summary>
+    /// <summary>
+    ///   Registered projects shown in the Projects pane.
+    /// </summary>
     public ObservableCollection<Project> Projects { get; } = new();
 
-    /// <summary>Agents shown in the Agents pane.</summary>
+    /// <summary>
+    ///   Agents shown in the Agents pane.
+    /// </summary>
     public ObservableCollection<AgentItem> Agents { get; } = new();
 
-    /// <summary>Current application version, formatted for the footer.</summary>
+    /// <summary>
+    ///   Current application version, formatted for the footer.
+    /// </summary>
     public string VersionText { get; }
 
-    /// <summary>The project that provides the launch context.</summary>
+    /// <summary>
+    ///   The project that provides the launch context.
+    /// </summary>
     public Project? SelectedProject
     {
         get => _selectedProject;
@@ -125,7 +145,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>The agent row the pane actions apply to.</summary>
+    /// <summary>
+    ///   The agent row the pane actions apply to.
+    /// </summary>
     public AgentItem? SelectedAgent
     {
         get => _selectedAgent;
@@ -140,7 +162,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>Whether the Agents pane hides agents that are not available in the project.</summary>
+    /// <summary>
+    ///   Whether the Agents pane hides agents that are not available in the project.
+    /// </summary>
     public bool ShowOnlyProjectAgents
     {
         get => _showOnlyProjectAgents;
@@ -160,8 +184,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Whether the window stays visible when it loses focus. Persisted so the window keeps the
-    /// user's intent across restarts.
+    ///   Whether the window stays visible when it loses focus. Persisted so the window keeps the
+    ///   user's intent across restarts.
     /// </summary>
     public bool IsPinned
     {
@@ -181,43 +205,101 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>How long project paths are shortened in the project rows.</summary>
+    /// <summary>
+    ///   How long project paths are shortened in the project rows.
+    /// </summary>
     public PathDisplayStyle DisplayStyle
     {
         get => _displayStyle;
         private set => SetProperty(ref _displayStyle, value);
     }
 
-    /// <summary>Transient status or error text shown in the footer.</summary>
+    /// <summary>
+    ///   Transient status or error text shown in the footer.
+    /// </summary>
     public string StatusMessage
     {
         get => _statusMessage;
         private set => SetProperty(ref _statusMessage, value);
     }
 
+    /// <summary>
+    ///   Adds a project folder via the folder picker.
+    /// </summary>
     public RelayCommand AddProjectCommand { get; }
+
+    /// <summary>
+    ///   Removes the selected project from the registry.
+    /// </summary>
     public RelayCommand RemoveProjectCommand { get; }
+
+    /// <summary>
+    ///   Toggles the favorite flag of the selected project.
+    /// </summary>
     public RelayCommand ToggleFavoriteCommand { get; }
+
+    /// <summary>
+    ///   Clears detection and version caches and reloads both panes.
+    /// </summary>
     public RelayCommand RefreshCommand { get; }
+
+    /// <summary>
+    ///   Checks for updates and reports the outcome in the status line.
+    /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
+
+    /// <summary>
+    ///   Opens the CLIHub data folder in Explorer.
+    /// </summary>
     public RelayCommand OpenDataFolderCommand { get; }
+
+    /// <summary>
+    ///   Opens the Settings window.
+    /// </summary>
     public RelayCommand OpenSettingsCommand { get; }
+
+    /// <summary>
+    ///   Exits the application.
+    /// </summary>
     public RelayCommand ExitCommand { get; }
 
+    /// <summary>
+    ///   Launches the selected agent in the current project.
+    /// </summary>
     public RelayCommand LaunchCommand { get; }
+
+    /// <summary>
+    ///   Resumes the selected agent in the current project.
+    /// </summary>
     public RelayCommand ResumeCommand { get; }
+
+    /// <summary>
+    ///   Initializes the selected agent in the current project.
+    /// </summary>
     public RelayCommand InitCommand { get; }
+
+    /// <summary>
+    ///   Updates the selected agent.
+    /// </summary>
     public RelayCommand UpdateCommand { get; }
+
+    /// <summary>
+    ///   Reports the selected agent's version in the status line.
+    /// </summary>
     public RelayCommand VersionCommand { get; }
 
-    /// <summary>Launches the agent of the activated row.</summary>
+    /// <summary>
+    ///   Launches the agent of the activated row.
+    /// </summary>
     public RelayCommand<AgentItem> LaunchAgentCommand { get; }
 
-    /// <summary>Resumes the agent of the activated row.</summary>
+    /// <summary>
+    ///   Resumes the agent of the activated row.
+    /// </summary>
     public RelayCommand<AgentItem> ResumeAgentCommand { get; }
 
     /// <summary>
-    /// Applies a path display style changed in Settings to the running window.
+    ///   Applies a path display style changed in Settings to the running window.
     /// </summary>
     public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
 
@@ -453,7 +535,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Shows a dialog owned by the launch window, so it appears above the always-on-top shell.
+    ///   Shows a dialog owned by the launch window, so it appears above the always-on-top shell.
     /// </summary>
     private static MessageBoxResult Prompt(string message, string title, MessageBoxButton buttons, MessageBoxImage image)
     {

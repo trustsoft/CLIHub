@@ -15,7 +15,7 @@ using System.IO;
 using System.Windows;
 
 /// <summary>
-/// Interaction logic for App.xaml
+///   Interaction logic for App.xaml
 /// </summary>
 public partial class App : Application
 {
@@ -24,6 +24,11 @@ public partial class App : Application
     private TrayIconController? _tray;
     private GlobalHotkeyService? _hotkey;
 
+    /// <summary>
+    ///   Enforces single-instance startup, builds the DI container, and shows the tray icon
+    ///   and (optionally) the launch window.
+    /// </summary>
+    /// <param name="e"> Startup event arguments. </param>
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -94,9 +99,9 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Opens the What's New window once when the running version differs from the one whose notes
-    /// were already shown; a version that has no notes is recorded without opening anything, so
-    /// the check does not repeat on every start.
+    ///   Opens the What's New window once when the running version differs from the one whose notes
+    ///   were already shown; a version that has no notes is recorded without opening anything, so
+    ///   the check does not repeat on every start.
     /// </summary>
     private void ShowReleaseNotesOnce()
     {
@@ -147,9 +152,9 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Downloads the available update and restarts into it. Started from the tray menu or the
-    /// What's New window; the restart needs no confirmation because the user explicitly invoked
-    /// the action, and failures are reported via a tray notification.
+    ///   Downloads the available update and restarts into it. Started from the tray menu or the
+    ///   What's New window; the restart needs no confirmation because the user explicitly invoked
+    ///   the action, and failures are reported via a tray notification.
     /// </summary>
     private async Task DownloadAndApplyUpdateAsync()
     {
@@ -226,6 +231,10 @@ public partial class App : Application
         _hotkey.Register(definition);
     }
 
+    /// <summary>
+    ///   Disposes the hotkey, tray icon, DI container, and single-instance guard, then flushes logs.
+    /// </summary>
+    /// <param name="e"> Exit event arguments. </param>
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("CLIHub shutting down");
@@ -240,3 +249,4 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
+

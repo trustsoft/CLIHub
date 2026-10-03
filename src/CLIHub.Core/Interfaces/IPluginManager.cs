@@ -3,25 +3,25 @@ namespace CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// Service for discovering and managing AI agent CLI tool plugins
+///   Discovers and manages AI agent CLI tool plugins.
 /// </summary>
 public interface IPluginManager
 {
     /// <summary>
-    /// Load all plugins from the plugins directory
+    ///   Loads all plugins from the plugins directory.
     /// </summary>
     void LoadPlugins();
 
     /// <summary>
-    /// Get all loaded plugins
+    ///   Gets all loaded plugins.
     /// </summary>
-    /// <returns>Collection of loaded plugins</returns>
+    /// <returns> The collection of loaded plugins. </returns>
     IEnumerable<Plugin> GetAllPlugins();
 
     /// <summary>
-    /// Get a specific plugin by ID
+    ///   Gets a specific plugin by ID.
     /// </summary>
-    /// <param name="id">Plugin ID</param>
-    /// <returns>Plugin if found, null otherwise</returns>
+    /// <param name="id"> The plugin ID. </param>
+    /// <returns> The plugin when found; otherwise null. </returns>
     Plugin? GetPluginById(string id);
 }

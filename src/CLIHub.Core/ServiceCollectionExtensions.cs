@@ -6,17 +6,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Registers the CLIHub core services (no UI dependencies).
+///   Registers the CLIHub core services (no UI dependencies).
 /// </summary>
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Adds configuration, project, plugin, and process-launch services as singletons.
-    /// Logging is registered so services can resolve <c>ILogger&lt;T&gt;</c>; the host may
-    /// add providers (for example Serilog) to the same logging pipeline.
+    ///   Adds configuration, project, plugin, and process-launch services as singletons.
+    ///   Logging is registered so services can resolve <c>ILogger&lt;T&gt;</c>; the host may
+    ///   add providers (for example Serilog) to the same logging pipeline.
     /// </summary>
-    /// <param name="services">The service collection to configure.</param>
-    /// <param name="defaultLogoPath">Path to the fallback project logo, or null.</param>
+    /// <param name="services"> The service collection to configure. </param>
+    /// <param name="defaultLogoPath"> The path to the fallback project logo, or null. </param>
     public static IServiceCollection AddClIHubCoreServices(
         this IServiceCollection services,
         string? defaultLogoPath = null)

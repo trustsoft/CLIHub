@@ -1,13 +1,13 @@
 namespace CLIHub.Core.Hotkeys;
 
 /// <summary>
-/// Parses human-readable hotkey strings such as <c>Ctrl+Shift+A</c> into a
-/// <see cref="HotkeyDefinition"/>. Pure logic; no Win32 or WPF dependency.
+///   Parses human-readable hotkey strings such as <c>Ctrl+Shift+A</c> into a
+///   <see cref="HotkeyDefinition"/>. Pure logic; no Win32 or WPF dependency.
 /// </summary>
 public static class HotkeyParser
 {
     /// <summary>
-    /// The default hotkey: Ctrl+Shift+A (virtual key 0x41).
+    ///   The default hotkey: Ctrl+Shift+A (virtual key 0x41).
     /// </summary>
     public static HotkeyDefinition Default { get; } =
         new(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x41);
@@ -35,8 +35,8 @@ public static class HotkeyParser
     private static readonly IReadOnlyDictionary<int, string> VirtualKeyLookup = BuildVirtualKeyLookup();
 
     /// <summary>
-    /// Attempts to parse a hotkey string. Requires at least one modifier and exactly
-    /// one recognized key. Returns false for null, empty, modifier-less, or unknown input.
+    ///   Attempts to parse a hotkey string. Requires at least one modifier and exactly
+    ///   one recognized key. Returns false for null, empty, modifier-less, or unknown input.
     /// </summary>
     public static bool TryParse(string? value, out HotkeyDefinition? definition)
     {
@@ -100,13 +100,13 @@ public static class HotkeyParser
     }
 
     /// <summary>
-    /// Returns the parsed definition, or <paramref name="fallback"/> when the value is invalid.
+    ///   Returns the parsed definition, or <paramref name="fallback"/> when the value is invalid.
     /// </summary>
     public static HotkeyDefinition ParseOrDefault(string? value, HotkeyDefinition fallback) =>
         TryParse(value, out var definition) && definition != null ? definition : fallback;
 
     /// <summary>
-    /// Formats a definition back into the canonical string form (for example <c>Ctrl+Shift+A</c>).
+    ///   Formats a definition back into the canonical string form (for example <c>Ctrl+Shift+A</c>).
     /// </summary>
     public static string Format(HotkeyDefinition definition)
     {

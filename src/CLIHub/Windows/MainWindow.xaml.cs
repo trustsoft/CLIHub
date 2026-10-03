@@ -7,7 +7,7 @@ using Microsoft.Win32;
 using System.Windows;
 
 /// <summary>
-/// Interaction logic for MainWindow.xaml
+///   Interaction logic for MainWindow.xaml
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -20,6 +20,16 @@ public partial class MainWindow : Window
     private readonly IUpdateService _updateService;
     private bool _suppressFilterEvent;
 
+    /// <summary>
+    ///   Creates the window and performs the initial project and agent load.
+    /// </summary>
+    /// <param name="pluginManager"> Plugin manager for the agent list. </param>
+    /// <param name="projectService"> Project service for the project list. </param>
+    /// <param name="agentCommandService"> Service executing agent commands. </param>
+    /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
+    /// <param name="agentVersionService"> Service resolving agent versions. </param>
+    /// <param name="configService"> Configuration service for the filter preference. </param>
+    /// <param name="updateService"> Update service for the version text and update checks. </param>
     public MainWindow(
         IPluginManager pluginManager,
         IProjectService projectService,
@@ -80,6 +90,10 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 
+    /// <summary>
+    ///   Hides the window instead of closing it; the application lives in the tray.
+    /// </summary>
+    /// <param name="e"> Closing event arguments, always cancelled. </param>
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         // Hide to tray instead of closing the application
@@ -277,3 +291,4 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 }
+

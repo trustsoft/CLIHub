@@ -1,20 +1,20 @@
 namespace CLIHub;
 
 /// <summary>
-/// Tracks whether a modal prompt opened from the launch window is active, so that the window
-/// does not hide itself when it loses focus to that prompt.
+///   Tracks whether a modal prompt opened from the launch window is active, so that the window
+///   does not hide itself when it loses focus to that prompt.
 /// </summary>
 public sealed class PromptState
 {
     private int _depth;
 
     /// <summary>
-    /// True while at least one prompt is open.
+    ///   True while at least one prompt is open.
     /// </summary>
     public bool IsPromptOpen => _depth > 0;
 
     /// <summary>
-    /// Marks a prompt as open until the returned scope is disposed.
+    ///   Marks a prompt as open until the returned scope is disposed.
     /// </summary>
     public IDisposable Begin()
     {

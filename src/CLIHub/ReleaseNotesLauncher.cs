@@ -5,9 +5,9 @@ using CLIHub.Windows;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Owns the application's single <see cref="WhatsNewWindow"/> instance so that every entry point
-/// (the tray menu, the one-time display after an upgrade) activates the same window instead of
-/// creating another, and keeps the recorded "notes seen" version up to date.
+///   Owns the application's single <see cref="WhatsNewWindow"/> instance so that every entry point
+///   (the tray menu, the one-time display after an upgrade) activates the same window instead of
+///   creating another, and keeps the recorded "notes seen" version up to date.
 /// </summary>
 public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
 {
@@ -17,6 +17,13 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     private readonly ILogger<ReleaseNotesLauncher> _logger;
     private WhatsNewWindow? _window;
 
+    /// <summary>
+    ///   Creates the launcher with its dependencies.
+    /// </summary>
+    /// <param name="factory"> Factory that creates the <see cref="WhatsNewWindow"/> on demand. </param>
+    /// <param name="updateService"> Update service that reports the running version. </param>
+    /// <param name="configService"> Configuration used to store the seen-versions record. </param>
+    /// <param name="logger"> Logger. </param>
     public ReleaseNotesLauncher(
         Func<WhatsNewWindow> factory,
         IUpdateService updateService,
@@ -29,6 +36,10 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
         _logger = logger;
     }
 
+    /// <summary>
+    ///   Shows the What's New window (creating it on first use) and records the running
+    ///   version as seen.
+    /// </summary>
     public void ShowReleaseNotes()
     {
         if (_window is null)
@@ -42,6 +53,9 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
         MarkReleaseNotesSeen();
     }
 
+    /// <summary>
+    ///   Records the running application version as the last one whose notes were shown.
+    /// </summary>
     public void MarkReleaseNotesSeen()
     {
         try

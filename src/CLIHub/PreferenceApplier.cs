@@ -8,7 +8,7 @@ using CLIHub.ViewModels;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Default <see cref="IPreferenceApplier"/>; forwards changes to the launcher and hotkey service.
+///   Default <see cref="IPreferenceApplier"/>; forwards changes to the launcher and hotkey service.
 /// </summary>
 public sealed class PreferenceApplier : IPreferenceApplier
 {
@@ -18,6 +18,14 @@ public sealed class PreferenceApplier : IPreferenceApplier
     private readonly LaunchWindowViewModel _launchWindow;
     private readonly ILogger<PreferenceApplier> _logger;
 
+    /// <summary>
+    ///   Creates the applier with the services it forwards preference changes to.
+    /// </summary>
+    /// <param name="processLauncher"> Process launcher receiving the runtime change. </param>
+    /// <param name="hotkey"> Hotkey service receiving the hotkey change. </param>
+    /// <param name="startupService"> Startup service receiving the start-with-Windows change. </param>
+    /// <param name="launchWindow"> Launch window receiving display changes. </param>
+    /// <param name="logger"> Logger. </param>
     public PreferenceApplier(
         IProcessLauncher processLauncher,
         GlobalHotkeyService hotkey,
@@ -32,18 +40,21 @@ public sealed class PreferenceApplier : IPreferenceApplier
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public void ApplyRuntime(RuntimeKind runtime)
     {
         _processLauncher.SetRuntime(runtime);
         _logger.LogInformation("Default runtime set to {Runtime}", runtime);
     }
 
+    /// <inheritdoc />
     public void ApplyPathDisplayStyle(PathDisplayStyle style)
     {
         _launchWindow.ApplyPathDisplayStyle(style);
         _logger.LogInformation("Path display style set to {Style}", style);
     }
 
+    /// <inheritdoc />
     public bool ApplyHotkey(HotkeyDefinition definition)
     {
         var registered = _hotkey.ReRegister(definition);
@@ -62,9 +73,11 @@ public sealed class PreferenceApplier : IPreferenceApplier
         return registered;
     }
 
+    /// <inheritdoc />
     public void ApplyStartupUpdateCheck(bool enabled) =>
         _logger.LogInformation("Startup update check set to {Enabled} (applies on next start)", enabled);
 
+    /// <inheritdoc />
     public bool ApplyStartWithWindows(bool enabled)
     {
         var updated = _startupService.SetEnabled(enabled);

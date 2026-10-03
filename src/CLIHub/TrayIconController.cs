@@ -10,7 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 /// <summary>
-/// Owns the system tray icon, its context menu, and main-window visibility.
+///   Owns the system tray icon, its context menu, and main-window visibility.
 /// </summary>
 public sealed class TrayIconController : IDisposable
 {
@@ -24,10 +24,20 @@ public sealed class TrayIconController : IDisposable
     private readonly TaskbarIcon _taskbarIcon;
 
     /// <summary>
-    /// Raised when the user clicks the tray's download-and-restart update action.
+    ///   Raised when the user clicks the tray's download-and-restart update action.
     /// </summary>
     public event EventHandler? UpdateDownloadRequested;
 
+    /// <summary>
+    ///   Creates the tray icon controller and builds its menu.
+    /// </summary>
+    /// <param name="projects"> Project service used by the project menu. </param>
+    /// <param name="pluginManager"> Plugin manager used by the agent menu. </param>
+    /// <param name="agentCommands"> Service invoked by the agent menu actions. </param>
+    /// <param name="updates"> Update service driving the update menu item. </param>
+    /// <param name="launchWindow"> The launch window the tray toggles. </param>
+    /// <param name="settingsLauncher"> Settings window launcher. </param>
+    /// <param name="releaseNotesLauncher"> What's New window launcher. </param>
     public TrayIconController(
         IProjectService projects,
         IPluginManager pluginManager,
@@ -60,7 +70,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows and activates the launch window on the pointer's monitor.
+    ///   Shows and activates the launch window on the pointer's monitor.
     /// </summary>
     public void ShowLaunchWindow()
     {
@@ -68,7 +78,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows the launch window when hidden; hides it when visible.
+    ///   Shows the launch window when hidden; hides it when visible.
     /// </summary>
     public void ToggleLaunchWindow()
     {
@@ -83,7 +93,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows a tray notification that a new version is available.
+    ///   Shows a tray notification that a new version is available.
     /// </summary>
     public void NotifyUpdateAvailable(string version)
     {
@@ -98,7 +108,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows a tray notification that an update was downloaded and the restart begins.
+    ///   Shows a tray notification that an update was downloaded and the restart begins.
     /// </summary>
     public void NotifyUpdateDownloaded(string version)
     {
@@ -113,7 +123,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Shows a tray notification that an update download failed.
+    ///   Shows a tray notification that an update download failed.
     /// </summary>
     public void NotifyUpdateFailed(string version)
     {
@@ -130,7 +140,7 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Rebuilds the tray context menu from the current projects and update state.
+    ///   Rebuilds the tray context menu from the current projects and update state.
     /// </summary>
     public void RefreshMenu()
     {
@@ -203,8 +213,8 @@ public sealed class TrayIconController : IDisposable
     }
 
     /// <summary>
-    /// Builds the update menu item: a download-and-restart action when an update is available,
-    /// a disabled downloading marker while the download runs, and nothing without an update.
+    ///   Builds the update menu item: a download-and-restart action when an update is available,
+    ///   a disabled downloading marker while the download runs, and nothing without an update.
     /// </summary>
     private MenuItem? BuildUpdateItem()
     {
@@ -299,8 +309,12 @@ public sealed class TrayIconController : IDisposable
         }
     }
 
+    /// <summary>
+    ///   Disposes the tray icon.
+    /// </summary>
     public void Dispose()
     {
         _taskbarIcon.Dispose();
     }
 }
+

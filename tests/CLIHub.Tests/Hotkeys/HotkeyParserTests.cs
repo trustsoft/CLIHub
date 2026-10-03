@@ -233,3 +233,4 @@ public class HotkeyParserTests
         Assert.Equal(HotkeyModifiers.Alt, result.Modifiers);
     }
 }
+

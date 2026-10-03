@@ -8,12 +8,16 @@ using System.Windows.Input;
 using System.Windows.Interop;
 
 /// <summary>
-/// The Settings window: dark drawn chrome (no OS title bar) around the preference sections.
+///   The Settings window: dark drawn chrome (no OS title bar) around the preference sections.
 /// </summary>
 public partial class SettingsWindow : Window
 {
     private readonly SettingsViewModel _viewModel;
 
+    /// <summary>
+    ///   Creates the window and binds it to the settings view model.
+    /// </summary>
+    /// <param name="viewModel"> The settings view model. </param>
     public SettingsWindow(SettingsViewModel viewModel)
     {
         InitializeComponent();
@@ -24,8 +28,8 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>
-    /// Reloads the stored preferences and shows (or re-activates) the window. The height matches
-    /// the launch window's current height, so the two windows read as the same surface.
+    ///   Reloads the stored preferences and shows (or re-activates) the window. The height matches
+    ///   the launch window's current height, so the two windows read as the same surface.
     /// </summary>
     public void ShowSettings()
     {
@@ -57,8 +61,8 @@ public partial class SettingsWindow : Window
         DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
 
     /// <summary>
-    /// Moves the window while the drawn header is dragged. The close button handles the press
-    /// itself, so a click on it never starts a drag.
+    ///   Moves the window while the drawn header is dragged. The close button handles the press
+    ///   itself, so a click on it never starts a drag.
     /// </summary>
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)
     {
@@ -91,8 +95,8 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>
-    /// A Border does not take keyboard focus on click the way a Control does, so the click
-    /// handler has to move focus here — otherwise the PreviewKeyDown capture never runs.
+    ///   A Border does not take keyboard focus on click the way a Control does, so the click
+    ///   handler has to move focus here — otherwise the PreviewKeyDown capture never runs.
     /// </summary>
     private void HotkeyField_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

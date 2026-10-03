@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 /// <summary>
-/// Service for discovering and managing AI agent CLI tool plugins
+///   Discovers and manages AI agent CLI tool plugins.
 /// </summary>
 public class PluginManager : IPluginManager
 {
@@ -19,6 +19,9 @@ public class PluginManager : IPluginManager
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
+    /// <summary>
+    ///   Creates the plugin manager for the given plugins root.
+    /// </summary>
     public PluginManager(ILogger<PluginManager> logger, string? pluginsPath = null)
     {
         _logger = logger;
@@ -28,6 +31,7 @@ public class PluginManager : IPluginManager
             "plugins");
     }
 
+    /// <inheritdoc />
     public void LoadPlugins()
     {
         _plugins.Clear();
@@ -84,6 +88,7 @@ public class PluginManager : IPluginManager
         _logger.LogInformation("Loaded {Count} plugin(s)", _plugins.Count);
     }
 
+    /// <inheritdoc />
     public IEnumerable<Plugin> GetAllPlugins()
     {
         return _plugins;
@@ -174,6 +179,7 @@ public class PluginManager : IPluginManager
         return _plugins.Any(p => p.Id == pluginId && p.PluginDirectory != currentPluginDirectory);
     }
 
+    /// <inheritdoc />
     public Plugin? GetPluginById(string id)
     {
         return _plugins.FirstOrDefault(p => p.Id == id);

@@ -66,3 +66,4 @@ public class ProcessLauncherTests
         Assert.NotEqual(0, result.ExitCode);
     }
 }
+

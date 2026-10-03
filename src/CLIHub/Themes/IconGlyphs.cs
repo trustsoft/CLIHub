@@ -1,8 +1,8 @@
 namespace CLIHub.Themes;
 
 /// <summary>
-/// Segoe MDL2 Assets glyphs used by the dark-chrome XAML, as compile-time checked constants.
-/// Referenced from XAML via <c>{x:Static themes:IconGlyphs.Name}</c>.
+///   Segoe MDL2 Assets glyphs used by the dark-chrome XAML, as compile-time checked constants.
+///   Referenced from XAML via <c>{x:Static themes:IconGlyphs.Name}</c>.
 /// </summary>
 internal static class IconGlyphs
 {

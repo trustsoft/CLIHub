@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 /// <summary>
-/// Service for launching processes for AI agent CLI tools
+///   Launches processes for AI agent CLI tools.
 /// </summary>
 public class ProcessLauncher : IProcessLauncher
 {
@@ -15,21 +15,25 @@ public class ProcessLauncher : IProcessLauncher
     private readonly ILogger<ProcessLauncher> _logger;
     private RuntimeKind _runtime = RuntimeKind.WindowsTerminal;
 
+    /// <summary>
+    ///   Creates the launcher.
+    /// </summary>
     public ProcessLauncher(ILogger<ProcessLauncher> logger)
     {
         _logger = logger;
     }
 
     /// <summary>
-    /// Sets the runtime used to launch interactive agent commands.
+    ///   Sets the runtime used to launch interactive agent commands.
     /// </summary>
     public void SetRuntime(RuntimeKind runtime) => _runtime = runtime;
 
     /// <summary>
-    /// Gets the configured runtime.
+    ///   Gets the configured runtime.
     /// </summary>
     public RuntimeKind GetRuntime() => _runtime;
 
+    /// <inheritdoc />
     public bool LaunchProcess(PluginCommand command, string workingDirectory)
     {
         if (command == null)
@@ -96,6 +100,7 @@ public class ProcessLauncher : IProcessLauncher
         }
     }
 
+    /// <inheritdoc />
     public async Task<ProcessCaptureResult> CaptureOutputAsync(
         string executable,
         string? arguments,
@@ -161,7 +166,7 @@ public class ProcessLauncher : IProcessLauncher
     }
 
     /// <summary>
-    /// Builds the process file name and arguments for the given runtime.
+    ///   Builds the process file name and arguments for the given runtime.
     /// </summary>
     internal static (string FileName, string Arguments) BuildStartInfo(
         RuntimeKind runtime,
@@ -179,7 +184,7 @@ public class ProcessLauncher : IProcessLauncher
     }
 
     /// <summary>
-    /// Builds the shell command line for a plugin command (executable plus escaped arguments).
+    ///   Builds the shell command line for a plugin command (executable plus escaped arguments).
     /// </summary>
     internal static string BuildCommandLine(PluginCommand command)
     {

@@ -5,24 +5,24 @@ using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// A selectable default runtime with a friendly label and a short segment label.
+///   A selectable default runtime with a friendly label and a short segment label.
 /// </summary>
-/// <param name="Kind">The runtime kind.</param>
-/// <param name="Name">Display name shown in tooltips and diagnostics.</param>
-/// <param name="Segment">Short label rendered by the segmented selector.</param>
+/// <param name="Kind"> The runtime kind. </param>
+/// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
+/// <param name="Segment"> Short label rendered by the segmented selector. </param>
 public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment);
 
 /// <summary>
-/// A selectable path display style with a friendly label and a short segment label.
+///   A selectable path display style with a friendly label and a short segment label.
 /// </summary>
-/// <param name="Style">The path display style.</param>
-/// <param name="Name">Display name shown in tooltips and diagnostics.</param>
-/// <param name="Segment">Short label rendered by the segmented selector.</param>
+/// <param name="Style"> The path display style. </param>
+/// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
+/// <param name="Segment"> Short label rendered by the segmented selector. </param>
 public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, string Segment);
 
 /// <summary>
-/// View model for the Settings window: loads preferences, validates input, and applies
-/// changes on save.
+///   View model for the Settings window: loads preferences, validates input, and applies
+///   changes on save.
 /// </summary>
 public sealed class SettingsViewModel : ObservableObject
 {
@@ -56,6 +56,13 @@ public sealed class SettingsViewModel : ObservableObject
     private string _updateMessage = string.Empty;
     private string? _validationError;
 
+    /// <summary>
+    ///   Creates the view model with its services.
+    /// </summary>
+    /// <param name="configService"> Configuration service used to load and save preferences. </param>
+    /// <param name="updateService"> Update service used for the version and update checks. </param>
+    /// <param name="startupService"> Startup service used by the start-with-Windows toggle. </param>
+    /// <param name="applier"> Preference applier invoked on save. </param>
     public SettingsViewModel(
         IConfigService configService,
         IUpdateService updateService,
@@ -74,37 +81,60 @@ public sealed class SettingsViewModel : ObservableObject
         CheckForUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync());
     }
 
-    /// <summary>Raised when the window should close (on Save or Cancel).</summary>
+    /// <summary>
+    ///   Raised when the window should close (on Save or Cancel).
+    /// </summary>
     public event EventHandler? RequestClose;
 
+    /// <summary>
+    ///   The runtime options offered by the segmented control.
+    /// </summary>
     public IReadOnlyList<RuntimeOption> Runtimes => RuntimeOptions;
 
+    /// <summary>
+    ///   The path display options offered by the segmented control.
+    /// </summary>
     public IReadOnlyList<PathDisplayOption> PathDisplays => PathDisplayOptions;
 
+    /// <summary>
+    ///   The selected path display style.
+    /// </summary>
     public PathDisplayOption SelectedPathDisplay
     {
         get => _selectedPathDisplay;
         set => SetProperty(ref _selectedPathDisplay, value);
     }
 
+    /// <summary>
+    ///   Whether the application starts with Windows.
+    /// </summary>
     public bool StartWithWindows
     {
         get => _startWithWindows;
         set => SetProperty(ref _startWithWindows, value);
     }
 
+    /// <summary>
+    ///   Whether the launch window is shown at startup.
+    /// </summary>
     public bool ShowWindowOnStartup
     {
         get => _showWindowOnStartup;
         set => SetProperty(ref _showWindowOnStartup, value);
     }
 
+    /// <summary>
+    ///   The selected default runtime.
+    /// </summary>
     public RuntimeOption SelectedRuntime
     {
         get => _selectedRuntime;
         set => SetProperty(ref _selectedRuntime, value);
     }
 
+    /// <summary>
+    ///   The global hotkey in its canonical textual form.
+    /// </summary>
     public string HotkeyText
     {
         get => _hotkeyText;
@@ -118,7 +148,7 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// The captured combination split into key-chip tokens, for the segmented hotkey field.
+    ///   The captured combination split into key-chip tokens, for the segmented hotkey field.
     /// </summary>
     public IReadOnlyList<string> HotkeyParts
     {
@@ -131,43 +161,74 @@ public sealed class SettingsViewModel : ObservableObject
             ? []
             : text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
+    /// <summary>
+    ///   The agent probe TTL as text; empty means the built-in default.
+    /// </summary>
     public string ProbeTtlText
     {
         get => _probeTtlText;
         set => SetProperty(ref _probeTtlText, value);
     }
 
+    /// <summary>
+    ///   The agent probe timeout as text; empty means the built-in default.
+    /// </summary>
     public string ProbeTimeoutText
     {
         get => _probeTimeoutText;
         set => SetProperty(ref _probeTimeoutText, value);
     }
 
+    /// <summary>
+    ///   Whether updates are checked on startup.
+    /// </summary>
     public bool CheckForUpdatesOnStartup
     {
         get => _checkForUpdatesOnStartup;
         set => SetProperty(ref _checkForUpdatesOnStartup, value);
     }
 
+    /// <summary>
+    ///   The status line of the update check.
+    /// </summary>
     public string UpdateMessage
     {
         get => _updateMessage;
         private set => SetProperty(ref _updateMessage, value);
     }
 
+    /// <summary>
+    ///   The current validation error, or null when the form is valid.
+    /// </summary>
     public string? ValidationError
     {
         get => _validationError;
         private set => SetProperty(ref _validationError, value);
     }
 
+    /// <summary>
+    ///   The running application version.
+    /// </summary>
     public string Version { get; }
 
+    /// <summary>
+    ///   Persists the form and applies the preferences.
+    /// </summary>
     public RelayCommand SaveCommand { get; }
+
+    /// <summary>
+    ///   Closes the window without saving.
+    /// </summary>
     public RelayCommand CancelCommand { get; }
+
+    /// <summary>
+    ///   Runs an update check and reports the outcome in <see cref="UpdateMessage"/>.
+    /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
 
-    /// <summary>Reloads all fields from the stored configuration.</summary>
+    /// <summary>
+    ///   Reloads all fields from the stored configuration.
+    /// </summary>
     public void Load()
     {
         var prefs = _configService.Load().Preferences;
@@ -201,18 +262,29 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ValidationError));
     }
 
-    /// <summary>Sets the hotkey field from a captured combination; clears any error.</summary>
+    /// <summary>
+    ///   Sets the hotkey field from a captured combination; clears any error.
+    /// </summary>
     public void SetCapturedHotkey(HotkeyDefinition definition)
     {
         HotkeyText = HotkeyParser.Format(definition);
         ValidationError = null;
     }
 
-    /// <summary>Reports an invalid hotkey capture without changing the current value.</summary>
+    /// <summary>
+    ///   Reports an invalid hotkey capture without changing the current value.
+    /// </summary>
     public void SetHotkeyError(string message) => ValidationError = message;
 
+    /// <summary>
+    ///   Closes the window without saving.
+    /// </summary>
     public void Cancel() => RequestClose?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>
+    ///   Checks for updates and reports the outcome in <see cref="UpdateMessage"/>.
+    /// </summary>
+    /// <returns> A task that completes when the check finishes. </returns>
     public async Task CheckForUpdatesAsync()
     {
         UpdateMessage = "Checking for updates...";

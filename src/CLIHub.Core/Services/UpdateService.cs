@@ -9,7 +9,7 @@ using Velopack.Exceptions;
 using Velopack.Sources;
 
 /// <summary>
-/// Checks for, downloads, and applies updates via Velopack and reports the current version.
+///   Checks for, downloads, and applies updates via Velopack and reports the current version.
 /// </summary>
 public class UpdateService : IUpdateService
 {
@@ -28,7 +28,7 @@ public class UpdateService : IUpdateService
     private string? _lastKnownAvailableVersion;
 
     /// <summary>
-    /// Creates the service using the default GitHub update source.
+    ///   Creates the service using the default GitHub update source.
     /// </summary>
     public UpdateService(ILogger<UpdateService> logger)
     {
@@ -37,8 +37,8 @@ public class UpdateService : IUpdateService
     }
 
     /// <summary>
-    /// Test seam: uses a caller-provided manager (for example one built with a
-    /// <c>TestVelopackLocator</c>).
+    ///   Test seam: uses a caller-provided manager (for example one built with a
+    ///   <c>TestVelopackLocator</c>).
     /// </summary>
     internal UpdateService(ILogger<UpdateService> logger, UpdateManager manager)
     {
@@ -71,6 +71,7 @@ public class UpdateService : IUpdateService
         }
     }
 
+    /// <inheritdoc />
     public string GetCurrentVersion()
     {
         if (Manager?.CurrentVersion is { } version)
@@ -85,12 +86,14 @@ public class UpdateService : IUpdateService
         return string.IsNullOrWhiteSpace(informational) ? "unknown" : Normalize(informational);
     }
 
+    /// <inheritdoc />
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
         var (result, _) = await CheckForUpdateCoreAsync(cancellationToken);
         return result;
     }
 
+    /// <inheritdoc />
     public bool IsDownloading
     {
         get
@@ -102,10 +105,13 @@ public class UpdateService : IUpdateService
         }
     }
 
+    /// <inheritdoc />
     public string? LastKnownAvailableVersion => _lastKnownAvailableVersion;
 
+    /// <inheritdoc />
     public event EventHandler? UpdateStateChanged;
 
+    /// <inheritdoc />
     public async Task<UpdateDownloadResult> DownloadUpdateAsync(CancellationToken cancellationToken = default)
     {
         lock (_downloadGate)
@@ -171,6 +177,7 @@ public class UpdateService : IUpdateService
         }
     }
 
+    /// <inheritdoc />
     public void ApplyDownloadedUpdateAndRestart()
     {
         var manager = Manager;
@@ -269,8 +276,8 @@ public class UpdateService : IUpdateService
     private void RaiseStateChanged() => UpdateStateChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    /// Strips build metadata (for example, the "+commit" suffix) so the version
-    /// displays as a plain semantic version.
+    ///   Strips build metadata (for example, the "+commit" suffix) so the version
+    ///   displays as a plain semantic version.
     /// </summary>
     private static string Normalize(string version)
     {

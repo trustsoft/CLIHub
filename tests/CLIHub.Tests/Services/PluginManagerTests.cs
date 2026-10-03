@@ -112,3 +112,4 @@ public class PluginManagerTests : IDisposable
         Assert.Single(manager.GetAllPlugins());
     }
 }
+

@@ -4,12 +4,14 @@ using CLIHub.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Manages the per-user Windows Run registration for the application, so it can start
-/// with Windows. Uses the current user's registry hive (no elevation).
+///   Manages the per-user Windows Run registration for the application, so it can start
+///   with Windows. Uses the current user's registry hive (no elevation).
 /// </summary>
 public sealed class StartupService : IStartupService
 {
-    /// <summary>Value name used under the Run key.</summary>
+    /// <summary>
+    ///   Value name used under the Run key.
+    /// </summary>
     public const string ValueName = "CLIHub";
 
     private readonly IStartupRegistry _registry;
@@ -26,6 +28,7 @@ public sealed class StartupService : IStartupService
         _executablePathProvider = executablePathProvider ?? DefaultExecutablePath;
     }
 
+    /// <inheritdoc />
     public bool IsEnabled()
     {
         try
@@ -39,6 +42,7 @@ public sealed class StartupService : IStartupService
         }
     }
 
+    /// <inheritdoc />
     public bool SetEnabled(bool enabled)
     {
         try
@@ -70,7 +74,9 @@ public sealed class StartupService : IStartupService
         }
     }
 
-    /// <summary>Wraps a path in quotes for the Run value.</summary>
+    /// <summary>
+    ///   Wraps a path in quotes for the Run value.
+    /// </summary>
     internal static string Quote(string path) => $"\"{path.Trim('"')}\"";
 
     private static string? DefaultExecutablePath() =>

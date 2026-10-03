@@ -3,8 +3,8 @@ namespace CLIHub.Core.Services;
 using System.IO.Pipes;
 
 /// <summary>
-/// Ensures a single application instance. The first instance owns a named mutex and
-/// listens on a named pipe; later instances signal it to activate and then exit.
+///   Ensures a single application instance. The first instance owns a named mutex and
+///   listens on a named pipe; later instances signal it to activate and then exit.
 /// </summary>
 public sealed class SingleInstanceGuard : IDisposable
 {
@@ -17,16 +17,19 @@ public sealed class SingleInstanceGuard : IDisposable
     private readonly Task? _serverTask;
 
     /// <summary>
-    /// True when this process acquired the mutex and is the primary instance.
+    ///   True when this process acquired the mutex and is the primary instance.
     /// </summary>
     public bool IsFirstInstance => _isFirstInstance;
 
     /// <summary>
-    /// Raised on the first instance when another instance signals activation.
-    /// Handlers are invoked on a background thread.
+    ///   Raised on the first instance when another instance signals activation.
+    ///   Handlers are invoked on a background thread.
     /// </summary>
     public event Action? ActivationRequested;
 
+    /// <summary>
+    ///   Creates the guard and acquires the single-instance mutex.
+    /// </summary>
     public SingleInstanceGuard()
     {
         _mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
@@ -40,8 +43,8 @@ public sealed class SingleInstanceGuard : IDisposable
     }
 
     /// <summary>
-    /// Signals the running primary instance to show its window. Safe to call from a
-    /// second instance; failures are swallowed so the caller can exit quietly.
+    ///   Signals the running primary instance to show its window. Safe to call from a
+    ///   second instance; failures are swallowed so the caller can exit quietly.
     /// </summary>
     public void SignalActivation()
     {
@@ -103,6 +106,9 @@ public sealed class SingleInstanceGuard : IDisposable
         }
     }
 
+    /// <summary>
+    ///   Releases the mutex and signal resources.
+    /// </summary>
     public void Dispose()
     {
         try

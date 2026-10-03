@@ -5,7 +5,7 @@ using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Tracks project directories backed by <see cref="IConfigService"/>.
+///   Tracks project directories backed by <see cref="IConfigService"/>.
 /// </summary>
 public class ProjectService : IProjectService
 {
@@ -19,10 +19,15 @@ public class ProjectService : IProjectService
     private readonly ILogger<ProjectService> _logger;
     private readonly AppConfig _config;
 
+    /// <inheritdoc />
     public event EventHandler? ProjectsChanged;
 
+    /// <inheritdoc />
     public string? DefaultLogoPath { get; set; }
 
+    /// <summary>
+    ///   Creates the service with the default project logo path.
+    /// </summary>
     public ProjectService(IConfigService configService, ILogger<ProjectService> logger)
     {
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
@@ -31,12 +36,14 @@ public class ProjectService : IProjectService
         ClearStaleCurrentProject();
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<Project> GetAllProjects()
     {
         RefreshLogos();
         return _config.Projects.ToList();
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<Project> GetRecentProjects(int limit)
     {
         if (limit <= 0)
@@ -51,12 +58,14 @@ public class ProjectService : IProjectService
             .ToList();
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<Project> GetFavorites()
     {
         RefreshLogos();
         return _config.Projects.Where(p => p.IsFavorite).ToList();
     }
 
+    /// <inheritdoc />
     public Project? GetCurrentProject()
     {
         if (_config.CurrentProjectId == null)
@@ -81,6 +90,7 @@ public class ProjectService : IProjectService
         }
     }
 
+    /// <inheritdoc />
     public Project AddProject(string folderPath)
     {
         if (string.IsNullOrWhiteSpace(folderPath))
@@ -122,6 +132,7 @@ public class ProjectService : IProjectService
         return project;
     }
 
+    /// <inheritdoc />
     public void RemoveProject(string projectId)
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
@@ -141,6 +152,7 @@ public class ProjectService : IProjectService
         Persist();
     }
 
+    /// <inheritdoc />
     public void SetCurrentProject(string projectId)
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
@@ -155,6 +167,7 @@ public class ProjectService : IProjectService
         Persist();
     }
 
+    /// <inheritdoc />
     public void ToggleFavorite(string projectId)
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
@@ -167,6 +180,7 @@ public class ProjectService : IProjectService
         Persist();
     }
 
+    /// <inheritdoc />
     public void TouchProject(string projectId)
     {
         var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
@@ -179,6 +193,7 @@ public class ProjectService : IProjectService
         Persist();
     }
 
+    /// <inheritdoc />
     public string? ResolveLogo(string projectPath)
     {
         if (string.IsNullOrWhiteSpace(projectPath))

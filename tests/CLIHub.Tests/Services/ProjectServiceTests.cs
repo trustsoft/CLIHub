@@ -176,3 +176,4 @@ public class ProjectServiceTests : IDisposable
         Assert.Equal("default.png", logo);
     }
 }
+

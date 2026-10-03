@@ -103,3 +103,4 @@ public class LogLevelParserTests
         Assert.Equal(LogEventLevel.Information, LogLevelParser.Parse(input));
     }
 }
+

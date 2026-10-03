@@ -4,7 +4,7 @@ using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// In-memory IProcessLauncher recording calls, for testing command routing.
+///   In-memory IProcessLauncher recording calls, for testing command routing.
 /// </summary>
 public class FakeProcessLauncher : IProcessLauncher
 {
@@ -37,3 +37,4 @@ public class FakeProcessLauncher : IProcessLauncher
 
     public RuntimeKind Runtime { get; private set; } = RuntimeKind.WindowsTerminal;
 }
+

@@ -110,3 +110,4 @@ public class AgentCommandServiceTests : IDisposable
         Assert.Equal("boom", result.Error);
     }
 }
+

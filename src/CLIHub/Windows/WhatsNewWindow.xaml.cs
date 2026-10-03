@@ -7,14 +7,18 @@ using System.Windows.Input;
 using System.Windows.Interop;
 
 /// <summary>
-/// The What's New window: the user-facing release notes, newest version first.
+///   The What's New window: the user-facing release notes, newest version first.
 /// </summary>
 /// <remarks>
-/// The window draws its own chrome — no OS title bar — following the launch window, but it is an
-/// ordinary window otherwise: not always on top, and it stays open while the user works in it.
+///   The window draws its own chrome — no OS title bar — following the launch window, but it is an
+///   ordinary window otherwise: not always on top, and it stays open while the user works in it.
 /// </remarks>
 public partial class WhatsNewWindow : Window
 {
+    /// <summary>
+    ///   Creates the window and binds it to the What's New view model.
+    /// </summary>
+    /// <param name="viewModel"> The What's New view model. </param>
     public WhatsNewWindow(WhatsNewViewModel viewModel)
     {
         InitializeComponent();
@@ -23,7 +27,7 @@ public partial class WhatsNewWindow : Window
     }
 
     /// <summary>
-    /// Shows the window, or brings it to the front when it is already open.
+    ///   Shows the window, or brings it to the front when it is already open.
     /// </summary>
     public void ShowNotes()
     {
@@ -48,8 +52,8 @@ public partial class WhatsNewWindow : Window
         DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
 
     /// <summary>
-    /// Moves the window while the drawn header is dragged. The close button handles the press
-    /// itself, so a click on it never starts a drag.
+    ///   Moves the window while the drawn header is dragged. The close button handles the press
+    ///   itself, so a click on it never starts a drag.
     /// </summary>
     private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)
     {
