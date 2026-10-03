@@ -3,7 +3,7 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
-## 0.6.0 — 2026-10-02
+## 0.6.0 — 2026-10-03
 
 ### New
 

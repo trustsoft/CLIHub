@@ -7,7 +7,7 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
-## 0.6.0 — 2026-10-02
+## 0.6.0 — 2026-10-03
 
 ### Added
 
