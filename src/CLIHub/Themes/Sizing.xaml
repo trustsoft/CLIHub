@@ -46,8 +46,9 @@
     <CornerRadius x:Key="Sizing.ProjectLogo.CornerRadius">9</CornerRadius>
     <sys:Double x:Key="Sizing.AgentLogo.Height">28</sys:Double>
     <sys:Double x:Key="Sizing.AgentLogo.Width">28</sys:Double>
-    <!-- Right inset of row content: 12px, so row text uses the full row width. -->
-    <Thickness x:Key="Sizing.ProjectRow.Padding">12,9</Thickness>
+    <!-- Row paddings: the divider-side insets match (10px row padding + 10px pane margin on
+         both sides of the pane divider). -->
+    <Thickness x:Key="Sizing.ProjectRow.Padding">12,9,10,9</Thickness>
     <Thickness x:Key="Sizing.AgentRow.Padding">10,0,10,0</Thickness>
     <!-- Gap between an agent's text and its action buttons. -->
     <Thickness x:Key="Sizing.AgentRow.TextMargin">14,0,24,0</Thickness>
