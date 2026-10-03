@@ -12,8 +12,15 @@ using System.Text.RegularExpressions;
 /// </summary>
 public class AgentVersionService : IAgentVersionService
 {
-    internal static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
-    internal static readonly TimeSpan DefaultProbeTimeout = TimeSpan.FromSeconds(10);
+    /// <summary>
+    ///   The probe time-to-live used when the TTL preference is not set.
+    /// </summary>
+    public static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
+
+    /// <summary>
+    ///   The probe timeout used when the timeout preference is not set.
+    /// </summary>
+    public static readonly TimeSpan DefaultProbeTimeout = TimeSpan.FromSeconds(10);
 
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 

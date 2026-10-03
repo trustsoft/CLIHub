@@ -144,6 +144,7 @@
                             <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
                             <TextBox Margin="0,6,0,0"
                                      Style="{StaticResource SettingsInput}"
+                                     Tag="{Binding ProbeTtlWatermark}"
                                      Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
                                      Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
                         </StackPanel>
@@ -151,6 +152,7 @@
                             <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
                             <TextBox Margin="0,6,0,0"
                                      Style="{StaticResource SettingsInput}"
+                                     Tag="{Binding ProbeTimeoutWatermark}"
                                      Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
                                      Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
                         </StackPanel>

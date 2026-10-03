@@ -3,6 +3,7 @@ namespace CLIHub.ViewModels;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
+using CLIHub.Core.Services;
 
 /// <summary>
 ///   A selectable default runtime with a friendly label and a short segment label.
@@ -178,6 +179,16 @@ public sealed class SettingsViewModel : ObservableObject
         get => _probeTimeoutText;
         set => SetProperty(ref _probeTimeoutText, value);
     }
+
+    /// <summary>
+    ///   Watermark for the TTL field: the built-in default shown while the field is empty.
+    /// </summary>
+    public string ProbeTtlWatermark => ((int)AgentVersionService.DefaultTtl.TotalMinutes).ToString();
+
+    /// <summary>
+    ///   Watermark for the timeout field: the built-in default shown while the field is empty.
+    /// </summary>
+    public string ProbeTimeoutWatermark => ((int)AgentVersionService.DefaultProbeTimeout.TotalSeconds).ToString();
 
     /// <summary>
     ///   Whether updates are checked on startup.
