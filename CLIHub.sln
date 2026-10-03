@@ -12,6 +12,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Tests", "tests\CLIHu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6E1BB30C-BDF9-4AE0-93F6-EA07A032CF26}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB7D91EA-850B-4DE3-8820-649DBE3026AE}"
+	ProjectSection(SolutionItems) = preProject
+		AGENTS.md = AGENTS.md
+		docs\architecture.md = docs\architecture.md
+		docs\changelog-and-release-notes.md = docs\changelog-and-release-notes.md
+		docs\glossary.md = docs\glossary.md
+		docs\repo-structure.md = docs\repo-structure.md
+		docs\vision.md = docs\vision.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

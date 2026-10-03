@@ -90,6 +90,7 @@ tests/CLIHub.Tests/    # xUnit tests
 ## Documentation
 
 - [`docs/vision.md`](docs/vision.md) — vision and roadmap
+- [`docs/glossary.md`](docs/glossary.md) — terminology: project, agent, plugin, agent command, availability
 - [`docs/architecture.md`](docs/architecture.md) — architecture, plugin format, conventions
 - [`docs/repo-structure.md`](docs/repo-structure.md) — repository layout
 - [`docs/changelog-and-release-notes.md`](docs/changelog-and-release-notes.md) — changelog & release-notes plan (draft)

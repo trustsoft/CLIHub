@@ -10,6 +10,7 @@ Single source of truth for each topic — link, don't duplicate:
 
 - `README.md` — user-facing overview and quickstart
 - `docs/vision.md` — vision, goals, roadmap
+- `docs/glossary.md` — canonical terminology (project, agent, plugin, agent command, availability); use these terms in docs, specs, and code
 - `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
 - `docs/repo-structure.md` — repository layout (where everything lives)
 - `docs/changelog-and-release-notes.md` — changelog & release-notes plan (draft, decision pending)

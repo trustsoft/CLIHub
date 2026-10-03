@@ -38,6 +38,7 @@
 **`docs/`** — project documentation (markdown):
 
 - `vision.md` — vision, goals, audience, capability roadmap
+- `glossary.md` — canonical terminology used across docs, specs, and code
 - `architecture.md` — architecture, responsibilities, plugin format, technology decisions, conventions
 - `repo-structure.md` — this file
 - `changelog-and-release-notes.md` — the rationale and decision log behind the changelog & release notes (implemented by the `release-notes` change)
