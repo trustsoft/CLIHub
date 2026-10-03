@@ -9,7 +9,7 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 - **Projects** — track folders with auto-detected logos, recents, and a current-project context
 - **Agents as plugins** — JSON descriptors; built-in agents are seeded on first run with logos
 - **Agent commands** — launch, resume last session, version, update, initialize (per agent)
-- **Availability** — detects whether an agent is installed on the host and used in a project; dim or hide unavailable agents
+- **Availability** — agents that are not installed on the host are never listed; agents unused in the current project are dimmed, or hidden via the filter
 - **Versions** — each agent's version is captured and shown in the list
 - **Resizable layout** — drag the divider between the Projects and AI Agents panes
 - **Runtime selection** — open agents in Windows Terminal, Command Prompt, or PowerShell
@@ -39,7 +39,7 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 1. Right-click the tray icon (or press **Ctrl+Shift+A**) to open CLIHub.
 2. **Add Project…** and pick a project folder.
 3. Select the project, then choose an agent and click **Launch** (or **Resume**, **Init**, **Update**, **Version**).
-4. Agents not used in the current project are dimmed, or hidden via **Only agents available in project**.
+4. Agents that are not installed on the host are not listed; agents not used in the current project are dimmed, or hidden via **Only agents available in project**.
 5. After CLIHub updates itself, **What's New** opens once with the notes for the new version; you can reopen it any time from the tray menu.
 6. When a newer version is available, install it from the tray menu or the What's New window: **Download and restart** fetches the update and relaunches CLIHub into it.
 
