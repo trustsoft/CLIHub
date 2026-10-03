@@ -88,7 +88,7 @@ CI builds and tests every pull request and push to `master`. To cut a release:
 2. Push the version tag: `git tag v0.7.0 && git push origin v0.7.0`.
 3. The pipeline tests, packages (framework-dependent win-x64 via `vpk`), and publishes the release to [GitHub Releases](https://github.com/trustsoft/clihub/releases); installed apps pick it up through the built-in updater.
 
-Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#packaging-cicd).
+Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#packaging-cicd). Step-by-step runbook: [`docs/releasing.md`](docs/releasing.md).
 
 ## Project layout
 

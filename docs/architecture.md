@@ -139,7 +139,9 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 ## Packaging & CI/CD
 
-Two GitHub Actions workflows, both on `windows-latest` (WPF does not build on Linux):
+Two GitHub Actions workflows, both on `windows-latest` (WPF does not build on Linux). The
+step-by-step release procedure lives in [releasing.md](releasing.md); this section describes the
+machinery:
 
 - **`ci.yml`** — every pull request and every push to `master`: `dotnet build CLIHub.sln -c Release`, then `dotnet test`.
 - **`release.yml`** — triggered by pushing a tag `v*`:
