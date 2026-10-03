@@ -26,7 +26,7 @@
 
 ## 4. End-to-end release verification
 
-- [ ] 4.1 Push the change to `master` (CI green), prepare the `0.6.0` sections in `RELEASE-NOTES.md`/`CHANGELOG.md` if missing, then push tag `v0.6.0`. Verify: the release workflow completes, the GitHub release `v0.6.0` is published with installer + portable + update metadata, and the release body matches the notes section.
+- [x] 4.1 Push the change to `master` (CI green), prepare the `0.6.0` sections in `RELEASE-NOTES.md`/`CHANGELOG.md` if missing, then push tag `v0.6.0`. Verify: the release workflow completes, the GitHub release `v0.6.0` is published with installer + portable + update metadata, and the release body matches the notes section.
 
 - [ ] 4.2 Install the produced `CLIHub-win-Setup.exe` on a machine and confirm the app runs, reports version 0.6.0, and the in-app "Check for updates" reports no update (it is the latest). Verify: observed on a real machine.
 
