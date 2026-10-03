@@ -32,7 +32,9 @@
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF"/>
 
     <!-- Text -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFFFFFFF"/>
+    <!-- Primary text is one step off pure white (pure white reads harsh on the dark chrome);
+         it sits a hair above MenuItemBrush so list names keep a slight edge over menu entries. -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFE9E9E9"/>
     <SolidColorBrush x:Key="TextMutedBrush" Color="#FF9A9A9A"/>
     <SolidColorBrush x:Key="SectionLabelBrush" Color="#FF8B8B8B"/>
     <SolidColorBrush x:Key="BrandBrush" Color="#FFB0B0B0"/>

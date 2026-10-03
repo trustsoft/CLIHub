@@ -29,6 +29,13 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!--
+                Pane-list scrollbar thumbs use the row hover tone. The app-level implicit ScrollBar
+                style reads this key dynamically, so this window-scoped override reaches it.
+            -->
+            <SolidColorBrush x:Key="ScrollThumbBrush"
+                             Color="{Binding Color, Source={StaticResource HoverOverlayBrush}}"/>
+
+            <!--
                 Actions-menu item templates. They live here, not in the styles dictionary, because an
                 entry wires the window's click handler, which only a window with code-behind can
                 resolve. Each entry is rendered by a ContentControl that swaps template by kind.
@@ -343,7 +350,7 @@
                 </Border>
             </Grid>
 
-            <Rectangle Height="1" Margin="12,0" Fill="{StaticResource HairlineBrush}"/>
+            <Rectangle Height="1" Fill="{StaticResource HairlineBrush}"/>
 
             <!-- Footer: brand and version left, update check beside it, status centered, actions right -->
             <Grid Height="{StaticResource Sizing.Footer.Height}" Background="{StaticResource StripBgBrush}">

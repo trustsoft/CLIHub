@@ -245,7 +245,7 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Project row: accent bar on the selected row -->
+    <!-- Project row: selected rows get a soft accent fill -->
     <Style x:Key="ProjectRowContainer" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
@@ -255,31 +255,18 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Grid Background="Transparent">
-                        <Rectangle x:Name="AccentBar"
-                                   Width="3"
-                                   Height="22"
-                                   RadiusX="2"
-                                   RadiusY="2"
-                                   Fill="{StaticResource AccentBrush}"
-                                   VerticalAlignment="Center"
-                                   HorizontalAlignment="Left"
-                                   Margin="3,0,0,0"
-                                   Visibility="Collapsed"/>
-                        <Border x:Name="Bd"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
-                                Background="Transparent"
-                                Padding="{StaticResource Sizing.ProjectRow.Padding}">
-                            <ContentPresenter/>
-                        </Border>
-                    </Grid>
+                    <Border x:Name="Bd"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
+                            Background="Transparent"
+                            Padding="{StaticResource Sizing.ProjectRow.Padding}">
+                        <ContentPresenter/>
+                    </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
-                            <Setter TargetName="AccentBar" Property="Visibility" Value="Visible"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -327,6 +314,65 @@
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Standard"/>
+        <!--
+            Own template: the default ListBox template hardcodes a 1px Border padding, which
+            shaves the scroll viewport to 432px, while MaxHeight is tuned to exactly seven 62px
+            rows (434px); that 2px deficit makes the item-based ScrollViewer report a scrollable
+            overflow and show the scrollbar even though every row fits.
+        -->
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <ScrollViewer CanContentScroll="{TemplateBinding ScrollViewer.CanContentScroll}"
+                                  Focusable="false"
+                                  HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                  VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Resources>
+            <!--
+                ScrollViewer for the pane lists: the scrollbar keeps its own fixed-width column,
+                so the rows keep their geometry when the bar appears or disappears; visually the
+                bar is nudged 4px to the right of its column, past the list's edge.
+            -->
+            <Style TargetType="ScrollViewer">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollViewer">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <!-- Matches the scrollbar width set by the implicit bar style. -->
+                                    <ColumnDefinition Width="4"/>
+                                </Grid.ColumnDefinitions>
+                                <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                                        Grid.Column="0"
+                                                        CanContentScroll="{TemplateBinding CanContentScroll}"
+                                                        Content="{TemplateBinding Content}"
+                                                        ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                        Margin="{TemplateBinding Padding}"/>
+                                <ScrollBar x:Name="PART_VerticalScrollBar"
+                                           Grid.Column="1"
+                                           Cursor="Arrow"
+                                           Maximum="{TemplateBinding ScrollableHeight}"
+                                           Minimum="0"
+                                           Orientation="Vertical"
+                                           Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                           ViewportSize="{TemplateBinding ViewportHeight}"
+                                           Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}">
+                                    <ScrollBar.RenderTransform>
+                                        <TranslateTransform X="{StaticResource Sizing.PaneList.ScrollbarShift}"/>
+                                    </ScrollBar.RenderTransform>
+                                </ScrollBar>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Style.Resources>
     </Style>
 
 </ResourceDictionary>

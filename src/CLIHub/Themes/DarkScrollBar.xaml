@@ -4,7 +4,9 @@
     <!--
         Slim dark scrollbar, shared by the dark-chrome windows (launch window lists, Settings and
         What's New content). Implicit style, merged at the application level in App.xaml: window
-        resources do not reach the scrollbars inside ScrollViewer and ListBox templates.
+        resources do not reach the scrollbars inside ScrollViewer and ListBox templates. The thumb
+        reads its brush dynamically, so a window can override ScrollThumbBrush in its own
+        resources (the launch window aligns it with the row hover tone).
     -->
 
     <ResourceDictionary.MergedDictionaries>
@@ -33,7 +35,7 @@
                                 <Thumb>
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border CornerRadius="2" Background="{StaticResource ScrollThumbBrush}" Margin="0.5"/>
+                                            <Border CornerRadius="2" Background="{DynamicResource ScrollThumbBrush}" Margin="0.5"/>
                                         </ControlTemplate>
                                     </Thumb.Template>
                                 </Thumb>
