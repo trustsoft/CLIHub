@@ -90,6 +90,16 @@ public partial class SettingsWindow : Window
         e.Handled = true;
     }
 
+    /// <summary>
+    /// A Border does not take keyboard focus on click the way a Control does, so the click
+    /// handler has to move focus here — otherwise the PreviewKeyDown capture never runs.
+    /// </summary>
+    private void HotkeyField_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        HotkeyField.Focus();
+        e.Handled = true;
+    }
+
     private void HotkeyField_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         e.Handled = true;

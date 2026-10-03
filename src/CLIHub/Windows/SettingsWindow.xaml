@@ -110,31 +110,25 @@
                     <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="GLOBAL HOTKEY"/>
                     <Border x:Name="HotkeyField"
                             HorizontalAlignment="Left"
+                            MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
                             PreviewKeyDown="HotkeyField_PreviewKeyDown"
                             Style="{StaticResource HotkeyField}">
-                        <StackPanel Orientation="Horizontal">
-                            <!-- -6 cancels the last chip's trailing margin, so the left and right
-                                 insets of the field stay equal -->
-                            <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Style="{StaticResource HotkeyChip}">
-                                            <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <Rectangle Width="1.5"
-                                       Height="18"
-                                       Fill="{StaticResource AccentBrush}"
-                                       VerticalAlignment="Center"
-                                       Visibility="{Binding IsKeyboardFocusWithin, ElementName=HotkeyField, Converter={StaticResource BoolToVisibility}}"/>
-                        </StackPanel>
+                        <!-- -6 cancels the last chip's trailing margin, so the left and right
+                             insets of the field stay equal -->
+                        <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource HotkeyChip}">
+                                        <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </Border>
                     <TextBlock Margin="0,8,0,0"
                                Style="{StaticResource HintText}"
