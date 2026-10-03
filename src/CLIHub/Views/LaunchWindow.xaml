@@ -192,6 +192,9 @@
                                                        Foreground="{StaticResource TextPrimaryBrush}"
                                                        Text="{Binding Name}"
                                                        TextTrimming="CharacterEllipsis"/>
+                                            <!-- TextTrimming is only a transient fallback while the converter catches
+                                                 up after a width change (one layout pass, e.g. mid-splitter-drag);
+                                                 the authoritative trimming is the converter's. -->
                                             <TextBlock Margin="0,3,0,0"
                                                        FontSize="{StaticResource Sizing.FontSize.Body}"
                                                        Foreground="{StaticResource TextMutedBrush}"

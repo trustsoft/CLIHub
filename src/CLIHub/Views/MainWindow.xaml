@@ -25,7 +25,7 @@
                 <TextBlock Text="CLIHub" 
                           FontSize="24" 
                           FontWeight="Bold" 
-                          Foreground="White" 
+                          Foreground="{StaticResource TextPrimaryBrush}"
                           VerticalAlignment="Center"/>
                 <TextBlock Text="AI Agent Launcher" 
                           FontSize="14" 
