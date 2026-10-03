@@ -102,17 +102,13 @@ The system SHALL present each project as a single row showing its logo, name, pa
 - **WHEN** a project path fits the space available in the row
 - **THEN** the path is shown unchanged, without an ellipsis
 
-#### Scenario: Short path unchanged
-- **WHEN** a project path fits the space available in the row
-- **THEN** the path is shown unchanged, without an ellipsis
-
 #### Scenario: Favorite marker
 - **WHEN** a project is marked as a favorite
 - **THEN** its row shows a favorite marker, and a project that is not a favorite shows no marker
 
 #### Scenario: Selected row indicated
 - **WHEN** a project row is selected
-- **THEN** the row is highlighted with the accent selection treatment and carries a left accent bar that distinguishes it from unselected rows
+- **THEN** the row is highlighted with the accent selection fill that distinguishes it from unselected rows
 
 #### Scenario: Rows fill the list width
 - **WHEN** the projects list is shown
