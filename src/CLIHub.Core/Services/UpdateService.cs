@@ -13,9 +13,9 @@ using Velopack.Sources;
 /// </summary>
 public class UpdateService : IUpdateService
 {
-    // Set to the release repository when packaging with Velopack (GitHub Releases).
+    // The release repository used as the Velopack update feed (GitHub Releases).
     // A non-GitHub URL or local folder is also supported (see CreateDefaultManager).
-    internal const string RepositoryUrl = "https://github.com/your-org/clihub";
+    internal const string RepositoryUrl = "https://github.com/trustsoft/clihub";
 
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
 
