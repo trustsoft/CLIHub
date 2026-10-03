@@ -22,8 +22,73 @@
         WindowStartupLocation="Manual"
         WindowStyle="None">
     <Window.Resources>
-        <!-- Window-scoped styles: the dark theme applies to this window only. -->
-        <ResourceDictionary Source="/Themes/LaunchWindowStyles.xaml"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Window-scoped styles: the dark theme applies to this window only. -->
+                <ResourceDictionary Source="/Themes/LaunchWindowStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--
+                Actions-menu item templates. They live here, not in the styles dictionary, because an
+                entry wires the window's click handler, which only a window with code-behind can
+                resolve. Each entry is rendered by a ContentControl that swaps template by kind.
+            -->
+            <DataTemplate x:Key="ActionsMenuActionTemplate">
+                <Button Click="OnMenuActionInvoked"
+                        Command="{Binding Command}"
+                        Style="{StaticResource ActionsMenuEntryButton}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="16"
+                                   Margin="0,0,8,0"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Text="{Binding Glyph}"/>
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                    </StackPanel>
+                </Button>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ActionsMenuToggleTemplate">
+                <ToggleButton Click="OnMenuActionInvoked"
+                              IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                              Style="{StaticResource ActionsMenuEntryToggle}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Width="16"
+                                   Margin="0,0,8,0"
+                                   VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   Text="{Binding Glyph}"/>
+                        <TextBlock VerticalAlignment="Center" Text="{Binding Label}"/>
+                    </StackPanel>
+                </ToggleButton>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ActionsMenuSeparatorTemplate">
+                <Rectangle Height="1" Margin="8,4" Fill="{StaticResource RowDividerBrush}"/>
+            </DataTemplate>
+
+            <DataTemplate x:Key="ActionsMenuItemTemplate">
+                <ContentControl Content="{Binding}">
+                    <ContentControl.Style>
+                        <Style TargetType="ContentControl">
+                            <Setter Property="ContentTemplate" Value="{StaticResource ActionsMenuActionTemplate}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource ActionsMenuSeparatorTemplate}"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsCheckable}" Value="True">
+                                    <Setter Property="ContentTemplate" Value="{StaticResource ActionsMenuToggleTemplate}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ContentControl.Style>
+                </ContentControl>
+            </DataTemplate>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
@@ -49,44 +114,33 @@
                     <DockPanel Margin="{StaticResource Sizing.Pane.Margin}">
                         <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="PROJECTS"/>
-                            <Button x:Name="ProjectsActionsButton"
-                                    HorizontalAlignment="Right"
-                                    Click="OnOpenProjectsMenu"
-                                    Content="Actions"
-                                    Style="{StaticResource PaneActionsButton}">
-                                <Button.ContextMenu>
-                                    <ContextMenu Style="{StaticResource DarkContextMenu}">
-                                        <ContextMenu.Resources>
-                                            <!-- Items are styled implicitly; MenuSeparator keeps its explicit style -->
-                                            <Style TargetType="MenuItem" BasedOn="{StaticResource DarkMenuItem}"/>
-                                        </ContextMenu.Resources>
-                                        <MenuItem Command="{Binding AddProjectCommand}"
-                                                  Header="Add Project...">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Add}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding RemoveProjectCommand}"
-                                                  Header="Remove Project">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Delete}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
-                                                  Header="Toggle Favorite">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.FavoriteStar}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding RefreshCommand}"
-                                                  Header="Refresh">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                            </Button>
+                            <ToggleButton x:Name="ProjectsActionsButton"
+                                          HorizontalAlignment="Right"
+                                          Content="ACTIONS"
+                                          Style="{StaticResource PaneActionsToggle}"/>
+                            <Popup x:Name="ProjectsActionsPopup"
+                                   AllowsTransparency="True"
+                                   IsOpen="{Binding IsChecked, ElementName=ProjectsActionsButton, Mode=TwoWay}"
+                                   Opened="OnActionsPopupOpened"
+                                   Placement="Bottom"
+                                   PlacementTarget="{Binding ElementName=ProjectsActionsButton}"
+                                   PopupAnimation="Fade"
+                                   StaysOpen="False"
+                                   VerticalOffset="-1">
+                                <Grid PreviewKeyDown="OnActionsMenuPreviewKeyDown">
+                                    <Border Style="{StaticResource ActionsPopover}">
+                                        <ItemsControl ItemTemplate="{StaticResource ActionsMenuItemTemplate}"
+                                                      ItemsSource="{Binding ProjectsActions}"/>
+                                    </Border>
+                                    <!-- Masks the card's top border under the open Actions control,
+                                         so the control and the card read as one panel with no seam. -->
+                                    <Rectangle Width="{Binding ActualWidth, ElementName=ProjectsActionsButton}"
+                                               Height="2"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Top"
+                                               Fill="{StaticResource PopoverOpenBrush}"/>
+                                </Grid>
+                            </Popup>
                         </Grid>
 
                         <ListBox ItemContainerStyle="{StaticResource ProjectRowContainer}"
@@ -182,65 +236,33 @@
                     <DockPanel Margin="{StaticResource Sizing.Pane.Margin}">
                         <Grid DockPanel.Dock="Top" Style="{StaticResource PaneHeader}">
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="AGENTS"/>
-                            <Button x:Name="AgentsActionsButton"
-                                    HorizontalAlignment="Right"
-                                    Click="OnOpenAgentsMenu"
-                                    Content="Actions"
-                                    Style="{StaticResource PaneActionsButton}">
-                                <Button.ContextMenu>
-                                    <ContextMenu Style="{StaticResource DarkContextMenu}">
-                                        <ContextMenu.Resources>
-                                            <!-- Items are styled implicitly; MenuSeparator keeps its explicit style -->
-                                            <Style TargetType="MenuItem" BasedOn="{StaticResource DarkMenuItem}"/>
-                                        </ContextMenu.Resources>
-                                        <MenuItem Command="{Binding LaunchCommand}"
-                                                  Header="Launch">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Play}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding ResumeCommand}"
-                                                  Header="Resume Session">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding InitCommand}"
-                                                  Header="Initialize">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Initialize}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding UpdateCommand}"
-                                                  Header="Update">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Update}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <MenuItem Command="{Binding VersionCommand}"
-                                                  Header="Show Version">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Version}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <Separator Style="{StaticResource MenuSeparator}"/>
-                                        <MenuItem Header="Only agents available in project"
-                                                  IsCheckable="True"
-                                                  IsChecked="{Binding ShowOnlyProjectAgents, Mode=TwoWay}">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Filter}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                        <Separator Style="{StaticResource MenuSeparator}"/>
-                                        <MenuItem Command="{Binding RefreshCommand}"
-                                                  Header="Refresh">
-                                            <MenuItem.Icon>
-                                                <TextBlock Style="{StaticResource MenuIcon}" Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                                            </MenuItem.Icon>
-                                        </MenuItem>
-                                    </ContextMenu>
-                                </Button.ContextMenu>
-                            </Button>
+                            <ToggleButton x:Name="AgentsActionsButton"
+                                          HorizontalAlignment="Right"
+                                          Content="ACTIONS"
+                                          Style="{StaticResource PaneActionsToggle}"/>
+                            <Popup x:Name="AgentsActionsPopup"
+                                   AllowsTransparency="True"
+                                   IsOpen="{Binding IsChecked, ElementName=AgentsActionsButton, Mode=TwoWay}"
+                                   Opened="OnActionsPopupOpened"
+                                   Placement="Bottom"
+                                   PlacementTarget="{Binding ElementName=AgentsActionsButton}"
+                                   PopupAnimation="Fade"
+                                   StaysOpen="False"
+                                   VerticalOffset="-1">
+                                <Grid PreviewKeyDown="OnActionsMenuPreviewKeyDown">
+                                    <Border Style="{StaticResource ActionsPopover}">
+                                        <ItemsControl ItemTemplate="{StaticResource ActionsMenuItemTemplate}"
+                                                      ItemsSource="{Binding AgentsActions}"/>
+                                    </Border>
+                                    <!-- Masks the card's top border under the open Actions control,
+                                         so the control and the card read as one panel with no seam. -->
+                                    <Rectangle Width="{Binding ActualWidth, ElementName=AgentsActionsButton}"
+                                               Height="2"
+                                               HorizontalAlignment="Right"
+                                               VerticalAlignment="Top"
+                                               Fill="{StaticResource PopoverOpenBrush}"/>
+                                </Grid>
+                            </Popup>
                         </Grid>
 
                         <ListBox AlternationCount="100000"

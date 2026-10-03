@@ -4,8 +4,10 @@ using CLIHub.Core.Formatting;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
+using CLIHub.Themes;
 using Microsoft.Win32;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 
@@ -38,6 +40,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private bool _suppressSelectionChange;
     private bool _suppressFilterChange;
     private string _statusMessage = "CLIHub ready";
+    private MenuAction? _filterAction;
 
     /// <summary>
     ///   Creates the view model with its services and loads projects and agents.
@@ -107,6 +110,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _isPinned = preferences.PinLaunchWindow;
         _displayStyle = PathDisplayStyles.Parse(preferences.PathDisplayStyle);
 
+        BuildActions();
+
         RefreshProjects();
         RefreshAgents();
     }
@@ -120,6 +125,16 @@ public sealed class LaunchWindowViewModel : ObservableObject
     ///   Agents shown in the Agents pane.
     /// </summary>
     public ObservableCollection<AgentItem> Agents { get; } = new();
+
+    /// <summary>
+    ///   Entries of the Projects pane's actions menu.
+    /// </summary>
+    public IReadOnlyList<MenuAction> ProjectsActions { get; private set; } = Array.Empty<MenuAction>();
+
+    /// <summary>
+    ///   Entries of the Agents pane's actions menu.
+    /// </summary>
+    public IReadOnlyList<MenuAction> AgentsActions { get; private set; } = Array.Empty<MenuAction>();
 
     /// <summary>
     ///   Current application version, formatted for the footer.
@@ -180,6 +195,11 @@ public sealed class LaunchWindowViewModel : ObservableObject
             _configService.Save(config);
 
             RefreshAgents();
+
+            if (_filterAction is { } action && action.IsChecked != value)
+            {
+                action.IsChecked = value;
+            }
         }
     }
 
@@ -304,6 +324,57 @@ public sealed class LaunchWindowViewModel : ObservableObject
     public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
 
     private bool HasSelectedAgent() => SelectedAgent is not null;
+
+    /// <summary>
+    ///   Builds the per-pane actions menus from the existing commands, and wires the availability
+    ///   filter entry to its persisted preference.
+    /// </summary>
+    private void BuildActions()
+    {
+        ProjectsActions = new MenuAction[]
+        {
+            new() { Label = "Add Project...", Glyph = IconGlyphs.Add, Command = AddProjectCommand },
+            new() { Label = "Remove Project", Glyph = IconGlyphs.Delete, Command = RemoveProjectCommand },
+            new() { Label = "Toggle Favorite", Glyph = IconGlyphs.FavoriteStar, Command = ToggleFavoriteCommand },
+            new() { Label = "Refresh", Glyph = IconGlyphs.Refresh, Command = RefreshCommand }
+        };
+
+        _filterAction = new MenuAction
+        {
+            Label = "Only agents available in project",
+            Glyph = IconGlyphs.Filter,
+            IsCheckable = true,
+            IsChecked = ShowOnlyProjectAgents
+        };
+
+        _filterAction.PropertyChanged += OnFilterActionChanged;
+
+        AgentsActions = new MenuAction[]
+        {
+            new() { Label = "Launch", Glyph = IconGlyphs.Play, Command = LaunchCommand },
+            new() { Label = "Resume Session", Glyph = IconGlyphs.Refresh, Command = ResumeCommand },
+            new() { Label = "Initialize", Glyph = IconGlyphs.Initialize, Command = InitCommand },
+            new() { Label = "Update", Glyph = IconGlyphs.Update, Command = UpdateCommand },
+            new() { Label = "Show Version", Glyph = IconGlyphs.Version, Command = VersionCommand },
+            MenuAction.Separator(),
+            _filterAction,
+            MenuAction.Separator(),
+            new() { Label = "Refresh", Glyph = IconGlyphs.Refresh, Command = RefreshCommand }
+        };
+    }
+
+    /// <summary>
+    ///   Mirrors the filter entry's checked state into the availability filter preference.
+    /// </summary>
+    private void OnFilterActionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MenuAction.IsChecked)
+            && _filterAction is { } action
+            && action.IsChecked != ShowOnlyProjectAgents)
+        {
+            ShowOnlyProjectAgents = action.IsChecked;
+        }
+    }
 
     private void AddProject()
     {

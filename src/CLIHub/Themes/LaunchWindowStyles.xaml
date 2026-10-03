@@ -29,37 +29,120 @@
     <!-- Play glyph shared by the launch button and the resume ring -->
     <PathGeometry x:Key="PlayGlyph" Figures="M0,0 L0,8 L7,4 Z"/>
 
-    <!-- Icons and separators inside the Actions menus -->
-    <Style x:Key="MenuIcon" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Icon}"/>
-        <Setter Property="FontSize" Value="14"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
-    </Style>
-
     <!-- Footer icon glyphs (open data folder, settings, pin, exit) -->
     <Style x:Key="FooterIcon" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Icon}"/>
         <Setter Property="FontSize" Value="16"/>
     </Style>
 
-    <Style x:Key="MenuSeparator" TargetType="Separator">
-        <Setter Property="Margin" Value="4,4"/>
+    <!-- Icons and separators inside the Actions menus are data-driven: see ActionsPopover and the
+         entry styles below, plus the item templates declared in the window. -->
+
+    <!-- Actions menu popover card. A Popup (not a ContextMenu) hosts it, so the card lives in the
+         window's own tree and these resources resolve without being keyed for a separate tree.
+         The card sizes to its content. Its top-left and bottom corners are rounded; its top-right
+         is square because it sits under the open Actions control, which supplies that corner. -->
+    <Style x:Key="ActionsPopover" TargetType="Border">
+        <Setter Property="MinWidth" Value="{StaticResource Sizing.ActionsMenu.MinWidth}"/>
+        <Setter Property="CornerRadius" Value="8,0,8,8"/>
+        <Setter Property="Background" Value="{StaticResource PopoverOpenBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Effect">
+            <Setter.Value>
+                <DropShadowEffect BlurRadius="28" ShadowDepth="12" Opacity="0.45"/>
+            </Setter.Value>
+        </Setter>
     </Style>
 
-    <!-- Pane header "Actions" button: chrome appears on hover only -->
-    <Style x:Key="PaneActionsButton" TargetType="Button">
+    <!-- Actions menu entry: a full-width pill that highlights on hover and dims when disabled -->
+    <Style x:Key="ActionsMenuEntryButton" TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuItemBrush}"/>
+        <Setter Property="FontSize" Value="12.5"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="Bd"
-                            Height="20"
+                            Height="30"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                            Padding="8,0"
+                            Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Checkable entry (the availability filter toggle) -->
+    <Style x:Key="ActionsMenuEntryToggle" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{StaticResource MenuItemBrush}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd"
+                            Height="30"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                            Padding="8,0"
+                            Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Pane header "Actions" toggle: uppercase and SemiBold like the section label, in a slightly
+         smaller size; chrome appears on hover and stays while its menu is open -->
+    <Style x:Key="PaneActionsToggle" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd"
+                            Height="24"
                             CornerRadius="5"
-                            Padding="6,0,4,0"
+                            Padding="7,0,5,0"
                             Background="Transparent"
                             BorderBrush="Transparent"
                             BorderThickness="1">
@@ -81,75 +164,19 @@
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
                         </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <!-- Open: merge with the menu into one panel. The bottom edge is left
+                                 open and the top corners squared, so the card's top edge continues
+                                 the outline as a header divider. The extra bottom padding compensates
+                                 the removed bottom border, so the label and chevron do not move. -->
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PopoverOpenBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderThickness" Value="1,1,1,0"/>
+                            <Setter TargetName="Bd" Property="Padding" Value="7,0,5,1"/>
+                            <Setter TargetName="Bd" Property="CornerRadius" Value="5,5,0,0"/>
+                        </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Dark popover context menu -->
-    <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
-        <Setter Property="MinWidth" Value="180"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ContextMenu">
-                    <Border CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
-                            Background="{StaticResource PopoverBgBrush}"
-                            BorderBrush="{StaticResource FieldStrokeBrush}"
-                            BorderThickness="1"
-                            Padding="4">
-                        <Border.Effect>
-                            <DropShadowEffect BlurRadius="28" ShadowDepth="12" Opacity="0.45"/>
-                        </Border.Effect>
-                        <StackPanel IsItemsHost="True"/>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style x:Key="DarkMenuItem" TargetType="MenuItem">
-        <Setter Property="Foreground" Value="{StaticResource MenuItemBrush}"/>
-        <Setter Property="FontSize" Value="12.5"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="MenuItem">
-                    <Border x:Name="Bd"
-                            Height="30"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
-                            Padding="8,0"
-                            Background="Transparent">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <ContentPresenter x:Name="IconHost"
-                                              Grid.Column="0"
-                                              ContentSource="Icon"
-                                              Margin="0,0,8,0"
-                                              VerticalAlignment="Center"/>
-                            <ContentPresenter Grid.Column="1"
-                                              ContentSource="Header"
-                                              VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="Icon" Value="{x:Null}">
-                            <Setter TargetName="IconHost" Property="Visibility" Value="Collapsed"/>
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
