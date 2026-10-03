@@ -401,24 +401,22 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private void RefreshAgents()
     {
         var currentProject = _projectService.GetCurrentProject()?.Path;
-        var filterUnavailable = ShowOnlyProjectAgents && currentProject != null;
+        var entries = AgentListComposer.Compose(
+            _pluginManager.GetAllPlugins(),
+            _agentDetectionService,
+            currentProject,
+            ShowOnlyProjectAgents);
+
         var items = new List<AgentItem>();
 
-        foreach (var plugin in _pluginManager.GetAllPlugins())
+        foreach (var entry in entries)
         {
-            var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
-
-            if (filterUnavailable && !inProject)
-            {
-                continue;
-            }
-
             items.Add(new AgentItem
             {
-                Plugin = plugin,
-                Name = plugin.Name,
-                LogoPath = plugin.LogoPath,
-                IsAvailable = currentProject == null || inProject
+                Plugin = entry.Plugin,
+                Name = entry.Plugin.Name,
+                LogoPath = entry.Plugin.LogoPath,
+                IsAvailable = entry.IsAvailable
             });
         }
 
