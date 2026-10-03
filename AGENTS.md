@@ -43,8 +43,21 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 - **Implicit usings** enabled — no need for `using System;` etc.
 - **File-scoped namespaces** (`namespace X;` not block-scoped).
 - **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`).
-- **Braces** Use curly braces for if statements and loops.
+- **Braces**: Use curly braces for if statements and loops.
 - **Naming**: PascalCase for public members, `_camelCase` for private fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
+- **XML documentation**: public types and members carry XML doc comments. Canonical examples: `src/CLIHub.Core/Models/AgentCommandKind.cs` and `src/CLIHub.Core/Models/AgentCommandResult.cs`. Conventions:
+  - `<summary>` is always multi-line; content lines are indented one space past the tag alignment (`///` followed by three spaces):
+    ```csharp
+    /// <summary>
+    ///   Outcome of executing an agent command.
+    /// </summary>
+    ```
+  - Other tags (`<param>`, `<returns>`, `<exception>`, …) stay on one line, padded with a single space inside both ends:
+    ```csharp
+    /// <param name="Success"> Whether the command succeeded. </param>
+    ```
+  - Doc text is full English sentences: capital first letter, trailing period.
+  - Positional record parameters are documented with `<param name="...">` tags in declaration order.
 - **Async patterns**: `async Task` / `ValueTask` used extensively; avoid `async void`.
 - **Reactive extensions (if needed)**: R3 (`ObservableCollections.R3`, `R3`) used for reactive patterns in ViewModels.
 - **MVVM**: Use the Model-View-ViewModel pattern for the WPF UI — keep views (XAML) and code-behind thin; put state, commands, and logic in view models under `src/CLIHub/ViewModels/`. (Some existing windows still carry logic in code-behind and are being migrated as they change.)
