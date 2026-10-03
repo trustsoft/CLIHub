@@ -54,9 +54,9 @@
     <Thickness x:Key="Sizing.AgentRow.TextMargin">14,0,24,0</Thickness>
     <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->
     <sys:Double x:Key="Sizing.AgentRow.TextMaxWidth">240</sys:Double>
-    <!-- Insets the project row's text does not get: row padding, thumbnail and text margin. The
-         favourite marker's width is added by PathDisplayConverter when the project is a favourite. -->
-    <sys:Double x:Key="Sizing.ProjectRow.TextInsets">81</sys:Double>
+    <!-- Gap between a project row's thumbnail and its texts: a fixed grid column, so the text
+         column's measured width is exactly the space the path may fill. -->
+    <GridLength x:Key="Sizing.ProjectRow.TextGap">15</GridLength>
 
     <!-- Buttons -->
     <sys:Double x:Key="Sizing.ActionButton.Height">28</sys:Double>

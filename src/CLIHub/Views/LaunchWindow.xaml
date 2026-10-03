@@ -160,7 +160,10 @@
                                     <Grid Height="{StaticResource Sizing.ProjectLogo.Height}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <!-- Fixed gap column: the text column's measured width then equals
+                                                 exactly the space the path may fill, with no chrome arithmetic
+                                                 in the converter. -->
+                                            <ColumnDefinition Width="{StaticResource Sizing.ProjectRow.TextGap}"/>
                                             <!-- Star column so the row fills the list width, while the
                                                  item's own desired width stays content driven. -->
                                             <ColumnDefinition Width="*"/>
@@ -182,8 +185,8 @@
                                         </Border>
 
                                         <StackPanel
-                                                    Grid.Column="1"
-                                                    Margin="15,0,0,0"
+                                                    x:Name="TextHost"
+                                                    Grid.Column="2"
                                                     VerticalAlignment="Center">
                                             <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
                                                        Foreground="{StaticResource TextPrimaryBrush}"
@@ -194,19 +197,16 @@
                                                        Foreground="{StaticResource TextMutedBrush}"
                                                        TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Text>
-                                                    <MultiBinding Converter="{StaticResource PathDisplay}"
-                                                                  ConverterParameter="{StaticResource Sizing.ProjectRow.TextInsets}">
+                                                    <MultiBinding Converter="{StaticResource PathDisplay}">
                                                         <Binding Path="Path"/>
-                                                        <!-- The list's measured width: the path is the elastic part of a row,
-                                                             so it is trimmed to whatever the list currently offers. The list's
-                                                             own width converges to its 300px minimum (or to a manually dragged
-                                                             pane width), because each layout pass trims the path a little more. -->
-                                                        <Binding Path="ActualWidth"
-                                                                 RelativeSource="{RelativeSource AncestorType={x:Type ListBox}}"/>
+                                                        <!-- The text host's measured width: it stretches over the text column,
+                                                             so it equals exactly the space the path may fill. The row is stretched
+                                                             to the list, so the width follows the pane's width and the path is
+                                                             re-trimmed on every change of it. -->
+                                                        <Binding ElementName="TextHost" Path="ActualWidth"/>
                                                         <Binding Path="DataContext.DisplayStyle"
                                                                  RelativeSource="{RelativeSource AncestorType={x:Type Window}}"/>
-                                                        <!-- Favourite marker widens the row, the TextBlock measures the text. -->
-                                                        <Binding Path="IsFavorite"/>
+                                                        <!-- The TextBlock measures the text. -->
                                                         <Binding RelativeSource="{RelativeSource Self}"/>
                                                     </MultiBinding>
                                                 </TextBlock.Text>

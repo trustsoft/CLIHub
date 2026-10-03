@@ -9,31 +9,25 @@ using System.Windows.Data;
 using System.Windows.Media;
 
 /// <summary>
-///   Shortens a project path so that it fits the width available in a row, using the configured
-///   path display style. The longest fitting form is found by measuring candidate texts with the
-///   row's own typeface, so the row is filled without clipping.
+///   Shortens a project path so that it fills the width offered by the row's text column, using
+///   the configured path display style. The longest fitting form is found by measuring candidate
+///   texts with the row's own typeface, so the row is filled without clipping.
 /// </summary>
 public sealed class PathDisplayConverter : IMultiValueConverter
 {
-    /// <summary>
-    ///   Width reserved for the favourite marker when the project is a favourite, so the path never
-    ///   runs into it: the 13px glyph plus its 8px margin in the project row template.
-    /// </summary>
-    private const double FavouriteMarkerWidth = 21d;
-
     /// <summary>
     ///   Fallback character width, used only when no text element is available for measuring.
     /// </summary>
     private const double FallbackCharacterWidth = 6.5d;
 
     /// <summary>
-    ///   Shortens the path text to the available row width using the configured display style.
+    ///   Shortens the path text to the available column width using the configured display style.
     /// </summary>
     /// <param name="values">
-    ///   Path text, list width, display style, favourite flag, and the measuring <see cref="TextBlock"/>.
+    ///   Path text, available column width, display style, and the measuring <see cref="TextBlock"/>.
     /// </param>
     /// <param name="targetType"> The target type of the binding. </param>
-    /// <param name="parameter"> Row insets as a comma-separated list of pixel widths. </param>
+    /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
     /// <returns> The text, shortened when needed; empty for missing text. </returns>
     public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
@@ -43,30 +37,24 @@ public sealed class PathDisplayConverter : IMultiValueConverter
             return string.Empty;
         }
 
-        if (values.Length < 2 || values[1] is not double listWidth || double.IsNaN(listWidth))
+        if (values.Length < 2 || values[1] is not double available || double.IsNaN(available))
         {
-            return text;
+            // The text column reports its width from the first arrange on; before that there is
+            // no honest budget. An empty stub keeps the content-sized window at its minimum
+            // width, while the full path here would blow it up to the longest path's width.
+            return string.Empty;
         }
 
         var style = values.Length > 2 && values[2] is PathDisplayStyle displayStyle
             ? displayStyle
             : PathDisplayStyles.Default;
 
-        // The list width is measured on the list, so the space taken by the row padding, the
-        // thumbnail, the text margin and (when shown) the favourite marker is subtracted here.
-        var insets = ParseInsets(parameter);
-        if (values.Length > 3 && values[3] is true)
-        {
-            insets += FavouriteMarkerWidth;
-        }
-
-        var available = listWidth - insets;
         if (available <= 0)
         {
-            return text;
+            return string.Empty;
         }
 
-        var textBlock = values.Length > 4 ? values[4] as TextBlock : null;
+        var textBlock = values.Length > 3 ? values[3] as TextBlock : null;
         var budget = textBlock is null
             ? (int)Math.Floor(available / FallbackCharacterWidth)
             : FindLargestFittingBudget(text, available, style, textBlock);
@@ -139,18 +127,5 @@ public sealed class PathDisplayConverter : IMultiValueConverter
             // The element may not be attached to a visual tree yet; fall back to an estimate.
             return text.Length * FallbackCharacterWidth;
         }
-    }
-
-    private static double ParseInsets(object parameter)
-    {
-        if (parameter is double doubleValue)
-        {
-            return doubleValue;
-        }
-
-        return parameter is string text
-            && double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
-                ? parsed
-                : 0d;
     }
 }
