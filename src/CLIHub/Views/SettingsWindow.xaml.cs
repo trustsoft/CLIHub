@@ -1,4 +1,4 @@
-namespace CLIHub.Windows;
+namespace CLIHub.Views;
 
 using CLIHub.Core.Hotkeys;
 using CLIHub.Interop;

@@ -2,7 +2,7 @@ namespace CLIHub;
 
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-using CLIHub.Windows;
+using CLIHub.Views;
 using H.NotifyIcon;
 using Microsoft.Win32;
 using System.Windows;

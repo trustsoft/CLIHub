@@ -1,4 +1,4 @@
-namespace CLIHub.Windows;
+namespace CLIHub.Views;
 
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;

@@ -1,7 +1,7 @@
 namespace CLIHub;
 
 using CLIHub.Core.Interfaces;
-using CLIHub.Windows;
+using CLIHub.Views;
 using Microsoft.Extensions.Logging;
 
 /// <summary>

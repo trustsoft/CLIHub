@@ -1,6 +1,6 @@
 namespace CLIHub;
 
-using CLIHub.Windows;
+using CLIHub.Views;
 
 /// <summary>
 ///   Owns the application's single <see cref="SettingsWindow"/> instance so that every entry

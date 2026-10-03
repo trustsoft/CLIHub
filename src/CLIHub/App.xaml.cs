@@ -7,7 +7,7 @@ using CLIHub.Core.Models;
 using CLIHub.Core.Services;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
-using CLIHub.Windows;
+using CLIHub.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
