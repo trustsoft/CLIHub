@@ -74,7 +74,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 
 ## Capabilities (per `openspec/specs/`)
 
-`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `preferences-ui`. Each spec defines observable behavior; see the corresponding spec for requirements.
+`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`. Each spec defines observable behavior; see the corresponding spec for requirements.
 
 ## Technology Stack
 
@@ -88,7 +88,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - **Serilog** with file sink (+ `Serilog.Extensions.Logging`) — structured logging, bridged into `Microsoft.Extensions.Logging`
 - **H.NotifyIcon.Wpf** — system tray icon
 - **System.Text.Json** — JSON serialization with camelCase policy
-- **Velopack** — application update checking, downloading, and packaging (GitHub Releases source)
+- **Velopack** — application update checking, downloading, and packaging (GitHub Releases source); packaging runs in CI, see [Packaging & CI/CD](#packaging-cicd)
 
 ### External Integration
 - **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
@@ -136,6 +136,22 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 - **Delivery:** `RELEASE-NOTES.md` is embedded into `CLIHub.Core` by link with the logical name `CLIHub.Core.ReleaseNotes.RELEASE-NOTES.md`, so the notes are available offline and independently of the update mechanism. There is no duplicate copy under `src/`.
 - **Parsing:** `ReleaseNotesService` (`IReleaseNotesService`) reads the embedded document once, orders notes by version descending (`System.Version`), and keeps a version that does not parse in its document position at the end rather than failing. Malformed, empty, or missing notes are logged and yield no notes; the application continues normally.
 - **Failure modes:** an unparseable version heading drops that section only, and the remaining sections still parse.
+
+## Packaging & CI/CD
+
+Two GitHub Actions workflows, both on `windows-latest` (WPF does not build on Linux):
+
+- **`ci.yml`** — every pull request and every push to `master`: `dotnet build CLIHub.sln -c Release`, then `dotnet test`.
+- **`release.yml`** — triggered by pushing a tag `v*`:
+  1. a `test` job builds and tests the solution as a gate;
+  2. a `release` job (`permissions: contents: write`) derives the version from the tag (leading `v` stripped; the tag is the source of truth — `Directory.Build.props` stays the development default), extracts the released version's section from `RELEASE-NOTES.md` (fails the job when the section is missing), and publishes framework-dependent `win-x64` with `-p:Version=<tag version>`;
+  3. `vpk pack` (the Velopack CLI tool, pinned to the exact Velopack library version the app links) produces the setup, portable, and delta assets with `--runtime win-x64 --framework net8.0-x64-desktop` — the installer offers the .NET 8 Desktop Runtime when it is missing — and the notes file;
+  4. `vpk upload github` publishes everything to the repository's GitHub Releases as a published release on the pushed tag (`--merge true`, so re-running for the same tag updates the release). `GITHUB_TOKEN` authenticates the upload; the extracted notes section becomes the release body and the updater's notes.
+
+- **Update channel:** stable only (the default `win` channel). Prerelease channels are not wired.
+- **Signing:** the packages are unsigned (no certificate yet); SmartScreen may warn on first install.
+- **User prerequisite:** the .NET 8 Desktop Runtime (x64), unless the installer's runtime bootstrap installs it.
+- **Rollback:** delete the GitHub release and the tag; installed clients then never see the update.
 
 ## File System Layout
 

@@ -8,6 +8,7 @@
 ├── tests/                   # Test projects
 │   └── CLIHub.Tests/        # Unit tests (xUnit)
 ├── docs/                    # Project documentation
+├── .github/workflows/       # GitHub Actions (ci.yml: build+test; release.yml: tag -> GitHub Releases)
 ├── assets/                  # Application icon source files (not in the build)
 ├── ui/                      # UI mockups and design references (not in the build)
 ├── openspec/                # Specs (openspec/specs) + archived changes
@@ -87,7 +88,7 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 **`Directory.Build.props`** — MSBuild properties shared by all projects:
 - `BaseOutputPath` → `artifacts/` (compiled binaries)
 - `BaseIntermediateOutputPath` → `obj/` (intermediate files)
-- `Version` → `0.5.0` (product version; drives the version shown in the UI and update checks)
+- `Version` → `0.6.0` (product version; the development default — a release takes its version from the pushed `v*` tag)
 - `EnforceCodeStyleInBuild` → `true` (code style checked as part of the build)
 
 ## Build Output (git-ignored)
