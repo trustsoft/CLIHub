@@ -4,7 +4,7 @@
 
 - [x] 1.1 Create `.github/workflows/ci.yml`: windows-latest, triggers `pull_request` + `push` to `master`, checkout, `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release --no-build`. Verify: `dotnet build` and `dotnet test` commands run locally with exit code 0; YAML parses (`openspec validate` not applicable — check with a YAML parser or `gh workflow list` after push).
 
-- [ ] 1.2 Verify the workflow file against GitHub's schema and the repository's default branch name (`master`). Verify: push a branch, open a draft PR, and confirm the CI check runs and is green.
+- [x] 1.2 Verify the workflow file against GitHub's schema and the repository's default branch name (`master`). Verify: push a branch, open a draft PR, and confirm the CI check runs and is green.
 
 ## 2. Release workflow
 
