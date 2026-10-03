@@ -23,7 +23,8 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 ## Requirements
 
 - Windows 10 or 11
-- [.NET 8](https://dotnet.microsoft.com/download/dotnet/8.0) SDK (to build) or runtime (to run a published build)
+- .NET 8 Desktop Runtime (x64) to run an installed build — the installer offers to install it if missing
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or newer (to build)
 - Windows Terminal (`wt.exe`) recommended for launching agents
 
 ## Build & run
@@ -78,6 +79,16 @@ Create `%APPDATA%\CLIHub\plugins\<id>\plugin.json` (and optionally `logo.png`):
 ```
 
 Only `launch` is required. Built-in descriptors for the six supported agents are embedded in the app and seeded when the plugins folder is empty; delete the folder to re-seed. Full descriptor format: [`docs/architecture.md`](docs/architecture.md#plugin-descriptor-format).
+
+## Releases
+
+CI builds and tests every pull request and push to `master`. To cut a release:
+
+1. Add sections for the new version to both [`RELEASE-NOTES.md`](RELEASE-NOTES.md) and [`CHANGELOG.md`](CHANGELOG.md) (the release fails without a `RELEASE-NOTES.md` section).
+2. Push the version tag: `git tag v0.7.0 && git push origin v0.7.0`.
+3. The pipeline tests, packages (framework-dependent win-x64 via `vpk`), and publishes the release to [GitHub Releases](https://github.com/trustsoft/clihub/releases); installed apps pick it up through the built-in updater.
+
+Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#packaging-cicd).
 
 ## Project layout
 

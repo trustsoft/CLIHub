@@ -48,8 +48,8 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Release notes in the app: hand-written user-facing notes shipped inside the build, a **What's New** window reachable from the tray, and a one-time display after an upgrade — `release-notes`, `release-notes-display`
 - Downloading and applying updates from the tray: a one-click download-and-restart action in the tray menu and the What's New window, with progress state and completion/failure notifications — `update-checking`
 - Dark theme for the Settings window: drawn chrome like the other windows, segmented runtime/path selectors, hotkey chip field, themed inputs and footer, sharing the launch window's palette — `settings-theme`
+- CI and tag-driven releases: build and test on every pull request and push to `master`; a pushed `v*` tag is packaged with `vpk` and published to GitHub Releases as the live update feed — `ci-build`, `release-pipeline`
 
 **Remaining directions**
 - Notification support for background agent activities
 - Per-agent project filtering refinements beyond dim/hide
-- Packaging and release setup: the real release repository for the update feed (the `RepositoryUrl` placeholder) and CI packaging with `vpk`
