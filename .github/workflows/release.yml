@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Build
+        run: dotnet build CLIHub.sln -c Release
+
+      - name: Test
+        run: dotnet test CLIHub.sln -c Release --no-build
+
+  release:
+    needs: test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      VPK_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Derive version from tag
+        id: version
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          if (-not $tag.StartsWith('v')) {
+            Write-Host "::error::Tag '$tag' does not start with 'v'"
+            exit 1
+          }
+          $version = $tag.Substring(1)
+          if ($version -notmatch '^\d+\.\d+(\.\d+)?(-[0-9A-Za-z.-]+)?$') {
+            Write-Host "::error::Tag '$tag' does not carry a valid major.minor[.patch] version ('$version')"
+            exit 1
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Extract release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $lines = Get-Content -LiteralPath 'RELEASE-NOTES.md'
+          $headingPattern = '^##\s+' + [regex]::Escape($version) + '\s*([—-])\s*'
+          $start = -1
+          for ($i = 0; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match $headingPattern) {
+              $start = $i
+              break
+            }
+          }
+          if ($start -lt 0) {
+            Write-Host "::error::RELEASE-NOTES.md has no section for version $version"
+            exit 1
+          }
+          $end = $lines.Count
+          for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^##\s') {
+              $end = $i
+              break
+            }
+          }
+          $section = ($lines[$start..($end - 1)] -join "`n").TrimEnd()
+          $notesFile = Join-Path $env:RUNNER_TEMP 'release-notes.md'
+          Set-Content -LiteralPath $notesFile -Value $section -Encoding utf8
+          "file=$notesFile" >> $env:GITHUB_OUTPUT
+
+      - name: Publish
+        run: dotnet publish src/CLIHub/CLIHub.csproj -c Release -r win-x64 --self-contained false -p:Version=${{ steps.version.outputs.version }} -o publish
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version 1.2.158
+
+      - name: Pack
+        shell: pwsh
+        run: |
+          $vpk = Join-Path $env:USERPROFILE '.dotnet\tools\vpk.exe'
+          & $vpk pack `
+            -u CLIHub `
+            -v '${{ steps.version.outputs.version }}' `
+            -p publish `
+            -e CLIHub.exe `
+            -i src/CLIHub/app.ico `
+            --packTitle CLIHub `
+            --runtime win-x64 `
+            --framework net8.0-x64-desktop `
+            --releaseNotes '${{ steps.notes.outputs.file }}' `
+            -o Releases
+
+      - name: Upload to GitHub Releases
+        shell: pwsh
+        run: |
+          $vpk = Join-Path $env:USERPROFILE '.dotnet\tools\vpk.exe'
+          & $vpk upload github `
+            --repoUrl https://github.com/trustsoft/clihub `
+            --token $env:VPK_TOKEN `
+            --publish true `
+            --tag '${{ steps.version.outputs.tag }}' `
+            --releaseName 'CLIHub ${{ steps.version.outputs.version }}' `
+            --merge true `
+            -o Releases
