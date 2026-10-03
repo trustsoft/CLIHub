@@ -15,12 +15,15 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB7D91EA-850B-4DE3-8820-649DBE3026AE}"
 	ProjectSection(SolutionItems) = preProject
 		AGENTS.md = AGENTS.md
+		CHANGELOG.md = CHANGELOG.md
 		docs\architecture.md = docs\architecture.md
 		docs\changelog-and-release-notes.md = docs\changelog-and-release-notes.md
 		docs\glossary.md = docs\glossary.md
 		docs\releasing.md = docs\releasing.md
 		docs\repo-structure.md = docs\repo-structure.md
 		docs\vision.md = docs\vision.md
+		README.md = README.md
+		RELEASE-NOTES.md = RELEASE-NOTES.md
 	EndProjectSection
 EndProject
 Global
