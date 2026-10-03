@@ -44,8 +44,8 @@
     </Style>
 
     <Style x:Key="VersionChipBorder" TargetType="Border">
-        <Setter Property="CornerRadius" Value="10"/>
-        <Setter Property="Padding" Value="8,1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource Sizing.CornerRadius.Chip}"/>
+        <Setter Property="Padding" Value="6,2"/>
         <Setter Property="Background" Value="{StaticResource ChipBgBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>

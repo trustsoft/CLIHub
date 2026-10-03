@@ -225,11 +225,11 @@
         </Setter>
     </Style>
 
-    <!-- Footer text button (update check) -->
+    <!-- Footer text button (update check); text matches the version chip's font -->
     <Style x:Key="FooterTextButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
-        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Padding" Value="10,3"/>
+        <Setter Property="Padding" Value="10,2"/>
     </Style>
 
     <!-- Agent row action button (launch / resume); disabled rows dim to the divider tone -->

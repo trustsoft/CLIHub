@@ -75,7 +75,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
 
-        VersionText = $"v{_updateService.GetCurrentVersion()}";
+        VersionText = _updateService.GetCurrentVersion();
 
         AddProjectCommand = new RelayCommand(AddProject);
         RemoveProjectCommand = new RelayCommand(RemoveProject, () => SelectedProject != null);
