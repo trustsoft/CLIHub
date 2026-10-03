@@ -26,9 +26,6 @@
     <sys:Double x:Key="Sizing.Footer.Height">42</sys:Double>
     <sys:Double x:Key="Sizing.Splitter.HitWidth">9</sys:Double>
     <sys:Double x:Key="Sizing.PaneList.MaxHeight">434</sys:Double>
-    <!-- How far the pane lists' scrollbar is nudged right of its reserved column, so it reads as
-         sitting past the list's edge. -->
-    <sys:Double x:Key="Sizing.PaneList.ScrollbarShift">4</sys:Double>
 
     <!-- Pane and list minimums -->
     <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->

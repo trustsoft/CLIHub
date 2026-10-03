@@ -334,9 +334,9 @@
         </Setter>
         <Style.Resources>
             <!--
-                ScrollViewer for the pane lists: the scrollbar keeps its own fixed-width column,
-                so the rows keep their geometry when the bar appears or disappears; visually the
-                bar is nudged 4px to the right of its column, past the list's edge.
+                ScrollViewer for the pane lists: the scrollbar renders inside its own column at the
+                list's right edge. The column exists only while the bar is displayed, so no space
+                is reserved for a hidden bar and the rows reach the list's full width.
             -->
             <Style TargetType="ScrollViewer">
                 <Setter Property="Template">
@@ -345,8 +345,8 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <!-- Matches the scrollbar width set by the implicit bar style. -->
-                                    <ColumnDefinition Width="4"/>
+                                    <!-- Takes the bar's width while it is displayed, collapses otherwise. -->
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
                                                         Grid.Column="0"
@@ -362,12 +362,16 @@
                                            Orientation="Vertical"
                                            Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
                                            ViewportSize="{TemplateBinding ViewportHeight}"
-                                           Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}">
-                                    <ScrollBar.RenderTransform>
-                                        <TranslateTransform X="{StaticResource Sizing.PaneList.ScrollbarShift}"/>
-                                    </ScrollBar.RenderTransform>
-                                </ScrollBar>
+                                           Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
                             </Grid>
+                            <ControlTemplate.Triggers>
+                                <!-- While the bar is displayed the content keeps a 4px standoff from
+                                     it; with the bar hidden the standoff collapses, so both panes'
+                                     rows end the same 10px away from the pane's edge. -->
+                                <Trigger SourceName="PART_VerticalScrollBar" Property="Visibility" Value="Visible">
+                                    <Setter TargetName="PART_ScrollContentPresenter" Property="Margin" Value="0,0,4,0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
