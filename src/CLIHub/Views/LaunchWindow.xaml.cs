@@ -89,6 +89,10 @@ public partial class LaunchWindow : Window
         Hide();
     }
 
+    /// <summary>
+    ///   Closes an open actions menu on Escape; otherwise hides the window. A second Escape, after
+    ///   the menu is closed, hides the window.
+    /// </summary>
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.Escape)
@@ -96,8 +100,39 @@ public partial class LaunchWindow : Window
             return;
         }
 
-        Hide();
+        if (!CloseActionsMenus())
+        {
+            Hide();
+        }
+
         e.Handled = true;
+    }
+
+    /// <summary>
+    ///   Closes the actions menu on Escape while the keyboard focus is inside the popup. A popup is
+    ///   a separate window, so its key events do not reach the window's <c>OnKeyDown</c>.
+    /// </summary>
+    private void OnActionsMenuPreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            CloseActionsMenus();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    ///   Closes both actions menus.
+    /// </summary>
+    /// <returns> True when either menu was open. </returns>
+    private bool CloseActionsMenus()
+    {
+        var wasOpen = ProjectsActionsPopup.IsOpen || AgentsActionsPopup.IsOpen;
+
+        ProjectsActionsPopup.IsOpen = false;
+        AgentsActionsPopup.IsOpen = false;
+
+        return wasOpen;
     }
 
     /// <summary>
@@ -187,24 +222,28 @@ public partial class LaunchWindow : Window
         e.Handled = true;
     }
 
-    private void OnOpenProjectsMenu(object sender, RoutedEventArgs e) => OpenMenuAlignedRight(ProjectsActionsButton);
-
-    private void OnOpenAgentsMenu(object sender, RoutedEventArgs e) => OpenMenuAlignedRight(AgentsActionsButton);
-
-    private static void OpenMenuAlignedRight(Button button)
+    /// <summary>
+    ///   Right-aligns an actions popover with the control that opened it. The popover sizes to its
+    ///   content, so its width is measured here rather than fixed in XAML.
+    /// </summary>
+    private void OnActionsPopupOpened(object? sender, EventArgs e)
     {
-        if (button.ContextMenu is not { } menu)
+        if (sender is not Popup popup || popup.Child is not FrameworkElement child)
         {
             return;
         }
 
-        menu.PlacementTarget = button;
-        menu.Placement = PlacementMode.Bottom;
-        menu.IsOpen = true;
+        child.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
-        // The menu's width is only known once it is open; align its right edge with the button.
-        menu.HorizontalOffset = button.ActualWidth - menu.ActualWidth;
+        var targetWidth = popup.PlacementTarget is FrameworkElement target ? target.ActualWidth : 0;
+        popup.HorizontalOffset = targetWidth - child.DesiredSize.Width;
     }
+
+    /// <summary>
+    ///   Closes the actions menu the clicked entry belongs to. A popup does not close when an entry
+    ///   inside it is clicked, so the click handler closes both.
+    /// </summary>
+    private void OnMenuActionInvoked(object sender, RoutedEventArgs e) => CloseActionsMenus();
 
     /// <summary>
     ///   Hides the window instead of closing it; the application lives in the tray.

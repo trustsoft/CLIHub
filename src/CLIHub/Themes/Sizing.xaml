@@ -60,6 +60,10 @@
     <sys:Double x:Key="Sizing.IconButton.Height">26</sys:Double>
     <sys:Double x:Key="Sizing.IconButton.Width">30</sys:Double>
 
+    <!-- Actions menu: the popover sizes to its content so short menus stay compact; this is the
+         smallest width a menu may take. -->
+    <sys:Double x:Key="Sizing.ActionsMenu.MinWidth">176</sys:Double>
+
     <!-- Shape roles (shared corner-radius vocabulary) -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>

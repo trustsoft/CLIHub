@@ -11,6 +11,9 @@
     <SolidColorBrush x:Key="ChromeBgBrush" Color="#FF26262C"/>
     <SolidColorBrush x:Key="StripBgBrush" Color="#24000000"/>
     <SolidColorBrush x:Key="PopoverBgBrush" Color="#FF2B2B31"/>
+    <!-- Open actions-menu surface: the Actions control's pressed tone (the pressed overlay over the
+         pane header), used as the open menu's background so the control and menu share one fill. -->
+    <SolidColorBrush x:Key="PopoverOpenBrush" Color="#FF1E1E23"/>
     <SolidColorBrush x:Key="HairlineBrush" Color="#0FFFFFFF"/>
 
     <!-- Strokes and overlays -->

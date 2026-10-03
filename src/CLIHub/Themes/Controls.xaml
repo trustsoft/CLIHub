@@ -67,7 +67,7 @@
     </Style>
 
     <!--
-        Dark popover tooltip: the little sibling of DarkContextMenu. Keyed here as the base for
+        Dark popover tooltip: the little sibling of the actions popover. Keyed here as the base for
         the application-level implicit ToolTip style in App.xaml — tooltips live outside the
         window visual tree, so only an application-level implicit style reaches them.
     -->
