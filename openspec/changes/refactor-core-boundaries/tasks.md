@@ -23,19 +23,19 @@
 
 - [x] 4.1 Extract project path normalization and equality policy from `ProjectService`; verify existing project path tests cover relative paths, separators, and case-insensitive equality.
 - [x] 4.2 Extract project logo resolution from `ProjectService` while retaining logo cache behavior and fallback behavior; verify project and logo cache tests pass.
-- [ ] 4.3 Verify that project operations remain the only owners of `Projects` and `CurrentProjectId` mutations; verify with focused project service tests and code review of all `AppConfig` writes.
+- [x] 4.3 Verify that project operations remain the only owners of `Projects` and `CurrentProjectId` mutations; verify with focused project service tests and code review of all `AppConfig` writes.
 
 ## 5. Plugins and agents
 
-- [ ] 5.1 Separate plugin discovery, validation, and seeding responsibilities from agent command and availability policies; verify plugin manager and seeder tests pass unchanged in behavior.
-- [ ] 5.2 Place `AgentListComposer` with the availability/query policy and keep it free of persistence and process-launching dependencies; verify agent availability tests pass.
-- [ ] 5.3 Review agent command, detection, and version services against the dependency rules; verify each service depends on contracts rather than concrete services.
+- [x] 5.1 Separate plugin discovery, validation, and seeding responsibilities from agent command and availability policies; verify plugin manager and seeder tests pass unchanged in behavior.
+- [x] 5.2 Place `AgentListComposer` with the availability/query policy and keep it free of persistence and process-launching dependencies; verify agent availability tests pass.
+- [x] 5.3 Review agent command, detection, and version services against the dependency rules; verify each service depends on contracts rather than concrete services.
 
 ## 6. Process and platform boundaries
 
-- [ ] 6.1 Separate interactive process launch policy from captured-output policy while preserving the current `IProcessLauncher` compatibility surface where required; verify `ProcessLauncherTests` and `AgentCommandServiceTests` pass.
-- [ ] 6.2 Group Windows-specific services and filesystem persistence under explicit infrastructure namespaces; verify Core has no WPF references and Windows integration tests remain green.
-- [ ] 6.3 Keep update and release-note integration isolated behind their existing interfaces; verify `UpdateServiceTests` and `ReleaseNotesServiceTests` pass.
+- [x] 6.1 Separate interactive process launch policy from captured-output policy while preserving the current `IProcessLauncher` compatibility surface where required; verify `ProcessLauncherTests` and `AgentCommandServiceTests` pass.
+- [x] 6.2 Group Windows-specific services and filesystem persistence under explicit infrastructure namespaces; verify Core has no WPF references and Windows integration tests remain green.
+- [x] 6.3 Keep update and release-note integration isolated behind their existing interfaces; verify `UpdateServiceTests` and `ReleaseNotesServiceTests` pass.
 
 ## 7. Composition and documentation
 

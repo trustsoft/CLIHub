@@ -39,14 +39,17 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IPluginManager, PluginManager>();
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
-        services.AddSingleton<IProcessLauncher, ProcessLauncher>();
+        services.AddSingleton<ProcessLauncher>();
+        services.AddSingleton<IInteractiveProcessRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
+        services.AddSingleton<IProcessOutputRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
+        services.AddSingleton<IProcessLauncher>(sp => sp.GetRequiredService<ProcessLauncher>());
         services.AddSingleton<IAgentCommandService, AgentCommandService>();
 
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
 
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(
-            sp.GetRequiredService<IProcessLauncher>(),
+            sp.GetRequiredService<IProcessOutputRunner>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
 

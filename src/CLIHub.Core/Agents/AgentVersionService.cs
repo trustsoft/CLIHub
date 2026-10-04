@@ -26,7 +26,7 @@ public class AgentVersionService : IAgentVersionService
 
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 
-    private readonly IProcessLauncher _processLauncher;
+    private readonly IProcessOutputRunner _outputRunner;
     private readonly IPreferencesStore _preferencesStore;
     private readonly ILogger<AgentVersionService> _logger;
     private readonly TimeProvider _timeProvider;
@@ -41,7 +41,22 @@ public class AgentVersionService : IAgentVersionService
         ILogger<AgentVersionService> logger,
         TimeProvider? timeProvider = null)
     {
-        _processLauncher = processLauncher;
+        _outputRunner = processLauncher;
+        _preferencesStore = preferencesStore;
+        _logger = logger;
+        _timeProvider = timeProvider ?? TimeProvider.System;
+    }
+
+    /// <summary>
+    ///   Creates the service with the captured-output process boundary.
+    /// </summary>
+    public AgentVersionService(
+        IProcessOutputRunner outputRunner,
+        IPreferencesStore preferencesStore,
+        ILogger<AgentVersionService> logger,
+        TimeProvider? timeProvider = null)
+    {
+        _outputRunner = outputRunner;
         _preferencesStore = preferencesStore;
         _logger = logger;
         _timeProvider = timeProvider ?? TimeProvider.System;
@@ -80,7 +95,7 @@ public class AgentVersionService : IAgentVersionService
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var result = await _processLauncher.CaptureOutputAsync(
+        var result = await _outputRunner.CaptureOutputAsync(
             command.Executable, command.Arguments, workingDirectory, cancellationToken, ProbeTimeout);
 
         string? version = null;
