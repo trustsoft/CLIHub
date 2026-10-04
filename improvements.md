@@ -66,7 +66,7 @@ SelectedProject.set → SetCurrentProject → Persist (синхронная за
 
 ## Мелочи (1/3)
 
-- 🟡 `_ = PopulateVersionsAsync(...)` защищён; другие fire-and-forget команды (`ExecuteAsync`, update control и settings actions) ещё требуют отдельного общего error-boundary решения.
+- ✅ Fire-and-forget операции в launch window, update control, settings update check и retained legacy window paths проходят через общий UI error boundary; существующие локально обработанные version population и application startup/update paths сохранены.
 - ✅ `RefreshProjects/RefreshAgents`: синхронизация по стабильным идентификаторам сохраняет строки и ограничивает CollectionChanged membership/order changes.
 - ✅ `App.OnStartup` каждый запуск перезаписывает Run-ключ реестра — оставлено (самолечение при смене пути); зафиксировано как осознанный трейд-офф.
 
@@ -81,11 +81,9 @@ SelectedProject.set → SetCurrentProject → Persist (синхронная за
 | Метрика | Значение |
 |---|---|
 | Всего пунктов | 16 |
-| ✅ Реализовано | 14 (87.5%) |
+| ✅ Реализовано | 15 (93.75%) |
 | 🟡 Частично | 1 (М1) |
-| ❌ Осталось | 1 (М1) |
-| Содержательная работа | 1 пункт: М1 |
+| ❌ Осталось | 0 |
+| Содержательная работа | 1 частично проверенный пункт: М1 |
 
-Готовность по приоритетам: П1 — 2/3, П2 — 2/2, П3 — 3/3, П4 — 1/1, П5 — 4/4, мелочи — 1/3.
-
-Порядок внедрения оставшегося: общий error boundary для fire-and-forget операций.
+Готовность по приоритетам: П1 — 2/3, П2 — 2/2, П3 — 3/3, П4 — 1/1, П5 — 4/4, мелочи — 3/3.
