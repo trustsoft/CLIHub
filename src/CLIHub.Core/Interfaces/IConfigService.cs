@@ -5,7 +5,7 @@ using CLIHub.Core.Models;
 /// <summary>
 ///   Provides access to the application configuration.
 /// </summary>
-public interface IConfigService
+public interface IConfigService : IDisposable
 {
     /// <summary>
     ///   Loads the configuration from disk.
@@ -14,10 +14,17 @@ public interface IConfigService
     AppConfig Load();
 
     /// <summary>
-    ///   Saves the configuration to disk.
+    ///   Schedules the configuration for prompt asynchronous persistence; the calling thread is
+    ///   not blocked by disk I/O.
     /// </summary>
     /// <param name="config"> The configuration to save. </param>
     void Save(AppConfig config);
+
+    /// <summary>
+    ///   Writes all pending configuration changes to disk synchronously, so the stored state is
+    ///   guaranteed to be current when this call returns.
+    /// </summary>
+    void Flush();
 
     /// <summary>
     ///   Gets the currently selected project.

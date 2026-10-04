@@ -518,11 +518,25 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         try
         {
-            Projects.Clear();
+            var projects = _projectService.GetAllProjects();
 
-            foreach (var project in _projectService.GetAllProjects())
+            // Diff sync: the service mutates the same Project instances this collection holds,
+            // so in-place changes flow through the model's property notifications. Only
+            // membership changes touch the collection, which keeps row and selection identity.
+            for (var i = Projects.Count - 1; i >= 0; i--)
             {
-                Projects.Add(project);
+                if (projects.All(p => p.Id != Projects[i].Id))
+                {
+                    Projects.RemoveAt(i);
+                }
+            }
+
+            foreach (var project in projects)
+            {
+                if (Projects.All(p => p.Id != project.Id))
+                {
+                    Projects.Add(project);
+                }
             }
 
             var current = _projectService.GetCurrentProject();

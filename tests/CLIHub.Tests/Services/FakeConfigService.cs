@@ -41,5 +41,13 @@ public class FakeConfigService : IConfigService
     {
         _config.CurrentProjectId = projectId;
     }
+
+    public void Flush()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
 }
 
