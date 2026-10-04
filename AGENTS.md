@@ -44,9 +44,9 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 - **Nullable reference types** enabled globally.
 - **Implicit usings** enabled — no need for `using System;` etc.
 - **File-scoped namespaces** (`namespace X;` not block-scoped).
-- **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`).
+- **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`). Under file-scoped namespaces those usings are inside the namespace, which is exactly what `csharp_using_directive_placement = inside_namespace` in `.editorconfig` enforces — do not change the editorconfig to `outside_namespace`.
 - **Braces**: Use curly braces for if statements and loops.
-- **Naming**: PascalCase for public members, `_camelCase` for private fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
+- **Naming**: PascalCase for public members, `_camelCase` for private instance and static fields, PascalCase for private `const` and `static readonly` fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
 - **XML documentation**: public types and members carry XML doc comments. Canonical examples: `src/CLIHub.Core/Models/AgentCommandKind.cs` and `src/CLIHub.Core/Models/AgentCommandResult.cs`. Conventions:
   - `<summary>` is always multi-line; content lines are indented one space past the tag alignment (`///` followed by three spaces):
     ```csharp

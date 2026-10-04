@@ -1,3 +1,4 @@
+root = true
 
 [*]
 charset = utf-8
@@ -17,11 +18,19 @@ csharp_style_var_elsewhere = true:suggestion
 csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_using_directive_placement = inside_namespace:warning
+
+# Build-time severity pins. The "option:severity" format above is only respected
+# inside IDEs on the .NET 8 SDK, so the warning-severity style rules are pinned
+# here by rule ID to be enforced by "dotnet build".
+dotnet_diagnostic.IDE0011.severity = warning
+dotnet_diagnostic.IDE0065.severity = warning
+dotnet_diagnostic.IDE0161.severity = warning
+dotnet_diagnostic.IDE1006.severity = warning
 dotnet_naming_rule.interfaces_rule.import_to_resharper = True
 dotnet_naming_rule.interfaces_rule.resharper_description = Interfaces
 dotnet_naming_rule.interfaces_rule.resharper_guid = a7a3339e-4e89-4319-9735-a9dc4cb74cc7
 dotnet_naming_rule.interfaces_rule.severity = warning
-dotnet_naming_rule.interfaces_rule.style = upper_camel_case_style
+dotnet_naming_rule.interfaces_rule.style = interface_style
 dotnet_naming_rule.interfaces_rule.symbols = interfaces_symbols
 dotnet_naming_rule.private_constants_rule.import_to_resharper = True
 dotnet_naming_rule.private_constants_rule.resharper_description = Constant fields (private)
@@ -44,8 +53,8 @@ dotnet_naming_rule.private_static_fields_rule.style = lower_camel_case_style
 dotnet_naming_rule.private_static_fields_rule.symbols = private_static_fields_symbols
 dotnet_naming_rule.private_static_readonly_rule.import_to_resharper = True
 dotnet_naming_rule.private_static_readonly_rule.resharper_description = Static readonly fields (private)
-dotnet_naming_rule.private_static_readonly_rule.resharper_guid = 15b5b1f1-457c-4ca6-b278-5615aedc07d3
 dotnet_naming_rule.private_static_readonly_rule.resharper_style = AaBb
+dotnet_naming_rule.private_static_readonly_rule.resharper_guid = 15b5b1f1-457c-4ca6-b278-5615aedc07d3
 dotnet_naming_rule.private_static_readonly_rule.severity = warning
 dotnet_naming_rule.private_static_readonly_rule.style = upper_camel_case_style
 dotnet_naming_rule.private_static_readonly_rule.symbols = private_static_readonly_symbols
@@ -55,16 +64,11 @@ dotnet_naming_rule.type_parameters_rule.resharper_guid = 2c62818f-621b-4425-adc9
 dotnet_naming_rule.type_parameters_rule.severity = warning
 dotnet_naming_rule.type_parameters_rule.style = upper_camel_case_style
 dotnet_naming_rule.type_parameters_rule.symbols = type_parameters_symbols
-dotnet_naming_rule.unity_serialized_field_rule.import_to_resharper = True
-dotnet_naming_rule.unity_serialized_field_rule.resharper_description = Unity serialized field
-dotnet_naming_rule.unity_serialized_field_rule.resharper_guid = 5f0fdb63-c892-4d2c-9324-15c80b22a7ef
-dotnet_naming_rule.unity_serialized_field_rule.severity = warning
-dotnet_naming_rule.unity_serialized_field_rule.style = lower_camel_case_style_1
-dotnet_naming_rule.unity_serialized_field_rule.symbols = unity_serialized_field_symbols
 dotnet_naming_style.lower_camel_case_style.capitalization = camel_case
 dotnet_naming_style.lower_camel_case_style.required_prefix = _
-dotnet_naming_style.lower_camel_case_style_1.capitalization = camel_case
 dotnet_naming_style.upper_camel_case_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.required_prefix = I
 dotnet_naming_symbols.interfaces_symbols.applicable_accessibilities = *
 dotnet_naming_symbols.interfaces_symbols.applicable_kinds = interface
 dotnet_naming_symbols.interfaces_symbols.resharper_applicable_kinds = interface
@@ -92,10 +96,6 @@ dotnet_naming_symbols.type_parameters_symbols.applicable_accessibilities = *
 dotnet_naming_symbols.type_parameters_symbols.applicable_kinds = type_parameter
 dotnet_naming_symbols.type_parameters_symbols.resharper_applicable_kinds = type_parameter
 dotnet_naming_symbols.type_parameters_symbols.resharper_required_modifiers = any
-dotnet_naming_symbols.unity_serialized_field_symbols.applicable_accessibilities = *
-dotnet_naming_symbols.unity_serialized_field_symbols.applicable_kinds = 
-dotnet_naming_symbols.unity_serialized_field_symbols.resharper_applicable_kinds = unity_serialised_field
-dotnet_naming_symbols.unity_serialized_field_symbols.resharper_required_modifiers = instance
 dotnet_style_parentheses_in_arithmetic_binary_operators = never_if_unnecessary:none
 dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:none
 dotnet_style_parentheses_in_relational_binary_operators = never_if_unnecessary:none
@@ -121,25 +121,7 @@ resharper_arrange_type_member_modifiers_highlighting = hint
 resharper_arrange_type_modifiers_highlighting = hint
 resharper_built_in_type_reference_style_for_member_access_highlighting = hint
 resharper_built_in_type_reference_style_highlighting = hint
-resharper_mvc_action_not_resolved_highlighting = warning
-resharper_mvc_area_not_resolved_highlighting = warning
-resharper_mvc_controller_not_resolved_highlighting = warning
-resharper_mvc_masterpage_not_resolved_highlighting = warning
-resharper_mvc_partial_view_not_resolved_highlighting = warning
-resharper_mvc_template_not_resolved_highlighting = warning
-resharper_mvc_view_component_not_resolved_highlighting = warning
-resharper_mvc_view_component_view_not_resolved_highlighting = warning
-resharper_mvc_view_not_resolved_highlighting = warning
-resharper_razor_assembly_not_resolved_highlighting = warning
 resharper_redundant_base_qualifier_highlighting = warning
 resharper_suggest_var_or_type_built_in_types_highlighting = hint
 resharper_suggest_var_or_type_elsewhere_highlighting = hint
 resharper_suggest_var_or_type_simple_types_highlighting = hint
-resharper_web_config_module_not_resolved_highlighting = warning
-resharper_web_config_type_not_resolved_highlighting = warning
-resharper_web_config_wrong_module_highlighting = warning
-
-[*.{appxmanifest,asax,ascx,aspx,axaml,blockshader,c,c++,c++m,cc,ccm,cginc,compute,cp,cpp,cppm,cs,cshtml,cu,cuh,cxx,cxxm,dtd,fs,fsi,fsscript,fsx,fx,fxh,h,h++,hh,hlsl,hlsli,hlslinc,hp,hpp,hxx,icc,inc,inl,ino,ipp,ispc,isph,ixx,master,ml,mli,mpp,mq4,mq5,mqh,mxx,nuspec,paml,pssl,pssli,razor,resw,resx,shader,shaderFoundry,skin,tcc,tpp,urtshader,usf,ush,uxml,vb,xaml,xamlx,xoml,xsd}]
-indent_style = space
-indent_size = 4
-tab_width = 4
