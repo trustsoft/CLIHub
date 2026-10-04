@@ -451,7 +451,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void OpenDataFolder()
     {
-        var root = DirectoryInitializer.GetAppDataRoot();
+        var root = AppPaths.Root;
 
         try
         {

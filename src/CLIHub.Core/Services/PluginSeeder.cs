@@ -19,13 +19,12 @@ public class PluginSeeder : IPluginSeeder
     /// <summary>
     ///   Creates the seeder for the given plugins root.
     /// </summary>
+    /// <param name="logger"> The logger. </param>
+    /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
     public PluginSeeder(ILogger<PluginSeeder> logger, string? pluginsPath = null)
     {
         _logger = logger;
-        _pluginsPath = pluginsPath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CLIHub",
-            "plugins");
+        _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
     }
 
     /// <inheritdoc />

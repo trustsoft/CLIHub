@@ -23,14 +23,14 @@ public class PluginManager : IPluginManager
     /// <summary>
     ///   Creates the plugin manager for the given plugins root.
     /// </summary>
+    /// <param name="logger"> The logger. </param>
+    /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
+    /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
     public PluginManager(ILogger<PluginManager> logger, ILogoCacheService logoCache, string? pluginsPath = null)
     {
         _logger = logger;
         _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
-        _pluginsPath = pluginsPath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CLIHub",
-            "plugins");
+        _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
     }
 
     /// <inheritdoc />

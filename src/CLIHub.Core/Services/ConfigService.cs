@@ -26,13 +26,11 @@ public class ConfigService : IConfigService
     private readonly ILogger<ConfigService> _logger;
     private readonly object _gate = new();
     private readonly object _writeLock = new();
+    private readonly string _configFilePath;
     private AppConfig? _cachedConfig;
     private string? _pendingJson;
     private Task _workerTask = Task.CompletedTask;
     private bool _workerRunning;
-
-    /// <inheritdoc />
-    public string ConfigFilePath { get; }
 
     /// <summary>
     ///   Creates the service.
@@ -45,14 +43,12 @@ public class ConfigService : IConfigService
 
         if (string.IsNullOrWhiteSpace(configFilePath))
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var clihubFolder = Path.Combine(appDataPath, "CLIHub");
-            Directory.CreateDirectory(clihubFolder);
-            ConfigFilePath = Path.Combine(clihubFolder, "config.json");
+            Directory.CreateDirectory(AppPaths.Root);
+            _configFilePath = AppPaths.ConfigFile;
         }
         else
         {
-            ConfigFilePath = configFilePath;
+            _configFilePath = configFilePath;
         }
     }
 
@@ -64,9 +60,9 @@ public class ConfigService : IConfigService
             return _cachedConfig;
         }
 
-        if (!File.Exists(ConfigFilePath))
+        if (!File.Exists(_configFilePath))
         {
-            _logger.LogInformation("No config found at {Path}; creating defaults", ConfigFilePath);
+            _logger.LogInformation("No config found at {Path}; creating defaults", _configFilePath);
             _cachedConfig = new AppConfig();
             Save(_cachedConfig);
             return _cachedConfig;
@@ -74,14 +70,14 @@ public class ConfigService : IConfigService
 
         try
         {
-            var json = File.ReadAllText(ConfigFilePath);
+            var json = File.ReadAllText(_configFilePath);
             _cachedConfig = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions) ?? new AppConfig();
-            _logger.LogDebug("Loaded configuration from {Path}", ConfigFilePath);
+            _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
             return _cachedConfig;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to read config at {Path}; using defaults", ConfigFilePath);
+            _logger.LogError(ex, "Failed to read config at {Path}; using defaults", _configFilePath);
             _cachedConfig = new AppConfig();
             return _cachedConfig;
         }
@@ -142,7 +138,7 @@ public class ConfigService : IConfigService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not flush pending configuration writes to {Path}", ConfigFilePath);
+            _logger.LogWarning(ex, "Could not flush pending configuration writes to {Path}", _configFilePath);
         }
     }
 
@@ -228,8 +224,8 @@ public class ConfigService : IConfigService
         try
         {
             // Atomic write: write to temp file, then rename to avoid corruption
-            var tempPath = ConfigFilePath + ".tmp";
-            var directory = Path.GetDirectoryName(ConfigFilePath);
+            var tempPath = _configFilePath + ".tmp";
+            var directory = Path.GetDirectoryName(_configFilePath);
             if (!string.IsNullOrEmpty(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -238,14 +234,14 @@ public class ConfigService : IConfigService
             lock (_writeLock)
             {
                 File.WriteAllText(tempPath, json);
-                File.Move(tempPath, ConfigFilePath, overwrite: true);
+                File.Move(tempPath, _configFilePath, overwrite: true);
             }
 
-            _logger.LogDebug("Saved configuration to {Path}", ConfigFilePath);
+            _logger.LogDebug("Saved configuration to {Path}", _configFilePath);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not write the configuration to {Path}", ConfigFilePath);
+            _logger.LogWarning(ex, "Could not write the configuration to {Path}", _configFilePath);
         }
     }
 }

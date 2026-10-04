@@ -32,11 +32,7 @@ public sealed class LogoCacheService : ILogoCacheService
     public LogoCacheService(ILogger<LogoCacheService> logger, string? stateFilePath = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _stateFilePath = stateFilePath ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "CLIHub",
-            "cache",
-            "logos.json");
+        _stateFilePath = stateFilePath ?? AppPaths.LogosCacheFile;
 
         Load();
     }

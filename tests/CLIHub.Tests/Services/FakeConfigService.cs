@@ -15,8 +15,6 @@ public class FakeConfigService : IConfigService
         _config = initial ?? new AppConfig();
     }
 
-    public string ConfigFilePath => "(in-memory)";
-
     public int SaveCount { get; private set; }
 
     public AppConfig Load() => _config;

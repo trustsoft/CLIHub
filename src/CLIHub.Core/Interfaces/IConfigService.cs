@@ -37,9 +37,4 @@ public interface IConfigService : IDisposable
     /// </summary>
     /// <param name="projectId"> The ID of the project to select, or null to clear the selection. </param>
     void SetCurrentProject(string? projectId);
-
-    /// <summary>
-    ///   The path to the config.json file.
-    /// </summary>
-    string ConfigFilePath { get; }
 }

@@ -204,12 +204,10 @@ public partial class App : Application
 
     private static void ConfigureLogging()
     {
-        var root = DirectoryInitializer.GetAppDataRoot();
-        var logsDirectory = Path.Combine(root, "logs");
-        var configPath = Path.Combine(root, "config.json");
+        var configPath = AppPaths.ConfigFile;
 
         var level = LogLevelParser.Parse(PreferenceReader.ReadLogLevel(configPath));
-        Log.Logger = LoggingSetup.CreateLogger(logsDirectory, level);
+        Log.Logger = LoggingSetup.CreateLogger(AppPaths.LogsDirectory, level);
     }
 
     private void RegisterGlobalHotkey()
