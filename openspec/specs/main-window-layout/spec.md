@@ -164,14 +164,14 @@ The system SHALL present each agent as a single row with its logo, name, version
 
 ### Requirement: Window footer
 
-The system SHALL provide a footer that shows the application identity and version, keeps the update-check control in the left part of the footer immediately to the right of the version, and exposes the window-level actions.
+The system SHALL provide a footer that shows the application identity, keeps the update control - which itself displays the current application version - in the left part of the footer immediately to the right of the application name, and exposes the window-level actions.
 
 #### Scenario: Footer identity and version
 - **WHEN** the main window is shown
-- **THEN** the left part of the footer shows the application name and the current application version, and the update-check control sits immediately to the right of the version
+- **THEN** the left part of the footer shows the application name followed by the update control, and the control displays the current application version
 
 #### Scenario: Update check from the footer
-- **WHEN** the user activates the footer's update-check action
+- **WHEN** the user activates the footer's update control while it is idle
 - **THEN** an update check runs immediately and its outcome is reported in the footer
 
 #### Scenario: Footer actions
