@@ -1,5 +1,6 @@
 namespace CLIHub.Views;
 
+using System.Diagnostics;
 using System.Windows;
 
 using Microsoft.Win32;
@@ -21,6 +22,8 @@ public partial class MainWindow : Window
     private readonly IConfigService _configService;
     private readonly IUpdateService _updateService;
     private bool _suppressFilterEvent;
+    private CancellationTokenSource? _versionPopulationCts;
+    private int _versionPopulationGeneration;
 
     /// <summary>
     ///   Creates the window and performs the initial project and agent load.
@@ -118,6 +121,12 @@ public partial class MainWindow : Window
 
     private void RefreshAgents()
     {
+        _versionPopulationCts?.Cancel();
+        _versionPopulationCts?.Dispose();
+        _versionPopulationCts = new CancellationTokenSource();
+        var generation = ++_versionPopulationGeneration;
+        var cancellationToken = _versionPopulationCts.Token;
+
         var currentProject = _projectService.GetCurrentProject()?.Path;
         var filterUnavailable = FilterUnavailableCheckBox.IsChecked == true && currentProject != null;
         var items = new List<AgentItem>();
@@ -152,17 +161,33 @@ public partial class MainWindow : Window
         }
         else
         {
-            _ = PopulateVersionsAsync(items);
+            _ = PopulateVersionsAsync(items, generation, cancellationToken);
         }
     }
 
-    private async Task PopulateVersionsAsync(IReadOnlyList<AgentItem> items)
+    private async Task PopulateVersionsAsync(
+        IReadOnlyList<AgentItem> items,
+        int generation,
+        CancellationToken cancellationToken)
     {
-        await Task.WhenAll(items.Select(async item =>
+        try
         {
-            var version = await _agentVersionService.GetVersionAsync(item.Plugin);
-            item.Version = version ?? "unknown";
-        }));
+            await Task.WhenAll(items.Select(async item =>
+            {
+                var version = await _agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && generation == _versionPopulationGeneration)
+                {
+                    item.Version = version ?? "unknown";
+                }
+            }));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Agent version population failed: {ex}");
+        }
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -293,4 +318,4 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 }
-
+
