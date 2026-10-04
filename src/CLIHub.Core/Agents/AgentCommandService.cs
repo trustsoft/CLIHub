@@ -17,7 +17,7 @@ public class AgentCommandService : IAgentCommandService
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentCommandService(IProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
+    internal AgentCommandService(IProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
         : this(processLauncher, processLauncher, logger)
     {
     }
