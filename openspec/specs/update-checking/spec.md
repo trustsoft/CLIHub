@@ -56,7 +56,7 @@ The system SHALL allow the user to trigger an update check manually.
 
 ### Requirement: Update check failure handling
 
-The system SHALL handle update-check failures gracefully.
+The system SHALL handle update-check failures gracefully and SHALL complete the underlying check lifecycle when a timeout or cancellation occurs.
 
 #### Scenario: Network error during check
 - **WHEN** the check fails due to a network or service error
@@ -64,7 +64,11 @@ The system SHALL handle update-check failures gracefully.
 
 #### Scenario: Update check timeout
 - **WHEN** the check does not complete within its timeout
-- **THEN** it is cancelled and the application continues normally
+- **THEN** the underlying check is cancelled or fully observed, the service reports a failed check, and the application continues normally
+
+#### Scenario: Caller cancels the check
+- **WHEN** the caller cancels an in-progress update check
+- **THEN** the check lifecycle is completed without an unobserved exception and the service remains ready for a later check
 
 ### Requirement: Download and restart action
 
