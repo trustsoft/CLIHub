@@ -62,13 +62,6 @@ public class ReleaseNotesService : IReleaseNotesService
     public IReadOnlyList<ReleaseNote> GetNotes() => _notes.Value;
 
     /// <inheritdoc />
-    public ReleaseNote? GetLatestNote()
-    {
-        var notes = GetNotes();
-        return notes.Count > 0 ? notes[0] : null;
-    }
-
-    /// <inheritdoc />
     public ReleaseNote? GetNote(string version)
     {
         if (string.IsNullOrWhiteSpace(version))

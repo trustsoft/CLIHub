@@ -14,11 +14,6 @@ public interface IReleaseNotesService
     IReadOnlyList<ReleaseNote> GetNotes();
 
     /// <summary>
-    ///   Returns the newest release note, or null when no notes could be read.
-    /// </summary>
-    ReleaseNote? GetLatestNote();
-
-    /// <summary>
     ///   Returns the note for a specific version, or null when that version has no note.
     /// </summary>
     ReleaseNote? GetNote(string version);

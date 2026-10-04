@@ -28,11 +28,6 @@ public interface IProjectService
     IReadOnlyList<Project> GetRecentProjects(int limit);
 
     /// <summary>
-    ///   Returns projects marked as favorites.
-    /// </summary>
-    IReadOnlyList<Project> GetFavorites();
-
-    /// <summary>
     ///   Returns the currently selected project, or null if none is selected.
     /// </summary>
     Project? GetCurrentProject();
@@ -58,14 +53,4 @@ public interface IProjectService
     ///   Toggles the favorite flag for a project.
     /// </summary>
     void ToggleFavorite(string projectId);
-
-    /// <summary>
-    ///   Updates a project's last-used timestamp without changing the current selection.
-    /// </summary>
-    void TouchProject(string projectId);
-
-    /// <summary>
-    ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath"/>.
-    /// </summary>
-    string? ResolveLogo(string projectPath);
 }

@@ -9,6 +9,7 @@ using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 
 /// <summary>
@@ -21,6 +22,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private const string NoProjectMessage = "Select a project before running an agent command.";
     private const string NoAgentMessage = "Select an agent before running an agent command.";
     private const string NoProjectSelectedMessage = "Select a project first.";
+
+    private static readonly string DefaultAgentLogoPath =
+        Path.Combine(AppContext.BaseDirectory, "default-project.png");
 
     private readonly IProjectService _projectService;
     private readonly IPluginManager _pluginManager;
@@ -567,7 +571,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
             {
                 Plugin = entry.Plugin,
                 Name = entry.Plugin.Name,
-                LogoPath = entry.Plugin.LogoPath,
+                LogoPath = entry.Plugin.LogoPath ?? DefaultAgentLogoPath,
                 IsAvailable = entry.IsAvailable
             });
         }

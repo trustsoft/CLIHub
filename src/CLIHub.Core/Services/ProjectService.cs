@@ -64,13 +64,6 @@ public class ProjectService : IProjectService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<Project> GetFavorites()
-    {
-        RefreshLogos();
-        return _config.Projects.Where(p => p.IsFavorite).ToList();
-    }
-
-    /// <inheritdoc />
     public Project? GetCurrentProject()
     {
         if (_config.CurrentProjectId == null)
@@ -194,21 +187,10 @@ public class ProjectService : IProjectService
         Persist();
     }
 
-    /// <inheritdoc />
-    public void TouchProject(string projectId)
-    {
-        var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
-        if (project == null)
-        {
-            return;
-        }
-
-        project.LastUsed = DateTime.UtcNow;
-        Persist();
-    }
-
-    /// <inheritdoc />
-    public string? ResolveLogo(string projectPath) => ScanLogo(projectPath) ?? DefaultLogoPath;
+    /// <summary>
+    ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath"/>.
+    /// </summary>
+    internal string? ResolveLogo(string projectPath) => ScanLogo(projectPath) ?? DefaultLogoPath;
 
     /// <summary>
     ///   Scans the project folder for well-known logo filenames and returns the first match, or

@@ -15,13 +15,6 @@ public interface IPluginManager
     /// <summary>
     ///   Gets all loaded plugins.
     /// </summary>
-    /// <returns> The collection of loaded plugins. </returns>
-    IEnumerable<Plugin> GetAllPlugins();
-
-    /// <summary>
-    ///   Gets a specific plugin by ID.
-    /// </summary>
-    /// <param name="id"> The plugin ID. </param>
-    /// <returns> The plugin when found; otherwise null. </returns>
-    Plugin? GetPluginById(string id);
+    /// <returns> The read-only collection of loaded plugins. </returns>
+    IReadOnlyList<Plugin> GetAllPlugins();
 }

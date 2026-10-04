@@ -132,10 +132,10 @@ public class ProjectServiceTests : IDisposable
         var project = service.AddProject(folder);
 
         service.ToggleFavorite(project.Id);
-        Assert.Contains(service.GetFavorites(), p => p.Id == project.Id);
+        Assert.True(service.GetAllProjects().Single(p => p.Id == project.Id).IsFavorite);
 
         service.ToggleFavorite(project.Id);
-        Assert.DoesNotContain(service.GetFavorites(), p => p.Id == project.Id);
+        Assert.False(service.GetAllProjects().Single(p => p.Id == project.Id).IsFavorite);
     }
 
     [Fact]

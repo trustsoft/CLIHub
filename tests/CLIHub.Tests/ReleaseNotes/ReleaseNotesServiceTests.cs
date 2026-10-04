@@ -218,7 +218,7 @@ public class ReleaseNotesServiceTests
     }
 
     [Fact]
-    public void GetLatestNote_SeveralVersions_ReturnsNewest()
+    public void GetNotes_SeveralVersions_NewestIsFirst()
     {
         var service = Create("""
         ## 0.4.0 — 2026-01-01
@@ -230,7 +230,7 @@ public class ReleaseNotesServiceTests
         - Newer
         """);
 
-        Assert.Equal("0.5.0", service.GetLatestNote()?.Version);
+        Assert.Equal("0.5.0", service.GetNotes()[0].Version);
     }
 
     [Fact]
@@ -272,7 +272,6 @@ public class ReleaseNotesServiceTests
         var service = Create(text);
 
         Assert.Empty(service.GetNotes());
-        Assert.Null(service.GetLatestNote());
     }
 
     [Fact]

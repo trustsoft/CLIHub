@@ -18,7 +18,7 @@ public class AppConfigSerializationTests
         }
         """;
 
-        var config = JsonSerializer.Deserialize<AppConfig>(json, ConfigService.JsonOptions);
+        var config = JsonSerializer.Deserialize<AppConfig>(json, CoreJson.Options);
 
         Assert.NotNull(config);
         Assert.Null(config!.Preferences.LastSeenReleaseNotesVersion);
@@ -30,11 +30,11 @@ public class AppConfigSerializationTests
         var config = new AppConfig();
         config.Preferences.LastSeenReleaseNotesVersion = "0.5.0";
 
-        var json = JsonSerializer.Serialize(config, ConfigService.JsonOptions);
+        var json = JsonSerializer.Serialize(config, CoreJson.Options);
 
         Assert.Contains("\"lastSeenReleaseNotesVersion\": \"0.5.0\"", json);
 
-        var restored = JsonSerializer.Deserialize<AppConfig>(json, ConfigService.JsonOptions);
+        var restored = JsonSerializer.Deserialize<AppConfig>(json, CoreJson.Options);
 
         Assert.Equal("0.5.0", restored!.Preferences.LastSeenReleaseNotesVersion);
     }

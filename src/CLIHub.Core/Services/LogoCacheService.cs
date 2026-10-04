@@ -12,12 +12,6 @@ using System.Text.Json;
 /// </summary>
 public sealed class LogoCacheService : ILogoCacheService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private readonly ILogger<LogoCacheService> _logger;
     private readonly ConcurrentDictionary<string, string?> _cache = new();
     private readonly string _stateFilePath;
@@ -115,7 +109,7 @@ public sealed class LogoCacheService : ILogoCacheService
         try
         {
             var json = File.ReadAllText(_stateFilePath);
-            var state = JsonSerializer.Deserialize<CacheState>(json, JsonOptions);
+            var state = JsonSerializer.Deserialize<CacheState>(json, CoreJson.Options);
 
             if (state != null)
             {
@@ -143,7 +137,7 @@ public sealed class LogoCacheService : ILogoCacheService
             state.Logos[key] = value;
         }
 
-        var json = JsonSerializer.Serialize(state, JsonOptions);
+        var json = JsonSerializer.Serialize(state, CoreJson.Options);
 
         // Atomic write: write to a temp file, then rename, so an interrupted save cannot
         // corrupt the previous state.

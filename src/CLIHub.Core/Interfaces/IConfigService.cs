@@ -25,16 +25,4 @@ public interface IConfigService : IDisposable
     ///   guaranteed to be current when this call returns.
     /// </summary>
     void Flush();
-
-    /// <summary>
-    ///   Gets the currently selected project.
-    /// </summary>
-    /// <returns> The current project, or null when none is selected. </returns>
-    Project? GetCurrentProject();
-
-    /// <summary>
-    ///   Sets the currently selected project.
-    /// </summary>
-    /// <param name="projectId"> The ID of the project to select, or null to clear the selection. </param>
-    void SetCurrentProject(string? projectId);
 }

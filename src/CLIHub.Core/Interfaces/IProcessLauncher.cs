@@ -34,9 +34,4 @@ public interface IProcessLauncher
     ///   Sets the runtime used to launch interactive agent commands.
     /// </summary>
     void SetRuntime(RuntimeKind runtime);
-
-    /// <summary>
-    ///   Gets the configured runtime.
-    /// </summary>
-    RuntimeKind GetRuntime();
 }

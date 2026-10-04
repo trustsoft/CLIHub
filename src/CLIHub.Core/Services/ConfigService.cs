@@ -12,15 +12,6 @@ using System.Text.Json;
 /// </summary>
 public class ConfigService : IConfigService
 {
-    /// <summary>
-    ///   Serializer options used for <c>config.json</c>; internal so tests can assert the on-disk key names.
-    /// </summary>
-    internal static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     private static readonly TimeSpan DebounceDelay = TimeSpan.FromMilliseconds(250);
 
     private readonly ILogger<ConfigService> _logger;
@@ -71,7 +62,7 @@ public class ConfigService : IConfigService
         try
         {
             var json = File.ReadAllText(_configFilePath);
-            _cachedConfig = JsonSerializer.Deserialize<AppConfig>(json, JsonOptions) ?? new AppConfig();
+            _cachedConfig = JsonSerializer.Deserialize<AppConfig>(json, CoreJson.Options) ?? new AppConfig();
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
             return _cachedConfig;
         }
@@ -92,7 +83,7 @@ public class ConfigService : IConfigService
         // serialization could race with the caller. Serializing this small document on the
         // calling thread is far cheaper than the disk write it replaces.
         _cachedConfig = config;
-        var json = JsonSerializer.Serialize(config, JsonOptions);
+        var json = JsonSerializer.Serialize(config, CoreJson.Options);
 
         lock (_gate)
         {
@@ -140,26 +131,6 @@ public class ConfigService : IConfigService
         {
             _logger.LogWarning(ex, "Could not flush pending configuration writes to {Path}", _configFilePath);
         }
-    }
-
-    /// <inheritdoc />
-    public Project? GetCurrentProject()
-    {
-        var config = Load();
-        if (config.CurrentProjectId == null)
-        {
-            return null;
-        }
-
-        return config.Projects.FirstOrDefault(p => p.Id == config.CurrentProjectId);
-    }
-
-    /// <inheritdoc />
-    public void SetCurrentProject(string? projectId)
-    {
-        var config = Load();
-        config.CurrentProjectId = projectId;
-        Save(config);
     }
 
     private void EnsureWorker()

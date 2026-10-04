@@ -14,11 +14,6 @@ public class PluginManager : IPluginManager
     private readonly ILogoCacheService _logoCache;
     private readonly string _pluginsPath;
     private readonly List<Plugin> _plugins = new();
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
 
     /// <summary>
     ///   Creates the plugin manager for the given plugins root.
@@ -61,7 +56,7 @@ public class PluginManager : IPluginManager
             try
             {
                 var json = File.ReadAllText(pluginJsonPath);
-                var plugin = JsonSerializer.Deserialize<Plugin>(json, JsonOptions);
+                var plugin = JsonSerializer.Deserialize<Plugin>(json, CoreJson.Options);
 
                 if (plugin != null && ValidatePlugin(plugin, pluginDir))
                 {
@@ -74,7 +69,7 @@ public class PluginManager : IPluginManager
 
                     plugin.PluginDirectory = pluginDir;
 
-                    // Load logo with placeholder fallback, resolved through the logo cache.
+                    // Resolve the plugin logo through the logo cache (logo.png or null).
                     plugin.LogoPath = _logoCache.GetOrResolve(
                         $"plugin:{plugin.Id}",
                         () => LoadPluginLogo(pluginDir));
@@ -93,7 +88,7 @@ public class PluginManager : IPluginManager
     }
 
     /// <inheritdoc />
-    public IEnumerable<Plugin> GetAllPlugins()
+    public IReadOnlyList<Plugin> GetAllPlugins()
     {
         return _plugins;
     }
@@ -126,66 +121,19 @@ public class PluginManager : IPluginManager
         return true;
     }
 
-    private string LoadPluginLogo(string pluginDirectory)
+    /// <summary>
+    ///   Scans the plugin folder for <c>logo.png</c> and returns its path, or null when the
+    ///   folder has no logo.
+    /// </summary>
+    private static string? LoadPluginLogo(string pluginDirectory)
     {
         var logoPath = Path.Combine(pluginDirectory, "logo.png");
-        
-        if (File.Exists(logoPath))
-        {
-            return logoPath;
-        }
 
-        // Return path to default placeholder logo
-        var defaultLogoPath = Path.Combine(pluginDirectory, "assets", "placeholder-logo.png");
-        
-        // Create assets directory if it doesn't exist
-        var assetsDir = Path.Combine(pluginDirectory, "assets");
-        if (!Directory.Exists(assetsDir))
-        {
-            Directory.CreateDirectory(assetsDir);
-        }
-
-        // Copy placeholder if it doesn't exist in plugin directory
-        if (!File.Exists(defaultLogoPath))
-        {
-            CreatePlaceholderLogo(defaultLogoPath);
-        }
-
-        return defaultLogoPath;
-    }
-
-    private void CreatePlaceholderLogo(string logoPath)
-    {
-        // Create a simple 64x64 transparent PNG as placeholder
-        // For MVP, we'll create a minimal valid PNG file
-        var placeholderBytes = new byte[]
-        {
-            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
-            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR chunk
-            0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x40, // 64x64
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x99, 0x5F, 0x62, 0x6B,
-            0x00, 0x00, 0x00, 0x01, 0x73, 0x52, 0x47, 0x42, // sRGB chunk
-            0x00, 0xAE, 0xCE, 0x1C, 0xE9,
-            0x00, 0x00, 0x00, 0x1F, 0x49, 0x44, 0x41, 0x54, // IDAT chunk
-            0x78, 0x9C, 0x63, 0x60, 0x18, 0x05, 0xA3, 0x60, 0x14, 0x8C,
-            0x82, 0x51, 0x30, 0x0A, 0x46, 0xC1, 0x28, 0x18, 0x05, 0xA3,
-            0x60, 0x14, 0x8C, 0x82, 0x51, 0x30, 0x0A, 0x46, 0xC1, 0x28,
-            0x18, 0x05, 0xA3, 0x60, 0x14, 0x8C, 0x82, 0x51, 0x30, 0x0A,
-            0x46, 0x01, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, // IEND chunk
-            0xAE, 0x42, 0x60, 0x82
-        };
-
-        File.WriteAllBytes(logoPath, placeholderBytes);
+        return File.Exists(logoPath) ? logoPath : null;
     }
 
     private bool IsDuplicateId(string pluginId, string currentPluginDirectory)
     {
         return _plugins.Any(p => p.Id == pluginId && p.PluginDirectory != currentPluginDirectory);
-    }
-
-    /// <inheritdoc />
-    public Plugin? GetPluginById(string id)
-    {
-        return _plugins.FirstOrDefault(p => p.Id == id);
     }
 }
