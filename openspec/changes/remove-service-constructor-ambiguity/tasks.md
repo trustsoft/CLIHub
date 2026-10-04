@@ -12,4 +12,4 @@
 ## 3. Documentation and final verification
 
 - [x] 3.1 Document the one-public-production-constructor rule and named test-factory convention in the Core architecture guidance; verify the documented paths exist.
-- [ ] 3.2 Run `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release`, and `openspec validate "remove-service-constructor-ambiguity"`; record the results.
+- [x] 3.2 Run `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release`, and `openspec validate "remove-service-constructor-ambiguity"`; record the results.
