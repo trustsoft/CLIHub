@@ -140,6 +140,46 @@ public class AgentVersionServiceTests
     }
 
     [Fact]
+    public async Task GetVersion_ConcurrentCacheMisses_RunOneProbe()
+    {
+        _launcher.CaptureGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = CreateService();
+        var plugin = PluginWithVersion(true);
+
+        var first = service.GetVersionAsync(plugin);
+        var second = service.GetVersionAsync(plugin);
+
+        await Task.Delay(25);
+        Assert.Single(_launcher.Captures);
+
+        _launcher.CaptureGate.SetResult(true);
+        var results = await Task.WhenAll(first, second);
+
+        Assert.Equal(new[] { "1.2.3", "1.2.3" }, results);
+        Assert.Single(_launcher.Captures);
+    }
+
+    [Fact]
+    public async Task GetVersion_CancelledWaiter_DoesNotCancelSharedProbe()
+    {
+        _launcher.CaptureGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = CreateService();
+        var plugin = PluginWithVersion(true);
+        using var cancellation = new CancellationTokenSource();
+
+        var cancelled = service.GetVersionAsync(plugin, cancellation.Token);
+        var retained = service.GetVersionAsync(plugin);
+        await Task.Delay(25);
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await cancelled);
+        _launcher.CaptureGate.SetResult(true);
+
+        Assert.Equal("1.2.3", await retained);
+        Assert.Single(_launcher.Captures);
+    }
+
+    [Fact]
     public async Task GetVersion_PassesConfiguredProbeTimeout()
     {
         _config.Load().Preferences.AgentProbeTimeoutSeconds = 4;
@@ -160,4 +200,4 @@ public class AgentVersionServiceTests
         Assert.Equal(AgentVersionService.DefaultProbeTimeout, _launcher.LastCaptureTimeout);
     }
 }
-
+

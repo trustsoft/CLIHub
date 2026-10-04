@@ -14,6 +14,10 @@ public class FakeProcessLauncher : IProcessLauncher
     public bool LaunchResult { get; set; } = true;
     public ProcessCaptureResult CaptureResult { get; set; } = new(true, 0, "1.2.3", string.Empty);
 
+    public TaskCompletionSource<bool>? CaptureGate { get; set; }
+
+    public Func<string, string?, string, CancellationToken, TimeSpan?, Task<ProcessCaptureResult>>? CaptureHandler { get; set; }
+
     public bool LaunchProcess(PluginCommand command, string workingDirectory)
     {
         Launches.Add((command, workingDirectory));
@@ -28,7 +32,23 @@ public class FakeProcessLauncher : IProcessLauncher
     {
         Captures.Add((executable, arguments, workingDirectory));
         LastCaptureTimeout = timeout;
+        if (CaptureHandler is not null)
+        {
+            return CaptureHandler(executable, arguments, workingDirectory, cancellationToken, timeout);
+        }
+
+        if (CaptureGate != null)
+        {
+            return WaitForCaptureAsync(cancellationToken);
+        }
+
         return Task.FromResult(CaptureResult);
+    }
+
+    private async Task<ProcessCaptureResult> WaitForCaptureAsync(CancellationToken cancellationToken)
+    {
+        await CaptureGate!.Task.WaitAsync(cancellationToken);
+        return CaptureResult;
     }
 
     public void SetRuntime(RuntimeKind runtime) => Runtime = runtime;
@@ -37,4 +57,4 @@ public class FakeProcessLauncher : IProcessLauncher
 
     public RuntimeKind Runtime { get; private set; } = RuntimeKind.WindowsTerminal;
 }
-
+

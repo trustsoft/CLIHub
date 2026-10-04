@@ -31,20 +31,18 @@ public class AgentVersionService : IAgentVersionService
     private readonly ILogger<AgentVersionService> _logger;
     private readonly TimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
+    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new();
 
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentVersionService(
+    internal AgentVersionService(
         IProcessLauncher processLauncher,
         IPreferencesStore preferencesStore,
         ILogger<AgentVersionService> logger,
         TimeProvider? timeProvider = null)
+        : this((IProcessOutputRunner)processLauncher, preferencesStore, logger, timeProvider)
     {
-        _outputRunner = processLauncher;
-        _preferencesStore = preferencesStore;
-        _logger = logger;
-        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <summary>
@@ -87,16 +85,37 @@ public class AgentVersionService : IAgentVersionService
             return cached.Value;
         }
 
+        var lazy = _inFlight.GetOrAdd(
+            plugin.Id,
+            _ => new Lazy<Task<string?>>(
+                () => ProbeAndCacheAsync(plugin),
+                LazyThreadSafetyMode.ExecutionAndPublication));
+
+        try
+        {
+            return await lazy.Value.WaitAsync(cancellationToken);
+        }
+        finally
+        {
+            if (lazy.IsValueCreated && lazy.Value.IsCompleted)
+            {
+                _inFlight.TryRemove(plugin.Id, out _);
+            }
+        }
+    }
+
+    private async Task<string?> ProbeAndCacheAsync(Plugin plugin)
+    {
         var command = plugin.Commands?.Version;
         if (command == null || string.IsNullOrWhiteSpace(command.Executable))
         {
-            _cache[plugin.Id] = new CacheEntry(null, now);
+            _cache[plugin.Id] = new CacheEntry(null, _timeProvider.GetUtcNow());
             return null;
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var result = await _outputRunner.CaptureOutputAsync(
-            command.Executable, command.Arguments, workingDirectory, cancellationToken, ProbeTimeout);
+            command.Executable, command.Arguments, workingDirectory, CancellationToken.None, ProbeTimeout);
 
         string? version = null;
         if (result.Started && result.ExitCode == 0)
@@ -108,7 +127,7 @@ public class AgentVersionService : IAgentVersionService
             _logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.StdErr);
         }
 
-        _cache[plugin.Id] = new CacheEntry(version, now);
+        _cache[plugin.Id] = new CacheEntry(version, _timeProvider.GetUtcNow());
         return version;
     }
 
