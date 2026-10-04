@@ -18,8 +18,18 @@ public class ProcessLauncherTests
         var (fileName, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
 
         Assert.Equal(expectedFileName, fileName);
-        Assert.Contains("opencode", arguments);
-        Assert.Contains("--continue", arguments);
+        if (runtime == RuntimeKind.PowerShell)
+        {
+            var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+            var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
+            Assert.Contains("opencode", script);
+            Assert.Contains("--continue", script);
+        }
+        else
+        {
+            Assert.Contains("opencode", arguments);
+            Assert.Contains("--continue", arguments);
+        }
     }
 
     [Fact]
@@ -31,7 +41,23 @@ public class ProcessLauncherTests
             RuntimeKind.WindowsTerminal, command, @"C:\proj");
 
         Assert.Contains("-d \"C:\\proj\"", arguments);
-        Assert.Contains("cmd /k opencode", arguments);
+        Assert.Contains("cmd /d /k \"opencode\"", arguments);
+    }
+
+    [Fact]
+    public void BuildStartInfo_QuotesExecutablePathAndShellCharacters()
+    {
+        var command = new PluginCommand
+        {
+            Executable = @"C:\Program Files\Agent\agent.exe",
+            Arguments = "--name \"A&B\""
+        };
+
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            RuntimeKind.CommandPrompt, command, @"C:\Projects\Demo Folder");
+
+        Assert.Contains("\"C:\\Program Files\\Agent\\agent.exe\"", arguments);
+        Assert.Contains("^&", arguments);
     }
 
     [Fact]
@@ -66,5 +92,30 @@ public class ProcessLauncherTests
 
         Assert.NotEqual(0, result.ExitCode);
     }
+
+    [Theory]
+    [InlineData(".cmd")]
+    [InlineData(".bat")]
+    public async Task CaptureOutputAsync_ResolvesShellShim(string extension)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "clihub-shim-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var executable = Path.Combine(directory, "shim" + extension);
+
+        try
+        {
+            await File.WriteAllTextAsync(executable, "@echo shim-output");
+            var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+                .CaptureOutputAsync(executable, null, directory);
+
+            Assert.True(result.Started);
+            Assert.Equal(0, result.ExitCode);
+            Assert.Contains("shim-output", result.StdOut);
+        }
+        finally
+        {
+            try { Directory.Delete(directory, recursive: true); } catch { }
+        }
+    }
 }
-
+

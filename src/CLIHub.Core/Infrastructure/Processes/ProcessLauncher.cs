@@ -119,14 +119,12 @@ public class ProcessLauncher : IProcessLauncher
         {
             // Run through the command interpreter so PATHEXT resolution works for
             // npm/shim executables (.cmd/.bat/.ps1), which CreateProcess cannot resolve.
-            var commandLine = string.IsNullOrWhiteSpace(arguments)
-                ? executable
-                : $"{executable} {arguments}";
+            var (fileName, commandLineArguments) = WindowsCommandLineBuilder.BuildCapturedCommand(executable, arguments);
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe",
-                Arguments = $"/c {commandLine}",
+                FileName = fileName,
+                Arguments = commandLineArguments,
                 WorkingDirectory = workingDirectory,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -175,14 +173,7 @@ public class ProcessLauncher : IProcessLauncher
         PluginCommand command,
         string workingDirectory)
     {
-        var commandLine = BuildCommandLine(command);
-
-        return runtime switch
-        {
-            RuntimeKind.CommandPrompt => ("cmd.exe", $"/k \"{commandLine}\""),
-            RuntimeKind.PowerShell => ("powershell.exe", $"-NoExit -Command \"{commandLine}\""),
-            _ => ("wt.exe", $"-d \"{workingDirectory}\" cmd /k {commandLine}")
-        };
+        return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory);
     }
 
     /// <summary>
@@ -190,14 +181,6 @@ public class ProcessLauncher : IProcessLauncher
     /// </summary>
     internal static string BuildCommandLine(PluginCommand command)
     {
-        var executable = string.IsNullOrEmpty(command.Executable) ? "cmd" : command.Executable;
-
-        if (string.IsNullOrEmpty(command.Arguments))
-        {
-            return executable;
-        }
-
-        var escapedArgs = command.Arguments.Replace("\"", "\\\"");
-        return $"{executable} {escapedArgs}";
+        return WindowsCommandLineBuilder.BuildCommandLine(command);
     }
 }

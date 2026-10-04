@@ -2,7 +2,7 @@
 
 - [x] 1.1 Record the current runtime-stability baseline and confirm `dotnet build CLIHub.sln -c Release` plus `dotnet test CLIHub.sln -c Release` pass before implementation.
 - [x] 1.2 Add a test seam that can count concurrent version-command launches and verify the current duplicate-probe behavior is reproduced before the fix.
-- [ ] 1.3 Add regression cases for executable paths, working directories, quoted arguments, shell metacharacters, and each supported interactive runtime; verify the cases fail or expose the current unsafe command construction.
+- [x] 1.3 Add regression cases for executable paths, working directories, quoted arguments, shell metacharacters, and each supported interactive runtime; verify the cases fail or expose the current unsafe command construction.
 - [ ] 1.4 Add an update-service test seam that completes the underlying check after the configured timeout with both success and failure; verify late completion is observable without changing the returned timeout result.
 
 ## 2. Version probe concurrency and lifecycle
@@ -15,10 +15,10 @@
 
 ## 3. Windows command construction
 
-- [ ] 3.1 Add an internal runtime command builder with separate construction paths for Windows Terminal, Command Prompt, PowerShell, and captured `cmd.exe` execution; verify each output is deterministic in focused unit tests.
-- [ ] 3.2 Implement executable and argument quoting/escaping for spaces, embedded quotes, and shell metacharacters while retaining the existing raw plugin descriptor format; verify command builder regression tests pass.
-- [ ] 3.3 Use the builder from both interactive launch and captured-output execution; verify `ProcessLauncherTests` and `AgentCommandServiceTests` pass for successful and failed commands.
-- [ ] 3.4 Cover `.cmd`, `.bat`, and PATH-resolved shim execution without weakening timeout and process-tree termination behavior; verify captured-output tests pass on Windows.
+- [x] 3.1 Add an internal runtime command builder with separate construction paths for Windows Terminal, Command Prompt, PowerShell, and captured `cmd.exe` execution; verify each output is deterministic in focused unit tests.
+- [x] 3.2 Implement executable and argument quoting/escaping for spaces, embedded quotes, and shell metacharacters while retaining the existing raw plugin descriptor format; verify command builder regression tests pass.
+- [x] 3.3 Use the builder from both interactive launch and captured-output execution; verify `ProcessLauncherTests` and `AgentCommandServiceTests` pass for successful and failed commands.
+- [x] 3.4 Cover `.cmd`, `.bat`, and PATH-resolved shim execution without weakening timeout and process-tree termination behavior; verify captured-output tests pass on Windows.
 
 ## 4. Update timeout lifecycle
 
