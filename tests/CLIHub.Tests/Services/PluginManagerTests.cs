@@ -26,7 +26,10 @@ public class PluginManagerTests : IDisposable
     }
 
     private PluginManager CreateManager() =>
-        new(NullLogger<PluginManager>.Instance, _root);
+        new(NullLogger<PluginManager>.Instance, CreateCache(), _root);
+
+    private LogoCacheService CreateCache() =>
+        new(NullLogger<LogoCacheService>.Instance, Path.Combine(_root, "logos-state.json"));
 
     private const string ValidJson = """
     {
@@ -110,6 +113,25 @@ public class PluginManagerTests : IDisposable
         manager.LoadPlugins();
 
         Assert.Single(manager.GetAllPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_SecondManager_SharesCache_ReusesCachedLogoWithoutRescan()
+    {
+        WritePlugin("opencode", ValidJson);
+        var pluginDir = Path.Combine(_root, "opencode");
+        File.WriteAllBytes(Path.Combine(pluginDir, "logo.png"), [0x89, 0x50]);
+
+        var cache = CreateCache();
+        var first = new PluginManager(NullLogger<PluginManager>.Instance, cache, _root);
+        first.LoadPlugins();
+        var cachedLogo = first.GetAllPlugins().Single().LogoPath;
+
+        File.Delete(Path.Combine(pluginDir, "logo.png"));
+        var second = new PluginManager(NullLogger<PluginManager>.Instance, cache, _root);
+        second.LoadPlugins();
+
+        Assert.Equal(cachedLogo, second.GetAllPlugins().Single().LogoPath);
     }
 }
 

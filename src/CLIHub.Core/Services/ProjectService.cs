@@ -16,6 +16,7 @@ public class ProjectService : IProjectService
     };
 
     private readonly IConfigService _configService;
+    private readonly ILogoCacheService _logoCache;
     private readonly ILogger<ProjectService> _logger;
     private readonly AppConfig _config;
 
@@ -28,9 +29,13 @@ public class ProjectService : IProjectService
     /// <summary>
     ///   Creates the service with the default project logo path.
     /// </summary>
-    public ProjectService(IConfigService configService, ILogger<ProjectService> logger)
+    public ProjectService(
+        IConfigService configService,
+        ILogoCacheService logoCache,
+        ILogger<ProjectService> logger)
     {
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _config = _configService.Load();
         ClearStaleCurrentProject();
@@ -76,7 +81,7 @@ public class ProjectService : IProjectService
         var project = _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
         if (project != null)
         {
-            project.LogoPath = ResolveLogo(project.Path);
+            project.LogoPath = ResolveProjectLogo(project);
         }
 
         return project;
@@ -86,9 +91,16 @@ public class ProjectService : IProjectService
     {
         foreach (var project in _config.Projects)
         {
-            project.LogoPath = ResolveLogo(project.Path);
+            project.LogoPath = ResolveProjectLogo(project);
         }
     }
+
+    /// <summary>
+    ///   Resolves the project logo through the logo cache keyed by the project ID, falling back
+    ///   to <see cref="DefaultLogoPath"/> when no logo is found.
+    /// </summary>
+    private string? ResolveProjectLogo(Project project) =>
+        _logoCache.GetOrResolve($"project:{project.Id}", () => ScanLogo(project.Path)) ?? DefaultLogoPath;
 
     /// <inheritdoc />
     public Project AddProject(string folderPath)
@@ -117,14 +129,15 @@ public class ProjectService : IProjectService
             Name = Path.GetFileName(normalized.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
             Path = normalized,
             IsFavorite = false,
-            LastUsed = DateTime.UtcNow,
-            LogoPath = ResolveLogo(normalized)
+            LastUsed = DateTime.UtcNow
         };
 
         if (string.IsNullOrEmpty(project.Name))
         {
             project.Name = normalized;
         }
+
+        project.LogoPath = ResolveProjectLogo(project);
 
         _config.Projects.Add(project);
         _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
@@ -142,6 +155,7 @@ public class ProjectService : IProjectService
         }
 
         _config.Projects.Remove(project);
+        _logoCache.Remove($"project:{projectId}");
         _logger.LogInformation("Removed project {ProjectName}", project.Name);
 
         if (_config.CurrentProjectId == projectId)
@@ -194,11 +208,17 @@ public class ProjectService : IProjectService
     }
 
     /// <inheritdoc />
-    public string? ResolveLogo(string projectPath)
+    public string? ResolveLogo(string projectPath) => ScanLogo(projectPath) ?? DefaultLogoPath;
+
+    /// <summary>
+    ///   Scans the project folder for well-known logo filenames and returns the first match, or
+    ///   null when no candidate exists.
+    /// </summary>
+    private static string? ScanLogo(string projectPath)
     {
         if (string.IsNullOrWhiteSpace(projectPath))
         {
-            return DefaultLogoPath;
+            return null;
         }
 
         foreach (var candidate in CandidateLogoNames)
@@ -210,7 +230,7 @@ public class ProjectService : IProjectService
             }
         }
 
-        return DefaultLogoPath;
+        return null;
     }
 
     private void ClearStaleCurrentProject()

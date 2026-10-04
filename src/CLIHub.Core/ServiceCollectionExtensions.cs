@@ -24,9 +24,11 @@ public static class ServiceCollectionExtensions
         services.AddLogging();
 
         services.AddSingleton<IConfigService, ConfigService>();
+        services.AddSingleton<ILogoCacheService, LogoCacheService>();
 
         services.AddSingleton<IProjectService>(sp => new ProjectService(
             sp.GetRequiredService<IConfigService>(),
+            sp.GetRequiredService<ILogoCacheService>(),
             sp.GetRequiredService<ILogger<ProjectService>>())
         {
             DefaultLogoPath = defaultLogoPath

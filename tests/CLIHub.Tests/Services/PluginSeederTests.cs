@@ -103,7 +103,8 @@ public class PluginSeederTests : IDisposable
     {
         CreateSeeder().SeedIfEmpty();
 
-        var manager = new PluginManager(NullLogger<PluginManager>.Instance, _pluginsPath);
+        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(_pluginsPath, "logos-state.json"));
+        var manager = new PluginManager(NullLogger<PluginManager>.Instance, cache, _pluginsPath);
         manager.LoadPlugins();
 
         var plugins = manager.GetAllPlugins().ToList();

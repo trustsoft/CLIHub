@@ -27,6 +27,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IAgentCommandService _agentCommandService;
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
+    private readonly ILogoCacheService _logoCacheService;
     private readonly IConfigService _configService;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
@@ -49,6 +50,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="agentCommandService"> Service executing agent commands. </param>
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
+    /// <param name="logoCacheService"> Persistent logo cache for project and agent logos. </param>
     /// <param name="configService"> Configuration service for persisted preferences. </param>
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
@@ -59,6 +61,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IAgentCommandService agentCommandService,
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
+        ILogoCacheService logoCacheService,
         IConfigService configService,
         IUpdateService updateService,
         ISettingsLauncher settingsLauncher,
@@ -69,6 +72,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _agentCommandService = agentCommandService;
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
+        _logoCacheService = logoCacheService;
         _configService = configService;
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
@@ -437,8 +441,10 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void Refresh()
     {
+        _logoCacheService.InvalidateAll();
         _agentVersionService.Invalidate();
         _agentDetectionService.Invalidate();
+        RefreshProjects();
         RefreshAgents();
         StatusMessage = "Refreshed agents, versions and availability.";
     }

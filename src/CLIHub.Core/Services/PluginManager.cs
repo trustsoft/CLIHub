@@ -11,6 +11,7 @@ using System.Text.Json;
 public class PluginManager : IPluginManager
 {
     private readonly ILogger<PluginManager> _logger;
+    private readonly ILogoCacheService _logoCache;
     private readonly string _pluginsPath;
     private readonly List<Plugin> _plugins = new();
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -22,9 +23,10 @@ public class PluginManager : IPluginManager
     /// <summary>
     ///   Creates the plugin manager for the given plugins root.
     /// </summary>
-    public PluginManager(ILogger<PluginManager> logger, string? pluginsPath = null)
+    public PluginManager(ILogger<PluginManager> logger, ILogoCacheService logoCache, string? pluginsPath = null)
     {
         _logger = logger;
+        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
         _pluginsPath = pluginsPath ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "CLIHub",
@@ -71,9 +73,11 @@ public class PluginManager : IPluginManager
                     }
 
                     plugin.PluginDirectory = pluginDir;
-                    
-                    // Load logo with placeholder fallback
-                    plugin.LogoPath = LoadPluginLogo(pluginDir);
+
+                    // Load logo with placeholder fallback, resolved through the logo cache.
+                    plugin.LogoPath = _logoCache.GetOrResolve(
+                        $"plugin:{plugin.Id}",
+                        () => LoadPluginLogo(pluginDir));
 
                     _plugins.Add(plugin);
                     _logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);

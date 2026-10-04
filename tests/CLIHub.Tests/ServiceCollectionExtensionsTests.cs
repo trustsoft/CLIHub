@@ -15,6 +15,7 @@ public class ServiceCollectionExtensionsTests
         using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetRequiredService<IConfigService>());
+        Assert.NotNull(provider.GetRequiredService<ILogoCacheService>());
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
         Assert.NotNull(provider.GetRequiredService<IPluginManager>());
         Assert.NotNull(provider.GetRequiredService<IProcessLauncher>());
@@ -31,6 +32,20 @@ public class ServiceCollectionExtensionsTests
 
         var first = provider.GetRequiredService<IConfigService>();
         var second = provider.GetRequiredService<IConfigService>();
+
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void LogoCacheService_IsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+
+        using var provider = services.BuildServiceProvider();
+
+        var first = provider.GetRequiredService<ILogoCacheService>();
+        var second = provider.GetRequiredService<ILogoCacheService>();
 
         Assert.Same(first, second);
     }
