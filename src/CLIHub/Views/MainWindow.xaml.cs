@@ -3,8 +3,10 @@ namespace CLIHub.Views;
 using System.Diagnostics;
 using System.Windows;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
+using CLIHub;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.ViewModels;
@@ -21,6 +23,7 @@ public partial class MainWindow : Window
     private readonly IAgentVersionService _agentVersionService;
     private readonly IConfigService _configService;
     private readonly IUpdateService _updateService;
+    private readonly ILogger<MainWindow> _logger;
     private bool _suppressFilterEvent;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
@@ -35,6 +38,7 @@ public partial class MainWindow : Window
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="configService"> Configuration service for the filter preference. </param>
     /// <param name="updateService"> Update service for the version text and update checks. </param>
+    /// <param name="logger"> Logger for unexpected legacy window action failures. </param>
     public MainWindow(
         IPluginManager pluginManager,
         IProjectService projectService,
@@ -42,7 +46,8 @@ public partial class MainWindow : Window
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
         IConfigService configService,
-        IUpdateService updateService)
+        IUpdateService updateService,
+        ILogger<MainWindow> logger)
     {
         InitializeComponent();
 
@@ -53,6 +58,7 @@ public partial class MainWindow : Window
         _agentVersionService = agentVersionService;
         _configService = configService;
         _updateService = updateService;
+        _logger = logger;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
@@ -66,7 +72,16 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 
-    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    private void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        _ = AsyncOperationRunner.RunAsync(
+            "Legacy window update check",
+            CheckForUpdatesAsync,
+            _logger,
+            message => StatusText.Text = message);
+    }
+
+    private async Task CheckForUpdatesAsync()
     {
         StatusText.Text = "Checking for updates...";
 
@@ -266,13 +281,20 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 
-    private void Launch_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Launch);
-    private void Resume_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Resume);
-    private void Init_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Init);
-    private void Update_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Update);
-    private void Version_Click(object sender, RoutedEventArgs e) => ExecuteAsync(AgentCommandKind.Version);
+    private void Launch_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Launch);
+    private void Resume_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Resume);
+    private void Init_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Init);
+    private void Update_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Update);
+    private void Version_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Version);
 
-    private async void ExecuteAsync(AgentCommandKind kind)
+    private void StartAgentCommand(AgentCommandKind kind) =>
+        _ = AsyncOperationRunner.RunAsync(
+            $"Legacy window {kind} command",
+            () => ExecuteAsync(kind),
+            _logger,
+            message => StatusText.Text = message);
+
+    private async Task ExecuteAsync(AgentCommandKind kind)
     {
         if (AgentList.SelectedItem is not AgentItem item)
         {

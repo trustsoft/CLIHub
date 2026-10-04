@@ -6,8 +6,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
+using CLIHub;
 using CLIHub.Core.Formatting;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
@@ -37,6 +39,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IConfigService _configService;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
+    private readonly ILogger<LaunchWindowViewModel> _logger;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
 
@@ -63,6 +66,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
+    /// <param name="logger"> Logger for unexpected agent command failures. </param>
+    /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
         IProjectService projectService,
         IPluginManager pluginManager,
@@ -73,7 +78,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IConfigService configService,
         IUpdateService updateService,
         ISettingsLauncher settingsLauncher,
-        PromptState promptState)
+        PromptState promptState,
+        ILogger<LaunchWindowViewModel> logger,
+        ILogger<UpdateControlViewModel> updateControlLogger)
     {
         _projectService = projectService;
         _pluginManager = pluginManager;
@@ -84,8 +91,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _configService = configService;
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
+        _logger = logger;
 
-        UpdateControl = new UpdateControlViewModel(updateService);
+        UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger);
         UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
 
         AddProjectCommand = new RelayCommand(AddProject);
@@ -96,17 +104,17 @@ public sealed class LaunchWindowViewModel : ObservableObject
         OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
         ExitCommand = new RelayCommand(() => Application.Current.Shutdown());
 
-        LaunchCommand = new RelayCommand(() => _ = ExecuteAsync(SelectedAgent, AgentCommandKind.Launch), HasSelectedAgent);
-        ResumeCommand = new RelayCommand(() => _ = ExecuteAsync(SelectedAgent, AgentCommandKind.Resume), HasSelectedAgent);
-        InitCommand = new RelayCommand(() => _ = ExecuteAsync(SelectedAgent, AgentCommandKind.Init), HasSelectedAgent);
-        UpdateCommand = new RelayCommand(() => _ = ExecuteAsync(SelectedAgent, AgentCommandKind.Update), HasSelectedAgent);
-        VersionCommand = new RelayCommand(() => _ = ExecuteAsync(SelectedAgent, AgentCommandKind.Version), HasSelectedAgent);
+        LaunchCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Launch), HasSelectedAgent);
+        ResumeCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Resume), HasSelectedAgent);
+        InitCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Init), HasSelectedAgent);
+        UpdateCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Update), HasSelectedAgent);
+        VersionCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Version), HasSelectedAgent);
 
         LaunchAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = ExecuteAsync(item, AgentCommandKind.Launch),
+            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Launch),
             item => item.CanLaunch);
         ResumeAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = ExecuteAsync(item, AgentCommandKind.Resume),
+            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
             item => item.CanResume);
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
@@ -330,6 +338,13 @@ public sealed class LaunchWindowViewModel : ObservableObject
     public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
 
     private bool HasSelectedAgent() => SelectedAgent is not null;
+
+    private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
+        AsyncOperationRunner.RunAsync(
+            $"{kind} {item?.Name ?? "agent command"}",
+            () => ExecuteAsync(item, kind),
+            _logger,
+            message => StatusMessage = message);
 
     /// <summary>
     ///   Builds the per-pane actions menus from the existing commands, and wires the availability

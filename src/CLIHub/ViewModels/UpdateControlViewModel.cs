@@ -3,6 +3,9 @@ namespace CLIHub.ViewModels;
 using System.Windows;
 using System.Windows.Input;
 
+using Microsoft.Extensions.Logging;
+
+using CLIHub;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
@@ -15,6 +18,7 @@ using CLIHub.Core.Services;
 public sealed class UpdateControlViewModel : ObservableObject
 {
     private readonly IUpdateService _updateService;
+    private readonly ILogger<UpdateControlViewModel> _logger;
 
     private UpdateControlState _state = UpdateControlState.Idle;
 
@@ -27,19 +31,30 @@ public sealed class UpdateControlViewModel : ObservableObject
     ///   Creates the update control state for the given update service.
     /// </summary>
     /// <param name="updateService"> Update service backing the checks, downloads, and applies. </param>
-    public UpdateControlViewModel(IUpdateService updateService)
+    /// <param name="logger"> Logger for unexpected update control failures. </param>
+    public UpdateControlViewModel(
+        IUpdateService updateService,
+        ILogger<UpdateControlViewModel> logger)
     {
         _updateService = updateService;
+        _logger = logger;
 
         CurrentVersion = updateService.GetCurrentVersion();
 
         UpdateControlCommand = new RelayCommand(
-            () => _ = HandleUpdateControlAsync(),
+            () => _ = RunUpdateControlAsync(),
             () => _state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
 
         _updateService.UpdateStateChanged += OnUpdateStateChanged;
         RefreshState();
     }
+
+    private Task RunUpdateControlAsync() =>
+        AsyncOperationRunner.RunAsync(
+            "Update control",
+            HandleUpdateControlAsync,
+            _logger,
+            ReportOutcome);
 
     /// <summary>
     ///   The current application version, shown while the control is idle.

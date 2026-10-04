@@ -1,5 +1,8 @@
 namespace CLIHub.ViewModels;
 
+using Microsoft.Extensions.Logging;
+
+using CLIHub;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
@@ -44,6 +47,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly IUpdateService _updateService;
     private readonly IStartupService _startupService;
     private readonly IPreferenceApplier _applier;
+    private readonly ILogger<SettingsViewModel> _logger;
 
     private bool _startWithWindows;
     private bool _showWindowOnStartup = true;
@@ -64,22 +68,25 @@ public sealed class SettingsViewModel : ObservableObject
     /// <param name="updateService"> Update service used for the version and update checks. </param>
     /// <param name="startupService"> Startup service used by the start-with-Windows toggle. </param>
     /// <param name="applier"> Preference applier invoked on save. </param>
+    /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
         IConfigService configService,
         IUpdateService updateService,
         IStartupService startupService,
-        IPreferenceApplier applier)
+        IPreferenceApplier applier,
+        ILogger<SettingsViewModel> logger)
     {
         _configService = configService;
         _updateService = updateService;
         _startupService = startupService;
         _applier = applier;
+        _logger = logger;
 
         Version = _updateService.GetCurrentVersion();
 
         SaveCommand = new RelayCommand(Save);
         CancelCommand = new RelayCommand(Cancel);
-        CheckForUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync());
+        CheckForUpdatesCommand = new RelayCommand(() => _ = RunUpdateCheckAsync());
     }
 
     /// <summary>
@@ -236,6 +243,13 @@ public sealed class SettingsViewModel : ObservableObject
     ///   Runs an update check and reports the outcome in <see cref="UpdateMessage"/>.
     /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
+
+    private Task RunUpdateCheckAsync() =>
+        AsyncOperationRunner.RunAsync(
+            "Settings update check",
+            CheckForUpdatesAsync,
+            _logger,
+            message => UpdateMessage = message);
 
     /// <summary>
     ///   Reloads all fields from the stored configuration.
