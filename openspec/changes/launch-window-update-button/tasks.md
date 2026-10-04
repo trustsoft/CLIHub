@@ -20,4 +20,4 @@
 
 ## 4. Shared update control component
 
-- [ ] 4.1 Extract `UpdateControlViewModel` (states, labels, command, `OutcomeReported` event) and refactor `LaunchWindowViewModel`/`LaunchWindow.xaml`/`FooterTextButton` to bind through it; verify the solution builds and `dotnet test` passes
+- [x] 4.1 Extract `UpdateControlViewModel` (states, labels, command, `OutcomeReported` event) and refactor `LaunchWindowViewModel`/`LaunchWindow.xaml`/`FooterTextButton` to bind through it; verify the solution builds and `dotnet test` passes

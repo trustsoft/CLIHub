@@ -3,6 +3,16 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.8.0 — 2026-10-04
+
+### New
+
+### Improved
+
+- The launch window update control now uses a reusable state-aware component, keeping update checks, downloads, and restart actions consistent across the window.
+
+### Fixed
+
 ## 0.7.0 — 2026-10-04
 
 ### New

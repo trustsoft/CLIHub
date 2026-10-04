@@ -7,6 +7,12 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.8.0 — 2026-10-04
+
+### Changed
+
+- The launch-window update control is now a reusable state-aware view model that keeps update checks, downloads, and restart actions consistent across the window (`update-checking`)
+
 ## 0.7.0 — 2026-10-04
 
 ### Added
