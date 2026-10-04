@@ -22,7 +22,7 @@ SelectedProject.set → SetCurrentProject → Persist (синхронная за
 
 - ✅ **Кэшировать резолв логотипов** — реализовано: `LogoCacheService` (`ILogoCacheService.GetOrResolve`, ключи `project:<id>`/`plugin:<id>`), кэширует и негативные результаты, персистентно хранится в `%APPDATA%\CLIHub\cache\logos.json`, атомарно сохраняется при `Dispose`, сброс по `Remove`/`InvalidateAll` (`ProjectService.RemoveProject` чистит запись). Покрыто `LogoCacheServiceTests`, `ProjectServiceTests.GetAllProjects_AfterServiceRestart_ReuseCachedLogoWithoutRescan`. Спека: `openspec/specs/logo-cache`.
 - ✅ **Вынести запись конфига из UI-потока** — реализовано: `ConfigService.Save` сериализует на вызывающем потоке (защита от гонок по общему графу конфига) и передаёт готовый JSON фоновому воркеру (`EnsureWorker`/`_pendingJson` под `_gate`), есть `Flush()` для записи при выходе.
-- ❌ **Не пересобирать списки на каждый Persist** — актуально: `Persist()` по-прежнему шлёт `ProjectsChanged(EventArgs.Empty)`, а `RefreshProjects`/`RefreshAgents` пересобирают списки целиком.
+- ✅ **Не пересобирать списки на каждый Persist** — `RefreshProjects` и `RefreshAgents` синхронизируют строки по стабильным идентификаторам и сохраняют объекты и выбор при обновлении.
 
 ---
 
@@ -67,7 +67,7 @@ SelectedProject.set → SetCurrentProject → Persist (синхронная за
 ## Мелочи (1/3)
 
 - 🟡 `_ = PopulateVersionsAsync(...)` защищён; другие fire-and-forget команды (`ExecuteAsync`, update control и settings actions) ещё требуют отдельного общего error-boundary решения.
-- ❌ `RefreshProjects/RefreshAgents`: `Clear()` + цикл `Add()` — N событий CollectionChanged; на текущих объёмах терпимо. Актуально, не менялось.
+- ✅ `RefreshProjects/RefreshAgents`: синхронизация по стабильным идентификаторам сохраняет строки и ограничивает CollectionChanged membership/order changes.
 - ✅ `App.OnStartup` каждый запуск перезаписывает Run-ключ реестра — оставлено (самолечение при смене пути); зафиксировано как осознанный трейд-офф.
 
 ---
@@ -81,11 +81,11 @@ SelectedProject.set → SetCurrentProject → Persist (синхронная за
 | Метрика | Значение |
 |---|---|
 | Всего пунктов | 16 |
-| ✅ Реализовано | 12 (75%) |
+| ✅ Реализовано | 14 (87.5%) |
 | 🟡 Частично | 1 (М1) |
-| ❌ Осталось | 3 (1.3, М1, М2) |
-| Содержательная работа | 3 пункта: 1.3, М1, М2 |
+| ❌ Осталось | 1 (М1) |
+| Содержательная работа | 1 пункт: М1 |
 
 Готовность по приоритетам: П1 — 2/3, П2 — 2/2, П3 — 3/3, П4 — 1/1, П5 — 4/4, мелочи — 1/3.
 
-Порядок внедрения оставшегося: 1.3 → общий error boundary для fire-and-forget операций → batching обновления UI-коллекций.
+Порядок внедрения оставшегося: общий error boundary для fire-and-forget операций.
