@@ -3,6 +3,24 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.7.0 — 2026-10-04
+
+### New
+
+- One update button in the window footer: it shows the current version, and when a new release is out it walks you through Update and Restart to update without leaving the window
+- An update check or download started anywhere counts everywhere: the tray, the What's New window, and the footer button always show the same update state
+
+### Improved
+
+- The launch window opens snappier: project and agent logos are remembered between runs instead of being searched for in folders on every start
+- Working with projects and settings no longer stutters: changes are saved in the background while you keep going
+- Empty agent probe fields in Settings now show their default values as hints
+
+### Fixed
+
+- The pane scrollbar now renders inside the list's edge and no longer covers row content
+- Shortened project paths are measured against the row's text and rows sit evenly against the divider, so nothing is cut off or overlaps
+
 ## 0.6.0 — 2026-10-03
 
 ### New

@@ -7,6 +7,43 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.7.0 — 2026-10-04
+
+### Added
+
+- Single update control in the launch window footer: shows the current version when idle, checks
+  for updates on click, downloads an available release, and restarts to apply it; the control
+  reflects checks and downloads started from the tray or the What's New window and carries accent
+  styling whenever an action is available
+- Persistent logo cache: project and agent logos resolve through a key-based cache
+  (`project:<id>` / `plugin:<id>`) that loads at startup, updates write-through during runs, and
+  saves at shutdown; negative results are cached too, a removed project drops its entry, and a
+  manual refresh re-resolves (`logo-cache`)
+- `IConfigService.Flush()` drains pending configuration writes synchronously; the service flushes
+  on disposal, and the DI container disposes it at shutdown so no change is lost
+  (`app-lifecycle`)
+
+### Changed
+
+- Configuration saves no longer write to disk on the calling thread: `ConfigService.Save`
+  snapshot-serializes on the caller, and a single debounced background worker (250 ms) writes the
+  file atomically, coalescing rapid saves; in-memory `Load` semantics are unchanged
+  (`project-management`)
+- The launch window syncs the project list by membership diff instead of rebuilding it, and
+  `Project` raises property-change notifications for favorite, last-used, and logo, so rows and
+  the selection update in place (`project-management`)
+- The pane actions menus are composed from a data model instead of hand-built XAML
+  (`main-window-layout`)
+- Settings agent-probe fields show their default values as watermarks when empty
+- GitHub Actions are bumped to node 24 majors (checkout v7, setup-dotnet v6)
+
+### Fixed
+
+- The pane scrollbar renders inside the list's edge instead of overlapping row content
+- Shortened project paths are budgeted against the row's live text column, so they fit without
+  being cut off
+- Pane rows keep equal insets on the divider side
+
 ## 0.6.0 — 2026-10-03
 
 ### Added
