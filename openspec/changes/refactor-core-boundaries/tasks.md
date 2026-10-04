@@ -43,4 +43,4 @@
 - [x] 7.2 Add or update focused tests for newly extracted policies and seams; verify the new tests cover ownership boundaries rather than mirroring implementation details.
 - [x] 7.3 Update `docs/architecture.md` and `docs/repo-structure.md` with the durable Core boundaries and the accurate “UI-independent, Windows-aware” description; verify links and paths refer to existing files.
 - [x] 7.4 Perform a final dependency review against `design.md`; verify no UI dependency, unintended infrastructure-to-application dependency, unrecorded `AppConfig` ownership, or unapproved deviation remains.
-- [ ] 7.5 Run `dotnet build CLIHub.sln`, `dotnet test`, and `openspec validate "refactor-core-boundaries"`; record the results and confirm all tasks are complete.
+- [x] 7.5 Run `dotnet build CLIHub.sln`, `dotnet test`, and `openspec validate "refactor-core-boundaries"`; record the results and confirm all tasks are complete.
