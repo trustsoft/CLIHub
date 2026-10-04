@@ -14,10 +14,10 @@
 
 ## 3. Subsystem structure
 
-- [ ] 3.1 Create the target Core subsystem directories and namespaces described in `design.md`; verify Core still builds with no WPF dependency.
-- [ ] 3.2 Move configuration, project, plugin, agent, update, and infrastructure files one subsystem at a time without changing behavior; verify `dotnet build CLIHub.sln` after each subsystem move.
-- [ ] 3.3 Move or group interfaces according to subsystem ownership while preserving public contracts; verify all Core tests compile and pass.
-- [ ] 3.4 Move `ServiceCollectionExtensions` into the composition area and preserve the existing `AddClIHubCoreServices` entry point; verify `ServiceCollectionExtensionsTests` passes.
+- [x] 3.1 Create the target Core subsystem directories and namespaces described in `design.md`; verify Core still builds with no WPF dependency.
+- [x] 3.2 Move configuration, project, plugin, agent, update, and infrastructure files one subsystem at a time without changing behavior; verify `dotnet build CLIHub.sln` after each subsystem move.
+- [x] 3.3 Move or group interfaces according to subsystem ownership while preserving public contracts; verify all Core tests compile and pass.
+- [x] 3.4 Move `ServiceCollectionExtensions` into the composition area and preserve the existing `AddClIHubCoreServices` entry point; verify `ServiceCollectionExtensionsTests` passes.
 
 ## 4. Projects and configuration policies
 
