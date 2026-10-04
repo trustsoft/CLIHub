@@ -8,9 +8,18 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 ### CLIHub.Core
 
-**Purpose:** Platform-agnostic business logic and services.
+**Purpose:** UI-independent application logic with explicit Windows infrastructure boundaries.
 
 **Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `ReleaseNote`.
+
+**Subsystems:**
+- `Configuration/` — the `config.json` persistence document, preference access, project-state access, and the shared atomic write path
+- `Projects/` — project lifecycle, `ProjectState`, path policy, and project logo resolution
+- `Plugins/` — plugin discovery, validation, seeding, and plugin contracts
+- `Agents/` — agent commands, detection, version lookup, availability composition, and agent contracts
+- `Updates/` — update and release-note behavior and contracts
+- `Infrastructure/` — process execution, filesystem paths, logo persistence, Windows startup, and single-instance integration
+- `Composition/` — Core dependency injection registration grouped by subsystem
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
@@ -28,11 +37,13 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `SingleInstanceGuard` — named mutex + named-pipe activation
 - `DirectoryInitializer` — `%APPDATA%\CLIHub\` layout
 
+`AppConfigDocument` is the persistence representation of the existing flat `config.json` shape. `ProjectState` owns `Projects` and `CurrentProjectId`. `ProjectStateStore` and `PreferencesStore` expose narrower access boundaries over the same single configuration document, so separating responsibility does not split the physical file or atomic write path.
+
 **Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
-**Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency.
+**Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency. Core is UI-independent, but Windows-aware: Registry, named mutexes/pipes, Windows Terminal, and process integration live under `Infrastructure/`.
 
 **Target:** `net8.0`.
 
@@ -71,6 +82,10 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - `CLIHub.Tests` references `CLIHub.Core` only (not the UI)
 - Business logic lives in `CLIHub.Core` for testability
 - `CLIHub` is a thin presentation layer over Core services
+- Core subsystem dependencies use interfaces or explicit state boundaries; infrastructure does not depend on application facades
+- Project state is mutated by the project subsystem; unrelated services do not mutate `Projects` or `CurrentProjectId`
+- The existing flat `config.json` format and one atomic persistence path remain stable during the boundary refactor
+- Interactive process launching and captured command output are separate process contracts; `IProcessLauncher` remains the compatibility aggregate
 
 ## Capabilities (per `openspec/specs/`)
 
