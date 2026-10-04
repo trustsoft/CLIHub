@@ -86,6 +86,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - Project state is mutated by the project subsystem; unrelated services do not mutate `Projects` or `CurrentProjectId`
 - The existing flat `config.json` format and one atomic persistence path remain stable during the boundary refactor
 - Interactive process launching and captured command output are separate process contracts; `IProcessLauncher` remains the compatibility aggregate
+- Each production Core service exposes one public constructor for dependency injection; test-only seams use explicit internal factories or adapters
 
 ## Capabilities (per `openspec/specs/`)
 

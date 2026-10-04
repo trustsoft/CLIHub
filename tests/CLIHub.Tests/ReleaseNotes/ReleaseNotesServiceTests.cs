@@ -9,7 +9,7 @@ using CLIHub.Core.Services;
 public class ReleaseNotesServiceTests
 {
     private static ReleaseNotesService Create(string? text) =>
-        new(NullLogger<ReleaseNotesService>.Instance, text);
+        ReleaseNotesService.CreateForTesting(NullLogger<ReleaseNotesService>.Instance, text);
 
     [Fact]
     public void GetNotes_MultipleVersions_OrdersNewestFirst()

@@ -12,7 +12,11 @@ public class AgentVersionServiceTests
     private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
 
     private AgentVersionService CreateService() =>
-        new(_launcher, _config, NullLogger<AgentVersionService>.Instance, _time);
+        new(
+            _launcher,
+            new PreferencesStore(_config),
+            NullLogger<AgentVersionService>.Instance,
+            _time);
 
     private static Plugin PluginWithVersion(bool includeVersion)
     {

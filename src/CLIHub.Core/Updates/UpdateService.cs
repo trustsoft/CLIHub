@@ -45,13 +45,24 @@ public class UpdateService : IUpdateService
     ///   Test seam: uses a caller-provided manager (for example one built with a
     ///   <c>TestVelopackLocator</c>).
     /// </summary>
-    internal UpdateService(ILogger<UpdateService> logger, UpdateManager manager, TimeSpan? checkTimeout = null)
+    private UpdateService(ILogger<UpdateService> logger, UpdateManager manager, TimeSpan? checkTimeout)
     {
         _logger = logger;
         _checkTimeout = checkTimeout ?? CheckTimeout;
         _injectedManager = manager;
         _defaultManager = new Lazy<UpdateManager?>(() => manager);
     }
+
+    /// <summary>
+    ///   Creates an update service with an injected manager for tests.
+    /// </summary>
+    /// <param name="logger"> The service logger. </param>
+    /// <param name="manager"> The test update manager. </param>
+    /// <param name="checkTimeout"> Optional timeout used by the test. </param>
+    internal static UpdateService CreateForTesting(
+        ILogger<UpdateService> logger,
+        UpdateManager manager,
+        TimeSpan? checkTimeout = null) => new(logger, manager, checkTimeout);
 
     private UpdateManager? Manager => _injectedManager ?? _defaultManager.Value;
 

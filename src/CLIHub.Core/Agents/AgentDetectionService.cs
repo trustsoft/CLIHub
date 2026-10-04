@@ -26,16 +26,6 @@ public class AgentDetectionService : IAgentDetectionService
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    /// <summary>
-    ///   Creates the service over the legacy configuration contract during migration.
-    /// </summary>
-    /// <param name="configService"> The shared configuration service. </param>
-    /// <param name="timeProvider"> The time source used for cache expiry. </param>
-    internal AgentDetectionService(IConfigService configService, TimeProvider? timeProvider = null)
-        : this(new PreferencesStore(configService), timeProvider)
-    {
-    }
-
     /// <inheritdoc />
     public bool IsInstalledInSystem(Plugin plugin) =>
         GetOrCheck($"sys:{plugin.Id}", () => CheckSystem(plugin));

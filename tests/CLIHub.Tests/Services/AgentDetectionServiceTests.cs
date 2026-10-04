@@ -14,7 +14,7 @@ public class AgentDetectionServiceTests : IDisposable
     {
         _projectDir = Path.Combine(Path.GetTempPath(), "clihub-detect-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_projectDir);
-        _service = new AgentDetectionService(_config, _time);
+        _service = new AgentDetectionService(new PreferencesStore(_config), _time);
     }
 
     public void Dispose()
@@ -156,4 +156,4 @@ public class AgentDetectionServiceTests : IDisposable
         Assert.False(_service.IsInstalledInSystem(plugin));
     }
 }
-
+

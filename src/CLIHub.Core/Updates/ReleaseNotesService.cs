@@ -46,12 +46,13 @@ public class ReleaseNotesService : IReleaseNotesService
     }
 
     /// <summary>
-    ///   Test seam: parses caller-provided note text instead of the embedded document.
+    ///   Creates a release-notes service over caller-provided text for tests.
     /// </summary>
-    internal ReleaseNotesService(ILogger<ReleaseNotesService> logger, string? noteText)
-        : this(logger, () => noteText)
-    {
-    }
+    /// <param name="logger"> The service logger. </param>
+    /// <param name="noteText"> The test note text. </param>
+    internal static ReleaseNotesService CreateForTesting(
+        ILogger<ReleaseNotesService> logger,
+        string? noteText) => new(logger, () => noteText);
 
     private ReleaseNotesService(ILogger<ReleaseNotesService> logger, Func<string?> readNotes)
     {

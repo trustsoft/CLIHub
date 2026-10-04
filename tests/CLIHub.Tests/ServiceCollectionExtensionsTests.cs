@@ -22,6 +22,8 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IAgentCommandService>());
         Assert.NotNull(provider.GetRequiredService<IAgentDetectionService>());
         Assert.NotNull(provider.GetRequiredService<IAgentVersionService>());
+        Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
+        Assert.NotNull(provider.GetRequiredService<IProcessOutputRunner>());
         Assert.NotNull(provider.GetRequiredService<IProcessLauncher>());
         Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
     }

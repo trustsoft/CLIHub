@@ -36,20 +36,6 @@ public class ProjectService : IProjectService
         ClearStaleCurrentProject();
     }
 
-    /// <summary>
-    ///   Creates the service over the legacy configuration contract during migration.
-    /// </summary>
-    /// <param name="configService"> The shared configuration service. </param>
-    /// <param name="logoCache"> The logo cache. </param>
-    /// <param name="logger"> The project logger. </param>
-    internal ProjectService(
-        IConfigService configService,
-        ILogoCacheService logoCache,
-        ILogger<ProjectService> logger)
-        : this(new ProjectStateStore(configService), logoCache, logger)
-    {
-    }
-
     /// <inheritdoc />
     public IReadOnlyList<Project> GetAllProjects()
     {

@@ -72,21 +72,21 @@ public class UpdateServiceTests : IDisposable
         var locator = new TestVelopackLocator("CLIHub", version, _packagesDir);
         var source = new SimpleFileSource(new DirectoryInfo(_packagesDir));
         var manager = new UpdateManager(source, null, locator);
-        return new UpdateService(NullLogger<UpdateService>.Instance, manager);
+        return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager);
     }
 
     private UpdateService CreateDelayedService(TimeSpan delay)
     {
         var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
         var manager = new UpdateManager(new DelayedSource(delay), null, locator);
-        return new UpdateService(NullLogger<UpdateService>.Instance, manager);
+        return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager);
     }
 
     private UpdateService CreateDelayedService(TimeSpan delay, TimeSpan checkTimeout, bool fail = false)
     {
         var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
         var manager = new UpdateManager(new DelayedSource(delay, fail), null, locator);
-        return new UpdateService(NullLogger<UpdateService>.Instance, manager, checkTimeout);
+        return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager, checkTimeout);
     }
 
     [Fact]

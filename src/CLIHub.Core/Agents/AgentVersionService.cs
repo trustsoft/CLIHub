@@ -34,18 +34,6 @@ public class AgentVersionService : IAgentVersionService
     private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new();
 
     /// <summary>
-    ///   Creates the service.
-    /// </summary>
-    internal AgentVersionService(
-        IProcessLauncher processLauncher,
-        IPreferencesStore preferencesStore,
-        ILogger<AgentVersionService> logger,
-        TimeProvider? timeProvider = null)
-        : this((IProcessOutputRunner)processLauncher, preferencesStore, logger, timeProvider)
-    {
-    }
-
-    /// <summary>
     ///   Creates the service with the captured-output process boundary.
     /// </summary>
     public AgentVersionService(
@@ -58,22 +46,6 @@ public class AgentVersionService : IAgentVersionService
         _preferencesStore = preferencesStore;
         _logger = logger;
         _timeProvider = timeProvider ?? TimeProvider.System;
-    }
-
-    /// <summary>
-    ///   Creates the service over the legacy configuration contract during migration.
-    /// </summary>
-    /// <param name="processLauncher"> The process launcher. </param>
-    /// <param name="configService"> The shared configuration service. </param>
-    /// <param name="logger"> The service logger. </param>
-    /// <param name="timeProvider"> The time source used for cache expiry. </param>
-    internal AgentVersionService(
-        IProcessLauncher processLauncher,
-        IConfigService configService,
-        ILogger<AgentVersionService> logger,
-        TimeProvider? timeProvider = null)
-        : this(processLauncher, new PreferencesStore(configService), logger, timeProvider)
-    {
     }
 
     /// <inheritdoc />

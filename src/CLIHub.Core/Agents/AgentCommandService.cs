@@ -15,14 +15,6 @@ public class AgentCommandService : IAgentCommandService
     private readonly ILogger<AgentCommandService> _logger;
 
     /// <summary>
-    ///   Creates the service.
-    /// </summary>
-    internal AgentCommandService(IProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
-        : this(processLauncher, processLauncher, logger)
-    {
-    }
-
-    /// <summary>
     ///   Creates the service with separate interactive and output process boundaries.
     /// </summary>
     public AgentCommandService(

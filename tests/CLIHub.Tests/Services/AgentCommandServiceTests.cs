@@ -15,7 +15,10 @@ public class AgentCommandServiceTests : IDisposable
     {
         _projectDir = Path.Combine(Path.GetTempPath(), "clihub-agent-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_projectDir);
-        _service = new AgentCommandService(_launcher, NullLogger<AgentCommandService>.Instance);
+        _service = new AgentCommandService(
+            _launcher,
+            _launcher,
+            NullLogger<AgentCommandService>.Instance);
     }
 
     public void Dispose()
@@ -111,4 +114,4 @@ public class AgentCommandServiceTests : IDisposable
         Assert.Equal("boom", result.Error);
     }
 }
-
+
