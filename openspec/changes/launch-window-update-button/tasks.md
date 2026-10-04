@@ -16,6 +16,7 @@
 
 - [x] 3.1 Add xUnit coverage for the transition logic in `tests/CLIHub.Tests` (idle → checking → available → downloading → ready to apply, download failure, shared-download reflection via `UpdateControlLogic.Derive`/`AfterDownload`); verify `dotnet test` passes
 - [ ] 3.2 Manual end-to-end pass against a real build: startup check finding an update flips the control without user action, tray-started download shows "Downloading…" in the window, and the restart action applies the update; record the result in the change notes
+  - Verified 2026-10-04 against the released 0.7.0 install: idle chip look, click → "Checking…" → "Up to date (v0.7.0)" and back to idle, re-entry disabled while busy, "Updates apply to installed builds only." on a dev run, and the What's New window opening once with the 0.7.0 notes. The full Available → Downloading → Restart pass is deferred to the next release (0.8.0): it needs a version newer than the installed one; agreed 2026-10-04.
 
 ## 4. Shared update control component
 
