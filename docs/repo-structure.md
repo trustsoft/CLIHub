@@ -22,6 +22,7 @@
 ├── RELEASE-NOTES.md         # User-facing release notes (embedded into the app)
 ├── CLIHub.sln               # Visual Studio solution file
 ├── Directory.Build.props    # MSBuild properties (build output paths)
+├── .editorconfig            # Code style rules (root; enforced at build)
 ├── .gitignore               # Git exclusions
 └── AGENTS.md                # OpenCode agent instructions
 ```
@@ -78,6 +79,7 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 
 ## Tooling Configuration
 
+**`.editorconfig`** — repository-wide code style rules (whitespace, naming, language style), one file at the root covering `src/`, `tests/`, and non-code files; enforced at build (see the `code-style` spec).
 **`.opencode/`** — OpenCode CLI configuration, skills, and commands.
 **`.idea/`**, **`.vs/`** — IDE settings (user-specific, not committed).
 **`.git/`** — Git metadata.
@@ -89,7 +91,7 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 **`Directory.Build.props`** — MSBuild properties shared by all projects:
 - `BaseOutputPath` → `artifacts/` (compiled binaries)
 - `BaseIntermediateOutputPath` → `obj/` (intermediate files)
-- `Version` → `0.6.0` (product version; the development default — a release takes its version from the pushed `v*` tag)
+- `Version` → `0.7.0` (product version; the development default — a release takes its version from the pushed `v*` tag)
 - `EnforceCodeStyleInBuild` → `true` (code style checked as part of the build)
 
 ## Build Output (git-ignored)

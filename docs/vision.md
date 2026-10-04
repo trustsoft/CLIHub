@@ -33,6 +33,7 @@ The capability sketch below began as a draft. Delivered capabilities are tracked
 - Windows system tray icon with a context menu (current project, recent projects, add project, launch agent, exit) — `project-management`
 - Project management with logos, recents, and a current-project launch context — `project-management`
 - Dynamic agent plugins described by JSON descriptors, seeded on first run with logos — `plugin-seeding`
+- Persistent logo cache: project and agent logos resolve through a key-based cache that loads at startup, updates write-through, and saves at shutdown — `logo-cache`
 - Agent command set: launch, resume last session, version, update, initialize — `agent-commands`
 - Agent availability detection (installed on host / used in project) — `agent-detection`
 - Agent version display and availability dimming/filtering — `agent-version`, `agent-availability-display`

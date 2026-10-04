@@ -105,6 +105,6 @@ tests/CLIHub.Tests/    # xUnit tests
 - [`docs/architecture.md`](docs/architecture.md) — architecture, plugin format, conventions
 - [`docs/repo-structure.md`](docs/repo-structure.md) — repository layout
 - [`docs/releasing.md`](docs/releasing.md) — step-by-step release runbook for maintainers
-- [`docs/changelog-and-release-notes.md`](docs/changelog-and-release-notes.md) — changelog & release-notes plan (draft)
+- [`docs/changelog-and-release-notes.md`](docs/changelog-and-release-notes.md) — changelog & release-notes rationale and decision log
 - [`AGENTS.md`](AGENTS.md) — guidance for AI coding agents
 - `openspec/specs/` — durable capability specs

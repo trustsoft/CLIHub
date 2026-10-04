@@ -74,7 +74,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 
 ## Capabilities (per `openspec/specs/`)
 
-`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`. Each spec defines observable behavior; see the corresponding spec for requirements.
+`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `logo-cache`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `launch-window-theme`, `settings-theme`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`, `code-style`. Each spec defines observable behavior; see the corresponding spec for requirements.
 
 ## Technology Stack
 
@@ -223,6 +223,8 @@ machinery:
 ### Code Style
 
 See [AGENTS.md → Code Style](../AGENTS.md#code-style) (file-scoped namespaces, nullable, implicit usings, braces, naming, async, MVVM).
+
+The rules live in the root [`.editorconfig`](../.editorconfig) and are enforced at build time: `EnforceCodeStyleInBuild` in `Directory.Build.props` plus explicit severity pins surface naming (private fields, `I`-prefixed interfaces), brace, namespace, and using-placement violations as build warnings (the `code-style` spec). The application projects also enable `GenerateDocumentationFile`, so the compiler reports malformed XML doc comments and `<param>` tags that drift from the actual signature.
 
 ### Namespace Structure
 - `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`, `CLIHub.Core.Formatting`
