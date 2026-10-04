@@ -573,39 +573,23 @@ public sealed class LaunchWindowViewModel : ObservableObject
             currentProject,
             ShowOnlyProjectAgents);
 
-        var items = new List<AgentItem>();
-
-        foreach (var entry in entries)
-        {
-            items.Add(new AgentItem
-            {
-                Plugin = entry.Plugin,
-                Name = entry.Plugin.Name,
-                LogoPath = entry.Plugin.LogoPath ?? DefaultAgentLogoPath,
-                IsAvailable = entry.IsAvailable
-            });
-        }
-
         var selectedPluginId = SelectedAgent?.Plugin.Id;
 
-        Agents.Clear();
+        var selected = AgentListSynchronizer.Synchronize(
+            Agents,
+            entries,
+            DefaultAgentLogoPath,
+            selectedPluginId);
 
-        foreach (var item in items)
-        {
-            Agents.Add(item);
-        }
+        SelectedAgent = selected;
 
-        SelectedAgent = selectedPluginId is null
-            ? null
-            : Agents.FirstOrDefault(a => a.Plugin.Id == selectedPluginId);
-
-        if (items.Count == 0)
+        if (Agents.Count == 0)
         {
             StatusMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
         }
         else
         {
-            _ = PopulateVersionsAsync(items, generation, cancellationToken);
+            _ = PopulateVersionsAsync(Agents.ToList(), generation, cancellationToken);
         }
     }
 
