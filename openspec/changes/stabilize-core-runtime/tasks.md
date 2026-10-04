@@ -10,8 +10,8 @@
 - [x] 2.1 Add per-agent in-flight task coalescing while preserving the completed-result TTL cache; verify concurrent callers start one process and receive the same result.
 - [x] 2.2 Make caller cancellation stop waiting without cancelling a shared probe needed by another caller; verify one cancelled waiter does not cancel another caller's result.
 - [x] 2.3 Make the legacy `IProcessLauncher` constructor of `AgentVersionService` internal and keep the `IProcessOutputRunner` constructor as the production boundary; verify Core composition and direct tests resolve the intended constructor.
-- [ ] 2.4 Add generation and cancellation handling to `LaunchWindowViewModel.PopulateVersionsAsync`; verify a superseded refresh cannot update current agent items and current results still populate.
-- [ ] 2.5 Apply equivalent exception-safe population handling to the retained `MainWindow` path; verify the solution builds and no population task can escape unobserved from the refresh path.
+- [x] 2.4 Add generation and cancellation handling to `LaunchWindowViewModel.PopulateVersionsAsync`; verify a superseded refresh cannot update current agent items and current results still populate.
+- [x] 2.5 Apply equivalent exception-safe population handling to the retained `MainWindow` path; verify the solution builds and no population task can escape unobserved from the refresh path.
 
 ## 3. Windows command construction
 
@@ -29,5 +29,5 @@
 ## 5. Final verification and backlog update
 
 - [x] 5.1 Run focused agent-version, process-launcher, agent-command, and update-service tests; verify all new concurrency, cancellation, quoting, and timeout scenarios pass.
-- [ ] 5.2 Run `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release`, and `openspec validate "stabilize-core-runtime"`; record the results.
-- [ ] 5.3 Update `improvements.md` to mark completed runtime items and retain only verified follow-up work with current file paths; verify the backlog matches the implemented behavior.
+- [x] 5.2 Run `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release`, and `openspec validate "stabilize-core-runtime"`; record the results.
+- [x] 5.3 Update `improvements.md` to mark completed runtime items and retain only verified follow-up work with current file paths; verify the backlog matches the implemented behavior.
