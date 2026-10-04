@@ -64,7 +64,8 @@ public class ConfigService : IConfigService
         try
         {
             var json = File.ReadAllText(_configFilePath);
-            _cachedConfig = JsonSerializer.Deserialize<AppConfig>(json, CoreJson.Options) ?? new AppConfig();
+            var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options);
+            _cachedConfig = document?.ToAppConfig() ?? new AppConfig();
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
             return _cachedConfig;
         }
@@ -85,7 +86,7 @@ public class ConfigService : IConfigService
         // serialization could race with the caller. Serializing this small document on the
         // calling thread is far cheaper than the disk write it replaces.
         _cachedConfig = config;
-        var json = JsonSerializer.Serialize(config, CoreJson.Options);
+        var json = JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options);
 
         lock (_gate)
         {

@@ -13,17 +13,27 @@ public class AgentDetectionService : IAgentDetectionService
 {
     internal static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
 
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly TimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
 
     /// <summary>
     ///   Creates the service with an optional time source for tests.
     /// </summary>
-    public AgentDetectionService(IConfigService configService, TimeProvider? timeProvider = null)
+    public AgentDetectionService(IPreferencesStore preferencesStore, TimeProvider? timeProvider = null)
     {
-        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _timeProvider = timeProvider ?? TimeProvider.System;
+    }
+
+    /// <summary>
+    ///   Creates the service over the legacy configuration contract during migration.
+    /// </summary>
+    /// <param name="configService"> The shared configuration service. </param>
+    /// <param name="timeProvider"> The time source used for cache expiry. </param>
+    internal AgentDetectionService(IConfigService configService, TimeProvider? timeProvider = null)
+        : this(new PreferencesStore(configService), timeProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -54,7 +64,7 @@ public class AgentDetectionService : IAgentDetectionService
     {
         get
         {
-            var minutes = _configService.Load().Preferences.AgentProbeTtlMinutes;
+            var minutes = _preferencesStore.Load().AgentProbeTtlMinutes;
             return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
         }
     }

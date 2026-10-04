@@ -39,4 +39,49 @@ public class AppConfigSerializationTests
 
         Assert.Equal("0.5.0", restored!.Preferences.LastSeenReleaseNotesVersion);
     }
+
+    [Fact]
+    public void AppConfigDocument_PreservesTheExistingFlatDocumentShape()
+    {
+        var config = new AppConfig
+        {
+            Projects =
+            {
+                new Project { Id = "project-1", Name = "Project", Path = "C:\\Project" }
+            },
+            CurrentProjectId = "project-1"
+        };
+
+        var json = JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options);
+
+        Assert.Contains("\"projects\": [", json);
+        Assert.Contains("\"preferences\": {", json);
+        Assert.Contains("\"currentProjectId\": \"project-1\"", json);
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
+        Assert.Single(restored.Projects);
+        Assert.Equal("project-1", restored.CurrentProjectId);
+    }
+
+    [Fact]
+    public void ProjectState_TransfersProjectOwnershipWithoutChangingValues()
+    {
+        var config = new AppConfig
+        {
+            Projects =
+            {
+                new Project { Id = "project-1", Name = "Project", Path = "C:\\Project" }
+            },
+            CurrentProjectId = "project-1"
+        };
+
+        var state = ProjectState.From(config);
+        state.Projects[0].IsFavorite = true;
+        var destination = new AppConfig();
+
+        state.ApplyTo(destination);
+
+        Assert.Equal("project-1", destination.CurrentProjectId);
+        Assert.True(destination.Projects.Single().IsFavorite);
+    }
 }

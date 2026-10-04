@@ -16,10 +16,10 @@ public class ProjectService : IProjectService
         "icon.png", "icon.jpg", "favicon.png"
     };
 
-    private readonly IConfigService _configService;
+    private readonly IProjectStateStore _projectStateStore;
     private readonly ILogoCacheService _logoCache;
     private readonly ILogger<ProjectService> _logger;
-    private readonly AppConfig _config;
+    private readonly ProjectState _projectState;
 
     /// <inheritdoc />
     public event EventHandler? ProjectsChanged;
@@ -31,22 +31,36 @@ public class ProjectService : IProjectService
     ///   Creates the service with the default project logo path.
     /// </summary>
     public ProjectService(
-        IConfigService configService,
+        IProjectStateStore projectStateStore,
         ILogoCacheService logoCache,
         ILogger<ProjectService> logger)
     {
-        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
         _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _config = _configService.Load();
+        _projectState = _projectStateStore.Load();
         ClearStaleCurrentProject();
+    }
+
+    /// <summary>
+    ///   Creates the service over the legacy configuration contract during migration.
+    /// </summary>
+    /// <param name="configService"> The shared configuration service. </param>
+    /// <param name="logoCache"> The logo cache. </param>
+    /// <param name="logger"> The project logger. </param>
+    internal ProjectService(
+        IConfigService configService,
+        ILogoCacheService logoCache,
+        ILogger<ProjectService> logger)
+        : this(new ProjectStateStore(configService), logoCache, logger)
+    {
     }
 
     /// <inheritdoc />
     public IReadOnlyList<Project> GetAllProjects()
     {
         RefreshLogos();
-        return _config.Projects.ToList();
+        return _projectState.Projects.ToList();
     }
 
     /// <inheritdoc />
@@ -58,7 +72,7 @@ public class ProjectService : IProjectService
         }
 
         RefreshLogos();
-        return _config.Projects
+        return _projectState.Projects
             .OrderByDescending(p => p.LastUsed)
             .Take(limit)
             .ToList();
@@ -67,12 +81,12 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public Project? GetCurrentProject()
     {
-        if (_config.CurrentProjectId == null)
+        if (_projectState.CurrentProjectId == null)
         {
             return null;
         }
 
-        var project = _config.Projects.FirstOrDefault(p => p.Id == _config.CurrentProjectId);
+        var project = _projectState.Projects.FirstOrDefault(p => p.Id == _projectState.CurrentProjectId);
         if (project != null)
         {
             project.LogoPath = ResolveProjectLogo(project);
@@ -83,7 +97,7 @@ public class ProjectService : IProjectService
 
     private void RefreshLogos()
     {
-        foreach (var project in _config.Projects)
+        foreach (var project in _projectState.Projects)
         {
             project.LogoPath = ResolveProjectLogo(project);
         }
@@ -111,7 +125,7 @@ public class ProjectService : IProjectService
             throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
         }
 
-        var existing = _config.Projects.FirstOrDefault(p => PathsEqual(p.Path, normalized));
+        var existing = _projectState.Projects.FirstOrDefault(p => PathsEqual(p.Path, normalized));
         if (existing != null)
         {
             return existing;
@@ -133,7 +147,7 @@ public class ProjectService : IProjectService
 
         project.LogoPath = ResolveProjectLogo(project);
 
-        _config.Projects.Add(project);
+        _projectState.Projects.Add(project);
         _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
         Persist();
         return project;
@@ -142,19 +156,19 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public void RemoveProject(string projectId)
     {
-        var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
         }
 
-        _config.Projects.Remove(project);
+        _projectState.Projects.Remove(project);
         _logoCache.Remove($"project:{projectId}");
         _logger.LogInformation("Removed project {ProjectName}", project.Name);
 
-        if (_config.CurrentProjectId == projectId)
+        if (_projectState.CurrentProjectId == projectId)
         {
-            _config.CurrentProjectId = null;
+            _projectState.CurrentProjectId = null;
         }
 
         Persist();
@@ -163,13 +177,13 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public void SetCurrentProject(string projectId)
     {
-        var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
         }
 
-        _config.CurrentProjectId = projectId;
+        _projectState.CurrentProjectId = projectId;
         project.LastUsed = DateTime.UtcNow;
         _logger.LogDebug("Current project set to {ProjectName}", project.Name);
         Persist();
@@ -178,7 +192,7 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public void ToggleFavorite(string projectId)
     {
-        var project = _config.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
@@ -218,23 +232,23 @@ public class ProjectService : IProjectService
 
     private void ClearStaleCurrentProject()
     {
-        if (_config.CurrentProjectId == null)
+        if (_projectState.CurrentProjectId == null)
         {
             return;
         }
 
-        var matches = _config.Projects.Any(p => p.Id == _config.CurrentProjectId);
+        var matches = _projectState.Projects.Any(p => p.Id == _projectState.CurrentProjectId);
         if (!matches)
         {
-            _logger.LogDebug("Clearing stale current project id {ProjectId}", _config.CurrentProjectId);
-            _config.CurrentProjectId = null;
+            _logger.LogDebug("Clearing stale current project id {ProjectId}", _projectState.CurrentProjectId);
+            _projectState.CurrentProjectId = null;
             Persist();
         }
     }
 
     private void Persist()
     {
-        _configService.Save(_config);
+        _projectStateStore.Save(_projectState);
         ProjectsChanged?.Invoke(this, EventArgs.Empty);
     }
 

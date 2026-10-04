@@ -25,10 +25,12 @@ public static class ServiceCollectionExtensions
         services.AddLogging();
 
         services.AddSingleton<IConfigService, ConfigService>();
+        services.AddSingleton<IProjectStateStore, ProjectStateStore>();
+        services.AddSingleton<IPreferencesStore, PreferencesStore>();
         services.AddSingleton<ILogoCacheService, LogoCacheService>();
 
         services.AddSingleton<IProjectService>(sp => new ProjectService(
-            sp.GetRequiredService<IConfigService>(),
+            sp.GetRequiredService<IProjectStateStore>(),
             sp.GetRequiredService<ILogoCacheService>(),
             sp.GetRequiredService<ILogger<ProjectService>>())
         {
@@ -41,11 +43,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentCommandService, AgentCommandService>();
 
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
-            sp.GetRequiredService<IConfigService>()));
+            sp.GetRequiredService<IPreferencesStore>()));
 
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(
             sp.GetRequiredService<IProcessLauncher>(),
-            sp.GetRequiredService<IConfigService>(),
+            sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
 
         services.AddSingleton<IUpdateService, UpdateService>();

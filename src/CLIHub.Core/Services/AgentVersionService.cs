@@ -27,7 +27,7 @@ public class AgentVersionService : IAgentVersionService
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 
     private readonly IProcessLauncher _processLauncher;
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly ILogger<AgentVersionService> _logger;
     private readonly TimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
@@ -37,14 +37,30 @@ public class AgentVersionService : IAgentVersionService
     /// </summary>
     public AgentVersionService(
         IProcessLauncher processLauncher,
-        IConfigService configService,
+        IPreferencesStore preferencesStore,
         ILogger<AgentVersionService> logger,
         TimeProvider? timeProvider = null)
     {
         _processLauncher = processLauncher;
-        _configService = configService;
+        _preferencesStore = preferencesStore;
         _logger = logger;
         _timeProvider = timeProvider ?? TimeProvider.System;
+    }
+
+    /// <summary>
+    ///   Creates the service over the legacy configuration contract during migration.
+    /// </summary>
+    /// <param name="processLauncher"> The process launcher. </param>
+    /// <param name="configService"> The shared configuration service. </param>
+    /// <param name="logger"> The service logger. </param>
+    /// <param name="timeProvider"> The time source used for cache expiry. </param>
+    internal AgentVersionService(
+        IProcessLauncher processLauncher,
+        IConfigService configService,
+        ILogger<AgentVersionService> logger,
+        TimeProvider? timeProvider = null)
+        : this(processLauncher, new PreferencesStore(configService), logger, timeProvider)
+    {
     }
 
     /// <inheritdoc />
@@ -88,7 +104,7 @@ public class AgentVersionService : IAgentVersionService
     {
         get
         {
-            var minutes = _configService.Load().Preferences.AgentProbeTtlMinutes;
+            var minutes = _preferencesStore.Load().AgentProbeTtlMinutes;
             return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
         }
     }
@@ -97,7 +113,7 @@ public class AgentVersionService : IAgentVersionService
     {
         get
         {
-            var seconds = _configService.Load().Preferences.AgentProbeTimeoutSeconds;
+            var seconds = _preferencesStore.Load().AgentProbeTimeoutSeconds;
             return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : DefaultProbeTimeout;
         }
     }
