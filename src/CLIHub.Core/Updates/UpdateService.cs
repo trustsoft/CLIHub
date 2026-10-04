@@ -26,6 +26,7 @@ public class UpdateService : IUpdateService
     private readonly UpdateManager? _injectedManager;
     private readonly Lazy<UpdateManager?> _defaultManager;
     private readonly object _downloadGate = new();
+    private readonly TimeSpan _checkTimeout;
     private bool _isDownloading;
     private VelopackAsset? _downloadedAsset;
     private string? _lastKnownAvailableVersion;
@@ -36,6 +37,7 @@ public class UpdateService : IUpdateService
     public UpdateService(ILogger<UpdateService> logger)
     {
         _logger = logger;
+        _checkTimeout = CheckTimeout;
         _defaultManager = new Lazy<UpdateManager?>(CreateDefaultManager);
     }
 
@@ -43,9 +45,10 @@ public class UpdateService : IUpdateService
     ///   Test seam: uses a caller-provided manager (for example one built with a
     ///   <c>TestVelopackLocator</c>).
     /// </summary>
-    internal UpdateService(ILogger<UpdateService> logger, UpdateManager manager)
+    internal UpdateService(ILogger<UpdateService> logger, UpdateManager manager, TimeSpan? checkTimeout = null)
     {
         _logger = logger;
+        _checkTimeout = checkTimeout ?? CheckTimeout;
         _injectedManager = manager;
         _defaultManager = new Lazy<UpdateManager?>(() => manager);
     }
@@ -224,11 +227,13 @@ public class UpdateService : IUpdateService
         try
         {
             var checkTask = manager.CheckForUpdatesAsync();
-            var completed = await Task.WhenAny(checkTask, Task.Delay(CheckTimeout, cancellationToken));
+            var timeoutTask = Task.Delay(_checkTimeout, cancellationToken);
+            var completed = await Task.WhenAny(checkTask, timeoutTask);
 
             if (completed != checkTask)
             {
-                _logger.LogWarning("Update check timed out after {Seconds}s", CheckTimeout.TotalSeconds);
+                _ = ObserveLateUpdateCheckAsync(checkTask);
+                _logger.LogWarning("Update check timed out after {Seconds}s", _checkTimeout.TotalSeconds);
                 SetAvailableVersion(null);
                 return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
             }
@@ -263,6 +268,18 @@ public class UpdateService : IUpdateService
             _logger.LogWarning(ex, "Update check failed");
             SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
+        }
+    }
+
+    private async Task ObserveLateUpdateCheckAsync(Task<UpdateInfo?> checkTask)
+    {
+        try
+        {
+            await checkTask.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Late update check completed after timeout");
         }
     }
 

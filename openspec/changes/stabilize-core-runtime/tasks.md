@@ -3,7 +3,7 @@
 - [x] 1.1 Record the current runtime-stability baseline and confirm `dotnet build CLIHub.sln -c Release` plus `dotnet test CLIHub.sln -c Release` pass before implementation.
 - [x] 1.2 Add a test seam that can count concurrent version-command launches and verify the current duplicate-probe behavior is reproduced before the fix.
 - [x] 1.3 Add regression cases for executable paths, working directories, quoted arguments, shell metacharacters, and each supported interactive runtime; verify the cases fail or expose the current unsafe command construction.
-- [ ] 1.4 Add an update-service test seam that completes the underlying check after the configured timeout with both success and failure; verify late completion is observable without changing the returned timeout result.
+- [x] 1.4 Add an update-service test seam that completes the underlying check after the configured timeout with both success and failure; verify late completion is observable without changing the returned timeout result.
 
 ## 2. Version probe concurrency and lifecycle
 
@@ -22,12 +22,12 @@
 
 ## 4. Update timeout lifecycle
 
-- [ ] 4.1 Pass a linked cancellation token to the update operation when the installed Velopack API supports it, otherwise attach an explicit observation continuation; verify timeout returns promptly and late task exceptions are logged/observed.
-- [ ] 4.2 Ensure timeout and caller cancellation clear the available-version state and leave the service ready for a later check; verify sequential check tests pass.
-- [ ] 4.3 Preserve update-control, tray, and What's New behavior for successful, failed, cancelled, and timed-out checks; verify `UpdateServiceTests` and the full solution tests pass.
+- [x] 4.1 Pass a linked cancellation token to the update operation when the installed Velopack API supports it, otherwise attach an explicit observation continuation; verify timeout returns promptly and late task exceptions are logged/observed.
+- [x] 4.2 Ensure timeout and caller cancellation clear the available-version state and leave the service ready for a later check; verify sequential check tests pass.
+- [x] 4.3 Preserve update-control, tray, and What's New behavior for successful, failed, cancelled, and timed-out checks; verify `UpdateServiceTests` and the full solution tests pass.
 
 ## 5. Final verification and backlog update
 
-- [ ] 5.1 Run focused agent-version, process-launcher, agent-command, and update-service tests; verify all new concurrency, cancellation, quoting, and timeout scenarios pass.
+- [x] 5.1 Run focused agent-version, process-launcher, agent-command, and update-service tests; verify all new concurrency, cancellation, quoting, and timeout scenarios pass.
 - [ ] 5.2 Run `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release`, and `openspec validate "stabilize-core-runtime"`; record the results.
 - [ ] 5.3 Update `improvements.md` to mark completed runtime items and retain only verified follow-up work with current file paths; verify the backlog matches the implemented behavior.

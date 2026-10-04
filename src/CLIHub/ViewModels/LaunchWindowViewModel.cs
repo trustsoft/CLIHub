@@ -37,6 +37,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IConfigService _configService;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
+    private CancellationTokenSource? _versionPopulationCts;
+    private int _versionPopulationGeneration;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
@@ -558,6 +560,12 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void RefreshAgents()
     {
+        _versionPopulationCts?.Cancel();
+        _versionPopulationCts?.Dispose();
+        _versionPopulationCts = new CancellationTokenSource();
+        var generation = ++_versionPopulationGeneration;
+        var cancellationToken = _versionPopulationCts.Token;
+
         var currentProject = _projectService.GetCurrentProject()?.Path;
         var entries = AgentListComposer.Compose(
             _pluginManager.GetAllPlugins(),
@@ -597,17 +605,33 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
         else
         {
-            _ = PopulateVersionsAsync(items);
+            _ = PopulateVersionsAsync(items, generation, cancellationToken);
         }
     }
 
-    private async Task PopulateVersionsAsync(IReadOnlyList<AgentItem> items)
+    private async Task PopulateVersionsAsync(
+        IReadOnlyList<AgentItem> items,
+        int generation,
+        CancellationToken cancellationToken)
     {
-        await Task.WhenAll(items.Select(async item =>
+        try
         {
-            var version = await _agentVersionService.GetVersionAsync(item.Plugin);
-            item.Version = version ?? "unknown";
-        }));
+            await Task.WhenAll(items.Select(async item =>
+            {
+                var version = await _agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && generation == _versionPopulationGeneration)
+                {
+                    item.Version = version ?? "unknown";
+                }
+            }));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Agent version population failed: {ex}");
+        }
     }
 
     /// <summary>

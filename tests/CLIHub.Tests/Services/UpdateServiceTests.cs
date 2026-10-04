@@ -32,8 +32,13 @@ public class UpdateServiceTests : IDisposable
     private sealed class DelayedSource : IUpdateSource
     {
         private readonly TimeSpan _delay;
+        private readonly bool _fail;
 
-        public DelayedSource(TimeSpan delay) => _delay = delay;
+        public DelayedSource(TimeSpan delay, bool fail = false)
+        {
+            _delay = delay;
+            _fail = fail;
+        }
 
         public async Task<VelopackAssetFeed> GetReleaseFeed(
             IVelopackLogger logger,
@@ -43,6 +48,11 @@ public class UpdateServiceTests : IDisposable
             VelopackAsset? latestLocalRelease)
         {
             await Task.Delay(_delay);
+            if (_fail)
+            {
+                throw new InvalidOperationException("late update feed failure");
+            }
+
             return new VelopackAssetFeed { Assets = Array.Empty<VelopackAsset>() };
         }
 
@@ -70,6 +80,13 @@ public class UpdateServiceTests : IDisposable
         var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
         var manager = new UpdateManager(new DelayedSource(delay), null, locator);
         return new UpdateService(NullLogger<UpdateService>.Instance, manager);
+    }
+
+    private UpdateService CreateDelayedService(TimeSpan delay, TimeSpan checkTimeout, bool fail = false)
+    {
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var manager = new UpdateManager(new DelayedSource(delay, fail), null, locator);
+        return new UpdateService(NullLogger<UpdateService>.Instance, manager, checkTimeout);
     }
 
     [Fact]
@@ -104,6 +121,44 @@ public class UpdateServiceTests : IDisposable
     {
         var exception = await Record.ExceptionAsync(() => CreateDefaultService().CheckForUpdatesAsync());
         Assert.Null(exception);
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_TimeoutObservesLateSuccessAndLeavesStateClear()
+    {
+        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20));
+
+        var result = await service.CheckForUpdatesAsync();
+
+        Assert.Equal(UpdateStatus.Failed, result.Status);
+        Assert.Null(service.LastKnownAvailableVersion);
+        await Task.Delay(180);
+        Assert.Null(service.LastKnownAvailableVersion);
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_TimeoutObservesLateFailure()
+    {
+        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20), fail: true);
+
+        var result = await service.CheckForUpdatesAsync();
+
+        Assert.Equal(UpdateStatus.Failed, result.Status);
+        await Task.Delay(180);
+        Assert.Null(service.LastKnownAvailableVersion);
+    }
+
+    [Fact]
+    public async Task CheckForUpdates_CancellationObservesLateCompletionAndLeavesStateClear()
+    {
+        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromSeconds(2));
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        var result = await service.CheckForUpdatesAsync(cancellation.Token);
+
+        Assert.Equal(UpdateStatus.Failed, result.Status);
+        Assert.Null(service.LastKnownAvailableVersion);
     }
 
     [Fact]
@@ -171,4 +226,4 @@ public class UpdateServiceTests : IDisposable
         Assert.Null(exception);
     }
 }
-
+
