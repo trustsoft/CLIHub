@@ -369,19 +369,15 @@
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                     <TextBlock Style="{StaticResource BrandText}" Text="CLIHub"/>
-                    <Border Margin="12,2,0,0"
-                            VerticalAlignment="Center"
-                            Style="{StaticResource VersionChipBorder}">
-                        <TextBlock Style="{StaticResource VersionChipText}" Text="{Binding VersionText}"/>
-                    </Border>
                 </StackPanel>
 
                 <Button Grid.Column="1"
                         Margin="10,2,0,0"
                         VerticalAlignment="Center"
-                        Command="{Binding CheckForUpdatesCommand}"
-                        Content="Check for updates"
-                        Style="{StaticResource FooterTextButton}"/>
+                        Command="{Binding UpdateControl.UpdateControlCommand}"
+                        Content="{Binding UpdateControl.UpdateButtonText}"
+                        Style="{StaticResource FooterTextButton}"
+                        ToolTip="Check for updates"/>
 
                 <TextBlock Grid.Column="2"
                            Margin="12,0"

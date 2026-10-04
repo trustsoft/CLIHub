@@ -28,7 +28,6 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
     private readonly IConfigService _configService;
-    private readonly IUpdateService _updateService;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
 
@@ -71,17 +70,16 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
         _configService = configService;
-        _updateService = updateService;
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
 
-        VersionText = _updateService.GetCurrentVersion();
+        UpdateControl = new UpdateControlViewModel(updateService);
+        UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
 
         AddProjectCommand = new RelayCommand(AddProject);
         RemoveProjectCommand = new RelayCommand(RemoveProject, () => SelectedProject != null);
         ToggleFavoriteCommand = new RelayCommand(ToggleFavorite, () => SelectedProject != null);
         RefreshCommand = new RelayCommand(Refresh);
-        CheckForUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync());
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
         ExitCommand = new RelayCommand(() => Application.Current.Shutdown());
@@ -137,9 +135,10 @@ public sealed class LaunchWindowViewModel : ObservableObject
     public IReadOnlyList<MenuAction> AgentsActions { get; private set; } = Array.Empty<MenuAction>();
 
     /// <summary>
-    ///   Current application version, formatted for the footer.
+    ///   The shared update control: current version when idle, update and restart actions when
+    ///   an update is known.
     /// </summary>
-    public string VersionText { get; }
+    public UpdateControlViewModel UpdateControl { get; }
 
     /// <summary>
     ///   The project that provides the launch context.
@@ -262,11 +261,6 @@ public sealed class LaunchWindowViewModel : ObservableObject
     ///   Clears detection and version caches and reloads both panes.
     /// </summary>
     public RelayCommand RefreshCommand { get; }
-
-    /// <summary>
-    ///   Checks for updates and reports the outcome in the status line.
-    /// </summary>
-    public RelayCommand CheckForUpdatesCommand { get; }
 
     /// <summary>
     ///   Opens the CLIHub data folder in Explorer.
@@ -462,21 +456,6 @@ public sealed class LaunchWindowViewModel : ObservableObject
         {
             StatusMessage = $"Could not open {root}: {ex.Message}";
         }
-    }
-
-    private async Task CheckForUpdatesAsync()
-    {
-        StatusMessage = "Checking for updates...";
-
-        var result = await _updateService.CheckForUpdatesAsync();
-
-        StatusMessage = result.Status switch
-        {
-            UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
-            UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
-            UpdateStatus.NotInstalled => "Updates apply to installed builds only.",
-            _ => "Update check failed or timed out."
-        };
     }
 
     private async Task ExecuteAsync(AgentItem? item, AgentCommandKind kind)

@@ -225,11 +225,18 @@
         </Setter>
     </Style>
 
-    <!-- Footer text button (update check); text matches the version chip's font -->
+    <!-- Footer text button (update control): muted chip when idle, accent border and text
+         while it offers the update or restart action -->
     <Style x:Key="FooterTextButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
         <Setter Property="Padding" Value="10,2"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding UpdateControl.IsUpdateActionAvailable}" Value="True">
+                <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Agent row action button (launch / resume); disabled rows dim to the divider tone -->
