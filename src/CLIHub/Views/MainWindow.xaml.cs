@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     private readonly IAgentCommandService _agentCommandService;
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly IUpdateService _updateService;
     private readonly ILogger<MainWindow> _logger;
     private bool _suppressFilterEvent;
@@ -36,7 +36,7 @@ public partial class MainWindow : Window
     /// <param name="agentCommandService"> Service executing agent commands. </param>
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
-    /// <param name="configService"> Configuration service for the filter preference. </param>
+    /// <param name="preferencesStore"> Store for the filter preference. </param>
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="logger"> Logger for unexpected legacy window action failures. </param>
     public MainWindow(
@@ -45,7 +45,7 @@ public partial class MainWindow : Window
         IAgentCommandService agentCommandService,
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
-        IConfigService configService,
+        IPreferencesStore preferencesStore,
         IUpdateService updateService,
         ILogger<MainWindow> logger)
     {
@@ -56,14 +56,14 @@ public partial class MainWindow : Window
         _agentCommandService = agentCommandService;
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
-        _configService = configService;
+        _preferencesStore = preferencesStore;
         _updateService = updateService;
         _logger = logger;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
         _suppressFilterEvent = true;
-        FilterUnavailableCheckBox.IsChecked = _configService.Load().Preferences.ShowOnlyProjectAgents;
+        FilterUnavailableCheckBox.IsChecked = _preferencesStore.Load().ShowOnlyProjectAgents;
         _suppressFilterEvent = false;
 
         AppVersionText.Text = $"v{_updateService.GetCurrentVersion()}";
@@ -103,9 +103,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var config = _configService.Load();
-        config.Preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true;
-        _configService.Save(config);
+        var preferences = _preferencesStore.Load();
+        preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true;
+        _preferencesStore.Save(preferences);
 
         RefreshAgents();
     }

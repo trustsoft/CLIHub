@@ -57,7 +57,7 @@ public partial class App : Application
         _services.GetRequiredService<IPluginSeeder>().SeedIfEmpty();
         _services.GetRequiredService<IPluginManager>().LoadPlugins();
 
-        var preferences = _services.GetRequiredService<IConfigService>().Load().Preferences;
+        var preferences = _services.GetRequiredService<IPreferencesStore>().Load();
         _services.GetRequiredService<IProcessLauncher>().SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
         _services.GetRequiredService<IStartupService>().SetEnabled(preferences.StartWithWindows);
 
@@ -113,8 +113,8 @@ public partial class App : Application
             var services = _services!;
             var currentVersion = services.GetRequiredService<IUpdateService>().GetCurrentVersion();
             var notes = services.GetRequiredService<IReleaseNotesService>();
-            var recordedVersion = services.GetRequiredService<IConfigService>()
-                .Load().Preferences.LastSeenReleaseNotesVersion;
+            var recordedVersion = services.GetRequiredService<IPreferencesStore>()
+                .Load().LastSeenReleaseNotesVersion;
             var launcher = services.GetRequiredService<IReleaseNotesLauncher>();
 
             var action = ReleaseNotesPrompt.Decide(
@@ -215,7 +215,7 @@ public partial class App : Application
 
     private void RegisterGlobalHotkey()
     {
-        var configured = _services!.GetRequiredService<IConfigService>().Load().Preferences.Hotkey;
+        var configured = _services!.GetRequiredService<IPreferencesStore>().Load().Hotkey;
 
         HotkeyDefinition definition;
         if (HotkeyParser.TryParse(configured, out var parsed) && parsed != null)
@@ -250,4 +250,4 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
-
+

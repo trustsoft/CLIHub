@@ -43,7 +43,7 @@ public sealed class SettingsViewModel : ObservableObject
         new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends", "Middle ellipsis")
     };
 
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly IUpdateService _updateService;
     private readonly IStartupService _startupService;
     private readonly IPreferenceApplier _applier;
@@ -64,19 +64,19 @@ public sealed class SettingsViewModel : ObservableObject
     /// <summary>
     ///   Creates the view model with its services.
     /// </summary>
-    /// <param name="configService"> Configuration service used to load and save preferences. </param>
+    /// <param name="preferencesStore"> Store used to load and save preferences. </param>
     /// <param name="updateService"> Update service used for the version and update checks. </param>
     /// <param name="startupService"> Startup service used by the start-with-Windows toggle. </param>
     /// <param name="applier"> Preference applier invoked on save. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
-        IConfigService configService,
+        IPreferencesStore preferencesStore,
         IUpdateService updateService,
         IStartupService startupService,
         IPreferenceApplier applier,
         ILogger<SettingsViewModel> logger)
     {
-        _configService = configService;
+        _preferencesStore = preferencesStore;
         _updateService = updateService;
         _startupService = startupService;
         _applier = applier;
@@ -256,7 +256,7 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     public void Load()
     {
-        var prefs = _configService.Load().Preferences;
+        var prefs = _preferencesStore.Load();
 
         _selectedRuntime = RuntimeOptions
             .FirstOrDefault(o => o.Kind == RuntimeKinds.Parse(prefs.DefaultRuntime)) ?? RuntimeOptions[2];
@@ -339,8 +339,7 @@ public sealed class SettingsViewModel : ObservableObject
             return;
         }
 
-        var config = _configService.Load();
-        var prefs = config.Preferences;
+        var prefs = _preferencesStore.Load();
         prefs.DefaultRuntime = RuntimeKinds.ToToken(SelectedRuntime.Kind);
         prefs.Hotkey = HotkeyParser.Format(hotkeyDefinition!);
         prefs.AgentProbeTtlMinutes = ttl;
@@ -349,7 +348,7 @@ public sealed class SettingsViewModel : ObservableObject
         prefs.StartWithWindows = StartWithWindows;
         prefs.ShowWindowOnStartup = ShowWindowOnStartup;
         prefs.PathDisplayStyle = PathDisplayStyles.ToToken(SelectedPathDisplay.Style);
-        _configService.Save(config);
+        _preferencesStore.Save(prefs);
 
         _applier.ApplyRuntime(SelectedRuntime.Kind);
         _applier.ApplyPathDisplayStyle(SelectedPathDisplay.Style);

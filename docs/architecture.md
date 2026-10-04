@@ -23,6 +23,8 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Services:**
 - `ConfigService` — JSON configuration load/save with atomic writes
+- `PreferencesStore` — preferences-only access over the shared configuration document
+- `ProjectStateStore` — project-state-only access over the shared configuration document
 - `ProjectService` — project tracking (current, recent, favorites, logo resolution)
 - `PluginManager` — plugin discovery/validation from `plugins\<id>\plugin.json`
 - `PluginSeeder` — first-run seeding of built-in descriptors + logos
@@ -39,7 +41,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 `AppConfigDocument` is the persistence representation of the existing flat `config.json` shape. `ProjectState` owns `Projects` and `CurrentProjectId`. `ProjectStateStore` and `PreferencesStore` expose narrower access boundaries over the same single configuration document, so separating responsibility does not split the physical file or atomic write path.
 
-**Interfaces:** `IConfigService`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
+**Interfaces:** `IConfigService` (shared persistence boundary), `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
@@ -84,6 +86,7 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 - `CLIHub` is a thin presentation layer over Core services
 - Core subsystem dependencies use interfaces or explicit state boundaries; infrastructure does not depend on application facades
 - Project state is mutated by the project subsystem; unrelated services do not mutate `Projects` or `CurrentProjectId`
+- UI components use `IPreferencesStore` when they need preferences and do not depend on the full `IConfigService` document.
 - The existing flat `config.json` format and one atomic persistence path remain stable during the boundary refactor
 - Interactive process launching and captured command output are separate process contracts; `IProcessLauncher` remains the compatibility aggregate
 - Each production Core service exposes one public constructor for dependency injection; test-only seams use explicit internal factories or adapters

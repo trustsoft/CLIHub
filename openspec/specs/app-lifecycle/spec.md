@@ -28,7 +28,7 @@ The application SHALL configure a dependency-injection container at startup with
 
 #### Scenario: Container configuration
 - **WHEN** the application initializes
-- **THEN** `IConfigService`, `IProjectService`, `IPluginManager`, `IProcessLauncher`, `IAgentCommandService`, `IAgentDetectionService`, and `IAgentVersionService` are registered as singletons and UI components resolve their dependencies from the container
+- **THEN** `IConfigService`, `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginManager`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IAgentCommandService`, `IAgentDetectionService`, and `IAgentVersionService` are registered as singletons and UI components resolve their dependencies from the container; UI components that need only preferences use `IPreferencesStore` rather than the full configuration document
 
 #### Scenario: Service resolution
 - **WHEN** a component requests a registered Core service from the container

@@ -14,7 +14,7 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
 {
     private readonly Func<WhatsNewWindow> _factory;
     private readonly IUpdateService _updateService;
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly ILogger<ReleaseNotesLauncher> _logger;
     private WhatsNewWindow? _window;
 
@@ -23,17 +23,17 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     /// </summary>
     /// <param name="factory"> Factory that creates the <see cref="WhatsNewWindow"/> on demand. </param>
     /// <param name="updateService"> Update service that reports the running version. </param>
-    /// <param name="configService"> Configuration used to store the seen-versions record. </param>
+    /// <param name="preferencesStore"> Preferences used to store the seen-versions record. </param>
     /// <param name="logger"> Logger. </param>
     public ReleaseNotesLauncher(
         Func<WhatsNewWindow> factory,
         IUpdateService updateService,
-        IConfigService configService,
+        IPreferencesStore preferencesStore,
         ILogger<ReleaseNotesLauncher> logger)
     {
         _factory = factory;
         _updateService = updateService;
-        _configService = configService;
+        _preferencesStore = preferencesStore;
         _logger = logger;
     }
 
@@ -62,18 +62,18 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
         try
         {
             var version = _updateService.GetCurrentVersion();
-            var config = _configService.Load();
+            var preferences = _preferencesStore.Load();
 
             if (string.Equals(
-                    config.Preferences.LastSeenReleaseNotesVersion,
+                    preferences.LastSeenReleaseNotesVersion,
                     version,
                     StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
 
-            config.Preferences.LastSeenReleaseNotesVersion = version;
-            _configService.Save(config);
+            preferences.LastSeenReleaseNotesVersion = version;
+            _preferencesStore.Save(preferences);
             _logger.LogInformation("Release notes recorded as seen for version {Version}", version);
         }
         catch (Exception ex)

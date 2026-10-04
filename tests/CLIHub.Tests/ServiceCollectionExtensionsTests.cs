@@ -16,6 +16,7 @@ public class ServiceCollectionExtensionsTests
         using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetRequiredService<IConfigService>());
+        Assert.NotNull(provider.GetRequiredService<IPreferencesStore>());
         Assert.NotNull(provider.GetRequiredService<ILogoCacheService>());
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
         Assert.NotNull(provider.GetRequiredService<IPluginManager>());

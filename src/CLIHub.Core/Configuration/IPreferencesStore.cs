@@ -3,7 +3,7 @@ namespace CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Provides access to application preferences without exposing project state.
+///   Provides access to application preferences without exposing the full configuration document.
 /// </summary>
 public interface IPreferencesStore
 {

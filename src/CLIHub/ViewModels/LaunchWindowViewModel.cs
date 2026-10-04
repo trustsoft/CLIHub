@@ -36,7 +36,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
     private readonly ILogoCacheService _logoCacheService;
-    private readonly IConfigService _configService;
+    private readonly IPreferencesStore _preferencesStore;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
     private readonly ILogger<LaunchWindowViewModel> _logger;
@@ -62,7 +62,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="logoCacheService"> Persistent logo cache for project and agent logos. </param>
-    /// <param name="configService"> Configuration service for persisted preferences. </param>
+    /// <param name="preferencesStore"> Store for persisted preferences. </param>
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
@@ -75,7 +75,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
         ILogoCacheService logoCacheService,
-        IConfigService configService,
+        IPreferencesStore preferencesStore,
         IUpdateService updateService,
         ISettingsLauncher settingsLauncher,
         PromptState promptState,
@@ -88,7 +88,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
         _logoCacheService = logoCacheService;
-        _configService = configService;
+        _preferencesStore = preferencesStore;
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
         _logger = logger;
@@ -119,7 +119,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
 
-        var preferences = _configService.Load().Preferences;
+        var preferences = _preferencesStore.Load();
 
         _suppressFilterChange = true;
         ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents;
@@ -209,9 +209,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
-            var config = _configService.Load();
-            config.Preferences.ShowOnlyProjectAgents = value;
-            _configService.Save(config);
+            var preferences = _preferencesStore.Load();
+            preferences.ShowOnlyProjectAgents = value;
+            _preferencesStore.Save(preferences);
 
             RefreshAgents();
 
@@ -236,9 +236,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
-            var config = _configService.Load();
-            config.Preferences.PinLaunchWindow = value;
-            _configService.Save(config);
+            var preferences = _preferencesStore.Load();
+            preferences.PinLaunchWindow = value;
+            _preferencesStore.Save(preferences);
 
             StatusMessage = value ? "Window pinned open" : "Window unpinned";
         }
