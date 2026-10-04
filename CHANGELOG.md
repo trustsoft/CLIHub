@@ -7,6 +7,52 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.8.5 — 2026-10-05
+
+### Added
+
+- Named internal test factories (`CreateForTesting(...)`) on `UpdateService` and `ReleaseNotesService`,
+  replacing test-only constructor seams (`app-lifecycle`)
+
+### Changed
+
+- `CLIHub.Core` reorganized into subsystem folders (`Agents/`, `Projects/`, `Plugins/`,
+  `Configuration/`, `Updates/`, `Infrastructure/`, `Composition/`), with DI registration grouped per
+  subsystem; externally observable behavior is unchanged (`refactor-core-boundaries`)
+- Configuration ownership split into `AppConfigDocument` (the persisted document), `ProjectState`
+  (projects and current project), and `AppPreferences` (preferences), keeping one flat `config.json`,
+  the existing JSON contract, and a single atomic write path (`refactor-core-boundaries`)
+- Project path-shortening and logo-resolution policies extracted from `ProjectService` into
+  `ProjectPathPolicy` and `ProjectLogoResolver` (`refactor-core-boundaries`)
+- Process execution split into `IInteractiveProcessRunner` and `IProcessOutputRunner`;
+  `IProcessLauncher` retained as a compatibility aggregate contract (`refactor-core-boundaries`)
+- Application data paths centralized in a static `AppPaths` class, the single source of truth for the
+  `%APPDATA%\CLIHub` layout, consumed by `DirectoryInitializer`, `ConfigService`, `PluginManager`,
+  `LogoCacheService`, `PluginSeeder`, logging, and the data-folder action; paths and file names are
+  unchanged (`centralize-app-data-paths`)
+- Production Core services now expose exactly one public DI constructor: compatibility overloads
+  removed from `AgentCommandService`, `AgentVersionService`, `AgentDetectionService`, and
+  `ProjectService` (`app-lifecycle`)
+
+### Fixed
+
+- Concurrent version probes for the same agent are coalesced into a single process; caller
+  cancellation stops that caller's wait without cancelling the shared probe, and TTL caching is
+  retained (`agent-version`)
+- Stale version-population results are ignored after the agent list is refreshed, using generation
+  and cancellation tracking (`agent-version`)
+- Windows command construction is hardened for Windows Terminal, Command Prompt, and PowerShell:
+  paths with spaces, quoted arguments, shell metacharacters, executable shims, and `.cmd`/`.bat`
+  files are handled correctly for both interactive launches and captured output (`agent-commands`)
+- Update-check timeouts cancel or observe the underlying operation and clear the stale available
+  version instead of leaving a late task unobserved (`update-checking`)
+- Async refresh and update-check paths are bounded by cancellation and generation guards so they
+  cannot outlive the state they belong to (`agent-availability-display`, `update-checking`)
+- The launch-window agent collection synchronizes by stable plugin ID, preserving `AgentItem`
+  identity and the current selection across refreshes (`agent-availability-display`)
+- UI fire-and-forget commands route through a shared async error boundary that logs unexpected
+  exceptions with operation context and reports a user-safe status message
+
 ## 0.8.0 — 2026-10-04
 
 ### Changed

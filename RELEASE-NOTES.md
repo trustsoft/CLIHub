@@ -3,6 +3,22 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.8.5 — 2026-10-05
+
+### New
+
+### Improved
+
+- Refreshing the AI Agents list updates rows in place instead of rebuilding them, so your selection and the agent details you are looking at stay put
+- Agent version lookups are shared: refreshing several times at once no longer starts duplicate probes or leaves a stale version on screen
+
+### Fixed
+
+- The app no longer fails to start while creating its services — the ambiguous agent-command constructor that could stop startup before the tray appeared is gone
+- Launching an agent now works when the project path or the executable contains spaces, and through .cmd and .bat shims
+- Update checks and background refreshes no longer hang: they finish on timeout, cancel cleanly, and clear stale state
+- Unexpected errors in background UI work are now logged and shown as a status message instead of disappearing silently
+
 ## 0.8.0 — 2026-10-04
 
 ### New
