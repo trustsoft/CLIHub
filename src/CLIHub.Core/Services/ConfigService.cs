@@ -1,9 +1,11 @@
 namespace CLIHub.Core.Services;
 
-using CLIHub.Core.Models;
-using CLIHub.Core.Interfaces;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
+
+using Microsoft.Extensions.Logging;
+
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   Loads and saves the application configuration to config.json. Saves are serialized on the

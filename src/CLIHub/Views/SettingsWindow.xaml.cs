@@ -1,11 +1,12 @@
 namespace CLIHub.Views;
 
-using CLIHub.Core.Hotkeys;
-using CLIHub.Interop;
-using CLIHub.ViewModels;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+
+using CLIHub.Core.Hotkeys;
+using CLIHub.Interop;
+using CLIHub.ViewModels;
 
 /// <summary>
 ///   The Settings window: dark drawn chrome (no OS title bar) around the preference sections.

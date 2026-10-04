@@ -1,8 +1,9 @@
 namespace CLIHub.Tests.Models;
 
+using System.Text.Json;
+
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
-using System.Text.Json;
 
 public class AppConfigSerializationTests
 {

@@ -1,5 +1,11 @@
 namespace CLIHub;
 
+using System.IO;
+using System.Windows;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Logging;
@@ -8,11 +14,8 @@ using CLIHub.Core.Services;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
 using CLIHub.Views;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+
 using Serilog;
-using System.IO;
-using System.Windows;
 
 /// <summary>
 ///   Interaction logic for App.xaml

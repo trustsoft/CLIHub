@@ -1,16 +1,18 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub.Core.Formatting;
-using CLIHub.Core.Interfaces;
-using CLIHub.Core.Models;
-using CLIHub.Core.Services;
-using CLIHub.Themes;
-using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+
+using Microsoft.Win32;
+
+using CLIHub.Core.Formatting;
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Models;
+using CLIHub.Core.Services;
+using CLIHub.Themes;
 
 /// <summary>
 ///   State and commands for the launch window: the project and agent lists, the current

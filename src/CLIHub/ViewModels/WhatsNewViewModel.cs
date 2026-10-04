@@ -1,9 +1,10 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub.Core.Interfaces;
-using CLIHub.Core.Models;
 using System.ComponentModel;
 using System.Windows;
+
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   View model for the What's New window: the release notes in display order, with empty groups

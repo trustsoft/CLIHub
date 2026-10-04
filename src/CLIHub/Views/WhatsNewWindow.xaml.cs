@@ -1,10 +1,11 @@
 namespace CLIHub.Views;
 
-using CLIHub.Interop;
-using CLIHub.ViewModels;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+
+using CLIHub.Interop;
+using CLIHub.ViewModels;
 
 /// <summary>
 ///   The What's New window: the user-facing release notes, newest version first.

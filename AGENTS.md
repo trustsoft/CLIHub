@@ -45,6 +45,7 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 - **Implicit usings** enabled — no need for `using System;` etc.
 - **File-scoped namespaces** (`namespace X;` not block-scoped).
 - **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`). Under file-scoped namespaces those usings are inside the namespace, which is exactly what `csharp_using_directive_placement = inside_namespace` in `.editorconfig` enforces — do not change the editorconfig to `outside_namespace`.
+- **Using organization**: using directives form ordered groups separated by a blank line — BCL namespaces (`System.*`, plus `Windows.*`) first, then `Microsoft.*`, then the project's own `CLIHub.*`, then the remaining third-party namespaces; each group is sorted alphabetically by namespace name (`dotnet_sort_system_directives_first` in `.editorconfig` pins the BCL group first).
 - **Braces**: Use curly braces for if statements and loops.
 - **Naming**: PascalCase for public members, `_camelCase` for private instance and static fields, PascalCase for private `const` and `static readonly` fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
 - **XML documentation**: public types and members carry XML doc comments. Canonical examples: `src/CLIHub.Core/Models/AgentCommandKind.cs` and `src/CLIHub.Core/Models/AgentCommandResult.cs`. Conventions:

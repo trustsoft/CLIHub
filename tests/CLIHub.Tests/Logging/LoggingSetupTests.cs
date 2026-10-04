@@ -1,6 +1,7 @@
 namespace CLIHub.Tests.Logging;
 
 using CLIHub.Core.Logging;
+
 using Serilog;
 using Serilog.Events;
 

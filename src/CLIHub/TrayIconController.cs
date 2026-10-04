@@ -1,13 +1,16 @@
 namespace CLIHub;
 
-using CLIHub.Core.Interfaces;
-using CLIHub.Core.Models;
-using CLIHub.Views;
-using H.NotifyIcon;
-using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+
+using Microsoft.Win32;
+
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Models;
+using CLIHub.Views;
+
+using H.NotifyIcon;
 
 /// <summary>
 ///   Owns the system tray icon, its context menu, and main-window visibility.

@@ -3,6 +3,7 @@ namespace CLIHub.Tests.Services;
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
+
 using Moq;
 
 public class AgentListComposerTests

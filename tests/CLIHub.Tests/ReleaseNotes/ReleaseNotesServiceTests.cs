@@ -1,8 +1,10 @@
 namespace CLIHub.Tests.ReleaseNotes;
 
-using CLIHub.Core.Services;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Reflection;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using CLIHub.Core.Services;
 
 public class ReleaseNotesServiceTests
 {

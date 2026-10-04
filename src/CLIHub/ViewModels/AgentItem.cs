@@ -1,8 +1,9 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub.Core.Models;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   Display item for an agent row in the launch window.

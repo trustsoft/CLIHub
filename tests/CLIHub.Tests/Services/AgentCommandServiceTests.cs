@@ -1,8 +1,9 @@
 namespace CLIHub.Tests.Services;
 
+using Microsoft.Extensions.Logging.Abstractions;
+
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
-using Microsoft.Extensions.Logging.Abstractions;
 
 public class AgentCommandServiceTests : IDisposable
 {

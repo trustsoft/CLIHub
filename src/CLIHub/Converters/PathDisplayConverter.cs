@@ -1,12 +1,13 @@
 namespace CLIHub.Converters;
 
-using CLIHub.Core.Formatting;
-using CLIHub.Core.Models;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+
+using CLIHub.Core.Formatting;
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   Shortens a project path so that it fills the width offered by the row's text column, using

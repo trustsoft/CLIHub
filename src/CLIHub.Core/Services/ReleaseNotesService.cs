@@ -1,8 +1,9 @@
 namespace CLIHub.Core.Services;
 
+using Microsoft.Extensions.Logging;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Reads the user-facing release notes embedded in this assembly and parses them into

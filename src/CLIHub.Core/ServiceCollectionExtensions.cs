@@ -1,9 +1,10 @@
 namespace CLIHub.Core;
 
-using CLIHub.Core.Interfaces;
-using CLIHub.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+using CLIHub.Core.Interfaces;
+using CLIHub.Core.Services;
 
 /// <summary>
 ///   Registers the CLIHub core services (no UI dependencies).

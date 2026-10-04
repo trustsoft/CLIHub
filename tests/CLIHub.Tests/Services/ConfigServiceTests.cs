@@ -1,9 +1,10 @@
 namespace CLIHub.Tests.Services;
 
-using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+
+using CLIHub.Core.Models;
+using CLIHub.Core.Services;
 
 public class ConfigServiceTests : IDisposable
 {

@@ -1,9 +1,12 @@
 namespace CLIHub.Core.Services;
 
+using System.Reflection;
+
+using Microsoft.Extensions.Logging;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-using Microsoft.Extensions.Logging;
-using System.Reflection;
+
 using Velopack;
 using Velopack.Exceptions;
 using Velopack.Sources;

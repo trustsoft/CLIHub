@@ -1,10 +1,12 @@
 namespace CLIHub.Views;
 
+using System.Windows;
+
+using Microsoft.Win32;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.ViewModels;
-using Microsoft.Win32;
-using System.Windows;
 
 /// <summary>
 ///   Interaction logic for MainWindow.xaml

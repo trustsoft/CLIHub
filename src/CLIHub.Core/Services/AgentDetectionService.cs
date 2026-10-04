@@ -1,8 +1,9 @@
 namespace CLIHub.Core.Services;
 
+using System.Collections.Concurrent;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-using System.Collections.Concurrent;
 
 /// <summary>
 ///   Detects agent availability using only file-system checks, caching results for a

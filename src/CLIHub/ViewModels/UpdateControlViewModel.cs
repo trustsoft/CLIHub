@@ -1,10 +1,11 @@
 namespace CLIHub.ViewModels;
 
+using System.Windows;
+using System.Windows.Input;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
-using System.Windows;
-using System.Windows.Input;
 
 /// <summary>
 ///   State and command for an update control: shows the current version when idle, checks for

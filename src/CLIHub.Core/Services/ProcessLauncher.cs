@@ -1,9 +1,11 @@
 namespace CLIHub.Core.Services;
 
+using System.Diagnostics;
+
+using Microsoft.Extensions.Logging;
+
 using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
 
 /// <summary>
 ///   Launches processes for AI agent CLI tools.

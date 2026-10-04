@@ -1,7 +1,5 @@
 namespace CLIHub.Views;
 
-using CLIHub.Interop;
-using CLIHub.ViewModels;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,6 +8,9 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+
+using CLIHub.Interop;
+using CLIHub.ViewModels;
 
 /// <summary>
 ///   Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on

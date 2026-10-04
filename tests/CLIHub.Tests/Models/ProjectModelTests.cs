@@ -1,7 +1,8 @@
 namespace CLIHub.Tests.Models;
 
-using CLIHub.Core.Models;
 using System.ComponentModel;
+
+using CLIHub.Core.Models;
 
 public class ProjectModelTests
 {
