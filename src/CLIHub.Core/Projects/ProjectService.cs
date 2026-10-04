@@ -10,14 +10,8 @@ using CLIHub.Core.Models;
 /// </summary>
 public class ProjectService : IProjectService
 {
-    private static readonly string[] CandidateLogoNames =
-    {
-        "logo.png", "logo.jpg", "logo.jpeg", "logo.svg",
-        "icon.png", "icon.jpg", "favicon.png"
-    };
-
     private readonly IProjectStateStore _projectStateStore;
-    private readonly ILogoCacheService _logoCache;
+    private readonly ProjectLogoResolver _logoResolver;
     private readonly ILogger<ProjectService> _logger;
     private readonly ProjectState _projectState;
 
@@ -36,7 +30,7 @@ public class ProjectService : IProjectService
         ILogger<ProjectService> logger)
     {
         _projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
-        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
+        _logoResolver = new ProjectLogoResolver(logoCache);
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _projectState = _projectStateStore.Load();
         ClearStaleCurrentProject();
@@ -108,7 +102,7 @@ public class ProjectService : IProjectService
     ///   to <see cref="DefaultLogoPath"/> when no logo is found.
     /// </summary>
     private string? ResolveProjectLogo(Project project) =>
-        _logoCache.GetOrResolve($"project:{project.Id}", () => ScanLogo(project.Path)) ?? DefaultLogoPath;
+        _logoResolver.Resolve(project, DefaultLogoPath);
 
     /// <inheritdoc />
     public Project AddProject(string folderPath)
@@ -118,14 +112,14 @@ public class ProjectService : IProjectService
             throw new ArgumentException("Folder path is required.", nameof(folderPath));
         }
 
-        var normalized = NormalizePath(folderPath);
+        var normalized = ProjectPathPolicy.Normalize(folderPath);
 
         if (!Directory.Exists(normalized))
         {
             throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
         }
 
-        var existing = _projectState.Projects.FirstOrDefault(p => PathsEqual(p.Path, normalized));
+        var existing = _projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
         if (existing != null)
         {
             return existing;
@@ -163,7 +157,7 @@ public class ProjectService : IProjectService
         }
 
         _projectState.Projects.Remove(project);
-        _logoCache.Remove($"project:{projectId}");
+        _logoResolver.Remove(projectId);
         _logger.LogInformation("Removed project {ProjectName}", project.Name);
 
         if (_projectState.CurrentProjectId == projectId)
@@ -205,30 +199,7 @@ public class ProjectService : IProjectService
     /// <summary>
     ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath"/>.
     /// </summary>
-    internal string? ResolveLogo(string projectPath) => ScanLogo(projectPath) ?? DefaultLogoPath;
-
-    /// <summary>
-    ///   Scans the project folder for well-known logo filenames and returns the first match, or
-    ///   null when no candidate exists.
-    /// </summary>
-    private static string? ScanLogo(string projectPath)
-    {
-        if (string.IsNullOrWhiteSpace(projectPath))
-        {
-            return null;
-        }
-
-        foreach (var candidate in CandidateLogoNames)
-        {
-            var candidatePath = Path.Combine(projectPath, candidate);
-            if (File.Exists(candidatePath))
-            {
-                return candidatePath;
-            }
-        }
-
-        return null;
-    }
+    internal string? ResolveLogo(string projectPath) => _logoResolver.ResolvePath(projectPath, DefaultLogoPath);
 
     private void ClearStaleCurrentProject()
     {
@@ -252,10 +223,4 @@ public class ProjectService : IProjectService
         ProjectsChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    internal static string NormalizePath(string path) =>
-        Path.GetFullPath(path)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-    internal static bool PathsEqual(string a, string b) =>
-        string.Equals(NormalizePath(a), NormalizePath(b), StringComparison.OrdinalIgnoreCase);
 }

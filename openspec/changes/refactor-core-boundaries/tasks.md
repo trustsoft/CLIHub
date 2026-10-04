@@ -21,8 +21,8 @@
 
 ## 4. Projects and configuration policies
 
-- [ ] 4.1 Extract project path normalization and equality policy from `ProjectService`; verify existing project path tests cover relative paths, separators, and case-insensitive equality.
-- [ ] 4.2 Extract project logo resolution from `ProjectService` while retaining logo cache behavior and fallback behavior; verify project and logo cache tests pass.
+- [x] 4.1 Extract project path normalization and equality policy from `ProjectService`; verify existing project path tests cover relative paths, separators, and case-insensitive equality.
+- [x] 4.2 Extract project logo resolution from `ProjectService` while retaining logo cache behavior and fallback behavior; verify project and logo cache tests pass.
 - [ ] 4.3 Verify that project operations remain the only owners of `Projects` and `CurrentProjectId` mutations; verify with focused project service tests and code review of all `AppConfig` writes.
 
 ## 5. Plugins and agents
