@@ -24,11 +24,29 @@ public static class ServiceCollectionExtensions
     {
         services.AddLogging();
 
-        services.AddSingleton<IConfigService, ConfigService>();
-        services.AddSingleton<IProjectStateStore, ProjectStateStore>();
-        services.AddSingleton<IPreferencesStore, PreferencesStore>();
-        services.AddSingleton<ILogoCacheService, LogoCacheService>();
+        services.AddConfigurationServices();
+        services.AddProjectServices(defaultLogoPath);
+        services.AddPluginServices();
+        services.AddAgentServices();
+        services.AddUpdateServices();
+        services.AddWindowsInfrastructureServices();
 
+        return services;
+    }
+
+    private static IServiceCollection AddConfigurationServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IConfigService, ConfigService>();
+        services.AddSingleton<IPreferencesStore, PreferencesStore>();
+        return services;
+    }
+
+    private static IServiceCollection AddProjectServices(
+        this IServiceCollection services,
+        string? defaultLogoPath)
+    {
+        services.AddSingleton<IProjectStateStore, ProjectStateStore>();
+        services.AddSingleton<ILogoCacheService, LogoCacheService>();
         services.AddSingleton<IProjectService>(sp => new ProjectService(
             sp.GetRequiredService<IProjectStateStore>(),
             sp.GetRequiredService<ILogoCacheService>(),
@@ -36,30 +54,44 @@ public static class ServiceCollectionExtensions
         {
             DefaultLogoPath = defaultLogoPath
         });
+        return services;
+    }
 
+    private static IServiceCollection AddPluginServices(this IServiceCollection services)
+    {
         services.AddSingleton<IPluginManager, PluginManager>();
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
-        services.AddSingleton<ProcessLauncher>();
-        services.AddSingleton<IInteractiveProcessRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
-        services.AddSingleton<IProcessOutputRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
-        services.AddSingleton<IProcessLauncher>(sp => sp.GetRequiredService<ProcessLauncher>());
-        services.AddSingleton<IAgentCommandService, AgentCommandService>();
+        return services;
+    }
 
+    private static IServiceCollection AddAgentServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IAgentCommandService, AgentCommandService>();
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
-
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(
             sp.GetRequiredService<IProcessOutputRunner>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
+        return services;
+    }
 
+    private static IServiceCollection AddUpdateServices(this IServiceCollection services)
+    {
         services.AddSingleton<IUpdateService, UpdateService>();
         services.AddSingleton<IReleaseNotesService, ReleaseNotesService>();
+        return services;
+    }
 
+    private static IServiceCollection AddWindowsInfrastructureServices(this IServiceCollection services)
+    {
+        services.AddSingleton<ProcessLauncher>();
+        services.AddSingleton<IInteractiveProcessRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
+        services.AddSingleton<IProcessOutputRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
+        services.AddSingleton<IProcessLauncher>(sp => sp.GetRequiredService<ProcessLauncher>());
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));
-
         return services;
     }
 }
