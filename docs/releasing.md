@@ -58,7 +58,7 @@ The `Release` workflow (Actions tab) runs two jobs, about 4–6 minutes total:
 1. `test` — build + full test suite (a failure here stops everything before any packaging);
 2. `release` — derives the version from the tag, extracts the notes section, publishes
    framework-dependent win-x64, packages with `vpk` (setup, portable, delta; the installer offers
-   the .NET 8 Desktop Runtime when missing), and publishes everything to GitHub Releases on the
+   the .NET 10 Desktop Runtime when missing), and publishes everything to GitHub Releases on the
    pushed tag, with the notes section as the release body.
 
 ## 4. Verify

@@ -45,9 +45,9 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
-**Dependencies:** .NET 8, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency. Core is UI-independent, but Windows-aware: Registry, named mutexes/pipes, Windows Terminal, and process integration live under `Infrastructure/`.
+**Dependencies:** .NET 10, `Microsoft.Extensions.DependencyInjection.Abstractions`, `Microsoft.Extensions.Logging`, `Serilog`, `System.Text.Json`, `Velopack`. No WPF dependency. Core is UI-independent, but Windows-aware: Registry, named mutexes/pipes, Windows Terminal, and process integration live under `Infrastructure/`.
 
-**Target:** `net8.0`.
+**Target:** `net10.0`.
 
 ### CLIHub
 
@@ -57,7 +57,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
-**Target:** `net8.0-windows`.
+**Target:** `net10.0-windows`.
 
 ### CLIHub.Tests
 
@@ -67,7 +67,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 **Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
 
-**Target:** `net8.0`. UI/tray/terminal behavior is verified manually.
+**Target:** `net10.0-windows`. UI/tray/terminal behavior is verified manually.
 
 ## Dependency Flow
 
@@ -98,8 +98,8 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 ## Technology Stack
 
 ### Core Technologies
-- **.NET 8 LTS** — long-term support
-- **C# 12** with nullable reference types and implicit usings enabled
+- **.NET 10 LTS** — long-term support
+- **C# 14.0** with nullable reference types and implicit usings enabled; the version is declared centrally in `Directory.Build.props`
 - **WPF** — Windows Presentation Foundation for UI
 
 ### Libraries
@@ -166,12 +166,12 @@ machinery:
 - **`release.yml`** — triggered by pushing a tag `v*`:
   1. a `test` job builds and tests the solution as a gate;
   2. a `release` job (`permissions: contents: write`) derives the version from the tag (leading `v` stripped; the tag is the source of truth — `Directory.Build.props` stays the development default), extracts the released version's section from `RELEASE-NOTES.md` (fails the job when the section is missing), and publishes framework-dependent `win-x64` with `-p:Version=<tag version>`;
-  3. `vpk pack` (the Velopack CLI tool, pinned to the exact Velopack library version the app links) produces the setup, portable, and delta assets with `--runtime win-x64 --framework net8.0-x64-desktop` — the installer offers the .NET 8 Desktop Runtime when it is missing — and the notes file;
+  3. `vpk pack` (the Velopack CLI tool, pinned to the exact Velopack library version the app links) produces the setup, portable, and delta assets with `--runtime win-x64 --framework net10.0-x64-desktop` — the installer offers the .NET 10 Desktop Runtime when it is missing — and the notes file;
   4. `vpk upload github` publishes everything to the repository's GitHub Releases as a published release on the pushed tag (`--merge true`, so re-running for the same tag updates the release). `GITHUB_TOKEN` authenticates the upload; the extracted notes section becomes the release body and the updater's notes.
 
 - **Update channel:** stable only (the default `win` channel). Prerelease channels are not wired.
 - **Signing:** the packages are unsigned (no certificate yet); SmartScreen may warn on first install.
-- **User prerequisite:** the .NET 8 Desktop Runtime (x64), unless the installer's runtime bootstrap installs it.
+- **User prerequisite:** the .NET 10 Desktop Runtime (x64), unless the installer's runtime bootstrap installs it.
 - **Rollback:** delete the GitHub release and the tag; installed clients then never see the update.
 
 ## File System Layout

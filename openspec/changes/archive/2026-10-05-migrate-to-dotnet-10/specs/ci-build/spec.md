@@ -1,9 +1,4 @@
-# ci-build Specification
-
-## Purpose
-Builds and tests every pull request and every push to `master` automatically on Windows, so regressions are caught before merge.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Build and test on pull requests
 

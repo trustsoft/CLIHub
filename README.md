@@ -23,8 +23,8 @@ A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline
 ## Requirements
 
 - Windows 10 or 11
-- .NET 8 Desktop Runtime (x64) to run an installed build — the installer offers to install it if missing
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or newer (to build)
+- .NET 10 Desktop Runtime (x64) to run an installed build — the installer offers to install it if missing
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (to build; the repository pins the SDK policy in `global.json`)
 - Windows Terminal (`wt.exe`) recommended for launching agents
 
 ## Build & run
@@ -93,8 +93,8 @@ Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#pac
 ## Project layout
 
 ```
-src/CLIHub.Core/       # business logic (net8.0, no WPF)
-src/CLIHub/            # WPF app (net8.0-windows)
+src/CLIHub.Core/       # business logic (net10.0, no WPF)
+src/CLIHub/            # WPF app (net10.0-windows)
 tests/CLIHub.Tests/    # xUnit tests
 ```
 

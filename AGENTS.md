@@ -29,7 +29,7 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 
 ## Technology Stack
 
-.NET 8 (WPF for UI) · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI) · Velopack (updates). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
+.NET 10 (WPF for UI) · C# 14.0 · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI) · Velopack (updates). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
 
 ## Key Conventions
 
