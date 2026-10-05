@@ -64,6 +64,14 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void AppConfigDocument_NewWrites_IncludeCurrentSchemaVersion()
+    {
+        var json = JsonSerializer.Serialize(AppConfigDocument.From(new AppConfig()), CoreJson.Options);
+
+        Assert.Contains("\"schemaVersion\": 1", json);
+    }
+
+    [Fact]
     public void ProjectState_TransfersProjectOwnershipWithoutChangingValues()
     {
         var config = new AppConfig

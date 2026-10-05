@@ -50,6 +50,64 @@ public class ConfigServiceTests : IDisposable
 
         Assert.True(File.Exists(ConfigPath));
         Assert.Contains("\"currentProjectId\": \"abc\"", File.ReadAllText(ConfigPath));
+        Assert.Contains("\"schemaVersion\": 1", File.ReadAllText(ConfigPath));
+    }
+
+    [Fact]
+    public void Load_LegacyDocumentWithoutSchemaVersion_ReadsExistingValues()
+    {
+        const string legacyJson = """
+        {
+          "projects": [],
+          "preferences": { "hotkey": "Ctrl+Alt+L" },
+          "currentProjectId": null
+        }
+        """;
+        File.WriteAllText(ConfigPath, legacyJson);
+
+        using var service = CreateService();
+
+        Assert.Equal("Ctrl+Alt+L", service.Load().Preferences.Hotkey);
+    }
+
+    [Fact]
+    public void Load_UnknownSchemaVersion_UsesDefaultsWithoutOverwritingSource()
+    {
+        const string futureJson = """
+        {
+          "schemaVersion": 99,
+          "projects": [],
+          "preferences": { "hotkey": "Ctrl+Alt+F" },
+          "currentProjectId": "future-project"
+        }
+        """;
+        File.WriteAllText(ConfigPath, futureJson);
+
+        using var service = CreateService();
+
+        Assert.Null(service.Load().CurrentProjectId);
+        Assert.Equal(futureJson, File.ReadAllText(ConfigPath));
+        Assert.Contains(_logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
+    }
+
+    [Fact]
+    public void Load_InvalidSchemaVersion_UsesDefaultsWithoutOverwritingSource()
+    {
+        const string invalidJson = """
+        {
+          "schemaVersion": -1,
+          "projects": [],
+          "preferences": {},
+          "currentProjectId": "invalid-project"
+        }
+        """;
+        File.WriteAllText(ConfigPath, invalidJson);
+
+        using var service = CreateService();
+
+        Assert.Null(service.Load().CurrentProjectId);
+        Assert.Equal(invalidJson, File.ReadAllText(ConfigPath));
+        Assert.Contains(_logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
     }
 
     [Fact]

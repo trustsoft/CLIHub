@@ -67,6 +67,19 @@ public class ConfigService : IConfigService
         {
             var json = File.ReadAllText(_configFilePath);
             var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options);
+
+            var schemaVersion = document?.SchemaVersion ?? AppConfigDocument.LegacySchemaVersion;
+            if (schemaVersion < AppConfigDocument.LegacySchemaVersion ||
+                schemaVersion > AppConfigDocument.CurrentSchemaVersion)
+            {
+                _logger.LogWarning(
+                    "Unsupported configuration schema version {SchemaVersion} at {Path}",
+                    schemaVersion,
+                    _configFilePath);
+                _cachedConfig = new AppConfig();
+                return ConfigurationSnapshot.From(_cachedConfig);
+            }
+
             _cachedConfig = document?.ToAppConfig() ?? new AppConfig();
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
             return ConfigurationSnapshot.From(_cachedConfig);
