@@ -46,6 +46,8 @@ public static class ServiceRegistration
         services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
         services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
         services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
+        services.AddSingleton<IUpdateDownloadNotifier, UpdateDownloadNotifier>();
+        services.AddSingleton<IUpdateDownloadCoordinator, UpdateDownloadCoordinator>();
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddTransient<SettingsViewModel>();
