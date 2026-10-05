@@ -9,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Logging;
@@ -60,8 +59,7 @@ public partial class App : Application
         _services.GetRequiredService<IPluginInitializationService>().Initialize();
 
         var preferences = _services.GetRequiredService<IPreferencesStore>().Load();
-        _services.GetRequiredService<IProcessLauncher>().SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
-        _services.GetRequiredService<IStartupService>().SetEnabled(preferences.StartWithWindows);
+        _services.GetRequiredService<IStartupPreferencesApplier>().Apply(preferences);
 
         _tray = _services.GetRequiredService<TrayIconController>();
 
