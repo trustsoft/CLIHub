@@ -3,6 +3,21 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.9.0 — 2026-10-05
+
+### New
+
+- CLIHub now runs on the .NET 10 Desktop Runtime with an explicit C# 14.0 development baseline
+
+### Improved
+
+- The app, tests, and release pipeline use the stable .NET 10 toolchain, with a pinned SDK policy for consistent local and CI builds
+- Updated notification, logging, update, and test dependencies keep the application aligned with current compatible releases
+
+### Fixed
+
+- The installer now offers the .NET 10 Desktop Runtime when it is missing from the machine
+
 ## 0.8.5 — 2026-10-05
 
 ### New

@@ -64,7 +64,7 @@ jobs:
         run: |
           $version = '${{ steps.version.outputs.version }}'
           $lines = Get-Content -LiteralPath 'RELEASE-NOTES.md'
-          $headingPattern = '^##\s+' + [regex]::Escape($version) + '\s*([—-])\s*'
+          $headingPattern = '^##\s+' + [regex]::Escape($version) + '\s+'
           $start = -1
           for ($i = 0; $i -lt $lines.Count; $i++) {
             if ($lines[$i] -match $headingPattern) {

@@ -7,6 +7,23 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.9.0 — 2026-10-05
+
+### Added
+
+- Explicit C# 14.0 language policy and stable .NET 10 SDK resolution with `global.json` and controlled feature-band roll-forward (`code-style`)
+
+### Changed
+
+- **BREAKING**: `CLIHub.Core`, the WPF application, and the test project now target .NET 10 (`ci-build`, `release-pipeline`)
+- Direct runtime, tray, logging, update, and test dependencies refreshed to compatible current releases
+- CI and release workflows now install the .NET 10 SDK only; Velopack packaging targets `net10.0-x64-desktop` and the .NET 10 Desktop Runtime (`ci-build`, `release-pipeline`)
+- Documentation and repository structure references updated from .NET 8/C# 12 to .NET 10/C# 14.0
+
+### Fixed
+
+- Removed the redundant explicit `System.Text.Json` package reference exposed by the .NET 10 restore graph
+
 ## 0.8.5 — 2026-10-05
 
 ### Added
