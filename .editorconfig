@@ -22,7 +22,7 @@ dotnet_separate_import_directive_groups = true
 dotnet_sort_system_directives_first = true
 
 # Build-time severity pins. The "option:severity" format above is only respected
-# inside IDEs on the .NET 8 SDK, so the warning-severity style rules are pinned
+# inside IDEs on the .NET 10 SDK, so the warning-severity style rules are pinned
 # here by rule ID to be enforced by "dotnet build".
 dotnet_diagnostic.IDE0011.severity = warning
 dotnet_diagnostic.IDE0065.severity = warning
