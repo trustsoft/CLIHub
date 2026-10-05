@@ -70,4 +70,17 @@ public sealed class ProjectState
         snapshot.Projects = Projects;
         snapshot.CurrentProjectId = CurrentProjectId;
     }
+
+    /// <summary>
+    ///   Copies this state into another owned project state.
+    /// </summary>
+    /// <param name="target"> The state to replace. </param>
+    public void CopyTo(ProjectState target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+
+        target.Projects.Clear();
+        target.Projects.AddRange(Projects);
+        target.CurrentProjectId = CurrentProjectId;
+    }
 }

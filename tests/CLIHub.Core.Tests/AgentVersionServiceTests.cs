@@ -187,9 +187,7 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_PassesConfiguredProbeTimeout()
     {
-        var preferences = _config.Load().Preferences;
-        preferences.AgentProbeTimeoutSeconds = 4;
-        new PreferencesStore(_config).Save(preferences);
+        new PreferencesStore(_config).Update(preferences => preferences.AgentProbeTimeoutSeconds = 4);
         var service = CreateService();
 
         await service.GetVersionAsync(PluginWithVersion(true));

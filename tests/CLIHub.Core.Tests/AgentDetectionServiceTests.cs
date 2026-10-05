@@ -141,9 +141,7 @@ public class AgentDetectionServiceTests : IDisposable
     [Fact]
     public void IsInstalledInSystem_RespectsConfiguredTtl()
     {
-        var preferences = _config.Load().Preferences;
-        preferences.AgentProbeTtlMinutes = 1;
-        new PreferencesStore(_config).Save(preferences);
+        new PreferencesStore(_config).Update(preferences => preferences.AgentProbeTtlMinutes = 1);
         var marker = Path.Combine(_projectDir, "short-ttl-marker");
         File.WriteAllText(marker, string.Empty);
         var plugin = new Plugin

@@ -107,9 +107,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var preferences = _preferencesStore.Load();
-        preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true;
-        _preferencesStore.Save(preferences);
+        _preferencesStore.Update(preferences =>
+            preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true);
 
         RefreshAgents();
     }
@@ -344,4 +343,3 @@ public partial class MainWindow : Window
         RefreshAgents();
     }
 }
-

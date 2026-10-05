@@ -225,9 +225,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
-            var preferences = _preferencesStore.Load();
-            preferences.ShowOnlyProjectAgents = value;
-            _preferencesStore.Save(preferences);
+            _preferencesStore.Update(preferences => preferences.ShowOnlyProjectAgents = value);
 
             RefreshAgents();
 
@@ -252,9 +250,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
-            var preferences = _preferencesStore.Load();
-            preferences.PinLaunchWindow = value;
-            _preferencesStore.Save(preferences);
+            _preferencesStore.Update(preferences => preferences.PinLaunchWindow = value);
 
             StatusMessage = value ? "Window pinned open" : "Window unpinned";
         }

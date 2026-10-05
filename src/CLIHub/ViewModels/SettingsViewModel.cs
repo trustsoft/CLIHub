@@ -341,16 +341,17 @@ public sealed class SettingsViewModel : ObservableObject
             return;
         }
 
-        var prefs = _preferencesStore.Load();
-        prefs.DefaultRuntime = RuntimeKinds.ToToken(SelectedRuntime.Kind);
-        prefs.Hotkey = HotkeyParser.Format(hotkeyDefinition!);
-        prefs.AgentProbeTtlMinutes = ttl;
-        prefs.AgentProbeTimeoutSeconds = timeout;
-        prefs.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
-        prefs.StartWithWindows = StartWithWindows;
-        prefs.ShowWindowOnStartup = ShowWindowOnStartup;
-        prefs.PathDisplayStyle = PathDisplayStyles.ToToken(SelectedPathDisplay.Style);
-        _preferencesStore.Save(prefs);
+        _preferencesStore.Update(prefs =>
+        {
+            prefs.DefaultRuntime = RuntimeKinds.ToToken(SelectedRuntime.Kind);
+            prefs.Hotkey = HotkeyParser.Format(hotkeyDefinition!);
+            prefs.AgentProbeTtlMinutes = ttl;
+            prefs.AgentProbeTimeoutSeconds = timeout;
+            prefs.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
+            prefs.StartWithWindows = StartWithWindows;
+            prefs.ShowWindowOnStartup = ShowWindowOnStartup;
+            prefs.PathDisplayStyle = PathDisplayStyles.ToToken(SelectedPathDisplay.Style);
+        });
 
         _applier.ApplyRuntime(SelectedRuntime.Kind);
         _applier.ApplyPathDisplayStyle(SelectedPathDisplay.Style);

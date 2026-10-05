@@ -73,8 +73,7 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
                 return;
             }
 
-            preferences.LastSeenReleaseNotesVersion = version;
-            _preferencesStore.Save(preferences);
+            _preferencesStore.Update(preferences => preferences.LastSeenReleaseNotesVersion = version);
             _logger.LogInformation("Release notes recorded as seen for version {Version}", version);
         }
         catch (Exception ex)

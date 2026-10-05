@@ -23,11 +23,13 @@ public sealed class ProjectStateStore : IProjectStateStore
     public ProjectState Load() => ProjectState.From(_configService.Load());
 
     /// <inheritdoc />
-    public void Save(ProjectState state)
+    public void Update(Action<ProjectState> update)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(update);
 
         var snapshot = _configService.Load();
+        var state = ProjectState.From(snapshot);
+        update(state);
         state.ApplyTo(snapshot);
         _configService.Save(snapshot);
     }

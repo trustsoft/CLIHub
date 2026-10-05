@@ -14,8 +14,8 @@ public interface IProjectStateStore
     ProjectState Load();
 
     /// <summary>
-    ///   Persists project state through the shared configuration document and atomic write path.
+    ///   Updates detached project state and persists it when the callback completes successfully.
     /// </summary>
-    /// <param name="state"> The project state to persist. </param>
-    void Save(ProjectState state);
+    /// <param name="update"> Mutation applied to a detached project state value. </param>
+    void Update(Action<ProjectState> update);
 }

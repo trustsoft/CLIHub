@@ -14,8 +14,8 @@ public interface IPreferencesStore
     AppPreferences Load();
 
     /// <summary>
-    ///   Persists application preferences through the shared configuration document.
+    ///   Updates detached preferences and persists them when the callback completes successfully.
     /// </summary>
-    /// <param name="preferences"> The preferences to persist. </param>
-    void Save(AppPreferences preferences);
+    /// <param name="update"> Mutation applied to a detached preferences value. </param>
+    void Update(Action<AppPreferences> update);
 }

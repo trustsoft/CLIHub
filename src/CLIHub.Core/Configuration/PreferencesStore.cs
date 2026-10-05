@@ -22,12 +22,12 @@ public sealed class PreferencesStore : IPreferencesStore
     public AppPreferences Load() => _configService.Load().Preferences;
 
     /// <inheritdoc />
-    public void Save(AppPreferences preferences)
+    public void Update(Action<AppPreferences> update)
     {
-        ArgumentNullException.ThrowIfNull(preferences);
+        ArgumentNullException.ThrowIfNull(update);
 
         var snapshot = _configService.Load();
-        snapshot.Preferences = preferences;
+        update(snapshot.Preferences);
         _configService.Save(snapshot);
     }
 }
