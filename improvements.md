@@ -555,6 +555,6 @@ extract-plugin-initialization
 | № | Change | Состояние | Результат / проверка |
 |---:|---|---|---|
 | 1 | `document-application-startup-contract` | Completed | Startup/shutdown sequence and failure policy added to `docs/architecture.md`; all 5 OpenSpec tasks complete, validation passed, and change archived at `openspec/changes/archive/2026-10-05-document-application-startup-contract`. |
-| 2 | `extract-plugin-initialization` | Pending | Начать после завершения change 1. |
+| 2 | `extract-plugin-initialization` | Completed | Added `IPluginInitializationService`, preserved `SeedIfEmpty -> LoadPlugins` ordering, added focused tests, passed OpenSpec validation, Release build, and 340 tests. Archived at `openspec/changes/archive/2026-10-05-extract-plugin-initialization`. |
 
-Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 1 из 30. Активного change сейчас нет. Следующий change: `extract-plugin-initialization`.
+Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 2 из 30. Активного change сейчас нет. Следующий change: `extract-startup-preferences`.
