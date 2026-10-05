@@ -21,4 +21,7 @@ jobs:
         run: dotnet build CLIHub.sln -c Release
 
       - name: Test
-        run: dotnet test CLIHub.sln -c Release --no-build
+        shell: pwsh
+        run: |
+          dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj -c Release --no-build
+          dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj -c Release --no-build

@@ -6,7 +6,8 @@
 │   ├── CLIHub.Core/         # Business logic, services, models (no WPF dependencies)
 │   └── CLIHub/              # WPF application, UI, system tray, hotkey
 ├── tests/                   # Test projects
-│   └── CLIHub.Tests/        # Unit tests (xUnit)
+│   ├── CLIHub.Core.Tests/   # Core-only tests (xUnit, no WPF reference)
+│   └── CLIHub.Tests/        # WPF/application-specific tests (xUnit)
 ├── docs/                    # Project documentation
 ├── .github/workflows/       # GitHub Actions (ci.yml: build+test; release.yml: tag -> GitHub Releases)
 ├── assets/                  # Application icon source files (not in the build)
@@ -33,7 +34,8 @@
 
 - **`src/CLIHub.Core/`** (`net10.0`, no WPF) — subsystem folders and matching namespaces: `Configuration/` (the shared `ConfigService` persistence boundary plus the narrower `PreferencesStore` and `ProjectStateStore` adapters), `Projects/`, `Plugins/`, `Agents/`, `Updates/`, `Infrastructure/` (`FileSystem/`, `Processes/`, `Persistence/`, `Windows/`), and `Composition/`; shared folders remain `Models/`, `Hotkeys/`, `Logging/`, `Formatting/` (display formatting helpers such as `MiddleEllipsisFormatter`), and `SeedPlugins/` (embedded built-in agent descriptors + logos). Core contracts are colocated with their owning subsystem; the former `CLIHub.Core.Services` and `CLIHub.Core.Interfaces` namespaces are removed. Core is UI-independent and Windows-aware; WPF is not referenced by this project.
 - **`src/CLIHub/`** (`net10.0-windows`) — folders: `Views/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `Controls.xaml` shared keyed styles including the `DarkToolTip` base, `DarkScrollBar.xaml` shared slim dark scrollbar, `SettingsStyles.xaml` settings-window styles, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles, `IconGlyphs.cs` Segoe MDL2 glyph constants); the implicit dark tooltip style and shared converters live in `App.xaml`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ServiceRegistration.cs`, `IPreferenceApplier.cs`, `PreferenceApplier.cs`, `ISettingsLauncher.cs`, `SettingsLauncher.cs`, `IReleaseNotesLauncher.cs`, `ReleaseNotesLauncher.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`. `Views/LaunchWindow.xaml(.cs)` with `ViewModels/LaunchWindowViewModel.cs` and `ViewModels/MenuAction.cs` (the data-driven pane Actions menus) is the application window; `Views/SettingsWindow.xaml(.cs)` with `ViewModels/SettingsViewModel.cs` is the settings window; `Views/WhatsNewWindow.xaml(.cs)` shows the release notes; `Views/MainWindow.xaml(.cs)` is the pre-redesign window, retained for reference and no longer wired
-- **`tests/CLIHub.Tests/`** (`net10.0-windows`, xUnit) — folders: `Services/`, `Hotkeys/`, `Logging/`, `Formatting/`, `ReleaseNotes/`, `Models/`; references `CLIHub.Core` only
+- **`tests/CLIHub.Core.Tests/`** (`net10.0`, xUnit) — Core-only service, model, formatting, logging, hotkey, release-notes, and infrastructure tests; references `CLIHub.Core` only and does not enable WPF.
+- **`tests/CLIHub.Tests/`** (`net10.0-windows`, xUnit) — application/UI composition, workflow, ViewModel, and WPF-dependent tests; references `CLIHub` and `CLIHub.Core`.
 
 ## Documentation
 
@@ -86,7 +88,7 @@ See `openspec/config.yaml` for project context and [OpenSpec documentation](http
 
 ## Solution Files
 
-**`CLIHub.sln`** — solution at the repository root, referencing the two application projects under `src/` and the test project under `tests/`.
+**`CLIHub.sln`** — solution at the repository root, referencing the two application projects under `src/` and both test projects under `tests/`.
 
 **`Directory.Build.props`** — MSBuild properties shared by all projects:
 - `BaseOutputPath` → `artifacts/` (compiled binaries)

@@ -5,7 +5,6 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub", "src\CLIHub\CLIHub.csproj", "{A1B2C3D4-E5F6-4A5B-8C9D-0E1F2A3B4C5D}"
 EndProject
-
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Core", "src\CLIHub.Core\CLIHub.Core.csproj", "{4EAD803B-4EDF-4044-9C82-ADAF9CFB332D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Tests", "tests\CLIHub.Tests\CLIHub.Tests.csproj", "{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E}"
@@ -29,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "release", "release", "{1E76
 		docs\releasing.md = docs\releasing.md
 		RELEASE-NOTES.md = RELEASE-NOTES.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CLIHub.Core.Tests", "tests\CLIHub.Core.Tests\CLIHub.Core.Tests.csproj", "{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,12 +77,25 @@ Global
 		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E}.Release|x64.Build.0 = Release|Any CPU
 		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E}.Release|x86.ActiveCfg = Release|Any CPU
 		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E}.Release|x86.Build.0 = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|x64.Build.0 = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Debug|x86.Build.0 = Debug|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|x64.ActiveCfg = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|x64.Build.0 = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|x86.ActiveCfg = Release|Any CPU
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0C1E0D3E-6390-4044-A1D4-95FF91A3E94E} = {6E1BB30C-BDF9-4AE0-93F6-EA07A032CF26}
 		{1E76BAC6-7F4E-4E5D-A93A-24BE5B1D032C} = {BB7D91EA-850B-4DE3-8820-649DBE3026AE}
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
+		{2118BFC1-7AE4-4BAE-BB45-FCF60D4A679C} = {6E1BB30C-BDF9-4AE0-93F6-EA07A032CF26}
 	EndGlobalSection
 EndGlobal
