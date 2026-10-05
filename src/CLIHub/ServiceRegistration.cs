@@ -31,6 +31,7 @@ public static class ServiceRegistration
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
+        services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
         services.AddSingleton<IPluginInitializationService, PluginInitializationService>();
         services.AddSingleton<IStartupPreferencesApplier, StartupPreferencesApplier>();
         services.AddSingleton<PromptState>();

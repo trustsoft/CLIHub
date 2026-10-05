@@ -27,6 +27,7 @@ public sealed class TrayIconController : IDisposable
     private readonly LaunchWindow _launchWindow;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IReleaseNotesLauncher _releaseNotesLauncher;
+    private readonly IApplicationLifetime _applicationLifetime;
     private readonly TaskbarIcon _taskbarIcon;
 
     /// <summary>
@@ -44,6 +45,7 @@ public sealed class TrayIconController : IDisposable
     /// <param name="launchWindow"> The launch window the tray toggles. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="releaseNotesLauncher"> What's New window launcher. </param>
+    /// <param name="applicationLifetime"> Application lifetime control used by the Exit action. </param>
     public TrayIconController(
         IProjectService projects,
         IPluginManager pluginManager,
@@ -51,7 +53,8 @@ public sealed class TrayIconController : IDisposable
         IUpdateService updates,
         LaunchWindow launchWindow,
         ISettingsLauncher settingsLauncher,
-        IReleaseNotesLauncher releaseNotesLauncher)
+        IReleaseNotesLauncher releaseNotesLauncher,
+        IApplicationLifetime applicationLifetime)
     {
         _projects = projects;
         _pluginManager = pluginManager;
@@ -60,6 +63,7 @@ public sealed class TrayIconController : IDisposable
         _launchWindow = launchWindow;
         _settingsLauncher = settingsLauncher;
         _releaseNotesLauncher = releaseNotesLauncher;
+        _applicationLifetime = applicationLifetime;
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -212,7 +216,7 @@ public sealed class TrayIconController : IDisposable
         menu.Items.Add(showItem);
 
         var exitItem = new MenuItem { Header = "Exit" };
-        exitItem.Click += (_, _) => Application.Current.Shutdown();
+        exitItem.Click += (_, _) => _applicationLifetime.Shutdown();
         menu.Items.Add(exitItem);
 
         return menu;
@@ -323,4 +327,4 @@ public sealed class TrayIconController : IDisposable
         _taskbarIcon.Dispose();
     }
 }
-
+

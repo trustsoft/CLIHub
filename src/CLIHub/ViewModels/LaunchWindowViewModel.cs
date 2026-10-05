@@ -45,6 +45,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly PromptState _promptState;
     private readonly IProjectDialogService _projectDialogs;
     private readonly IUserNotificationService _notifications;
+    private readonly IApplicationLifetime _applicationLifetime;
     private readonly ILogger<LaunchWindowViewModel> _logger;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
@@ -74,6 +75,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
     /// <param name="projectDialogs"> Project folder and confirmation dialogs. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
+    /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
     /// <param name="logger"> Logger for unexpected agent command failures. </param>
     /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
@@ -89,6 +91,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         PromptState promptState,
         IProjectDialogService projectDialogs,
         IUserNotificationService notifications,
+        IApplicationLifetime applicationLifetime,
         ILogger<LaunchWindowViewModel> logger,
         ILogger<UpdateControlViewModel> updateControlLogger)
     {
@@ -103,6 +106,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _promptState = promptState;
         _projectDialogs = projectDialogs;
         _notifications = notifications;
+        _applicationLifetime = applicationLifetime;
         _logger = logger;
 
         UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger);
@@ -114,7 +118,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         RefreshCommand = new RelayCommand(Refresh);
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
-        ExitCommand = new RelayCommand(() => Application.Current.Shutdown());
+        ExitCommand = new RelayCommand(_applicationLifetime.Shutdown);
 
         LaunchCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Launch), HasSelectedAgent);
         ResumeCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Resume), HasSelectedAgent);

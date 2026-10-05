@@ -33,6 +33,8 @@ public class LaunchWindowViewModelDialogTests
         dialogs.Setup(x => x.SelectProjectFolder()).Returns((string?)null);
 
         var notifications = new Mock<IUserNotificationService>(MockBehavior.Strict);
+        var lifetime = new Mock<IApplicationLifetime>(MockBehavior.Strict);
+        lifetime.Setup(x => x.Shutdown());
         var viewModel = new LaunchWindowViewModel(
             projectService.Object,
             pluginManager.Object,
@@ -46,6 +48,7 @@ public class LaunchWindowViewModelDialogTests
             new PromptState(),
             dialogs.Object,
             notifications.Object,
+            lifetime.Object,
             NullLogger<LaunchWindowViewModel>.Instance,
             NullLogger<UpdateControlViewModel>.Instance);
 
@@ -54,6 +57,10 @@ public class LaunchWindowViewModelDialogTests
         dialogs.Verify(x => x.SelectProjectFolder(), Times.Once);
         projectService.Verify(x => x.AddProject(It.IsAny<string>()), Times.Never);
         Assert.Empty(viewModel.Projects);
+
+        viewModel.ExitCommand.Execute(null);
+
+        lifetime.Verify(x => x.Shutdown(), Times.Once);
     }
 
     private static IUpdateService CreateUpdateService()
