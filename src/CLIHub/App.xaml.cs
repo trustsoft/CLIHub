@@ -89,33 +89,11 @@ public partial class App : Application
 
         _services.GetRequiredService<IReleaseNotesStartupCoordinator>().Evaluate(preferences);
 
-        if (preferences.CheckForUpdatesOnStartup)
-        {
-            _ = CheckForUpdatesAsync();
-        }
-        else
-        {
-            Log.Information("Startup update check disabled in preferences");
-        }
+        _ = _services.GetRequiredService<IUpdateStartupCoordinator>().CheckAsync(
+            preferences.CheckForUpdatesOnStartup,
+            version => Dispatcher.Invoke(() => _tray?.NotifyUpdateAvailable(version)));
 
         Log.Information("CLIHub started");
-    }
-
-    private async Task CheckForUpdatesAsync()
-    {
-        try
-        {
-            var result = await _services!.GetRequiredService<IUpdateService>().CheckForUpdatesAsync();
-
-            if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
-            {
-                Dispatcher.Invoke(() => _tray?.NotifyUpdateAvailable(version));
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Update check failed");
-        }
     }
 
     /// <summary>

@@ -45,6 +45,7 @@ public static class ServiceRegistration
         services.AddSingleton<IGlobalHotkeyService>(sp => sp.GetRequiredService<GlobalHotkeyService>());
         services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
         services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
+        services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddTransient<SettingsViewModel>();
