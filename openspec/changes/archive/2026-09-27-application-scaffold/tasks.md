@@ -69,7 +69,7 @@ This change has been scoped down to MVP. The following task groups are deferred 
 - [x] 11.1 Add H.NotifyIcon.Wpf TaskbarIcon to App.xaml with CLIHub icon and tooltip and verify tray icon appears on startup
 - [x] 11.2 Create tray icon context menu with "Launch", "Exit" items and verify right-click shows menu
 - [x] 11.3 Wire left-click to show Launch Window and verify window appears and activates
-- [ ] 11.4 (DEFERRED) Add "Current Project" display in context menu - depends on Project Management Service (Group 6, deferred)
+- [x] 11.4 Add "Current Project" display in context menu. The current-project header and recent-project menu are implemented in `TrayIconController`; the original deferred marker was stale after the project service became available.
 
 ## 12. Launch Window UI (DEFERRED)
 

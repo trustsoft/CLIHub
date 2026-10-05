@@ -246,7 +246,10 @@ See [AGENTS.md → Code Style](../AGENTS.md#code-style) (file-scoped namespaces,
 The rules live in the root [`.editorconfig`](../.editorconfig) and are enforced at build time: `EnforceCodeStyleInBuild` in `Directory.Build.props` plus explicit severity pins surface naming (private fields, `I`-prefixed interfaces), brace, namespace, and using-placement violations as build warnings (the `code-style` spec). The application projects also enable `GenerateDocumentationFile`, so the compiler reports malformed XML doc comments and `<param>` tags that drift from the actual signature.
 
 ### Namespace Structure
-- `CLIHub.Core.Models`, `CLIHub.Core.Services`, `CLIHub.Core.Interfaces`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`, `CLIHub.Core.Formatting`
+- `CLIHub.Core.Models`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`, `CLIHub.Core.Formatting`
+- `CLIHub.Core.Configuration`, `CLIHub.Core.Projects`, `CLIHub.Core.Plugins`, `CLIHub.Core.Agents`, `CLIHub.Core.Updates`
+- `CLIHub.Core.Infrastructure.FileSystem`, `CLIHub.Core.Infrastructure.Persistence`, `CLIHub.Core.Infrastructure.Processes`, `CLIHub.Core.Infrastructure.Windows`, `CLIHub.Core.Composition`
+- Core contracts live beside their owning subsystem; the former `CLIHub.Core.Services` and `CLIHub.Core.Interfaces` namespaces are no longer used. Consumers of the public Core source API must update their using directives after this source-level namespace migration.
 - `CLIHub` (App, controllers), `CLIHub.Views`, `CLIHub.Hotkeys`, `CLIHub.Interop`, `CLIHub.Converters`, `CLIHub.ViewModels`
 - `CLIHub.Themes` (XAML resource dictionaries; the only code is `IconGlyphs`, the compile-time checked Segoe MDL2 glyph constants referenced from XAML via `{x:Static themes:IconGlyphs.Name}`)
 
