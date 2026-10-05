@@ -1,8 +1,6 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.Windows;
 
 using Microsoft.Extensions.Logging;
-
-using CLIHub.Core.Interfaces;
 
 /// <summary>
 ///   Manages the per-user Windows Run registration for the application, so it can start

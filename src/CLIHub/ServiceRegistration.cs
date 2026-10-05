@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
-using CLIHub.Core.Services;
+using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
 using CLIHub.Views;

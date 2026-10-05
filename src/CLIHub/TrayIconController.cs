@@ -6,7 +6,10 @@ using System.Windows.Media.Imaging;
 
 using Microsoft.Win32;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Agents;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Projects;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 using CLIHub.Views;
 

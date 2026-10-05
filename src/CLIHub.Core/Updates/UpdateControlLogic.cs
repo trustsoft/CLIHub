@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Updates;
 
 using CLIHub.Core.Models;
 

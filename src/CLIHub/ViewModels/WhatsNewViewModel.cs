@@ -3,7 +3,7 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.Windows;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 
 /// <summary>

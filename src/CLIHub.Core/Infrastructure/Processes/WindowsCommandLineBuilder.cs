@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.Processes;
 
 using System.Text;
 

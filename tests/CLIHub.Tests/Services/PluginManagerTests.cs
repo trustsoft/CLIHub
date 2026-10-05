@@ -2,7 +2,8 @@ namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using CLIHub.Core.Services;
+using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Plugins;
 
 public class PluginManagerTests : IDisposable
 {

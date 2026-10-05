@@ -3,7 +3,7 @@ namespace CLIHub.Tests.Models;
 using System.Text.Json;
 
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
+using CLIHub.Core.Configuration;
 
 public class AppConfigSerializationTests
 {

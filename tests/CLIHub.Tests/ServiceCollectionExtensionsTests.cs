@@ -3,7 +3,13 @@ namespace CLIHub.Tests;
 using Microsoft.Extensions.DependencyInjection;
 
 using CLIHub.Core;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Projects;
+using CLIHub.Core.Updates;
 
 public class ServiceCollectionExtensionsTests
 {

@@ -1,6 +1,7 @@
 namespace CLIHub.Tests.Services;
 
-using CLIHub.Core.Services;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Windows;
 
 public class SingleInstanceGuardTests
 {

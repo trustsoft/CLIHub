@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.Windows;
 
 /// <summary>
 ///   Thin seam over the current user's Run registry key, so startup registration is testable.

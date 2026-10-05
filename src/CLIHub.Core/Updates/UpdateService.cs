@@ -1,10 +1,9 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Updates;
 
 using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 using Velopack;

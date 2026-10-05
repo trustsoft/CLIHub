@@ -3,7 +3,8 @@ namespace CLIHub;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;

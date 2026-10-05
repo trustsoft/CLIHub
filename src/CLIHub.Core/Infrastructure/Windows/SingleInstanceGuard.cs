@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.Windows;
 
 using System.IO.Pipes;
 

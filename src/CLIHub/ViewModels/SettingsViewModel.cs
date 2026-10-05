@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub;
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 
 /// <summary>
 ///   A selectable default runtime with a friendly label and a short segment label.

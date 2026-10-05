@@ -1,6 +1,4 @@
-namespace CLIHub.Core.Interfaces;
-
-using CLIHub.Core.Models;
+namespace CLIHub.Core.Infrastructure.Processes;
 
 /// <summary>
 ///   Launches processes for AI agent CLI tools.

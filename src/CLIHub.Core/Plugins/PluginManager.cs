@@ -1,10 +1,12 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Plugins;
 
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>

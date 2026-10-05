@@ -1,8 +1,8 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Agents;
 
 using System.Collections.Concurrent;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 /// <summary>

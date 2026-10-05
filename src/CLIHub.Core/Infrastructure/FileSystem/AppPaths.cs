@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.FileSystem;
 
 /// <summary>
 ///   The CLIHub data layout under <c>%APPDATA%\CLIHub</c>, as documented in

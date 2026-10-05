@@ -7,10 +7,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
 using CLIHub.Views;

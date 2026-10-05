@@ -1,8 +1,9 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Projects;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>

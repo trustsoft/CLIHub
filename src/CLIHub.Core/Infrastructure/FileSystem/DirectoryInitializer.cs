@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.FileSystem;
 
 /// <summary>
 ///   Ensures the CLIHub data directory layout exists under <see cref="AppPaths.Root"/>.

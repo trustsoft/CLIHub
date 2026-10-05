@@ -3,7 +3,7 @@ namespace CLIHub.Tests.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
+using CLIHub.Core.Infrastructure.Processes;
 
 public class ProcessLauncherTests
 {

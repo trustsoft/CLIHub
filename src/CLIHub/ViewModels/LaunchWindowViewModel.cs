@@ -11,9 +11,14 @@ using Microsoft.Win32;
 
 using CLIHub;
 using CLIHub.Core.Formatting;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Projects;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 using CLIHub.Themes;
 
 /// <summary>

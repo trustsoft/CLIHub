@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Interfaces;
+namespace CLIHub.Core.Configuration;
 
 using CLIHub.Core.Models;
 

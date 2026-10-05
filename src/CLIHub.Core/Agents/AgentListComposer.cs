@@ -1,6 +1,5 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Agents;
 
-using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>

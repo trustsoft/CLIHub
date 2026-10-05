@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Projects;
 
 /// <summary>
 ///   Normalizes and compares project paths using Windows path semantics.

@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Interfaces;
+namespace CLIHub.Core.Plugins;
 
 /// <summary>
 ///   Populates the plugins folder with built-in descriptors on first run.

@@ -1,7 +1,7 @@
 namespace CLIHub.Tests.Services;
 
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
+using CLIHub.Core.Updates;
 
 /// <summary>
 ///   Tests for the launch window update control state transitions.

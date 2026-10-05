@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Interfaces;
+namespace CLIHub.Core.Projects;
 
 using CLIHub.Core.Models;
 

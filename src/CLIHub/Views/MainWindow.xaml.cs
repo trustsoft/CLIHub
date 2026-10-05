@@ -7,7 +7,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
 using CLIHub;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Projects;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 using CLIHub.ViewModels;
 

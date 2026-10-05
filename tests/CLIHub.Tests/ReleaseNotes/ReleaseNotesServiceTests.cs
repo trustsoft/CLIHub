@@ -4,7 +4,7 @@ using System.Reflection;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using CLIHub.Core.Services;
+using CLIHub.Core.Updates;
 
 public class ReleaseNotesServiceTests
 {

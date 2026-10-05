@@ -6,9 +6,8 @@ using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 
 /// <summary>
 ///   State and command for an update control: shows the current version when idle, checks for

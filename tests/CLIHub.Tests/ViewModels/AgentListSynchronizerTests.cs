@@ -2,8 +2,8 @@ namespace CLIHub.Tests.ViewModels;
 
 using System.Collections.ObjectModel;
 
+using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
-using CLIHub.Core.Services;
 using CLIHub.ViewModels;
 
 public class AgentListSynchronizerTests

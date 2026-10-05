@@ -1,8 +1,7 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Updates;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
 using CLIHub.Core.Models;
 
 /// <summary>

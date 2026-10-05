@@ -1,6 +1,6 @@
 namespace CLIHub.Tests.Services;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>

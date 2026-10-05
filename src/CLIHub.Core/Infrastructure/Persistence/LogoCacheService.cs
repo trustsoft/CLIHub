@@ -1,11 +1,12 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Infrastructure.Persistence;
 
 using System.Collections.Concurrent;
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
 
 /// <summary>
 ///   Persistent logo cache: resolves logos by a namespaced key, stores outcomes (including

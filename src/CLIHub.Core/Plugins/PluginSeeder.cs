@@ -1,10 +1,10 @@
-namespace CLIHub.Core.Services;
+namespace CLIHub.Core.Plugins;
 
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Interfaces;
+using CLIHub.Core.Infrastructure.FileSystem;
 
 /// <summary>
 ///   Seeds the plugins folder from descriptors and logos embedded in this assembly.
