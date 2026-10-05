@@ -25,6 +25,8 @@ public class ConfigService : IConfigService
     private Task _workerTask = Task.CompletedTask;
     private bool _workerRunning;
 
+    internal Action? BeforeWorkerExitForTests { get; set; }
+
     /// <summary>
     ///   Creates the service.
     /// </summary>
@@ -167,6 +169,7 @@ public class ConfigService : IConfigService
 
                 if (json is null)
                 {
+                    BeforeWorkerExitForTests?.Invoke();
                     return;
                 }
 
