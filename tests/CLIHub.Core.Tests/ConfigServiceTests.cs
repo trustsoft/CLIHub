@@ -27,7 +27,7 @@ public class ConfigServiceTests : IDisposable
     private ConfigService CreateService(string? configPath = null) =>
         new(_logger, configPath ?? ConfigPath);
 
-    private static AppConfig Config(string projectId) => new()
+    private static ConfigurationSnapshot Config(string projectId) => new()
     {
         CurrentProjectId = projectId
     };
@@ -104,6 +104,26 @@ public class ConfigServiceTests : IDisposable
     }
 
     [Fact]
+    public void Load_ReturnsDetachedSnapshot_WhenNestedValuesAreMutated()
+    {
+        using var service = CreateService();
+        var initial = Config("project-1");
+        initial.Projects.Add(new Project { Id = "project-1", Name = "Original", Path = "C:\\Original" });
+        initial.Preferences.Hotkey = "Ctrl+Shift+A";
+        service.Save(initial);
+        service.Flush();
+
+        var loaded = service.Load();
+        loaded.Projects[0].Name = "Mutated";
+        loaded.Preferences.Hotkey = "Ctrl+Alt+M";
+
+        var reread = service.Load();
+
+        Assert.Equal("Original", reread.Projects[0].Name);
+        Assert.Equal("Ctrl+Shift+A", reread.Preferences.Hotkey);
+    }
+
+    [Fact]
     public void Save_WhileWorkerIsExiting_StartsReplacementWorkerAndPersistsValue()
     {
         using var service = CreateService();
@@ -149,7 +169,9 @@ public class ConfigServiceTests : IDisposable
         Directory.CreateDirectory(ConfigPath);
         var service = CreateService();
 
-        service.Load().CurrentProjectId = "abc";
+        var snapshot = service.Load();
+        snapshot.CurrentProjectId = "abc";
+        service.Save(snapshot);
 
         var exception = Record.Exception(service.Flush);
 

@@ -1,6 +1,7 @@
 namespace CLIHub.Tests.Services;
 
 using CLIHub.Core.Models;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Projects;
 
 public class ProjectStateStoreTests
@@ -25,9 +26,10 @@ public class ProjectStateStoreTests
 
         store.Save(state);
 
-        Assert.Equal("project-1", config.CurrentProjectId);
-        Assert.Single(config.Projects);
-        Assert.Equal("Ctrl+Alt+P", config.Preferences.Hotkey);
+        var saved = configService.Load();
+        Assert.Equal("project-1", saved.CurrentProjectId);
+        Assert.Single(saved.Projects);
+        Assert.Equal("Ctrl+Alt+P", saved.Preferences.Hotkey);
         Assert.Equal(1, configService.SaveCount);
     }
 }

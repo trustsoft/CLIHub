@@ -26,7 +26,7 @@ public class PreferencesStoreTests
 
         store.Save(preferences);
 
-        Assert.Equal("Ctrl+Alt+P", config.Preferences.Hotkey);
+        Assert.Equal("Ctrl+Alt+P", configService.Load().Preferences.Hotkey);
         Assert.Single(config.Projects);
         Assert.Equal(project.Id, config.CurrentProjectId);
         Assert.Equal(1, configService.SaveCount);

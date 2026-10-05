@@ -26,8 +26,8 @@ public sealed class PreferencesStore : IPreferencesStore
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
-        var config = _configService.Load();
-        config.Preferences = preferences;
-        _configService.Save(config);
+        var snapshot = _configService.Load();
+        snapshot.Preferences = preferences;
+        _configService.Save(snapshot);
     }
 }

@@ -8,20 +8,20 @@ using CLIHub.Core.Models;
 /// </summary>
 public class FakeConfigService : IConfigService
 {
-    private AppConfig _config;
+    private ConfigurationSnapshot _snapshot;
 
     public FakeConfigService(AppConfig? initial = null)
     {
-        _config = initial ?? new AppConfig();
+        _snapshot = ConfigurationSnapshot.From(initial ?? new AppConfig());
     }
 
     public int SaveCount { get; private set; }
 
-    public AppConfig Load() => _config;
+    public ConfigurationSnapshot Load() => ConfigurationSnapshot.From(_snapshot.ToAppConfig());
 
-    public void Save(AppConfig config)
+    public void Save(ConfigurationSnapshot snapshot)
     {
-        _config = config;
+        _snapshot = ConfigurationSnapshot.From(snapshot.ToAppConfig());
         SaveCount++;
     }
 
@@ -33,4 +33,4 @@ public class FakeConfigService : IConfigService
     {
     }
 }
-
+

@@ -27,8 +27,8 @@ public sealed class ProjectStateStore : IProjectStateStore
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        var config = _configService.Load();
-        state.ApplyTo(config);
-        _configService.Save(config);
+        var snapshot = _configService.Load();
+        state.ApplyTo(snapshot);
+        _configService.Save(snapshot);
     }
 }

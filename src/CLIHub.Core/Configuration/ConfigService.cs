@@ -48,19 +48,19 @@ public class ConfigService : IConfigService
     }
 
     /// <inheritdoc />
-    public AppConfig Load()
+    public ConfigurationSnapshot Load()
     {
         if (_cachedConfig != null)
         {
-            return _cachedConfig;
+            return ConfigurationSnapshot.From(_cachedConfig);
         }
 
         if (!File.Exists(_configFilePath))
         {
             _logger.LogInformation("No config found at {Path}; creating defaults", _configFilePath);
             _cachedConfig = new AppConfig();
-            Save(_cachedConfig);
-            return _cachedConfig;
+            Save(ConfigurationSnapshot.From(_cachedConfig));
+            return ConfigurationSnapshot.From(_cachedConfig);
         }
 
         try
@@ -69,20 +69,22 @@ public class ConfigService : IConfigService
             var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options);
             _cachedConfig = document?.ToAppConfig() ?? new AppConfig();
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
-            return _cachedConfig;
+            return ConfigurationSnapshot.From(_cachedConfig);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to read config at {Path}; using defaults", _configFilePath);
             _cachedConfig = new AppConfig();
-            return _cachedConfig;
+            return ConfigurationSnapshot.From(_cachedConfig);
         }
     }
 
     /// <inheritdoc />
-    public void Save(AppConfig config)
+    public void Save(ConfigurationSnapshot snapshot)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        var config = snapshot.ToAppConfig();
 
         // Serialize here: the config graph is shared and mutated elsewhere, so background
         // serialization could race with the caller. Serializing this small document on the

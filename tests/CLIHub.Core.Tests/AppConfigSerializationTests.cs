@@ -84,4 +84,26 @@ public class AppConfigSerializationTests
         Assert.Equal("project-1", destination.CurrentProjectId);
         Assert.True(destination.Projects.Single().IsFavorite);
     }
+
+    [Fact]
+    public void ConfigurationSnapshot_RoundTripsNestedValuesWithoutSharingReferences()
+    {
+        var config = new AppConfig
+        {
+            Projects =
+            {
+                new Project { Id = "project-1", Name = "Project", Path = "C:\\Project" }
+            },
+            CurrentProjectId = "project-1"
+        };
+        config.Preferences.Hotkey = "Ctrl+Alt+P";
+
+        var snapshot = ConfigurationSnapshot.From(config);
+        snapshot.Projects[0].Name = "Changed";
+        snapshot.Preferences.Hotkey = "Ctrl+Alt+M";
+
+        Assert.Equal("Project", config.Projects[0].Name);
+        Assert.Equal("Ctrl+Alt+P", config.Preferences.Hotkey);
+        Assert.Equal("Changed", snapshot.ToAppConfig().Projects[0].Name);
+    }
 }
