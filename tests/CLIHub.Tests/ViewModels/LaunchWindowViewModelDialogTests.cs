@@ -38,7 +38,7 @@ public class LaunchWindowViewModelDialogTests
         var viewModel = new LaunchWindowViewModel(
             projectService.Object,
             pluginManager.Object,
-            new Mock<IAgentCommandService>().Object,
+            new Mock<IAgentCommandWorkflow>().Object,
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,

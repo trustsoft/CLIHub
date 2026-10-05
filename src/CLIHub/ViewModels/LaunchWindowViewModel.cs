@@ -36,7 +36,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private readonly IProjectService _projectService;
     private readonly IPluginManager _pluginManager;
-    private readonly IAgentCommandService _agentCommandService;
+    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
     private readonly ILogoCacheService _logoCacheService;
@@ -65,7 +65,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// </summary>
     /// <param name="projectService"> Project service backing the Projects pane. </param>
     /// <param name="pluginManager"> Plugin manager backing the Agents pane. </param>
-    /// <param name="agentCommandService"> Service executing agent commands. </param>
+    /// <param name="agentCommandWorkflow"> Workflow executing agent commands. </param>
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="logoCacheService"> Persistent logo cache for project and agent logos. </param>
@@ -81,7 +81,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     public LaunchWindowViewModel(
         IProjectService projectService,
         IPluginManager pluginManager,
-        IAgentCommandService agentCommandService,
+        IAgentCommandWorkflow agentCommandWorkflow,
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
         ILogoCacheService logoCacheService,
@@ -97,7 +97,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     {
         _projectService = projectService;
         _pluginManager = pluginManager;
-        _agentCommandService = agentCommandService;
+        _agentCommandWorkflow = agentCommandWorkflow;
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
         _logoCacheService = logoCacheService;
@@ -522,7 +522,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         StatusMessage = $"{kind} {item.Name}...";
 
-        var result = await _agentCommandService.ExecuteAsync(item.Plugin, kind, project.Path);
+        var result = await _agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind);
         var error = result.Error ?? "no error details";
 
         if (kind == AgentCommandKind.Version)

@@ -22,7 +22,7 @@ public sealed class TrayIconController : IDisposable
 {
     private readonly IProjectService _projects;
     private readonly IPluginManager _pluginManager;
-    private readonly IAgentCommandService _agentCommands;
+    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
     private readonly IUpdateService _updates;
     private readonly LaunchWindow _launchWindow;
     private readonly ISettingsLauncher _settingsLauncher;
@@ -40,7 +40,7 @@ public sealed class TrayIconController : IDisposable
     /// </summary>
     /// <param name="projects"> Project service used by the project menu. </param>
     /// <param name="pluginManager"> Plugin manager used by the agent menu. </param>
-    /// <param name="agentCommands"> Service invoked by the agent menu actions. </param>
+    /// <param name="agentCommandWorkflow"> Workflow invoked by the agent menu actions. </param>
     /// <param name="updates"> Update service driving the update menu item. </param>
     /// <param name="launchWindow"> The launch window the tray toggles. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
@@ -49,7 +49,7 @@ public sealed class TrayIconController : IDisposable
     public TrayIconController(
         IProjectService projects,
         IPluginManager pluginManager,
-        IAgentCommandService agentCommands,
+        IAgentCommandWorkflow agentCommandWorkflow,
         IUpdateService updates,
         LaunchWindow launchWindow,
         ISettingsLauncher settingsLauncher,
@@ -58,7 +58,7 @@ public sealed class TrayIconController : IDisposable
     {
         _projects = projects;
         _pluginManager = pluginManager;
-        _agentCommands = agentCommands;
+        _agentCommandWorkflow = agentCommandWorkflow;
         _updates = updates;
         _launchWindow = launchWindow;
         _settingsLauncher = settingsLauncher;
@@ -271,7 +271,7 @@ public sealed class TrayIconController : IDisposable
             var item = new MenuItem { Header = plugin.Name };
             item.Click += async (_, _) =>
             {
-                var result = await _agentCommands.ExecuteAsync(plugin, AgentCommandKind.Launch, current.Path);
+                var result = await _agentCommandWorkflow.ExecuteAsync(plugin, current, AgentCommandKind.Launch);
                 if (!result.Success)
                 {
                     MessageBox.Show(

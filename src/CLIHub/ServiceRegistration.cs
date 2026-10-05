@@ -32,6 +32,7 @@ public static class ServiceRegistration
 
         services.AddSingleton<SingleInstanceGuard>();
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
+        services.AddSingleton<IAgentCommandWorkflow, AgentCommandWorkflow>();
         services.AddSingleton<IPluginInitializationService, PluginInitializationService>();
         services.AddSingleton<IStartupPreferencesApplier, StartupPreferencesApplier>();
         services.AddSingleton<PromptState>();
