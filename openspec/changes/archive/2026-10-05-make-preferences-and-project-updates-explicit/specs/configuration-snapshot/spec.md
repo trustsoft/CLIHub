@@ -1,19 +1,4 @@
-# configuration-snapshot Specification
-
-## Purpose
-
-Provides an isolated configuration boundary so callers can read and update application state without mutating a shared in-memory graph implicitly, while preserving the established config.json persistence contract.
-
-## Requirements
-
-### Requirement: Configuration reads are mutation-isolated
-
-The configuration boundary SHALL return a snapshot whose projects, preferences, and nested mutable values are detached from service-owned state.
-
-#### Scenario: Mutating a returned snapshot does not change stored state
-- **GIVEN** the configuration contains a project and preferences
-- **WHEN** a caller mutates its local snapshot or any nested project/preferences value without submitting an update
-- **THEN** a subsequent configuration read returns the original stored values
+## MODIFIED Requirements
 
 ### Requirement: Configuration updates are explicit
 
@@ -28,15 +13,6 @@ The configuration boundary SHALL persist changes only when a caller submits an e
 - **GIVEN** an owning store has stored preferences or project state
 - **WHEN** an explicit update callback throws before completion
 - **THEN** the store propagates the error and the previous stored state remains unchanged
-
-### Requirement: Snapshot persistence preserves the existing document
-
-The snapshot boundary SHALL preserve the existing single `config.json` document, JSON property names, default values, debounced writes, atomic replacement, and synchronous flush guarantees.
-
-#### Scenario: Snapshot round-trip preserves configuration data
-- **GIVEN** a snapshot containing projects, preferences, and a current project ID
-- **WHEN** it is persisted, flushed, and loaded by a new configuration service instance
-- **THEN** all values round-trip without changing the established JSON document shape
 
 ### Requirement: Stores use the snapshot boundary
 
