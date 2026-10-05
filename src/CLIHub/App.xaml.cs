@@ -6,7 +6,6 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Windows;
@@ -85,7 +84,8 @@ public partial class App : Application
             Log.Information("Starting in the system tray (show window on startup disabled)");
         }
 
-        RegisterGlobalHotkey();
+        _hotkey = _services.GetRequiredService<GlobalHotkeyService>();
+        _services.GetRequiredService<IHotkeyStartupRegistrar>().Register(preferences);
 
         ShowReleaseNotesOnce();
 
@@ -211,25 +211,6 @@ public partial class App : Application
 
         var level = LogLevelParser.Parse(PreferenceReader.ReadLogLevel(configPath));
         Log.Logger = LoggingSetup.CreateLogger(AppPaths.LogsDirectory, level);
-    }
-
-    private void RegisterGlobalHotkey()
-    {
-        var configured = _services!.GetRequiredService<IPreferencesStore>().Load().Hotkey;
-
-        HotkeyDefinition definition;
-        if (HotkeyParser.TryParse(configured, out var parsed) && parsed != null)
-        {
-            definition = parsed;
-        }
-        else
-        {
-            Log.Warning("Invalid hotkey '{Hotkey}' in config; using default Ctrl+Shift+A", configured);
-            definition = HotkeyParser.Default;
-        }
-
-        _hotkey = _services!.GetRequiredService<GlobalHotkeyService>();
-        _hotkey.Register(definition);
     }
 
     /// <summary>

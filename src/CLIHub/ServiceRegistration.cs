@@ -42,6 +42,8 @@ public static class ServiceRegistration
             sp.GetRequiredService<LaunchWindow>(),
             () => sp.GetRequiredService<TrayIconController>().ToggleLaunchWindow(),
             sp.GetRequiredService<ILogger<GlobalHotkeyService>>()));
+        services.AddSingleton<IGlobalHotkeyService>(sp => sp.GetRequiredService<GlobalHotkeyService>());
+        services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddTransient<SettingsViewModel>();

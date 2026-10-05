@@ -11,7 +11,7 @@ using CLIHub.Interop;
 /// <summary>
 ///   Registers a global hotkey against a window and invokes a callback when it is pressed.
 /// </summary>
-public sealed class GlobalHotkeyService : IDisposable
+public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
 {
     private const int HotkeyId = 0xC1A0;
 
@@ -126,4 +126,4 @@ public sealed class GlobalHotkeyService : IDisposable
         _source.RemoveHook(WndProc);
     }
 }
-
+
