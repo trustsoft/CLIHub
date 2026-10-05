@@ -11,7 +11,6 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Infrastructure.Windows;
-using CLIHub.Core.Plugins;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
@@ -58,8 +57,7 @@ public partial class App : Application
         services.AddClIHubServices();
         _services = services.BuildServiceProvider();
 
-        _services.GetRequiredService<IPluginSeeder>().SeedIfEmpty();
-        _services.GetRequiredService<IPluginManager>().LoadPlugins();
+        _services.GetRequiredService<IPluginInitializationService>().Initialize();
 
         var preferences = _services.GetRequiredService<IPreferencesStore>().Load();
         _services.GetRequiredService<IProcessLauncher>().SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
@@ -254,4 +252,3 @@ public partial class App : Application
         base.OnExit(e);
     }
 }
-
