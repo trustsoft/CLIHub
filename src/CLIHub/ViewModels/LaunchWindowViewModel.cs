@@ -7,7 +7,6 @@ using System.IO;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
 
 using CLIHub;
 using CLIHub.Core.Formatting;
@@ -44,6 +43,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IPreferencesStore _preferencesStore;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly PromptState _promptState;
+    private readonly IProjectDialogService _projectDialogs;
+    private readonly IUserNotificationService _notifications;
     private readonly ILogger<LaunchWindowViewModel> _logger;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
@@ -71,6 +72,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
+    /// <param name="projectDialogs"> Project folder and confirmation dialogs. </param>
+    /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="logger"> Logger for unexpected agent command failures. </param>
     /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
@@ -84,6 +87,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IUpdateService updateService,
         ISettingsLauncher settingsLauncher,
         PromptState promptState,
+        IProjectDialogService projectDialogs,
+        IUserNotificationService notifications,
         ILogger<LaunchWindowViewModel> logger,
         ILogger<UpdateControlViewModel> updateControlLogger)
     {
@@ -96,6 +101,8 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _preferencesStore = preferencesStore;
         _settingsLauncher = settingsLauncher;
         _promptState = promptState;
+        _projectDialogs = projectDialogs;
+        _notifications = notifications;
         _logger = logger;
 
         UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger);
@@ -404,29 +411,25 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void AddProject()
     {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "Select Project Folder"
-        };
-
         using (_promptState.Begin())
         {
-            if (dialog.ShowDialog(Application.Current?.MainWindow) != true)
+            var folderPath = _projectDialogs.SelectProjectFolder();
+            if (folderPath is null)
             {
                 return;
             }
-        }
 
-        try
-        {
-            var project = _projectService.AddProject(dialog.FolderName);
-            _projectService.SetCurrentProject(project.Id);
-            StatusMessage = $"Added project: {project.Name}";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Could not add project: {ex.Message}";
-            ShowWarning($"Could not add project: {ex.Message}");
+            try
+            {
+                var project = _projectService.AddProject(folderPath);
+                _projectService.SetCurrentProject(project.Id);
+                StatusMessage = $"Added project: {project.Name}";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Could not add project: {ex.Message}";
+                ShowWarning($"Could not add project: {ex.Message}");
+            }
         }
     }
 
@@ -440,7 +443,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         using (_promptState.Begin())
         {
-            var confirmed = Confirm($"Remove \"{project.Name}\" from CLIHub?\n\nThe folder and its files are not deleted.");
+            var confirmed = _projectDialogs.ConfirmProjectRemoval(project.Name);
 
             if (!confirmed)
             {
@@ -638,24 +641,9 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
-    /// <summary>
-    ///   Shows a dialog owned by the launch window, so it appears above the always-on-top shell.
-    /// </summary>
-    private static MessageBoxResult Prompt(string message, string title, MessageBoxButton buttons, MessageBoxImage image)
-    {
-        var owner = Application.Current?.MainWindow;
+    private void ShowInfo(string message, string title) =>
+        _notifications.ShowInformation(message, title);
 
-        return owner is null
-            ? MessageBox.Show(message, title, buttons, image)
-            : MessageBox.Show(owner, message, title, buttons, image);
-    }
-
-    private static bool Confirm(string message) =>
-        Prompt(message, "CLIHub", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
-
-    private static void ShowInfo(string message, string title) =>
-        _ = Prompt(message, title, MessageBoxButton.OK, MessageBoxImage.Information);
-
-    private static void ShowWarning(string message) =>
-        _ = Prompt(message, "CLIHub", MessageBoxButton.OK, MessageBoxImage.Warning);
+    private void ShowWarning(string message) =>
+        _notifications.ShowWarning(message);
 }

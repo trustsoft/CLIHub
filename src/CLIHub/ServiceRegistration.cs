@@ -34,6 +34,8 @@ public static class ServiceRegistration
         services.AddSingleton<IPluginInitializationService, PluginInitializationService>();
         services.AddSingleton<IStartupPreferencesApplier, StartupPreferencesApplier>();
         services.AddSingleton<PromptState>();
+        services.AddSingleton<IProjectDialogService, ProjectDialogService>();
+        services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<LaunchWindowViewModel>();
         services.AddSingleton<LaunchWindow>();
         services.AddSingleton<TrayIconController>();
