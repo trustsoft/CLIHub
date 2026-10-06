@@ -16,7 +16,10 @@ public sealed class PluginCatalog : IPluginCatalog
     private readonly IPluginDescriptorReader _descriptorReader;
     private readonly IPluginDescriptorValidator _descriptorValidator;
     private readonly string _pluginsPath;
-    private readonly List<Plugin> _plugins = new();
+    private IReadOnlyList<Plugin> _plugins = Array.Empty<Plugin>();
+
+    /// <inheritdoc />
+    public event EventHandler? PluginsChanged;
 
     /// <summary>
     ///   Creates the plugin catalog for the given plugins root.
@@ -43,14 +46,26 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <inheritdoc />
     public void LoadPlugins()
     {
-        _plugins.Clear();
+        _plugins = LoadPluginsCore();
+    }
+
+    /// <inheritdoc />
+    public void ReloadPlugins()
+    {
+        _plugins = LoadPluginsCore();
+        PluginsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private IReadOnlyList<Plugin> LoadPluginsCore()
+    {
+        var plugins = new List<Plugin>();
 
         var pluginsPath = _pluginsPath;
 
         if (!Directory.Exists(pluginsPath))
         {
             Directory.CreateDirectory(pluginsPath);
-            return;
+            return plugins;
         }
 
         var pluginDirectories = Directory.GetDirectories(pluginsPath)
@@ -74,7 +89,7 @@ public sealed class PluginCatalog : IPluginCatalog
 
                 if (plugin != null && ValidatePlugin(plugin, pluginDir))
                 {
-                    var loadedDirectory = FindLoadedPluginDirectory(plugin.Id, pluginDir);
+                    var loadedDirectory = FindLoadedPluginDirectory(plugins, plugin.Id, pluginDir);
                     if (loadedDirectory is not null)
                     {
                         _logger.LogWarning(
@@ -90,7 +105,7 @@ public sealed class PluginCatalog : IPluginCatalog
                         $"plugin:{plugin.Id}",
                         () => LoadPluginLogo(pluginDir));
 
-                    _plugins.Add(plugin);
+                    plugins.Add(plugin);
                     _logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
                 }
             }
@@ -100,7 +115,8 @@ public sealed class PluginCatalog : IPluginCatalog
             }
         }
 
-        _logger.LogInformation("Loaded {Count} plugin(s)", _plugins.Count);
+        _logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
+        return plugins;
     }
 
     /// <inheritdoc />
@@ -131,9 +147,12 @@ public sealed class PluginCatalog : IPluginCatalog
         return File.Exists(logoPath) ? logoPath : null;
     }
 
-    private string? FindLoadedPluginDirectory(string pluginId, string currentPluginDirectory)
+    private static string? FindLoadedPluginDirectory(
+        IReadOnlyList<Plugin> plugins,
+        string pluginId,
+        string currentPluginDirectory)
     {
-        return _plugins
+        return plugins
             .Where(plugin => plugin.Id == pluginId && plugin.PluginDirectory != currentPluginDirectory)
             .Select(plugin => plugin.PluginDirectory)
             .FirstOrDefault();

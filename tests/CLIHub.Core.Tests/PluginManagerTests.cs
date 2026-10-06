@@ -150,6 +150,44 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
+    public void ReloadPlugins_RescansSnapshotAndRaisesNotificationAfterReplacement()
+    {
+        WritePlugin("opencode", ValidJson);
+        var catalog = CreateManager();
+        catalog.LoadPlugins();
+        var notificationCount = 0;
+        var snapshots = new List<int>();
+        catalog.PluginsChanged += (_, _) =>
+        {
+            notificationCount++;
+            snapshots.Add(catalog.GetAllPlugins().Count);
+        };
+
+        WritePlugin("pi", ValidJson.Replace("opencode", "pi", StringComparison.Ordinal));
+        catalog.ReloadPlugins();
+
+        Directory.Delete(Path.Combine(_root, "pi"), recursive: true);
+        catalog.ReloadPlugins();
+
+        Assert.Equal(2, notificationCount);
+        Assert.Equal([2, 1], snapshots);
+        Assert.Equal(["opencode"], catalog.GetAllPlugins().Select(plugin => plugin.Id));
+    }
+
+    [Fact]
+    public void LoadPlugins_DoesNotRaiseReloadNotification()
+    {
+        WritePlugin("opencode", ValidJson);
+        var catalog = CreateManager();
+        var notificationCount = 0;
+        catalog.PluginsChanged += (_, _) => notificationCount++;
+
+        catalog.LoadPlugins();
+
+        Assert.Equal(0, notificationCount);
+    }
+
+    [Fact]
     public void LoadPlugins_SecondManager_SharesCache_ReusesCachedLogoWithoutRescan()
     {
         WritePlugin("opencode", ValidJson);
