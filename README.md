@@ -78,7 +78,7 @@ Create `%APPDATA%\CLIHub\plugins\<id>\plugin.json` (and optionally `logo.png`):
 }
 ```
 
-Only `launch` is required. Built-in descriptors for the six supported agents are embedded in the app and seeded when the plugins folder is empty; delete the folder to re-seed. Full descriptor format: [`docs/architecture.md`](docs/architecture.md#plugin-descriptor-format).
+Only `launch` is required. Built-in descriptors for the six supported agents are embedded in the app and seeded when the plugins folder is empty; delete the folder to re-seed. Full descriptor format: [`docs/architecture/plugins.md`](docs/architecture/plugins.md).
 
 ## Releases
 

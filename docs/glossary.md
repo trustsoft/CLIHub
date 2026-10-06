@@ -31,7 +31,7 @@ use these terms with these meanings.
 - **Plugin** — the descriptor-only way to define an agent: a folder under
   `%APPDATA%\CLIHub\plugins\<id>\` containing a `plugin.json` [descriptor](#agents-and-plugins)
   and an optional `logo.png`. No DLLs, no code execution — a plugin is data. See
-  [Plugin Descriptor Format](architecture.md#plugin-descriptor-format).
+  [Plugin Descriptor Format](architecture/plugins.md).
 - **Plugin descriptor** — the `plugin.json` file: `id`, `name`, `commands`, and `detection`
   markers. Only the `launch` command is required; a descriptor without it is rejected.
 - **Built-in agent** — one of the agents whose descriptors (and logos) are embedded in the

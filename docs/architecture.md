@@ -2,7 +2,7 @@
 
 ## Solution Structure
 
-CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) under `src/`, plus `CLIHub.Core.Tests` (Core-only) and `CLIHub.Tests` (WPF/application) under `tests/`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
+CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) under `src/`, plus `CLIHub.Core.Tests` (Core-only) and `CLIHub.Tests` (WPF/application) under `tests/`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow. Topic documents live under [architecture/](architecture/): [startup](architecture/startup.md), [configuration](architecture/configuration.md), [plugins](architecture/plugins.md), [processes](architecture/processes.md), and [UI](architecture/ui.md).
 
 ## Project Responsibilities
 
@@ -61,65 +61,6 @@ The WPF composition root registers `PluginInitializationService`, `TrayMenuBuild
 
 **Target:** `net10.0-windows`.
 
-## Application Startup and Shutdown
-
-The observable lifecycle requirements are defined by the [`app-lifecycle` specification](../openspec/specs/app-lifecycle/spec.md). This section records the current implementation order and failure policy as a baseline for future startup refactors; it does not introduce additional runtime requirements.
-
-### Process Bootstrap
-
-`Program.Main` runs `VelopackApp.Build().Run()` before constructing and running the WPF `App`. Velopack bootstrap hooks therefore run before application initialization.
-
-### First-Instance Startup Sequence
-
-`App.OnStartup` performs the following operations in order:
-
-1. Calls the WPF base implementation and creates `SingleInstanceGuard`.
-2. If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns. No directories, logger, service provider, tray icon, or window are initialized in this branch.
-3. Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
-4. Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
-5. Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services.
-6. Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
-7. Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
-8. Resolves the tray controller and subscribes it to update-state changes. Tray update actions and the What's New update action are wired to the shared download-and-restart workflow.
-9. Connects second-instance activation to showing the launch window on the pointer's monitor.
-10. Resolves the launch window and assigns it to `Application.MainWindow`.
-11. Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
-12. Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
-13. Evaluates whether release notes should be shown or recorded for the current version.
-14. Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled.
-15. Logs that startup is complete.
-
-The implementation is in `src/CLIHub/Program.cs`, `src/CLIHub/App.xaml.cs`, and `src/CLIHub/ServiceRegistration.cs`; Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
-
-### Startup Failure Policy
-
-| Operation | Current behavior on failure |
-|---|---|
-| Velopack bootstrap, directory creation, logger setup, service-provider creation/resolution | No application-level recovery boundary is present; an unhandled failure can prevent normal startup. |
-| Signaling the first instance from a second process | Connection attempts are best-effort; failures are swallowed and the second process proceeds to shut down. |
-| Plugin seeding | The seeder logs a warning and returns; startup continues to plugin loading. |
-| Loading an individual plugin descriptor | The manager logs a warning and skips the descriptor that failed to load. |
-| Applying the Windows Run registration during startup | The startup service reports failure without throwing; startup continues. |
-| Invalid configured hotkey | A warning is logged and the default hotkey is used. If Windows will not register the combination, registration logs a warning and the application continues without that hotkey. |
-| Release-notes startup check | Exceptions are logged as warnings; startup continues. |
-| Startup update check | The operation runs asynchronously; exceptions are logged and do not block the already-running application. |
-
-The failure behavior above describes the current implementation, not a recommendation that all startup operations remain best-effort. Changes to this policy must update this section and the relevant lifecycle requirements when user-observable behavior changes.
-
-### Shutdown Sequence
-
-`App.OnExit` logs shutdown and then disposes resources in this order:
-
-1. Unregisters the global hotkey and removes its window-message hook.
-2. Disposes the tray icon.
-3. Disposes the service provider. This disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes) and the logo cache service (which saves dirty cache state).
-4. Disposes `SingleInstanceGuard`, stopping its pipe server and releasing the mutex.
-5. Flushes and closes Serilog, then calls the WPF base implementation.
-
-The order is implemented in `src/CLIHub/App.xaml.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
-
-The current shutdown sequence is not wrapped in a per-resource recovery boundary or `finally` block. An exception from a disposal step can therefore prevent later cleanup steps from running.
-
 ### CLIHub.Core.Tests
 
 **Purpose:** Core-only unit and composition tests (xUnit).
@@ -139,6 +80,10 @@ The current shutdown sequence is not wrapped in a per-resource recovery boundary
 **Dependencies:** `CLIHub` and `CLIHub.Core`, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection, Moq, and coverlet.
 
 **Target:** `net10.0-windows` with WPF enabled.
+
+## Application Startup and Shutdown
+
+Startup and shutdown sequence, startup failure policy, and disposal order: [architecture/startup.md](architecture/startup.md).
 
 ## Dependency Flow
 
@@ -183,37 +128,12 @@ CLIHub.Tests ────────> CLIHub ──> CLIHub.Core
 - **Velopack** — application update checking, downloading, and packaging (GitHub Releases source); packaging runs in CI, see [Packaging & CI/CD](#packaging-cicd)
 
 ### External Integration
-- **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
-- **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
-- **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
-- **Velopack** — update checks, package downloads, and apply-and-restart against the CLIHub GitHub Releases (`trustsoft/clihub`); the current version comes from the Velopack locator (falling back to the assembly informational version)
-- **Registry (HKCU Run)** — the per-user `Software\Microsoft\Windows\CurrentVersion\Run` value `CLIHub` controls start-with-Windows
+
+Runtime spawning, single-instance activation, hotkey registration, update source, and start-with-Windows integration details: [architecture/processes.md](architecture/processes.md).
 
 ## Plugin Descriptor Format
 
-Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an optional `logo.png`:
-
-```jsonc
-{
-  "id": "opencode",
-  "name": "OpenCode",
-  "description": "AI coding agent CLI",
-  "commands": {
-    "launch":  { "executable": "opencode" },
-    "resume":  { "executable": "opencode", "arguments": "--continue" },
-    "version": { "executable": "opencode", "arguments": "--version" },
-    "update":  { "executable": "opencode", "arguments": "upgrade" }
-  },
-  "detection": {
-    "systemPaths": [ "%USERPROFILE%\\.opencode" ],
-    "projectIndicators": [ ".opencode", "openspec" ]
-  }
-}
-```
-
-- `commands` is a named set; only `launch` is required.
-- `detection.systemPaths` are host install markers (env vars expanded); `detection.projectIndicators` are project-relative markers.
-- Built-in descriptors for OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code are embedded and seeded on first run.
+Descriptor JSON format, commands, detection markers, and built-in seeding: [architecture/plugins.md](architecture/plugins.md).
 
 ## Release Notes
 
@@ -264,11 +184,7 @@ machinery:
 
 ## Configuration Persistence
 
-- **Format:** JSON with camelCase property names
-- **Location:** `%APPDATA%\CLIHub\config.json`
-- **Atomic writes:** write to a `.tmp` file, then rename (temp-file-then-rename)
-- **Schema:** `AppConfig` with `projects`, `preferences`, and `currentProjectId`. `AppPreferences` includes `hotkey` (`Ctrl+Shift+A` by default), `defaultRuntime` (`wt`/`cmd`/`ps`), `logLevel`, `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `startWithWindows`, `showWindowOnStartup`, `pinLaunchWindow`, `pathDisplayStyle` (`leftTrim` by default, `middleEllipsis` as the alternative; unrecognized values fall back to the default), and `lastSeenReleaseNotesVersion` (the version whose release notes were last shown — written by the application, not editable in Settings; missing or null means the notes have never been shown, which is treated as a first run without opening the What's New window) (all optional; missing values fall back to defaults); the legacy `terminalExecutable` is superseded by `defaultRuntime`
-- **Forward compatibility:** missing fields deserialize to defaults; unknown fields are ignored. There is no explicit schema-version field yet (adding one is deferred).
+Format, location, atomic writes, schema, and forward compatibility: [architecture/configuration.md](architecture/configuration.md).
 
 ## Logging Strategy
 
@@ -281,21 +197,9 @@ machinery:
 
 ## Error Handling Strategy
 
-### Configuration Errors
-
-- **Missing config.json:** create defaults on first run
-- **Corrupted/invalid config.json:** log the error and fall back to in-memory defaults (the file is rewritten on the next save)
-
-### Plugin Errors
-
-- **Invalid plugin.json:** skip during discovery, log a warning (with the missing field)
-- **Duplicate plugin IDs:** load the first, skip duplicates, log a warning
-- **Missing logo:** fall back to the default project logo
-
-### Process / Agent Errors
-
-- **Missing executable / permission denied:** log the error, return a failed result, surface a message in the UI
-- **Non-zero exit for `version`:** report unknown and log
+- **Configuration errors:** [architecture/configuration.md](architecture/configuration.md).
+- **Plugin errors:** [architecture/plugins.md](architecture/plugins.md).
+- **Process and agent errors:** [architecture/processes.md](architecture/processes.md).
 
 ### System Integration Errors
 
@@ -326,26 +230,9 @@ The rules live in the root [`.editorconfig`](../.editorconfig) and are enforced 
 - `CLIHub` (App, controllers), `CLIHub.Views`, `CLIHub.Hotkeys`, `CLIHub.Interop`, `CLIHub.Converters`, `CLIHub.ViewModels`
 - `CLIHub.Themes` (XAML resource dictionaries; the only code is `IconGlyphs`, the compile-time checked Segoe MDL2 glyph constants referenced from XAML via `{x:Static themes:IconGlyphs.Name}`)
 
-### Resource Organization
-- Application icon: `src/CLIHub/app.ico` (embedded; also the exe icon)
-- Default project logo: `src/CLIHub/default-project.png` (copied to output)
-- Desktop app icon sources: `assets/` at the repository root (not part of the build)
-- Embedded seed descriptors/logos: `src/CLIHub.Core/SeedPlugins/`
+### UI Resources and Theming
 
-### XAML Themes and Styles Recipe
-
-Layering: `LaunchTheme.xaml` (palette — the only place with colors) + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
-
-To add a window:
-1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the palette and sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries).
-2. Define keyed styles only (no implicit styles — they would not reach popups anyway); build on the shared bases (`IconChipButton`, `QuietChipButton`, `WindowHeader`, `WindowTitle`) via `BasedOn`.
-3. Merge it from the window's `Window.Resources`; reference colors exclusively through palette brushes, metrics through `Sizing.*`, glyphs through `IconGlyphs`.
-4. Add tooltips as plain `ToolTip="..."` attributes — the app-level implicit style themes them automatically.
-
-To create a new palette (compile-time theme choice, applied at startup):
-1. Copy `LaunchTheme.xaml` to a new file and change the colors.
-2. Point the palette merges in `App.xaml` and `Controls.xaml` at the new file.
-Runtime re-theming without restart would require brushes referenced via `DynamicResource` — deliberately deferred until a second theme ships.
+Resource organization and the XAML themes/styles recipe: [architecture/ui.md](architecture/ui.md).
 
 ## Build and Run
 
