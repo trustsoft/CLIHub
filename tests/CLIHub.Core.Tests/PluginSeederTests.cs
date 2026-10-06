@@ -106,14 +106,14 @@ public class PluginSeederTests : IDisposable
         CreateSeeder().SeedIfEmpty();
 
         var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(_pluginsPath, "logos-state.json"));
-        var manager = new PluginManager(NullLogger<PluginManager>.Instance, cache, _pluginsPath);
-        manager.LoadPlugins();
+        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, _pluginsPath);
+        catalog.LoadPlugins();
 
-        var plugins = manager.GetAllPlugins().ToList();
+        var plugins = catalog.GetAllPlugins().ToList();
         Assert.Equal(6, plugins.Count);
         Assert.All(plugins, p => Assert.NotNull(p.Commands.Launch));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Id)));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Name)));
     }
 }
-
+

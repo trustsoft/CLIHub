@@ -35,7 +35,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         Path.Combine(AppContext.BaseDirectory, "default-project.png");
 
     private readonly IProjectService _projectService;
-    private readonly IPluginManager _pluginManager;
+    private readonly IPluginCatalog _pluginCatalog;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
@@ -64,7 +64,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     ///   Creates the view model with its services and loads projects and agents.
     /// </summary>
     /// <param name="projectService"> Project service backing the Projects pane. </param>
-    /// <param name="pluginManager"> Plugin manager backing the Agents pane. </param>
+    /// <param name="pluginCatalog"> Plugin catalog backing the Agents pane. </param>
     /// <param name="agentCommandWorkflow"> Workflow executing agent commands. </param>
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
@@ -80,7 +80,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
         IProjectService projectService,
-        IPluginManager pluginManager,
+        IPluginCatalog pluginCatalog,
         IAgentCommandWorkflow agentCommandWorkflow,
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
@@ -96,7 +96,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         ILogger<UpdateControlViewModel> updateControlLogger)
     {
         _projectService = projectService;
-        _pluginManager = pluginManager;
+        _pluginCatalog = pluginCatalog;
         _agentCommandWorkflow = agentCommandWorkflow;
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
@@ -591,7 +591,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         var currentProject = _projectService.GetCurrentProject()?.Path;
         var entries = AgentListComposer.Compose(
-            _pluginManager.GetAllPlugins(),
+            _pluginCatalog.GetAllPlugins(),
             _agentDetectionService,
             currentProject,
             ShowOnlyProjectAgents);

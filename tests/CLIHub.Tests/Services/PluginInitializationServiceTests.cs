@@ -15,17 +15,17 @@ public class PluginInitializationServiceTests
     {
         var sequence = new MockSequence();
         var seeder = new Mock<IPluginSeeder>(MockBehavior.Strict);
-        var manager = new Mock<IPluginManager>(MockBehavior.Strict);
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
 
         seeder.InSequence(sequence).Setup(x => x.SeedIfEmpty()).Returns(6);
-        manager.InSequence(sequence).Setup(x => x.LoadPlugins());
+        catalog.InSequence(sequence).Setup(x => x.LoadPlugins());
 
-        var service = new PluginInitializationService(seeder.Object, manager.Object);
+        var service = new PluginInitializationService(seeder.Object, catalog.Object);
 
         service.Initialize();
 
         seeder.Verify(x => x.SeedIfEmpty(), Times.Once);
-        manager.Verify(x => x.LoadPlugins(), Times.Once);
+        catalog.Verify(x => x.LoadPlugins(), Times.Once);
     }
 
     [Fact]

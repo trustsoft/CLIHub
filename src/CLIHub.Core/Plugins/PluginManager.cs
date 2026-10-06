@@ -1,148 +1,32 @@
 namespace CLIHub.Core.Plugins;
 
-using Microsoft.Extensions.Logging;
-
-using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Discovers and manages AI agent CLI tool plugins.
+///   Compatibility adapter for the plugin catalog contract.
 /// </summary>
-public class PluginManager : IPluginManager
+public sealed class PluginManager : IPluginManager
 {
-    private readonly ILogger<PluginManager> _logger;
-    private readonly ILogoCacheService _logoCache;
-    private readonly IPluginDescriptorReader _descriptorReader;
-    private readonly IPluginDescriptorValidator _descriptorValidator;
-    private readonly string _pluginsPath;
-    private readonly List<Plugin> _plugins = new();
+    private readonly IPluginCatalog _catalog;
 
     /// <summary>
-    ///   Creates the plugin manager for the given plugins root.
+    ///   Creates the compatibility adapter for the plugin catalog.
     /// </summary>
-    /// <param name="logger"> The logger. </param>
-    /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
-    /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
-    /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
-    /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
-    public PluginManager(
-        ILogger<PluginManager> logger,
-        ILogoCacheService logoCache,
-        string? pluginsPath = null,
-        IPluginDescriptorReader? descriptorReader = null,
-        IPluginDescriptorValidator? descriptorValidator = null)
+    /// <param name="catalog"> The shared plugin catalog. </param>
+    public PluginManager(IPluginCatalog catalog)
     {
-        _logger = logger;
-        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
-        _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
-        _descriptorReader = descriptorReader ?? new PluginDescriptorReader();
-        _descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
+        _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
     }
 
     /// <inheritdoc />
     public void LoadPlugins()
     {
-        _plugins.Clear();
-
-        var pluginsPath = _pluginsPath;
-
-        if (!Directory.Exists(pluginsPath))
-        {
-            Directory.CreateDirectory(pluginsPath);
-            return;
-        }
-
-        var pluginDirectories = Directory.GetDirectories(pluginsPath)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-        _logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
-
-        foreach (var pluginDir in pluginDirectories)
-        {
-            try
-            {
-                var descriptor = _descriptorReader.Read(pluginDir);
-                if (descriptor.Error is not null)
-                {
-                    _logger.LogWarning(descriptor.Error, "Failed to load plugin.json from {Directory}", pluginDir);
-                    continue;
-                }
-
-                var plugin = descriptor.Plugin;
-
-                if (plugin != null && ValidatePlugin(plugin, pluginDir))
-                {
-                    // Check for duplicate ID
-                    var loadedDirectory = FindLoadedPluginDirectory(plugin.Id, pluginDir);
-                    if (loadedDirectory is not null)
-                    {
-                        _logger.LogWarning(
-                            "Duplicate plugin ID {PluginId} in {Directory}; skipped; loaded from {LoadedDirectory}",
-                            plugin.Id,
-                            pluginDir,
-                            loadedDirectory);
-                        continue;
-                    }
-
-                    plugin.PluginDirectory = pluginDir;
-
-                    // Resolve the plugin logo through the logo cache (logo.png or null).
-                    plugin.LogoPath = _logoCache.GetOrResolve(
-                        $"plugin:{plugin.Id}",
-                        () => LoadPluginLogo(pluginDir));
-
-                    _plugins.Add(plugin);
-                    _logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", pluginDir);
-            }
-        }
-
-        _logger.LogInformation("Loaded {Count} plugin(s)", _plugins.Count);
+        _catalog.LoadPlugins();
     }
 
     /// <inheritdoc />
     public IReadOnlyList<Plugin> GetAllPlugins()
     {
-        return _plugins;
-    }
-
-    private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
-    {
-        var result = _descriptorValidator.Validate(plugin);
-        if (!result.IsValid)
-        {
-            _logger.LogWarning(
-                "Invalid plugin in {Directory}: {Errors}",
-                pluginDirectory,
-                string.Join("; ", result.Errors));
-            return false;
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    ///   Scans the plugin folder for <c>logo.png</c> and returns its path, or null when the
-    ///   folder has no logo.
-    /// </summary>
-    private static string? LoadPluginLogo(string pluginDirectory)
-    {
-        var logoPath = Path.Combine(pluginDirectory, "logo.png");
-
-        return File.Exists(logoPath) ? logoPath : null;
-    }
-
-    private string? FindLoadedPluginDirectory(string pluginId, string currentPluginDirectory)
-    {
-        return _plugins
-            .Where(plugin => plugin.Id == pluginId && plugin.PluginDirectory != currentPluginDirectory)
-            .Select(plugin => plugin.PluginDirectory)
-            .FirstOrDefault();
+        return _catalog.GetAllPlugins();
     }
 }

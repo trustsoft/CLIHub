@@ -20,7 +20,7 @@ using CLIHub.ViewModels;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly IPluginManager _pluginManager;
+    private readonly IPluginCatalog _pluginCatalog;
     private readonly IProjectService _projectService;
     private readonly IAgentCommandService _agentCommandService;
     private readonly IAgentDetectionService _agentDetectionService;
@@ -35,7 +35,7 @@ public partial class MainWindow : Window
     /// <summary>
     ///   Creates the window and performs the initial project and agent load.
     /// </summary>
-    /// <param name="pluginManager"> Plugin manager for the agent list. </param>
+    /// <param name="pluginCatalog"> Plugin catalog for the agent list. </param>
     /// <param name="projectService"> Project service for the project list. </param>
     /// <param name="agentCommandService"> Service executing agent commands. </param>
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
@@ -44,7 +44,7 @@ public partial class MainWindow : Window
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="logger"> Logger for unexpected legacy window action failures. </param>
     public MainWindow(
-        IPluginManager pluginManager,
+        IPluginCatalog pluginCatalog,
         IProjectService projectService,
         IAgentCommandService agentCommandService,
         IAgentDetectionService agentDetectionService,
@@ -55,7 +55,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        _pluginManager = pluginManager;
+        _pluginCatalog = pluginCatalog;
         _projectService = projectService;
         _agentCommandService = agentCommandService;
         _agentDetectionService = agentDetectionService;
@@ -149,7 +149,7 @@ public partial class MainWindow : Window
         var filterUnavailable = FilterUnavailableCheckBox.IsChecked == true && currentProject != null;
         var items = new List<AgentItem>();
 
-        foreach (var plugin in _pluginManager.GetAllPlugins())
+        foreach (var plugin in _pluginCatalog.GetAllPlugins())
         {
             var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
             var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);

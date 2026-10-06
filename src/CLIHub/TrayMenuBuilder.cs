@@ -18,7 +18,7 @@ using CLIHub.Views;
 public sealed class TrayMenuBuilder
 {
     private readonly IProjectService _projects;
-    private readonly IPluginManager _pluginManager;
+    private readonly IPluginCatalog _pluginCatalog;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
     private readonly IUpdateService _updates;
     private readonly LaunchWindow _launchWindow;
@@ -35,7 +35,7 @@ public sealed class TrayMenuBuilder
     ///   Creates a tray menu builder.
     /// </summary>
     /// <param name="projects"> Project service used by the project menu. </param>
-    /// <param name="pluginManager"> Plugin manager used by the agent menu. </param>
+    /// <param name="pluginCatalog"> Plugin catalog used by the agent menu. </param>
     /// <param name="agentCommandWorkflow"> Workflow invoked by the agent menu actions. </param>
     /// <param name="updates"> Update service driving the update menu item. </param>
     /// <param name="launchWindow"> The launch window shown by menu actions. </param>
@@ -44,7 +44,7 @@ public sealed class TrayMenuBuilder
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit action. </param>
     public TrayMenuBuilder(
         IProjectService projects,
-        IPluginManager pluginManager,
+        IPluginCatalog pluginCatalog,
         IAgentCommandWorkflow agentCommandWorkflow,
         IUpdateService updates,
         LaunchWindow launchWindow,
@@ -53,7 +53,7 @@ public sealed class TrayMenuBuilder
         IApplicationLifetime applicationLifetime)
     {
         _projects = projects ?? throw new ArgumentNullException(nameof(projects));
-        _pluginManager = pluginManager ?? throw new ArgumentNullException(nameof(pluginManager));
+        _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
         _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
         _updates = updates ?? throw new ArgumentNullException(nameof(updates));
         _launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
@@ -161,7 +161,7 @@ public sealed class TrayMenuBuilder
             return agentsMenu;
         }
 
-        var launchable = _pluginManager.GetAllPlugins()
+        var launchable = _pluginCatalog.GetAllPlugins()
             .Where(p => p.Commands?.Launch != null)
             .ToList();
 

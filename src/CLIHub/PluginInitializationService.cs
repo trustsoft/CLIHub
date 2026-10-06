@@ -8,23 +8,23 @@ using CLIHub.Core.Plugins;
 public sealed class PluginInitializationService : IPluginInitializationService
 {
     private readonly IPluginSeeder _pluginSeeder;
-    private readonly IPluginManager _pluginManager;
+    private readonly IPluginCatalog _pluginCatalog;
 
     /// <summary>
     ///   Creates the startup service with the plugin seeder and manager.
     /// </summary>
     /// <param name="pluginSeeder"> Seeds built-in plugin descriptors and logos. </param>
-    /// <param name="pluginManager"> Loads the plugin catalog. </param>
-    public PluginInitializationService(IPluginSeeder pluginSeeder, IPluginManager pluginManager)
+    /// <param name="pluginCatalog"> Loads the plugin catalog. </param>
+    public PluginInitializationService(IPluginSeeder pluginSeeder, IPluginCatalog pluginCatalog)
     {
         _pluginSeeder = pluginSeeder ?? throw new ArgumentNullException(nameof(pluginSeeder));
-        _pluginManager = pluginManager ?? throw new ArgumentNullException(nameof(pluginManager));
+        _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
     }
 
     /// <inheritdoc />
     public void Initialize()
     {
         _pluginSeeder.SeedIfEmpty();
-        _pluginManager.LoadPlugins();
+        _pluginCatalog.LoadPlugins();
     }
 }

@@ -23,8 +23,8 @@ public class LaunchWindowViewModelDialogTests
         projectService.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
         projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
 
-        var pluginManager = new Mock<IPluginManager>();
-        pluginManager.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
+        var pluginCatalog = new Mock<IPluginCatalog>();
+        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
 
         var preferences = new Mock<IPreferencesStore>();
         preferences.Setup(x => x.Load()).Returns(new AppPreferences());
@@ -37,7 +37,7 @@ public class LaunchWindowViewModelDialogTests
         lifetime.Setup(x => x.Shutdown());
         var viewModel = new LaunchWindowViewModel(
             projectService.Object,
-            pluginManager.Object,
+            pluginCatalog.Object,
             new Mock<IAgentCommandWorkflow>().Object,
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,

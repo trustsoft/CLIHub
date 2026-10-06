@@ -69,7 +69,10 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IPluginDescriptorReader, PluginDescriptorReader>();
         services.AddSingleton<IPluginDescriptorValidator, PluginDescriptorValidator>();
-        services.AddSingleton<IPluginManager, PluginManager>();
+        services.AddSingleton<PluginCatalog>();
+        services.AddSingleton<IPluginCatalog>(sp => sp.GetRequiredService<PluginCatalog>());
+        services.AddSingleton<PluginManager>();
+        services.AddSingleton<IPluginManager>(sp => sp.GetRequiredService<PluginManager>());
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
         return services;
     }
