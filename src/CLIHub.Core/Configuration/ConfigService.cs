@@ -17,6 +17,7 @@ public class ConfigService : IConfigService
     private static readonly TimeSpan DebounceDelay = TimeSpan.FromMilliseconds(250);
 
     private readonly ILogger<ConfigService> _logger;
+    private readonly IConfigMigrationRunner _migrationRunner;
     private readonly object _gate = new();
     private readonly object _writeLock = new();
     private readonly string _configFilePath;
@@ -32,9 +33,14 @@ public class ConfigService : IConfigService
     /// </summary>
     /// <param name="logger"> The logger. </param>
     /// <param name="configFilePath"> Overrides the config file location; defaults to <c>%APPDATA%\CLIHub\config.json</c>. </param>
-    public ConfigService(ILogger<ConfigService> logger, string? configFilePath = null)
+    /// <param name="migrationRunner"> Optional schema migration runner. </param>
+    public ConfigService(
+        ILogger<ConfigService> logger,
+        string? configFilePath = null,
+        IConfigMigrationRunner? migrationRunner = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _migrationRunner = migrationRunner ?? new ConfigMigrationRunner();
 
         if (string.IsNullOrWhiteSpace(configFilePath))
         {
@@ -80,7 +86,12 @@ public class ConfigService : IConfigService
                 return ConfigurationSnapshot.From(_cachedConfig);
             }
 
-            _cachedConfig = document?.ToAppConfig() ?? new AppConfig();
+            var snapshot = ConfigurationSnapshot.From(document?.ToAppConfig() ?? new AppConfig());
+            var migrated = !_migrationRunner.HasMigrations &&
+                schemaVersion == AppConfigDocument.LegacySchemaVersion
+                ? new ConfigurationMigrationResult(snapshot, schemaVersion)
+                : _migrationRunner.Migrate(schemaVersion, snapshot, AppConfigDocument.CurrentSchemaVersion);
+            _cachedConfig = migrated.Snapshot.ToAppConfig();
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
             return ConfigurationSnapshot.From(_cachedConfig);
         }
