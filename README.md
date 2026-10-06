@@ -85,7 +85,7 @@ Only `launch` is required. Built-in descriptors for the six supported agents are
 CI builds and tests every pull request and push to `master`. To cut a release:
 
 1. Add sections for the new version to both [`RELEASE-NOTES.md`](RELEASE-NOTES.md) and [`CHANGELOG.md`](CHANGELOG.md) (the release fails without a `RELEASE-NOTES.md` section).
-2. Push the version tag: `git tag v0.7.0 && git push origin v0.7.0`.
+2. Push the version tag for the release version, for example: `git tag v0.9.0 && git push origin v0.9.0`.
 3. The pipeline tests, packages (framework-dependent win-x64 via `vpk`), and publishes the release to [GitHub Releases](https://github.com/trustsoft/clihub/releases); installed apps pick it up through the built-in updater.
 
 Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#packaging-cicd). Step-by-step runbook: [`docs/releasing.md`](docs/releasing.md).
@@ -95,7 +95,8 @@ Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#pac
 ```
 src/CLIHub.Core/       # business logic (net10.0, no WPF)
 src/CLIHub/            # WPF app (net10.0-windows)
-tests/CLIHub.Tests/    # xUnit tests
+tests/CLIHub.Core.Tests/ # Core-only xUnit tests
+tests/CLIHub.Tests/      # WPF/application xUnit tests
 ```
 
 ## Documentation

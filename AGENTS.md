@@ -25,7 +25,8 @@ Application source lives under `src/` and tests under `tests/`; the solution is 
 |---------|------|---------|
 | `CLIHub.Core` | `src/CLIHub.Core` | Platform-independent core logic: models, services, interfaces, plugin/agent handling, config, logging, hotkey parsing. No WPF. |
 | `CLIHub` | `src/CLIHub` | WPF application: startup/DI, system tray, global hotkey, windows, converters. |
-| `CLIHub.Tests` | `tests/CLIHub.Tests` | xUnit tests for `CLIHub.Core`; references Core only. |
+| `CLIHub.Core.Tests` | `tests/CLIHub.Core.Tests` | Core-only xUnit tests; references `CLIHub.Core` only. |
+| `CLIHub.Tests` | `tests/CLIHub.Tests` | WPF/application xUnit tests; references `CLIHub` and `CLIHub.Core`. |
 
 ## Technology Stack
 

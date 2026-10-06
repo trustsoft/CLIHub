@@ -17,7 +17,7 @@ and date:
 **`RELEASE-NOTES.md`** (user-facing — what the updater and the GitHub release will show):
 
 ```markdown
-## 0.7.0 — 2026-10-10
+## 0.9.0 — YYYY-MM-DD
 
 ### New
 - ...
@@ -34,17 +34,17 @@ only `New`, `Improved`, and `Fixed`; entries are plain text without Markdown emp
 list item. **The release fails if there is no section for the tagged version** — this is deliberate,
 so a release can never ship without its notes.
 
-**`CHANGELOG.md`** (technical, for developers): `## [0.7.0] — 2026-10-10` with `Added` / `Changed` /
+**`CHANGELOG.md`** (technical, for developers): `## [0.9.0] — YYYY-MM-DD` with `Added` / `Changed` /
 `Fixed` / `Removed` groups, `**BREAKING**` markers, and spec references where useful.
 
-Commit the notes to `master` (for example `docs: release notes for 0.7.0`) and wait for CI to go
+Commit the notes to `master` (for example `docs: release notes for 0.9.0`) and wait for CI to go
 green.
 
 ## 2. Tag and push
 
 ```powershell
-git tag v0.7.0
-git push origin v0.7.0
+git tag v0.9.0
+git push origin v0.9.0
 ```
 
 The tag without the leading `v` is the release version — it overrides the development default in
@@ -90,7 +90,7 @@ already installed it stays on it (Velopack has no downgrade path).
 
 ## Not wired yet
 
-- **Prerelease channels** — a tag like `v0.7.0-beta.1` would pass the version check but publish as a
+- **Prerelease channels** — a tag like `v0.9.0-beta.1` would pass the version check but publish as a
   stable release; do not use prerelease tags until a beta channel change exists (stable-only
   decision, 2026-10-03).
 - **Code signing** — packages are unsigned, so SmartScreen may warn on first install.

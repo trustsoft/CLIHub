@@ -2,7 +2,7 @@
 
 ## Solution Structure
 
-CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) under `src/`, plus `CLIHub.Tests` under `tests/`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
+CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) under `src/`, plus `CLIHub.Core.Tests` (Core-only) and `CLIHub.Tests` (WPF/application) under `tests/`. The full directory tree, folder inventory, and build output live in [repo-structure.md](repo-structure.md). Project responsibilities and dependency rules follow.
 
 ## Project Responsibilities
 
@@ -22,11 +22,11 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 - `Composition/` — Core dependency injection registration grouped by subsystem
 
 **Services:**
-- `ConfigService` — JSON configuration load/save with atomic writes
+- `ConfigurationRepository` — JSON configuration load/save with atomic writes
 - `PreferencesStore` — preferences-only access over the shared configuration document
 - `ProjectStateStore` — project-state-only access over the shared configuration document
 - `ProjectService` — project tracking (current, recent, favorites, logo resolution)
-- `PluginManager` — plugin discovery/validation from `plugins\<id>\plugin.json`
+- `PluginCatalog` — plugin discovery/validation from `plugins\<id>\plugin.json`; `PluginManager` remains a compatibility adapter
 - `PluginSeeder` — first-run seeding of built-in descriptors + logos
 - `AgentCommandService` — execute named commands (launch/resume/version/update/init)
 - `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
@@ -41,7 +41,7 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 
 `AppConfigDocument` is the persistence representation of the existing flat `config.json` shape. `ProjectState` owns `Projects` and `CurrentProjectId`. `ProjectStateStore` and `PreferencesStore` expose narrower access boundaries over the same single configuration document, so separating responsibility does not split the physical file or atomic write path.
 
-**Interfaces:** `IConfigService` (shared persistence boundary), `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginManager`, `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
+**Interfaces:** `IConfigurationRepository` (shared persistence boundary), `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginCatalog`, `IPluginManager` (compatibility adapter), `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
@@ -56,6 +56,8 @@ CLIHub is a three-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) 
 **Contains:** app entry/DI wiring (`Program` with the Velopack bootstrap, `App.xaml(.cs)`, `ServiceRegistration`), `TrayIconController` (H.NotifyIcon.Wpf), `ISettingsLauncher`/`SettingsLauncher` (owns the single Settings window instance), `PromptState` (keeps the popup visible while a prompt is open), `LaunchWindow` + `LaunchWindowViewModel` (the chromeless popup shell: no OS chrome, always on top, hides when it loses focus unless pinned, Escape hides it, centred on the pointer's monitor on every show; shown from the tray, the hotkey, a second-instance activation and startup; the pane Actions menus are data-driven — `MenuAction` entries (label, glyph, command, availability, checked state) defined in the view model and rendered by shared styles), `MainWindow` (retained from the pre-redesign scaffold; kept for reference, no longer registered or constructed), `AgentItem`, `GlobalHotkeyService`, `PathToImageConverter`, `PathDisplayConverter`, `Themes/` (`LaunchTheme.xaml` palette — the single place for colors; `Sizing.xaml` metrics and tokens such as the icon font family; `Controls.xaml` shared keyed styles — button templates (`IconChipButton`, `QuietChipButton` and their derivatives), drawn-window chrome (`WindowHeader`, `WindowTitle`, `WindowCloseButton`), common typography (`SectionLabel`, `BrandText`, `VersionChip*`) and the `DarkToolTip` base style; `DarkScrollBar.xaml` shared dark-control style; `SettingsStyles.xaml`, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles that merge `Controls.xaml`, which brings the palette and sizing tokens transitively (StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries). `App.xaml` hosts the implicit dark ToolTip style — tooltips, like scrollbars, live outside the window visual tree, so only an application-level implicit style reaches them — and the shared converter instances (`PathToImage`, `PathDisplay`, `BoolToVisibility`), `Interop/User32` (source-generated `user32.dll` P/Invoke), `Interop/DwmApi` (window corner rounding), `Interop/WindowPositioner` (pointer-monitor placement), and the Settings window (`SettingsWindow` + `SettingsViewModel`, MVVM, dark drawn chrome like the What's New window: drawn header, segmented runtime/path selectors, chip-styled hotkey capture field, themed footer; owned by the launch window so it stays visible above it, its height following the launch window's) with `IPreferenceApplier`/`PreferenceApplier`. The What's New window (`WhatsNewWindow` + `WhatsNewViewModel`, MVVM) shows the embedded release notes newest-first and is reached from the tray or shown once after an upgrade (`IReleaseNotesLauncher`/`ReleaseNotesLauncher`, single instance, owned by the launch window like Settings); when an update is available its header offers the same download-and-restart action as the tray menu, sharing the update state. It draws its own dark chrome — no OS title bar, a header that drags the window, and a close button — but stays an ordinary resizable window rather than a popup: not always on top, no hide-on-focus-loss. Startup wires the configured runtime, refreshes the start-with-Windows registration, creates the tray icon, shows the launch window when the preference asks for it, registers the global hotkey, shows the What's New window once when the running version differs from the recorded one (recording a version that has no notes — and a first run — without showing anything), and (when enabled) runs a background update check that raises a tray notification when an update is available. Window logic lives in `ViewModels/` (MVVM).
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
+
+The WPF composition root registers `PluginInitializationService`, `TrayMenuBuilder`, `LaunchWindowViewModel`, `LaunchWindow`, `TrayIconController`, settings and release-notes launchers, startup coordinators, and the global hotkey services. `MainWindow` remains a legacy reference window and is not registered or constructed.
 
 **Target:** `net10.0-windows`.
 
@@ -110,28 +112,39 @@ The failure behavior above describes the current implementation, not a recommend
 
 1. Unregisters the global hotkey and removes its window-message hook.
 2. Disposes the tray icon.
-3. Disposes the service provider. This disposes singleton persistence services, including `ConfigService` (which flushes pending configuration writes) and the logo cache service (which saves dirty cache state).
+3. Disposes the service provider. This disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes) and the logo cache service (which saves dirty cache state).
 4. Disposes `SingleInstanceGuard`, stopping its pipe server and releasing the mutex.
 5. Flushes and closes Serilog, then calls the WPF base implementation.
 
-The order is implemented in `src/CLIHub/App.xaml.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigService.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
+The order is implemented in `src/CLIHub/App.xaml.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 
 The current shutdown sequence is not wrapped in a per-resource recovery boundary or `finally` block. An exception from a disposal step can therefore prevent later cleanup steps from running.
 
+### CLIHub.Core.Tests
+
+**Purpose:** Core-only unit and composition tests (xUnit).
+
+**Contains:** Core service, model, formatting, logging, hotkey, release-notes, infrastructure, plugin, and configuration tests.
+
+**Dependencies:** `CLIHub.Core`, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection, Moq, and coverlet.
+
+**Target:** `net10.0`; no WPF reference.
+
 ### CLIHub.Tests
 
-**Purpose:** unit tests (xUnit) for Core behavior.
+**Purpose:** WPF/application-specific tests (xUnit).
 
-**Contains:** `ProjectServiceTests`, `PluginManagerTests`, `PluginSeederTests`, `AgentCommandServiceTests`, `AgentDetectionServiceTests`, `AgentListComposerTests`, `AgentVersionServiceTests`, `ProcessLauncherTests`, `UpdateServiceTests`, `ReleaseNotesServiceTests`, `LoggingSetupTests`, `MiddleEllipsisFormatterTests`, `PathLeftTrimFormatterTests`, `PathDisplayStyleTests`, `HotkeyParserTests`, `SingleInstanceGuardTests`, `StartupServiceTests`, `ServiceCollectionExtensionsTests`, plus `FakeConfigService`/`FakeProcessLauncher`/`FakeStartupRegistry`/`FakeTimeProvider`.
+**Contains:** application composition, startup orchestration, workflows, ViewModels, and WPF-dependent tests.
 
-**Dependencies:** CLIHub.Core, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection (for the composition test), coverlet.
+**Dependencies:** `CLIHub` and `CLIHub.Core`, xUnit, Microsoft.NET.Test.Sdk, Microsoft.Extensions.DependencyInjection, Moq, and coverlet.
 
-**Target:** `net10.0-windows`. UI/tray/terminal behavior is verified manually.
+**Target:** `net10.0-windows` with WPF enabled.
 
 ## Dependency Flow
 
 ```
-CLIHub.Tests ──> CLIHub.Core <── CLIHub
+CLIHub.Core.Tests ──> CLIHub.Core <── CLIHub
+CLIHub.Tests ────────> CLIHub ──> CLIHub.Core
                                    │
                                    ├─> System Tray (H.NotifyIcon.Wpf)
                                    ├─> Windows Terminal (wt.exe)
@@ -140,12 +153,13 @@ CLIHub.Tests ──> CLIHub.Core <── CLIHub
 
 **Rules:**
 - `CLIHub.Core` has NO dependency on `CLIHub` (UI)
-- `CLIHub.Tests` references `CLIHub.Core` only (not the UI)
+- `CLIHub.Core.Tests` references `CLIHub.Core` only and does not enable WPF
+- `CLIHub.Tests` references both `CLIHub` and `CLIHub.Core` for application/UI coverage
 - Business logic lives in `CLIHub.Core` for testability
 - `CLIHub` is a thin presentation layer over Core services
 - Core subsystem dependencies use interfaces or explicit state boundaries; infrastructure does not depend on application facades
 - Project state is mutated by the project subsystem; unrelated services do not mutate `Projects` or `CurrentProjectId`
-- UI components use `IPreferencesStore` when they need preferences and do not depend on the full `IConfigService` document.
+- UI components use `IPreferencesStore` when they need preferences and do not depend on the full `IConfigurationRepository` document.
 - The existing flat `config.json` format and one atomic persistence path remain stable during the boundary refactor
 - Interactive process launching and captured command output are separate process contracts; `IProcessLauncher` remains the compatibility aggregate
 - Each production Core service exposes one public constructor for dependency injection; test-only seams use explicit internal factories or adapters
