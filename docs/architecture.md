@@ -113,6 +113,10 @@ CLIHub.Tests ────────> CLIHub ──> CLIHub.Core
 
 `app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `logo-cache`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `launch-window-theme`, `settings-theme`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`, `code-style`. Each spec defines observable behavior; see the corresponding spec for requirements.
 
+## Decision Records
+
+Architectural decisions and the trade-offs behind them are recorded as ADRs: [adr/README.md](adr/README.md).
+
 ## Technology Stack
 
 ### Core Technologies

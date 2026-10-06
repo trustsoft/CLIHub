@@ -47,6 +47,7 @@
 - `releasing.md` — step-by-step release runbook (notes, tag, verification, rollback)
 - `repo-structure.md` — this file
 - `changelog-and-release-notes.md` — the rationale and decision log behind the changelog & release notes (implemented by the `release-notes` change)
+- `adr/` — architecture decision records (`NNNN-short-title.md`, one decision each); format and index in `adr/README.md`
 
 The two release-note documents live at the repository root rather than under `docs/` so they are the first
 thing a contributor sees and so the build can embed the user-facing one by path:
