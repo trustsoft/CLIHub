@@ -418,19 +418,13 @@ Workflow отвечает за проверку проекта, вызов comma
 
 Зависимость: `extract-plugin-descriptor-validator`.
 
-### 23. `add-plugin-origin-metadata`
-
-Добавить внутреннее происхождение plugin: `Seeded`, `User`, `Custom`.
-
-Зависимость: `make-plugin-loading-deterministic`.
-
-### 24. `introduce-plugin-catalog-boundary`
+### 23. `introduce-plugin-catalog-boundary`
 
 Разделить `IPluginCatalog` и agent behavior services. `IPluginManager` можно временно оставить compatibility adapter.
 
-Зависимости: changes 20–23.
+Зависимости: changes 20–22.
 
-### 25. `add-plugin-catalog-reload`
+### 24. `add-plugin-catalog-reload`
 
 Добавить ручной reload каталога и `PluginsChanged`. File watcher в этот change не входит.
 
@@ -438,35 +432,41 @@ Workflow отвечает за проверку проекта, вызов comma
 
 ## Этап 4. Documentation and legacy cleanup
 
-### 26. `synchronize-repository-documentation`
+### 25. `synchronize-repository-documentation`
 
 Исправить версии, test dependencies, список активных окон и фактическую структуру solution.
 
 Зависимость: желательно после `split-core-and-ui-test-projects`.
 
-### 27. `isolate-legacy-main-window`
+### 26. `isolate-legacy-main-window`
 
 Переместить `MainWindow` в `src/CLIHub/Legacy/` либо удалить после проверки истории и references.
 
 Зависимости: нет.
 
-### 28. `split-architecture-documentation`
+### 27. `split-architecture-documentation`
 
 Разделить архитектурную документацию на документы по startup, configuration, plugins, process execution и UI boundaries.
 
 Зависимости: после соответствующих implementation changes.
 
-### 29. `add-architecture-decision-records`
+### 28. `add-architecture-decision-records`
 
 Добавить ADR для Core/UI boundaries, single config document, startup orchestration, plugin precedence и UI dialog boundaries.
 
 Зависимости: после соответствующих changes.
 
-### 30. `add-architecture-ci-checks`
+### 29. `add-architecture-ci-checks`
 
 Добавить CI-проверки ссылок проектов, Core/WPF boundaries, test project structure, legacy references и запуска всех test projects.
 
 Зависимости: после `split-core-and-ui-test-projects` и `isolate-legacy-main-window`.
+
+### 30. `add-plugin-origin-metadata`
+
+Добавить внутреннее происхождение plugin: `Seeded`, `User`, `Custom` после появления реального catalog/reload consumer.
+
+Зависимость: `add-plugin-catalog-reload`.
 
 # Рекомендуемая последовательность
 
@@ -493,14 +493,14 @@ Workflow отвечает за проверку проекта, вызов comma
 20. extract-plugin-descriptor-reader
 21. extract-plugin-descriptor-validator
 22. make-plugin-loading-deterministic
-23. add-plugin-origin-metadata
-24. introduce-plugin-catalog-boundary
-25. add-plugin-catalog-reload
-26. synchronize-repository-documentation
-27. isolate-legacy-main-window
-28. split-architecture-documentation
-29. add-architecture-decision-records
-30. add-architecture-ci-checks
+23. introduce-plugin-catalog-boundary
+24. add-plugin-catalog-reload
+25. synchronize-repository-documentation
+26. isolate-legacy-main-window
+27. split-architecture-documentation
+28. add-architecture-decision-records
+29. add-architecture-ci-checks
+30. add-plugin-origin-metadata
 ```
 
 # Приоритеты
@@ -577,6 +577,7 @@ extract-plugin-initialization
 | 20  | `extract-plugin-descriptor-reader`               | Completed | Added `IPluginDescriptorReader` and descriptor read results, moved `plugin.json` lookup/read/deserialization out of `PluginManager`, preserved validation and loading behavior, passed Release build and 401 tests (365 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-extract-plugin-descriptor-reader`. |
 | 21  | `extract-plugin-descriptor-validator`            | Completed | Added `IPluginDescriptorValidator` and structured validation results, preserved ID/name/launch rules and warning behavior, passed Release build and 406 tests (370 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-extract-plugin-descriptor-validator`. |
 | 22  | `make-plugin-loading-deterministic`              | Completed | Added deterministic plugin directory ordering, stable duplicate-ID selection, and winner/skipped-directory diagnostics, passed Release build and 408 tests (372 Core, 36 UI), and synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-make-plugin-loading-deterministic`. |
+| 23  | `introduce-plugin-catalog-boundary`              | Completed | Added `IPluginCatalog`/`PluginCatalog`, migrated startup and UI consumers, preserved `IPluginManager` as a shared-instance compatibility adapter, passed Release build and 409 tests (373 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-introduce-plugin-catalog-boundary`. |
 
 
-Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 22 из 30. Активного change сейчас нет. Следующий change: `add-plugin-origin-metadata`.
+Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 23 из 30. Активного change сейчас нет. Следующий change: `add-plugin-catalog-reload`.
