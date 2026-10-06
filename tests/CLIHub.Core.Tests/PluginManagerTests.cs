@@ -1,5 +1,6 @@
 namespace CLIHub.Tests.Services;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Infrastructure.Persistence;
@@ -106,6 +107,37 @@ public class PluginManagerTests : IDisposable
     }
 
     [Fact]
+    public void LoadPlugins_DirectoriesAreLoadedInDeterministicOrder()
+    {
+        WritePlugin("zeta", ValidJson.Replace("opencode", "zeta", StringComparison.Ordinal));
+        WritePlugin("Alpha", ValidJson.Replace("opencode", "alpha", StringComparison.Ordinal));
+        var manager = CreateManager();
+
+        manager.LoadPlugins();
+
+        Assert.Equal(["alpha", "zeta"], manager.GetAllPlugins().Select(plugin => plugin.Id));
+    }
+
+    [Fact]
+    public void LoadPlugins_DuplicateId_UsesDeterministicWinnerAndLogsBothDirectories()
+    {
+        WritePlugin("second", ValidJson);
+        WritePlugin("first", ValidJson);
+        var logger = new RecordingLogger<PluginManager>();
+        var manager = new PluginManager(logger, CreateCache(), _root);
+
+        manager.LoadPlugins();
+
+        var plugin = Assert.Single(manager.GetAllPlugins());
+        Assert.Equal(Path.Combine(_root, "first"), plugin.PluginDirectory);
+        Assert.Contains(
+            logger.Messages,
+            message => message.Contains("Duplicate plugin ID opencode", StringComparison.Ordinal)
+                && message.Contains(Path.Combine(_root, "second"), StringComparison.Ordinal)
+                && message.Contains(Path.Combine(_root, "first"), StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void LoadPlugins_IsIdempotent()
     {
         WritePlugin("opencode", ValidJson);
@@ -135,5 +167,33 @@ public class PluginManagerTests : IDisposable
 
         Assert.Equal(cachedLogo, second.GetAllPlugins().Single().LogoPath);
     }
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add(formatter(state, exception));
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static NullScope Instance { get; } = new();
+
+            public void Dispose()
+            {
+            }
+        }
+    }
 }
-
+

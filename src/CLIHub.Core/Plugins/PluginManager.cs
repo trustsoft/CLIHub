@@ -53,7 +53,10 @@ public class PluginManager : IPluginManager
             return;
         }
 
-        var pluginDirectories = Directory.GetDirectories(pluginsPath);
+        var pluginDirectories = Directory.GetDirectories(pluginsPath)
+            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(path => path, StringComparer.Ordinal)
+            .ToArray();
         _logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
 
         foreach (var pluginDir in pluginDirectories)
@@ -72,9 +75,14 @@ public class PluginManager : IPluginManager
                 if (plugin != null && ValidatePlugin(plugin, pluginDir))
                 {
                     // Check for duplicate ID
-                    if (IsDuplicateId(plugin.Id, pluginDir))
+                    var loadedDirectory = FindLoadedPluginDirectory(plugin.Id, pluginDir);
+                    if (loadedDirectory is not null)
                     {
-                        _logger.LogWarning("Duplicate plugin ID {PluginId} in {Directory}; skipped", plugin.Id, pluginDir);
+                        _logger.LogWarning(
+                            "Duplicate plugin ID {PluginId} in {Directory}; skipped; loaded from {LoadedDirectory}",
+                            plugin.Id,
+                            pluginDir,
+                            loadedDirectory);
                         continue;
                     }
 
@@ -130,8 +138,11 @@ public class PluginManager : IPluginManager
         return File.Exists(logoPath) ? logoPath : null;
     }
 
-    private bool IsDuplicateId(string pluginId, string currentPluginDirectory)
+    private string? FindLoadedPluginDirectory(string pluginId, string currentPluginDirectory)
     {
-        return _plugins.Any(p => p.Id == pluginId && p.PluginDirectory != currentPluginDirectory);
+        return _plugins
+            .Where(plugin => plugin.Id == pluginId && plugin.PluginDirectory != currentPluginDirectory)
+            .Select(plugin => plugin.PluginDirectory)
+            .FirstOrDefault();
     }
 }
