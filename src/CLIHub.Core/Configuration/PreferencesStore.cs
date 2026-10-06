@@ -3,31 +3,29 @@ namespace CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Adapts the shared configuration document to the preferences boundary.
+///   Adapts the configuration repository to the preferences boundary.
 /// </summary>
 public sealed class PreferencesStore : IPreferencesStore
 {
-    private readonly IConfigService _configService;
+    private readonly IConfigurationRepository _repository;
 
     /// <summary>
-    ///   Creates the store over the shared configuration service.
+    ///   Creates the store over the configuration repository.
     /// </summary>
-    /// <param name="configService"> The shared configuration service. </param>
-    public PreferencesStore(IConfigService configService)
+    /// <param name="repository"> The configuration repository. </param>
+    public PreferencesStore(IConfigurationRepository repository)
     {
-        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     /// <inheritdoc />
-    public AppPreferences Load() => _configService.Load().Preferences;
+    public AppPreferences Load() => _repository.Read().Preferences;
 
     /// <inheritdoc />
     public void Update(Action<AppPreferences> update)
     {
         ArgumentNullException.ThrowIfNull(update);
 
-        var snapshot = _configService.Load();
-        update(snapshot.Preferences);
-        _configService.Save(snapshot);
+        _repository.Update(snapshot => update(snapshot.Preferences));
     }
 }

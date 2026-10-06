@@ -4,33 +4,34 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Adapts the shared configuration document to the project state boundary.
+///   Adapts the configuration repository to the project state boundary.
 /// </summary>
 public sealed class ProjectStateStore : IProjectStateStore
 {
-    private readonly IConfigService _configService;
+    private readonly IConfigurationRepository _repository;
 
     /// <summary>
-    ///   Creates the store over the shared configuration service.
+    ///   Creates the store over the configuration repository.
     /// </summary>
-    /// <param name="configService"> The shared configuration service. </param>
-    public ProjectStateStore(IConfigService configService)
+    /// <param name="repository"> The configuration repository. </param>
+    public ProjectStateStore(IConfigurationRepository repository)
     {
-        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     /// <inheritdoc />
-    public ProjectState Load() => ProjectState.From(_configService.Load());
+    public ProjectState Load() => ProjectState.From(_repository.Read());
 
     /// <inheritdoc />
     public void Update(Action<ProjectState> update)
     {
         ArgumentNullException.ThrowIfNull(update);
 
-        var snapshot = _configService.Load();
-        var state = ProjectState.From(snapshot);
-        update(state);
-        state.ApplyTo(snapshot);
-        _configService.Save(snapshot);
+        _repository.Update(snapshot =>
+        {
+            var state = ProjectState.From(snapshot);
+            update(state);
+            state.ApplyTo(snapshot);
+        });
     }
 }

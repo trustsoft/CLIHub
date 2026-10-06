@@ -57,7 +57,7 @@ public class ConfigMigrationRunnerTests
     }
 
     [Fact]
-    public void ConfigService_MigrationFailure_LeavesSourceDocumentUnchanged()
+    public void ConfigurationRepository_MigrationFailure_LeavesSourceDocumentUnchanged()
     {
         var path = Path.Combine(Path.GetTempPath(), $"clihub-migration-{Guid.NewGuid():N}.json");
         const string original = """
@@ -73,12 +73,12 @@ public class ConfigMigrationRunnerTests
         try
         {
             var runner = new ConfigMigrationRunner([new ThrowingMigration(0, 1)]);
-            using var service = new ConfigService(
-                NullLogger<ConfigService>.Instance,
+            using var repository = new ConfigurationRepository(
+                NullLogger<ConfigurationRepository>.Instance,
                 path,
                 runner);
 
-            Assert.Null(service.Load().CurrentProjectId);
+            Assert.Null(repository.Read().CurrentProjectId);
             Assert.Equal(original, File.ReadAllText(path));
         }
         finally

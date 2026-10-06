@@ -21,7 +21,7 @@ public class ServiceCollectionExtensionsTests
 
         using var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetRequiredService<IConfigService>());
+        Assert.NotNull(provider.GetRequiredService<IConfigurationRepository>());
         Assert.NotNull(provider.GetRequiredService<IPreferencesStore>());
         Assert.NotNull(provider.GetRequiredService<ILogoCacheService>());
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
@@ -36,17 +36,18 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void ConfigService_IsSingleton()
+    public void ConfigurationRepository_IsSingleton()
     {
         var services = new ServiceCollection();
         services.AddClIHubCoreServices();
 
         using var provider = services.BuildServiceProvider();
 
-        var first = provider.GetRequiredService<IConfigService>();
-        var second = provider.GetRequiredService<IConfigService>();
+        var first = provider.GetRequiredService<IConfigurationRepository>();
+        var second = provider.GetRequiredService<IConfigurationRepository>();
 
         Assert.Same(first, second);
+        Assert.True(provider.GetRequiredService<IConfigMigrationRunner>().HasMigrations);
     }
 
     [Fact]
@@ -75,4 +76,3 @@ public class ServiceCollectionExtensionsTests
         Assert.Equal("custom-logo.png", projects.DefaultLogoPath);
     }
 }
-

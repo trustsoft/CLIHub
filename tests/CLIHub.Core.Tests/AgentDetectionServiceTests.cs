@@ -7,7 +7,7 @@ using CLIHub.Core.Configuration;
 public class AgentDetectionServiceTests : IDisposable
 {
     private readonly string _projectDir;
-    private readonly FakeConfigService _config = new();
+    private readonly FakeConfigurationRepository _config = new();
     private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
     private readonly AgentDetectionService _service;
 

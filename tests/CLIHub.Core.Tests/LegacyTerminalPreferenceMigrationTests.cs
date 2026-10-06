@@ -62,7 +62,7 @@ public class LegacyTerminalPreferenceMigrationTests
     }
 
     [Fact]
-    public void ConfigService_LegacyDocument_UsesRegisteredTerminalMigration()
+    public void ConfigurationRepository_LegacyDocument_UsesRegisteredTerminalMigration()
     {
         var path = Path.Combine(Path.GetTempPath(), $"clihub-legacy-runtime-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, """
@@ -76,9 +76,16 @@ public class LegacyTerminalPreferenceMigrationTests
         try
         {
             var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration()]);
-            using var service = new ConfigService(NullLogger<ConfigService>.Instance, path, runner);
+            using var repository = new ConfigurationRepository(
+                NullLogger<ConfigurationRepository>.Instance,
+                path,
+                runner);
 
-            Assert.Equal("cmd", service.Load().Preferences.DefaultRuntime);
+            Assert.Equal("cmd", repository.Read().Preferences.DefaultRuntime);
+            repository.Flush();
+            var persisted = File.ReadAllText(path);
+            Assert.Contains("\"schemaVersion\": 1", persisted);
+            Assert.Contains("\"defaultRuntime\": \"cmd\"", persisted);
         }
         finally
         {
@@ -87,7 +94,7 @@ public class LegacyTerminalPreferenceMigrationTests
     }
 
     [Fact]
-    public void ConfigService_CurrentDocument_DoesNotApplyLegacyMigration()
+    public void ConfigurationRepository_CurrentDocument_DoesNotApplyLegacyMigration()
     {
         var path = Path.Combine(Path.GetTempPath(), $"clihub-current-runtime-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, """
@@ -102,9 +109,12 @@ public class LegacyTerminalPreferenceMigrationTests
         try
         {
             var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration()]);
-            using var service = new ConfigService(NullLogger<ConfigService>.Instance, path, runner);
+            using var repository = new ConfigurationRepository(
+                NullLogger<ConfigurationRepository>.Instance,
+                path,
+                runner);
 
-            Assert.Equal("wt", service.Load().Preferences.DefaultRuntime);
+            Assert.Equal("wt", repository.Read().Preferences.DefaultRuntime);
         }
         finally
         {

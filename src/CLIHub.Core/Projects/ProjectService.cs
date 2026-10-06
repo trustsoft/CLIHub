@@ -7,7 +7,7 @@ using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Tracks project directories backed by <see cref="IConfigService"/>.
+///   Tracks project directories backed by the configuration repository.
 /// </summary>
 public class ProjectService : IProjectService
 {

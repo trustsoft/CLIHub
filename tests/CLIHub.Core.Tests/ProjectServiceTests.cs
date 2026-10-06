@@ -33,7 +33,7 @@ public class ProjectServiceTests : IDisposable
             Path.Combine(CreateTempDir(), "logos.json"));
 
         return new ProjectService(
-            new ProjectStateStore(new FakeConfigService(config)),
+            new ProjectStateStore(new FakeConfigurationRepository(config)),
             cache,
             NullLogger<ProjectService>.Instance)
         {
@@ -200,7 +200,7 @@ public class ProjectServiceTests : IDisposable
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
         var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(CreateTempDir(), "logos.json"));
         var service = new ProjectService(
-            new ProjectStateStore(new FakeConfigService()),
+            new ProjectStateStore(new FakeConfigurationRepository()),
             cache,
             NullLogger<ProjectService>.Instance);
         var project = service.AddProject(folder);
@@ -236,7 +236,7 @@ public class ProjectServiceTests : IDisposable
         var cachePath = Path.Combine(CreateTempDir(), "logos.json");
         string cachedLogo;
 
-        var config = new FakeConfigService();
+        var config = new FakeConfigurationRepository();
         var firstCache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath);
         var first = new ProjectService(
             new ProjectStateStore(config),
@@ -257,4 +257,3 @@ public class ProjectServiceTests : IDisposable
         Assert.Equal(cachedLogo, logoAfterRestart);
     }
 }
-

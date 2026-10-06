@@ -8,21 +8,22 @@ using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Loads and saves the application configuration to config.json. Saves are serialized on the
-///   calling thread and written to disk by a single debounced background worker, so callers are
-///   never blocked by disk I/O; <see cref="Flush"/> drains pending writes synchronously.
+///   Owns configuration snapshots, migrations, and persistence to config.json.
 /// </summary>
-public class ConfigService : IConfigService
+public sealed class ConfigurationRepository : IConfigurationRepository
 {
     private static readonly TimeSpan DebounceDelay = TimeSpan.FromMilliseconds(250);
 
-    private readonly ILogger<ConfigService> _logger;
+    private readonly ILogger<ConfigurationRepository> _logger;
     private readonly IConfigMigrationRunner _migrationRunner;
-    private readonly object _gate = new();
+    private readonly object _stateGate = new();
+    private readonly object _writerGate = new();
     private readonly object _writeLock = new();
     private readonly string _configFilePath;
     private AppConfig? _cachedConfig;
-    private string? _pendingJson;
+    private bool _loaded;
+    private PendingWrite? _pendingWrite;
+    private long _latestWriteGeneration;
     private Task _workerTask = Task.CompletedTask;
     private bool _workerRunning;
 
@@ -34,8 +35,8 @@ public class ConfigService : IConfigService
     /// <param name="logger"> The logger. </param>
     /// <param name="configFilePath"> Overrides the config file location; defaults to <c>%APPDATA%\CLIHub\config.json</c>. </param>
     /// <param name="migrationRunner"> Optional schema migration runner. </param>
-    public ConfigService(
-        ILogger<ConfigService> logger,
+    public ConfigurationRepository(
+        ILogger<ConfigurationRepository> logger,
         string? configFilePath = null,
         IConfigMigrationRunner? migrationRunner = null)
     {
@@ -54,19 +55,48 @@ public class ConfigService : IConfigService
     }
 
     /// <inheritdoc />
-    public ConfigurationSnapshot Load()
+    public ConfigurationSnapshot Read()
     {
-        if (_cachedConfig != null)
+        lock (_stateGate)
         {
-            return ConfigurationSnapshot.From(_cachedConfig);
+            EnsureLoaded();
+            return ConfigurationSnapshot.From(_cachedConfig!);
+        }
+    }
+
+    /// <inheritdoc />
+    public void Update(Action<ConfigurationSnapshot> update)
+    {
+        ArgumentNullException.ThrowIfNull(update);
+
+        lock (_stateGate)
+        {
+            EnsureLoaded();
+
+            var snapshot = ConfigurationSnapshot.From(_cachedConfig!);
+            update(snapshot);
+
+            var updatedConfig = snapshot.ToAppConfig();
+            var json = Serialize(updatedConfig);
+            _cachedConfig = updatedConfig;
+            QueueWrite(json);
+        }
+    }
+
+    private void EnsureLoaded()
+    {
+        if (_loaded)
+        {
+            return;
         }
 
         if (!File.Exists(_configFilePath))
         {
             _logger.LogInformation("No config found at {Path}; creating defaults", _configFilePath);
             _cachedConfig = new AppConfig();
-            Save(ConfigurationSnapshot.From(_cachedConfig));
-            return ConfigurationSnapshot.From(_cachedConfig);
+            _loaded = true;
+            QueueWrite(Serialize(_cachedConfig));
+            return;
         }
 
         try
@@ -83,7 +113,8 @@ public class ConfigService : IConfigService
                     schemaVersion,
                     _configFilePath);
                 _cachedConfig = new AppConfig();
-                return ConfigurationSnapshot.From(_cachedConfig);
+                _loaded = true;
+                return;
             }
 
             var snapshot = ConfigurationSnapshot.From(document?.ToAppConfig() ?? new AppConfig());
@@ -92,62 +123,70 @@ public class ConfigService : IConfigService
                 ? new ConfigurationMigrationResult(snapshot, schemaVersion)
                 : _migrationRunner.Migrate(schemaVersion, snapshot, AppConfigDocument.CurrentSchemaVersion);
             _cachedConfig = migrated.Snapshot.ToAppConfig();
+            _loaded = true;
+            if (migrated.SchemaVersion != schemaVersion)
+            {
+                QueueWrite(Serialize(_cachedConfig));
+            }
+
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
-            return ConfigurationSnapshot.From(_cachedConfig);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to read config at {Path}; using defaults", _configFilePath);
+            _logger.LogError(ex, "Failed to load config at {Path}; using defaults", _configFilePath);
             _cachedConfig = new AppConfig();
-            return ConfigurationSnapshot.From(_cachedConfig);
+            _loaded = true;
         }
     }
 
-    /// <inheritdoc />
-    public void Save(ConfigurationSnapshot snapshot)
+    private static string Serialize(AppConfig config) =>
+        JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options);
+
+    private void QueueWrite(string json)
     {
-        ArgumentNullException.ThrowIfNull(snapshot);
-
-        var config = snapshot.ToAppConfig();
-
-        // Serialize here: the config graph is shared and mutated elsewhere, so background
-        // serialization could race with the caller. Serializing this small document on the
-        // calling thread is far cheaper than the disk write it replaces.
-        _cachedConfig = config;
-        var json = JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options);
-
-        lock (_gate)
+        lock (_writerGate)
         {
-            _pendingJson = json;
+            _pendingWrite = new PendingWrite(json, ++_latestWriteGeneration);
+            EnsureWorkerLocked();
         }
-
-        EnsureWorker();
     }
 
     /// <inheritdoc />
     public void Flush()
     {
-        Task worker;
-        lock (_gate)
+        while (true)
         {
-            worker = _workerTask;
-        }
+            Task worker;
+            PendingWrite? pendingWrite = null;
+            lock (_writerGate)
+            {
+                worker = _workerTask;
+                if (worker.IsCompleted && _pendingWrite is not null)
+                {
+                    pendingWrite = _pendingWrite;
+                    _pendingWrite = null;
+                }
+            }
 
-        if (!worker.IsCompleted)
-        {
-            worker.Wait();
-        }
+            if (!worker.IsCompleted)
+            {
+                worker.Wait();
+                continue;
+            }
 
-        string? json;
-        lock (_gate)
-        {
-            json = _pendingJson;
-            _pendingJson = null;
-        }
+            if (pendingWrite is not null)
+            {
+                WriteConfig(pendingWrite);
+                continue;
+            }
 
-        if (json is not null)
-        {
-            WriteConfig(json);
+            lock (_writerGate)
+            {
+                if (!_workerRunning && _pendingWrite is null && _workerTask.IsCompleted)
+                {
+                    return;
+                }
+            }
         }
     }
 
@@ -164,18 +203,15 @@ public class ConfigService : IConfigService
         }
     }
 
-    private void EnsureWorker()
+    private void EnsureWorkerLocked()
     {
-        lock (_gate)
+        if (_workerRunning)
         {
-            if (_workerRunning)
-            {
-                return;
-            }
-
-            _workerRunning = true;
-            _workerTask = Task.Run(ProcessPendingAsync);
+            return;
         }
+
+        _workerRunning = true;
+        _workerTask = Task.Run(ProcessPendingAsync);
     }
 
     private async Task ProcessPendingAsync()
@@ -186,20 +222,20 @@ public class ConfigService : IConfigService
             {
                 await Task.Delay(DebounceDelay).ConfigureAwait(false);
 
-                string? json;
-                lock (_gate)
+                PendingWrite? pendingWrite;
+                lock (_writerGate)
                 {
-                    json = _pendingJson;
-                    _pendingJson = null;
+                    pendingWrite = _pendingWrite;
+                    _pendingWrite = null;
                 }
 
-                if (json is null)
+                if (pendingWrite is null)
                 {
                     BeforeWorkerExitForTests?.Invoke();
                     return;
                 }
 
-                WriteConfig(json);
+                WriteConfig(pendingWrite);
             }
         }
         catch (Exception ex)
@@ -208,12 +244,12 @@ public class ConfigService : IConfigService
         }
         finally
         {
-            lock (_gate)
+            lock (_writerGate)
             {
                 _workerRunning = false;
 
                 // A save that slipped in while this worker was exiting: start a new one.
-                if (_pendingJson is not null)
+                if (_pendingWrite is not null)
                 {
                     _workerRunning = true;
                     _workerTask = Task.Run(ProcessPendingAsync);
@@ -222,7 +258,7 @@ public class ConfigService : IConfigService
         }
     }
 
-    private void WriteConfig(string json)
+    private void WriteConfig(PendingWrite pendingWrite)
     {
         try
         {
@@ -236,7 +272,15 @@ public class ConfigService : IConfigService
 
             lock (_writeLock)
             {
-                File.WriteAllText(tempPath, json);
+                lock (_writerGate)
+                {
+                    if (pendingWrite.Generation < _latestWriteGeneration)
+                    {
+                        return;
+                    }
+                }
+
+                File.WriteAllText(tempPath, pendingWrite.Json);
                 File.Move(tempPath, _configFilePath, overwrite: true);
             }
 
@@ -247,4 +291,6 @@ public class ConfigService : IConfigService
             _logger.LogWarning(ex, "Could not write the configuration to {Path}", _configFilePath);
         }
     }
+
+    private sealed record PendingWrite(string Json, long Generation);
 }

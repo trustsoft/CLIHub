@@ -13,8 +13,8 @@ public class ProjectStateStoreTests
         {
             Preferences = new AppPreferences { Hotkey = "Ctrl+Alt+P" }
         };
-        var configService = new FakeConfigService(config);
-        var store = new ProjectStateStore(configService);
+        var repository = new FakeConfigurationRepository(config);
+        var store = new ProjectStateStore(repository);
         store.Update(state =>
         {
             state.CurrentProjectId = "project-1";
@@ -26,18 +26,18 @@ public class ProjectStateStoreTests
             });
         });
 
-        var saved = configService.Load();
+        var saved = repository.Read();
         Assert.Equal("project-1", saved.CurrentProjectId);
         Assert.Single(saved.Projects);
         Assert.Equal("Ctrl+Alt+P", saved.Preferences.Hotkey);
-        Assert.Equal(1, configService.SaveCount);
+        Assert.Equal(1, repository.UpdateCount);
     }
 
     [Fact]
     public void Update_CallbackFailure_DoesNotPersistPartialProjectState()
     {
-        var configService = new FakeConfigService();
-        var store = new ProjectStateStore(configService);
+        var repository = new FakeConfigurationRepository();
+        var store = new ProjectStateStore(repository);
 
         Assert.Throws<InvalidOperationException>(() => store.Update(state =>
         {
@@ -46,6 +46,6 @@ public class ProjectStateStoreTests
         }));
 
         Assert.Null(store.Load().CurrentProjectId);
-        Assert.Equal(0, configService.SaveCount);
+        Assert.Equal(0, repository.UpdateCount);
     }
 }
