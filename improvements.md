@@ -440,7 +440,7 @@ Workflow отвечает за проверку проекта, вызов comma
 
 ### 26. `isolate-legacy-main-window`
 
-Переместить `MainWindow` в `src/CLIHub/Legacy/` либо удалить после проверки истории и references.
+Отложено на отдалённое будущее. Переместить `MainWindow` в `src/CLIHub/Legacy/` либо удалить после отдельной проверки истории и references, когда legacy cleanup снова станет приоритетом.
 
 Зависимости: нет.
 
@@ -521,7 +521,7 @@ Workflow отвечает за проверку проекта, вызов comma
 - tray menu separation;
 - plugin reader и validator;
 - deterministic duplicate policy;
-- изоляция `MainWindow`.
+- изоляция `MainWindow` (отдалённое будущее).
 
 ## Низкий приоритет
 
@@ -582,4 +582,4 @@ extract-plugin-initialization
 | 25  | `synchronize-repository-documentation`          | Completed | Synchronized README, agent guidance, architecture, repository structure, and release runbook with the `0.9.0` solution state, current plugin/configuration boundaries, test projects, and DI registrations; passed Release build and 411 tests (375 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-synchronize-repository-documentation`. |
 
 
-Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 25 из 30. Активного change сейчас нет. Следующий change: `isolate-legacy-main-window`.
+Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 25 из 30. Активного change сейчас нет. `isolate-legacy-main-window` отложен на отдалённое будущее и не является следующим change.
