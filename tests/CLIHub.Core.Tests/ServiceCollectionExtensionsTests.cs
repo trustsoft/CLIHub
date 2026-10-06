@@ -27,6 +27,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
         Assert.NotNull(provider.GetRequiredService<IPluginManager>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
+        Assert.NotNull(provider.GetRequiredService<IPluginDescriptorValidator>());
         Assert.NotNull(provider.GetRequiredService<IAgentCommandService>());
         Assert.NotNull(provider.GetRequiredService<IAgentDetectionService>());
         Assert.NotNull(provider.GetRequiredService<IAgentVersionService>());

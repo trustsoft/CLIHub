@@ -14,6 +14,7 @@ public class PluginManager : IPluginManager
     private readonly ILogger<PluginManager> _logger;
     private readonly ILogoCacheService _logoCache;
     private readonly IPluginDescriptorReader _descriptorReader;
+    private readonly IPluginDescriptorValidator _descriptorValidator;
     private readonly string _pluginsPath;
     private readonly List<Plugin> _plugins = new();
 
@@ -24,16 +25,19 @@ public class PluginManager : IPluginManager
     /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
     /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
+    /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
     public PluginManager(
         ILogger<PluginManager> logger,
         ILogoCacheService logoCache,
         string? pluginsPath = null,
-        IPluginDescriptorReader? descriptorReader = null)
+        IPluginDescriptorReader? descriptorReader = null,
+        IPluginDescriptorValidator? descriptorValidator = null)
     {
         _logger = logger;
         _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
         _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
         _descriptorReader = descriptorReader ?? new PluginDescriptorReader();
+        _descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
     }
 
     /// <inheritdoc />
@@ -102,26 +106,13 @@ public class PluginManager : IPluginManager
 
     private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
     {
-        var errors = new List<string>();
-
-        if (string.IsNullOrWhiteSpace(plugin.Id))
+        var result = _descriptorValidator.Validate(plugin);
+        if (!result.IsValid)
         {
-            errors.Add("Plugin ID is required");
-        }
-
-        if (string.IsNullOrWhiteSpace(plugin.Name))
-        {
-            errors.Add("Plugin Name is required");
-        }
-
-        if (plugin.Commands == null || plugin.Commands.Launch == null)
-        {
-            errors.Add("Plugin must define a launch command");
-        }
-
-        if (errors.Count > 0)
-        {
-            _logger.LogWarning("Invalid plugin in {Directory}: {Errors}", pluginDirectory, string.Join("; ", errors));
+            _logger.LogWarning(
+                "Invalid plugin in {Directory}: {Errors}",
+                pluginDirectory,
+                string.Join("; ", result.Errors));
             return false;
         }
 
