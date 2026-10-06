@@ -1,10 +1,7 @@
 namespace CLIHub.Core.Plugins;
 
-using System.Text.Json;
-
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
@@ -16,6 +13,7 @@ public class PluginManager : IPluginManager
 {
     private readonly ILogger<PluginManager> _logger;
     private readonly ILogoCacheService _logoCache;
+    private readonly IPluginDescriptorReader _descriptorReader;
     private readonly string _pluginsPath;
     private readonly List<Plugin> _plugins = new();
 
@@ -25,11 +23,17 @@ public class PluginManager : IPluginManager
     /// <param name="logger"> The logger. </param>
     /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
-    public PluginManager(ILogger<PluginManager> logger, ILogoCacheService logoCache, string? pluginsPath = null)
+    /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
+    public PluginManager(
+        ILogger<PluginManager> logger,
+        ILogoCacheService logoCache,
+        string? pluginsPath = null,
+        IPluginDescriptorReader? descriptorReader = null)
     {
         _logger = logger;
         _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
         _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
+        _descriptorReader = descriptorReader ?? new PluginDescriptorReader();
     }
 
     /// <inheritdoc />
@@ -50,17 +54,16 @@ public class PluginManager : IPluginManager
 
         foreach (var pluginDir in pluginDirectories)
         {
-            var pluginJsonPath = Path.Combine(pluginDir, "plugin.json");
-            
-            if (!File.Exists(pluginJsonPath))
-            {
-                continue;
-            }
-
             try
             {
-                var json = File.ReadAllText(pluginJsonPath);
-                var plugin = JsonSerializer.Deserialize<Plugin>(json, CoreJson.Options);
+                var descriptor = _descriptorReader.Read(pluginDir);
+                if (descriptor.Error is not null)
+                {
+                    _logger.LogWarning(descriptor.Error, "Failed to load plugin.json from {Directory}", pluginDir);
+                    continue;
+                }
+
+                var plugin = descriptor.Plugin;
 
                 if (plugin != null && ValidatePlugin(plugin, pluginDir))
                 {

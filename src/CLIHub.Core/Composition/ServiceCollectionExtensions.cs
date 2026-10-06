@@ -67,6 +67,7 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddPluginServices(this IServiceCollection services)
     {
+        services.AddSingleton<IPluginDescriptorReader, PluginDescriptorReader>();
         services.AddSingleton<IPluginManager, PluginManager>();
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
         return services;
