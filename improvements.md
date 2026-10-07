@@ -429,11 +429,11 @@ Change считается завершённым только когда:
 | 12 | `define-plugin-reload-consumer` | Completed | `AgentPaneController` подписан на `PluginsChanged`, invalidates detection/version/logo caches и refreshes selection-safe agent list; file watcher не добавлен. Change archived at `openspec/changes/archive/2026-10-08-define-plugin-reload-consumer`. |
 | 13 | `retire-compatibility-adapters` | Completed | Удалены `PluginManager`/`IPluginManager` и aggregate `IProcessLauncher`; production использует canonical catalog и split process contracts. Change archived at `openspec/changes/archive/2026-10-08-retire-compatibility-adapters`. |
 | 14 | `remove-or-isolate-legacy-main-window` | Skipped | Отложен по решению владельца проекта; legacy `MainWindow` остаётся без изменений. |
-| 15 | `add-architecture-enforcement` | Pending | CI и dependency rules. |
+| 15 | `add-architecture-enforcement` | Completed | Добавлены architecture tests для Core/WPF boundaries, composition roots, project direction, CI test coverage и retired APIs. Change archived at `openspec/changes/archive/2026-10-08-add-architecture-enforcement`. |
 
 ## Следующая работа
 
-Следующий implementation change: `add-architecture-enforcement`.
+Следующий implementation change: определить следующий pending пункт плана.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -458,3 +458,5 @@ Change считается завершённым только когда:
 `define-plugin-reload-consumer` завершён: `AgentPaneController` стал consumer-ом `PluginsChanged`, перезагружает agent rows с сохранением context, очищает stale caches и безопасно снимает исчезнувший selection.
 
 `retire-compatibility-adapters` завершён: удалены неиспользуемые `PluginManager`/`IPluginManager` и aggregate `IProcessLauncher`; canonical interfaces теперь являются единственными production boundaries.
+
+`add-architecture-enforcement` завершён: architecture tests проверяют Core/WPF isolation, composition-root wiring, project direction, CI test projects и отсутствие retired compatibility APIs.
