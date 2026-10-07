@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using CLIHub;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
-using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 
@@ -45,10 +43,8 @@ public sealed class SettingsViewModel : ObservableObject
         new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends", "Middle ellipsis")
     };
 
-    private readonly IPreferencesStore _preferencesStore;
+    private readonly SettingsApplicationService _settingsApplication;
     private readonly IUpdateService _updateService;
-    private readonly IStartupService _startupService;
-    private readonly IPreferenceApplier _applier;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<SettingsViewModel> _logger;
 
@@ -67,24 +63,18 @@ public sealed class SettingsViewModel : ObservableObject
     /// <summary>
     ///   Creates the view model with its services.
     /// </summary>
-    /// <param name="preferencesStore"> Store used to load and save preferences. </param>
+    /// <param name="settingsApplication"> Typed Settings draft and application service. </param>
     /// <param name="updateService"> Update service used for the version and update checks. </param>
-    /// <param name="startupService"> Startup service used by the start-with-Windows toggle. </param>
-    /// <param name="applier"> Preference applier invoked on save. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
-        IPreferencesStore preferencesStore,
+        SettingsApplicationService settingsApplication,
         IUpdateService updateService,
-        IStartupService startupService,
-        IPreferenceApplier applier,
         IApplicationOperationLifetime operationLifetime,
         ILogger<SettingsViewModel> logger)
     {
-        _preferencesStore = preferencesStore;
+        _settingsApplication = settingsApplication;
         _updateService = updateService;
-        _startupService = startupService;
-        _applier = applier;
         _operationLifetime = operationLifetime;
         _logger = logger;
 
@@ -264,21 +254,19 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     public void Load()
     {
-        var prefs = _preferencesStore.Load();
+        var draft = _settingsApplication.Load();
 
         _selectedRuntime = RuntimeOptions
-            .FirstOrDefault(o => o.Kind == RuntimeKinds.Parse(prefs.DefaultRuntime)) ?? RuntimeOptions[2];
+            .FirstOrDefault(o => o.Kind == draft.Runtime) ?? RuntimeOptions[2];
         _selectedPathDisplay = PathDisplayOptions
-            .FirstOrDefault(o => o.Style == PathDisplayStyles.Parse(prefs.PathDisplayStyle)) ?? PathDisplayOptions[0];
-        _hotkeyText = string.IsNullOrWhiteSpace(prefs.Hotkey)
-            ? HotkeyParser.Format(HotkeyParser.Default)
-            : prefs.Hotkey;
+            .FirstOrDefault(o => o.Style == draft.PathDisplayStyle) ?? PathDisplayOptions[0];
+        _hotkeyText = HotkeyParser.Format(draft.Hotkey);
         _hotkeyParts = SplitHotkeyParts(_hotkeyText);
-        _probeTtlText = prefs.AgentProbeTtlMinutes?.ToString() ?? string.Empty;
-        _probeTimeoutText = prefs.AgentProbeTimeoutSeconds?.ToString() ?? string.Empty;
-        _checkForUpdatesOnStartup = prefs.CheckForUpdatesOnStartup;
-        _startWithWindows = _startupService.IsEnabled();
-        _showWindowOnStartup = prefs.ShowWindowOnStartup;
+        _probeTtlText = draft.ProbeTtlMinutes?.ToString() ?? string.Empty;
+        _probeTimeoutText = draft.ProbeTimeoutSeconds?.ToString() ?? string.Empty;
+        _checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
+        _startWithWindows = draft.StartWithWindows;
+        _showWindowOnStartup = draft.ShowWindowOnStartup;
         _updateMessage = string.Empty;
         _validationError = null;
 
@@ -344,81 +332,29 @@ public sealed class SettingsViewModel : ObservableObject
 
     private void Save()
     {
-        if (!Validate(out var hotkeyDefinition, out var ttl, out var timeout))
+        var input = new SettingsInput(
+            SelectedRuntime.Kind,
+            SelectedPathDisplay.Style,
+            HotkeyText,
+            ProbeTtlText,
+            ProbeTimeoutText,
+            StartWithWindows,
+            ShowWindowOnStartup,
+            CheckForUpdatesOnStartup);
+
+        if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {
+            ValidationError = validationError;
             return;
         }
 
-        if (!_applier.ApplyStartWithWindows(StartWithWindows))
+        var result = _settingsApplication.Save(draft!);
+        if (!result.Success)
         {
-            ValidationError = "Could not update the Windows startup registration. Changes were not saved.";
-            StartWithWindows = _startupService.IsEnabled();
+            ValidationError = result.Error;
             return;
         }
-
-        _preferencesStore.Update(prefs =>
-        {
-            prefs.DefaultRuntime = RuntimeKinds.ToToken(SelectedRuntime.Kind);
-            prefs.Hotkey = HotkeyParser.Format(hotkeyDefinition!);
-            prefs.AgentProbeTtlMinutes = ttl;
-            prefs.AgentProbeTimeoutSeconds = timeout;
-            prefs.CheckForUpdatesOnStartup = CheckForUpdatesOnStartup;
-            prefs.StartWithWindows = StartWithWindows;
-            prefs.ShowWindowOnStartup = ShowWindowOnStartup;
-            prefs.PathDisplayStyle = PathDisplayStyles.ToToken(SelectedPathDisplay.Style);
-        });
-
-        _applier.ApplyRuntime(SelectedRuntime.Kind);
-        _applier.ApplyPathDisplayStyle(SelectedPathDisplay.Style);
-        _applier.ApplyHotkey(hotkeyDefinition!);
-        _applier.ApplyStartupUpdateCheck(CheckForUpdatesOnStartup);
 
         RequestClose?.Invoke(this, EventArgs.Empty);
-    }
-
-    private bool Validate(out HotkeyDefinition? hotkeyDefinition, out int? ttl, out int? timeout)
-    {
-        hotkeyDefinition = null;
-        ttl = null;
-        timeout = null;
-        ValidationError = null;
-
-        if (!HotkeyParser.TryParse(HotkeyText, out hotkeyDefinition) || hotkeyDefinition == null)
-        {
-            ValidationError = "Hotkey needs a modifier (Ctrl, Shift, Alt, Win) and a key.";
-            return false;
-        }
-
-        if (!TryParsePositive(ProbeTtlText, out ttl))
-        {
-            ValidationError = "Probe TTL must be a positive number of minutes, or empty for the default.";
-            return false;
-        }
-
-        if (!TryParsePositive(ProbeTimeoutText, out timeout))
-        {
-            ValidationError = "Probe timeout must be a positive number of seconds, or empty for the default.";
-            return false;
-        }
-
-        return true;
-    }
-
-    private static bool TryParsePositive(string? text, out int? value)
-    {
-        value = null;
-
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return true;
-        }
-
-        if (int.TryParse(text.Trim(), out var parsed) && parsed > 0)
-        {
-            value = parsed;
-            return true;
-        }
-
-        return false;
     }
 }

@@ -67,6 +67,7 @@ public static class ServiceRegistration
             () => sp.GetRequiredService<IUpdateDownloadCoordinator>());
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
+        services.AddSingleton<SettingsApplicationService>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());

@@ -30,10 +30,12 @@ public class SettingsOperationLifetimeTests
             .Returns((string _, Func<CancellationToken, Task> operation) => operation(cancellation.Token));
 
         var viewModel = new SettingsViewModel(
-            new Mock<IPreferencesStore>().Object,
+            new SettingsApplicationService(
+                new Mock<IPreferencesStore>().Object,
+                new Mock<IStartupService>().Object,
+                new Mock<IPreferenceApplier>().Object,
+                NullLogger<SettingsApplicationService>.Instance),
             updates.Object,
-            new Mock<IStartupService>().Object,
-            new Mock<IPreferenceApplier>().Object,
             lifetime.Object,
             NullLogger<SettingsViewModel>.Instance);
 
