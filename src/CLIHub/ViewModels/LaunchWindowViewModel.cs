@@ -21,7 +21,7 @@ using CLIHub.Themes;
 ///   selection, the availability filter, the path display style, the pin state, the status
 ///   message, and every window action.
 /// </summary>
-public sealed class LaunchWindowViewModel : ObservableObject
+public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget
 {
     private const string NoProjectMessage = "Select a project before running an agent command.";
     private const string NoAgentMessage = "Select an agent before running an agent command.";

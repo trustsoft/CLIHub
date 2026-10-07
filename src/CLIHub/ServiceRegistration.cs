@@ -58,6 +58,7 @@ public static class ServiceRegistration
             () => sp.GetRequiredService<TrayIconController>().ToggleLaunchWindow(),
             sp.GetRequiredService<ILogger<GlobalHotkeyService>>()));
         services.AddSingleton<IGlobalHotkeyService>(sp => sp.GetRequiredService<GlobalHotkeyService>());
+        services.AddSingleton<IRuntimePreferenceTarget, ProcessRuntimePreferenceTarget>();
         services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
         services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
         services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();

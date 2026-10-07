@@ -3,56 +3,54 @@ namespace CLIHub;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
-using CLIHub.ViewModels;
 
 /// <summary>
 ///   Default <see cref="IPreferenceApplier"/>; forwards changes to the launcher and hotkey service.
 /// </summary>
 public sealed class PreferenceApplier : IPreferenceApplier
 {
-    private readonly IProcessLauncher _processLauncher;
-    private readonly GlobalHotkeyService _hotkey;
+    private readonly IRuntimePreferenceTarget _runtime;
+    private readonly IGlobalHotkeyService _hotkey;
     private readonly IStartupService _startupService;
-    private readonly LaunchWindowViewModel _launchWindow;
+    private readonly IPathDisplayStyleTarget _displayStyle;
     private readonly ILogger<PreferenceApplier> _logger;
 
     /// <summary>
     ///   Creates the applier with the services it forwards preference changes to.
     /// </summary>
-    /// <param name="processLauncher"> Process launcher receiving the runtime change. </param>
-    /// <param name="hotkey"> Hotkey service receiving the hotkey change. </param>
+    /// <param name="runtime"> Runtime target receiving the runtime change. </param>
+    /// <param name="hotkey"> Hotkey target receiving the hotkey change. </param>
     /// <param name="startupService"> Startup service receiving the start-with-Windows change. </param>
-    /// <param name="launchWindow"> Launch window receiving display changes. </param>
+    /// <param name="displayStyle"> Display-style target receiving path changes. </param>
     /// <param name="logger"> Logger. </param>
     public PreferenceApplier(
-        IProcessLauncher processLauncher,
-        GlobalHotkeyService hotkey,
+        IRuntimePreferenceTarget runtime,
+        IGlobalHotkeyService hotkey,
         IStartupService startupService,
-        LaunchWindowViewModel launchWindow,
+        IPathDisplayStyleTarget displayStyle,
         ILogger<PreferenceApplier> logger)
     {
-        _processLauncher = processLauncher;
+        _runtime = runtime;
         _hotkey = hotkey;
         _startupService = startupService;
-        _launchWindow = launchWindow;
+        _displayStyle = displayStyle;
         _logger = logger;
     }
 
     /// <inheritdoc />
     public void ApplyRuntime(RuntimeKind runtime)
     {
-        _processLauncher.SetRuntime(runtime);
+        _runtime.SetRuntime(runtime);
         _logger.LogInformation("Default runtime set to {Runtime}", runtime);
     }
 
     /// <inheritdoc />
     public void ApplyPathDisplayStyle(PathDisplayStyle style)
     {
-        _launchWindow.ApplyPathDisplayStyle(style);
+        _displayStyle.ApplyPathDisplayStyle(style);
         _logger.LogInformation("Path display style set to {Style}", style);
     }
 
