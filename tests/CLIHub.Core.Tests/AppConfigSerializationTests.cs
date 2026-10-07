@@ -92,7 +92,7 @@ public class AppConfigSerializationTests
                 StartWithWindows = true,
                 Hotkey = "Ctrl+Alt+P",
                 TerminalExecutable = "terminal.exe",
-                DefaultRuntime = "ps",
+                DefaultRuntime = RuntimeKind.PowerShell,
                 LogLevel = "Debug",
                 ShowOnlyProjectAgents = true,
                 AgentProbeTtlMinutes = 15,
@@ -129,6 +129,23 @@ public class AppConfigSerializationTests
         Assert.Equal(config.Preferences.PinLaunchWindow, restored.Preferences.PinLaunchWindow);
         Assert.Equal(config.Preferences.PathDisplayStyle, restored.Preferences.PathDisplayStyle);
         Assert.Equal(config.Preferences.LastSeenReleaseNotesVersion, restored.Preferences.LastSeenReleaseNotesVersion);
+    }
+
+    [Fact]
+    public void AppConfigDocument_UnknownRuntimeToken_UsesSafeDefault()
+    {
+        const string json = """
+        {
+          "schemaVersion": 1,
+          "projects": [],
+          "preferences": { "defaultRuntime": "future-runtime" },
+          "currentProjectId": null
+        }
+        """;
+
+        var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!;
+
+        Assert.Equal(RuntimeKind.WindowsTerminal, document.ToAppConfig().Preferences.DefaultRuntime);
     }
 
     [Fact]

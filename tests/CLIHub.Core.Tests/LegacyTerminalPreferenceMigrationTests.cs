@@ -21,7 +21,7 @@ public class LegacyTerminalPreferenceMigrationTests
 
         var migrated = _migration.Migrate(snapshot);
 
-        Assert.Equal(expected, migrated.Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKinds.Parse(expected), migrated.Preferences.DefaultRuntime);
     }
 
     [Theory]
@@ -39,7 +39,7 @@ public class LegacyTerminalPreferenceMigrationTests
 
         var migrated = _migration.Migrate(snapshot);
 
-        Assert.Equal(RuntimeKinds.WindowsTerminalToken, migrated.Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKind.WindowsTerminal, migrated.Preferences.DefaultRuntime);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class LegacyTerminalPreferenceMigrationTests
                 path,
                 runner);
 
-            Assert.Equal("cmd", repository.Read().Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKind.CommandPrompt, repository.Read().Preferences.DefaultRuntime);
             repository.Flush();
             var persisted = File.ReadAllText(path);
             Assert.Contains("\"schemaVersion\": 1", persisted);
@@ -114,7 +114,7 @@ public class LegacyTerminalPreferenceMigrationTests
                 path,
                 runner);
 
-            Assert.Equal("wt", repository.Read().Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKind.WindowsTerminal, repository.Read().Preferences.DefaultRuntime);
         }
         finally
         {

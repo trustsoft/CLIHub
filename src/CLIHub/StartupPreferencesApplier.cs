@@ -30,7 +30,7 @@ public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
-        _processRunner.SetRuntime(RuntimeKinds.Parse(preferences.DefaultRuntime));
+        _processRunner.SetRuntime(preferences.DefaultRuntime);
         _startupService.SetEnabled(preferences.StartWithWindows);
     }
 }

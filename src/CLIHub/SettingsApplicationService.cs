@@ -109,7 +109,7 @@ public sealed class SettingsApplicationService
             : HotkeyParser.Default;
 
         return new SettingsDraft(
-            RuntimeKinds.Parse(preferences.DefaultRuntime),
+            preferences.DefaultRuntime,
             PathDisplayStyles.Parse(preferences.PathDisplayStyle),
             hotkey,
             preferences.AgentProbeTtlMinutes,
@@ -196,7 +196,7 @@ public sealed class SettingsApplicationService
 
             _preferencesStore.Update(preferences =>
             {
-                preferences.DefaultRuntime = RuntimeKinds.ToToken(draft.Runtime);
+                preferences.DefaultRuntime = draft.Runtime;
                 preferences.Hotkey = HotkeyParser.Format(draft.Hotkey);
                 preferences.AgentProbeTtlMinutes = draft.ProbeTtlMinutes;
                 preferences.AgentProbeTimeoutSeconds = draft.ProbeTimeoutSeconds;
@@ -219,7 +219,7 @@ public sealed class SettingsApplicationService
 
     private void Rollback(AppPreferences previous, bool previousStartupState, HotkeyDefinition previousHotkey)
     {
-        TryRollback("runtime", () => _applier.ApplyRuntime(RuntimeKinds.Parse(previous.DefaultRuntime)));
+        TryRollback("runtime", () => _applier.ApplyRuntime(previous.DefaultRuntime));
         TryRollback("path display style", () => _applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
         TryRollback("hotkey", () => _applier.ApplyHotkey(previousHotkey));
         TryRollback("Windows startup", () => _applier.ApplyStartWithWindows(previousStartupState));

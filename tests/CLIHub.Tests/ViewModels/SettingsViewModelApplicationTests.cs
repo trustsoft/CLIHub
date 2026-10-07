@@ -69,7 +69,7 @@ public class SettingsViewModelApplicationTests
         {
             Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
-                DefaultRuntime = RuntimeKinds.WindowsTerminalToken,
+                DefaultRuntime = RuntimeKind.WindowsTerminal,
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                 CheckForUpdatesOnStartup = true,

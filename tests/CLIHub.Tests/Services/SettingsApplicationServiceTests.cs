@@ -124,7 +124,7 @@ public class SettingsApplicationServiceTests
 
     private static AppPreferences PreviousPreferences() => new()
     {
-        DefaultRuntime = RuntimeKinds.WindowsTerminalToken,
+        DefaultRuntime = RuntimeKind.WindowsTerminal,
         PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
         Hotkey = "Ctrl+Shift+A",
         CheckForUpdatesOnStartup = true,

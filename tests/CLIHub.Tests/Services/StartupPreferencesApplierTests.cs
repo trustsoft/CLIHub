@@ -26,7 +26,7 @@ public class StartupPreferencesApplierTests
 
         applier.Apply(new AppPreferences
         {
-            DefaultRuntime = "ps",
+            DefaultRuntime = RuntimeKind.PowerShell,
             StartWithWindows = true
         });
 

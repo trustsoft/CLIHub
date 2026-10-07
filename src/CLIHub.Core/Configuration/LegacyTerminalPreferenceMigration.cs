@@ -22,8 +22,8 @@ public sealed class LegacyTerminalPreferenceMigration : IConfigMigration
         migrated.Preferences.DefaultRuntime = RuntimeKinds.TryParse(
             migrated.Preferences.TerminalExecutable,
             out var runtime)
-            ? RuntimeKinds.ToToken(runtime)
-            : RuntimeKinds.WindowsTerminalToken;
+            ? runtime
+            : RuntimeKind.WindowsTerminal;
 
         return migrated;
     }
