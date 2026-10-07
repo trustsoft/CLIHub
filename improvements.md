@@ -1,587 +1,438 @@
-# Главные архитектурные проблемы
+# CLIHub: архитектурные улучшения и порядок работ
 
-Этот файл является стержнем для последующих архитектурных улучшений и рефакторинга CLIHub. Изменения должны выполняться через OpenSpec, небольшими атомарными change-ами, по одному активному change за раз.
+Этот файл является стержнем последующих архитектурных изменений CLIHub. Он фиксирует текущую оценку, целевое направление, порядок рефакторинга и критерии завершения. Новые изменения должны сверяться с этим документом.
 
-Текущая архитектура уже имеет сильную основу:
+## Правила работы
 
-- `CLIHub.Core` не зависит от WPF;
-- подсистемы Core разделены на `Agents`, `Projects`, `Plugins`, `Configuration`, `Updates` и `Infrastructure`;
-- DI-регистрация сгруппирована по подсистемам;
-- интерактивный запуск процессов и захват вывода разделены контрактами;
-- основные сервисы Core покрыты тестами;
-- конфигурация сохраняется через один атомарный persistence path;
-- OpenSpec используется как источник плана, критериев и истории изменений.
+- Работать по одному активному OpenSpec change.
+- Перед реализацией фиксировать границы, зависимости и критерии готовности в change-артефактах.
+- Сохранять пользовательское поведение, формат `config.json`, один atomic write path и Windows-only модель приложения.
+- Не выполнять массовый rewrite или миграцию на сложную архитектуру без конкретной проблемы, которую это решает.
+- После каждого change запускать `dotnet build CLIHub.sln -c Release`, `dotnet test CLIHub.sln -c Release` и `openspec validate`.
+- После успешной реализации архивировать change и обновлять раздел прогресса этого файла.
+- Не переписывать пользовательские незакоммиченные изменения в документации или UI-артефактах.
 
-Основная дальнейшая работа нужна вокруг application/UI orchestration, владения конфигурационным состоянием, расширяемости plugin system и согласованности документации.
+## Baseline
 
-## 1. Слишком большой startup orchestration
+Состояние на 2026-10-07:
 
-`App.xaml.cs` одновременно отвечает за:
+- `CLIHub.Core` не зависит от WPF и содержит основные модели, сервисы, persistence boundaries и Windows-инфраструктуру.
+- `CLIHub` содержит WPF presentation layer, tray, hotkey, dialogs, launch/settings/release-notes windows и composition root.
+- DI-регистрация сгруппирована по подсистемам.
+- Конфигурация использует `ConfigurationSnapshot`, `IConfigurationRepository`, миграции, debounce и atomic write.
+- Плагинная система разделена на reader, validator и `IPluginCatalog`, поддерживает deterministic loading и reload.
+- Startup-сценарии уже частично вынесены в отдельные coordinators.
+- Core-процессы разделены на interactive launch и captured output contracts.
+- Проверка `dotnet build CLIHub.sln --no-restore -c Release`: 0 предупреждений, 0 ошибок.
+- Проверка `dotnet test CLIHub.sln --no-restore`: 411 успешных тестов, из них 375 Core и 36 application/UI.
 
-- single-instance запуск;
-- подготовку каталогов;
-- настройку логирования;
-- сборку DI;
-- seed и загрузку плагинов;
-- применение preferences;
-- tray icon;
-- second-instance activation;
-- launch window;
-- регистрацию hotkey;
-- release notes;
-- update check;
-- скачивание и применение обновлений;
-- завершение приложения.
+### Уже выполнено и не должно планироваться повторно
 
-Это затрудняет тестирование жизненного цикла приложения и увеличивает риск побочных эффектов при добавлении новых startup-сценариев.
+Следующие направления уже реализованы и находятся в архиве OpenSpec:
 
-Целевое направление:
+- plugin initialization;
+- startup preferences;
+- hotkey startup registration;
+- release-notes startup coordinator;
+- startup update check;
+- update download workflow;
+- UI dialog services;
+- application lifetime boundary;
+- shared agent command workflow;
+- tray menu separation;
+- разделение Core и application/UI test projects;
+- configuration concurrency tests;
+- configuration snapshot и explicit store updates;
+- schema version и config migrations;
+- configuration repository;
+- plugin descriptor reader и validator;
+- deterministic plugin loading;
+- plugin catalog boundary и reload;
+- синхронизация документации, topical architecture docs и ADR.
+
+## Главные текущие проблемы
+
+### 1. Startup orchestration и ownership ресурсов
+
+`App.OnStartup` всё ещё управляет single-instance, каталогами, logging, DI, плагинами, preferences, tray, hotkey, release notes и updates. Это усложняет тестирование порядка запуска и делает `App` главным application service.
+
+Кроме того, `SingleInstanceGuard` создаётся напрямую в `App`, но одновременно зарегистрирован в DI. В результате есть две потенциальные модели владения одним ресурсом, хотя фактически используется только ручной экземпляр.
+
+Направление:
 
 ```text
-App.xaml.cs
-    тонкий WPF entry point
+Program
+  Velopack bootstrap
 
-Application startup coordinators
-    отдельные сценарии запуска и завершения
+App
+  WPF lifecycle adapter
+
+ApplicationBootstrapper
+  startup ordering, failure policy, cancellation, shutdown
+
+Infrastructure services
+  single instance, logging, persistence, tray, hotkey
 ```
 
-## 2. `LaunchWindowViewModel` имеет слишком много обязанностей
+### 2. Неконтролируемые фоновые операции
 
-`LaunchWindowViewModel` управляет:
+Startup update check, update download и часть команд ViewModel запускаются через fire-and-forget. У приложения нет общего cancellation lifecycle и согласованного ожидания фоновых операций при завершении.
 
-- проектами;
-- агентами;
-- фильтрацией;
-- версиями;
-- кешами обнаружения;
-- запуском команд;
-- настройками;
-- отображением путей;
-- действиями меню;
-- update control;
-- WPF dialogs и MessageBox.
+Нужно определить:
 
-Конструктор ViewModel принимает большое количество сервисов, а сам класс содержит как presentation state, так и application workflow.
+- какие операции можно отменить;
+- какие операции должны завершиться перед shutdown;
+- как логируются исключения и отмена;
+- кто владеет `CancellationTokenSource` приложения.
 
-Целевое направление:
+### 3. Слишком большой `LaunchWindowViewModel`
+
+ViewModel содержит состояние окна, проекты, агентов, фильтрацию, версии, кэширование, команды, настройки, действия меню, notifications, dialogs, lifetime и update control. Конструктор принимает большое количество сервисов.
+
+Направление:
 
 ```text
 LaunchWindowViewModel
-    состояние окна, selection, команды
+  observable state, selection, commands, presentation messages
 
-Application workflows
-    запуск агентов, проекты, обновления
+ProjectPaneController
+  project list, selection, favorite/remove/add
 
-UI adapters
-    dialogs, notifications, dispatcher, lifetime
+AgentPaneController
+  available agents, filtering, versions, refresh
+
+AgentCommandWorkflow
+  validation, execution, unified result
+
+WPF adapters
+  dialogs, notifications, dispatcher, window lifetime
 ```
 
-## 3. WPF-зависимости проникли в ViewModel и прикладные сценарии
+Цель не в механическом дроблении класса, а в том, чтобы workflow можно было тестировать без создания WPF-окна.
 
-В ViewModel используются `Application.Current`, `MessageBox` и `OpenFolderDialog`. Это делает ViewModel трудно тестируемой без WPF и смешивает UI integration с application logic.
+### 4. Сильная связь application-кода с конкретными WPF-объектами
 
-Необходимо ввести узкие UI-контракты:
+`PreferenceApplier` напрямую зависит от `GlobalHotkeyService` и `LaunchWindowViewModel`. `TrayMenuBuilder` зависит от `LaunchWindow`, а `GlobalHotkeyService` создаётся вокруг конкретного WPF `Window`.
+
+Уже существующие интерфейсы `IProjectDialogService`, `IUserNotificationService` и `IApplicationLifetime` нужно продолжить в том же направлении. Application-код должен зависеть от портов, а WPF-классы - реализовывать эти порты.
+
+### 5. `CLIHub.Core` объединяет несколько архитектурных ролей
+
+В одном проекте находятся domain models, application services, JSON persistence, filesystem, process execution, Windows Registry, named pipes и Velopack. Отсутствие WPF-зависимости полезно, но `Core` не является чистым domain/application слоем.
+
+Целевое логическое разделение:
 
 ```text
-IProjectDialogService
-IUserNotificationService
-IApplicationLifetime
+Domain
+  models, value objects, parsing, pure rules
+
+Application
+  use cases, workflows, application ports
+
+Infrastructure
+  JSON, filesystem, processes, Windows, Velopack
+
+WPF
+  views, ViewModels, tray, dialogs, composition root
 ```
 
-Реализации этих контрактов остаются в WPF-проекте, а ViewModel зависит только от интерфейсов.
+Сначала границы следует установить namespace и dependency rules. Отдельные проекты `CLIHub.Application` и `CLIHub.Infrastructure` выделять только после стабилизации этих границ.
 
-## 4. `TrayIconController` смешивает tray UI и прикладные действия
+### 6. Слишком широкий update contract
 
-`TrayIconController` одновременно:
+`IUpdateService` одновременно предоставляет current version, check, download, apply/restart, mutable download state и event notifications.
 
-- создаёт `TaskbarIcon`;
-- строит контекстное меню;
-- выбирает проекты;
-- запускает агентов;
-- показывает notifications и MessageBox;
-- управляет settings, release notes и exit;
-- отображает состояние updates.
+Целевое разделение:
 
-Целевое направление:
+- `IAppVersionProvider`;
+- `IUpdateChecker`;
+- `IUpdateDownloader`;
+- `IUpdateInstaller`;
+- отдельный state/notification adapter для UI.
+
+Это позволит тестировать update check отдельно от скачивания и перезапуска приложения.
+
+### 7. Конфигурационная модель требует дальнейшего укрепления
+
+`AppConfig`, `AppConfigDocument`, `ConfigurationSnapshot` и `ProjectState` дублируют части структуры и используют ручное копирование. Это повышает риск забыть новое поле в одном из mappings.
+
+Следующее направление:
+
+- оставить persistence DTO отдельно от runtime state;
+- свести mappings в один явно тестируемый слой;
+- постепенно заменить строковые runtime settings на типизированные значения;
+- сохранить текущий `config.json` и обратную совместимость;
+- не разрешать потребителям изменять общий конфигурационный граф обходным путём.
+
+### 8. Legacy и compatibility code
+
+- `MainWindow` больше не является активным окном, но остаётся рядом с рабочим UI.
+- `PluginManager` является compatibility adapter над `PluginCatalog`.
+- `IProcessLauncher` сохраняется как aggregate interface, хотя новые сервисы уже могут зависеть от узких контрактов.
+
+После проверки references эти элементы нужно либо удалить, либо переместить в явно обозначенный `Legacy`/`Compatibility` слой с зафиксированным сроком удаления.
+
+### 9. Недостаточная защита application/UI orchestration тестами
+
+Core имеет хорошую тестовую базу. Прямых тестов недостаточно для `LaunchWindowViewModel`, `SettingsViewModel`, `PreferenceApplier`, `TrayIconController` и полного startup/shutdown flow.
+
+Нужно добавлять тесты не ради покрытия строк, а для контрактов:
+
+- порядок startup и shutdown;
+- single ownership ресурсов;
+- сохранение, отмена и валидация настроек;
+- отмена фоновых операций;
+- реакция UI на изменение проектов и плагинов;
+- восстановление предыдущего hotkey после ошибки регистрации.
+
+## Целевая архитектурная форма
 
 ```text
-TrayIconController
-    lifecycle TaskbarIcon
-
-TrayMenuBuilder
-    построение меню и его состояний
-
-TrayActionHandler / application workflows
-    выполнение действий
+CLIHub WPF
+  App / Program
+  Views / ViewModels
+  Tray / Hotkey / Dialog adapters
+  Composition root
+          |
+          v
+Application layer
+  Startup and shutdown
+  Project workflows
+  Agent workflows
+  Settings application
+  Update workflows
+  Application ports
+          |
+          v
+Core contracts and rules
+  Models
+  Plugin rules
+  Agent command rules
+  Configuration state
+          ^
+          |
+Infrastructure adapters
+  JSON and filesystem
+  Process execution
+  Windows Registry / pipes / hotkey host
+  Velopack
 ```
 
-## 5. Применение preferences связано с конкретными WPF-объектами
+Основные правила целевой формы:
 
-`PreferenceApplier` знает о `GlobalHotkeyService` и `LaunchWindowViewModel`. Это связывает применение настроек с конкретным окном и затрудняет расширение настроек.
+1. Только composition root знает конкретные реализации всех слоёв.
+2. ViewModel не создаёт application service и не обращается к `Application.Current` напрямую.
+3. Application layer не зависит от WPF types.
+4. Infrastructure не зависит от ViewModel и окон.
+5. UI получает typed results и state notifications, а не управляет persistence и process details.
+6. Каждый singleton имеет одного владельца и явный lifecycle.
 
-Целевое направление:
+## Порядок работ
 
-```text
-IPreferencesApplicationService
-    применение runtime, hotkey, startup и window preferences
+### Этап 1. Lifecycle и startup ownership
 
-Низкоуровневые appliers
-    независимые адаптеры отдельных настроек
-```
+#### 1. `unify-single-instance-ownership`
 
-Нужно сохранять частичный результат операций: например, предыдущий hotkey должен восстанавливаться при неудачной регистрации нового.
+Убрать двойную регистрацию/создание `SingleInstanceGuard` и определить единый lifecycle.
 
-## 6. Конфигурация основана на общем изменяемом графе
+Критерии:
 
-`ConfigService.Load()` возвращает кешированный изменяемый `AppConfig`. Stores работают поверх этого общего объекта. Сейчас это работает, но создаёт скрытые зависимости:
+- создаётся ровно один guard;
+- второй экземпляр по-прежнему активирует первый;
+- guard освобождается на каждом пути shutdown;
+- есть composition test на registration и ownership.
 
-- потребитель может изменить вложенный объект без явного `Save`;
-- preferences и project state используют общий mutable graph;
-- усложняется контроль порядка изменений при появлении фоновых операций;
-- ownership состояния выражен интерфейсами, но не защищён моделью данных.
+#### 2. `extract-application-bootstrapper`
 
-Целевое направление:
+Вынести startup ordering из `App.OnStartup` в `ApplicationBootstrapper` или `StartupCoordinator`.
 
-```text
-ConfigurationSnapshot
-    snapshot состояния
+Критерии:
 
-IConfigurationRepository
-    явные операции чтения, изменения и сохранения
+- `App` содержит только WPF-specific lifecycle glue;
+- порядок действий зафиксирован тестом;
+- failure policy явно разделена на fatal и best-effort операции;
+- текущий пользовательский startup flow не меняется.
 
-ConfigurationWriter
-    debounce, atomic write и flush
-```
+#### 3. `add-application-operation-lifetime`
 
-При этом должен сохраниться один файл `config.json` и один atomic write path.
+Ввести общий cancellation/lifetime boundary для startup checks, update downloads и async command workflows.
 
-## 7. Отсутствует явная версия схемы конфигурации
+Критерии:
 
-Обратная совместимость сейчас основана в основном на default-значениях JSON. Это недостаточно для будущих изменений смысла полей и удаления старых свойств.
+- фоновые операции получают cancellation token;
+- завершение приложения не оставляет неконтролируемые tasks;
+- исключения не теряются в fire-and-forget вызовах;
+- shutdown ожидает только операции, которые действительно требуют ожидания.
 
-Нужно добавить:
+### Этап 2. Application/UI boundaries
 
-```text
-schemaVersion
-IConfigMigration
-ConfigMigrationRunner
-```
+#### 4. `split-launch-window-workflows`
 
-Legacy-переход `terminalExecutable -> defaultRuntime` должен находиться в migration layer, а не в обычной загрузке модели.
+Разделить `LaunchWindowViewModel` на state/presentation часть и отдельные project/agent workflows.
 
-## 8. Plugin loading зависит от неявного порядка каталогов
+Критерии:
 
-`PluginManager` читает каталоги через `Directory.GetDirectories`, а duplicate ID разрешается фактически порядком файловой системы. Это не является устойчивой политикой приоритета.
+- application workflow тестируется без WPF window;
+- ViewModel не владеет process, cache и persistence details;
+- refresh, selection и command results имеют явные контракты;
+- поведение selection identity и async version population сохраняется.
 
-Нужно явно определить:
+#### 5. `extract-settings-draft-and-application`
 
-- детерминированную сортировку;
-- поведение duplicate ID;
-- приоритет seeded и user plugins;
-- provenance plugin.
+Вынести draft, validation и сохранение настроек из `SettingsViewModel` в типизированный settings application service.
 
-Также следует отделить:
+Критерии:
 
-```text
-PluginDescriptorReader
-PluginDescriptorValidator
-PluginCatalog
-Agent command/detection/version services
-```
+- Cancel не изменяет сохранённые настройки;
+- Save атомарно применяет валидный draft;
+- частично применяемые системные настройки имеют rollback/error policy;
+- добавлены прямые тесты ViewModel/application service.
 
-## 9. Реализация процессов всё ещё объединяет несколько механизмов
+#### 6. `decouple-runtime-preference-application`
 
-Контракты уже разделены, но `ProcessLauncher` продолжает объединять:
+Заменить зависимости `PreferenceApplier` на конкретные WPF classes узкими интерфейсами и state notifications.
 
-- interactive launch;
-- captured output;
-- runtime selection;
-- command-line building;
-- timeout и termination;
-- logging.
+Критерии:
 
-Целевое направление:
+- application code не зависит от `LaunchWindowViewModel`;
+- runtime, hotkey, startup и display preferences применяются независимо;
+- ошибка hotkey сохраняет предыдущую комбинацию;
+- прямые unit-тесты покрывают все ветки applier.
 
-```text
-WindowsInteractiveProcessRunner
-WindowsOutputProcessRunner
-WindowsCommandLineBuilder
-RuntimeSelection
-```
+#### 7. `separate-tray-actions-from-tray-host`
 
-Compatibility aggregate interface можно сохранить временно, но новые сервисы должны зависеть от узких контрактов.
+Оставить `TrayIconController` владельцем `TaskbarIcon`, а действия и menu state перенести в application-facing handlers.
 
-## 10. Тестовая структура расходится с документацией
+Критерии:
 
-Документация описывает `CLIHub.Tests` как Core-only, однако фактический test project ссылается также на WPF-проект.
+- tray host не содержит бизнес-правил запуска агента;
+- menu builder получает готовые состояния и commands;
+- tray actions используют те же workflows, что launch window;
+- refresh и disposal проверяются тестами.
 
-Целевая структура:
+### Этап 3. Contracts и infrastructure
 
-```text
-tests/CLIHub.Core.Tests
-    ссылка только на CLIHub.Core
+#### 8. `split-update-service-contracts`
 
-tests/CLIHub.Tests
-    WPF/UI-specific tests
-```
+Разделить check, download, install/restart и current version contracts. Velopack оставить за infrastructure adapter.
 
-Либо WPF-ссылка должна быть удалена, если UI-тесты не планируются. Архитектурное правило и фактическая структура должны совпадать.
+Критерии:
 
-## 11. Legacy `MainWindow` находится рядом с активным UI
+- update check можно тестировать без download/apply;
+- UI не знает деталей Velopack;
+- state changes приходят через отдельный application/UI adapter;
+- повторный download и failure paths сохраняют текущую семантику.
 
-`MainWindow` сохранён как legacy, но его код содержит старый UI workflow и диалоги. Это создаёт риск случайного использования или исправления неактивного пути.
+#### 9. `harden-process-boundaries`
 
-Нужно либо удалить окно после проверки истории, либо переместить его в явно обозначенный `Legacy` каталог.
+Сохранить узкие process contracts и убрать новые зависимости от aggregate `IProcessLauncher`. Проверить cancellation, timeout и termination semantics.
 
-## 12. Документация требует синхронизации
+Критерии:
 
-Нужно привести в соответствие с кодом:
+- interactive и output runners остаются независимыми;
+- cancellation не только прекращает ожидание, но и имеет определённое поведение для процесса;
+- command-line building тестируется отдельно;
+- runtime selection не смешан с UI/application logic.
 
-- development version в `docs/repo-structure.md`;
-- release instructions в `docs/releasing.md`;
-- описание test project dependencies;
-- описание активных и legacy окон;
-- список фактически зарегистрированных сервисов.
+#### 10. `harden-configuration-boundary`
 
-Архитектурную документацию желательно разделить на документы по слоям, оставив `docs/architecture.md` индексом.
+Разделить внутренние state, persistence DTO, mapping и writer implementation без изменения внешнего формата файла.
 
-# План OpenSpec changes
+Критерии:
 
-Каждый пункт ниже является отдельным атомарным change. В каждый момент времени реализуется только один активный change.
+- один владелец mutable configuration state;
+- mapping покрывает все поля;
+- concurrent updates и Flush сохраняют latest valid snapshot;
+- schema migrations и atomic write остаются совместимыми.
 
-Для каждого change используется стандартный цикл:
+#### 11. `introduce-typed-runtime-settings`
 
-```text
-openspec new change "<change-name>"
-создание proposal.md, spec.md, design.md и tasks.md
-openspec validate "<change-name>"
-реализация через отдельный apply-запрос
-dotnet build CLIHub.sln -c Release
-dotnet test CLIHub.sln -c Release
-openspec archive "<change-name>"
-```
+Оставить строки только на JSON boundary и использовать typed values внутри application/infrastructure contracts.
 
-## Этап 1. UI orchestration
+Критерии:
 
-### 1. `document-application-startup-contract`
+- неизвестные значения безопасно переходят в defaults;
+- миграции старых значений остаются обратимо тестируемыми;
+- runtime services не сравнивают строковые tokens вручную.
 
-Документационный change без изменения runtime-кода.
+### Этап 4. Plugin и legacy cleanup
 
-Зафиксировать:
+#### 12. `define-plugin-reload-consumer`
 
-- порядок startup operations;
-- startup failure policy;
-- порядок shutdown operations;
-- будущие coordinator boundaries.
+Определить реального consumer для `PluginsChanged`, обновить agent list и связанные caches после reload. File watcher в этот change не включать.
 
-Зависимости: нет.
+Критерии:
 
-### 2. `extract-plugin-initialization`
+- reload приводит к предсказуемому обновлению UI;
+- исчезнувшие plugins удаляются из selection safely;
+- version/detection caches не возвращают данные для устаревшего descriptor.
 
-Вынести seed и load plugins из `App.xaml.cs` в `PluginInitializationService`.
+#### 13. `retire-compatibility-adapters`
 
-Требования:
+Удалить или изолировать `PluginManager`, aggregate process interface и прочие compatibility boundaries после проверки references.
 
-- порядок `SeedIfEmpty -> LoadPlugins` сохраняется;
-- ошибка seed не блокирует запуск;
-- добавлены unit/composition tests.
+Критерии:
 
-Зависимость: `document-application-startup-contract`.
+- production code использует canonical contracts;
+- legacy API имеет явный owner и removal decision;
+- тесты не поддерживают устаревший путь без необходимости.
 
-### 3. `extract-startup-preferences`
+#### 14. `remove-or-isolate-legacy-main-window`
 
-Вынести применение `DefaultRuntime` и `StartWithWindows` в `StartupPreferencesApplier`.
+После проверки истории и references удалить `MainWindow` либо переместить его в `src/CLIHub/Legacy/`.
 
-Зависимости: нет.
+Критерии:
 
-### 4. `extract-hotkey-startup-registration`
+- активный UI не имеет двусмысленного legacy entry point;
+- документация и solution отражают только поддерживаемый путь;
+- старый workflow не участвует в production composition.
 
-Вынести загрузку, parsing, fallback и регистрацию global hotkey в `HotkeyStartupRegistrar`.
+#### 15. `add-architecture-enforcement`
 
-Зависимости: нет.
+Зафиксировать dependency rules в CI и тестах.
 
-### 5. `extract-release-notes-startup`
+Проверять:
 
-Вынести `ShowReleaseNotesOnce` в `ReleaseNotesStartupCoordinator`.
+- Core не ссылается на WPF;
+- application namespaces не ссылаются на `System.Windows`;
+- composition root является единственным местом concrete wiring;
+- все test projects запускаются в CI;
+- legacy references не появляются снова.
 
-Покрыть сценарии новой версии, отсутствующих notes, уже показанной версии и ошибки сервиса.
+## Definition of Done для каждого этапа
 
-Зависимости: нет.
+Change считается завершённым только когда:
 
-### 6. `extract-update-startup-check`
+1. Поведение описано в OpenSpec и не противоречит этому файлу.
+2. Архитектурная граница отражена в коде, DI и тестах.
+3. Есть тесты для нового контракта и failure paths.
+4. `dotnet build CLIHub.sln -c Release` проходит без предупреждений.
+5. `dotnet test CLIHub.sln -c Release` проходит.
+6. Документация и ADR обновлены, если изменилось архитектурное решение.
+7. Change архивирован, а прогресс ниже обновлён.
 
-Вынести startup update check в `UpdateStartupCoordinator`.
+## Отслеживание прогресса
 
-Покрыть enabled, disabled, update available, up-to-date и failed scenarios.
+| № | Change | Состояние | Комментарий |
+|---:|---|---|---|
+| 1 | `unify-single-instance-ownership` | Completed | Guard зарегистрирован и разрешается как один DI singleton; provider владеет его disposal. Change archived at `openspec/changes/archive/2026-10-07-unify-single-instance-ownership`. |
+| 2 | `extract-application-bootstrapper` | Pending | Вынести orchestration из `App.OnStartup`. |
+| 3 | `add-application-operation-lifetime` | Pending | Cancellation и контролируемый shutdown. |
+| 4 | `split-launch-window-workflows` | Pending | Снизить ответственность и число зависимостей ViewModel. |
+| 5 | `extract-settings-draft-and-application` | Pending | Typed draft, validation и save workflow. |
+| 6 | `decouple-runtime-preference-application` | Pending | Убрать concrete WPF dependencies из applier. |
+| 7 | `separate-tray-actions-from-tray-host` | Pending | Разделить TaskbarIcon host и application actions. |
+| 8 | `split-update-service-contracts` | Pending | Narrow update ports и Velopack adapter. |
+| 9 | `harden-process-boundaries` | Pending | Cancellation, timeout и узкие process contracts. |
+| 10 | `harden-configuration-boundary` | Pending | State, DTO, mapping и writer ownership. |
+| 11 | `introduce-typed-runtime-settings` | Pending | Строки только на persistence boundary. |
+| 12 | `define-plugin-reload-consumer` | Pending | Реакция UI и cache invalidation после reload. |
+| 13 | `retire-compatibility-adapters` | Pending | PluginManager и прочие переходные API. |
+| 14 | `remove-or-isolate-legacy-main-window` | Pending | После проверки references. |
+| 15 | `add-architecture-enforcement` | Pending | CI и dependency rules. |
 
-Зависимость: желательно после `extract-startup-preferences`.
+## Следующая работа
 
-### 7. `extract-update-download-workflow`
+Следующий implementation change: `extract-application-bootstrapper`.
 
-Вынести download, notifications, menu refresh, delay и apply/restart в `UpdateDownloadCoordinator`.
-
-Зависимость: `extract-update-startup-check`.
-
-### 8. `introduce-ui-dialog-services`
-
-Добавить `IProjectDialogService` и `IUserNotificationService`, убрать прямые WPF dialogs из `LaunchWindowViewModel`.
-
-Зависимости: нет.
-
-### 9. `introduce-application-lifetime-service`
-
-Добавить `IApplicationLifetime` и убрать прямые вызовы `Application.Current.Shutdown()` из ViewModel и tray.
-
-Зависимости: нет.
-
-### 10. `extract-agent-launch-workflow`
-
-Объединить запуск агента из launch window и tray через `IAgentLaunchWorkflow`.
-
-Workflow отвечает за проверку проекта, вызов command service и единый результат.
-
-Зависимость: желательно после `introduce-ui-dialog-services`.
-
-### 11. `separate-tray-menu-building`
-
-Разделить TaskbarIcon lifecycle и построение tray menu через `TrayMenuBuilder`.
-
-Зависимость: `extract-agent-launch-workflow`.
-
-### 12. `split-core-and-ui-test-projects`
-
-Разделить Core tests и WPF/UI tests по разным test projects и обновить solution/CI.
-
-Зависимости: после UI boundary changes.
-
-## Этап 2. Configuration
-
-### 13. `add-configuration-concurrency-tests`
-
-Добавить тесты для нескольких Save, Flush во время записи, worker restart, ошибок записи и сохранения последнего JSON.
-
-Зависимости: нет.
-
-### 14. `introduce-configuration-snapshot`
-
-Добавить `ConfigurationSnapshot` и уменьшить использование общего mutable configuration graph.
-
-Зависимость: `add-configuration-concurrency-tests`.
-
-### 15. `make-preferences-and-project-updates-explicit`
-
-Перевести stores на явные операции Load/Save/Update. Изменения должны проходить через store, а не через случайную мутацию общего объекта.
-
-Зависимость: `introduce-configuration-snapshot`.
-
-### 16. `add-config-schema-version`
-
-Добавить `schemaVersion`, определить текущую версию и правила обработки старого/неизвестного формата.
-
-Зависимость: `introduce-configuration-snapshot`.
-
-### 17. `add-config-migration-runner`
-
-Добавить `IConfigMigration` и `ConfigMigrationRunner`.
-
-Зависимость: `add-config-schema-version`.
-
-### 18. `migrate-legacy-terminal-preference`
-
-Перенести `terminalExecutable -> defaultRuntime` в migration layer.
-
-Зависимость: `add-config-migration-runner`.
-
-### 19. `introduce-configuration-repository`
-
-Ввести единый `IConfigurationRepository`, владеющий snapshot, изменениями, debounce, atomic write и flush.
-
-Зависимости: changes 14–18.
-
-## Этап 3. Plugin system
-
-### 20. `extract-plugin-descriptor-reader`
-
-Вынести поиск, чтение и JSON deserialization `plugin.json` в `IPluginDescriptorReader`.
-
-Зависимости: нет.
-
-### 21. `extract-plugin-descriptor-validator`
-
-Вынести validation rules в отдельный validator и структурированный `PluginValidationResult`.
-
-Зависимость: желательно после `extract-plugin-descriptor-reader`.
-
-### 22. `make-plugin-loading-deterministic`
-
-Определить сортировку директорий, duplicate ID policy и детерминированное логирование.
-
-Зависимость: `extract-plugin-descriptor-validator`.
-
-### 23. `introduce-plugin-catalog-boundary`
-
-Разделить `IPluginCatalog` и agent behavior services. `IPluginManager` можно временно оставить compatibility adapter.
-
-Зависимости: changes 20–22.
-
-### 24. `add-plugin-catalog-reload`
-
-Добавить ручной reload каталога и `PluginsChanged`. File watcher в этот change не входит.
-
-Зависимость: `introduce-plugin-catalog-boundary`.
-
-## Этап 4. Documentation and legacy cleanup
-
-### 25. `synchronize-repository-documentation`
-
-Исправить версии, test dependencies, список активных окон и фактическую структуру solution.
-
-Зависимость: желательно после `split-core-and-ui-test-projects`.
-
-### 26. `isolate-legacy-main-window`
-
-Отложено на отдалённое будущее. Переместить `MainWindow` в `src/CLIHub/Legacy/` либо удалить после отдельной проверки истории и references, когда legacy cleanup снова станет приоритетом.
-
-Зависимости: нет.
-
-### 27. `split-architecture-documentation`
-
-Разделить архитектурную документацию на документы по startup, configuration, plugins, process execution и UI boundaries.
-
-Зависимости: после соответствующих implementation changes.
-
-### 28. `add-architecture-decision-records`
-
-Добавить ADR для Core/UI boundaries, single config document, startup orchestration, plugin precedence и UI dialog boundaries.
-
-Зависимости: после соответствующих changes.
-
-### 29. `add-architecture-ci-checks`
-
-Добавить CI-проверки ссылок проектов, Core/WPF boundaries, test project structure, legacy references и запуска всех test projects.
-
-Зависимости: после `split-core-and-ui-test-projects` и `isolate-legacy-main-window`.
-
-### 30. `add-plugin-origin-metadata`
-
-Добавить внутреннее происхождение plugin: `Seeded`, `User`, `Custom` после появления реального catalog/reload consumer.
-
-Зависимость: `add-plugin-catalog-reload`.
-
-# Рекомендуемая последовательность
-
-```text
-1.  document-application-startup-contract
-2.  extract-plugin-initialization
-3.  extract-startup-preferences
-4.  extract-hotkey-startup-registration
-5.  extract-release-notes-startup
-6.  extract-update-startup-check
-7.  extract-update-download-workflow
-8.  introduce-ui-dialog-services
-9.  introduce-application-lifetime-service
-10. extract-agent-launch-workflow
-11. separate-tray-menu-building
-12. split-core-and-ui-test-projects
-13. add-configuration-concurrency-tests
-14. introduce-configuration-snapshot
-15. make-preferences-and-project-updates-explicit
-16. add-config-schema-version
-17. add-config-migration-runner
-18. migrate-legacy-terminal-preference
-19. introduce-configuration-repository
-20. extract-plugin-descriptor-reader
-21. extract-plugin-descriptor-validator
-22. make-plugin-loading-deterministic
-23. introduce-plugin-catalog-boundary
-24. add-plugin-catalog-reload
-25. synchronize-repository-documentation
-26. isolate-legacy-main-window
-27. split-architecture-documentation
-28. add-architecture-decision-records
-29. add-architecture-ci-checks
-30. add-plugin-origin-metadata
-```
-
-# Приоритеты
-
-## Высокий приоритет
-
-- startup orchestration;
-- WPF dialogs в ViewModel;
-- общий agent launch workflow;
-- разделение Core/UI test projects;
-- синхронизация документации;
-- concurrency tests для configuration persistence.
-
-## Средний приоритет
-
-- configuration snapshot;
-- schema version и migrations;
-- tray menu separation;
-- plugin reader и validator;
-- deterministic duplicate policy;
-- изоляция `MainWindow` (отдалённое будущее).
-
-## Низкий приоритет
-
-- универсальная TTL cache abstraction;
-- plugin file watcher;
-- полная immutable-модель конфигурации;
-- дальнейшее разбиение `LaunchWindowViewModel` на controllers.
-
-# Следующий change
-
-Первым рекомендуется создать:
-
-```text
-document-application-startup-contract
-```
-
-Он не изменяет runtime-код и фиксирует baseline для последующих рефакторингов.
-
-Первым implementation change после него должен стать:
-
-```text
-extract-plugin-initialization
-```
-
-Он небольшой, изолированный и сохраняет текущее пользовательское поведение.
-
-# Отслеживание прогресса (обновляется по мере реализации)
-
-Обновлять эту таблицу после каждого OpenSpec change. Change считается выполненным после реализации, успешных проверок и архивирования через OpenSpec.
-
-
-| №   | Change                                          | Состояние | Результат / проверка                                                                                                                                                                                                                                                                                                                         |
-| ---: | ----------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `document-application-startup-contract`         | Completed | Startup/shutdown sequence and failure policy added to `docs/architecture.md`; all 5 OpenSpec tasks complete, validation passed, and change archived at `openspec/changes/archive/2026-10-05-document-application-startup-contract`.                                                                                                          |
-| 2   | `extract-plugin-initialization`                 | Completed | Added `IPluginInitializationService`, preserved `SeedIfEmpty -> LoadPlugins` ordering, added focused tests, passed OpenSpec validation, Release build, and 340 tests. Archived at `openspec/changes/archive/2026-10-05-extract-plugin-initialization`.                                                                                       |
-| 3   | `extract-startup-preferences`                   | Completed | Added `IStartupPreferencesApplier`, preserved runtime-before-startup ordering and the shared preferences snapshot, added focused tests, passed OpenSpec validation, Release build, and 342 tests. Archived at `openspec/changes/archive/2026-10-05-extract-startup-preferences`.                                                             |
-| 4   | `extract-hotkey-startup-registration`           | Completed | Added `IHotkeyStartupRegistrar` and the global registration seam, preserved valid parsing and default fallback, added focused tests, passed OpenSpec validation, Release build, and 345 tests. Archived at `openspec/changes/archive/2026-10-05-extract-hotkey-startup-registration`.                                                        |
-| 5   | `extract-release-notes-startup`                 | Completed | Added `IReleaseNotesStartupCoordinator`, preserved Show/RecordOnly/Skip behavior and warning-only failures, added focused tests, passed OpenSpec validation, Release build, and 350 tests. Archived at `openspec/changes/archive/2026-10-05-extract-release-notes-startup`.                                                                  |
-| 6   | `extract-update-startup-check`                  | Completed | Added `IUpdateStartupCoordinator`, preserved disabled/non-blocking/available-version behavior and dispatcher callback, added focused tests, passed OpenSpec validation, Release build, and 357 tests. Archived at `openspec/changes/archive/2026-10-05-extract-update-startup-check`.                                                        |
-| 7   | `extract-update-download-workflow`              | Completed | Added shared `IUpdateDownloadCoordinator` and dispatcher-aware notifier, routed tray and What's New through one workflow, preserved result handling/delay/apply behavior, added focused tests, passed OpenSpec validation, Release build, and 364 tests. Archived at `openspec/changes/archive/2026-10-05-extract-update-download-workflow`. |
-| 8   | `introduce-ui-dialog-services`                  | Completed | Added project dialog and user notification services, removed direct WPF dialog calls from `LaunchWindowViewModel`, preserved modal behavior, added focused tests, passed OpenSpec validation, Release build, and 365 tests. Archived at `openspec/changes/archive/2026-10-05-introduce-ui-dialog-services`.                                  |
-| 9   | `introduce-application-lifetime-service`        | Completed | Added `IApplicationLifetime` and WPF adapter, replaced direct shutdown calls in the active ViewModel and tray, added focused tests, passed OpenSpec validation, Release build, and 366 tests. Archived at `openspec/changes/archive/2026-10-05-introduce-application-lifetime-service`.                                                      |
-| 10  | `extract-agent-launch-workflow`                 | Completed | Added shared `IAgentCommandWorkflow`, routed active launch-window and tray agent commands through it, preserved result presentation and Core validation, added focused tests, passed OpenSpec validation, Release build, and 367 tests. Archived at `openspec/changes/archive/2026-10-05-extract-agent-launch-workflow`.                     |
-| 11  | `separate-tray-menu-building`                   | Completed | Added singleton `TrayMenuBuilder`, separated menu composition from tray icon lifecycle, passed Release build, 368 tests, and OpenSpec validation. Archived at `openspec/changes/archive/2026-10-05-separate-tray-menu-building`.                                                                                                             |
-| 12  | `split-core-and-ui-test-projects`               | Completed | Split Core-only and WPF/application tests into separate projects, updated solution, CI, and repository documentation, passed Release build and 368 tests (332 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-05-split-core-and-ui-test-projects`.                                                                               |
-| 13  | `add-configuration-concurrency-tests`           | Completed | Added configuration concurrency, flush, worker-exit, and write-failure coverage with an internal test hook, passed Release build, 372 tests, and OpenSpec validation. Archived at `openspec/changes/archive/2026-10-05-add-configuration-concurrency-tests`.                                                                                 |
-| 14  | `introduce-configuration-snapshot`              | Completed | Added detached `ConfigurationSnapshot`, migrated config service, stores, and test fakes, passed Release build and 374 tests; synced the new durable spec. Archived at `openspec/changes/archive/2026-10-05-introduce-configuration-snapshot`.                                                                                                |
-| 15  | `make-preferences-and-project-updates-explicit` | Completed | Replaced store Save methods with explicit Update callbacks, migrated callers, added callback-failure tests, passed Release build, and synced the durable spec. Archived at `openspec/changes/archive/2026-10-05-make-preferences-and-project-updates-explicit`.                                                                              |
-| 16  | `add-config-schema-version`                     | Completed | Added schema version 1 and legacy version 0 handling, future/invalid-version load fallback, passed Release build and 380 tests; synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-add-config-schema-version`.                                                                                                        |
-| 17  | `add-config-migration-runner`                   | Completed | Added migration contracts, runner, config-service integration, and Core DI registration, passed Release build and 385 tests (349 Core, 36 UI); synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-add-config-migration-runner`.                                                                                       |
-| 18  | `migrate-legacy-terminal-preference`            | Completed | Added schema 0 → 1 terminal preference migration, mapped legacy executable values to runtime tokens, passed Release build and 395 tests (359 Core, 36 UI); synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-migrate-legacy-terminal-preference`.                                                                    |
-| 19  | `introduce-configuration-repository`            | Completed | Replaced `IConfigService`/`ConfigService` with `IConfigurationRepository`, serialized latest-snapshot updates, preserved migration and atomic persistence behavior, passed Release build and 397 tests (361 Core, 36 UI); synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-introduce-configuration-repository`.     |
-| 20  | `extract-plugin-descriptor-reader`               | Completed | Added `IPluginDescriptorReader` and descriptor read results, moved `plugin.json` lookup/read/deserialization out of `PluginManager`, preserved validation and loading behavior, passed Release build and 401 tests (365 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-extract-plugin-descriptor-reader`. |
-| 21  | `extract-plugin-descriptor-validator`            | Completed | Added `IPluginDescriptorValidator` and structured validation results, preserved ID/name/launch rules and warning behavior, passed Release build and 406 tests (370 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-extract-plugin-descriptor-validator`. |
-| 22  | `make-plugin-loading-deterministic`              | Completed | Added deterministic plugin directory ordering, stable duplicate-ID selection, and winner/skipped-directory diagnostics, passed Release build and 408 tests (372 Core, 36 UI), and synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-make-plugin-loading-deterministic`. |
-| 23  | `introduce-plugin-catalog-boundary`              | Completed | Added `IPluginCatalog`/`PluginCatalog`, migrated startup and UI consumers, preserved `IPluginManager` as a shared-instance compatibility adapter, passed Release build and 409 tests (373 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-introduce-plugin-catalog-boundary`. |
-| 24  | `add-plugin-catalog-reload`                     | Completed | Added synchronous catalog reload and `PluginsChanged` notification, preserved initial-load behavior, passed Release build and 411 tests (375 Core, 36 UI), and synced the durable spec. Archived at `openspec/changes/archive/2026-10-06-add-plugin-catalog-reload`. |
-| 25  | `synchronize-repository-documentation`          | Completed | Synchronized README, agent guidance, architecture, repository structure, and release runbook with the `0.9.0` solution state, current plugin/configuration boundaries, test projects, and DI registrations; passed Release build and 411 tests (375 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-synchronize-repository-documentation`. |
-| 27  | `split-architecture-documentation`              | Completed | Split `docs/architecture.md` into topical documents under `docs/architecture/` (`startup`, `configuration`, `plugins`, `processes`, `ui`) with the entry point keeping overview content and one-line links; updated glossary and README links; passed OpenSpec validation, Release build, and 411 tests (375 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-split-architecture-documentation`. |
-| 28  | `add-architecture-decision-records`             | Completed | Added `docs/adr/` with ADR conventions and index plus five accepted ADRs (Core/UI boundaries, single configuration document, startup orchestration, plugin catalog and precedence, UI dialog boundaries); wired links from architecture and repository-structure docs; passed OpenSpec validation, Release build, and 411 tests (375 Core, 36 UI). Archived at `openspec/changes/archive/2026-10-06-add-architecture-decision-records`. |
-
-
-Остальные changes выполняются последовательно согласно разделу «Рекомендуемая последовательность» и добавляются в таблицу по мере перехода в работу. Завершено: 27 из 30 (позиция 26 `isolate-legacy-main-window` отложена на отдалённое будущее и в таблицу не входит). Активного change сейчас нет. Оставшиеся позиции заблокированы: `add-architecture-ci-checks` (29) частично зависит от отложенного `isolate-legacy-main-window`; `add-plugin-origin-metadata` (30) отложен до появления реального consumer origin-метаданных.
+`unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован. Следующим шагом можно переходить к `extract-application-bootstrapper`.
