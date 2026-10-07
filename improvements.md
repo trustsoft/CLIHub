@@ -421,7 +421,7 @@ Change считается завершённым только когда:
 | 4 | `split-launch-window-workflows` | Completed | Project и agent workflows вынесены в pane controllers; ViewModel оставлена presentation facade. Change archived at `openspec/changes/archive/2026-10-07-split-launch-window-workflows`. |
 | 5 | `extract-settings-draft-and-application` | Completed | Typed draft, validation, ordered application и rollback policy вынесены в Settings application service. Change archived at `openspec/changes/archive/2026-10-07-extract-settings-draft-and-application`. |
 | 6 | `decouple-runtime-preference-application` | Completed | Убраны concrete WPF dependencies из applier через узкие runtime/display/hotkey ports; добавлены прямые tests. Change archived at `openspec/changes/archive/2026-10-08-decouple-runtime-preference-application`. |
-| 7 | `separate-tray-actions-from-tray-host` | Pending | Разделить TaskbarIcon host и application actions. |
+| 7 | `separate-tray-actions-from-tray-host` | Completed | Tray host оставлен владельцем TaskbarIcon, application state/actions вынесены в TrayActions и narrow host ports. Change archived at `openspec/changes/archive/2026-10-08-separate-tray-actions-from-tray-host`. |
 | 8 | `split-update-service-contracts` | Pending | Narrow update ports и Velopack adapter. |
 | 9 | `harden-process-boundaries` | Pending | Cancellation, timeout и узкие process contracts. |
 | 10 | `harden-configuration-boundary` | Pending | State, DTO, mapping и writer ownership. |
@@ -433,7 +433,7 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: определить следующий pending пункт плана.
+Следующий implementation change: `split-update-service-contracts`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -444,3 +444,5 @@ Change считается завершённым только когда:
 `split-launch-window-workflows` завершён: project и agent pane operations вынесены в WPF-independent controllers, сохранены selection identity, filtering, refresh и cancellable version population, добавлены focused controller tests.
 
 `extract-settings-draft-and-application` завершён: typed Settings input/draft, validation, ordered system application, atomic persistence update и rollback policy вынесены в `SettingsApplicationService`; `SettingsViewModel` оставлена binding/presentation facade, добавлены service и ViewModel tests. `decouple-runtime-preference-application` завершён: `PreferenceApplier` больше не зависит от concrete WPF targets, а runtime/display/hotkey boundaries покрыты узкими портами и tests.
+
+`separate-tray-actions-from-tray-host` завершён: `TrayIconController` оставлен владельцем `TaskbarIcon`, tray state/actions вынесены в `TrayActions`, menu builder принимает prepared state и commands, а update notifier работает через `ITrayHost`.
