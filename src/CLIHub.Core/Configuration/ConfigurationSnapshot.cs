@@ -50,6 +50,12 @@ public sealed class ConfigurationSnapshot
         CurrentProjectId = CurrentProjectId
     };
 
+    /// <summary>
+    ///   Creates a detached copy of this snapshot.
+    /// </summary>
+    /// <returns> A detached snapshot copy. </returns>
+    public ConfigurationSnapshot Clone() => From(ToAppConfig());
+
     private static Project CloneProject(Project project) => new()
     {
         Id = project.Id,

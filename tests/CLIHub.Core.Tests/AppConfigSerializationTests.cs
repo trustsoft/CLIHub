@@ -72,6 +72,66 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void AppConfigDocument_RoundTripsEveryConfigurationFieldThroughDtoMapping()
+    {
+        var project = new Project
+        {
+            Id = "project-1",
+            Name = "Project",
+            Path = "C:\\Project",
+            IsFavorite = true,
+            LastUsed = new DateTime(2026, 10, 8, 12, 30, 0, DateTimeKind.Utc),
+            LogoPath = "logo.png"
+        };
+        var config = new AppConfig
+        {
+            Projects = [project],
+            CurrentProjectId = project.Id,
+            Preferences = new AppPreferences
+            {
+                StartWithWindows = true,
+                Hotkey = "Ctrl+Alt+P",
+                TerminalExecutable = "terminal.exe",
+                DefaultRuntime = "ps",
+                LogLevel = "Debug",
+                ShowOnlyProjectAgents = true,
+                AgentProbeTtlMinutes = 15,
+                AgentProbeTimeoutSeconds = 7,
+                CheckForUpdatesOnStartup = false,
+                ShowWindowOnStartup = false,
+                PinLaunchWindow = true,
+                PathDisplayStyle = "middleEllipsis",
+                LastSeenReleaseNotesVersion = "1.2.3"
+            }
+        };
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(
+            JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
+            CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal(config.CurrentProjectId, restored.CurrentProjectId);
+        Assert.Equal(config.Projects[0].Id, restored.Projects[0].Id);
+        Assert.Equal(config.Projects[0].Name, restored.Projects[0].Name);
+        Assert.Equal(config.Projects[0].Path, restored.Projects[0].Path);
+        Assert.Equal(config.Projects[0].IsFavorite, restored.Projects[0].IsFavorite);
+        Assert.Equal(config.Projects[0].LastUsed, restored.Projects[0].LastUsed);
+        Assert.Equal(config.Projects[0].LogoPath, restored.Projects[0].LogoPath);
+        Assert.Equal(config.Preferences.StartWithWindows, restored.Preferences.StartWithWindows);
+        Assert.Equal(config.Preferences.Hotkey, restored.Preferences.Hotkey);
+        Assert.Equal(config.Preferences.TerminalExecutable, restored.Preferences.TerminalExecutable);
+        Assert.Equal(config.Preferences.DefaultRuntime, restored.Preferences.DefaultRuntime);
+        Assert.Equal(config.Preferences.LogLevel, restored.Preferences.LogLevel);
+        Assert.Equal(config.Preferences.ShowOnlyProjectAgents, restored.Preferences.ShowOnlyProjectAgents);
+        Assert.Equal(config.Preferences.AgentProbeTtlMinutes, restored.Preferences.AgentProbeTtlMinutes);
+        Assert.Equal(config.Preferences.AgentProbeTimeoutSeconds, restored.Preferences.AgentProbeTimeoutSeconds);
+        Assert.Equal(config.Preferences.CheckForUpdatesOnStartup, restored.Preferences.CheckForUpdatesOnStartup);
+        Assert.Equal(config.Preferences.ShowWindowOnStartup, restored.Preferences.ShowWindowOnStartup);
+        Assert.Equal(config.Preferences.PinLaunchWindow, restored.Preferences.PinLaunchWindow);
+        Assert.Equal(config.Preferences.PathDisplayStyle, restored.Preferences.PathDisplayStyle);
+        Assert.Equal(config.Preferences.LastSeenReleaseNotesVersion, restored.Preferences.LastSeenReleaseNotesVersion);
+    }
+
+    [Fact]
     public void ProjectState_TransfersProjectOwnershipWithoutChangingValues()
     {
         var config = new AppConfig

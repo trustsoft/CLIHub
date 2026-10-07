@@ -20,7 +20,7 @@ public sealed class ConfigurationRepository : IConfigurationRepository
     private readonly object _writerGate = new();
     private readonly object _writeLock = new();
     private readonly string _configFilePath;
-    private AppConfig? _cachedConfig;
+    private ConfigurationSnapshot? _cachedSnapshot;
     private bool _loaded;
     private PendingWrite? _pendingWrite;
     private long _latestWriteGeneration;
@@ -60,7 +60,7 @@ public sealed class ConfigurationRepository : IConfigurationRepository
         lock (_stateGate)
         {
             EnsureLoaded();
-            return ConfigurationSnapshot.From(_cachedConfig!);
+            return _cachedSnapshot!.Clone();
         }
     }
 
@@ -73,12 +73,11 @@ public sealed class ConfigurationRepository : IConfigurationRepository
         {
             EnsureLoaded();
 
-            var snapshot = ConfigurationSnapshot.From(_cachedConfig!);
+            var snapshot = _cachedSnapshot!.Clone();
             update(snapshot);
 
-            var updatedConfig = snapshot.ToAppConfig();
-            var json = Serialize(updatedConfig);
-            _cachedConfig = updatedConfig;
+            var json = Serialize(snapshot);
+            _cachedSnapshot = snapshot;
             QueueWrite(json);
         }
     }
@@ -93,9 +92,9 @@ public sealed class ConfigurationRepository : IConfigurationRepository
         if (!File.Exists(_configFilePath))
         {
             _logger.LogInformation("No config found at {Path}; creating defaults", _configFilePath);
-            _cachedConfig = new AppConfig();
+            _cachedSnapshot = new ConfigurationSnapshot();
             _loaded = true;
-            QueueWrite(Serialize(_cachedConfig));
+            QueueWrite(Serialize(_cachedSnapshot));
             return;
         }
 
@@ -112,21 +111,21 @@ public sealed class ConfigurationRepository : IConfigurationRepository
                     "Unsupported configuration schema version {SchemaVersion} at {Path}",
                     schemaVersion,
                     _configFilePath);
-                _cachedConfig = new AppConfig();
+                _cachedSnapshot = new ConfigurationSnapshot();
                 _loaded = true;
                 return;
             }
 
-            var snapshot = ConfigurationSnapshot.From(document?.ToAppConfig() ?? new AppConfig());
+            var snapshot = document?.ToSnapshot() ?? new ConfigurationSnapshot();
             var migrated = !_migrationRunner.HasMigrations &&
                 schemaVersion == AppConfigDocument.LegacySchemaVersion
                 ? new ConfigurationMigrationResult(snapshot, schemaVersion)
                 : _migrationRunner.Migrate(schemaVersion, snapshot, AppConfigDocument.CurrentSchemaVersion);
-            _cachedConfig = migrated.Snapshot.ToAppConfig();
+            _cachedSnapshot = migrated.Snapshot;
             _loaded = true;
             if (migrated.SchemaVersion != schemaVersion)
             {
-                QueueWrite(Serialize(_cachedConfig));
+                QueueWrite(Serialize(_cachedSnapshot));
             }
 
             _logger.LogDebug("Loaded configuration from {Path}", _configFilePath);
@@ -134,13 +133,13 @@ public sealed class ConfigurationRepository : IConfigurationRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load config at {Path}; using defaults", _configFilePath);
-            _cachedConfig = new AppConfig();
+            _cachedSnapshot = new ConfigurationSnapshot();
             _loaded = true;
         }
     }
 
-    private static string Serialize(AppConfig config) =>
-        JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options);
+    private static string Serialize(ConfigurationSnapshot snapshot) =>
+        JsonSerializer.Serialize(AppConfigDocument.FromSnapshot(snapshot), CoreJson.Options);
 
     private void QueueWrite(string json)
     {
