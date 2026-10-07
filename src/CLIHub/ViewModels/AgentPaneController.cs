@@ -24,6 +24,8 @@ public sealed class AgentPaneController
     private readonly IApplicationOperationLifetime _operationLifetime;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
+    private string? _currentProjectPath;
+    private bool _showOnlyProjectAgents;
 
     /// <summary>
     ///   Creates the agent-pane workflow boundary.
@@ -45,6 +47,7 @@ public sealed class AgentPaneController
         _agentVersionService = agentVersionService ?? throw new ArgumentNullException(nameof(agentVersionService));
         _logoCacheService = logoCacheService ?? throw new ArgumentNullException(nameof(logoCacheService));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        _pluginCatalog.PluginsChanged += OnPluginsChanged;
     }
 
     /// <summary>
@@ -71,6 +74,8 @@ public sealed class AgentPaneController
     /// <returns> True when at least one agent row is available. </returns>
     public bool Refresh(string? currentProjectPath, bool showOnlyProjectAgents)
     {
+        _currentProjectPath = currentProjectPath;
+        _showOnlyProjectAgents = showOnlyProjectAgents;
         _versionPopulationCts?.Cancel();
         _versionPopulationCts?.Dispose();
         _versionPopulationCts = new CancellationTokenSource();
@@ -112,6 +117,12 @@ public sealed class AgentPaneController
         _logoCacheService.InvalidateAll();
         _agentVersionService.Invalidate();
         _agentDetectionService.Invalidate();
+    }
+
+    private void OnPluginsChanged(object? sender, EventArgs e)
+    {
+        InvalidateCaches();
+        Refresh(_currentProjectPath, _showOnlyProjectAgents);
     }
 
     private async Task PopulateVersionsAsync(

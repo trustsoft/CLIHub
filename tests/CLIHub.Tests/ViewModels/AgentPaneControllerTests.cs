@@ -19,6 +19,7 @@ public class AgentPaneControllerTests
         var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
         catalog.Setup(x => x.GetAllPlugins()).Returns([first, second]);
         var detection = new Mock<IAgentDetectionService>(MockBehavior.Strict);
+        detection.Setup(x => x.Invalidate());
         detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
         detection
             .Setup(x => x.IsAvailableInProject(It.IsAny<Plugin>(), "C:\\Project"))
@@ -63,6 +64,44 @@ public class AgentPaneControllerTests
         detection.Verify(x => x.Invalidate(), Times.Once);
         versions.Verify(x => x.Invalidate(), Times.Once);
         logos.Verify(x => x.InvalidateAll(), Times.Once);
+    }
+
+    [Fact]
+    public void PluginsChanged_InvalidatesCachesAndRefreshesWithLastContext()
+    {
+        var first = Plugin("first");
+        var second = Plugin("second");
+        IReadOnlyList<Plugin> plugins = [first, second];
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
+        catalog.Setup(x => x.GetAllPlugins()).Returns(() => plugins);
+        var detection = new Mock<IAgentDetectionService>(MockBehavior.Strict);
+        detection.Setup(x => x.Invalidate());
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        detection.Setup(x => x.IsAvailableInProject(It.IsAny<Plugin>(), "C:\\Project")).Returns(true);
+        var versions = new Mock<IAgentVersionService>(MockBehavior.Strict);
+        versions.Setup(x => x.Invalidate());
+        var logos = new Mock<ILogoCacheService>(MockBehavior.Strict);
+        logos.Setup(x => x.InvalidateAll());
+        var controller = new AgentPaneController(
+            catalog.Object,
+            detection.Object,
+            versions.Object,
+            logos.Object,
+            CreateLifetime().Object);
+
+        controller.Refresh("C:\\Project", true);
+        var selected = controller.Agents[0];
+        controller.Select(selected);
+        plugins = [second];
+
+        catalog.Raise(x => x.PluginsChanged += null, EventArgs.Empty);
+
+        Assert.Single(controller.Agents);
+        Assert.Equal("second", controller.Agents[0].Plugin.Id);
+        Assert.Null(controller.SelectedAgent);
+        versions.Verify(x => x.Invalidate(), Times.Once);
+        logos.Verify(x => x.InvalidateAll(), Times.Once);
+        detection.Verify(x => x.Invalidate(), Times.Once);
     }
 
     private static Mock<IApplicationOperationLifetime> CreateLifetime()
