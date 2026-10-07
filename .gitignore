@@ -113,3 +113,6 @@ $RECYCLE.BIN/
 
 # CodeGraph index (local to each machine)
 .codegraph/
+
+# Graphify generated index and caches (local to each machine)
+graphify-out/
