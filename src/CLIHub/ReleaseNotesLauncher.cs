@@ -14,7 +14,7 @@ using CLIHub.Views;
 public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
 {
     private readonly Func<WhatsNewWindow> _factory;
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateVersionProvider _versionProvider;
     private readonly IPreferencesStore _preferencesStore;
     private readonly ILogger<ReleaseNotesLauncher> _logger;
     private WhatsNewWindow? _window;
@@ -23,17 +23,17 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     ///   Creates the launcher with its dependencies.
     /// </summary>
     /// <param name="factory"> Factory that creates the <see cref="WhatsNewWindow"/> on demand. </param>
-    /// <param name="updateService"> Update service that reports the running version. </param>
+    /// <param name="versionProvider"> Provides the running version. </param>
     /// <param name="preferencesStore"> Preferences used to store the seen-versions record. </param>
     /// <param name="logger"> Logger. </param>
     public ReleaseNotesLauncher(
         Func<WhatsNewWindow> factory,
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
         IPreferencesStore preferencesStore,
         ILogger<ReleaseNotesLauncher> logger)
     {
         _factory = factory;
-        _updateService = updateService;
+        _versionProvider = versionProvider;
         _preferencesStore = preferencesStore;
         _logger = logger;
     }
@@ -62,7 +62,7 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     {
         try
         {
-            var version = _updateService.GetCurrentVersion();
+            var version = _versionProvider.GetCurrentVersion();
             var preferences = _preferencesStore.Load();
 
             if (string.Equals(

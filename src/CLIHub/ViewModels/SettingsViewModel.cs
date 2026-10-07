@@ -44,7 +44,8 @@ public sealed class SettingsViewModel : ObservableObject
     };
 
     private readonly SettingsApplicationService _settingsApplication;
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateVersionProvider _versionProvider;
+    private readonly IUpdateChecker _updateChecker;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<SettingsViewModel> _logger;
 
@@ -64,21 +65,24 @@ public sealed class SettingsViewModel : ObservableObject
     ///   Creates the view model with its services.
     /// </summary>
     /// <param name="settingsApplication"> Typed Settings draft and application service. </param>
-    /// <param name="updateService"> Update service used for the version and update checks. </param>
+    /// <param name="versionProvider"> Provides the current application version. </param>
+    /// <param name="updateChecker"> Checks for available updates. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
         SettingsApplicationService settingsApplication,
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
+        IUpdateChecker updateChecker,
         IApplicationOperationLifetime operationLifetime,
         ILogger<SettingsViewModel> logger)
     {
         _settingsApplication = settingsApplication;
-        _updateService = updateService;
+        _versionProvider = versionProvider;
+        _updateChecker = updateChecker;
         _operationLifetime = operationLifetime;
         _logger = logger;
 
-        Version = _updateService.GetCurrentVersion();
+        Version = _versionProvider.GetCurrentVersion();
 
         SaveCommand = new RelayCommand(Save);
         CancelCommand = new RelayCommand(Cancel);
@@ -313,7 +317,7 @@ public sealed class SettingsViewModel : ObservableObject
         UpdateCheckResult result;
         try
         {
-            result = await _updateService.CheckForUpdatesAsync(cancellationToken);
+            result = await _updateChecker.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

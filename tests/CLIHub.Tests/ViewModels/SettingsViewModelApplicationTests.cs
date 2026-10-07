@@ -92,6 +92,7 @@ public class SettingsViewModelApplicationTests
             ViewModel = new SettingsViewModel(
                 application,
                 Updates.Object,
+                Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 NullLogger<SettingsViewModel>.Instance);
         }

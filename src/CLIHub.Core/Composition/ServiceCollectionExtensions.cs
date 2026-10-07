@@ -92,6 +92,11 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddUpdateServices(this IServiceCollection services)
     {
         services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IUpdateVersionProvider>(sp => sp.GetRequiredService<IUpdateService>());
+        services.AddSingleton<IUpdateChecker>(sp => sp.GetRequiredService<IUpdateService>());
+        services.AddSingleton<IUpdateStateSource>(sp => sp.GetRequiredService<IUpdateService>());
+        services.AddSingleton<IUpdateDownloader>(sp => sp.GetRequiredService<IUpdateService>());
+        services.AddSingleton<IUpdateInstaller>(sp => sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IReleaseNotesService, ReleaseNotesService>();
         return services;
     }

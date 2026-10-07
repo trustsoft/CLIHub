@@ -20,7 +20,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     private readonly Func<IHotkeyStartupRegistrar> _hotkeyStartupRegistrarFactory;
     private readonly IReleaseNotesStartupCoordinator _releaseNotesStartup;
     private readonly IUpdateStartupCoordinator _updateStartup;
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateStateSource _updateState;
     private readonly Func<IApplicationStartupUi> _startupUiFactory;
     private readonly Func<IUpdateDownloadCoordinator> _updateDownloadFactory;
     private readonly Func<IUpdateRequestSource> _updateRequestSourceFactory;
@@ -38,7 +38,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="releaseNotesStartup"> Release-notes startup workflow. </param>
     /// <param name="updateStartup"> Startup update-check workflow. </param>
-    /// <param name="updateService"> Update state notification source. </param>
+    /// <param name="updateState"> Update state notification source. </param>
     /// <param name="startupUiFactory"> Lazy startup UI factory. </param>
     /// <param name="updateDownloadFactory"> Lazy update download workflow factory. </param>
     /// <param name="updateRequestSourceFactory"> Lazy presentation update-request source factory. </param>
@@ -53,7 +53,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
         IReleaseNotesStartupCoordinator releaseNotesStartup,
         IUpdateStartupCoordinator updateStartup,
-        IUpdateService updateService,
+        IUpdateStateSource updateState,
         Func<IApplicationStartupUi> startupUiFactory,
         Func<IUpdateDownloadCoordinator> updateDownloadFactory,
         Func<IUpdateRequestSource> updateRequestSourceFactory,
@@ -68,7 +68,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         _hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
         _releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
         _updateStartup = updateStartup ?? throw new ArgumentNullException(nameof(updateStartup));
-        _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
+        _updateState = updateState ?? throw new ArgumentNullException(nameof(updateState));
         _startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
         _updateDownloadFactory = updateDownloadFactory ?? throw new ArgumentNullException(nameof(updateDownloadFactory));
         _updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
@@ -101,7 +101,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             var updateRequestSource = _updateRequestSourceFactory();
             var hotkeyStartupRegistrar = _hotkeyStartupRegistrarFactory();
 
-            _updateService.UpdateStateChanged += (_, _) => context.Dispatch(startupUi.RefreshMenu);
+            _updateState.UpdateStateChanged += (_, _) => context.Dispatch(startupUi.RefreshMenu);
             startupUi.UpdateDownloadRequested += (_, _) =>
                 _ = _operationLifetime.RunAsync(
                     "Update download",

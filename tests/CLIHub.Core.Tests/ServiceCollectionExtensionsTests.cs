@@ -39,6 +39,23 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddClIHubCoreServices_MapsUpdatePortsToOneService()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+
+        using var provider = services.BuildServiceProvider();
+
+        var service = provider.GetRequiredService<IUpdateService>();
+
+        Assert.Same(service, provider.GetRequiredService<IUpdateVersionProvider>());
+        Assert.Same(service, provider.GetRequiredService<IUpdateChecker>());
+        Assert.Same(service, provider.GetRequiredService<IUpdateStateSource>());
+        Assert.Same(service, provider.GetRequiredService<IUpdateDownloader>());
+        Assert.Same(service, provider.GetRequiredService<IUpdateInstaller>());
+    }
+
+    [Fact]
     public void PluginManager_DelegatesToSharedCatalog()
     {
         var services = new ServiceCollection();

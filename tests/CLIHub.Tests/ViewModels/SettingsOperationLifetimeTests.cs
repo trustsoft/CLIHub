@@ -36,6 +36,7 @@ public class SettingsOperationLifetimeTests
                 new Mock<IPreferenceApplier>().Object,
                 NullLogger<SettingsApplicationService>.Instance),
             updates.Object,
+            updates.Object,
             lifetime.Object,
             NullLogger<SettingsViewModel>.Instance);
 

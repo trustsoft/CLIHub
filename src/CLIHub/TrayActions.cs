@@ -14,7 +14,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
     private readonly IProjectService _projects;
     private readonly IPluginCatalog _pluginCatalog;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IUpdateService _updates;
+    private readonly IUpdateStateSource _updates;
     private readonly IProjectDialogService _projectDialog;
     private readonly IUserNotificationService _notifications;
     private readonly ISettingsLauncher _settingsLauncher;
@@ -37,7 +37,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
         IProjectService projects,
         IPluginCatalog pluginCatalog,
         IAgentCommandWorkflow agentCommandWorkflow,
-        IUpdateService updates,
+        IUpdateStateSource updates,
         IProjectDialogService projectDialog,
         IUserNotificationService notifications,
         ISettingsLauncher settingsLauncher,

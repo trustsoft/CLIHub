@@ -126,5 +126,5 @@ public class UpdateDownloadCoordinatorTests
         IUpdateService updates,
         IUpdateDownloadNotifier notifier,
         Func<TimeSpan, CancellationToken, Task> delay) =>
-        new(updates, notifier, NullLogger<UpdateDownloadCoordinator>.Instance, delay);
+        new(updates, updates, notifier, NullLogger<UpdateDownloadCoordinator>.Instance, delay);
 }

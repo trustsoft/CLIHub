@@ -29,6 +29,10 @@ public class UpdateControlLifetimeTests
 
         var viewModel = new UpdateControlViewModel(
             updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             lifetime.Object);
 

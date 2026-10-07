@@ -26,7 +26,8 @@ public partial class MainWindow : Window
     private readonly IAgentDetectionService _agentDetectionService;
     private readonly IAgentVersionService _agentVersionService;
     private readonly IPreferencesStore _preferencesStore;
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateVersionProvider _versionProvider;
+    private readonly IUpdateChecker _updateChecker;
     private readonly ILogger<MainWindow> _logger;
     private bool _suppressFilterEvent;
     private CancellationTokenSource? _versionPopulationCts;
@@ -41,7 +42,8 @@ public partial class MainWindow : Window
     /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="preferencesStore"> Store for the filter preference. </param>
-    /// <param name="updateService"> Update service for the version text and update checks. </param>
+    /// <param name="versionProvider"> Provides the version text. </param>
+    /// <param name="updateChecker"> Checks for available updates. </param>
     /// <param name="logger"> Logger for unexpected legacy window action failures. </param>
     public MainWindow(
         IPluginCatalog pluginCatalog,
@@ -50,7 +52,8 @@ public partial class MainWindow : Window
         IAgentDetectionService agentDetectionService,
         IAgentVersionService agentVersionService,
         IPreferencesStore preferencesStore,
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
+        IUpdateChecker updateChecker,
         ILogger<MainWindow> logger)
     {
         InitializeComponent();
@@ -61,7 +64,8 @@ public partial class MainWindow : Window
         _agentDetectionService = agentDetectionService;
         _agentVersionService = agentVersionService;
         _preferencesStore = preferencesStore;
-        _updateService = updateService;
+        _versionProvider = versionProvider;
+        _updateChecker = updateChecker;
         _logger = logger;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
@@ -70,7 +74,7 @@ public partial class MainWindow : Window
         FilterUnavailableCheckBox.IsChecked = _preferencesStore.Load().ShowOnlyProjectAgents;
         _suppressFilterEvent = false;
 
-        AppVersionText.Text = $"v{_updateService.GetCurrentVersion()}";
+        AppVersionText.Text = $"v{_versionProvider.GetCurrentVersion()}";
 
         RefreshProjects();
         RefreshAgents();
@@ -89,7 +93,7 @@ public partial class MainWindow : Window
     {
         StatusText.Text = "Checking for updates...";
 
-        var result = await _updateService.CheckForUpdatesAsync();
+        var result = await _updateChecker.CheckForUpdatesAsync();
 
         StatusText.Text = result.Status switch
         {

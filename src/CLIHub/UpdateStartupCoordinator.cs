@@ -10,19 +10,19 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 {
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateChecker _updateChecker;
     private readonly ILogger<UpdateStartupCoordinator> _logger;
 
     /// <summary>
     ///   Creates the coordinator over the update service.
     /// </summary>
-    /// <param name="updateService"> Update service used for the startup check. </param>
+    /// <param name="updateChecker"> Update checker used for the startup check. </param>
     /// <param name="logger"> Logger for disabled checks and unexpected failures. </param>
     public UpdateStartupCoordinator(
-        IUpdateService updateService,
+        IUpdateChecker updateChecker,
         ILogger<UpdateStartupCoordinator> logger)
     {
-        _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
+        _updateChecker = updateChecker ?? throw new ArgumentNullException(nameof(updateChecker));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -42,7 +42,7 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 
         try
         {
-            var result = await _updateService.CheckForUpdatesAsync(cancellationToken);
+            var result = await _updateChecker.CheckForUpdatesAsync(cancellationToken);
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {

@@ -16,7 +16,11 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class UpdateControlViewModel : ObservableObject
 {
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateVersionProvider _versionProvider;
+    private readonly IUpdateChecker _checker;
+    private readonly IUpdateStateSource _stateSource;
+    private readonly IUpdateDownloader _downloader;
+    private readonly IUpdateInstaller _installer;
     private readonly ILogger<UpdateControlViewModel> _logger;
     private readonly IApplicationOperationLifetime _operationLifetime;
 
@@ -30,25 +34,37 @@ public sealed class UpdateControlViewModel : ObservableObject
     /// <summary>
     ///   Creates the update control state for the given update service.
     /// </summary>
-    /// <param name="updateService"> Update service backing the checks, downloads, and applies. </param>
+    /// <param name="versionProvider"> Provides the current application version. </param>
+    /// <param name="checker"> Checks for available updates. </param>
+    /// <param name="stateSource"> Provides shared update state. </param>
+    /// <param name="downloader"> Downloads available updates. </param>
+    /// <param name="installer"> Applies downloaded updates. </param>
     /// <param name="logger"> Logger for unexpected update control failures. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update work. </param>
     public UpdateControlViewModel(
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
+        IUpdateChecker checker,
+        IUpdateStateSource stateSource,
+        IUpdateDownloader downloader,
+        IUpdateInstaller installer,
         ILogger<UpdateControlViewModel> logger,
         IApplicationOperationLifetime operationLifetime)
     {
-        _updateService = updateService;
+        _versionProvider = versionProvider;
+        _checker = checker;
+        _stateSource = stateSource;
+        _downloader = downloader;
+        _installer = installer;
         _logger = logger;
         _operationLifetime = operationLifetime;
 
-        CurrentVersion = updateService.GetCurrentVersion();
+        CurrentVersion = versionProvider.GetCurrentVersion();
 
         UpdateControlCommand = new RelayCommand(
             () => _ = _operationLifetime.RunAsync("Update control", RunUpdateControlAsync),
             () => _state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
 
-        _updateService.UpdateStateChanged += OnUpdateStateChanged;
+        _stateSource.UpdateStateChanged += OnUpdateStateChanged;
         RefreshState();
     }
 
@@ -71,12 +87,12 @@ public sealed class UpdateControlViewModel : ObservableObject
     /// </summary>
     public string UpdateButtonText => _state switch
     {
-        UpdateControlState.Available => $"Update to {_updateService.LastKnownAvailableVersion}",
+        UpdateControlState.Available => $"Update to {_stateSource.LastKnownAvailableVersion}",
         UpdateControlState.Checking => "Checking…",
-        UpdateControlState.Downloading => _updateService.LastKnownAvailableVersion is { } downloading
+        UpdateControlState.Downloading => _stateSource.LastKnownAvailableVersion is { } downloading
             ? $"Downloading {downloading}…"
             : "Downloading…",
-        UpdateControlState.ReadyToApply => _updateService.LastKnownAvailableVersion is { } ready
+        UpdateControlState.ReadyToApply => _stateSource.LastKnownAvailableVersion is { } ready
             ? $"Restart to update to {ready}"
             : "Restart to update",
         _ => CurrentVersion,
@@ -118,7 +134,7 @@ public sealed class UpdateControlViewModel : ObservableObject
         UpdateCheckResult result;
         try
         {
-            result = await _updateService.CheckForUpdatesAsync(cancellationToken);
+            result = await _checker.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -152,7 +168,7 @@ public sealed class UpdateControlViewModel : ObservableObject
         UpdateDownloadResult result;
         try
         {
-            result = await _updateService.DownloadUpdateAsync(cancellationToken);
+            result = await _downloader.DownloadUpdateAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -168,8 +184,8 @@ public sealed class UpdateControlViewModel : ObservableObject
 
         SetState(UpdateControlLogic.AfterDownload(
             result.Status,
-            _updateService.IsDownloading,
-            _updateService.LastKnownAvailableVersion is not null));
+            _stateSource.IsDownloading,
+            _stateSource.LastKnownAvailableVersion is not null));
 
         ReportOutcome(result.Status switch
         {
@@ -185,7 +201,7 @@ public sealed class UpdateControlViewModel : ObservableObject
     {
         try
         {
-            _updateService.ApplyDownloadedUpdateAndRestart();
+            _installer.ApplyDownloadedUpdateAndRestart();
         }
         catch (Exception ex)
         {
@@ -200,8 +216,8 @@ public sealed class UpdateControlViewModel : ObservableObject
     private void RefreshState() =>
         SetState(UpdateControlLogic.Derive(
             _state,
-            _updateService.IsDownloading,
-            _updateService.LastKnownAvailableVersion is not null));
+            _stateSource.IsDownloading,
+            _stateSource.LastKnownAvailableVersion is not null));
 
     private void SetState(UpdateControlState state)
     {

@@ -12,7 +12,8 @@ public sealed class UpdateDownloadCoordinator : IUpdateDownloadCoordinator
 {
     private static readonly TimeSpan NotificationDelay = TimeSpan.FromSeconds(2);
 
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateDownloader _downloader;
+    private readonly IUpdateInstaller _installer;
     private readonly IUpdateDownloadNotifier _notifier;
     private readonly ILogger<UpdateDownloadCoordinator> _logger;
     private readonly Func<TimeSpan, CancellationToken, Task> _delay;
@@ -20,17 +21,20 @@ public sealed class UpdateDownloadCoordinator : IUpdateDownloadCoordinator
     /// <summary>
     ///   Creates the coordinator with the update service and UI notification boundary.
     /// </summary>
-    /// <param name="updateService"> Update service used for download and apply operations. </param>
+    /// <param name="downloader"> Update downloader used by the workflow. </param>
+    /// <param name="installer"> Update installer used after a successful download. </param>
     /// <param name="notifier"> UI boundary for notifications and tray refreshes. </param>
     /// <param name="logger"> Logger for workflow failures and non-applied results. </param>
     /// <param name="delay"> Optional cancellation-aware delay implementation. </param>
     public UpdateDownloadCoordinator(
-        IUpdateService updateService,
+        IUpdateDownloader downloader,
+        IUpdateInstaller installer,
         IUpdateDownloadNotifier notifier,
         ILogger<UpdateDownloadCoordinator> logger,
         Func<TimeSpan, CancellationToken, Task>? delay = null)
     {
-        _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
+        _downloader = downloader ?? throw new ArgumentNullException(nameof(downloader));
+        _installer = installer ?? throw new ArgumentNullException(nameof(installer));
         _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _delay = delay ?? ((duration, cancellationToken) => Task.Delay(duration, cancellationToken));
@@ -41,14 +45,14 @@ public sealed class UpdateDownloadCoordinator : IUpdateDownloadCoordinator
     {
         try
         {
-            var result = await _updateService.DownloadUpdateAsync(cancellationToken);
+            var result = await _downloader.DownloadUpdateAsync(cancellationToken);
 
             if (result.Status == UpdateDownloadStatus.Downloaded && result.AvailableVersion is { } version)
             {
                 _notifier.NotifyDownloaded(version);
                 _notifier.RefreshMenu();
                 await _delay(NotificationDelay, cancellationToken);
-                _updateService.ApplyDownloadedUpdateAndRestart();
+                _installer.ApplyDownloadedUpdateAndRestart();
             }
             else if (result.Status == UpdateDownloadStatus.Failed)
             {

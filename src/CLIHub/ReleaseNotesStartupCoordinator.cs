@@ -10,7 +10,7 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordinator
 {
-    private readonly IUpdateService _updateService;
+    private readonly IUpdateVersionProvider _versionProvider;
     private readonly IReleaseNotesService _releaseNotes;
     private readonly IReleaseNotesLauncher _launcher;
     private readonly ILogger<ReleaseNotesStartupCoordinator> _logger;
@@ -18,17 +18,17 @@ public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordin
     /// <summary>
     ///   Creates the coordinator with version, notes, and presentation boundaries.
     /// </summary>
-    /// <param name="updateService"> Provides the running application version. </param>
+    /// <param name="versionProvider"> Provides the running application version. </param>
     /// <param name="releaseNotes"> Provides release notes for the running version. </param>
     /// <param name="launcher"> Shows the notes or records them as seen. </param>
     /// <param name="logger"> Logger for non-fatal startup failures. </param>
     public ReleaseNotesStartupCoordinator(
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
         IReleaseNotesService releaseNotes,
         IReleaseNotesLauncher launcher,
         ILogger<ReleaseNotesStartupCoordinator> logger)
     {
-        _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
+        _versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
         _releaseNotes = releaseNotes ?? throw new ArgumentNullException(nameof(releaseNotes));
         _launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -41,7 +41,7 @@ public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordin
 
         try
         {
-            var currentVersion = _updateService.GetCurrentVersion();
+            var currentVersion = _versionProvider.GetCurrentVersion();
             var action = ReleaseNotesPrompt.Decide(
                 preferences.LastSeenReleaseNotesVersion,
                 currentVersion,

@@ -54,7 +54,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="agentPane"> Agent-pane workflow boundary. </param>
     /// <param name="agentCommandWorkflow"> Workflow executing agent commands. </param>
     /// <param name="preferencesStore"> Store for persisted preferences. </param>
-    /// <param name="updateService"> Update service for the version text and update checks. </param>
+    /// <param name="versionProvider"> Provides the current application version. </param>
+    /// <param name="updateChecker"> Checks for available updates. </param>
+    /// <param name="updateState"> Provides shared update state. </param>
+    /// <param name="updateDownloader"> Downloads available updates. </param>
+    /// <param name="updateInstaller"> Applies downloaded updates. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
@@ -66,7 +70,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         AgentPaneController agentPane,
         IAgentCommandWorkflow agentCommandWorkflow,
         IPreferencesStore preferencesStore,
-        IUpdateService updateService,
+        IUpdateVersionProvider versionProvider,
+        IUpdateChecker updateChecker,
+        IUpdateStateSource updateState,
+        IUpdateDownloader updateDownloader,
+        IUpdateInstaller updateInstaller,
         ISettingsLauncher settingsLauncher,
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
@@ -84,7 +92,14 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         _operationLifetime = operationLifetime;
         _logger = logger;
 
-        UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger, operationLifetime);
+        UpdateControl = new UpdateControlViewModel(
+            versionProvider,
+            updateChecker,
+            updateState,
+            updateDownloader,
+            updateInstaller,
+            updateControlLogger,
+            operationLifetime);
         UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
 
         AddProjectCommand = new RelayCommand(AddProject);
