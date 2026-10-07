@@ -423,7 +423,7 @@ Change считается завершённым только когда:
 | 6 | `decouple-runtime-preference-application` | Completed | Убраны concrete WPF dependencies из applier через узкие runtime/display/hotkey ports; добавлены прямые tests. Change archived at `openspec/changes/archive/2026-10-08-decouple-runtime-preference-application`. |
 | 7 | `separate-tray-actions-from-tray-host` | Completed | Tray host оставлен владельцем TaskbarIcon, application state/actions вынесены в TrayActions и narrow host ports. Change archived at `openspec/changes/archive/2026-10-08-separate-tray-actions-from-tray-host`. |
 | 8 | `split-update-service-contracts` | Completed | Check, version, state, download и installer contracts разделены; Velopack adapter сохранён, consumers используют narrow ports. Change archived at `openspec/changes/archive/2026-10-08-split-update-service-contracts`. |
-| 9 | `harden-process-boundaries` | Pending | Cancellation, timeout и узкие process contracts. |
+| 9 | `harden-process-boundaries` | Completed | Cancellation/timeout termination semantics уточнены, interactive/output contracts сохранены, command builder покрыт отдельными tests. Change archived at `openspec/changes/archive/2026-10-08-harden-process-boundaries`. |
 | 10 | `harden-configuration-boundary` | Pending | State, DTO, mapping и writer ownership. |
 | 11 | `introduce-typed-runtime-settings` | Pending | Строки только на persistence boundary. |
 | 12 | `define-plugin-reload-consumer` | Pending | Реакция UI и cache invalidation после reload. |
@@ -433,7 +433,7 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `harden-process-boundaries`.
+Следующий implementation change: `harden-configuration-boundary`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -448,3 +448,5 @@ Change считается завершённым только когда:
 `separate-tray-actions-from-tray-host` завершён: `TrayIconController` оставлен владельцем `TaskbarIcon`, tray state/actions вынесены в `TrayActions`, menu builder принимает prepared state и commands, а update notifier работает через `ITrayHost`.
 
 `split-update-service-contracts` завершён: update consumers используют отдельные version/check/state/download/install ports, а все aliases разрешаются на один Velopack-backed update adapter.
+
+`harden-process-boundaries` завершён: output process cancellation теперь явно завершает process tree и отличается от timeout, а command-line builder тестируется напрямую.
