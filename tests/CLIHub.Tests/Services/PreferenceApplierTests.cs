@@ -74,6 +74,19 @@ public class PreferenceApplierTests
         Assert.Equal(typeof(ProcessRuntimePreferenceTarget), registration.ImplementationType);
     }
 
+    [Fact]
+    public void AddClIHubServices_MapsDisplayTargetToLaunchWindowViewModel()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubServices();
+
+        var registration = Assert.Single(
+            services,
+            descriptor => descriptor.ServiceType == typeof(IPathDisplayStyleTarget));
+
+        Assert.NotNull(registration.ImplementationFactory);
+    }
+
     private static PreferenceApplier CreateApplier(
         IRuntimePreferenceTarget? runtime = null,
         IGlobalHotkeyService? hotkey = null,

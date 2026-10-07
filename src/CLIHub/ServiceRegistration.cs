@@ -50,6 +50,7 @@ public static class ServiceRegistration
         services.AddSingleton<ProjectPaneController>();
         services.AddSingleton<AgentPaneController>();
         services.AddSingleton<LaunchWindowViewModel>();
+        services.AddSingleton<IPathDisplayStyleTarget>(sp => sp.GetRequiredService<LaunchWindowViewModel>());
         services.AddSingleton<LaunchWindow>();
         services.AddSingleton<TrayIconController>();
 
