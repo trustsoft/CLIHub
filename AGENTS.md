@@ -92,6 +92,15 @@ openspec archive "<name>"
 
 Authored specs live in `openspec/specs/`; completed changes in `openspec/changes/archive/`.
 
+### Commit Structure For Changes
+
+Each completed OpenSpec change is normally committed in two commits:
+
+1. `refactor(...)` or `feat(...)` commit containing production code and tests.
+2. `docs:` commit containing the archived change, synchronized specs, and progress/documentation updates.
+
+Run the required build, test, and OpenSpec validation checks before creating the commits. Keep unrelated worktree changes out of both commits. If a change contains no production implementation, preserve the two-commit intent only when both commits have meaningful content; otherwise use the smallest honest commit structure.
+
 ## Known Constraints
 
 - **Windows 10/11 only** - no cross-platform
