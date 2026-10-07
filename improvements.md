@@ -425,7 +425,7 @@ Change считается завершённым только когда:
 | 8 | `split-update-service-contracts` | Completed | Check, version, state, download и installer contracts разделены; Velopack adapter сохранён, consumers используют narrow ports. Change archived at `openspec/changes/archive/2026-10-08-split-update-service-contracts`. |
 | 9 | `harden-process-boundaries` | Completed | Cancellation/timeout termination semantics уточнены, interactive/output contracts сохранены, command builder покрыт отдельными tests. Change archived at `openspec/changes/archive/2026-10-08-harden-process-boundaries`. |
 | 10 | `harden-configuration-boundary` | Completed | Snapshot стал единственным mutable state owner, добавлены explicit DTO mapping и full-field round-trip tests; migrations/writer сохранены. Change archived at `openspec/changes/archive/2026-10-08-harden-configuration-boundary`. |
-| 11 | `introduce-typed-runtime-settings` | Pending | Строки только на persistence boundary. |
+| 11 | `introduce-typed-runtime-settings` | Completed | `RuntimeKind` используется внутри preferences/runtime contracts, tokens оставлены только в DTO/migration boundary; unknown values безопасно defaulted. Change archived at `openspec/changes/archive/2026-10-08-introduce-typed-runtime-settings`. |
 | 12 | `define-plugin-reload-consumer` | Pending | Реакция UI и cache invalidation после reload. |
 | 13 | `retire-compatibility-adapters` | Pending | PluginManager и прочие переходные API. |
 | 14 | `remove-or-isolate-legacy-main-window` | Pending | После проверки references. |
@@ -433,7 +433,7 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `introduce-typed-runtime-settings`.
+Следующий implementation change: `define-plugin-reload-consumer`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -452,3 +452,5 @@ Change считается завершённым только когда:
 `harden-process-boundaries` завершён: output process cancellation теперь явно завершает process tree и отличается от timeout, а command-line builder тестируется напрямую.
 
 `harden-configuration-boundary` завершён: `ConfigurationSnapshot` стал единственным mutable state owner, persistence DTO mapping покрывает все поля, а concurrent/Flush/migration/atomic-write semantics сохранены.
+
+`introduce-typed-runtime-settings` завершён: runtime preferences используют `RuntimeKind`, JSON tokens конвертируются только на persistence boundary, а unknown/legacy values безопасно мигрируются.
