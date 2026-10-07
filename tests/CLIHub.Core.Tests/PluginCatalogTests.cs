@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Plugins;
 
-public class PluginManagerTests : IDisposable
+public class PluginCatalogTests : IDisposable
 {
     private readonly string _root;
 
-    public PluginManagerTests()
+    public PluginCatalogTests()
     {
         _root = Path.Combine(Path.GetTempPath(), "clihub-plugins-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_root);

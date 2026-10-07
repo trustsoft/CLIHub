@@ -4,9 +4,9 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   In-memory IProcessLauncher recording calls, for testing command routing.
+///   In-memory split process runners recording calls, for testing command routing.
 /// </summary>
-public class FakeProcessLauncher : IProcessLauncher
+public class FakeProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
 {
     public List<(PluginCommand Command, string WorkingDirectory)> Launches { get; } = new();
     public List<(string Executable, string? Arguments, string WorkingDirectory)> Captures { get; } = new();
@@ -57,4 +57,3 @@ public class FakeProcessLauncher : IProcessLauncher
 
     public RuntimeKind Runtime { get; private set; } = RuntimeKind.WindowsTerminal;
 }
-

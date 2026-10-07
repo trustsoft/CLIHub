@@ -9,7 +9,7 @@ using CLIHub.Core.Models;
 /// <summary>
 ///   Launches processes for AI agent CLI tools.
 /// </summary>
-public class ProcessLauncher : IProcessLauncher
+public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
 {
     private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);
 

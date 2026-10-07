@@ -25,7 +25,6 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IPreferencesStore>());
         Assert.NotNull(provider.GetRequiredService<ILogoCacheService>());
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
-        Assert.NotNull(provider.GetRequiredService<IPluginManager>());
         Assert.NotNull(provider.GetRequiredService<IPluginCatalog>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorValidator>());
@@ -34,7 +33,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IAgentVersionService>());
         Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
         Assert.NotNull(provider.GetRequiredService<IProcessOutputRunner>());
-        Assert.NotNull(provider.GetRequiredService<IProcessLauncher>());
+        Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
         Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
     }
 
@@ -53,21 +52,6 @@ public class ServiceCollectionExtensionsTests
         Assert.Same(service, provider.GetRequiredService<IUpdateStateSource>());
         Assert.Same(service, provider.GetRequiredService<IUpdateDownloader>());
         Assert.Same(service, provider.GetRequiredService<IUpdateInstaller>());
-    }
-
-    [Fact]
-    public void PluginManager_DelegatesToSharedCatalog()
-    {
-        var services = new ServiceCollection();
-        services.AddClIHubCoreServices();
-
-        using var provider = services.BuildServiceProvider();
-
-        var catalog = provider.GetRequiredService<IPluginCatalog>();
-        var manager = provider.GetRequiredService<IPluginManager>();
-
-        Assert.Same(catalog, provider.GetRequiredService<PluginCatalog>());
-        Assert.Same(provider.GetRequiredService<PluginManager>(), manager);
     }
 
     [Fact]

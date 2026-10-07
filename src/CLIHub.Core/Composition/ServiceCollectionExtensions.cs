@@ -71,8 +71,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPluginDescriptorValidator, PluginDescriptorValidator>();
         services.AddSingleton<PluginCatalog>();
         services.AddSingleton<IPluginCatalog>(sp => sp.GetRequiredService<PluginCatalog>());
-        services.AddSingleton<PluginManager>();
-        services.AddSingleton<IPluginManager>(sp => sp.GetRequiredService<PluginManager>());
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
         return services;
     }
@@ -106,7 +104,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ProcessLauncher>();
         services.AddSingleton<IInteractiveProcessRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
         services.AddSingleton<IProcessOutputRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
-        services.AddSingleton<IProcessLauncher>(sp => sp.GetRequiredService<ProcessLauncher>());
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));
