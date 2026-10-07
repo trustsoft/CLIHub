@@ -18,6 +18,7 @@
 
     <!-- Strokes and overlays -->
     <SolidColorBrush x:Key="FieldStrokeBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="ActionsBorderBrush" Color="#FF38383C"/>
     <SolidColorBrush x:Key="ControlStrokeBrush" Color="#1FFFFFFF"/>
     <SolidColorBrush x:Key="ChipBgBrush" Color="#0DFFFFFF"/>
     <SolidColorBrush x:Key="ChipStrokeBrush" Color="#14FFFFFF"/>

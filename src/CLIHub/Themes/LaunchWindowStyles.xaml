@@ -46,14 +46,9 @@
         <Setter Property="MinWidth" Value="{StaticResource Sizing.ActionsMenu.MinWidth}"/>
         <Setter Property="CornerRadius" Value="8,0,8,8"/>
         <Setter Property="Background" Value="{StaticResource PopoverOpenBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ActionsBorderBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="4"/>
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect BlurRadius="28" ShadowDepth="12" Opacity="0.45"/>
-            </Setter.Value>
-        </Setter>
     </Style>
 
     <!-- Actions menu entry: a full-width pill that highlights on hover and dims when disabled -->
@@ -170,7 +165,7 @@
                                  the outline as a header divider. The extra bottom padding compensates
                                  the removed bottom border, so the label and chevron do not move. -->
                             <Setter TargetName="Bd" Property="Background" Value="{StaticResource PopoverOpenBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ActionsBorderBrush}"/>
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1,1,1,0"/>
                             <Setter TargetName="Bd" Property="Padding" Value="7,0,5,1"/>
                             <Setter TargetName="Bd" Property="CornerRadius" Value="5,5,0,0"/>
