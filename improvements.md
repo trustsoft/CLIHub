@@ -24,7 +24,7 @@
 - Startup-сценарии уже частично вынесены в отдельные coordinators.
 - Core-процессы разделены на interactive launch и captured output contracts.
 - Проверка `dotnet build CLIHub.sln --no-restore -c Release`: 0 предупреждений, 0 ошибок.
-- Проверка `dotnet test CLIHub.sln -c Release`: 431 успешный тест, из них 376 Core и 55 application/UI.
+- Проверка `dotnet test CLIHub.sln -c Release`: 437 успешных тестов, из них 376 Core и 61 application/UI.
 
 ### Уже выполнено и не должно планироваться повторно
 
@@ -419,7 +419,7 @@ Change считается завершённым только когда:
 | 2 | `extract-application-bootstrapper` | Completed | Startup orchestration вынесена в `ApplicationBootstrapper`; добавлены application-facing UI/lifecycle ports и regression tests. Change archived at `openspec/changes/archive/2026-10-07-extract-application-bootstrapper`. |
 | 3 | `add-application-operation-lifetime` | Completed | Общий application operation lifetime, cancellation tokens и bounded shutdown для startup/update/command workflows. Change archived at `openspec/changes/archive/2026-10-07-add-application-operation-lifetime`. |
 | 4 | `split-launch-window-workflows` | Completed | Project и agent workflows вынесены в pane controllers; ViewModel оставлена presentation facade. Change archived at `openspec/changes/archive/2026-10-07-split-launch-window-workflows`. |
-| 5 | `extract-settings-draft-and-application` | Pending | Typed draft, validation и save workflow. |
+| 5 | `extract-settings-draft-and-application` | Completed | Typed draft, validation, ordered application и rollback policy вынесены в Settings application service. Change archived at `openspec/changes/archive/2026-10-07-extract-settings-draft-and-application`. |
 | 6 | `decouple-runtime-preference-application` | Pending | Убрать concrete WPF dependencies из applier. |
 | 7 | `separate-tray-actions-from-tray-host` | Pending | Разделить TaskbarIcon host и application actions. |
 | 8 | `split-update-service-contracts` | Pending | Narrow update ports и Velopack adapter. |
@@ -433,7 +433,7 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `extract-settings-draft-and-application`.
+Следующий implementation change: `decouple-runtime-preference-application`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -441,4 +441,6 @@ Change считается завершённым только когда:
 
 `add-application-operation-lifetime` завершён: один application CTS и tracked-operation registry используются для startup update checks, update downloads, agent commands, version population и settings/update controls; `App.OnExit` выполняет cancellation и bounded await перед DI disposal, добавлены cancellation/timeout tests.
 
-`split-launch-window-workflows` завершён: project и agent pane operations вынесены в WPF-independent controllers, сохранены selection identity, filtering, refresh и cancellable version population, добавлены focused controller tests. Следующим шагом можно переходить к `extract-settings-draft-and-application`.
+`split-launch-window-workflows` завершён: project и agent pane operations вынесены в WPF-independent controllers, сохранены selection identity, filtering, refresh и cancellable version population, добавлены focused controller tests.
+
+`extract-settings-draft-and-application` завершён: typed Settings input/draft, validation, ordered system application, atomic persistence update и rollback policy вынесены в `SettingsApplicationService`; `SettingsViewModel` оставлена binding/presentation facade, добавлены service и ViewModel tests. Следующим шагом можно переходить к `decouple-runtime-preference-application`.
