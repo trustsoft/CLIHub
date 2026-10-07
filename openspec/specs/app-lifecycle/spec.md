@@ -141,3 +141,25 @@ The launch window SHALL behave as a popup shell that stays out of the way and ca
 #### Scenario: Positioned on the pointer's monitor
 - **WHEN** the launch window is shown from the tray, the global hotkey, a second-instance activation, or startup
 - **THEN** it is centered in the work area of the monitor that contains the pointer at that moment
+
+### Requirement: Single instance resource ownership
+
+The application SHALL register and resolve exactly one `SingleInstanceGuard` singleton through the application composition root. The service provider SHALL own disposal of the guard and its named mutex and activation-pipe resources.
+
+#### Scenario: Production registration has one owner
+
+- **WHEN** the WPF service collection is built and the guard is resolved more than once
+- **THEN** every resolution returns the same `SingleInstanceGuard` instance
+- **AND** the application startup path does not construct or dispose a separate guard instance
+
+#### Scenario: Second instance exits through the provider lifecycle
+
+- **WHEN** startup resolves a guard that is not the first instance
+- **THEN** the application signals the first instance and requests shutdown
+- **AND** the service provider disposes the guard during normal application exit
+
+#### Scenario: First instance releases the mutex through provider disposal
+
+- **WHEN** the provider owning a first-instance guard is disposed
+- **THEN** the guard releases its named mutex and signal resources
+- **AND** a subsequent guard can acquire the mutex as the first instance

@@ -14,6 +14,7 @@ A monolithic `App.OnStartup` holding all of this inline was the original state: 
 
 - **Explicit ordered steps:** `OnStartup` remains a short, numbered sequence (documented in `docs/architecture/startup.md`) so the order is always visible in one place.
 - **Each concern gets a coordinator:** plugin initialization (`IPluginInitializationService`), preference application (`IStartupPreferencesApplier`), hotkey registration (`IHotkeyStartupRegistrar`), release notes (`IReleaseNotesStartupCoordinator`), and the update check (`IUpdateStartupCoordinator`) are separate services resolved from DI and invoked in order by `App`.
+- **The DI container owns singleton infrastructure:** `SingleInstanceGuard` is registered once and resolved by `App`; provider disposal releases its mutex and activation-pipe resources on every normal exit path.
 - **Documented failure policy per step:** the current best-effort behavior (log and continue, or abort startup) is written down per operation as a baseline; changes must update both the code and the table.
 - **No pipeline framework:** steps are plain awaited/straight-line calls in `App`, not middleware or a generic job runner.
 

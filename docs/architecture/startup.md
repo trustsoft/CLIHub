@@ -6,15 +6,15 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 
 `Program.Main` runs `VelopackApp.Build().Run()` before constructing and running the WPF `App`. Velopack bootstrap hooks therefore run before application initialization.
 
-## First-Instance Startup Sequence
+## Application Startup Sequence
 
 `App.OnStartup` performs the following operations in order:
 
-1. Calls the WPF base implementation and creates `SingleInstanceGuard`.
-2. If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns. No directories, logger, service provider, tray icon, or window are initialized in this branch.
-3. Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
-4. Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
-5. Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services.
+1. Calls the WPF base implementation.
+2. Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
+3. Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
+4. Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services.
+5. Resolves the single-instance guard from the service provider. If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns. The provider owns guard disposal on this path.
 6. Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
 7. Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
 8. Resolves the tray controller and subscribes it to update-state changes. Tray update actions and the What's New update action are wired to the shared download-and-restart workflow.
@@ -49,9 +49,8 @@ The failure behavior above describes the current implementation, not a recommend
 
 1. Unregisters the global hotkey and removes its window-message hook.
 2. Disposes the tray icon.
-3. Disposes the service provider. This disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes) and the logo cache service (which saves dirty cache state).
-4. Disposes `SingleInstanceGuard`, stopping its pipe server and releasing the mutex.
-5. Flushes and closes Serilog, then calls the WPF base implementation.
+3. Disposes the service provider. This disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes), the logo cache service (which saves dirty cache state), and `SingleInstanceGuard` (which stops its pipe server and releases the mutex).
+4. Flushes and closes Serilog, then calls the WPF base implementation.
 
 The order is implemented in `src/CLIHub/App.xaml.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 

@@ -57,7 +57,7 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 
 **Dependencies:** CLIHub.Core, WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Serilog.
 
-The WPF composition root registers `PluginInitializationService`, `TrayMenuBuilder`, `LaunchWindowViewModel`, `LaunchWindow`, `TrayIconController`, settings and release-notes launchers, startup coordinators, and the global hotkey services. `MainWindow` remains a legacy reference window and is not registered or constructed.
+The WPF composition root registers `SingleInstanceGuard` as the owner of the process mutex and activation pipe, along with `PluginInitializationService`, `TrayMenuBuilder`, `LaunchWindowViewModel`, `LaunchWindow`, `TrayIconController`, settings and release-notes launchers, startup coordinators, and the global hotkey services. `MainWindow` remains a legacy reference window and is not registered or constructed.
 
 **Target:** `net10.0-windows`.
 
