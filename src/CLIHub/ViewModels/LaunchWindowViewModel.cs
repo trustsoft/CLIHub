@@ -9,15 +9,11 @@ using System.Windows;
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
-using CLIHub.Core.Formatting;
-using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Persistence;
-using CLIHub.Core.Plugins;
-using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
+using CLIHub.Core.Formatting;
 using CLIHub.Themes;
 
 /// <summary>
@@ -31,25 +27,15 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private const string NoAgentMessage = "Select an agent before running an agent command.";
     private const string NoProjectSelectedMessage = "Select a project first.";
 
-    private static readonly string DefaultAgentLogoPath =
-        Path.Combine(AppContext.BaseDirectory, "default-project.png");
-
-    private readonly IProjectService _projectService;
-    private readonly IPluginCatalog _pluginCatalog;
+    private readonly ProjectPaneController _projectPane;
+    private readonly AgentPaneController _agentPane;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IAgentDetectionService _agentDetectionService;
-    private readonly IAgentVersionService _agentVersionService;
-    private readonly ILogoCacheService _logoCacheService;
     private readonly IPreferencesStore _preferencesStore;
     private readonly ISettingsLauncher _settingsLauncher;
-    private readonly PromptState _promptState;
-    private readonly IProjectDialogService _projectDialogs;
     private readonly IUserNotificationService _notifications;
     private readonly IApplicationLifetime _applicationLifetime;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<LaunchWindowViewModel> _logger;
-    private CancellationTokenSource? _versionPopulationCts;
-    private int _versionPopulationGeneration;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
@@ -64,50 +50,35 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <summary>
     ///   Creates the view model with its services and loads projects and agents.
     /// </summary>
-    /// <param name="projectService"> Project service backing the Projects pane. </param>
-    /// <param name="pluginCatalog"> Plugin catalog backing the Agents pane. </param>
+    /// <param name="projectPane"> Project-pane workflow boundary. </param>
+    /// <param name="agentPane"> Agent-pane workflow boundary. </param>
     /// <param name="agentCommandWorkflow"> Workflow executing agent commands. </param>
-    /// <param name="agentDetectionService"> Service detecting host and project availability. </param>
-    /// <param name="agentVersionService"> Service resolving agent versions. </param>
-    /// <param name="logoCacheService"> Persistent logo cache for project and agent logos. </param>
     /// <param name="preferencesStore"> Store for persisted preferences. </param>
     /// <param name="updateService"> Update service for the version text and update checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
-    /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
-    /// <param name="projectDialogs"> Project folder and confirmation dialogs. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
     /// <param name="logger"> Logger for unexpected agent command failures. </param>
     /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
-        IProjectService projectService,
-        IPluginCatalog pluginCatalog,
+        ProjectPaneController projectPane,
+        AgentPaneController agentPane,
         IAgentCommandWorkflow agentCommandWorkflow,
-        IAgentDetectionService agentDetectionService,
-        IAgentVersionService agentVersionService,
-        ILogoCacheService logoCacheService,
         IPreferencesStore preferencesStore,
         IUpdateService updateService,
         ISettingsLauncher settingsLauncher,
-        PromptState promptState,
-        IProjectDialogService projectDialogs,
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
         IApplicationOperationLifetime operationLifetime,
         ILogger<LaunchWindowViewModel> logger,
         ILogger<UpdateControlViewModel> updateControlLogger)
     {
-        _projectService = projectService;
-        _pluginCatalog = pluginCatalog;
+        _projectPane = projectPane;
+        _agentPane = agentPane;
         _agentCommandWorkflow = agentCommandWorkflow;
-        _agentDetectionService = agentDetectionService;
-        _agentVersionService = agentVersionService;
-        _logoCacheService = logoCacheService;
         _preferencesStore = preferencesStore;
         _settingsLauncher = settingsLauncher;
-        _promptState = promptState;
-        _projectDialogs = projectDialogs;
         _notifications = notifications;
         _applicationLifetime = applicationLifetime;
         _operationLifetime = operationLifetime;
@@ -137,7 +108,13 @@ public sealed class LaunchWindowViewModel : ObservableObject
             item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
             item => item.CanResume);
 
-        _projectService.ProjectsChanged += (_, _) => RefreshProjects();
+        _projectPane.ProjectsChanged += (_, _) =>
+        {
+            RefreshProjects();
+            RefreshAgents();
+        };
+
+        RefreshProjects();
 
         var preferences = _preferencesStore.Load();
 
@@ -150,19 +127,18 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         BuildActions();
 
-        RefreshProjects();
         RefreshAgents();
     }
 
     /// <summary>
     ///   Registered projects shown in the Projects pane.
     /// </summary>
-    public ObservableCollection<Project> Projects { get; } = new();
+    public ObservableCollection<Project> Projects => _projectPane.Projects;
 
     /// <summary>
     ///   Agents shown in the Agents pane.
     /// </summary>
-    public ObservableCollection<AgentItem> Agents { get; } = new();
+    public ObservableCollection<AgentItem> Agents => _agentPane.Agents;
 
     /// <summary>
     ///   Entries of the Projects pane's actions menu.
@@ -193,7 +169,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
-            _projectService.SetCurrentProject(value.Id);
+            _projectPane.Select(value);
             StatusMessage = $"Current project: {value.Name}";
             RefreshAgents();
         }
@@ -212,6 +188,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
                 return;
             }
 
+            _agentPane.Select(value);
             StatusMessage = $"Selected agent: {value.Name}";
         }
     }
@@ -418,25 +395,21 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void AddProject()
     {
-        using (_promptState.Begin())
+        try
         {
-            var folderPath = _projectDialogs.SelectProjectFolder();
-            if (folderPath is null)
+            var project = _projectPane.AddProject();
+            if (project is null)
             {
                 return;
             }
 
-            try
-            {
-                var project = _projectService.AddProject(folderPath);
-                _projectService.SetCurrentProject(project.Id);
-                StatusMessage = $"Added project: {project.Name}";
-            }
-            catch (Exception ex)
-            {
-                StatusMessage = $"Could not add project: {ex.Message}";
-                ShowWarning($"Could not add project: {ex.Message}");
-            }
+            RefreshProjects();
+            StatusMessage = $"Added project: {project.Name}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Could not add project: {ex.Message}";
+            ShowWarning($"Could not add project: {ex.Message}");
         }
     }
 
@@ -448,17 +421,12 @@ public sealed class LaunchWindowViewModel : ObservableObject
             return;
         }
 
-        using (_promptState.Begin())
+        if (!_projectPane.RemoveSelectedProject())
         {
-            var confirmed = _projectDialogs.ConfirmProjectRemoval(project.Name);
-
-            if (!confirmed)
-            {
-                return;
-            }
+            return;
         }
 
-        _projectService.RemoveProject(project.Id);
+        RefreshProjects();
         StatusMessage = $"Removed project: {project.Name}";
         RefreshAgents();
     }
@@ -471,7 +439,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
             return;
         }
 
-        _projectService.ToggleFavorite(project.Id);
+        _projectPane.ToggleFavorite();
         StatusMessage = project.IsFavorite
             ? $"Added {project.Name} to favorites"
             : $"Removed {project.Name} from favorites";
@@ -479,9 +447,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void Refresh()
     {
-        _logoCacheService.InvalidateAll();
-        _agentVersionService.Invalidate();
-        _agentDetectionService.Invalidate();
+        _agentPane.InvalidateCaches();
         RefreshProjects();
         RefreshAgents();
         StatusMessage = "Refreshed agents, versions and availability.";
@@ -513,7 +479,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
             return;
         }
 
-        var project = _projectService.GetCurrentProject();
+        var project = _projectPane.CurrentProject;
         if (project is null)
         {
             StatusMessage = NoProjectMessage;
@@ -559,31 +525,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         try
         {
-            var projects = _projectService.GetAllProjects();
-
-            // Diff sync: the service mutates the same Project instances this collection holds,
-            // so in-place changes flow through the model's property notifications. Only
-            // membership changes touch the collection, which keeps row and selection identity.
-            for (var i = Projects.Count - 1; i >= 0; i--)
-            {
-                if (projects.All(p => p.Id != Projects[i].Id))
-                {
-                    Projects.RemoveAt(i);
-                }
-            }
-
-            foreach (var project in projects)
-            {
-                if (Projects.All(p => p.Id != project.Id))
-                {
-                    Projects.Add(project);
-                }
-            }
-
-            var current = _projectService.GetCurrentProject();
-            SelectedProject = current is null
-                ? null
-                : Projects.FirstOrDefault(p => p.Id == current.Id);
+            SetProperty(ref _selectedProject, _projectPane.Refresh());
         }
         finally
         {
@@ -593,73 +535,12 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
     private void RefreshAgents()
     {
-        _versionPopulationCts?.Cancel();
-        _versionPopulationCts?.Dispose();
-        _versionPopulationCts = new CancellationTokenSource();
-        var generation = ++_versionPopulationGeneration;
-        var cancellationToken = _versionPopulationCts.Token;
+        var hasAgents = _agentPane.Refresh(_projectPane.CurrentProject?.Path, ShowOnlyProjectAgents);
+        SetProperty(ref _selectedAgent, _agentPane.SelectedAgent);
 
-        var currentProject = _projectService.GetCurrentProject()?.Path;
-        var entries = AgentListComposer.Compose(
-            _pluginCatalog.GetAllPlugins(),
-            _agentDetectionService,
-            currentProject,
-            ShowOnlyProjectAgents);
-
-        var selectedPluginId = SelectedAgent?.Plugin.Id;
-
-        var selected = AgentListSynchronizer.Synchronize(
-            Agents,
-            entries,
-            DefaultAgentLogoPath,
-            selectedPluginId);
-
-        SelectedAgent = selected;
-
-        if (Agents.Count == 0)
+        if (!hasAgents)
         {
             StatusMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
-        }
-        else
-        {
-            _ = _operationLifetime.RunAsync(
-                "Agent version population",
-                applicationToken => PopulateVersionsAsync(
-                    Agents.ToList(),
-                    generation,
-                    cancellationToken,
-                    applicationToken));
-        }
-    }
-
-    private async Task PopulateVersionsAsync(
-        IReadOnlyList<AgentItem> items,
-        int generation,
-        CancellationToken refreshCancellationToken,
-        CancellationToken applicationCancellationToken)
-    {
-        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
-            refreshCancellationToken,
-            applicationCancellationToken);
-        var cancellationToken = cancellation.Token;
-
-        try
-        {
-            await Task.WhenAll(items.Select(async item =>
-            {
-                var version = await _agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == _versionPopulationGeneration)
-                {
-                    item.Version = version ?? "unknown";
-                }
-            }));
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Agent version population failed: {ex}");
         }
     }
 

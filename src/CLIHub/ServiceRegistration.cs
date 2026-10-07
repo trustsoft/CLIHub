@@ -47,6 +47,8 @@ public static class ServiceRegistration
         services.AddSingleton<IProjectDialogService, ProjectDialogService>();
         services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<TrayMenuBuilder>();
+        services.AddSingleton<ProjectPaneController>();
+        services.AddSingleton<AgentPaneController>();
         services.AddSingleton<LaunchWindowViewModel>();
         services.AddSingleton<LaunchWindow>();
         services.AddSingleton<TrayIconController>();

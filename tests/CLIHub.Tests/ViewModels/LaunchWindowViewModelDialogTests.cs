@@ -35,21 +35,24 @@ public class LaunchWindowViewModelDialogTests
         var notifications = new Mock<IUserNotificationService>(MockBehavior.Strict);
         var lifetime = new Mock<IApplicationLifetime>(MockBehavior.Strict);
         lifetime.Setup(x => x.Shutdown());
-        var viewModel = new LaunchWindowViewModel(
-            projectService.Object,
+        var operationLifetime = new Mock<IApplicationOperationLifetime>();
+        var projectPane = new ProjectPaneController(projectService.Object, dialogs.Object, new PromptState());
+        var agentPane = new AgentPaneController(
             pluginCatalog.Object,
-            new Mock<IAgentCommandWorkflow>().Object,
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
+            operationLifetime.Object);
+        var viewModel = new LaunchWindowViewModel(
+            projectPane,
+            agentPane,
+            new Mock<IAgentCommandWorkflow>().Object,
             preferences.Object,
             CreateUpdateService(),
             new Mock<ISettingsLauncher>().Object,
-            new PromptState(),
-            dialogs.Object,
             notifications.Object,
             lifetime.Object,
-            new Mock<IApplicationOperationLifetime>().Object,
+            operationLifetime.Object,
             NullLogger<LaunchWindowViewModel>.Instance,
             NullLogger<UpdateControlViewModel>.Instance);
 
