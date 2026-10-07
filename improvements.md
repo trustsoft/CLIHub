@@ -416,7 +416,7 @@ Change считается завершённым только когда:
 | № | Change | Состояние | Комментарий |
 |---:|---|---|---|
 | 1 | `unify-single-instance-ownership` | Completed | Guard зарегистрирован и разрешается как один DI singleton; provider владеет его disposal. Change archived at `openspec/changes/archive/2026-10-07-unify-single-instance-ownership`. |
-| 2 | `extract-application-bootstrapper` | Pending | Вынести orchestration из `App.OnStartup`. |
+| 2 | `extract-application-bootstrapper` | Completed | Startup orchestration вынесена в `ApplicationBootstrapper`; добавлены application-facing UI/lifecycle ports и regression tests. Change archived at `openspec/changes/archive/2026-10-07-extract-application-bootstrapper`. |
 | 3 | `add-application-operation-lifetime` | Pending | Cancellation и контролируемый shutdown. |
 | 4 | `split-launch-window-workflows` | Pending | Снизить ответственность и число зависимостей ViewModel. |
 | 5 | `extract-settings-draft-and-application` | Pending | Typed draft, validation и save workflow. |
@@ -433,6 +433,8 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `extract-application-bootstrapper`.
+Следующий implementation change: `add-application-operation-lifetime`.
 
-`unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован. Следующим шагом можно переходить к `extract-application-bootstrapper`.
+`unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
+
+`extract-application-bootstrapper` завершён: startup ordering и failure policy вынесены из `App.OnStartup` в application bootstrapper, WPF wiring изолирован через startup UI/context ports, lazy factories предотвращают создание UI до single-instance проверки, добавлены orchestration и composition tests. Следующим шагом можно переходить к `add-application-operation-lifetime`.
