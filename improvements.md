@@ -24,7 +24,7 @@
 - Startup-сценарии уже частично вынесены в отдельные coordinators.
 - Core-процессы разделены на interactive launch и captured output contracts.
 - Проверка `dotnet build CLIHub.sln --no-restore -c Release`: 0 предупреждений, 0 ошибок.
-- Проверка `dotnet test CLIHub.sln -c Release`: 426 успешных тестов, из них 376 Core и 50 application/UI.
+- Проверка `dotnet test CLIHub.sln -c Release`: 431 успешный тест, из них 376 Core и 55 application/UI.
 
 ### Уже выполнено и не должно планироваться повторно
 
@@ -418,7 +418,7 @@ Change считается завершённым только когда:
 | 1 | `unify-single-instance-ownership` | Completed | Guard зарегистрирован и разрешается как один DI singleton; provider владеет его disposal. Change archived at `openspec/changes/archive/2026-10-07-unify-single-instance-ownership`. |
 | 2 | `extract-application-bootstrapper` | Completed | Startup orchestration вынесена в `ApplicationBootstrapper`; добавлены application-facing UI/lifecycle ports и regression tests. Change archived at `openspec/changes/archive/2026-10-07-extract-application-bootstrapper`. |
 | 3 | `add-application-operation-lifetime` | Completed | Общий application operation lifetime, cancellation tokens и bounded shutdown для startup/update/command workflows. Change archived at `openspec/changes/archive/2026-10-07-add-application-operation-lifetime`. |
-| 4 | `split-launch-window-workflows` | Pending | Снизить ответственность и число зависимостей ViewModel. |
+| 4 | `split-launch-window-workflows` | Completed | Project и agent workflows вынесены в pane controllers; ViewModel оставлена presentation facade. Change archived at `openspec/changes/archive/2026-10-07-split-launch-window-workflows`. |
 | 5 | `extract-settings-draft-and-application` | Pending | Typed draft, validation и save workflow. |
 | 6 | `decouple-runtime-preference-application` | Pending | Убрать concrete WPF dependencies из applier. |
 | 7 | `separate-tray-actions-from-tray-host` | Pending | Разделить TaskbarIcon host и application actions. |
@@ -433,10 +433,12 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `split-launch-window-workflows`.
+Следующий implementation change: `extract-settings-draft-and-application`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
 `extract-application-bootstrapper` завершён: startup ordering и failure policy вынесены из `App.OnStartup` в application bootstrapper, WPF wiring изолирован через startup UI/context ports, lazy factories предотвращают создание UI до single-instance проверки, добавлены orchestration и composition tests.
 
-`add-application-operation-lifetime` завершён: один application CTS и tracked-operation registry используются для startup update checks, update downloads, agent commands, version population и settings/update controls; `App.OnExit` выполняет cancellation и bounded await перед DI disposal, добавлены cancellation/timeout tests. Следующим шагом можно переходить к `split-launch-window-workflows`.
+`add-application-operation-lifetime` завершён: один application CTS и tracked-operation registry используются для startup update checks, update downloads, agent commands, version population и settings/update controls; `App.OnExit` выполняет cancellation и bounded await перед DI disposal, добавлены cancellation/timeout tests.
+
+`split-launch-window-workflows` завершён: project и agent pane operations вынесены в WPF-independent controllers, сохранены selection identity, filtering, refresh и cancellable version population, добавлены focused controller tests. Следующим шагом можно переходить к `extract-settings-draft-and-application`.
