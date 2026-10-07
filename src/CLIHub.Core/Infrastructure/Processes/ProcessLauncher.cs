@@ -149,8 +149,11 @@ public class ProcessLauncher : IProcessLauncher
             }
             catch (OperationCanceledException)
             {
-                try { process.Kill(entireProcessTree: true); } catch { /* ignore */ }
-                return new ProcessCaptureResult(false, -1, string.Empty, "Timed out waiting for the command");
+                await TerminateProcessAsync(process);
+                var reason = cancellationToken.IsCancellationRequested
+                    ? "Process cancelled"
+                    : "Timed out waiting for the command";
+                return new ProcessCaptureResult(false, -1, string.Empty, reason);
             }
 
             var stdout = (await stdoutTask).Trim();
@@ -181,5 +184,26 @@ public class ProcessLauncher : IProcessLauncher
     internal static string BuildCommandLine(PluginCommand command)
     {
         return WindowsCommandLineBuilder.BuildCommandLine(command);
+    }
+
+    private static async Task TerminateProcessAsync(Process process)
+    {
+        try
+        {
+            process.Kill(entireProcessTree: true);
+        }
+        catch
+        {
+            // The process may have exited between cancellation and termination.
+        }
+
+        try
+        {
+            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2));
+        }
+        catch
+        {
+            // Cleanup is best effort; the capture still reports the original cancellation reason.
+        }
     }
 }

@@ -61,6 +61,30 @@ public class ProcessLauncherTests
     }
 
     [Fact]
+    public void CommandLineBuilder_QuotesExecutableAndEscapesArgumentTail()
+    {
+        var command = new PluginCommand
+        {
+            Executable = @"C:\Program Files\Agent\agent.exe",
+            Arguments = "--name \"A&B\""
+        };
+
+        var commandLine = WindowsCommandLineBuilder.BuildCommandLine(command);
+
+        Assert.Equal("\"C:\\Program Files\\Agent\\agent.exe\" --name \"A^&B\"", commandLine);
+    }
+
+    [Fact]
+    public void CommandLineBuilder_BuildsCapturedCommandThroughComSpec()
+    {
+        var (fileName, arguments) = WindowsCommandLineBuilder.BuildCapturedCommand("echo", "hello & world");
+
+        Assert.Equal(Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe", fileName);
+        Assert.Contains("/d /s /c", arguments);
+        Assert.Contains("hello ^^^& world", arguments);
+    }
+
+    [Fact]
     public void SetRuntime_ThenGetRuntime_ReturnsConfiguredRuntime()
     {
         var launcher = new ProcessLauncher(NullLogger<ProcessLauncher>.Instance);
@@ -93,6 +117,28 @@ public class ProcessLauncherTests
         Assert.NotEqual(0, result.ExitCode);
     }
 
+    [Fact]
+    public async Task CaptureOutputAsync_CallerCancellationTerminatesProcessAndReportsCancellation()
+    {
+        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+
+        var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+            .CaptureOutputAsync("ping", "-n 10 127.0.0.1", Path.GetTempPath(), cancellation.Token, TimeSpan.FromSeconds(30));
+
+        Assert.False(result.Started);
+        Assert.Equal("Process cancelled", result.StdErr);
+    }
+
+    [Fact]
+    public async Task CaptureOutputAsync_TimeoutTerminatesProcessAndReportsTimeout()
+    {
+        var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+            .CaptureOutputAsync("ping", "-n 10 127.0.0.1", Path.GetTempPath(), timeout: TimeSpan.FromMilliseconds(100));
+
+        Assert.False(result.Started);
+        Assert.Equal("Timed out waiting for the command", result.StdErr);
+    }
+
     [Theory]
     [InlineData(".cmd")]
     [InlineData(".bat")]
@@ -118,4 +164,3 @@ public class ProcessLauncherTests
         }
     }
 }
-
