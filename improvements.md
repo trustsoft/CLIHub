@@ -420,7 +420,7 @@ Change считается завершённым только когда:
 | 3 | `add-application-operation-lifetime` | Completed | Общий application operation lifetime, cancellation tokens и bounded shutdown для startup/update/command workflows. Change archived at `openspec/changes/archive/2026-10-07-add-application-operation-lifetime`. |
 | 4 | `split-launch-window-workflows` | Completed | Project и agent workflows вынесены в pane controllers; ViewModel оставлена presentation facade. Change archived at `openspec/changes/archive/2026-10-07-split-launch-window-workflows`. |
 | 5 | `extract-settings-draft-and-application` | Completed | Typed draft, validation, ordered application и rollback policy вынесены в Settings application service. Change archived at `openspec/changes/archive/2026-10-07-extract-settings-draft-and-application`. |
-| 6 | `decouple-runtime-preference-application` | Pending | Убрать concrete WPF dependencies из applier. |
+| 6 | `decouple-runtime-preference-application` | Completed | Убраны concrete WPF dependencies из applier через узкие runtime/display/hotkey ports; добавлены прямые tests. Change archived at `openspec/changes/archive/2026-10-08-decouple-runtime-preference-application`. |
 | 7 | `separate-tray-actions-from-tray-host` | Pending | Разделить TaskbarIcon host и application actions. |
 | 8 | `split-update-service-contracts` | Pending | Narrow update ports и Velopack adapter. |
 | 9 | `harden-process-boundaries` | Pending | Cancellation, timeout и узкие process contracts. |
@@ -433,7 +433,7 @@ Change считается завершённым только когда:
 
 ## Следующая работа
 
-Следующий implementation change: `decouple-runtime-preference-application`.
+Следующий implementation change: определить следующий pending пункт плана.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -443,4 +443,4 @@ Change считается завершённым только когда:
 
 `split-launch-window-workflows` завершён: project и agent pane operations вынесены в WPF-independent controllers, сохранены selection identity, filtering, refresh и cancellable version population, добавлены focused controller tests.
 
-`extract-settings-draft-and-application` завершён: typed Settings input/draft, validation, ordered system application, atomic persistence update и rollback policy вынесены в `SettingsApplicationService`; `SettingsViewModel` оставлена binding/presentation facade, добавлены service и ViewModel tests. Следующим шагом можно переходить к `decouple-runtime-preference-application`.
+`extract-settings-draft-and-application` завершён: typed Settings input/draft, validation, ordered system application, atomic persistence update и rollback policy вынесены в `SettingsApplicationService`; `SettingsViewModel` оставлена binding/presentation facade, добавлены service и ViewModel tests. `decouple-runtime-preference-application` завершён: `PreferenceApplier` больше не зависит от concrete WPF targets, а runtime/display/hotkey boundaries покрыты узкими портами и tests.
