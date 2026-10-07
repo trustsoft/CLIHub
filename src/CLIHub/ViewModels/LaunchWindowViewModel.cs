@@ -46,6 +46,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private readonly IProjectDialogService _projectDialogs;
     private readonly IUserNotificationService _notifications;
     private readonly IApplicationLifetime _applicationLifetime;
+    private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<LaunchWindowViewModel> _logger;
     private CancellationTokenSource? _versionPopulationCts;
     private int _versionPopulationGeneration;
@@ -76,6 +77,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
     /// <param name="projectDialogs"> Project folder and confirmation dialogs. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
+    /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
     /// <param name="logger"> Logger for unexpected agent command failures. </param>
     /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
     public LaunchWindowViewModel(
@@ -92,6 +94,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
         IProjectDialogService projectDialogs,
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
+        IApplicationOperationLifetime operationLifetime,
         ILogger<LaunchWindowViewModel> logger,
         ILogger<UpdateControlViewModel> updateControlLogger)
     {
@@ -107,9 +110,10 @@ public sealed class LaunchWindowViewModel : ObservableObject
         _projectDialogs = projectDialogs;
         _notifications = notifications;
         _applicationLifetime = applicationLifetime;
+        _operationLifetime = operationLifetime;
         _logger = logger;
 
-        UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger);
+        UpdateControl = new UpdateControlViewModel(updateService, updateControlLogger, operationLifetime);
         UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
 
         AddProjectCommand = new RelayCommand(AddProject);
@@ -352,11 +356,14 @@ public sealed class LaunchWindowViewModel : ObservableObject
     private bool HasSelectedAgent() => SelectedAgent is not null;
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
-        AsyncOperationRunner.RunAsync(
+        _operationLifetime.RunAsync(
             $"{kind} {item?.Name ?? "agent command"}",
-            () => ExecuteAsync(item, kind),
-            _logger,
-            message => StatusMessage = message);
+            cancellationToken => AsyncOperationRunner.RunAsync(
+                $"{kind} {item?.Name ?? "agent command"}",
+                () => ExecuteAsync(item, kind, cancellationToken),
+                _logger,
+                message => StatusMessage = message,
+                cancellationToken));
 
     /// <summary>
     ///   Builds the per-pane actions menus from the existing commands, and wires the availability
@@ -495,7 +502,10 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
     }
 
-    private async Task ExecuteAsync(AgentItem? item, AgentCommandKind kind)
+    private async Task ExecuteAsync(
+        AgentItem? item,
+        AgentCommandKind kind,
+        CancellationToken cancellationToken)
     {
         if (item is null)
         {
@@ -518,7 +528,7 @@ public sealed class LaunchWindowViewModel : ObservableObject
 
         StatusMessage = $"{kind} {item.Name}...";
 
-        var result = await _agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind);
+        var result = await _agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind, cancellationToken);
         var error = result.Error ?? "no error details";
 
         if (kind == AgentCommandKind.Version)
@@ -612,15 +622,27 @@ public sealed class LaunchWindowViewModel : ObservableObject
         }
         else
         {
-            _ = PopulateVersionsAsync(Agents.ToList(), generation, cancellationToken);
+            _ = _operationLifetime.RunAsync(
+                "Agent version population",
+                applicationToken => PopulateVersionsAsync(
+                    Agents.ToList(),
+                    generation,
+                    cancellationToken,
+                    applicationToken));
         }
     }
 
     private async Task PopulateVersionsAsync(
         IReadOnlyList<AgentItem> items,
         int generation,
-        CancellationToken cancellationToken)
+        CancellationToken refreshCancellationToken,
+        CancellationToken applicationCancellationToken)
     {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+            refreshCancellationToken,
+            applicationCancellationToken);
+        var cancellationToken = cancellation.Token;
+
         try
         {
             await Task.WhenAll(items.Select(async item =>

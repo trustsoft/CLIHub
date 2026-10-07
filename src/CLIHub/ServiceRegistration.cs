@@ -33,6 +33,7 @@ public static class ServiceRegistration
         services.AddSingleton<SingleInstanceGuard>();
         services.AddSingleton<ISingleInstanceGuard>(sp => sp.GetRequiredService<SingleInstanceGuard>());
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
+        services.AddSingleton<IApplicationOperationLifetime, ApplicationOperationLifetime>();
         services.AddSingleton<IApplicationBootstrapper, ApplicationBootstrapper>();
         services.AddSingleton<IApplicationStartupUi, WpfApplicationStartupUi>();
         services.AddSingleton<Func<IApplicationStartupUi>>(sp =>

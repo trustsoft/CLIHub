@@ -27,7 +27,10 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
     }
 
     /// <inheritdoc />
-    public async Task CheckAsync(bool enabled, Action<string> notifyUpdateAvailable)
+    public async Task CheckAsync(
+        bool enabled,
+        Action<string> notifyUpdateAvailable,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(notifyUpdateAvailable);
 
@@ -39,12 +42,16 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 
         try
         {
-            var result = await _updateService.CheckForUpdatesAsync();
+            var result = await _updateService.CheckForUpdatesAsync(cancellationToken);
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {
                 notifyUpdateAvailable(version);
             }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Startup update check cancelled");
         }
         catch (Exception ex)
         {

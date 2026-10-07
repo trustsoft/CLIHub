@@ -13,6 +13,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 {
     private readonly ISingleInstanceGuard _singleInstanceGuard;
     private readonly IApplicationLifetime _applicationLifetime;
+    private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly IPluginInitializationService _pluginInitialization;
     private readonly IPreferencesStore _preferencesStore;
     private readonly IStartupPreferencesApplier _startupPreferences;
@@ -30,6 +31,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// </summary>
     /// <param name="singleInstanceGuard"> Single-instance boundary. </param>
     /// <param name="applicationLifetime"> Application shutdown boundary. </param>
+    /// <param name="operationLifetime"> Application operation lifetime boundary. </param>
     /// <param name="pluginInitialization"> Plugin initialization workflow. </param>
     /// <param name="preferencesStore"> Preferences persistence boundary. </param>
     /// <param name="startupPreferences"> Startup preference applier. </param>
@@ -44,6 +46,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     public ApplicationBootstrapper(
         ISingleInstanceGuard singleInstanceGuard,
         IApplicationLifetime applicationLifetime,
+        IApplicationOperationLifetime operationLifetime,
         IPluginInitializationService pluginInitialization,
         IPreferencesStore preferencesStore,
         IStartupPreferencesApplier startupPreferences,
@@ -58,6 +61,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     {
         _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
         _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         _pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
         _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _startupPreferences = startupPreferences ?? throw new ArgumentNullException(nameof(startupPreferences));
@@ -98,8 +102,14 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             var hotkeyStartupRegistrar = _hotkeyStartupRegistrarFactory();
 
             _updateService.UpdateStateChanged += (_, _) => context.Dispatch(startupUi.RefreshMenu);
-            startupUi.UpdateDownloadRequested += (_, _) => _ = updateDownload.DownloadAndApplyAsync();
-            updateRequestSource.UpdateRequested += (_, _) => _ = updateDownload.DownloadAndApplyAsync();
+            startupUi.UpdateDownloadRequested += (_, _) =>
+                _ = _operationLifetime.RunAsync(
+                    "Update download",
+                    cancellationToken => updateDownload.DownloadAndApplyAsync(cancellationToken));
+            updateRequestSource.UpdateRequested += (_, _) =>
+                _ = _operationLifetime.RunAsync(
+                    "Update download",
+                    cancellationToken => updateDownload.DownloadAndApplyAsync(cancellationToken));
             _singleInstanceGuard.ActivationRequested += () => context.Dispatch(startupUi.ShowLaunchWindow);
 
             context.SetMainWindow(startupUi.LaunchWindow);
@@ -118,7 +128,13 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             RunBestEffort("release notes", () => _releaseNotesStartup.Evaluate(preferences));
             RunBestEffort(
                 "startup update check",
-                () => _ = RunStartupUpdateCheckAsync(preferences.CheckForUpdatesOnStartup, startupUi, context));
+                () => _ = _operationLifetime.RunAsync(
+                    "Startup update check",
+                    cancellationToken => RunStartupUpdateCheckAsync(
+                        preferences.CheckForUpdatesOnStartup,
+                        startupUi,
+                        context,
+                        cancellationToken)));
 
             _logger.LogInformation("CLIHub started");
         }
@@ -132,13 +148,15 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     private async Task RunStartupUpdateCheckAsync(
         bool enabled,
         IApplicationStartupUi startupUi,
-        ApplicationStartupContext context)
+        ApplicationStartupContext context,
+        CancellationToken cancellationToken)
     {
         try
         {
             await _updateStartup.CheckAsync(
                 enabled,
-                version => context.Dispatch(() => startupUi.NotifyUpdateAvailable(version)));
+                version => context.Dispatch(() => startupUi.NotifyUpdateAvailable(version)),
+                cancellationToken);
         }
         catch (Exception ex)
         {

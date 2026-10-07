@@ -18,6 +18,7 @@ public sealed class UpdateControlViewModel : ObservableObject
 {
     private readonly IUpdateService _updateService;
     private readonly ILogger<UpdateControlViewModel> _logger;
+    private readonly IApplicationOperationLifetime _operationLifetime;
 
     private UpdateControlState _state = UpdateControlState.Idle;
 
@@ -31,29 +32,33 @@ public sealed class UpdateControlViewModel : ObservableObject
     /// </summary>
     /// <param name="updateService"> Update service backing the checks, downloads, and applies. </param>
     /// <param name="logger"> Logger for unexpected update control failures. </param>
+    /// <param name="operationLifetime"> Application lifetime for tracked update work. </param>
     public UpdateControlViewModel(
         IUpdateService updateService,
-        ILogger<UpdateControlViewModel> logger)
+        ILogger<UpdateControlViewModel> logger,
+        IApplicationOperationLifetime operationLifetime)
     {
         _updateService = updateService;
         _logger = logger;
+        _operationLifetime = operationLifetime;
 
         CurrentVersion = updateService.GetCurrentVersion();
 
         UpdateControlCommand = new RelayCommand(
-            () => _ = RunUpdateControlAsync(),
+            () => _ = _operationLifetime.RunAsync("Update control", RunUpdateControlAsync),
             () => _state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
 
         _updateService.UpdateStateChanged += OnUpdateStateChanged;
         RefreshState();
     }
 
-    private Task RunUpdateControlAsync() =>
+    private Task RunUpdateControlAsync(CancellationToken cancellationToken) =>
         AsyncOperationRunner.RunAsync(
             "Update control",
-            HandleUpdateControlAsync,
+            () => HandleUpdateControlAsync(cancellationToken),
             _logger,
-            ReportOutcome);
+            ReportOutcome,
+            cancellationToken);
 
     /// <summary>
     ///   The current application version, shown while the control is idle.
@@ -89,23 +94,23 @@ public sealed class UpdateControlViewModel : ObservableObject
     /// </summary>
     public RelayCommand UpdateControlCommand { get; }
 
-    private async Task HandleUpdateControlAsync()
+    private async Task HandleUpdateControlAsync(CancellationToken cancellationToken)
     {
         switch (_state)
         {
             case UpdateControlState.Available:
-                await DownloadUpdateAsync();
+                await DownloadUpdateAsync(cancellationToken);
                 break;
             case UpdateControlState.ReadyToApply:
                 ApplyDownloadedUpdate();
                 break;
             default:
-                await CheckForUpdatesAsync();
+                await CheckForUpdatesAsync(cancellationToken);
                 break;
         }
     }
 
-    private async Task CheckForUpdatesAsync()
+    private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
     {
         SetState(UpdateControlState.Checking);
         ReportOutcome("Checking for updates...");
@@ -113,7 +118,12 @@ public sealed class UpdateControlViewModel : ObservableObject
         UpdateCheckResult result;
         try
         {
-            result = await _updateService.CheckForUpdatesAsync();
+            result = await _updateService.CheckForUpdatesAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            SetState(UpdateControlState.Idle);
+            return;
         }
         catch (Exception)
         {
@@ -135,14 +145,19 @@ public sealed class UpdateControlViewModel : ObservableObject
             : UpdateControlState.Idle);
     }
 
-    private async Task DownloadUpdateAsync()
+    private async Task DownloadUpdateAsync(CancellationToken cancellationToken)
     {
         SetState(UpdateControlState.Downloading);
 
         UpdateDownloadResult result;
         try
         {
-            result = await _updateService.DownloadUpdateAsync();
+            result = await _updateService.DownloadUpdateAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            SetState(UpdateControlState.Idle);
+            return;
         }
         catch (Exception)
         {

@@ -24,7 +24,7 @@ public class UpdateDownloadCoordinatorTests
         var coordinator = CreateCoordinator(
             updates.Object,
             notifier.Object,
-            duration =>
+             (duration, _) =>
             {
                 delays.Add(duration);
                 return Task.CompletedTask;
@@ -44,7 +44,7 @@ public class UpdateDownloadCoordinatorTests
         var updates = CreateDownloadService(
             new UpdateDownloadResult(UpdateDownloadStatus.Failed, "1.2.0"));
         var notifier = CreateNotifier();
-        var coordinator = CreateCoordinator(updates.Object, notifier.Object, _ => Task.CompletedTask);
+        var coordinator = CreateCoordinator(updates.Object, notifier.Object, (_, _) => Task.CompletedTask);
 
         await coordinator.DownloadAndApplyAsync();
 
@@ -62,7 +62,7 @@ public class UpdateDownloadCoordinatorTests
     {
         var updates = CreateDownloadService(new UpdateDownloadResult(status, null));
         var notifier = CreateNotifier();
-        var coordinator = CreateCoordinator(updates.Object, notifier.Object, _ => Task.CompletedTask);
+        var coordinator = CreateCoordinator(updates.Object, notifier.Object, (_, _) => Task.CompletedTask);
 
         await coordinator.DownloadAndApplyAsync();
 
@@ -80,12 +80,28 @@ public class UpdateDownloadCoordinatorTests
             .Setup(x => x.DownloadUpdateAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("test"));
         var notifier = CreateNotifier();
-        var coordinator = CreateCoordinator(updates.Object, notifier.Object, _ => Task.CompletedTask);
+        var coordinator = CreateCoordinator(updates.Object, notifier.Object, (_, _) => Task.CompletedTask);
 
-        var exception = await Record.ExceptionAsync(coordinator.DownloadAndApplyAsync);
+        var exception = await Record.ExceptionAsync(() => coordinator.DownloadAndApplyAsync());
 
         Assert.Null(exception);
         notifier.Verify(x => x.RefreshMenu(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DownloadAndApplyAsync_ForwardsCancellationToken()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var updates = new Mock<IUpdateService>(MockBehavior.Strict);
+        updates
+            .Setup(x => x.DownloadUpdateAsync(cancellation.Token))
+            .ReturnsAsync(new UpdateDownloadResult(UpdateDownloadStatus.NoUpdate, null));
+        var notifier = CreateNotifier();
+        var coordinator = CreateCoordinator(updates.Object, notifier.Object, (_, _) => Task.CompletedTask);
+
+        await coordinator.DownloadAndApplyAsync(cancellation.Token);
+
+        updates.Verify(x => x.DownloadUpdateAsync(cancellation.Token), Times.Once);
     }
 
     private static Mock<IUpdateService> CreateDownloadService(UpdateDownloadResult result)
@@ -109,6 +125,6 @@ public class UpdateDownloadCoordinatorTests
     private static UpdateDownloadCoordinator CreateCoordinator(
         IUpdateService updates,
         IUpdateDownloadNotifier notifier,
-        Func<TimeSpan, Task> delay) =>
+        Func<TimeSpan, CancellationToken, Task> delay) =>
         new(updates, notifier, NullLogger<UpdateDownloadCoordinator>.Instance, delay);
 }

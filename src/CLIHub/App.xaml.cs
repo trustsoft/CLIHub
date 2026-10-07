@@ -57,6 +57,19 @@ public partial class App : Application
     {
         Log.Information("CLIHub shutting down");
 
+        try
+        {
+            _services?
+                .GetService<IApplicationOperationLifetime>()?
+                .StopAsync(ApplicationOperationLifetime.DefaultShutdownTimeout)
+                .GetAwaiter()
+                .GetResult();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Application operation shutdown failed");
+        }
+
         _services?.Dispose();
 
         Log.CloseAndFlush();

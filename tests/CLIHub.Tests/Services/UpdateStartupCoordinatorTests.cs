@@ -66,6 +66,21 @@ public class UpdateStartupCoordinatorTests
     }
 
     [Fact]
+    public async Task CheckAsync_ForwardsCancellationToken()
+    {
+        using var cancellation = new CancellationTokenSource();
+        var updateService = new Mock<IUpdateService>(MockBehavior.Strict);
+        updateService
+            .Setup(x => x.CheckForUpdatesAsync(cancellation.Token))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
+        var coordinator = CreateCoordinator(updateService.Object);
+
+        await coordinator.CheckAsync(true, _ => { }, cancellation.Token);
+
+        updateService.Verify(x => x.CheckForUpdatesAsync(cancellation.Token), Times.Once);
+    }
+
+    [Fact]
     public void AddClIHubServices_RegistersUpdateStartupCoordinator()
     {
         var services = new ServiceCollection();

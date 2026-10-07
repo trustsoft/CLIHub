@@ -49,6 +49,7 @@ public class LaunchWindowViewModelDialogTests
             dialogs.Object,
             notifications.Object,
             lifetime.Object,
+            new Mock<IApplicationOperationLifetime>().Object,
             NullLogger<LaunchWindowViewModel>.Instance,
             NullLogger<UpdateControlViewModel>.Instance);
 

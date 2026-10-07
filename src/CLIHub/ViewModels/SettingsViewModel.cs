@@ -49,6 +49,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly IUpdateService _updateService;
     private readonly IStartupService _startupService;
     private readonly IPreferenceApplier _applier;
+    private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<SettingsViewModel> _logger;
 
     private bool _startWithWindows;
@@ -70,25 +71,29 @@ public sealed class SettingsViewModel : ObservableObject
     /// <param name="updateService"> Update service used for the version and update checks. </param>
     /// <param name="startupService"> Startup service used by the start-with-Windows toggle. </param>
     /// <param name="applier"> Preference applier invoked on save. </param>
+    /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
         IPreferencesStore preferencesStore,
         IUpdateService updateService,
         IStartupService startupService,
         IPreferenceApplier applier,
+        IApplicationOperationLifetime operationLifetime,
         ILogger<SettingsViewModel> logger)
     {
         _preferencesStore = preferencesStore;
         _updateService = updateService;
         _startupService = startupService;
         _applier = applier;
+        _operationLifetime = operationLifetime;
         _logger = logger;
 
         Version = _updateService.GetCurrentVersion();
 
         SaveCommand = new RelayCommand(Save);
         CancelCommand = new RelayCommand(Cancel);
-        CheckForUpdatesCommand = new RelayCommand(() => _ = RunUpdateCheckAsync());
+        CheckForUpdatesCommand = new RelayCommand(() =>
+            _ = _operationLifetime.RunAsync("Settings update check", RunUpdateCheckAsync));
     }
 
     /// <summary>
@@ -246,12 +251,13 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
 
-    private Task RunUpdateCheckAsync() =>
+    private Task RunUpdateCheckAsync(CancellationToken cancellationToken) =>
         AsyncOperationRunner.RunAsync(
             "Settings update check",
-            CheckForUpdatesAsync,
+            () => CheckForUpdatesAsync(cancellationToken),
             _logger,
-            message => UpdateMessage = message);
+            message => UpdateMessage = message,
+            cancellationToken);
 
     /// <summary>
     ///   Reloads all fields from the stored configuration.
@@ -312,11 +318,20 @@ public sealed class SettingsViewModel : ObservableObject
     ///   Checks for updates and reports the outcome in <see cref="UpdateMessage"/>.
     /// </summary>
     /// <returns> A task that completes when the check finishes. </returns>
-    public async Task CheckForUpdatesAsync()
+    public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
         UpdateMessage = "Checking for updates...";
 
-        var result = await _updateService.CheckForUpdatesAsync();
+        UpdateCheckResult result;
+        try
+        {
+            result = await _updateService.CheckForUpdatesAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            UpdateMessage = "Update check cancelled.";
+            return;
+        }
 
         UpdateMessage = result.Status switch
         {

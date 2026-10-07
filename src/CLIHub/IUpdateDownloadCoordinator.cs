@@ -9,5 +9,5 @@ public interface IUpdateDownloadCoordinator
     ///   Downloads the known update, reports its outcome, and applies it with a restart when ready.
     /// </summary>
     /// <returns> A task that completes when the workflow has finished. </returns>
-    Task DownloadAndApplyAsync();
+    Task DownloadAndApplyAsync(CancellationToken cancellationToken = default);
 }

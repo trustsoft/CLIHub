@@ -121,6 +121,9 @@ public class ApplicationBootstrapperTests
         Assert.Same(
             provider.GetRequiredService<SingleInstanceGuard>(),
             provider.GetRequiredService<ISingleInstanceGuard>());
+        Assert.Same(
+            provider.GetRequiredService<IApplicationOperationLifetime>(),
+            provider.GetRequiredService<IApplicationOperationLifetime>());
     }
 
     private static ApplicationStartupContext CreateContext(IStartupWindow window) =>
@@ -130,6 +133,7 @@ public class ApplicationBootstrapperTests
     {
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationLifetime> Lifetime { get; } = new(MockBehavior.Strict);
+        public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
         public Mock<IPluginInitializationService> Plugin { get; } = new(MockBehavior.Strict);
         public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
         public Mock<IStartupPreferencesApplier> StartupPreferences { get; } = new(MockBehavior.Strict);
@@ -150,9 +154,14 @@ public class ApplicationBootstrapperTests
 
         public BootstrapperFixture()
         {
+            OperationLifetime
+                .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
+                .Returns((string _, Func<CancellationToken, Task> operation) => operation(CancellationToken.None));
+
             Bootstrapper = new ApplicationBootstrapper(
                 Guard.Object,
                 Lifetime.Object,
+                OperationLifetime.Object,
                 Plugin.Object,
                 Preferences.Object,
                 StartupPreferences.Object,
