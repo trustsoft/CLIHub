@@ -36,15 +36,6 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        _guard = new SingleInstanceGuard();
-
-        if (!_guard.IsFirstInstance)
-        {
-            _guard.SignalActivation();
-            Shutdown();
-            return;
-        }
-
         DirectoryInitializer.EnsureAppDataLayout();
         ConfigureLogging();
 
@@ -53,6 +44,15 @@ public partial class App : Application
         var services = new ServiceCollection();
         services.AddClIHubServices();
         _services = services.BuildServiceProvider();
+
+        _guard = _services.GetRequiredService<SingleInstanceGuard>();
+
+        if (!_guard.IsFirstInstance)
+        {
+            _guard.SignalActivation();
+            Shutdown();
+            return;
+        }
 
         _services.GetRequiredService<IPluginInitializationService>().Initialize();
 
@@ -105,7 +105,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    ///   Disposes the hotkey, tray icon, DI container, and single-instance guard, then flushes logs.
+    ///   Disposes the hotkey, tray icon, and DI container, then flushes logs.
     /// </summary>
     /// <param name="e"> Exit event arguments. </param>
     protected override void OnExit(ExitEventArgs e)
@@ -115,7 +115,6 @@ public partial class App : Application
         _hotkey?.Dispose();
         _tray?.Dispose();
         _services?.Dispose();
-        _guard?.Dispose();
 
         Log.CloseAndFlush();
 

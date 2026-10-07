@@ -1,5 +1,7 @@
 namespace CLIHub.Tests.Services;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Windows;
 
@@ -20,6 +22,21 @@ public class SingleInstanceGuardTests
 
         Assert.True(first.IsFirstInstance);
         Assert.False(second.IsFirstInstance);
+    }
+
+    [Fact]
+    public void ServiceProviderDisposal_ReleasesFirstInstanceMutex()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<SingleInstanceGuard>();
+
+        using (var provider = services.BuildServiceProvider())
+        {
+            Assert.True(provider.GetRequiredService<SingleInstanceGuard>().IsFirstInstance);
+        }
+
+        using var replacement = new SingleInstanceGuard();
+        Assert.True(replacement.IsFirstInstance);
     }
 }
 
@@ -61,4 +78,4 @@ public class DirectoryInitializerTests
         }
     }
 }
-
+
