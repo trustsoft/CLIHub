@@ -56,7 +56,7 @@ Everything lives under `%APPDATA%\CLIHub\`:
 └── cache\
 ```
 
-Key preferences in `config.json` → `preferences`: `startWithWindows`, `showWindowOnStartup`, `hotkey`, `defaultRuntime`, `logLevel`, `terminalExecutable` (legacy), `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`. Most are editable from the **Settings** window (tray menu). Full layout and configuration details: [`docs/architecture.md`](docs/architecture.md).
+Key preferences in `config.json` → `preferences`: `startWithWindows`, `showWindowOnStartup`, `hotkey`, `defaultRuntime`, `logLevel`, `terminalExecutable` (legacy), `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `pinLaunchWindow`, and `pathDisplayStyle`. Most are editable from the **Settings** window (tray menu). Full layout, schema, and migration details: [`docs/architecture/configuration.md`](docs/architecture/configuration.md).
 
 ## Adding an agent plugin
 

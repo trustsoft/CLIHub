@@ -1,8 +1,8 @@
-# Changelog & Release Notes — Plan
+# Changelog & Release Notes
 
 **Status:** Implemented by the `release-notes` change (`openspec/changes/archive/2026-09-30-release-notes/`): the two documents,
 the embedded notes and their parser, the **What's New** window, and the one-time display after an upgrade.
-The deferred CI / `vpk --releaseNotes` wiring was delivered by the `ci-cd-release` change
+The formerly deferred CI / `vpk --releaseNotes` wiring was delivered by the `ci-cd-release` change
 (`openspec/changes/archive/2026-10-03-ci-cd-release/`); the release procedure itself lives in
 [releasing.md](releasing.md).
 This document remains the rationale behind the decisions below; the durable behavior lives in the
@@ -21,7 +21,7 @@ Track what changes in CLIHub for two different audiences, and surface the user-f
 | File | Audience | Voice | Groupings |
 |------|----------|-------|-----------|
 | `CHANGELOG.md` (repo root) | developers | technical, precise | Added / Changed / Fixed / Removed (+ `BREAKING`, spec refs) |
-| `RELEASE-NOTES.md` (repo root, *name TBD*) | end users | laconic, person-oriented | New / Improved / Fixed |
+| `RELEASE-NOTES.md` (repo root) | end users | laconic, person-oriented | New / Improved / Fixed |
 
 Both use the same version headings (`## <version> — <date>`) so a release lines up across the two files.
 
@@ -90,7 +90,7 @@ An OpenSpec change, `release-notes`, that:
 
 - adds `CHANGELOG.md` (technical) and `RELEASE-NOTES.md` (user-facing), seeded with the current version;
 - adds a capability `release-notes-display`: embed the notes, `IReleaseNotesService` (parse), and a **"What's New"** window reachable from the tray;
-- defers CI / `vpk --releaseNotes` wiring to the packaging change (delivered: `ci-cd-release`, 2026-10-03).
+- records that CI / `vpk --releaseNotes` wiring was delivered by the packaging change (`ci-cd-release`, 2026-10-03).
 
 ## Decision log
 
@@ -107,6 +107,6 @@ Decisions taken while implementing (recorded here because they were open in this
 
 | # | Question | Decision | Date |
 |---|----------|----------|------|
-| 7 | Version for the seeded section | `0.5.0` — the version in `Directory.Build.props`, not the illustrative `1.0.0` in the examples above | 2026-09-30 |
+| 7 | Version for the seeded section | `0.5.0` — the development version at the time the notes feature was implemented, not the illustrative `1.0.0` in the examples above | 2026-09-30 |
 | 8 | First run vs. upgrade | A missing recorded version means "first run": the window is not opened automatically, and the version is recorded | 2026-09-30 |
 | 9 | What's New window chrome | Follows the Settings window's lifecycle (single instance, owned by the launch window) but draws its own dark chrome like the launch window; it stays an ordinary resizable window, not a popup | 2026-09-30 |

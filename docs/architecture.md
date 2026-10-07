@@ -10,10 +10,10 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 
 **Purpose:** UI-independent application logic with explicit Windows infrastructure boundaries.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppPreferences`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `ReleaseNote`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppConfigDocument`, `AppPreferences`, `ConfigurationSnapshot`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `UpdateControlState`, and `ReleaseNote`.
 
 **Subsystems:**
-- `Configuration/` — the `config.json` persistence document, preference access, project-state access, and the shared atomic write path
+- `Configuration/` — the `config.json` persistence document, detached snapshots, schema migrations, preference access, and the shared atomic write path
 - `Projects/` — project lifecycle, `ProjectState`, path policy, and project logo resolution
 - `Plugins/` — plugin discovery, validation, seeding, and plugin contracts
 - `Agents/` — agent commands, detection, version lookup, availability composition, and agent contracts
@@ -22,7 +22,8 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 - `Composition/` — Core dependency injection registration grouped by subsystem
 
 **Services:**
-- `ConfigurationRepository` — JSON configuration load/save with atomic writes
+- `ConfigurationRepository` — JSON configuration load/save, schema validation/migration, detached snapshots, and atomic writes
+- `ConfigMigrationRunner` / `LegacyTerminalPreferenceMigration` — ordered schema migration infrastructure and the version 0 to version 1 terminal preference migration
 - `PreferencesStore` — preferences-only access over the shared configuration document
 - `ProjectStateStore` — project-state-only access over the shared configuration document
 - `ProjectService` — project tracking (current, recent, favorites, logo resolution)

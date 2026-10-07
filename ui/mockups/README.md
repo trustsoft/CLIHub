@@ -2,7 +2,7 @@
 
 Reference images for UI work. The descriptions below are a snapshot of each image; the images are the source of truth and may be updated.
 
-Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` (light theme).
+Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` with the current dark theme.
 
 ## `popup-split.png` — launch window (Popup)
 
@@ -29,7 +29,7 @@ New or extended preferences:
 
 | Setting | Notes |
 |---------|-------|
-| Default runtime | `cmd` / `ps` / `wt` → the current `terminalExecutable` as a 3-way choice |
+| Default runtime | `cmd` / `ps` / `wt` → the legacy `terminalExecutable` preference as a 3-way choice |
 | Global hotkey | capture control (currently edited only in `config.json`) |
 | Agents probe TTL (minutes) | cache availability detection results; empty → default |
 | Agents probe timeout (seconds) | per-probe timeout; empty → default |
@@ -43,12 +43,12 @@ Launch window and Settings elements:
 - Availability display already exists (dim); the mockup also dims/filters unavailable agents, and the filter lives in the **AGENTS** Actions menu. *(delivered)*
 - The update check stays reachable from the launch window footer next to the version pill. *(delivered)*
 - Path shortening is selectable in Settings: **Left trim** (the mockup's `...tail` look) or **Middle ellipsis**. *(delivered)*
-- Downloading and applying updates with install "from tray" — still deferred to the packaging work.
-- The dark palette is applied to the launch window and to the What's New window (which draws its own chrome), while the Settings window keeps its light styling (owned by the launch window so it stays visible above it).
+- Downloading and applying updates with install "from tray". *(delivered)*
+- The dark palette is applied to the launch window, Settings window, and What's New window; each window draws its own chrome where required.
 
 ## Related changes
 
 - `launch-window-chrome` (delivered) — the chromeless popup shell: no OS chrome with DWM-rounded corners, always on top, hide on focus loss with a persisted pin, Escape to hide, pointer-monitor placement, the reference palette and sizing tokens, hairline divider, reference row metrics and vector action buttons, Actions menus with icons, and the path display preference.
 - `launch-window-ui` (delivered) — the dark two-pane launch window: pane headers with Actions menus, project and agent rows, inline launch/resume, footer with version pill, update check and add-project/settings/exit actions, scrolling, and the `LaunchWindowViewModel` behind it.
 - `main-window-layout` (delivered, redesigned) — resizable Projects/Agents panes and aligned pane layout, now expressed in the launch window as aligned pane headers and pane bodies ending at the footer.
-- `preferences-ui` (delivered) — the Settings window, default-runtime `cmd`/`ps`/`wt` selection, hotkey capture, agent probe TTL/timeout, and the startup update toggle (light theme rather than the mockup's dark styling).
+- `preferences-ui` (delivered) — the Settings window, default-runtime `cmd`/`ps`/`wt` selection, hotkey capture, agent probe TTL/timeout, and the startup update toggle.
