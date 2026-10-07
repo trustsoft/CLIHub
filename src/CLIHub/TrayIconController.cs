@@ -3,7 +3,6 @@ namespace CLIHub;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-using CLIHub.Core.Projects;
 using CLIHub.Views;
 
 using H.NotifyIcon;
@@ -11,9 +10,9 @@ using H.NotifyIcon;
 /// <summary>
 ///   Owns the system tray icon, its context menu, and main-window visibility.
 /// </summary>
-public sealed class TrayIconController : IDisposable
+public sealed class TrayIconController : ITrayHost, IDisposable
 {
-    private readonly IProjectService _projects;
+    private readonly ITrayActions _actions;
     private readonly TrayMenuBuilder _menuBuilder;
     private readonly LaunchWindow _launchWindow;
     private readonly TaskbarIcon _taskbarIcon;
@@ -26,19 +25,20 @@ public sealed class TrayIconController : IDisposable
     /// <summary>
     ///   Creates the tray icon controller and builds its menu.
     /// </summary>
-    /// <param name="projects"> Project service used by the project menu. </param>
+    /// <param name="actions"> Application actions and menu state provider. </param>
     /// <param name="menuBuilder"> Builder for the tray context menu. </param>
     /// <param name="launchWindow"> The launch window the tray toggles. </param>
     public TrayIconController(
-        IProjectService projects,
+        ITrayActions actions,
         TrayMenuBuilder menuBuilder,
         LaunchWindow launchWindow)
     {
-        _projects = projects ?? throw new ArgumentNullException(nameof(projects));
+        _actions = actions ?? throw new ArgumentNullException(nameof(actions));
         _menuBuilder = menuBuilder ?? throw new ArgumentNullException(nameof(menuBuilder));
         _launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
 
-        _menuBuilder.UpdateDownloadRequested += (_, _) => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty);
+        _actions.StateChanged += OnStateChanged;
+        _actions.UpdateDownloadRequested += OnUpdateDownloadRequested;
 
         _taskbarIcon = new TaskbarIcon
         {
@@ -47,8 +47,6 @@ public sealed class TrayIconController : IDisposable
         };
 
         _taskbarIcon.TrayLeftMouseUp += (_, _) => ShowLaunchWindow();
-
-        _projects.ProjectsChanged += (_, _) => RefreshMenu();
 
         RefreshMenu();
         _taskbarIcon.ForceCreate();
@@ -129,7 +127,13 @@ public sealed class TrayIconController : IDisposable
     /// </summary>
     public void RefreshMenu()
     {
-        _taskbarIcon.ContextMenu = _menuBuilder.Build();
+        var commands = _actions.Commands with
+        {
+            RequestUpdateDownload = () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
+            ShowLaunchWindow = ShowLaunchWindow,
+            Exit = () => Application.Current?.Shutdown()
+        };
+        _taskbarIcon.ContextMenu = _menuBuilder.Build(_actions.GetState(), commands);
     }
 
     /// <summary>
@@ -137,7 +141,14 @@ public sealed class TrayIconController : IDisposable
     /// </summary>
     public void Dispose()
     {
+        _actions.StateChanged -= OnStateChanged;
+        _actions.UpdateDownloadRequested -= OnUpdateDownloadRequested;
         _taskbarIcon.Dispose();
     }
+
+    private void OnStateChanged(object? sender, EventArgs e) => RefreshMenu();
+
+    private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
+        UpdateDownloadRequested?.Invoke(this, e);
 }
 

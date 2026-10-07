@@ -3,117 +3,64 @@ namespace CLIHub;
 using System.Windows;
 using System.Windows.Controls;
 
-using Microsoft.Win32;
-
-using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
-using CLIHub.Core.Plugins;
-using CLIHub.Core.Projects;
-using CLIHub.Core.Updates;
-using CLIHub.Views;
 
 /// <summary>
-///   Builds the system tray context menu from current application state.
+///   Projects prepared tray state and commands into a WPF context menu.
 /// </summary>
 public sealed class TrayMenuBuilder
 {
-    private readonly IProjectService _projects;
-    private readonly IPluginCatalog _pluginCatalog;
-    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IUpdateService _updates;
-    private readonly LaunchWindow _launchWindow;
-    private readonly ISettingsLauncher _settingsLauncher;
-    private readonly IReleaseNotesLauncher _releaseNotesLauncher;
-    private readonly IApplicationLifetime _applicationLifetime;
-
     /// <summary>
-    ///   Raised when the user clicks the tray's download-and-restart update action.
+    ///   Builds a new tray context menu from prepared state and commands.
     /// </summary>
-    public event EventHandler? UpdateDownloadRequested;
-
-    /// <summary>
-    ///   Creates a tray menu builder.
-    /// </summary>
-    /// <param name="projects"> Project service used by the project menu. </param>
-    /// <param name="pluginCatalog"> Plugin catalog used by the agent menu. </param>
-    /// <param name="agentCommandWorkflow"> Workflow invoked by the agent menu actions. </param>
-    /// <param name="updates"> Update service driving the update menu item. </param>
-    /// <param name="launchWindow"> The launch window shown by menu actions. </param>
-    /// <param name="settingsLauncher"> Settings window launcher. </param>
-    /// <param name="releaseNotesLauncher"> What's New window launcher. </param>
-    /// <param name="applicationLifetime"> Application lifetime control used by the Exit action. </param>
-    public TrayMenuBuilder(
-        IProjectService projects,
-        IPluginCatalog pluginCatalog,
-        IAgentCommandWorkflow agentCommandWorkflow,
-        IUpdateService updates,
-        LaunchWindow launchWindow,
-        ISettingsLauncher settingsLauncher,
-        IReleaseNotesLauncher releaseNotesLauncher,
-        IApplicationLifetime applicationLifetime)
-    {
-        _projects = projects ?? throw new ArgumentNullException(nameof(projects));
-        _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
-        _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
-        _updates = updates ?? throw new ArgumentNullException(nameof(updates));
-        _launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
-        _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
-        _releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
-        _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
-    }
-
-    /// <summary>
-    ///   Builds a new tray context menu from the current projects and update state.
-    /// </summary>
+    /// <param name="state"> State to project. </param>
+    /// <param name="commands"> Commands invoked by menu items. </param>
     /// <returns> A newly constructed tray context menu. </returns>
-    public ContextMenu Build()
+    public ContextMenu Build(TrayMenuState state, TrayMenuCommands commands)
     {
-        var menu = new ContextMenu();
+        ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(commands);
 
-        var current = _projects.GetCurrentProject();
+        var menu = new ContextMenu();
         menu.Items.Add(new MenuItem
         {
-            Header = current != null ? $"Current: {current.Name}" : "No project selected",
+            Header = state.CurrentProject != null ? $"Current: {state.CurrentProject.Name}" : "No project selected",
             IsEnabled = false
         });
 
         var recentMenu = new MenuItem { Header = "Recent Projects" };
-        var recent = _projects.GetRecentProjects(10);
-        if (recent.Count == 0)
+        if (state.RecentProjects.Count == 0)
         {
             recentMenu.Items.Add(new MenuItem { Header = "(none)", IsEnabled = false });
         }
         else
         {
-            foreach (var project in recent)
+            foreach (var project in state.RecentProjects)
             {
-                var item = new MenuItem
-                {
-                    Header = project.IsFavorite ? $"{project.Name} *" : project.Name
-                };
                 var id = project.Id;
-                item.Click += (_, _) => _projects.SetCurrentProject(id);
+                var item = new MenuItem { Header = project.IsFavorite ? $"{project.Name} *" : project.Name };
+                item.Click += (_, _) => commands.SelectProject(id);
                 recentMenu.Items.Add(item);
             }
         }
-        menu.Items.Add(recentMenu);
 
-        menu.Items.Add(BuildLaunchAgentMenu());
+        menu.Items.Add(recentMenu);
+        menu.Items.Add(BuildLaunchAgentMenu(state, commands));
 
         var addItem = new MenuItem { Header = "Add Project..." };
-        addItem.Click += (_, _) => AddProject();
+        addItem.Click += (_, _) => commands.AddProject();
         menu.Items.Add(addItem);
 
         var settingsItem = new MenuItem { Header = "Settings" };
-        settingsItem.Click += (_, _) => _settingsLauncher.ShowSettings();
+        settingsItem.Click += (_, _) => commands.ShowSettings();
         menu.Items.Add(settingsItem);
 
         var whatsNewItem = new MenuItem { Header = "What's New" };
-        whatsNewItem.Click += (_, _) => _releaseNotesLauncher.ShowReleaseNotes();
+        whatsNewItem.Click += (_, _) => commands.ShowReleaseNotes();
         menu.Items.Add(whatsNewItem);
 
-        var updateItem = BuildUpdateItem();
-        if (updateItem != null)
+        var updateItem = BuildUpdateItem(state, commands);
+        if (updateItem is not null)
         {
             menu.Items.Add(updateItem);
         }
@@ -121,101 +68,55 @@ public sealed class TrayMenuBuilder
         menu.Items.Add(new Separator());
 
         var showItem = new MenuItem { Header = "Show CLIHub" };
-        showItem.Click += (_, _) => _launchWindow.ShowOnPointerMonitor();
+        showItem.Click += (_, _) => commands.ShowLaunchWindow();
         menu.Items.Add(showItem);
 
         var exitItem = new MenuItem { Header = "Exit" };
-        exitItem.Click += (_, _) => _applicationLifetime.Shutdown();
+        exitItem.Click += (_, _) => commands.Exit();
         menu.Items.Add(exitItem);
 
         return menu;
     }
 
-    private MenuItem? BuildUpdateItem()
+    private static MenuItem? BuildUpdateItem(TrayMenuState state, TrayMenuCommands commands)
     {
-        var version = _updates.LastKnownAvailableVersion;
-
-        if (version == null)
+        if (state.AvailableUpdateVersion is null)
         {
             return null;
         }
 
-        if (_updates.IsDownloading)
+        if (state.IsDownloadingUpdate)
         {
             return new MenuItem { Header = "Downloading update…", IsEnabled = false };
         }
 
-        var item = new MenuItem { Header = $"Download {version} and restart" };
-        item.Click += (_, _) => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty);
+        var item = new MenuItem { Header = $"Download {state.AvailableUpdateVersion} and restart" };
+        item.Click += (_, _) => commands.RequestUpdateDownload();
         return item;
     }
 
-    private MenuItem BuildLaunchAgentMenu()
+    private static MenuItem BuildLaunchAgentMenu(TrayMenuState state, TrayMenuCommands commands)
     {
         var agentsMenu = new MenuItem { Header = "Launch Agent" };
-
-        var current = _projects.GetCurrentProject();
-        if (current == null)
+        if (state.CurrentProject is null)
         {
             agentsMenu.Items.Add(new MenuItem { Header = "(select a project)", IsEnabled = false });
             return agentsMenu;
         }
 
-        var launchable = _pluginCatalog.GetAllPlugins()
-            .Where(p => p.Commands?.Launch != null)
-            .ToList();
-
-        if (launchable.Count == 0)
+        if (state.LaunchableAgents.Count == 0)
         {
             agentsMenu.Items.Add(new MenuItem { Header = "(no agents)", IsEnabled = false });
             return agentsMenu;
         }
 
-        foreach (var plugin in launchable)
+        foreach (var plugin in state.LaunchableAgents)
         {
             var item = new MenuItem { Header = plugin.Name };
-            item.Click += async (_, _) =>
-            {
-                var result = await _agentCommandWorkflow.ExecuteAsync(plugin, current, AgentCommandKind.Launch);
-                if (!result.Success)
-                {
-                    MessageBox.Show(
-                        result.Error ?? $"Failed to launch {plugin.Name}",
-                        "CLIHub",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                }
-            };
+            item.Click += async (_, _) => await commands.LaunchAgentAsync(plugin, state.CurrentProject);
             agentsMenu.Items.Add(item);
         }
 
         return agentsMenu;
-    }
-
-    private void AddProject()
-    {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "Select Project Folder"
-        };
-
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
-
-        try
-        {
-            var project = _projects.AddProject(dialog.FolderName);
-            _projects.SetCurrentProject(project.Id);
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show(
-                $"Could not add project: {ex.Message}",
-                "CLIHub",
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-        }
     }
 }

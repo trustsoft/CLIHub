@@ -7,13 +7,13 @@ using System.Windows;
 /// </summary>
 public sealed class UpdateDownloadNotifier : IUpdateDownloadNotifier
 {
-    private readonly TrayIconController _tray;
+    private readonly ITrayHost _tray;
 
     /// <summary>
     ///   Creates the notifier over the tray controller.
     /// </summary>
     /// <param name="tray"> Tray controller receiving notifications and refresh requests. </param>
-    public UpdateDownloadNotifier(TrayIconController tray)
+    public UpdateDownloadNotifier(ITrayHost tray)
     {
         _tray = tray ?? throw new ArgumentNullException(nameof(tray));
     }

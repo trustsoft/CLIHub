@@ -47,12 +47,14 @@ public static class ServiceRegistration
         services.AddSingleton<IProjectDialogService, ProjectDialogService>();
         services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<TrayMenuBuilder>();
+        services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<ProjectPaneController>();
         services.AddSingleton<AgentPaneController>();
         services.AddSingleton<LaunchWindowViewModel>();
         services.AddSingleton<IPathDisplayStyleTarget>(sp => sp.GetRequiredService<LaunchWindowViewModel>());
         services.AddSingleton<LaunchWindow>();
         services.AddSingleton<TrayIconController>();
+        services.AddSingleton<ITrayHost>(sp => sp.GetRequiredService<TrayIconController>());
 
         services.AddSingleton<GlobalHotkeyService>(sp => new GlobalHotkeyService(
             sp.GetRequiredService<LaunchWindow>(),
