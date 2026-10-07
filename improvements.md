@@ -426,14 +426,14 @@ Change считается завершённым только когда:
 | 9 | `harden-process-boundaries` | Completed | Cancellation/timeout termination semantics уточнены, interactive/output contracts сохранены, command builder покрыт отдельными tests. Change archived at `openspec/changes/archive/2026-10-08-harden-process-boundaries`. |
 | 10 | `harden-configuration-boundary` | Completed | Snapshot стал единственным mutable state owner, добавлены explicit DTO mapping и full-field round-trip tests; migrations/writer сохранены. Change archived at `openspec/changes/archive/2026-10-08-harden-configuration-boundary`. |
 | 11 | `introduce-typed-runtime-settings` | Completed | `RuntimeKind` используется внутри preferences/runtime contracts, tokens оставлены только в DTO/migration boundary; unknown values безопасно defaulted. Change archived at `openspec/changes/archive/2026-10-08-introduce-typed-runtime-settings`. |
-| 12 | `define-plugin-reload-consumer` | Pending | Реакция UI и cache invalidation после reload. |
+| 12 | `define-plugin-reload-consumer` | Completed | `AgentPaneController` подписан на `PluginsChanged`, invalidates detection/version/logo caches и refreshes selection-safe agent list; file watcher не добавлен. Change archived at `openspec/changes/archive/2026-10-08-define-plugin-reload-consumer`. |
 | 13 | `retire-compatibility-adapters` | Pending | PluginManager и прочие переходные API. |
 | 14 | `remove-or-isolate-legacy-main-window` | Pending | После проверки references. |
 | 15 | `add-architecture-enforcement` | Pending | CI и dependency rules. |
 
 ## Следующая работа
 
-Следующий implementation change: `define-plugin-reload-consumer`.
+Следующий implementation change: `retire-compatibility-adapters`.
 
 `unify-single-instance-ownership` завершён: references на `SingleInstanceGuard` проверены, ownership передан DI provider, добавлены regression tests на registration и disposal, OpenSpec change архивирован.
 
@@ -454,3 +454,5 @@ Change считается завершённым только когда:
 `harden-configuration-boundary` завершён: `ConfigurationSnapshot` стал единственным mutable state owner, persistence DTO mapping покрывает все поля, а concurrent/Flush/migration/atomic-write semantics сохранены.
 
 `introduce-typed-runtime-settings` завершён: runtime preferences используют `RuntimeKind`, JSON tokens конвертируются только на persistence boundary, а unknown/legacy values безопасно мигрируются.
+
+`define-plugin-reload-consumer` завершён: `AgentPaneController` стал consumer-ом `PluginsChanged`, перезагружает agent rows с сохранением context, очищает stale caches и безопасно снимает исчезнувший selection.
