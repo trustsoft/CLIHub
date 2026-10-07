@@ -6,7 +6,7 @@ using System.IO.Pipes;
 ///   Ensures a single application instance. The first instance owns a named mutex and
 ///   listens on a named pipe; later instances signal it to activate and then exit.
 /// </summary>
-public sealed class SingleInstanceGuard : IDisposable
+public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
 {
     private const string MutexName = @"Local\CLIHub.SingleInstance";
     private const string PipeName = "CLIHub.SingleInstance";

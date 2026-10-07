@@ -3,8 +3,9 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.Windows;
 
-using CLIHub.Core.Updates;
+using CLIHub;
 using CLIHub.Core.Models;
+using CLIHub.Core.Updates;
 
 /// <summary>
 ///   View model for the What's New window: the release notes in display order, with empty groups
@@ -12,7 +13,7 @@ using CLIHub.Core.Models;
 ///   action for an available update. The action itself runs in <see cref="App"/>, so the tray menu
 ///   and this window share one flow and one state.
 /// </summary>
-public sealed class WhatsNewViewModel : ObservableObject, IDisposable
+public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRequestSource
 {
     /// <summary>
     ///   The group headings, in the order they are displayed.

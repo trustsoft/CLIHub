@@ -31,7 +31,14 @@ public static class ServiceRegistration
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddSingleton<SingleInstanceGuard>();
+        services.AddSingleton<ISingleInstanceGuard>(sp => sp.GetRequiredService<SingleInstanceGuard>());
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
+        services.AddSingleton<IApplicationBootstrapper, ApplicationBootstrapper>();
+        services.AddSingleton<IApplicationStartupUi, WpfApplicationStartupUi>();
+        services.AddSingleton<Func<IApplicationStartupUi>>(sp =>
+            () => sp.GetRequiredService<IApplicationStartupUi>());
+        services.AddSingleton<Func<IHotkeyStartupRegistrar>>(sp =>
+            () => sp.GetRequiredService<IHotkeyStartupRegistrar>());
         services.AddSingleton<IAgentCommandWorkflow, AgentCommandWorkflow>();
         services.AddSingleton<IPluginInitializationService, PluginInitializationService>();
         services.AddSingleton<IStartupPreferencesApplier, StartupPreferencesApplier>();
@@ -53,6 +60,8 @@ public static class ServiceRegistration
         services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
         services.AddSingleton<IUpdateDownloadNotifier, UpdateDownloadNotifier>();
         services.AddSingleton<IUpdateDownloadCoordinator, UpdateDownloadCoordinator>();
+        services.AddSingleton<Func<IUpdateDownloadCoordinator>>(sp =>
+            () => sp.GetRequiredService<IUpdateDownloadCoordinator>());
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddTransient<SettingsViewModel>();
@@ -61,6 +70,8 @@ public static class ServiceRegistration
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
 
         services.AddSingleton<WhatsNewViewModel>();
+        services.AddSingleton<Func<IUpdateRequestSource>>(sp =>
+            () => sp.GetRequiredService<WhatsNewViewModel>());
         services.AddTransient<WhatsNewWindow>();
         services.AddSingleton<Func<WhatsNewWindow>>(sp => () => sp.GetRequiredService<WhatsNewWindow>());
         services.AddSingleton<IReleaseNotesLauncher, ReleaseNotesLauncher>();

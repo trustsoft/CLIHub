@@ -9,6 +9,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 
+using CLIHub;
 using CLIHub.Interop;
 using CLIHub.ViewModels;
 
@@ -16,7 +17,7 @@ using CLIHub.ViewModels;
 ///   Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on
 ///   top, hides when it loses focus unless pinned, and is centred on the pointer's monitor.
 /// </summary>
-public partial class LaunchWindow : Window
+public partial class LaunchWindow : Window, IStartupWindow
 {
     /// <summary>
     ///   Window during which a deactivation right after showing is ignored: when Windows denies
