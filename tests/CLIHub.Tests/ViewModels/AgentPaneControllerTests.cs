@@ -104,6 +104,34 @@ public class AgentPaneControllerTests
         detection.Verify(x => x.Invalidate(), Times.Once);
     }
 
+    [Fact]
+    public void Dispose_UnsubscribesAndCancelsVersionPopulation()
+    {
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
+        catalog.Setup(x => x.GetAllPlugins()).Returns([Plugin("agent")]);
+        var detection = new Mock<IAgentDetectionService>(MockBehavior.Strict);
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        detection.Setup(x => x.Invalidate());
+        var lifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);
+        lifetime
+            .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
+            .Returns(Task.CompletedTask);
+        var controller = new AgentPaneController(
+            catalog.Object,
+            detection.Object,
+            new Mock<IAgentVersionService>().Object,
+            new Mock<ILogoCacheService>().Object,
+            lifetime.Object);
+        controller.Refresh(null, false);
+
+        controller.Dispose();
+        catalog.Raise(x => x.PluginsChanged += null, EventArgs.Empty);
+
+        detection.Verify(x => x.Invalidate(), Times.Never);
+        lifetime.Verify(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()), Times.Once);
+        Assert.False(controller.Refresh(null, false));
+    }
+
     private static Mock<IApplicationOperationLifetime> CreateLifetime()
     {
         var lifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);

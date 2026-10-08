@@ -11,6 +11,28 @@ using CLIHub.ViewModels;
 public class UpdateControlLifetimeTests
 {
     [Fact]
+    public void Dispose_UnsubscribesFromUpdateStateChanges()
+    {
+        var updates = new Mock<IUpdateService>(MockBehavior.Strict);
+        updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
+        updates.SetupGet(x => x.IsDownloading).Returns(false);
+        updates.SetupGet(x => x.LastKnownAvailableVersion).Returns((string?)null);
+        var control = new UpdateControlViewModel(
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            NullLogger<UpdateControlViewModel>.Instance,
+            new Mock<IApplicationOperationLifetime>().Object);
+        control.Dispose();
+
+        updates.Raise(x => x.UpdateStateChanged += null, EventArgs.Empty);
+
+        Assert.Equal("1.0.0", control.UpdateButtonText);
+    }
+
+    [Fact]
     public void UpdateCommand_WhenApplicationCancels_ReturnsToIdleWithoutFailure()
     {
         using var cancellation = new CancellationTokenSource();

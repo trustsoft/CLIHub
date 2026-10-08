@@ -12,7 +12,7 @@ using CLIHub.Core.Plugins;
 /// <summary>
 ///   Owns agent composition, filtering, selection identity, cache invalidation, and versions.
 /// </summary>
-public sealed class AgentPaneController
+public sealed class AgentPaneController : IDisposable
 {
     private static readonly string DefaultAgentLogoPath =
         Path.Combine(AppContext.BaseDirectory, "default-project.png");
@@ -26,6 +26,7 @@ public sealed class AgentPaneController
     private int _versionPopulationGeneration;
     private string? _currentProjectPath;
     private bool _showOnlyProjectAgents;
+    private bool _disposed;
 
     /// <summary>
     ///   Creates the agent-pane workflow boundary.
@@ -74,6 +75,11 @@ public sealed class AgentPaneController
     /// <returns> True when at least one agent row is available. </returns>
     public bool Refresh(string? currentProjectPath, bool showOnlyProjectAgents)
     {
+        if (_disposed)
+        {
+            return false;
+        }
+
         _currentProjectPath = currentProjectPath;
         _showOnlyProjectAgents = showOnlyProjectAgents;
         _versionPopulationCts?.Cancel();
@@ -121,8 +127,31 @@ public sealed class AgentPaneController
 
     private void OnPluginsChanged(object? sender, EventArgs e)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         InvalidateCaches();
         Refresh(_currentProjectPath, _showOnlyProjectAgents);
+    }
+
+    /// <summary>
+    ///   Unsubscribes from plugin reloads and cancels owned version population.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _versionPopulationGeneration++;
+        _versionPopulationCts?.Cancel();
+        _versionPopulationCts?.Dispose();
+        _versionPopulationCts = null;
+        _pluginCatalog.PluginsChanged -= OnPluginsChanged;
     }
 
     private async Task PopulateVersionsAsync(

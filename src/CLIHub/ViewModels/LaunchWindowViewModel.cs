@@ -14,7 +14,7 @@ using CLIHub.Core.Formatting;
 ///   selection, the availability filter, the path display style, the pin state, the status
 ///   message, and every window action.
 /// </summary>
-public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget
+public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget, IDisposable
 {
     private const string NoProjectSelectedMessage = "Select a project first.";
 
@@ -37,6 +37,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private bool _suppressFilterChange;
     private string _statusMessage = "CLIHub ready";
     private MenuAction? _filterAction;
+    private bool _disposed;
 
     /// <summary>
     ///   Creates the view model with its services and loads projects and agents.
@@ -74,7 +75,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         _actionBuilder = actionBuilder;
 
         UpdateControl = updateControl;
-        UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
+        UpdateControl.OutcomeReported += OnUpdateOutcomeReported;
 
         AddProjectCommand = new RelayCommand(AddProject);
         RemoveProjectCommand = new RelayCommand(RemoveProject, () => SelectedProject != null);
@@ -97,11 +98,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
             item => item.CanResume);
 
-        _projectPane.ProjectsChanged += (_, _) =>
-        {
-            RefreshProjects();
-            RefreshAgents();
-        };
+        _projectPane.ProjectsChanged += OnProjectsChanged;
 
         RefreshProjects();
 
@@ -468,4 +465,31 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
     private void ShowWarning(string message) =>
         _notifications.ShowWarning(message);
+
+    /// <summary>
+    ///   Removes subscriptions owned by the launch-window composition model.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _projectPane.ProjectsChanged -= OnProjectsChanged;
+        UpdateControl.OutcomeReported -= OnUpdateOutcomeReported;
+        if (_filterAction is not null)
+        {
+            _filterAction.PropertyChanged -= OnFilterActionChanged;
+        }
+    }
+
+    private void OnProjectsChanged(object? sender, EventArgs e)
+    {
+        RefreshProjects();
+        RefreshAgents();
+    }
+
+    private void OnUpdateOutcomeReported(object? sender, string message) => StatusMessage = message;
 }

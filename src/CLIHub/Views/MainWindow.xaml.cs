@@ -18,6 +18,9 @@ using CLIHub.ViewModels;
 /// <summary>
 ///   Interaction logic for MainWindow.xaml
 /// </summary>
+/// <remarks>
+///   Deprecated legacy reference window. It is not registered or constructed by the application.
+/// </remarks>
 public partial class MainWindow : Window
 {
     private readonly IPluginCatalog _pluginCatalog;

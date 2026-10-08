@@ -66,6 +66,25 @@ public class ProjectPaneControllerTests
         Assert.Empty(controller.Projects);
     }
 
+    [Fact]
+    public void Dispose_UnsubscribesFromProjectChanges()
+    {
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
+        service.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
+        var controller = new ProjectPaneController(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+        var changed = 0;
+        controller.ProjectsChanged += (_, _) => changed++;
+
+        controller.Dispose();
+        service.Raise(x => x.ProjectsChanged += null, EventArgs.Empty);
+
+        Assert.Equal(0, changed);
+    }
+
     private static Project Project(string id) => new()
     {
         Id = id,

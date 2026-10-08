@@ -8,11 +8,12 @@ using CLIHub.Core.Projects;
 /// <summary>
 ///   Owns project-pane collection synchronization, selection, and project mutations.
 /// </summary>
-public sealed class ProjectPaneController
+public sealed class ProjectPaneController : IDisposable
 {
     private readonly IProjectService _projectService;
     private readonly IProjectDialogService _dialogs;
     private readonly PromptState _promptState;
+    private bool _disposed;
 
     /// <summary>
     ///   Creates the project-pane workflow boundary.
@@ -158,5 +159,19 @@ public sealed class ProjectPaneController
     {
         Refresh();
         ProjectsChanged?.Invoke(this, e);
+    }
+
+    /// <summary>
+    ///   Removes the project-service event subscription.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _projectService.ProjectsChanged -= OnProjectsChanged;
     }
 }

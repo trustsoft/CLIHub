@@ -63,6 +63,40 @@ public sealed class ArchitectureBoundaryTests
     }
 
     [Fact]
+    public void ApplicationSessionAndTrayWorkflows_AreRegisteredAndLegacyWindowIsNot()
+    {
+        var root = FindRepositoryRoot();
+        var registration = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "ServiceRegistration.cs"));
+        var legacyWindow = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "Views", "MainWindow.xaml.cs"));
+
+        Assert.Contains("IApplicationSession, ApplicationSession", registration, StringComparison.Ordinal);
+        Assert.Contains("TrayStateProjection", registration, StringComparison.Ordinal);
+        Assert.Contains("TrayCommandHandlers", registration, StringComparison.Ordinal);
+        Assert.DoesNotContain("MainWindow", registration, StringComparison.Ordinal);
+        Assert.Contains("Deprecated legacy reference window", legacyWindow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SingletonEventOwners_ImplementDisposable()
+    {
+        var root = FindRepositoryRoot();
+        var viewModels = Path.Combine(root, "src", "CLIHub", "ViewModels");
+        var owners = new Dictionary<string, string>
+        {
+            ["ProjectPaneController.cs"] = "ProjectPaneController : IDisposable",
+            ["AgentPaneController.cs"] = "AgentPaneController : IDisposable",
+            ["LaunchWindowViewModel.cs"] = "LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget, IDisposable",
+            ["UpdateControlViewModel.cs"] = "UpdateControlViewModel : ObservableObject, IDisposable"
+        };
+
+        foreach (var (file, declaration) in owners)
+        {
+            var source = File.ReadAllText(Path.Combine(viewModels, file));
+            Assert.Contains(declaration, source, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public void ProductionSource_DoesNotReintroduceRetiredCompatibilityApis()
     {
         var root = FindRepositoryRoot();

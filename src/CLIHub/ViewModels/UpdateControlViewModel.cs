@@ -14,7 +14,7 @@ using CLIHub.Core.Models;
 ///   updates, downloads an available update, and applies it with a restart. Shared by every
 ///   window that hosts an update control; reflects checks and downloads started anywhere.
 /// </summary>
-public sealed class UpdateControlViewModel : ObservableObject
+public sealed class UpdateControlViewModel : ObservableObject, IDisposable
 {
     private readonly IUpdateVersionProvider _versionProvider;
     private readonly IUpdateChecker _checker;
@@ -25,6 +25,7 @@ public sealed class UpdateControlViewModel : ObservableObject
     private readonly IApplicationOperationLifetime _operationLifetime;
 
     private UpdateControlState _state = UpdateControlState.Idle;
+    private bool _disposed;
 
     /// <summary>
     ///   Raised with a verbose outcome message that the host window shows in its status line.
@@ -212,6 +213,20 @@ public sealed class UpdateControlViewModel : ObservableObject
 
     private void OnUpdateStateChanged(object? sender, EventArgs e) =>
         Application.Current?.Dispatcher.BeginInvoke(RefreshState);
+
+    /// <summary>
+    ///   Removes the shared update-state event subscription.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _stateSource.UpdateStateChanged -= OnUpdateStateChanged;
+    }
 
     private void RefreshState() =>
         SetState(UpdateControlLogic.Derive(
