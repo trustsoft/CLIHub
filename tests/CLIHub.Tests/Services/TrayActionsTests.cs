@@ -109,10 +109,11 @@ public class TrayActionsTests
         IUpdateService updates,
         IAgentCommandWorkflow? workflow = null,
         IUpdateChecker? updateChecker = null,
-        IApplicationOperationLifetime? operationLifetime = null) =>
-        new(
+        IApplicationOperationLifetime? operationLifetime = null)
+    {
+        var projection = new TrayStateProjection(projects, catalog, updates);
+        var handlers = new TrayCommandHandlers(
             projects,
-            catalog,
             workflow ?? new Mock<IAgentCommandWorkflow>().Object,
             updates,
             updateChecker ?? new Mock<IUpdateChecker>().Object,
@@ -120,7 +121,11 @@ public class TrayActionsTests
             new Mock<IProjectDialogService>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<ISettingsLauncher>().Object,
-            new Mock<IReleaseNotesLauncher>().Object);
+            new Mock<IReleaseNotesLauncher>().Object,
+            new Mock<IApplicationLifetime>().Object,
+            projection);
+        return new TrayActions(projection, handlers);
+    }
 
     private static Project CreateProject(string id) => new()
     {

@@ -51,6 +51,8 @@ public static class ServiceRegistration
         services.AddSingleton<LaunchCommandCoordinator>();
         services.AddSingleton<LaunchWindowActionBuilder>();
         services.AddSingleton<TrayMenuBuilder>();
+        services.AddSingleton<TrayStateProjection>();
+        services.AddSingleton<TrayCommandHandlers>();
         services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<ProjectPaneController>();
         services.AddSingleton<AgentPaneController>();
