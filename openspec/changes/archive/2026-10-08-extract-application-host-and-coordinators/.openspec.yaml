@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-10-08
+change_id: extract-application-host-and-coordinators
+milestone: improvements
+skip_specs: true
