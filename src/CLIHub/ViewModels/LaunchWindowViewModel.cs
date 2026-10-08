@@ -2,19 +2,12 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Windows;
-
-using Microsoft.Extensions.Logging;
 
 using CLIHub;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 using CLIHub.Core.Formatting;
-using CLIHub.Themes;
 
 /// <summary>
 ///   State and commands for the launch window: the project and agent lists, the current
@@ -23,19 +16,17 @@ using CLIHub.Themes;
 /// </summary>
 public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget
 {
-    private const string NoProjectMessage = "Select a project before running an agent command.";
-    private const string NoAgentMessage = "Select an agent before running an agent command.";
     private const string NoProjectSelectedMessage = "Select a project first.";
 
     private readonly ProjectPaneController _projectPane;
     private readonly AgentPaneController _agentPane;
-    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
+    private readonly LaunchCommandCoordinator _launchCommandCoordinator;
     private readonly IPreferencesStore _preferencesStore;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IUserNotificationService _notifications;
     private readonly IApplicationLifetime _applicationLifetime;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly ILogger<LaunchWindowViewModel> _logger;
+    private readonly IExternalLauncher _externalLauncher;
+    private readonly LaunchWindowActionBuilder _actionBuilder;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
@@ -52,54 +43,37 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     /// <param name="projectPane"> Project-pane workflow boundary. </param>
     /// <param name="agentPane"> Agent-pane workflow boundary. </param>
-    /// <param name="agentCommandWorkflow"> Workflow executing agent commands. </param>
+    /// <param name="launchCommandCoordinator"> Agent-command workflow and result coordinator. </param>
     /// <param name="preferencesStore"> Store for persisted preferences. </param>
-    /// <param name="versionProvider"> Provides the current application version. </param>
-    /// <param name="updateChecker"> Checks for available updates. </param>
-    /// <param name="updateState"> Provides shared update state. </param>
-    /// <param name="updateDownloader"> Downloads available updates. </param>
-    /// <param name="updateInstaller"> Applies downloaded updates. </param>
+    /// <param name="updateControl"> Shared update control for this launch window. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
-    /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
-    /// <param name="logger"> Logger for unexpected agent command failures. </param>
-    /// <param name="updateControlLogger"> Logger for unexpected update control failures. </param>
+    /// <param name="externalLauncher"> Operating-system path launcher. </param>
+    /// <param name="actionBuilder"> Builder for the pane Actions menus. </param>
     public LaunchWindowViewModel(
         ProjectPaneController projectPane,
         AgentPaneController agentPane,
-        IAgentCommandWorkflow agentCommandWorkflow,
+        LaunchCommandCoordinator launchCommandCoordinator,
         IPreferencesStore preferencesStore,
-        IUpdateVersionProvider versionProvider,
-        IUpdateChecker updateChecker,
-        IUpdateStateSource updateState,
-        IUpdateDownloader updateDownloader,
-        IUpdateInstaller updateInstaller,
+        UpdateControlViewModel updateControl,
         ISettingsLauncher settingsLauncher,
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
-        IApplicationOperationLifetime operationLifetime,
-        ILogger<LaunchWindowViewModel> logger,
-        ILogger<UpdateControlViewModel> updateControlLogger)
+        IExternalLauncher externalLauncher,
+        LaunchWindowActionBuilder actionBuilder)
     {
         _projectPane = projectPane;
         _agentPane = agentPane;
-        _agentCommandWorkflow = agentCommandWorkflow;
+        _launchCommandCoordinator = launchCommandCoordinator;
         _preferencesStore = preferencesStore;
         _settingsLauncher = settingsLauncher;
         _notifications = notifications;
         _applicationLifetime = applicationLifetime;
-        _operationLifetime = operationLifetime;
-        _logger = logger;
+        _externalLauncher = externalLauncher;
+        _actionBuilder = actionBuilder;
 
-        UpdateControl = new UpdateControlViewModel(
-            versionProvider,
-            updateChecker,
-            updateState,
-            updateDownloader,
-            updateInstaller,
-            updateControlLogger,
-            operationLifetime);
+        UpdateControl = updateControl;
         UpdateControl.OutcomeReported += (_, message) => StatusMessage = message;
 
         AddProjectCommand = new RelayCommand(AddProject);
@@ -348,14 +322,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private bool HasSelectedAgent() => SelectedAgent is not null;
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
-        _operationLifetime.RunAsync(
-            $"{kind} {item?.Name ?? "agent command"}",
-            cancellationToken => AsyncOperationRunner.RunAsync(
-                $"{kind} {item?.Name ?? "agent command"}",
-                () => ExecuteAsync(item, kind, cancellationToken),
-                _logger,
-                message => StatusMessage = message,
-                cancellationToken));
+        _launchCommandCoordinator.RunAsync(
+            item,
+            _projectPane.CurrentProject,
+            kind,
+            message => StatusMessage = message,
+            RefreshAgents);
 
     /// <summary>
     ///   Builds the per-pane actions menus from the existing commands, and wires the availability
@@ -363,36 +335,22 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     private void BuildActions()
     {
-        ProjectsActions = new MenuAction[]
-        {
-            new() { Label = "Add Project...", Glyph = IconGlyphs.Add, Command = AddProjectCommand },
-            new() { Label = "Remove Project", Glyph = IconGlyphs.Delete, Command = RemoveProjectCommand },
-            new() { Label = "Toggle Favorite", Glyph = IconGlyphs.FavoriteStar, Command = ToggleFavoriteCommand },
-            new() { Label = "Refresh", Glyph = IconGlyphs.Refresh, Command = RefreshCommand }
-        };
-
-        _filterAction = new MenuAction
-        {
-            Label = "Only agents available in project",
-            Glyph = IconGlyphs.Filter,
-            IsCheckable = true,
-            IsChecked = ShowOnlyProjectAgents
-        };
+        var actions = _actionBuilder.Build(
+            AddProjectCommand,
+            RemoveProjectCommand,
+            ToggleFavoriteCommand,
+            RefreshCommand,
+            LaunchCommand,
+            ResumeCommand,
+            InitCommand,
+            UpdateCommand,
+            VersionCommand,
+            ShowOnlyProjectAgents);
+        ProjectsActions = actions.Projects;
+        AgentsActions = actions.Agents;
+        _filterAction = actions.FilterAction;
 
         _filterAction.PropertyChanged += OnFilterActionChanged;
-
-        AgentsActions = new MenuAction[]
-        {
-            new() { Label = "Launch", Glyph = IconGlyphs.Play, Command = LaunchCommand },
-            new() { Label = "Resume Session", Glyph = IconGlyphs.Refresh, Command = ResumeCommand },
-            new() { Label = "Initialize", Glyph = IconGlyphs.Initialize, Command = InitCommand },
-            new() { Label = "Update", Glyph = IconGlyphs.Update, Command = UpdateCommand },
-            new() { Label = "Show Version", Glyph = IconGlyphs.Version, Command = VersionCommand },
-            MenuAction.Separator(),
-            _filterAction,
-            MenuAction.Separator(),
-            new() { Label = "Refresh", Glyph = IconGlyphs.Refresh, Command = RefreshCommand }
-        };
     }
 
     /// <summary>
@@ -474,64 +432,13 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         try
         {
-            Process.Start(new ProcessStartInfo(root) { UseShellExecute = true });
+            _externalLauncher.Open(root);
             StatusMessage = $"Opened {root}";
         }
         catch (Exception ex)
         {
             StatusMessage = $"Could not open {root}: {ex.Message}";
         }
-    }
-
-    private async Task ExecuteAsync(
-        AgentItem? item,
-        AgentCommandKind kind,
-        CancellationToken cancellationToken)
-    {
-        if (item is null)
-        {
-            StatusMessage = NoAgentMessage;
-            return;
-        }
-
-        var project = _projectPane.CurrentProject;
-        if (project is null)
-        {
-            StatusMessage = NoProjectMessage;
-            return;
-        }
-
-        if (item.Plugin.Commands?.Get(kind) is null)
-        {
-            StatusMessage = $"{item.Name} does not support the {kind.ToString().ToLowerInvariant()} command.";
-            return;
-        }
-
-        StatusMessage = $"{kind} {item.Name}...";
-
-        var result = await _agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind, cancellationToken);
-        var error = result.Error ?? "no error details";
-
-        if (kind == AgentCommandKind.Version)
-        {
-            if (result.Success)
-            {
-                StatusMessage = $"{item.Name} version: {result.Output}";
-                ShowInfo(result.Output ?? string.Empty, $"{item.Name} version");
-            }
-            else
-            {
-                StatusMessage = $"{item.Name} version failed: {error}";
-            }
-        }
-        else
-        {
-            StatusMessage = result.Success
-                ? $"{kind} started for {item.Name}"
-                : $"{kind} failed: {error}";
-        }
-
-        RefreshAgents();
     }
 
     private void RefreshProjects()
@@ -558,9 +465,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             StatusMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
         }
     }
-
-    private void ShowInfo(string message, string title) =>
-        _notifications.ShowInformation(message, title);
 
     private void ShowWarning(string message) =>
         _notifications.ShowWarning(message);

@@ -46,19 +46,18 @@ public class LaunchWindowViewModelDialogTests
         var viewModel = new LaunchWindowViewModel(
             projectPane,
             agentPane,
-            new Mock<IAgentCommandWorkflow>().Object,
+            new LaunchCommandCoordinator(
+                new Mock<IAgentCommandWorkflow>().Object,
+                operationLifetime.Object,
+                notifications.Object,
+                NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
-            CreateUpdateService(),
-            CreateUpdateService(),
-            CreateUpdateService(),
-            CreateUpdateService(),
-            CreateUpdateService(),
+            CreateUpdateControl(operationLifetime.Object),
             new Mock<ISettingsLauncher>().Object,
             notifications.Object,
             lifetime.Object,
-            operationLifetime.Object,
-            NullLogger<LaunchWindowViewModel>.Instance,
-            NullLogger<UpdateControlViewModel>.Instance);
+            new Mock<IExternalLauncher>().Object,
+            new LaunchWindowActionBuilder());
 
         viewModel.AddProjectCommand.Execute(null);
 
@@ -71,10 +70,17 @@ public class LaunchWindowViewModelDialogTests
         lifetime.Verify(x => x.Shutdown(), Times.Once);
     }
 
-    private static IUpdateService CreateUpdateService()
+    private static UpdateControlViewModel CreateUpdateControl(IApplicationOperationLifetime operationLifetime)
     {
         var updates = new Mock<IUpdateService>();
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
-        return updates.Object;
+        return new UpdateControlViewModel(
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            updates.Object,
+            NullLogger<UpdateControlViewModel>.Instance,
+            operationLifetime);
     }
 }
