@@ -77,10 +77,10 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         UpdateControl = updateControl;
         UpdateControl.OutcomeReported += OnUpdateOutcomeReported;
 
-        AddProjectCommand = new RelayCommand(AddProject);
-        RemoveProjectCommand = new RelayCommand(RemoveProject, () => SelectedProject != null);
-        ToggleFavoriteCommand = new RelayCommand(ToggleFavorite, () => SelectedProject != null);
-        RefreshCommand = new RelayCommand(Refresh);
+        AddProjectCommand = _projectPane.AddCommand;
+        RemoveProjectCommand = _projectPane.RemoveCommand;
+        ToggleFavoriteCommand = _projectPane.ToggleFavoriteCommand;
+        RefreshCommand = _projectPane.RefreshCommand;
         OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
         OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
         ExitCommand = new RelayCommand(_applicationLifetime.Shutdown);
@@ -361,66 +361,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         {
             ShowOnlyProjectAgents = action.IsChecked;
         }
-    }
-
-    private void AddProject()
-    {
-        try
-        {
-            var project = _projectPane.AddProject();
-            if (project is null)
-            {
-                return;
-            }
-
-            RefreshProjects();
-            StatusMessage = $"Added project: {project.Name}";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"Could not add project: {ex.Message}";
-            ShowWarning($"Could not add project: {ex.Message}");
-        }
-    }
-
-    private void RemoveProject()
-    {
-        if (SelectedProject is not { } project)
-        {
-            StatusMessage = NoProjectSelectedMessage;
-            return;
-        }
-
-        if (!_projectPane.RemoveSelectedProject())
-        {
-            return;
-        }
-
-        RefreshProjects();
-        StatusMessage = $"Removed project: {project.Name}";
-        RefreshAgents();
-    }
-
-    private void ToggleFavorite()
-    {
-        if (SelectedProject is not { } project)
-        {
-            StatusMessage = NoProjectSelectedMessage;
-            return;
-        }
-
-        _projectPane.ToggleFavorite();
-        StatusMessage = project.IsFavorite
-            ? $"Added {project.Name} to favorites"
-            : $"Removed {project.Name} from favorites";
-    }
-
-    private void Refresh()
-    {
-        _agentPane.InvalidateCaches();
-        RefreshProjects();
-        RefreshAgents();
-        StatusMessage = "Refreshed agents, versions and availability.";
     }
 
     private void OpenDataFolder()

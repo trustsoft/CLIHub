@@ -49,12 +49,19 @@ public sealed class AgentPaneController : IDisposable
         _logoCacheService = logoCacheService ?? throw new ArgumentNullException(nameof(logoCacheService));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         _pluginCatalog.PluginsChanged += OnPluginsChanged;
+
+        RefreshCommand = new RelayCommand(() => _ = Refresh(_currentProjectPath, _showOnlyProjectAgents));
     }
 
     /// <summary>
     ///   Agents currently shown in the agent pane.
     /// </summary>
     public ObservableCollection<AgentItem> Agents { get; } = new();
+
+    /// <summary>
+    ///   Command to refresh the agent list with current project path and filter settings.
+    /// </summary>
+    public RelayCommand RefreshCommand { get; }
 
     /// <summary>
     ///   The selected agent row, if one remains after the last refresh.

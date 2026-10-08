@@ -30,12 +30,37 @@ public sealed class ProjectPaneController : IDisposable
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _promptState = promptState ?? throw new ArgumentNullException(nameof(promptState));
         _projectService.ProjectsChanged += OnProjectsChanged;
+
+        AddCommand = new RelayCommand(() => _ = AddProject());
+        RemoveCommand = new RelayCommand(() => _ = RemoveSelectedProject(), () => CurrentProject is not null);
+        ToggleFavoriteCommand = new RelayCommand(() => _ = ToggleFavorite(), () => CurrentProject is not null);
+        RefreshCommand = new RelayCommand(() => _ = Refresh());
     }
 
     /// <summary>
     ///   Raised when an external project-service mutation changes the pane state.
     /// </summary>
     public event EventHandler? ProjectsChanged;
+
+    /// <summary>
+    ///   Command to add a new project through folder selection.
+    /// </summary>
+    public RelayCommand AddCommand { get; }
+
+    /// <summary>
+    ///   Command to remove the currently selected project after confirmation.
+    /// </summary>
+    public RelayCommand RemoveCommand { get; }
+
+    /// <summary>
+    ///   Command to toggle the favorite state of the currently selected project.
+    /// </summary>
+    public RelayCommand ToggleFavoriteCommand { get; }
+
+    /// <summary>
+    ///   Command to refresh the project list from the project service.
+    /// </summary>
+    public RelayCommand RefreshCommand { get; }
 
     /// <summary>
     ///   Projects currently shown in the project pane.
