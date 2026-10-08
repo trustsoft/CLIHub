@@ -12,9 +12,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 {
     private readonly IInstanceCoordinator _instanceCoordinator;
     private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly IPluginInitializationService _pluginInitialization;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly IStartupPreferencesApplier _startupPreferences;
+    private readonly IStartupStateLoader _startupStateLoader;
     private readonly Func<IHotkeyStartupRegistrar> _hotkeyStartupRegistrarFactory;
     private readonly IReleaseNotesStartupCoordinator _releaseNotesStartup;
     private readonly IUpdateStartupCoordinator _updateStartup;
@@ -26,9 +24,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// </summary>
     /// <param name="instanceCoordinator"> Single-instance coordinator. </param>
     /// <param name="operationLifetime"> Application operation lifetime boundary. </param>
-    /// <param name="pluginInitialization"> Plugin initialization workflow. </param>
-    /// <param name="preferencesStore"> Preferences persistence boundary. </param>
-    /// <param name="startupPreferences"> Startup preference applier. </param>
+    /// <param name="startupStateLoader"> Startup state loader. </param>
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="releaseNotesStartup"> Release-notes startup workflow. </param>
     /// <param name="updateStartup"> Startup update-check workflow. </param>
@@ -37,9 +33,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     public ApplicationBootstrapper(
         IInstanceCoordinator instanceCoordinator,
         IApplicationOperationLifetime operationLifetime,
-        IPluginInitializationService pluginInitialization,
-        IPreferencesStore preferencesStore,
-        IStartupPreferencesApplier startupPreferences,
+        IStartupStateLoader startupStateLoader,
         Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
         IReleaseNotesStartupCoordinator releaseNotesStartup,
         IUpdateStartupCoordinator updateStartup,
@@ -48,9 +42,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     {
         _instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
-        _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _startupPreferences = startupPreferences ?? throw new ArgumentNullException(nameof(startupPreferences));
+        _startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));
         _hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
         _releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
         _updateStartup = updateStartup ?? throw new ArgumentNullException(nameof(updateStartup));
@@ -73,17 +65,14 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 
         try
         {
-            _pluginInitialization.Initialize();
-
-            var preferences = _preferencesStore.Load();
-            _startupPreferences.Apply(preferences);
+            var startupState = _startupStateLoader.Load();
 
             var startupUi = _session.Start(context);
             var hotkeyStartupRegistrar = _hotkeyStartupRegistrarFactory();
 
             context.SetMainWindow(startupUi.LaunchWindow);
 
-            if (preferences.ShowWindowOnStartup)
+            if (startupState.Preferences.ShowWindowOnStartup)
             {
                 startupUi.ShowLaunchWindow();
             }
@@ -92,15 +81,15 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
                 _logger.LogInformation("Starting in the system tray (show window on startup disabled)");
             }
 
-            hotkeyStartupRegistrar.Register(preferences);
+            hotkeyStartupRegistrar.Register(startupState.Preferences);
 
-            RunBestEffort("release notes", () => _releaseNotesStartup.Evaluate(preferences));
+            RunBestEffort("release notes", () => _releaseNotesStartup.Evaluate(startupState.Preferences));
             RunBestEffort(
                 "startup update check",
                 () => _ = _operationLifetime.RunAsync(
                     "Startup update check",
                     cancellationToken => RunStartupUpdateCheckAsync(
-                        preferences.CheckForUpdatesOnStartup,
+                        startupState.Preferences.CheckForUpdatesOnStartup,
                         startupUi,
                         context,
                         cancellationToken)));

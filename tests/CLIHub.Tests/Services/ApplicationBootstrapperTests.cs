@@ -18,22 +18,20 @@ public class ApplicationBootstrapperTests
     {
         var sequence = new MockSequence();
         var fixture = new BootstrapperFixture();
-        var preferences = new AppPreferences
+        var startupState = new StartupState(new AppPreferences
         {
             ShowWindowOnStartup = true,
             CheckForUpdatesOnStartup = true
-        };
+        });
 
         fixture.InstanceCoordinator.InSequence(sequence).Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
-        fixture.Plugin.InSequence(sequence).Setup(x => x.Initialize());
-        fixture.Preferences.InSequence(sequence).Setup(x => x.Load()).Returns(preferences);
-        fixture.StartupPreferences.InSequence(sequence).Setup(x => x.Apply(preferences));
+        fixture.StartupStateLoader.InSequence(sequence).Setup(x => x.Load()).Returns(startupState);
         fixture.Session.InSequence(sequence).Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Hotkey.Object);
         fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
         fixture.Ui.Setup(x => x.ShowLaunchWindow());
-        fixture.Hotkey.InSequence(sequence).Setup(x => x.Register(preferences));
-        fixture.ReleaseNotes.InSequence(sequence).Setup(x => x.Evaluate(preferences));
+        fixture.Hotkey.InSequence(sequence).Setup(x => x.Register(startupState.Preferences));
+        fixture.ReleaseNotes.InSequence(sequence).Setup(x => x.Evaluate(startupState.Preferences));
         fixture.UpdateStartup.InSequence(sequence)
             .Setup(x => x.CheckAsync(true, It.IsAny<Action<string>>()))
             .Returns(Task.CompletedTask);
@@ -51,7 +49,7 @@ public class ApplicationBootstrapperTests
 
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
-        fixture.Plugin.Verify(x => x.Initialize(), Times.Never);
+        fixture.StartupStateLoader.Verify(x => x.Load(), Times.Never);
         fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
     }
 
@@ -60,33 +58,31 @@ public class ApplicationBootstrapperTests
     {
         var fixture = new BootstrapperFixture();
         fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
-        fixture.Plugin.Setup(x => x.Initialize()).Throws(new InvalidOperationException("test"));
+        fixture.StartupStateLoader.Setup(x => x.Load()).Throws(new InvalidOperationException("test"));
 
         Assert.Throws<InvalidOperationException>(() =>
             fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object)));
 
-        fixture.Preferences.Verify(x => x.Load(), Times.Never);
+        fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
     }
 
     [Fact]
     public void Start_OptionalReleaseNotesFailure_ContinuesStartup()
     {
         var fixture = new BootstrapperFixture();
-        var preferences = new AppPreferences
+        var startupState = new StartupState(new AppPreferences
         {
             ShowWindowOnStartup = false,
             CheckForUpdatesOnStartup = false
-        };
+        });
 
         fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
-        fixture.Plugin.Setup(x => x.Initialize());
-        fixture.Preferences.Setup(x => x.Load()).Returns(preferences);
-        fixture.StartupPreferences.Setup(x => x.Apply(preferences));
+        fixture.StartupStateLoader.Setup(x => x.Load()).Returns(startupState);
         fixture.Session.Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.Setup(x => x()).Returns(fixture.Hotkey.Object);
         fixture.Ui.SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
-        fixture.Hotkey.Setup(x => x.Register(preferences));
-        fixture.ReleaseNotes.Setup(x => x.Evaluate(preferences)).Throws(new InvalidOperationException("test"));
+        fixture.Hotkey.Setup(x => x.Register(startupState.Preferences));
+        fixture.ReleaseNotes.Setup(x => x.Evaluate(startupState.Preferences)).Throws(new InvalidOperationException("test"));
         fixture.UpdateStartup
             .Setup(x => x.CheckAsync(false, It.IsAny<Action<string>>()))
             .Returns(Task.CompletedTask);
@@ -94,7 +90,7 @@ public class ApplicationBootstrapperTests
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Never);
-        fixture.Hotkey.Verify(x => x.Register(preferences), Times.Once);
+        fixture.Hotkey.Verify(x => x.Register(startupState.Preferences), Times.Once);
         fixture.UpdateStartup.Verify(x => x.CheckAsync(false, It.IsAny<Action<string>>()), Times.Once);
     }
 
@@ -122,9 +118,7 @@ public class ApplicationBootstrapperTests
     {
         public Mock<IInstanceCoordinator> InstanceCoordinator { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
-        public Mock<IPluginInitializationService> Plugin { get; } = new(MockBehavior.Strict);
-        public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
-        public Mock<IStartupPreferencesApplier> StartupPreferences { get; } = new(MockBehavior.Strict);
+        public Mock<IStartupStateLoader> StartupStateLoader { get; } = new(MockBehavior.Strict);
         public Mock<IHotkeyStartupRegistrar> Hotkey { get; } = new(MockBehavior.Strict);
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
         public Mock<IReleaseNotesStartupCoordinator> ReleaseNotes { get; } = new(MockBehavior.Strict);
@@ -144,9 +138,7 @@ public class ApplicationBootstrapperTests
             Bootstrapper = new ApplicationBootstrapper(
                 InstanceCoordinator.Object,
                 OperationLifetime.Object,
-                Plugin.Object,
-                Preferences.Object,
-                StartupPreferences.Object,
+                StartupStateLoader.Object,
                 HotkeyFactory.Object,
                 ReleaseNotes.Object,
                 UpdateStartup.Object,
