@@ -43,6 +43,12 @@
                   Style="{StaticResource WindowHeader}">
                 <TextBlock Style="{StaticResource WindowTitle}" Text="What's New"/>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Click="OnCheckClick"
+                            Content="{Binding CheckActionText}"
+                            IsEnabled="{Binding CanCheckForUpdates}"
+                            Style="{StaticResource NotesInstallButton}"
+                            ToolTip="Check for updates"
+                            Visibility="{Binding ShowCheckForUpdates, Converter={StaticResource BoolToVisibility}}"/>
                     <Button Click="OnInstallClick"
                             Content="{Binding InstallActionText}"
                             IsEnabled="{Binding CanDownloadUpdate}"

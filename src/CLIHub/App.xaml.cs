@@ -59,6 +59,15 @@ public partial class App : Application
 
         try
         {
+            _services?.GetService<IApplicationSession>()?.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Application session shutdown failed");
+        }
+
+        try
+        {
             _services?
                 .GetService<IApplicationOperationLifetime>()?
                 .StopAsync(ApplicationOperationLifetime.DefaultShutdownTimeout)

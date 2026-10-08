@@ -5,10 +5,11 @@ using CLIHub.Views;
 /// <summary>
 ///   Adapts the WPF tray and launch window to the application startup UI port.
 /// </summary>
-public sealed class WpfApplicationStartupUi : IApplicationStartupUi
+public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
 {
     private readonly TrayIconController _tray;
     private readonly LaunchWindow _launchWindow;
+    private bool _disposed;
 
     /// <summary>
     ///   Creates the startup UI adapter over the tray and launch window.
@@ -39,4 +40,16 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi
 
     private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
         UpdateDownloadRequested?.Invoke(this, e);
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _tray.UpdateDownloadRequested -= OnUpdateDownloadRequested;
+    }
 }

@@ -146,7 +146,16 @@ public sealed class TrayIconController : ITrayHost, IDisposable
         _taskbarIcon.Dispose();
     }
 
-    private void OnStateChanged(object? sender, EventArgs e) => RefreshMenu();
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(RefreshMenu);
+            return;
+        }
+
+        RefreshMenu();
+    }
 
     private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
         UpdateDownloadRequested?.Invoke(this, e);

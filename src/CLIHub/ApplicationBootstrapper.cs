@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Windows;
-using CLIHub.Core.Updates;
 
 /// <summary>
 ///   Coordinates required and best-effort first-instance startup operations.
@@ -20,10 +19,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     private readonly Func<IHotkeyStartupRegistrar> _hotkeyStartupRegistrarFactory;
     private readonly IReleaseNotesStartupCoordinator _releaseNotesStartup;
     private readonly IUpdateStartupCoordinator _updateStartup;
-    private readonly IUpdateStateSource _updateState;
-    private readonly Func<IApplicationStartupUi> _startupUiFactory;
-    private readonly Func<IUpdateDownloadCoordinator> _updateDownloadFactory;
-    private readonly Func<IUpdateRequestSource> _updateRequestSourceFactory;
+    private readonly IApplicationSession _session;
     private readonly ILogger<ApplicationBootstrapper> _logger;
 
     /// <summary>
@@ -38,10 +34,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="releaseNotesStartup"> Release-notes startup workflow. </param>
     /// <param name="updateStartup"> Startup update-check workflow. </param>
-    /// <param name="updateState"> Update state notification source. </param>
-    /// <param name="startupUiFactory"> Lazy startup UI factory. </param>
-    /// <param name="updateDownloadFactory"> Lazy update download workflow factory. </param>
-    /// <param name="updateRequestSourceFactory"> Lazy presentation update-request source factory. </param>
+    /// <param name="session"> First-instance session and application event owner. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
     public ApplicationBootstrapper(
         ISingleInstanceGuard singleInstanceGuard,
@@ -53,10 +46,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
         IReleaseNotesStartupCoordinator releaseNotesStartup,
         IUpdateStartupCoordinator updateStartup,
-        IUpdateStateSource updateState,
-        Func<IApplicationStartupUi> startupUiFactory,
-        Func<IUpdateDownloadCoordinator> updateDownloadFactory,
-        Func<IUpdateRequestSource> updateRequestSourceFactory,
+        IApplicationSession session,
         ILogger<ApplicationBootstrapper> logger)
     {
         _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
@@ -68,10 +58,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         _hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
         _releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
         _updateStartup = updateStartup ?? throw new ArgumentNullException(nameof(updateStartup));
-        _updateState = updateState ?? throw new ArgumentNullException(nameof(updateState));
-        _startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
-        _updateDownloadFactory = updateDownloadFactory ?? throw new ArgumentNullException(nameof(updateDownloadFactory));
-        _updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
+        _session = session ?? throw new ArgumentNullException(nameof(session));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -96,21 +83,8 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             var preferences = _preferencesStore.Load();
             _startupPreferences.Apply(preferences);
 
-            var startupUi = _startupUiFactory();
-            var updateDownload = _updateDownloadFactory();
-            var updateRequestSource = _updateRequestSourceFactory();
+            var startupUi = _session.Start(context);
             var hotkeyStartupRegistrar = _hotkeyStartupRegistrarFactory();
-
-            _updateState.UpdateStateChanged += (_, _) => context.Dispatch(startupUi.RefreshMenu);
-            startupUi.UpdateDownloadRequested += (_, _) =>
-                _ = _operationLifetime.RunAsync(
-                    "Update download",
-                    cancellationToken => updateDownload.DownloadAndApplyAsync(cancellationToken));
-            updateRequestSource.UpdateRequested += (_, _) =>
-                _ = _operationLifetime.RunAsync(
-                    "Update download",
-                    cancellationToken => updateDownload.DownloadAndApplyAsync(cancellationToken));
-            _singleInstanceGuard.ActivationRequested += () => context.Dispatch(startupUi.ShowLaunchWindow);
 
             context.SetMainWindow(startupUi.LaunchWindow);
 

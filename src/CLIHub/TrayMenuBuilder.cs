@@ -80,9 +80,21 @@ public sealed class TrayMenuBuilder
 
     private static MenuItem? BuildUpdateItem(TrayMenuState state, TrayMenuCommands commands)
     {
+        if (state.IsCheckingForUpdates)
+        {
+            return new MenuItem { Header = "Checking for updates…", IsEnabled = false };
+        }
+
         if (state.AvailableUpdateVersion is null)
         {
-            return null;
+            if (state.IsDownloadingUpdate)
+            {
+                return new MenuItem { Header = "Downloading update…", IsEnabled = false };
+            }
+
+            var checkItem = new MenuItem { Header = "Check for updates" };
+            checkItem.Click += (_, _) => commands.CheckForUpdates();
+            return checkItem;
         }
 
         if (state.IsDownloadingUpdate)

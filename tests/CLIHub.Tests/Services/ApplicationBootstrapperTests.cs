@@ -28,9 +28,7 @@ public class ApplicationBootstrapperTests
         fixture.Plugin.InSequence(sequence).Setup(x => x.Initialize());
         fixture.Preferences.InSequence(sequence).Setup(x => x.Load()).Returns(preferences);
         fixture.StartupPreferences.InSequence(sequence).Setup(x => x.Apply(preferences));
-        fixture.UiFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Ui.Object);
-        fixture.DownloadFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Download.Object);
-        fixture.RequestSourceFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.RequestSource.Object);
+        fixture.Session.InSequence(sequence).Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Hotkey.Object);
         fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
         fixture.Ui.Setup(x => x.ShowLaunchWindow());
@@ -59,7 +57,7 @@ public class ApplicationBootstrapperTests
         fixture.Guard.Verify(x => x.SignalActivation(), Times.Once);
         fixture.Lifetime.Verify(x => x.Shutdown(), Times.Once);
         fixture.Plugin.Verify(x => x.Initialize(), Times.Never);
-        fixture.UiFactory.Verify(x => x(), Times.Never);
+        fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
     }
 
     [Fact]
@@ -90,9 +88,7 @@ public class ApplicationBootstrapperTests
         fixture.Plugin.Setup(x => x.Initialize());
         fixture.Preferences.Setup(x => x.Load()).Returns(preferences);
         fixture.StartupPreferences.Setup(x => x.Apply(preferences));
-        fixture.UiFactory.Setup(x => x()).Returns(fixture.Ui.Object);
-        fixture.DownloadFactory.Setup(x => x()).Returns(fixture.Download.Object);
-        fixture.RequestSourceFactory.Setup(x => x()).Returns(fixture.RequestSource.Object);
+        fixture.Session.Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.Setup(x => x()).Returns(fixture.Hotkey.Object);
         fixture.Ui.SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
         fixture.Hotkey.Setup(x => x.Register(preferences));
@@ -141,14 +137,9 @@ public class ApplicationBootstrapperTests
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
         public Mock<IReleaseNotesStartupCoordinator> ReleaseNotes { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateStartupCoordinator> UpdateStartup { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateService> UpdateService { get; } = new(MockBehavior.Strict);
+        public Mock<IApplicationSession> Session { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
         public Mock<IStartupWindow> Window { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateDownloadCoordinator> Download { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateRequestSource> RequestSource { get; } = new(MockBehavior.Strict);
-        public Mock<Func<IApplicationStartupUi>> UiFactory { get; } = new(MockBehavior.Strict);
-        public Mock<Func<IUpdateDownloadCoordinator>> DownloadFactory { get; } = new(MockBehavior.Strict);
-        public Mock<Func<IUpdateRequestSource>> RequestSourceFactory { get; } = new(MockBehavior.Strict);
 
         public ApplicationBootstrapper Bootstrapper { get; }
 
@@ -168,10 +159,7 @@ public class ApplicationBootstrapperTests
                 HotkeyFactory.Object,
                 ReleaseNotes.Object,
                 UpdateStartup.Object,
-                UpdateService.Object,
-                UiFactory.Object,
-                DownloadFactory.Object,
-                RequestSourceFactory.Object,
+                Session.Object,
                 NullLogger<ApplicationBootstrapper>.Instance);
         }
     }

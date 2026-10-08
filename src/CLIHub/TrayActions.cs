@@ -15,11 +15,14 @@ public sealed class TrayActions : ITrayActions, IDisposable
     private readonly IPluginCatalog _pluginCatalog;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
     private readonly IUpdateStateSource _updates;
+    private readonly IUpdateChecker _updateChecker;
+    private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly IProjectDialogService _projectDialog;
     private readonly IUserNotificationService _notifications;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IReleaseNotesLauncher _releaseNotesLauncher;
     private bool _disposed;
+    private bool _isCheckingForUpdates;
 
     /// <inheritdoc />
     public event EventHandler? StateChanged;
@@ -38,6 +41,8 @@ public sealed class TrayActions : ITrayActions, IDisposable
         IPluginCatalog pluginCatalog,
         IAgentCommandWorkflow agentCommandWorkflow,
         IUpdateStateSource updates,
+        IUpdateChecker updateChecker,
+        IApplicationOperationLifetime operationLifetime,
         IProjectDialogService projectDialog,
         IUserNotificationService notifications,
         ISettingsLauncher settingsLauncher,
@@ -47,6 +52,8 @@ public sealed class TrayActions : ITrayActions, IDisposable
         _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
         _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
         _updates = updates ?? throw new ArgumentNullException(nameof(updates));
+        _updateChecker = updateChecker ?? throw new ArgumentNullException(nameof(updateChecker));
+        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         _projectDialog = projectDialog ?? throw new ArgumentNullException(nameof(projectDialog));
         _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
         _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
@@ -62,6 +69,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
             AddProject,
             _settingsLauncher.ShowSettings,
             _releaseNotesLauncher.ShowReleaseNotes,
+            CheckForUpdates,
             () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
             static () => { },
             static () => { });
@@ -73,7 +81,8 @@ public sealed class TrayActions : ITrayActions, IDisposable
         _projects.GetRecentProjects(10),
         _pluginCatalog.GetAllPlugins().Where(plugin => plugin.Commands?.Launch is not null).ToArray(),
         _updates.LastKnownAvailableVersion,
-        _updates.IsDownloading);
+        _updates.IsDownloading,
+        _isCheckingForUpdates);
 
     /// <summary>
     ///   Releases application event subscriptions.
@@ -116,6 +125,31 @@ public sealed class TrayActions : ITrayActions, IDisposable
         if (!result.Success)
         {
             _notifications.ShowWarning(result.Error ?? $"Failed to launch {plugin.Name}");
+        }
+    }
+
+    private void CheckForUpdates()
+    {
+        if (_isCheckingForUpdates || _updates.IsDownloading)
+        {
+            return;
+        }
+
+        _isCheckingForUpdates = true;
+        StateChanged?.Invoke(this, EventArgs.Empty);
+        _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
+    }
+
+    private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _updateChecker.CheckForUpdatesAsync(cancellationToken);
+        }
+        finally
+        {
+            _isCheckingForUpdates = false;
+            StateChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

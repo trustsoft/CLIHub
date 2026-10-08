@@ -60,6 +60,33 @@ public class TrayActionsTests
     }
 
     [Fact]
+    public void CheckForUpdatesCommand_UsesSharedCheckerAndOperationLifetime()
+    {
+        var checker = new Mock<IUpdateChecker>(MockBehavior.Strict);
+        checker
+            .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
+        var operationLifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);
+        operationLifetime
+            .Setup(x => x.RunAsync("Manual update check", It.IsAny<Func<CancellationToken, Task>>()))
+            .Returns((string _, Func<CancellationToken, Task> operation) =>
+            {
+                operation(CancellationToken.None);
+                return Task.CompletedTask;
+            });
+        var actions = CreateActions(
+            new Mock<IProjectService>().Object,
+            new Mock<IPluginCatalog>().Object,
+            new Mock<IUpdateService>().Object,
+            updateChecker: checker.Object,
+            operationLifetime: operationLifetime.Object);
+
+        actions.Commands.CheckForUpdates();
+
+        checker.Verify(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
     public void Dispose_UnsubscribesFromStateChanges()
     {
         var projects = new Mock<IProjectService>();
@@ -80,12 +107,16 @@ public class TrayActionsTests
         IProjectService projects,
         IPluginCatalog catalog,
         IUpdateService updates,
-        IAgentCommandWorkflow? workflow = null) =>
+        IAgentCommandWorkflow? workflow = null,
+        IUpdateChecker? updateChecker = null,
+        IApplicationOperationLifetime? operationLifetime = null) =>
         new(
             projects,
             catalog,
             workflow ?? new Mock<IAgentCommandWorkflow>().Object,
             updates,
+            updateChecker ?? new Mock<IUpdateChecker>().Object,
+            operationLifetime ?? new Mock<IApplicationOperationLifetime>().Object,
             new Mock<IProjectDialogService>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<ISettingsLauncher>().Object,

@@ -21,8 +21,11 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     private static readonly string[] GroupLabels = { "New", "Improved", "Fixed" };
 
     private readonly IUpdateService _updates;
+    private readonly IUpdateChecker _updateChecker;
+    private readonly IApplicationOperationLifetime _operationLifetime;
     private bool _isUpdateAvailable;
     private bool _isDownloading;
+    private bool _isCheckingForUpdates;
 
     /// <summary>
     ///   Raised when the user asks to download the update and restart.
@@ -34,9 +37,17 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     /// <param name="releaseNotes"> Release notes service. </param>
     /// <param name="updates"> Update service used for the download action state. </param>
-    public WhatsNewViewModel(IReleaseNotesService releaseNotes, IUpdateService updates)
+    /// <param name="updateChecker"> Update check workflow. </param>
+    /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
+    public WhatsNewViewModel(
+        IReleaseNotesService releaseNotes,
+        IUpdateService updates,
+        IUpdateChecker updateChecker,
+        IApplicationOperationLifetime operationLifetime)
     {
         _updates = updates;
+        _updateChecker = updateChecker ?? throw new ArgumentNullException(nameof(updateChecker));
+        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
 
         Versions = BuildVersions(releaseNotes.GetNotes());
 
@@ -73,9 +84,33 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     }
 
     /// <summary>
+    ///   Whether an update check is currently running.
+    /// </summary>
+    public bool IsCheckingForUpdates
+    {
+        get => _isCheckingForUpdates;
+        private set => SetProperty(ref _isCheckingForUpdates, value);
+    }
+
+    /// <summary>
     ///   Whether the install action can start a download right now.
     /// </summary>
     public bool CanDownloadUpdate => IsUpdateAvailable && !IsDownloading;
+
+    /// <summary>
+    ///   Whether the user can start a manual update check.
+    /// </summary>
+    public bool CanCheckForUpdates => !IsUpdateAvailable && !IsDownloading && !IsCheckingForUpdates;
+
+    /// <summary>
+    ///   Whether the manual update-check action should remain visible.
+    /// </summary>
+    public bool ShowCheckForUpdates => !IsUpdateAvailable;
+
+    /// <summary>
+    ///   The caption of the manual update-check action.
+    /// </summary>
+    public string CheckActionText => IsCheckingForUpdates ? "Checking for updates..." : "Check for updates";
 
     /// <summary>
     ///   The caption of the install action, naming the version or the running download.
@@ -96,6 +131,21 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     }
 
     /// <summary>
+    ///   Starts a tracked manual update check while the What's New window is idle.
+    /// </summary>
+    public void RequestCheckForUpdates()
+    {
+        if (!CanCheckForUpdates)
+        {
+            return;
+        }
+
+        IsCheckingForUpdates = true;
+        NotifyCheckStateChanged();
+        _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
+    }
+
+    /// <summary>
     ///   Unsubscribes from update-state changes.
     /// </summary>
     public void Dispose()
@@ -110,7 +160,28 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     {
         IsUpdateAvailable = _updates.LastKnownAvailableVersion != null;
         IsDownloading = _updates.IsDownloading;
+        NotifyCheckStateChanged();
+    }
+
+    private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _updateChecker.CheckForUpdatesAsync(cancellationToken);
+        }
+        finally
+        {
+            IsCheckingForUpdates = false;
+            RefreshUpdateState();
+        }
+    }
+
+    private void NotifyCheckStateChanged()
+    {
         OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(CanCheckForUpdates));
+        OnPropertyChanged(nameof(ShowCheckForUpdates));
+        OnPropertyChanged(nameof(CheckActionText));
         OnPropertyChanged(nameof(InstallActionText));
     }
 
