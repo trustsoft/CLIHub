@@ -30,4 +30,16 @@ public interface IApplicationStartupUi
     /// </summary>
     /// <param name="version"> The available version. </param>
     void NotifyUpdateAvailable(string version);
+
+    /// <summary>
+    ///   Shows a notification that an update was downloaded and the application will restart.
+    /// </summary>
+    /// <param name="version"> The downloaded version. </param>
+    void NotifyUpdateDownloaded(string version);
+
+    /// <summary>
+    ///   Shows a notification that an update download failed.
+    /// </summary>
+    /// <param name="version"> The version whose download failed. </param>
+    void NotifyUpdateFailed(string version);
 }

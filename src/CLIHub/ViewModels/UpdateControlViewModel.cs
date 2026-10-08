@@ -6,8 +6,8 @@ using System.Windows.Input;
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
-using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
+using CLIHub.Core.Updates;
 
 /// <summary>
 ///   State and command for an update control: shows the current version when idle, checks for
@@ -16,11 +16,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class UpdateControlViewModel : ObservableObject, IDisposable
 {
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateChecker _checker;
-    private readonly IUpdateStateSource _stateSource;
-    private readonly IUpdateDownloader _downloader;
-    private readonly IUpdateInstaller _installer;
+    private readonly IUpdateWorkflow _workflow;
     private readonly ILogger<UpdateControlViewModel> _logger;
     private readonly IApplicationOperationLifetime _operationLifetime;
 
@@ -35,37 +31,25 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   Creates the update control state for the given update service.
     /// </summary>
-    /// <param name="versionProvider"> Provides the current application version. </param>
-    /// <param name="checker"> Checks for available updates. </param>
-    /// <param name="stateSource"> Provides shared update state. </param>
-    /// <param name="downloader"> Downloads available updates. </param>
-    /// <param name="installer"> Applies downloaded updates. </param>
+    /// <param name="workflow"> Shared application update workflow. </param>
     /// <param name="logger"> Logger for unexpected update control failures. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update work. </param>
     public UpdateControlViewModel(
-        IUpdateVersionProvider versionProvider,
-        IUpdateChecker checker,
-        IUpdateStateSource stateSource,
-        IUpdateDownloader downloader,
-        IUpdateInstaller installer,
+        IUpdateWorkflow workflow,
         ILogger<UpdateControlViewModel> logger,
         IApplicationOperationLifetime operationLifetime)
     {
-        _versionProvider = versionProvider;
-        _checker = checker;
-        _stateSource = stateSource;
-        _downloader = downloader;
-        _installer = installer;
+        _workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
         _logger = logger;
         _operationLifetime = operationLifetime;
 
-        CurrentVersion = versionProvider.GetCurrentVersion();
+        CurrentVersion = workflow.GetCurrentVersion();
 
         UpdateControlCommand = new RelayCommand(
             () => _ = _operationLifetime.RunAsync("Update control", RunUpdateControlAsync),
             () => _state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
 
-        _stateSource.UpdateStateChanged += OnUpdateStateChanged;
+        _workflow.UpdateStateChanged += OnUpdateStateChanged;
         RefreshState();
     }
 
@@ -88,12 +72,12 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     /// </summary>
     public string UpdateButtonText => _state switch
     {
-        UpdateControlState.Available => $"Update to {_stateSource.LastKnownAvailableVersion}",
+        UpdateControlState.Available => $"Update to {_workflow.LastKnownAvailableVersion}",
         UpdateControlState.Checking => "Checking…",
-        UpdateControlState.Downloading => _stateSource.LastKnownAvailableVersion is { } downloading
+        UpdateControlState.Downloading => _workflow.LastKnownAvailableVersion is { } downloading
             ? $"Downloading {downloading}…"
             : "Downloading…",
-        UpdateControlState.ReadyToApply => _stateSource.LastKnownAvailableVersion is { } ready
+        UpdateControlState.ReadyToApply => _workflow.LastKnownAvailableVersion is { } ready
             ? $"Restart to update to {ready}"
             : "Restart to update",
         _ => CurrentVersion,
@@ -135,7 +119,7 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         UpdateCheckResult result;
         try
         {
-            result = await _checker.CheckForUpdatesAsync(cancellationToken);
+            result = await _workflow.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -169,7 +153,7 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         UpdateDownloadResult result;
         try
         {
-            result = await _downloader.DownloadUpdateAsync(cancellationToken);
+            result = await _workflow.DownloadUpdateAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -185,8 +169,8 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
 
         SetState(UpdateControlLogic.AfterDownload(
             result.Status,
-            _stateSource.IsDownloading,
-            _stateSource.LastKnownAvailableVersion is not null));
+            _workflow.IsDownloading,
+            _workflow.LastKnownAvailableVersion is not null));
 
         ReportOutcome(result.Status switch
         {
@@ -202,7 +186,7 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     {
         try
         {
-            _installer.ApplyDownloadedUpdateAndRestart();
+        _workflow.ApplyDownloadedUpdateAndRestart();
         }
         catch (Exception ex)
         {
@@ -211,8 +195,16 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void OnUpdateStateChanged(object? sender, EventArgs e) =>
-        Application.Current?.Dispatcher.BeginInvoke(RefreshState);
+    private void OnUpdateStateChanged(object? sender, EventArgs e)
+    {
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(RefreshState);
+            return;
+        }
+
+        RefreshState();
+    }
 
     /// <summary>
     ///   Removes the shared update-state event subscription.
@@ -225,14 +217,24 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         }
 
         _disposed = true;
-        _stateSource.UpdateStateChanged -= OnUpdateStateChanged;
+        _workflow.UpdateStateChanged -= OnUpdateStateChanged;
     }
 
-    private void RefreshState() =>
-        SetState(UpdateControlLogic.Derive(
-            _state,
-            _stateSource.IsDownloading,
-            _stateSource.LastKnownAvailableVersion is not null));
+    private void RefreshState()
+    {
+        if (_disposed || _state == UpdateControlState.ReadyToApply)
+        {
+            return;
+        }
+
+        SetState(_workflow.IsDownloading
+            ? UpdateControlState.Downloading
+            : _workflow.IsCheckingForUpdates
+                ? UpdateControlState.Checking
+                : _workflow.LastKnownAvailableVersion is not null
+                    ? UpdateControlState.Available
+                    : UpdateControlState.Idle);
+    }
 
     private void SetState(UpdateControlState state)
     {

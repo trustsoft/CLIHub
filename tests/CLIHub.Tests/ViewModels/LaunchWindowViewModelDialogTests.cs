@@ -72,13 +72,9 @@ public class LaunchWindowViewModelDialogTests
 
     private static UpdateControlViewModel CreateUpdateControl(IApplicationOperationLifetime operationLifetime)
     {
-        var updates = new Mock<IUpdateService>();
+        var updates = new Mock<IUpdateWorkflow>();
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
         return new UpdateControlViewModel(
-            updates.Object,
-            updates.Object,
-            updates.Object,
-            updates.Object,
             updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             operationLifetime);

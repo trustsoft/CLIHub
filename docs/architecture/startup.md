@@ -8,7 +8,7 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 
 ## Application Startup Sequence
 
-`App.OnStartup` prepares the process environment, builds the service provider, and delegates the application sequence to `ApplicationBootstrapper`. The bootstrapper performs the following operations in order:
+`App.OnStartup` performs steps 1–4 and delegates the remaining application sequence to `ApplicationBootstrapper`:
 
 1. Calls the WPF base implementation.
 2. Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
@@ -17,12 +17,12 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 5. Resolves the single-instance guard from the service provider. If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns. The provider owns guard disposal on this path.
 6. Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
 7. Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
-8. Starts `ApplicationSession`, which creates the startup UI and owns update-state, update-request, and second-instance activation subscriptions.
+8. Starts `ApplicationSession`, which creates the startup UI and owns workflow-state, download-outcome, update-request, and second-instance activation subscriptions. Download requests use the singleton `IUpdateWorkflow`; downloaded/failed outcomes are dispatched to the startup UI for tray notifications.
 9. Assigns the session's launch window to `Application.MainWindow`.
 10. Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
 11. Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
 12. Evaluates whether release notes should be shown or recorded for the current version.
-13. Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled.
+13. Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled. `UpdateStartupCoordinator` calls the shared workflow, so a concurrent manual check joins the same operation.
 14. Logs that startup is complete.
 
 The implementation is in `src/CLIHub/Program.cs`, `src/CLIHub/App.xaml.cs`, `src/CLIHub/ApplicationBootstrapper.cs`, `src/CLIHub/ApplicationSession.cs`, and `src/CLIHub/ServiceRegistration.cs`; Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.

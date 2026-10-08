@@ -23,7 +23,7 @@ public class TrayActionsTests
         projects.Setup(x => x.GetRecentProjects(10)).Returns([recent]);
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns([launchable, nonLaunchable]);
-        var updates = new Mock<IUpdateService>();
+        var updates = new Mock<IUpdateWorkflow>();
         updates.SetupGet(x => x.LastKnownAvailableVersion).Returns("2.0.0");
         updates.SetupGet(x => x.IsDownloading).Returns(false);
         var actions = CreateActions(projects.Object, catalog.Object, updates.Object);
@@ -49,7 +49,7 @@ public class TrayActionsTests
         var actions = CreateActions(
             new Mock<IProjectService>().Object,
             new Mock<IPluginCatalog>().Object,
-            new Mock<IUpdateService>().Object,
+            new Mock<IUpdateWorkflow>().Object,
             workflow.Object);
 
         await actions.Commands.LaunchAgentAsync(plugin, project);
@@ -62,7 +62,7 @@ public class TrayActionsTests
     [Fact]
     public void CheckForUpdatesCommand_UsesSharedCheckerAndOperationLifetime()
     {
-        var checker = new Mock<IUpdateChecker>(MockBehavior.Strict);
+        var checker = new Mock<IUpdateWorkflow>();
         checker
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
@@ -77,8 +77,7 @@ public class TrayActionsTests
         var actions = CreateActions(
             new Mock<IProjectService>().Object,
             new Mock<IPluginCatalog>().Object,
-            new Mock<IUpdateService>().Object,
-            updateChecker: checker.Object,
+            checker.Object,
             operationLifetime: operationLifetime.Object);
 
         actions.Commands.CheckForUpdates();
@@ -93,7 +92,7 @@ public class TrayActionsTests
         var actions = CreateActions(
             projects.Object,
             new Mock<IPluginCatalog>().Object,
-            new Mock<IUpdateService>().Object);
+            new Mock<IUpdateWorkflow>().Object);
         var changed = 0;
         actions.StateChanged += (_, _) => changed++;
 
@@ -106,9 +105,8 @@ public class TrayActionsTests
     private static TrayActions CreateActions(
         IProjectService projects,
         IPluginCatalog catalog,
-        IUpdateService updates,
+        IUpdateWorkflow updates,
         IAgentCommandWorkflow? workflow = null,
-        IUpdateChecker? updateChecker = null,
         IApplicationOperationLifetime? operationLifetime = null)
     {
         var projection = new TrayStateProjection(projects, catalog, updates);
@@ -116,14 +114,12 @@ public class TrayActionsTests
             projects,
             workflow ?? new Mock<IAgentCommandWorkflow>().Object,
             updates,
-            updateChecker ?? new Mock<IUpdateChecker>().Object,
             operationLifetime ?? new Mock<IApplicationOperationLifetime>().Object,
             new Mock<IProjectDialogService>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<ISettingsLauncher>().Object,
             new Mock<IReleaseNotesLauncher>().Object,
-            new Mock<IApplicationLifetime>().Object,
-            projection);
+            new Mock<IApplicationLifetime>().Object);
         return new TrayActions(projection, handlers);
     }
 

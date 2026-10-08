@@ -62,6 +62,10 @@ The WPF composition root registers `SingleInstanceGuard` as the owner of the pro
 
 **Target:** `net10.0-windows`.
 
+Update operations are coordinated by the singleton `IUpdateWorkflow` / `UpdateWorkflow` in the application project. It wraps the existing Core update ports, forwards availability state, and owns shared checking state. Concurrent checks join one task; the initiating caller supplies the operation token, while cancellation by a joining caller only cancels that caller's wait. The initiating operation remains tracked until the underlying check finishes. Settings retains its narrow checker contract, wired to the same workflow at the composition root.
+
+`UpdateStartupCoordinator` applies the startup preference and notification policy. Tray and What's New download requests reach `DownloadAndApplyAsync` through `ApplicationSession`; workflow outcome events are dispatched to the tray, followed by the existing two-second delay and automatic restart. A download reservation spans that delay to prevent another download/apply flow. The launch-window control uses `DownloadUpdateAsync` and keeps its explicit restart action after success. Core `UpdateService` still owns Velopack integration and availability; no Core contracts or persistence formats change.
+
 ### CLIHub.Core.Tests
 
 **Purpose:** Core-only unit and composition tests (xUnit).

@@ -38,6 +38,12 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
     /// <inheritdoc />
     public void NotifyUpdateAvailable(string version) => _tray.NotifyUpdateAvailable(version);
 
+    /// <inheritdoc />
+    public void NotifyUpdateDownloaded(string version) => _tray.NotifyUpdateDownloaded(version);
+
+    /// <inheritdoc />
+    public void NotifyUpdateFailed(string version) => _tray.NotifyUpdateFailed(version);
+
     private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
         UpdateDownloadRequested?.Invoke(this, e);
 

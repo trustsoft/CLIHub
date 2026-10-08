@@ -22,7 +22,7 @@ public class ApplicationSessionTests
             },
             _ => { }));
 
-        fixture.UpdateState.Raise(x => x.UpdateStateChanged += null, EventArgs.Empty);
+        fixture.UpdateDownload.Raise(x => x.UpdateStateChanged += null, EventArgs.Empty);
         fixture.StartupUi.Raise(x => x.UpdateDownloadRequested += null, EventArgs.Empty);
         fixture.UpdateRequests.Raise(x => x.UpdateRequested += null, EventArgs.Empty);
         fixture.Guard.Raise(x => x.ActivationRequested += null);
@@ -45,7 +45,9 @@ public class ApplicationSessionTests
         fixture.Session.Start(new ApplicationStartupContext(_ => dispatched++, _ => { }));
         fixture.Session.Dispose();
 
-        fixture.UpdateState.Raise(x => x.UpdateStateChanged += null, EventArgs.Empty);
+        fixture.UpdateDownload.Raise(x => x.UpdateStateChanged += null, EventArgs.Empty);
+        fixture.UpdateDownload.Raise(x => x.UpdateDownloaded += null, fixture.UpdateDownload.Object, "2.0");
+        fixture.UpdateDownload.Raise(x => x.UpdateDownloadFailed += null, fixture.UpdateDownload.Object, "2.0");
         fixture.StartupUi.Raise(x => x.UpdateDownloadRequested += null, EventArgs.Empty);
         fixture.UpdateRequests.Raise(x => x.UpdateRequested += null, EventArgs.Empty);
         fixture.Guard.Raise(x => x.ActivationRequested += null);
@@ -58,12 +60,32 @@ public class ApplicationSessionTests
         fixture.StartupUi.Verify(x => x.ShowLaunchWindow(), Times.Never);
     }
 
+    [Fact]
+    public void DownloadOutcomes_ActiveSession_DispatchesTrayNotifications()
+    {
+        var fixture = new SessionFixture();
+        fixture.StartupUi.Setup(x => x.NotifyUpdateDownloaded("2.0"));
+        fixture.StartupUi.Setup(x => x.NotifyUpdateFailed("2.0"));
+        var dispatched = 0;
+        fixture.Session.Start(new ApplicationStartupContext(action =>
+        {
+            dispatched++;
+            action();
+        }, _ => { }));
+
+        fixture.UpdateDownload.Raise(x => x.UpdateDownloaded += null, fixture.UpdateDownload.Object, "2.0");
+        fixture.UpdateDownload.Raise(x => x.UpdateDownloadFailed += null, fixture.UpdateDownload.Object, "2.0");
+
+        Assert.Equal(2, dispatched);
+        fixture.StartupUi.Verify(x => x.NotifyUpdateDownloaded("2.0"), Times.Once);
+        fixture.StartupUi.Verify(x => x.NotifyUpdateFailed("2.0"), Times.Once);
+    }
+
     private sealed class SessionFixture
     {
         public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateStateSource> UpdateState { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationStartupUi> StartupUi { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateDownloadCoordinator> UpdateDownload { get; } = new(MockBehavior.Strict);
+        public Mock<IUpdateWorkflow> UpdateDownload { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateRequestSource> UpdateRequests { get; } = new(MockBehavior.Strict);
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
         public ApplicationSession Session { get; }
@@ -85,11 +107,10 @@ public class ApplicationSessionTests
 
             Session = new ApplicationSession(
                 OperationLifetime.Object,
-                UpdateState.Object,
                 () => StartupUi.Object,
-                () => UpdateDownload.Object,
                 () => UpdateRequests.Object,
-                Guard.Object);
+                Guard.Object,
+                UpdateDownload.Object);
         }
     }
 }

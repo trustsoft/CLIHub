@@ -10,7 +10,7 @@ using CLIHub.Core.Updates;
 /// <summary>
 ///   View model for the What's New window: the release notes in display order, with empty groups
 ///   dropped so the window only shows what a version actually changed, plus the download-and-restart
-///   action for an available update. The action itself runs in <see cref="App"/>, so the tray menu
+///   action for an available update. The action is wired by <see cref="ApplicationSession"/>, so the tray menu
 ///   and this window share one flow and one state.
 /// </summary>
 public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRequestSource
@@ -20,12 +20,11 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     private static readonly string[] GroupLabels = { "New", "Improved", "Fixed" };
 
-    private readonly IUpdateService _updates;
-    private readonly IUpdateChecker _updateChecker;
+    private readonly IUpdateWorkflow _updates;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private bool _isUpdateAvailable;
     private bool _isDownloading;
-    private bool _isCheckingForUpdates;
+    private bool _disposed;
 
     /// <summary>
     ///   Raised when the user asks to download the update and restart.
@@ -36,17 +35,14 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     ///   Loads the release notes and subscribes to update-state changes.
     /// </summary>
     /// <param name="releaseNotes"> Release notes service. </param>
-    /// <param name="updates"> Update service used for the download action state. </param>
-    /// <param name="updateChecker"> Update check workflow. </param>
+    /// <param name="updates"> Shared application update workflow. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
     public WhatsNewViewModel(
         IReleaseNotesService releaseNotes,
-        IUpdateService updates,
-        IUpdateChecker updateChecker,
+        IUpdateWorkflow updates,
         IApplicationOperationLifetime operationLifetime)
     {
         _updates = updates;
-        _updateChecker = updateChecker ?? throw new ArgumentNullException(nameof(updateChecker));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
 
         Versions = BuildVersions(releaseNotes.GetNotes());
@@ -86,11 +82,7 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// <summary>
     ///   Whether an update check is currently running.
     /// </summary>
-    public bool IsCheckingForUpdates
-    {
-        get => _isCheckingForUpdates;
-        private set => SetProperty(ref _isCheckingForUpdates, value);
-    }
+    public bool IsCheckingForUpdates => _updates.IsCheckingForUpdates;
 
     /// <summary>
     ///   Whether the install action can start a download right now.
@@ -140,8 +132,6 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
             return;
         }
 
-        IsCheckingForUpdates = true;
-        NotifyCheckStateChanged();
         _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
     }
 
@@ -150,14 +140,28 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public void Dispose()
     {
+        _disposed = true;
         _updates.UpdateStateChanged -= OnUpdateStateChanged;
     }
 
-    private void OnUpdateStateChanged(object? sender, EventArgs e) =>
-        Application.Current?.Dispatcher.BeginInvoke(RefreshUpdateState);
+    private void OnUpdateStateChanged(object? sender, EventArgs e)
+    {
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(RefreshUpdateState);
+            return;
+        }
+
+        RefreshUpdateState();
+    }
 
     private void RefreshUpdateState()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         IsUpdateAvailable = _updates.LastKnownAvailableVersion != null;
         IsDownloading = _updates.IsDownloading;
         NotifyCheckStateChanged();
@@ -167,11 +171,10 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     {
         try
         {
-            await _updateChecker.CheckForUpdatesAsync(cancellationToken);
+            await _updates.CheckForUpdatesAsync(cancellationToken);
         }
         finally
         {
-            IsCheckingForUpdates = false;
             RefreshUpdateState();
         }
     }
@@ -179,6 +182,7 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     private void NotifyCheckStateChanged()
     {
         OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(IsCheckingForUpdates));
         OnPropertyChanged(nameof(CanCheckForUpdates));
         OnPropertyChanged(nameof(ShowCheckForUpdates));
         OnPropertyChanged(nameof(CheckActionText));

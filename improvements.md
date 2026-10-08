@@ -6,7 +6,7 @@ Refactor the application layer to simplify code management and make the executio
 
 The refactoring should be incremental. Each stage must keep the solution buildable and testable, and must preserve the startup order and behavior defined in `openspec/specs/`.
 
-## Current Baseline
+## Baseline Before This Refactoring
 
 - `CLIHub.Core` is already separated from WPF and should remain UI-independent.
 - Core subsystems are organized by responsibility: configuration, projects, plugins, agents, updates, and infrastructure.
@@ -14,6 +14,22 @@ The refactoring should be incremental. Each stage must keep the solution buildab
 - The main complexity is in `src/CLIHub`, especially startup orchestration, update workflows, and the launch-window ViewModel.
 - Baseline verification: `dotnet test CLIHub.sln --no-restore` passes with 466 tests.
 - The working tree was clean before this plan was created.
+
+## Execution Progress
+
+The baseline and findings below describe the starting point. Archived increments do not by themselves mean every criterion in a phase is complete.
+
+| Area | Delivered | Remaining |
+|---|---|---|
+| Phase 0 | Startup characterization and initial startup documentation updates. | Reconcile retired compatibility API references throughout current docs/specs. |
+| Phase 1 | `ApplicationSession` owns update and activation subscriptions; shutdown removes them before stopping operations. | Further reduce startup sequencing dependencies and review host/factory boundaries. |
+| Phase 2 | Manual checks in tray and What's New; original download/restart policies preserved. | Native UI verification of update interactions. |
+| Phase 3 | Command coordinator, action builder, external-launcher port, injected update control. | Strengthen composition and external-launcher adapter coverage. |
+| Phase 4 | Tray state projection separated from command handlers. | Group DI registrations by feature, reduce non-window factories, and review shared project workflows. |
+| Phase 5 | Disposable pane/update/launch owners and documented legacy window; architecture checks added. | Complete event-owner review, queued-callback checks, and documentation reconciliation. |
+| Update workflow follow-up | One `IUpdateWorkflow` for startup, tray, What's New, launch-window operations, and Settings checks; concurrent checks share one task. | Verify installed-build notification/restart behavior in the native application. |
+
+The update workflow follow-up preserves the established apply policies: tray and What's New download and restart automatically; the launch window offers an explicit restart action. Existing Core contracts remain unchanged. Application tests exercise concurrency, cancellation, result propagation, automatic restart sequencing, and explicit restart policy without network or installer side effects.
 
 ## Current Execution Flow
 
@@ -26,18 +42,22 @@ Program / Velopack
             -> single-instance check
             -> plugin initialization
             -> preferences load and startup preference application
-            -> tray and launch UI creation
-            -> update and activation event wiring
+            -> ApplicationSession: tray/launch UI creation and update/activation event wiring
             -> optional launch-window display
             -> global hotkey registration
             -> release-notes evaluation
             -> background startup update check
 
-LaunchWindowViewModel / TrayActions
+LaunchWindowViewModel / TrayCommandHandlers
     -> IAgentCommandWorkflow
         -> AgentCommandService
             -> ProcessLauncher
                 -> Windows Terminal / Command Prompt / PowerShell
+
+Startup / Tray / What's New / Launch window / Settings
+    -> IUpdateWorkflow
+        -> Core update ports (one UpdateService)
+        -> ApplicationSession: automatic-download notifications
 ```
 
 ## Architectural Findings
@@ -92,13 +112,15 @@ Launch window
 
 The paths share `IUpdateStateSource`, but check, download, apply, error handling, and user feedback are orchestrated in different places.
 
-Current decision:
+Original Phase 2 decision (preserved for that increment):
 
 - do not refactor or unify the existing download/apply/restart workflow yet;
 - keep `UpdateService`, `UpdateDownloadCoordinator`, and `UpdateControlViewModel` behavior unchanged;
 - add an explicit `Check for updates` action to the tray and What's New surfaces;
 - route the new check action through the existing update checker and shared update state;
 - defer download/apply workflow unification to a separate future change.
+
+Follow-up `unify-update-workflow` implements that separate change: one application workflow owns shared checking state, concurrent-check coalescing, download exclusion, and automatic restart sequencing. `UpdateStartupCoordinator` remains the startup policy adapter; `UpdateControlViewModel` remains the launch presentation adapter with its explicit restart step. The former download coordinator/notifier are replaced by workflow outcome events wired through `ApplicationSession`.
 
 ### 4. Event ownership is implicit
 

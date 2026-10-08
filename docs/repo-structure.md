@@ -39,6 +39,8 @@
 
 ## Documentation
 
+Application update orchestration lives in `src/CLIHub/IUpdateWorkflow.cs` and `UpdateWorkflow.cs`. `ApplicationSession` wires its automatic-download outcomes to the WPF startup UI; startup, tray, release-notes, launch-window, and Settings adapters use the same workflow. The former `UpdateDownloadCoordinator` and `UpdateDownloadNotifier` files are retired. Core update contracts and the Velopack service remain under `src/CLIHub.Core/Updates/`.
+
 **`docs/`** — project documentation (markdown):
 
 - `vision.md` — vision, goals, audience, capability roadmap

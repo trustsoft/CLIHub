@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Updates;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
 using CLIHub.Views;
@@ -34,6 +35,7 @@ public static class ServiceRegistration
         services.AddSingleton<ISingleInstanceGuard>(sp => sp.GetRequiredService<SingleInstanceGuard>());
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
         services.AddSingleton<IApplicationOperationLifetime, ApplicationOperationLifetime>();
+        services.AddSingleton<IUpdateWorkflow, UpdateWorkflow>();
         services.AddSingleton<IApplicationSession, ApplicationSession>();
         services.AddSingleton<IApplicationBootstrapper, ApplicationBootstrapper>();
         services.AddSingleton<IApplicationStartupUi, WpfApplicationStartupUi>();
@@ -72,14 +74,15 @@ public static class ServiceRegistration
         services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
         services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
         services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
-        services.AddSingleton<IUpdateDownloadNotifier, UpdateDownloadNotifier>();
-        services.AddSingleton<IUpdateDownloadCoordinator, UpdateDownloadCoordinator>();
-        services.AddSingleton<Func<IUpdateDownloadCoordinator>>(sp =>
-            () => sp.GetRequiredService<IUpdateDownloadCoordinator>());
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddSingleton<SettingsApplicationService>();
-        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<SettingsViewModel>(sp => new SettingsViewModel(
+            sp.GetRequiredService<SettingsApplicationService>(),
+            sp.GetRequiredService<IUpdateVersionProvider>(),
+            sp.GetRequiredService<IUpdateWorkflow>(),
+            sp.GetRequiredService<IApplicationOperationLifetime>(),
+            sp.GetRequiredService<ILogger<SettingsViewModel>>()));
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();

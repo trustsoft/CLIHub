@@ -12,11 +12,11 @@ public class WhatsNewViewModelTests
     [Fact]
     public void RequestCheckForUpdates_WhenIdle_UsesCheckerAndReturnsToIdle()
     {
-        var updates = new Mock<IUpdateService>(MockBehavior.Strict);
+        var updates = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
+        updates.SetupGet(x => x.IsCheckingForUpdates).Returns(false);
         updates.SetupGet(x => x.LastKnownAvailableVersion).Returns((string?)null);
         updates.SetupGet(x => x.IsDownloading).Returns(false);
-        var checker = new Mock<IUpdateChecker>(MockBehavior.Strict);
-        checker
+        updates
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
         var operationLifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);
@@ -33,12 +33,11 @@ public class WhatsNewViewModelTests
         var viewModel = new WhatsNewViewModel(
             releaseNotes.Object,
             updates.Object,
-            checker.Object,
             operationLifetime.Object);
 
         viewModel.RequestCheckForUpdates();
 
-        checker.Verify(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        updates.Verify(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()), Times.Once);
         Assert.False(viewModel.IsCheckingForUpdates);
         Assert.True(viewModel.CanCheckForUpdates);
     }

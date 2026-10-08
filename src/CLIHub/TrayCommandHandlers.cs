@@ -2,7 +2,6 @@ namespace CLIHub;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
-using CLIHub.Core.Updates;
 
 /// <summary>
 ///   Executes user-invoked tray workflows without projecting tray state or owning WPF controls.
@@ -11,15 +10,13 @@ public sealed class TrayCommandHandlers
 {
     private readonly IProjectService _projects;
     private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IUpdateStateSource _updates;
-    private readonly IUpdateChecker _updateChecker;
+    private readonly IUpdateWorkflow _updateWorkflow;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly IProjectDialogService _projectDialog;
     private readonly IUserNotificationService _notifications;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IReleaseNotesLauncher _releaseNotesLauncher;
     private readonly IApplicationLifetime _applicationLifetime;
-    private readonly TrayStateProjection _projection;
 
     /// <summary>
     ///   Raised when the user requests the existing update download workflow.
@@ -31,39 +28,33 @@ public sealed class TrayCommandHandlers
     /// </summary>
     /// <param name="projects"> Project operations. </param>
     /// <param name="agentCommandWorkflow"> Shared agent command workflow. </param>
-    /// <param name="updates"> Shared update state. </param>
-    /// <param name="updateChecker"> Manual update check workflow. </param>
+    /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="operationLifetime"> Lifetime tracking asynchronous tray operations. </param>
     /// <param name="projectDialog"> Project folder selection dialog. </param>
     /// <param name="notifications"> User-facing warning notifications. </param>
     /// <param name="settingsLauncher"> Settings launcher. </param>
     /// <param name="releaseNotesLauncher"> What's New launcher. </param>
     /// <param name="applicationLifetime"> Application shutdown port. </param>
-    /// <param name="projection"> Shared tray state projection. </param>
     public TrayCommandHandlers(
         IProjectService projects,
         IAgentCommandWorkflow agentCommandWorkflow,
-        IUpdateStateSource updates,
-        IUpdateChecker updateChecker,
+        IUpdateWorkflow updateWorkflow,
         IApplicationOperationLifetime operationLifetime,
         IProjectDialogService projectDialog,
         IUserNotificationService notifications,
         ISettingsLauncher settingsLauncher,
         IReleaseNotesLauncher releaseNotesLauncher,
-        IApplicationLifetime applicationLifetime,
-        TrayStateProjection projection)
+        IApplicationLifetime applicationLifetime)
     {
         _projects = projects ?? throw new ArgumentNullException(nameof(projects));
         _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
-        _updates = updates ?? throw new ArgumentNullException(nameof(updates));
-        _updateChecker = updateChecker ?? throw new ArgumentNullException(nameof(updateChecker));
+        _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         _projectDialog = projectDialog ?? throw new ArgumentNullException(nameof(projectDialog));
         _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
         _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
         _releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
         _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
-        _projection = projection ?? throw new ArgumentNullException(nameof(projection));
     }
 
     /// <summary>
@@ -113,12 +104,11 @@ public sealed class TrayCommandHandlers
 
     private void CheckForUpdates()
     {
-        if (_projection.IsCheckingForUpdates || _updates.IsDownloading)
+        if (_updateWorkflow.IsCheckingForUpdates || _updateWorkflow.IsDownloading)
         {
             return;
         }
 
-        _projection.SetCheckingForUpdates(true);
         _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
     }
 
@@ -126,11 +116,10 @@ public sealed class TrayCommandHandlers
     {
         try
         {
-            await _updateChecker.CheckForUpdatesAsync(cancellationToken);
+            await _updateWorkflow.CheckForUpdatesAsync(cancellationToken);
         }
-        finally
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _projection.SetCheckingForUpdates(false);
         }
     }
 }

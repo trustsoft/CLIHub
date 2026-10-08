@@ -8,7 +8,6 @@ public sealed class ArchitectureBoundaryTests
         "AssemblyInfo.cs",
         "ProjectDialogService.cs",
         "TrayIconController.cs",
-        "UpdateDownloadNotifier.cs",
         "UserNotificationService.cs",
         "WpfApplicationLifetime.cs",
         "WpfApplicationStartupUi.cs"

@@ -15,7 +15,7 @@ public class UpdateStartupCoordinatorTests
     [Fact]
     public async Task CheckAsync_Disabled_DoesNotCallUpdateService()
     {
-        var updateService = new Mock<IUpdateService>(MockBehavior.Strict);
+        var updateService = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
         var coordinator = CreateCoordinator(updateService.Object);
 
         await coordinator.CheckAsync(false, _ => Assert.Fail("Notification was not expected."));
@@ -54,7 +54,7 @@ public class UpdateStartupCoordinatorTests
     [Fact]
     public async Task CheckAsync_WhenServiceThrows_DoesNotThrow()
     {
-        var updateService = new Mock<IUpdateService>(MockBehavior.Strict);
+        var updateService = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
         updateService
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("test"));
@@ -69,7 +69,7 @@ public class UpdateStartupCoordinatorTests
     public async Task CheckAsync_ForwardsCancellationToken()
     {
         using var cancellation = new CancellationTokenSource();
-        var updateService = new Mock<IUpdateService>(MockBehavior.Strict);
+        var updateService = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
         updateService
             .Setup(x => x.CheckForUpdatesAsync(cancellation.Token))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
@@ -91,15 +91,15 @@ public class UpdateStartupCoordinatorTests
         Assert.IsType<UpdateStartupCoordinator>(provider.GetRequiredService<IUpdateStartupCoordinator>());
     }
 
-    private static Mock<IUpdateService> CreateUpdateService(UpdateCheckResult result)
+    private static Mock<IUpdateWorkflow> CreateUpdateService(UpdateCheckResult result)
     {
-        var service = new Mock<IUpdateService>(MockBehavior.Strict);
+        var service = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
         service
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(result);
         return service;
     }
 
-    private static UpdateStartupCoordinator CreateCoordinator(IUpdateService updateService) =>
+    private static UpdateStartupCoordinator CreateCoordinator(IUpdateWorkflow updateService) =>
         new(updateService, NullLogger<UpdateStartupCoordinator>.Instance);
 }

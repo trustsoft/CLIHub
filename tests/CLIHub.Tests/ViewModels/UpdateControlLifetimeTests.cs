@@ -13,15 +13,12 @@ public class UpdateControlLifetimeTests
     [Fact]
     public void Dispose_UnsubscribesFromUpdateStateChanges()
     {
-        var updates = new Mock<IUpdateService>(MockBehavior.Strict);
+        var updates = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
+        updates.SetupGet(x => x.IsCheckingForUpdates).Returns(false);
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
         updates.SetupGet(x => x.IsDownloading).Returns(false);
         updates.SetupGet(x => x.LastKnownAvailableVersion).Returns((string?)null);
         var control = new UpdateControlViewModel(
-            updates.Object,
-            updates.Object,
-            updates.Object,
-            updates.Object,
             updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             new Mock<IApplicationOperationLifetime>().Object);
@@ -38,7 +35,7 @@ public class UpdateControlLifetimeTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        var updates = new Mock<IUpdateService>();
+        var updates = new Mock<IUpdateWorkflow>();
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
         updates
             .Setup(x => x.CheckForUpdatesAsync(cancellation.Token))
@@ -50,10 +47,6 @@ public class UpdateControlLifetimeTests
             .Returns((string _, Func<CancellationToken, Task> operation) => operation(cancellation.Token));
 
         var viewModel = new UpdateControlViewModel(
-            updates.Object,
-            updates.Object,
-            updates.Object,
-            updates.Object,
             updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             lifetime.Object);
