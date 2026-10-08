@@ -132,6 +132,30 @@ public class AgentPaneControllerTests
         Assert.False(controller.Refresh(null, false));
     }
 
+    [Fact]
+    public void RefreshCommand_ExecutesRefreshWithCurrentContext()
+    {
+        var first = Plugin("first");
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
+        catalog.Setup(x => x.GetAllPlugins()).Returns([first]);
+        var detection = new Mock<IAgentDetectionService>(MockBehavior.Strict);
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        detection.Setup(x => x.IsAvailableInProject(first, "C:\\Project")).Returns(true);
+        var lifetime = CreateLifetime();
+        var controller = new AgentPaneController(
+            catalog.Object,
+            detection.Object,
+            new Mock<IAgentVersionService>().Object,
+            new Mock<ILogoCacheService>().Object,
+            lifetime.Object);
+
+        controller.Refresh("C:\\Project", true);
+        controller.RefreshCommand.Execute(null);
+
+        Assert.Single(controller.Agents);
+        Assert.Equal("first", controller.Agents[0].Plugin.Id);
+    }
+
     private static Mock<IApplicationOperationLifetime> CreateLifetime()
     {
         var lifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);

@@ -79,4 +79,107 @@ public class LaunchWindowViewModelDialogTests
             NullLogger<UpdateControlViewModel>.Instance,
             operationLifetime);
     }
+
+    [Fact]
+    public void Commands_ArePassThroughToControllers()
+    {
+        var projectService = new Mock<IProjectService>();
+        projectService.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
+        projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
+
+        var pluginCatalog = new Mock<IPluginCatalog>();
+        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
+
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences());
+
+        var operationLifetime = new Mock<IApplicationOperationLifetime>();
+        var projectPane = new ProjectPaneController(
+            projectService.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+        var agentPane = new AgentPaneController(
+            pluginCatalog.Object,
+            new Mock<IAgentDetectionService>().Object,
+            new Mock<IAgentVersionService>().Object,
+            new Mock<ILogoCacheService>().Object,
+            operationLifetime.Object);
+        var viewModel = new LaunchWindowViewModel(
+            projectPane,
+            agentPane,
+            new LaunchCommandCoordinator(
+                new Mock<IAgentCommandWorkflow>().Object,
+                operationLifetime.Object,
+                new Mock<IUserNotificationService>().Object,
+                NullLogger<LaunchCommandCoordinator>.Instance),
+            preferences.Object,
+            CreateUpdateControl(operationLifetime.Object),
+            new Mock<ISettingsLauncher>().Object,
+            new Mock<IUserNotificationService>().Object,
+            new Mock<IApplicationLifetime>().Object,
+            new Mock<IExternalLauncher>().Object,
+            new LaunchWindowActionBuilder());
+
+        Assert.Same(projectPane.AddCommand, viewModel.AddProjectCommand);
+        Assert.Same(projectPane.RemoveCommand, viewModel.RemoveProjectCommand);
+        Assert.Same(projectPane.ToggleFavoriteCommand, viewModel.ToggleFavoriteCommand);
+        Assert.Same(projectPane.RefreshCommand, viewModel.RefreshCommand);
+    }
+
+    [Fact]
+    public void Dispose_RemovesEventSubscriptions()
+    {
+        var projectService = new Mock<IProjectService>();
+        projectService.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
+        projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
+
+        var pluginCatalog = new Mock<IPluginCatalog>();
+        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
+
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences());
+
+        var operationLifetime = new Mock<IApplicationOperationLifetime>();
+        var projectPane = new ProjectPaneController(
+            projectService.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+        var agentPane = new AgentPaneController(
+            pluginCatalog.Object,
+            new Mock<IAgentDetectionService>().Object,
+            new Mock<IAgentVersionService>().Object,
+            new Mock<ILogoCacheService>().Object,
+            operationLifetime.Object);
+        var updateControl = CreateUpdateControl(operationLifetime.Object);
+        var viewModel = new LaunchWindowViewModel(
+            projectPane,
+            agentPane,
+            new LaunchCommandCoordinator(
+                new Mock<IAgentCommandWorkflow>().Object,
+                operationLifetime.Object,
+                new Mock<IUserNotificationService>().Object,
+                NullLogger<LaunchCommandCoordinator>.Instance),
+            preferences.Object,
+            updateControl,
+            new Mock<ISettingsLauncher>().Object,
+            new Mock<IUserNotificationService>().Object,
+            new Mock<IApplicationLifetime>().Object,
+            new Mock<IExternalLauncher>().Object,
+            new LaunchWindowActionBuilder());
+
+        var projectsChangedCount = 0;
+        viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(viewModel.SelectedProject))
+            {
+                projectsChangedCount++;
+            }
+        };
+
+        viewModel.Dispose();
+
+        projectService.Raise(x => x.ProjectsChanged += null, EventArgs.Empty);
+
+        Assert.Equal(0, projectsChangedCount);
+    }
 }

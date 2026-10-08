@@ -85,6 +85,110 @@ public class ProjectPaneControllerTests
         Assert.Equal(0, changed);
     }
 
+    [Fact]
+    public void AddCommand_ExecutesAddProjectWorkflow()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.Setup(x => x.AddProject("C:\\Project")).Returns(project);
+        service.Setup(x => x.SetCurrentProject("project"));
+        service.Setup(x => x.GetAllProjects()).Returns([project]);
+        service.Setup(x => x.GetCurrentProject()).Returns(project);
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.SelectProjectFolder()).Returns("C:\\Project");
+        var controller = new ProjectPaneController(service.Object, dialogs.Object, new PromptState());
+
+        controller.AddCommand.Execute(null);
+
+        Assert.Single(controller.Projects);
+        Assert.Same(project, controller.CurrentProject);
+    }
+
+    [Fact]
+    public void RemoveCommand_CanExecuteOnlyWhenProjectSelected()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.SetupSequence(x => x.GetCurrentProject())
+            .Returns((Project?)null)
+            .Returns(project);
+        var controller = new ProjectPaneController(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+
+        Assert.False(controller.RemoveCommand.CanExecute(null));
+        Assert.True(controller.RemoveCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void RemoveCommand_ExecutesRemoveSelectedProjectWorkflow()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.Setup(x => x.GetCurrentProject()).Returns(project);
+        service.Setup(x => x.RemoveProject("project"));
+        service.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.ConfirmProjectRemoval("project")).Returns(true);
+        var controller = new ProjectPaneController(service.Object, dialogs.Object, new PromptState());
+
+        controller.RemoveCommand.Execute(null);
+
+        Assert.Empty(controller.Projects);
+    }
+
+    [Fact]
+    public void ToggleFavoriteCommand_CanExecuteOnlyWhenProjectSelected()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.SetupSequence(x => x.GetCurrentProject())
+            .Returns((Project?)null)
+            .Returns(project);
+        var controller = new ProjectPaneController(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+
+        Assert.False(controller.ToggleFavoriteCommand.CanExecute(null));
+        Assert.True(controller.ToggleFavoriteCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ToggleFavoriteCommand_ExecutesToggleFavoriteWorkflow()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.Setup(x => x.GetCurrentProject()).Returns(project);
+        service.Setup(x => x.ToggleFavorite("project"));
+        var controller = new ProjectPaneController(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+
+        controller.ToggleFavoriteCommand.Execute(null);
+
+        service.Verify(x => x.ToggleFavorite("project"), Times.Once);
+    }
+
+    [Fact]
+    public void RefreshCommand_ExecutesRefreshWorkflow()
+    {
+        var project = Project("project");
+        var service = new Mock<IProjectService>(MockBehavior.Strict);
+        service.Setup(x => x.GetAllProjects()).Returns([project]);
+        service.Setup(x => x.GetCurrentProject()).Returns(project);
+        var controller = new ProjectPaneController(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            new PromptState());
+
+        controller.RefreshCommand.Execute(null);
+
+        Assert.Same(project, controller.Projects.Single());
+    }
+
     private static Project Project(string id) => new()
     {
         Id = id,
