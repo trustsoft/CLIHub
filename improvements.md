@@ -28,7 +28,7 @@ The baseline and findings below describe the starting point. Archived increments
 | Phase 4 | Tray state projection separated from command handlers. | Group DI registrations by feature, reduce non-window factories, and review shared project workflows. |
 | Phase 5 | Disposable pane/update/launch owners and documented legacy window; architecture checks added. | Complete event-owner review, queued-callback checks, and documentation reconciliation. |
 | Update workflow follow-up | One `IUpdateWorkflow` for startup, tray, What's New, launch-window operations, and Settings checks; concurrent checks share one task. | Verify installed-build notification/restart behavior in the native application. |
-| Phase 6 (in progress) | `InstanceCoordinator` handles single-instance logic (FirstInstance/SecondInstance enum). `StartupStateLoader` loads plugins and preferences, returns immutable `StartupState`. ApplicationBootstrapper reduced from 11 to 8 constructor dependencies. | Extract `OptionalStartupCoordinator`, `ApplicationHost`, update documentation, archive change. |
+| Phase 6 | `ApplicationHost` owns WPF lifecycle (environment, DI, shutdown). `InstanceCoordinator` handles single-instance coordination with `InstanceStatus` enum. `StartupStateLoader` loads plugins and preferences, returns immutable `StartupState`. `OptionalStartupCoordinator` handles release notes and update check with best-effort policy. `ApplicationBootstrapper` reduced from 152 lines/11 deps to 88 lines/6 deps. `App.xaml.cs` reduced from 88 to 36 lines. Documentation and architecture docs updated. Change archived. | Extract `ShellCoordinator` from `ApplicationSession`, decompose `LaunchWindowViewModel`, add architecture tests. |
 
 The update workflow follow-up preserves the established apply policies: tray and What's New download and restart automatically; the launch window offers an explicit restart action. Existing Core contracts remain unchanged. Application tests exercise concurrency, cancellation, result propagation, automatic restart sequencing, and explicit restart policy without network or installer side effects.
 
@@ -361,3 +361,350 @@ Completion criteria:
 - `dotnet test CLIHub.sln` passes.
 - Architecture tests pass.
 - Architecture documentation and OpenSpec specifications match the implementation.
+## Next Steps After Phase 6
+
+### Current Status
+
+**Phase 6 Complete (October 2026):**
+- ? ApplicationHost — WPF lifecycle boundary (79 lines)
+- ? InstanceCoordinator — single-instance detection (36 lines)
+- ? StartupStateLoader — plugin + preferences initialization (43 lines)
+- ? OptionalStartupCoordinator — best-effort operations (93 lines)
+- ? ApplicationBootstrapper — session orchestration (88 lines, 6 dependencies)
+- ? App.xaml.cs — pure WPF delegation (36 lines)
+- ? Tests: 516 passing (128 app + 388 Core)
+
+**Current Architecture:**
+\\\
+App (36 lines)
+  -> ApplicationHost (79 lines)
+      -> InstanceCoordinator (36 lines)
+      -> StartupStateLoader (43 lines)
+      -> ApplicationBootstrapper (88 lines, 6 deps)
+          -> ApplicationSession (~150 lines)
+              -> TrayIconController
+              -> LaunchWindow + LaunchWindowViewModel (567 lines)
+              -> Update/activation subscriptions
+          -> OptionalStartupCoordinator (93 lines)
+\\\
+
+**What Remains:**
+- ?? ApplicationSession needs extraction — UI creation + event wiring
+- ? ShellCoordinator — not yet extracted
+- ? LaunchWindowViewModel — needs decomposition (567 ? ~250 lines target)
+- ? DI registrations — need feature grouping
+- ? Architecture tests — need boundary enforcement
+- ? MainWindow legacy cleanup
+
+### Recommended Next Steps
+
+#### Priority 1: Phase 7 - Extract ShellCoordinator
+
+**Goal:** Extract UI creation and event wiring from ApplicationSession into a focused ShellCoordinator.
+
+**Current Problem:**
+ApplicationSession (~150 lines) currently:
+- Creates tray icon controller
+- Creates launch window
+- Subscribes to update events
+- Subscribes to second-instance activation
+- Owns disposal of all resources
+
+**Target:**
+\\\
+ApplicationSession (thin, ~80 lines)
+  -> ShellCoordinator (~150 lines)
+      -> Tray creation + wiring
+      -> Launch window creation + wiring
+      -> Update request/outcome subscriptions
+      -> Second-instance activation handling
+\\\
+
+**Success Metrics:**
+- ApplicationSession < 100 lines
+- ShellCoordinator owns all UI creation
+- Event subscriptions isolated and testable
+- All 516+ tests pass
+
+**Effort:** 2-3 hours | **Risk:** Low | **Complexity:** Medium
+
+**Why Start Here:**
+- Natural next step after ApplicationHost extraction
+- Low risk — event wiring already explicit
+- Quick win — measurable improvement in 2-3 hours
+- Unlocks further improvements (LaunchWindowViewModel, Tray)
+- Moves directly toward target architecture
+
+---
+
+#### Priority 2: Phase 8 - Decompose LaunchWindowViewModel
+
+**Goal:** Break down monolithic LaunchWindowViewModel (567 lines) into focused components.
+
+**Current Problem:**
+LaunchWindowViewModel.cs (567 lines):
+- Manages project state, agent state, selection
+- Owns menu construction
+- Executes agent commands
+- Manages update control
+- Opens Explorer (Process.Start)
+- Initiates shutdown
+
+**Already Exists (can strengthen):**
+- ? ProjectPaneController
+- ? AgentPaneController
+- ? LaunchCommandCoordinator (Phase 3)
+- ? UpdateControlViewModel
+
+**Add:**
+- IExternalLauncher for opening folders (instead of Process.Start)
+- LaunchWindowActionBuilder for menu construction
+
+**Target:**
+LaunchWindowViewModel (~200-250 lines):
+- Screen composition only
+- Selected values binding
+- Pane coordination
+
+**Success Metrics:**
+- LaunchWindowViewModel < 300 lines
+- Agent command execution testable without full screen
+- Project/agent refresh independently testable
+- External OS actions behind abstraction
+
+**Effort:** 4-5 hours | **Risk:** Medium | **Complexity:** High
+
+**Dependencies:** Recommended after ShellCoordinator
+
+---
+
+#### Priority 3: Quick Win - Manual Update Checks
+
+**Goal:** Add manual "Check for updates" actions to tray and What's New window.
+
+**Current State:**
+- ? IUpdateWorkflow already unified (Phase 2 follow-up)
+- ? Concurrent checks share one task
+- ? Tray/What's New use automatic download+restart
+- ? Launch window uses explicit restart action
+
+**Add:**
+- Manual "Check for updates" in tray menu (when no update known)
+- Manual "Check for updates" in What's New window (when no update known)
+- Use existing IUpdateWorkflow contract
+- Refresh state after manual check completes
+
+**Success Metrics:**
+- Tray exposes manual check action while idle
+- What's New exposes manual check action while idle
+- Manual check updates shared availability state
+- All existing update tests pass
+
+**Effort:** 1-2 hours | **Risk:** Low | **Complexity:** Low
+
+**Why Consider:**
+- Visible user feature
+- Builds on existing IUpdateWorkflow
+- Can be done in parallel with ShellCoordinator
+
+---
+
+#### Priority 4: Simplify Tray Orchestration
+
+**Goal:** Eliminate duplication between tray and launch window actions.
+
+**Current State:**
+- ? Phase 4 Delivered: TrayStateProjection separated from handlers
+- ?? Still some duplication in command execution
+
+**Target:**
+- Reuse LaunchCommandCoordinator from tray
+- Eliminate duplicate project/agent/update logic
+- Tray actions as thin adapters to shared coordinators
+
+**Success Metrics:**
+- No duplicate workflow implementations
+- TrayCommandHandlers < 200 lines
+- Shared coordinators between tray and launch window
+
+**Effort:** 2-3 hours | **Risk:** Low | **Complexity:** Medium
+
+**Dependencies:** After LaunchWindowViewModel decomposition
+
+---
+
+#### Priority 5: Group DI Registrations by Feature
+
+**Goal:** Improve readability of ServiceRegistration.cs with clear feature grouping.
+
+**Current State:**
+ServiceRegistration.cs (99 lines):
+- Flat list of registrations
+- Unclear feature boundaries
+- Many Func<> factories
+
+**Target Feature Groups:**
+\\\csharp
+// Infrastructure & Logging
+// Startup Coordinators
+// Session & Shell
+// Agent Commands
+// Project Management
+// Update Workflow
+// UI Components
+// Windows & Dialogs
+\\\
+
+**Success Metrics:**
+- Clear feature grouping with comments
+- Reduce non-window factories where possible
+- Maintain composition-root rule
+
+**Effort:** 1 hour | **Risk:** Very Low | **Complexity:** Low
+
+**Why Consider:**
+- Low-hanging fruit
+- Zero risk (pure reorganization)
+- Better maintainability
+- Can be done anytime
+
+---
+
+#### Priority 6: Legacy Cleanup & Architecture Tests
+
+**Goal:** Decide MainWindow fate and add architecture boundary tests.
+
+**Current State:**
+MainWindow.xaml(.cs):
+- Deprecated legacy reference window
+- Not registered or constructed
+- Confuses codebase understanding
+
+**Options:**
+1. Delete MainWindow entirely
+2. Move to Legacy/ directory with DEPRECATED.md
+3. Keep with explicit deprecation doc
+
+**Add:**
+- Architecture tests for boundaries (Core/UI separation)
+- Event ownership verification tests
+- Disposal path validation tests
+
+**Success Metrics:**
+- Clear legacy status for MainWindow
+- Architecture tests enforce boundaries
+- No active feature depends on MainWindow
+
+**Effort:** 1-2 hours | **Risk:** Very Low | **Complexity:** Low
+
+**Dependencies:** After all other phases (cleanup phase)
+
+---
+
+#### Priority 7: Extract ApplicationTaskRunner (Optional)
+
+**Goal:** Explicit boundary for tracked async operations.
+
+**Current State:**
+IApplicationOperationLifetime:
+- Generic infrastructure
+- Used directly by many components
+- No clear ownership boundary
+
+**Target:**
+ApplicationTaskRunner (~60 lines):
+- Wraps IApplicationOperationLifetime
+- Narrower application-level contract
+- Explicit shutdown coordination
+
+**Success Metrics:**
+- Components depend on ApplicationTaskRunner, not infrastructure
+- Clear tracked-work ownership
+- Simplified shutdown sequence
+
+**Effort:** 2 hours | **Risk:** Low | **Complexity:** Low-Medium
+
+**Priority:** Optional — current approach works well
+
+---
+
+### Recommended Execution Order
+
+1. **Phase 7: ShellCoordinator** (2-3 hours) ? **START HERE**
+   - Extract UI creation + event wiring from ApplicationSession
+   - Low risk, quick win, unlocks further work
+
+2. **Phase 8: LaunchWindowViewModel** (4-5 hours)
+   - Decompose into pane controllers + coordinators
+   - Requires ShellCoordinator foundation
+
+3. **Quick Win: Manual update checks** (1-2 hours)
+   - Can be done in parallel with Phase 7/8
+   - Visible user feature, low risk
+
+4. **Tray simplification** (2-3 hours)
+   - Reuse coordinators, eliminate duplication
+   - After LaunchWindowViewModel decomposition
+
+5. **DI registrations grouping** (1 hour)
+   - Low-hanging fruit, anytime
+   - Better maintainability
+
+6. **Legacy cleanup** (1-2 hours)
+   - Final cleanup phase
+   - Architecture tests
+
+7. **ApplicationTaskRunner** (2 hours, optional)
+   - If desired, after ShellCoordinator
+
+**Total Time to Target Architecture:** 15-20 hours
+
+---
+
+### Target Architecture Metrics
+
+| Component | Current | Target |
+|-----------|---------|--------|
+| ApplicationBootstrapper | 88 lines, 6 deps | ~60 lines |
+| App.xaml.cs | 36 lines | ~30 lines |
+| ApplicationSession | ~150 lines | ~80 lines |
+| ShellCoordinator | N/A | ~150 lines |
+| LaunchWindowViewModel | 567 lines | ~250 lines |
+| *PaneController | ~100 lines each | (existing, strengthen) |
+| LaunchCommandCoordinator | (existing) | (existing, reuse) |
+| ApplicationTaskRunner | N/A | ~60 lines (optional) |
+
+**Target Benefits:**
+- ? Clear separation of concerns
+- ? Single responsibility per component
+- ? Independent testability
+- ? Explicit lifecycle boundaries
+- ? Reusable coordinators across tray and launch window
+- ? No duplication between entry points
+- ? Self-documenting architecture
+
+---
+
+### Alternative Starting Points
+
+**If Time Limited (1 hour):**
+? Group DI registrations
+- Zero risk, immediate improvement
+- Better code navigation
+
+**If User Feature Desired:**
+? Manual update checks
+- Visible functionality
+- Low risk, 1-2 hours
+- Good marketing point
+
+**If Architecture Focus:**
+? ShellCoordinator (recommended)
+- Foundation for further work
+- Moves toward target architecture
+- 2-3 hours, measurable impact
+
+**Choose Based On:**
+- **Available time:** 1h ? DI grouping, 2-3h ? ShellCoordinator
+- **Goal:** Architecture ? ShellCoordinator, User ? manual checks
+- **Risk tolerance:** Low ? DI grouping, Medium ? ShellCoordinator
