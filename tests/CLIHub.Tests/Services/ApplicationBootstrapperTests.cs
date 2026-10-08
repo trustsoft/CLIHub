@@ -31,10 +31,7 @@ public class ApplicationBootstrapperTests
         fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
         fixture.Ui.Setup(x => x.ShowLaunchWindow());
         fixture.Hotkey.InSequence(sequence).Setup(x => x.Register(startupState.Preferences));
-        fixture.ReleaseNotes.InSequence(sequence).Setup(x => x.Evaluate(startupState.Preferences));
-        fixture.UpdateStartup.InSequence(sequence)
-            .Setup(x => x.CheckAsync(true, It.IsAny<Action<string>>()))
-            .Returns(Task.CompletedTask);
+        fixture.OptionalStartup.InSequence(sequence).Setup(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()));
 
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
@@ -82,16 +79,13 @@ public class ApplicationBootstrapperTests
         fixture.HotkeyFactory.Setup(x => x()).Returns(fixture.Hotkey.Object);
         fixture.Ui.SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
         fixture.Hotkey.Setup(x => x.Register(startupState.Preferences));
-        fixture.ReleaseNotes.Setup(x => x.Evaluate(startupState.Preferences)).Throws(new InvalidOperationException("test"));
-        fixture.UpdateStartup
-            .Setup(x => x.CheckAsync(false, It.IsAny<Action<string>>()))
-            .Returns(Task.CompletedTask);
+        fixture.OptionalStartup.Setup(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()));
 
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Never);
         fixture.Hotkey.Verify(x => x.Register(startupState.Preferences), Times.Once);
-        fixture.UpdateStartup.Verify(x => x.CheckAsync(false, It.IsAny<Action<string>>()), Times.Once);
+        fixture.OptionalStartup.Verify(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()), Times.Once);
     }
 
     [Fact]
@@ -117,13 +111,11 @@ public class ApplicationBootstrapperTests
     private sealed class BootstrapperFixture
     {
         public Mock<IInstanceCoordinator> InstanceCoordinator { get; } = new(MockBehavior.Strict);
-        public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
         public Mock<IStartupStateLoader> StartupStateLoader { get; } = new(MockBehavior.Strict);
+        public Mock<IApplicationSession> Session { get; } = new(MockBehavior.Strict);
         public Mock<IHotkeyStartupRegistrar> Hotkey { get; } = new(MockBehavior.Strict);
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
-        public Mock<IReleaseNotesStartupCoordinator> ReleaseNotes { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateStartupCoordinator> UpdateStartup { get; } = new(MockBehavior.Strict);
-        public Mock<IApplicationSession> Session { get; } = new(MockBehavior.Strict);
+        public Mock<IOptionalStartupCoordinator> OptionalStartup { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
         public Mock<IStartupWindow> Window { get; } = new(MockBehavior.Strict);
 
@@ -131,18 +123,12 @@ public class ApplicationBootstrapperTests
 
         public BootstrapperFixture()
         {
-            OperationLifetime
-                .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
-                .Returns((string _, Func<CancellationToken, Task> operation) => operation(CancellationToken.None));
-
             Bootstrapper = new ApplicationBootstrapper(
                 InstanceCoordinator.Object,
-                OperationLifetime.Object,
                 StartupStateLoader.Object,
-                HotkeyFactory.Object,
-                ReleaseNotes.Object,
-                UpdateStartup.Object,
                 Session.Object,
+                HotkeyFactory.Object,
+                OptionalStartup.Object,
                 NullLogger<ApplicationBootstrapper>.Instance);
         }
     }

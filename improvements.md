@@ -28,6 +28,7 @@ The baseline and findings below describe the starting point. Archived increments
 | Phase 4 | Tray state projection separated from command handlers. | Group DI registrations by feature, reduce non-window factories, and review shared project workflows. |
 | Phase 5 | Disposable pane/update/launch owners and documented legacy window; architecture checks added. | Complete event-owner review, queued-callback checks, and documentation reconciliation. |
 | Update workflow follow-up | One `IUpdateWorkflow` for startup, tray, What's New, launch-window operations, and Settings checks; concurrent checks share one task. | Verify installed-build notification/restart behavior in the native application. |
+| Phase 6 (in progress) | `InstanceCoordinator` handles single-instance logic (FirstInstance/SecondInstance enum). `StartupStateLoader` loads plugins and preferences, returns immutable `StartupState`. ApplicationBootstrapper reduced from 11 to 8 constructor dependencies. | Extract `OptionalStartupCoordinator`, `ApplicationHost`, update documentation, archive change. |
 
 The update workflow follow-up preserves the established apply policies: tray and What's New download and restart automatically; the launch window offers an explicit restart action. Existing Core contracts remain unchanged. Application tests exercise concurrency, cancellation, result propagation, automatic restart sequencing, and explicit restart policy without network or installer side effects.
 
@@ -39,14 +40,13 @@ Program / Velopack
         -> application data directories and logging
         -> ServiceRegistration
         -> ApplicationBootstrapper.Start
-            -> single-instance check
-            -> plugin initialization
-            -> preferences load and startup preference application
+            -> InstanceCoordinator: single-instance check (returns FirstInstance/SecondInstance)
+            -> StartupStateLoader: plugin initialization, preferences load/apply → StartupState
             -> ApplicationSession: tray/launch UI creation and update/activation event wiring
             -> optional launch-window display
             -> global hotkey registration
-            -> release-notes evaluation
-            -> background startup update check
+            -> release-notes evaluation (best-effort)
+            -> background startup update check (best-effort)
 
 LaunchWindowViewModel / TrayCommandHandlers
     -> IAgentCommandWorkflow
