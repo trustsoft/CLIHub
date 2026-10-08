@@ -24,7 +24,7 @@ public class ApplicationBootstrapperTests
             CheckForUpdatesOnStartup = true
         };
 
-        fixture.Guard.InSequence(sequence).SetupGet(x => x.IsFirstInstance).Returns(true);
+        fixture.InstanceCoordinator.InSequence(sequence).Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.Plugin.InSequence(sequence).Setup(x => x.Initialize());
         fixture.Preferences.InSequence(sequence).Setup(x => x.Load()).Returns(preferences);
         fixture.StartupPreferences.InSequence(sequence).Setup(x => x.Apply(preferences));
@@ -41,36 +41,30 @@ public class ApplicationBootstrapperTests
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Once);
-        fixture.Lifetime.Verify(x => x.Shutdown(), Times.Never);
     }
 
     [Fact]
-    public void Start_SecondInstance_SignalsAndShutsDownBeforeCreatingUi()
+    public void Start_SecondInstance_ReturnsEarlyBeforeCreatingUi()
     {
         var fixture = new BootstrapperFixture();
-        fixture.Guard.SetupGet(x => x.IsFirstInstance).Returns(false);
-        fixture.Guard.Setup(x => x.SignalActivation());
-        fixture.Lifetime.Setup(x => x.Shutdown());
+        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.SecondInstance);
 
         fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
 
-        fixture.Guard.Verify(x => x.SignalActivation(), Times.Once);
-        fixture.Lifetime.Verify(x => x.Shutdown(), Times.Once);
         fixture.Plugin.Verify(x => x.Initialize(), Times.Never);
         fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
     }
 
     [Fact]
-    public void Start_RequiredStartupFailure_LogsAndShutsDown()
+    public void Start_RequiredStartupFailure_LogsAndThrows()
     {
         var fixture = new BootstrapperFixture();
-        fixture.Guard.SetupGet(x => x.IsFirstInstance).Returns(true);
+        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.Plugin.Setup(x => x.Initialize()).Throws(new InvalidOperationException("test"));
-        fixture.Lifetime.Setup(x => x.Shutdown());
 
-        fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
+        Assert.Throws<InvalidOperationException>(() =>
+            fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object)));
 
-        fixture.Lifetime.Verify(x => x.Shutdown(), Times.Once);
         fixture.Preferences.Verify(x => x.Load(), Times.Never);
     }
 
@@ -84,7 +78,7 @@ public class ApplicationBootstrapperTests
             CheckForUpdatesOnStartup = false
         };
 
-        fixture.Guard.SetupGet(x => x.IsFirstInstance).Returns(true);
+        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.Plugin.Setup(x => x.Initialize());
         fixture.Preferences.Setup(x => x.Load()).Returns(preferences);
         fixture.StartupPreferences.Setup(x => x.Apply(preferences));
@@ -102,7 +96,6 @@ public class ApplicationBootstrapperTests
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Never);
         fixture.Hotkey.Verify(x => x.Register(preferences), Times.Once);
         fixture.UpdateStartup.Verify(x => x.CheckAsync(false, It.IsAny<Action<string>>()), Times.Once);
-        fixture.Lifetime.Verify(x => x.Shutdown(), Times.Never);
     }
 
     [Fact]
@@ -127,8 +120,7 @@ public class ApplicationBootstrapperTests
 
     private sealed class BootstrapperFixture
     {
-        public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
-        public Mock<IApplicationLifetime> Lifetime { get; } = new(MockBehavior.Strict);
+        public Mock<IInstanceCoordinator> InstanceCoordinator { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
         public Mock<IPluginInitializationService> Plugin { get; } = new(MockBehavior.Strict);
         public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
@@ -150,8 +142,7 @@ public class ApplicationBootstrapperTests
                 .Returns((string _, Func<CancellationToken, Task> operation) => operation(CancellationToken.None));
 
             Bootstrapper = new ApplicationBootstrapper(
-                Guard.Object,
-                Lifetime.Object,
+                InstanceCoordinator.Object,
                 OperationLifetime.Object,
                 Plugin.Object,
                 Preferences.Object,

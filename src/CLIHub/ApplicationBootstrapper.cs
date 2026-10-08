@@ -10,8 +10,7 @@ using CLIHub.Core.Infrastructure.Windows;
 /// </summary>
 public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 {
-    private readonly ISingleInstanceGuard _singleInstanceGuard;
-    private readonly IApplicationLifetime _applicationLifetime;
+    private readonly IInstanceCoordinator _instanceCoordinator;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly IPluginInitializationService _pluginInitialization;
     private readonly IPreferencesStore _preferencesStore;
@@ -25,8 +24,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <summary>
     ///   Creates the application startup orchestrator.
     /// </summary>
-    /// <param name="singleInstanceGuard"> Single-instance boundary. </param>
-    /// <param name="applicationLifetime"> Application shutdown boundary. </param>
+    /// <param name="instanceCoordinator"> Single-instance coordinator. </param>
     /// <param name="operationLifetime"> Application operation lifetime boundary. </param>
     /// <param name="pluginInitialization"> Plugin initialization workflow. </param>
     /// <param name="preferencesStore"> Preferences persistence boundary. </param>
@@ -37,8 +35,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="session"> First-instance session and application event owner. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
     public ApplicationBootstrapper(
-        ISingleInstanceGuard singleInstanceGuard,
-        IApplicationLifetime applicationLifetime,
+        IInstanceCoordinator instanceCoordinator,
         IApplicationOperationLifetime operationLifetime,
         IPluginInitializationService pluginInitialization,
         IPreferencesStore preferencesStore,
@@ -49,8 +46,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         IApplicationSession session,
         ILogger<ApplicationBootstrapper> logger)
     {
-        _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
-        _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+        _instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
         _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         _pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
         _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
@@ -69,10 +65,9 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         ArgumentNullException.ThrowIfNull(context.Dispatch);
         ArgumentNullException.ThrowIfNull(context.SetMainWindow);
 
-        if (!_singleInstanceGuard.IsFirstInstance)
+        var instanceStatus = _instanceCoordinator.Coordinate();
+        if (instanceStatus == InstanceStatus.SecondInstance)
         {
-            _singleInstanceGuard.SignalActivation();
-            _applicationLifetime.Shutdown();
             return;
         }
 
@@ -115,7 +110,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         catch (Exception ex)
         {
             _logger.LogError(ex, "CLIHub startup failed");
-            _applicationLifetime.Shutdown();
+            throw;
         }
     }
 
