@@ -29,7 +29,7 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
    - Returns immutable `StartupState` containing the loaded preferences.
 
 4. **ApplicationBootstrapper** (session and hotkey setup):
-   - Starts `ApplicationSession`, which creates the startup UI and owns workflow-state, download-outcome, update-request, and second-instance activation subscriptions. Download requests use the singleton `IUpdateWorkflow`; downloaded/failed outcomes are dispatched to the startup UI for tray notifications.
+   - Starts `ApplicationSession`, which delegates shell creation to `ShellCoordinator`. The coordinator creates the startup UI (tray and launch window) and wires workflow-state, download-outcome, update-request, and second-instance activation subscriptions. Download requests use the singleton `IUpdateWorkflow`; downloaded/failed outcomes are dispatched to the startup UI for tray notifications. The session owns the coordinator's disposal lifecycle.
    - Assigns the session's launch window to `Application.MainWindow`.
    - Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
    - Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
@@ -50,7 +50,8 @@ The implementation is in:
 - `src/CLIHub/InstanceCoordinator.cs` — single-instance coordination
 - `src/CLIHub/StartupStateLoader.cs` — plugin and preferences initialization
 - `src/CLIHub/OptionalStartupCoordinator.cs` — release notes and update check
-- `src/CLIHub/ApplicationSession.cs` — UI creation and subscription ownership
+- `src/CLIHub/ApplicationSession.cs` — session lifecycle and coordinator ownership
+- `src/CLIHub/ShellCoordinator.cs` — shell creation and event wiring
 - `src/CLIHub/ServiceRegistration.cs` — WPF service registration
 
 Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
@@ -75,7 +76,7 @@ The failure behavior above describes the current implementation, not a recommend
 `App.OnExit` delegates to `ApplicationHost.Shutdown`, which disposes resources in this order:
 
 1. Logs shutdown.
-2. Disposes `ApplicationSession`, which removes application-level event subscriptions before tracked operations are stopped.
+2. Disposes `ApplicationSession`, which disposes `ShellCoordinator`. The coordinator removes application-level event subscriptions before tracked operations are stopped.
 3. Cancels tracked application operations and waits for them within the shutdown timeout.
 4. Disposes the service provider. This unregisters the global hotkey, removes its window-message hook, disposes the tray icon, and disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes), the logo cache service (which saves dirty cache state), and `SingleInstanceGuard` (which stops its pipe server and releases the mutex).
 5. Flushes and closes Serilog, then calls the WPF base implementation.
@@ -83,7 +84,8 @@ The failure behavior above describes the current implementation, not a recommend
 The order is implemented in:
 - `src/CLIHub/App.xaml.cs` — WPF lifecycle delegation to `ApplicationHost`
 - `src/CLIHub/ApplicationHost.cs` — shutdown sequence orchestration
-- `src/CLIHub/ApplicationSession.cs` — subscription removal
+- `src/CLIHub/ApplicationSession.cs` — coordinator disposal
+- `src/CLIHub/ShellCoordinator.cs` — subscription removal
 
 Persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 
