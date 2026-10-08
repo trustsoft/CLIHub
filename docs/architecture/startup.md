@@ -8,7 +8,7 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 
 ## Application Startup Sequence
 
-`App.OnStartup` performs the following operations in order:
+`App.OnStartup` prepares the process environment, builds the service provider, and delegates the application sequence to `ApplicationBootstrapper`. The bootstrapper performs the following operations in order:
 
 1. Calls the WPF base implementation.
 2. Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
@@ -17,16 +17,15 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 5. Resolves the single-instance guard from the service provider. If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns. The provider owns guard disposal on this path.
 6. Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
 7. Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
-8. Resolves the tray controller and subscribes it to update-state changes. Tray update actions and the What's New update action are wired to the shared download-and-restart workflow.
-9. Connects second-instance activation to showing the launch window on the pointer's monitor.
-10. Resolves the launch window and assigns it to `Application.MainWindow`.
-11. Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
-12. Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
-13. Evaluates whether release notes should be shown or recorded for the current version.
-14. Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled.
-15. Logs that startup is complete.
+8. Starts `ApplicationSession`, which creates the startup UI and owns update-state, update-request, and second-instance activation subscriptions.
+9. Assigns the session's launch window to `Application.MainWindow`.
+10. Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
+11. Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
+12. Evaluates whether release notes should be shown or recorded for the current version.
+13. Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled.
+14. Logs that startup is complete.
 
-The implementation is in `src/CLIHub/Program.cs`, `src/CLIHub/App.xaml.cs`, and `src/CLIHub/ServiceRegistration.cs`; Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
+The implementation is in `src/CLIHub/Program.cs`, `src/CLIHub/App.xaml.cs`, `src/CLIHub/ApplicationBootstrapper.cs`, `src/CLIHub/ApplicationSession.cs`, and `src/CLIHub/ServiceRegistration.cs`; Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
 
 ## Startup Failure Policy
 
@@ -47,11 +46,11 @@ The failure behavior above describes the current implementation, not a recommend
 
 `App.OnExit` logs shutdown and then disposes resources in this order:
 
-1. Unregisters the global hotkey and removes its window-message hook.
-2. Disposes the tray icon.
-3. Disposes the service provider. This disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes), the logo cache service (which saves dirty cache state), and `SingleInstanceGuard` (which stops its pipe server and releases the mutex).
+1. Disposes `ApplicationSession`, which removes application-level event subscriptions before tracked operations are stopped.
+2. Cancels tracked application operations and waits for them within the shutdown timeout.
+3. Disposes the service provider. This unregisters the global hotkey, removes its window-message hook, disposes the tray icon, and disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes), the logo cache service (which saves dirty cache state), and `SingleInstanceGuard` (which stops its pipe server and releases the mutex).
 4. Flushes and closes Serilog, then calls the WPF base implementation.
 
-The order is implemented in `src/CLIHub/App.xaml.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
+The order is implemented in `src/CLIHub/App.xaml.cs` and `src/CLIHub/ApplicationSession.cs`; persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 
 The current shutdown sequence is not wrapped in a per-resource recovery boundary or `finally` block. An exception from a disposal step can therefore prevent later cleanup steps from running.
