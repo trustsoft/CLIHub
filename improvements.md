@@ -29,6 +29,7 @@ The baseline and findings below describe the starting point. Archived increments
 | Phase 5 | Disposable pane/update/launch owners and documented legacy window; architecture checks added. | Complete event-owner review, queued-callback checks, and documentation reconciliation. |
 | Update workflow follow-up | One `IUpdateWorkflow` for startup, tray, What's New, launch-window operations, and Settings checks; concurrent checks share one task. | Verify installed-build notification/restart behavior in the native application. |
 | Phase 6 | `ApplicationHost` owns WPF lifecycle (environment, DI, shutdown). `InstanceCoordinator` handles single-instance coordination with `InstanceStatus` enum. `StartupStateLoader` loads plugins and preferences, returns immutable `StartupState`. `OptionalStartupCoordinator` handles release notes and update check with best-effort policy. `ApplicationBootstrapper` reduced from 152 lines/11 deps to 88 lines/6 deps. `App.xaml.cs` reduced from 88 to 36 lines. Documentation and architecture docs updated. Change archived. | Extract `ShellCoordinator` from `ApplicationSession`, decompose `LaunchWindowViewModel`, add architecture tests. |
+| Phase 7 | `ShellCoordinator` extracted from `ApplicationSession`. Coordinator creates startup UI (tray + launch window) and wires 6 event handlers (update state, download requests, activation, outcomes). `ApplicationSession` reduced from 147 to 86 lines (42% reduction). 10 comprehensive unit tests added. All 526 tests pass. Documentation updated. Change archived. | Decompose `LaunchWindowViewModel`, group DI registrations, add architecture tests. |
 
 The update workflow follow-up preserves the established apply policies: tray and What's New download and restart automatically; the launch window offers an explicit restart action. Existing Core contracts remain unchanged. Application tests exercise concurrency, cancellation, result propagation, automatic restart sequencing, and explicit restart policy without network or installer side effects.
 
@@ -366,12 +367,12 @@ Completion criteria:
 ### Current Status
 
 **Phase 6 Complete (October 2026):**
-- ? ApplicationHost — WPF lifecycle boundary (79 lines)
-- ? InstanceCoordinator — single-instance detection (36 lines)
-- ? StartupStateLoader — plugin + preferences initialization (43 lines)
-- ? OptionalStartupCoordinator — best-effort operations (93 lines)
-- ? ApplicationBootstrapper — session orchestration (88 lines, 6 dependencies)
-- ? App.xaml.cs — pure WPF delegation (36 lines)
+- ? ApplicationHost ï¿½ WPF lifecycle boundary (79 lines)
+- ? InstanceCoordinator ï¿½ single-instance detection (36 lines)
+- ? StartupStateLoader ï¿½ plugin + preferences initialization (43 lines)
+- ? OptionalStartupCoordinator ï¿½ best-effort operations (93 lines)
+- ? ApplicationBootstrapper ï¿½ session orchestration (88 lines, 6 dependencies)
+- ? App.xaml.cs ï¿½ pure WPF delegation (36 lines)
 - ? Tests: 516 passing (128 app + 388 Core)
 
 **Current Architecture:**
@@ -389,11 +390,11 @@ App (36 lines)
 \\\
 
 **What Remains:**
-- ?? ApplicationSession needs extraction — UI creation + event wiring
-- ? ShellCoordinator — not yet extracted
-- ? LaunchWindowViewModel — needs decomposition (567 ? ~250 lines target)
-- ? DI registrations — need feature grouping
-- ? Architecture tests — need boundary enforcement
+- ?? ApplicationSession needs extraction ï¿½ UI creation + event wiring
+- ? ShellCoordinator ï¿½ not yet extracted
+- ? LaunchWindowViewModel ï¿½ needs decomposition (567 ? ~250 lines target)
+- ? DI registrations ï¿½ need feature grouping
+- ? Architecture tests ï¿½ need boundary enforcement
 - ? MainWindow legacy cleanup
 
 ### Recommended Next Steps
@@ -430,8 +431,8 @@ ApplicationSession (thin, ~80 lines)
 
 **Why Start Here:**
 - Natural next step after ApplicationHost extraction
-- Low risk — event wiring already explicit
-- Quick win — measurable improvement in 2-3 hours
+- Low risk ï¿½ event wiring already explicit
+- Quick win ï¿½ measurable improvement in 2-3 hours
 - Unlocks further improvements (LaunchWindowViewModel, Tray)
 - Moves directly toward target architecture
 
@@ -624,7 +625,7 @@ ApplicationTaskRunner (~60 lines):
 
 **Effort:** 2 hours | **Risk:** Low | **Complexity:** Low-Medium
 
-**Priority:** Optional — current approach works well
+**Priority:** Optional ï¿½ current approach works well
 
 ---
 
