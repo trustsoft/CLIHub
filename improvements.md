@@ -106,58 +106,31 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 
 **Artifacts:** `openspec/changes/archive/2026-10-09-process-subsystem-refinement/`
 
----
-
-## Planned Next Steps
-
-### Phase 14: Agent Process Monitoring for Safe Updates
+### Phase 14: Agent Process Monitoring for Safe Updates (2026-10-09)
 **Goal:** Add monitoring of running agent processes to prevent updates while agents are active.
 
-**Priority:** High (critical for update safety)  
-**Estimated Effort:** 4-6 hours  
-**Complexity:** Medium-High
+**Status:** ✅ Complete
 
-**Current Problem:**
-- Update command doesn't check if agents are currently running
-- Updating while agents are active could cause crashes or data loss
-- No visibility into which agent processes are currently running
+**Changes:**
+- Registered `AgentProcessMonitor` and dependencies in DI container
+- Integrated process monitor into `WindowActionCoordinator`
+- Modified `UpdateCommand.CanExecute()` to block updates when agents are running
+- Added `ExecuteUpdate()` method with double-check safety for running agents
+- Added `ReportUpdateBlockedByRunningAgents()` to `StatusMessageCoordinator`
+- Wired process monitor through `LaunchWindowViewModel`
+- Updated all tests to include process monitor dependency
+- All 604 tests passing (425 Core + 179 UI)
 
-**Proposed Solution:**
+**Outcome:** Update command now prevents unsafe updates when agent processes are detected, with clear user feedback.
 
-**Phase 1: Core Process Detection (2-3 hours)**
-- Create `IAgentProcessInspector` interface for process detection
-- Implement `WindowsAgentProcessInspector` using WMI/Process API
-- Create `AgentProcessInstance` model (PID, executable path, command line, start time)
-- Add unit tests for process detection logic
-
-**Phase 2: Agent Matching Logic (1-2 hours)**
-- Create `AgentProcessMatcher` service
-- Implement matching rules (executable path, command line patterns)
-- Match running processes to registered agents/plugins
-- Add tests for matching logic with various edge cases
-
-**Phase 3: Update Command Integration (1-2 hours)**
-- Update `UpdateCommand.CanExecute` to check for running agent processes
-- Add double-check before starting update (processes might start between check and execution)
-- Update UI to show blocking reason when agents are running
-- Display list of running agents preventing update
-- Add integration tests for update blocking
-
-**Expected Benefits:**
+**Benefits:**
 - Prevents update-related crashes and data corruption
 - Clear user feedback when update is blocked
 - Foundation for future "graceful shutdown" feature
 
-**Dependencies:**
-- Existing Infrastructure.Processes subsystem (Phase 11)
-- UpdateCommand and UpdateControl
-
-**Testing Strategy:**
-- Unit tests for process detection and matching (15+ tests)
-- Integration tests with mock processes
-- Manual testing with real agent processes
-
 ---
+
+## Planned Next Steps
 
 ### Phase 12: Simplify Preference Synchronization
 **Goal:** Reduce boilerplate in preference property setters.
@@ -323,6 +296,7 @@ These principles guide all improvement work:
 - Phases 1-7 covered startup orchestration, update workflow unification, tray state extraction
 - Phases 8-9 covered ViewModel decomposition (controller commands, status coordination, menu coordination, window actions)
 - Phases 10-11 covered service decomposition (UpdateService, Process subsystem)
+- Phase 14 covered agent process monitoring for safe updates
 - Current focus: Preference synchronization, agent capabilities, testing infrastructure
 - Next focus areas: Agent subsystem enhancements, integration testing
 
