@@ -87,7 +87,7 @@ public class ProcessLauncherTests
     [Fact]
     public void SetRuntime_ThenGetRuntime_ReturnsConfiguredRuntime()
     {
-        var launcher = new ProcessLauncher(NullLogger<ProcessLauncher>.Instance);
+        var launcher = CreateRealProcessLauncher();
 
         launcher.SetRuntime(RuntimeKind.PowerShell);
 
@@ -97,7 +97,7 @@ public class ProcessLauncherTests
     [Fact]
     public async Task CaptureOutputAsync_CapturesStandardOutput()
     {
-        var launcher = new ProcessLauncher(NullLogger<ProcessLauncher>.Instance);
+        var launcher = CreateRealProcessLauncher();
 
         var result = await launcher.CaptureOutputAsync("echo", "hello-capture", Path.GetTempPath());
 
@@ -109,7 +109,7 @@ public class ProcessLauncherTests
     [Fact]
     public async Task CaptureOutputAsync_MissingExecutable_ReportsFailure()
     {
-        var launcher = new ProcessLauncher(NullLogger<ProcessLauncher>.Instance);
+        var launcher = CreateRealProcessLauncher();
 
         var result = await launcher.CaptureOutputAsync(
             "this-command-does-not-exist-xyz", null, Path.GetTempPath());
@@ -122,7 +122,7 @@ public class ProcessLauncherTests
     {
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
 
-        var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+        var result = await CreateRealProcessLauncher()
             .CaptureOutputAsync("ping", "-n 10 127.0.0.1", Path.GetTempPath(), cancellation.Token, TimeSpan.FromSeconds(30));
 
         Assert.False(result.Started);
@@ -132,7 +132,7 @@ public class ProcessLauncherTests
     [Fact]
     public async Task CaptureOutputAsync_TimeoutTerminatesProcessAndReportsTimeout()
     {
-        var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+        var result = await CreateRealProcessLauncher()
             .CaptureOutputAsync("ping", "-n 10 127.0.0.1", Path.GetTempPath(), timeout: TimeSpan.FromMilliseconds(100));
 
         Assert.False(result.Started);
@@ -151,7 +151,7 @@ public class ProcessLauncherTests
         try
         {
             await File.WriteAllTextAsync(executable, "@echo shim-output");
-            var result = await new ProcessLauncher(NullLogger<ProcessLauncher>.Instance)
+            var result = await CreateRealProcessLauncher()
                 .CaptureOutputAsync(executable, null, directory);
 
             Assert.True(result.Started);
@@ -162,5 +162,14 @@ public class ProcessLauncherTests
         {
             try { Directory.Delete(directory, recursive: true); } catch { }
         }
+    }
+
+    private static ProcessLauncher CreateRealProcessLauncher()
+    {
+        return new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            new RuntimeSelector(),
+            new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance),
+            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance));
     }
 }

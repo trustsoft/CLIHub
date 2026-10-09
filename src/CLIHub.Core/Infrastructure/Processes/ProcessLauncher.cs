@@ -1,6 +1,8 @@
 namespace CLIHub.Core.Infrastructure.Processes;
 
-using System.Diagnostics;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -9,19 +11,30 @@ using CLIHub.Core.Models;
 /// <summary>
 ///   Launches processes for AI agent CLI tools.
 /// </summary>
-public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
+public sealed class ProcessLauncher
 {
     private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);
 
     private readonly ILogger<ProcessLauncher> _logger;
+    private readonly RuntimeSelector _runtimeSelector;
+    private readonly IInteractiveProcessRunner _interactiveRunner;
+    private readonly IProcessOutputRunner _outputRunner;
+    
     private RuntimeKind _runtime = RuntimeKind.WindowsTerminal;
 
     /// <summary>
     ///   Creates the launcher.
     /// </summary>
-    public ProcessLauncher(ILogger<ProcessLauncher> logger)
+    public ProcessLauncher(
+        ILogger<ProcessLauncher> logger,
+        RuntimeSelector runtimeSelector,
+        IInteractiveProcessRunner interactiveRunner,
+        IProcessOutputRunner outputRunner)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _runtimeSelector = runtimeSelector ?? throw new ArgumentNullException(nameof(runtimeSelector));
+        _interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
+        _outputRunner = outputRunner ?? throw new ArgumentNullException(nameof(outputRunner));
     }
 
     /// <summary>
@@ -34,7 +47,12 @@ public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
     /// </summary>
     public RuntimeKind GetRuntime() => _runtime;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Launches a process for the specified plugin command in the given project directory.
+    /// </summary>
+    /// <param name="command"> The plugin command to execute. </param>
+    /// <param name="workingDirectory"> The working directory for the process. </param>
+    /// <returns> True when the process was launched successfully; otherwise false. </returns>
     public bool LaunchProcess(PluginCommand command, string workingDirectory)
     {
         if (command == null)
@@ -61,22 +79,32 @@ public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
             return false;
         }
 
-        var (fileName, arguments) = BuildStartInfo(_runtime, command, workingDirectory);
         _logger.LogInformation(
             "Launching {CommandName} ({Executable}) in {WorkingDirectory} via {Runtime}",
             command.Name, command.Executable, workingDirectory, _runtime);
 
         try
         {
-            var startInfo = new ProcessStartInfo
+            // Build command line for the runtime
+            var (fileName, arguments) = BuildStartInfo(_runtime, command, workingDirectory);
+            
+            // Create runtime info
+            var runtimeType = _runtime switch
             {
-                FileName = fileName,
-                Arguments = arguments,
-                WorkingDirectory = workingDirectory,
-                UseShellExecute = true // Required for wt.exe to work properly
+                RuntimeKind.WindowsTerminal => RuntimeType.WindowsTerminal,
+                RuntimeKind.CommandPrompt => RuntimeType.Cmd,
+                RuntimeKind.PowerShell => RuntimeType.PowerShell,
+                _ => RuntimeType.Cmd
+            };
+            
+            var runtime = new RuntimeInfo
+            {
+                ExecutablePath = fileName,
+                Type = runtimeType
             };
 
-            Process.Start(startInfo);
+            // Delegate to the interactive runner
+            _ = _interactiveRunner.LaunchAsync(arguments, runtime, CancellationToken.None);
             _logger.LogInformation("Launched {CommandName} in {WorkingDirectory}", command.Name, workingDirectory);
             return true;
         }
@@ -101,7 +129,14 @@ public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Runs an executable and captures its output.
+    /// </summary>
+    /// <param name="executable"> Executable to run. </param>
+    /// <param name="arguments"> Optional command-line arguments. </param>
+    /// <param name="workingDirectory"> Working directory for the process. </param>
+    /// <param name="cancellationToken"> Cancellation token. </param>
+    /// <param name="timeout"> Optional maximum run time. </param>
     public async Task<ProcessCaptureResult> CaptureOutputAsync(
         string executable,
         string? arguments,
@@ -116,49 +151,44 @@ public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
 
         try
         {
-            // Run through the command interpreter so PATHEXT resolution works for
-            // npm/shim executables (.cmd/.bat/.ps1), which CreateProcess cannot resolve.
-            var (fileName, commandLineArguments) = WindowsCommandLineBuilder.BuildCapturedCommand(executable, arguments);
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = fileName,
-                Arguments = commandLineArguments,
-                WorkingDirectory = workingDirectory,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
+            // Get runtime (cmd.exe for output capture)
+            var runtime = new RuntimeInfo 
+            { 
+                ExecutablePath = "cmd.exe", 
+                Type = RuntimeType.Cmd 
             };
 
-            using var process = Process.Start(startInfo);
-            if (process == null)
-            {
-                return new ProcessCaptureResult(false, -1, string.Empty, "Process did not start");
-            }
+            // Build command line through cmd.exe for PATHEXT resolution
+            var (_, commandLine) = WindowsCommandLineBuilder.BuildCapturedCommand(executable, arguments);
+            
+            // Set working directory via /D flag in command line
+            var fullCommandLine = $"/D \"{workingDirectory}\" {commandLine}";
 
-            var stdoutTask = process.StandardOutput.ReadToEndAsync();
-            var stderrTask = process.StandardError.ReadToEndAsync();
+            // Run with output capture
+            var result = await _outputRunner.RunAsync(
+                fullCommandLine,
+                runtime,
+                timeout ?? DefaultCaptureTimeout,
+                cancellationToken);
 
-            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            timeoutCts.CancelAfter(timeout ?? DefaultCaptureTimeout);
-
-            try
+            // Adapt ProcessResult to ProcessCaptureResult
+            if (result.TimedOut)
             {
-                await process.WaitForExitAsync(timeoutCts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                await TerminateProcessAsync(process);
                 var reason = cancellationToken.IsCancellationRequested
                     ? "Process cancelled"
                     : "Timed out waiting for the command";
-                return new ProcessCaptureResult(false, -1, string.Empty, reason);
+                return new ProcessCaptureResult(false, result.ExitCode, result.StandardOutput, reason);
             }
 
-            var stdout = (await stdoutTask).Trim();
-            var stderr = (await stderrTask).Trim();
-            return new ProcessCaptureResult(true, process.ExitCode, stdout, stderr);
+            return new ProcessCaptureResult(
+                true,
+                result.ExitCode,
+                result.StandardOutput,
+                result.StandardError);
+        }
+        catch (OperationCanceledException)
+        {
+            return new ProcessCaptureResult(false, -1, string.Empty, "Process cancelled");
         }
         catch (Exception ex)
         {
@@ -184,26 +214,5 @@ public class ProcessLauncher : IInteractiveProcessRunner, IProcessOutputRunner
     internal static string BuildCommandLine(PluginCommand command)
     {
         return WindowsCommandLineBuilder.BuildCommandLine(command);
-    }
-
-    private static async Task TerminateProcessAsync(Process process)
-    {
-        try
-        {
-            process.Kill(entireProcessTree: true);
-        }
-        catch
-        {
-            // The process may have exited between cancellation and termination.
-        }
-
-        try
-        {
-            await process.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(2));
-        }
-        catch
-        {
-            // Cleanup is best effort; the capture still reports the original cancellation reason.
-        }
     }
 }

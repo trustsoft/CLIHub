@@ -10,20 +10,17 @@ using CLIHub.Core.Models;
 /// </summary>
 public class AgentCommandService : IAgentCommandService
 {
-    private readonly IInteractiveProcessRunner _interactiveRunner;
-    private readonly IProcessOutputRunner _outputRunner;
+    private readonly ProcessLauncher _processLauncher;
     private readonly ILogger<AgentCommandService> _logger;
 
     /// <summary>
-    ///   Creates the service with separate interactive and output process boundaries.
+    ///   Creates the service.
     /// </summary>
     public AgentCommandService(
-        IInteractiveProcessRunner interactiveRunner,
-        IProcessOutputRunner outputRunner,
+        ProcessLauncher processLauncher,
         ILogger<AgentCommandService> logger)
     {
-        _interactiveRunner = interactiveRunner;
-        _outputRunner = outputRunner;
+        _processLauncher = processLauncher;
         _logger = logger;
     }
 
@@ -53,7 +50,7 @@ public class AgentCommandService : IAgentCommandService
             return await RunVersionAsync(plugin, command, projectPath, cancellationToken);
         }
 
-        var started = _interactiveRunner.LaunchProcess(command, projectPath);
+        var started = _processLauncher.LaunchProcess(command, projectPath);
         return started
             ? new AgentCommandResult(true, null, null)
             : new AgentCommandResult(false, null, $"Failed to launch {plugin.Name}");
@@ -65,7 +62,7 @@ public class AgentCommandService : IAgentCommandService
         string projectPath,
         CancellationToken cancellationToken)
     {
-        var result = await _outputRunner.CaptureOutputAsync(
+        var result = await _processLauncher.CaptureOutputAsync(
             command.Executable, command.Arguments, projectPath, cancellationToken);
 
         if (!result.Started || result.ExitCode != 0)

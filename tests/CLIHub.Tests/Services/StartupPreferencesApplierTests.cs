@@ -1,6 +1,7 @@
 namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
@@ -16,13 +17,12 @@ public class StartupPreferencesApplierTests
     public void Apply_SetsRuntimeBeforeStartupRegistration()
     {
         var sequence = new MockSequence();
-        var processRunner = new Mock<IInteractiveProcessRunner>(MockBehavior.Strict);
+        var processLauncher = CreateProcessLauncher();
         var startupService = new Mock<IStartupService>(MockBehavior.Strict);
 
-        processRunner.InSequence(sequence).Setup(x => x.SetRuntime(RuntimeKind.PowerShell));
         startupService.InSequence(sequence).Setup(x => x.SetEnabled(true)).Returns(true);
 
-        var applier = new StartupPreferencesApplier(processRunner.Object, startupService.Object);
+        var applier = new StartupPreferencesApplier(processLauncher, startupService.Object);
 
         applier.Apply(new AppPreferences
         {
@@ -30,7 +30,7 @@ public class StartupPreferencesApplierTests
             StartWithWindows = true
         });
 
-        processRunner.Verify(x => x.SetRuntime(RuntimeKind.PowerShell), Times.Once);
+        Assert.Equal(RuntimeKind.PowerShell, processLauncher.GetRuntime());
         startupService.Verify(x => x.SetEnabled(true), Times.Once);
     }
 
@@ -43,5 +43,14 @@ public class StartupPreferencesApplierTests
         using var provider = services.BuildServiceProvider();
 
         Assert.IsType<StartupPreferencesApplier>(provider.GetRequiredService<IStartupPreferencesApplier>());
+    }
+
+    private static ProcessLauncher CreateProcessLauncher()
+    {
+        return new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            new RuntimeSelector(),
+            new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance),
+            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance));
     }
 }

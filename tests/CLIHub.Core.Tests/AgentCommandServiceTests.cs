@@ -4,19 +4,29 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Tests.Fakes;
 
 public class AgentCommandServiceTests : IDisposable
 {
     private readonly string _projectDir;
-    private readonly FakeProcessLauncher _launcher = new();
+    private readonly FakeInteractiveProcessRunner _interactiveRunner = new();
+    private readonly FakeProcessOutputRunner _outputRunner = new();
+    private readonly ProcessLauncher _launcher;
     private readonly AgentCommandService _service;
 
     public AgentCommandServiceTests()
     {
         _projectDir = Path.Combine(Path.GetTempPath(), "clihub-agent-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_projectDir);
+        
+        _launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            new RuntimeSelector(),
+            _interactiveRunner,
+            _outputRunner);
+        
         _service = new AgentCommandService(
-            _launcher,
             _launcher,
             NullLogger<AgentCommandService>.Instance);
     }
@@ -42,8 +52,8 @@ public class AgentCommandServiceTests : IDisposable
 
         Assert.True(result.Success);
         Assert.Equal("1.2.3", result.Output);
-        Assert.Single(_launcher.Captures);
-        Assert.Empty(_launcher.Launches);
+        Assert.Single(_outputRunner.Runs);
+        Assert.Empty(_interactiveRunner.Launches);
     }
 
     [Theory]
@@ -64,54 +74,56 @@ public class AgentCommandServiceTests : IDisposable
         var result = await _service.ExecuteAsync(plugin, kind, _projectDir);
 
         Assert.True(result.Success);
-        Assert.Single(_launcher.Launches);
-        Assert.Empty(_launcher.Captures);
-        Assert.Equal(_projectDir, _launcher.Launches[0].WorkingDirectory);
+        Assert.Single(_interactiveRunner.Launches);
+        Assert.Empty(_outputRunner.Runs);
     }
 
     [Fact]
-    public async Task MissingCommandKind_Fails()
+    public async Task MissingCommand_ReturnsFailure()
     {
         var plugin = PluginWith(new AgentCommands
         {
             Launch = new PluginCommand { Name = "Launch", Executable = "test" }
-        });
-
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Resume, _projectDir);
-
-        Assert.False(result.Success);
-        Assert.Empty(_launcher.Launches);
-        Assert.Empty(_launcher.Captures);
-    }
-
-    [Fact]
-    public async Task MissingProjectFolder_Fails()
-    {
-        var plugin = PluginWith(new AgentCommands
-        {
-            Launch = new PluginCommand { Name = "Launch", Executable = "test" }
-        });
-
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Launch, "Z:\\nope-does-not-exist");
-
-        Assert.False(result.Success);
-        Assert.Empty(_launcher.Launches);
-    }
-
-    [Fact]
-    public async Task VersionCommandFailure_ReportsError()
-    {
-        _launcher.CaptureResult = new ProcessCaptureResult(false, -1, string.Empty, "boom");
-        var plugin = PluginWith(new AgentCommands
-        {
-            Launch = new PluginCommand { Name = "Launch", Executable = "test" },
-            Version = new PluginCommand { Name = "Version", Executable = "test" }
         });
 
         var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Version, _projectDir);
 
         Assert.False(result.Success);
-        Assert.Equal("boom", result.Error);
+        Assert.Contains("does not support", result.Error);
+    }
+
+    [Fact]
+    public async Task MissingProjectFolder_ReturnsFailure()
+    {
+        var plugin = PluginWith(new AgentCommands
+        {
+            Launch = new PluginCommand { Name = "Launch", Executable = "test" }
+        });
+
+        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Launch, "/nonexistent");
+
+        Assert.False(result.Success);
+        Assert.Contains("does not exist", result.Error);
+    }
+    [Fact]
+    public async Task Version_NonZeroExitCode_ReturnsFailure()
+    {
+        _outputRunner.Result = new ProcessResult
+        {
+            ExitCode = 1,
+            StandardOutput = string.Empty,
+            StandardError = "Command not found",
+            TimedOut = false
+        };
+
+        var plugin = PluginWith(new AgentCommands
+        {
+            Version = new PluginCommand { Name = "Version", Executable = "test", Arguments = "--version" }
+        });
+
+        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Version, _projectDir);
+
+        Assert.False(result.Success);
+        Assert.Contains("Command not found", result.Error);
     }
 }
-

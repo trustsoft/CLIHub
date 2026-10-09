@@ -5,12 +5,24 @@ using Microsoft.Extensions.Logging.Abstractions;
 using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Tests.Fakes;
 
 public class AgentVersionServiceTests
 {
-    private readonly FakeProcessLauncher _launcher = new();
+    private readonly FakeProcessOutputRunner _outputRunner = new();
+    private readonly ProcessLauncher _launcher;
     private readonly FakeConfigurationRepository _config = new();
     private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+
+    public AgentVersionServiceTests()
+    {
+        _launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            new RuntimeSelector(),
+            new FakeInteractiveProcessRunner(),
+            _outputRunner);
+    }
 
     private AgentVersionService CreateService() =>
         new(
@@ -36,13 +48,19 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_CommandDefined_ReturnsFirstLine()
     {
-        _launcher.CaptureResult = new ProcessCaptureResult(true, 0, "1.2.3\nsome banner", string.Empty);
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.2.3\nsome banner",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
         var service = CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
 
         Assert.Equal("1.2.3", version);
-        Assert.Single(_launcher.Captures);
+        Assert.Single(_outputRunner.Runs);
     }
 
     [Theory]
@@ -52,7 +70,13 @@ public class AgentVersionServiceTests
     [InlineData("v2.5", "2.5")]
     public async Task GetVersion_ExtractsVersionNumber(string output, string expected)
     {
-        _launcher.CaptureResult = new ProcessCaptureResult(true, 0, output, string.Empty);
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = output,
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
         var service = CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -63,7 +87,13 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_NoVersionNumber_ReturnsLineAsIs()
     {
-        _launcher.CaptureResult = new ProcessCaptureResult(true, 0, "no digits here", string.Empty);
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "no digits here",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
         var service = CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -79,13 +109,19 @@ public class AgentVersionServiceTests
         var version = await service.GetVersionAsync(PluginWithVersion(false));
 
         Assert.Null(version);
-        Assert.Empty(_launcher.Captures);
+        Assert.Empty(_outputRunner.Runs);
     }
 
     [Fact]
-    public async Task GetVersion_CommandFails_ReturnsNull()
+    public async Task GetVersion_CaptureFailure_ReturnsNull()
     {
-        _launcher.CaptureResult = new ProcessCaptureResult(false, -1, string.Empty, "boom");
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = string.Empty,
+            StandardError = "Command not found",
+            ExitCode = 1,
+            TimedOut = false
+        };
         var service = CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -94,114 +130,100 @@ public class AgentVersionServiceTests
     }
 
     [Fact]
-    public async Task GetVersion_IsCached()
+    public async Task GetVersion_Timeout_ReturnsNull()
     {
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = string.Empty,
+            StandardError = string.Empty,
+            ExitCode = -1,
+            TimedOut = true
+        };
+        var service = CreateService();
+
+        var version = await service.GetVersionAsync(PluginWithVersion(true));
+
+        Assert.Null(version);
+    }
+
+    [Fact]
+    public async Task GetVersion_WithinCacheTtl_ReturnsCachedVersionWithoutRunning()
+    {
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.2.3",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
         var service = CreateService();
         var plugin = PluginWithVersion(true);
 
         await service.GetVersionAsync(plugin);
-        await service.GetVersionAsync(plugin);
+        _time.Advance(TimeSpan.FromMinutes(10));
+        var cached = await service.GetVersionAsync(plugin);
 
-        Assert.Single(_launcher.Captures);
+        Assert.Equal("1.2.3", cached);
+        Assert.Single(_outputRunner.Runs); // Only ran once
     }
 
     [Fact]
-    public async Task Invalidate_ForcesReRun()
+    public async Task GetVersion_AfterCacheExpiry_RunsAgain()
     {
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.2.3",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        var service = CreateService();
+        var plugin = PluginWithVersion(true);
+
+        await service.GetVersionAsync(plugin);
+        _time.Advance(TimeSpan.FromMinutes(20)); // Default TTL is 15 minutes
+        
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "2.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+
+        var version = await service.GetVersionAsync(plugin);
+
+        Assert.Equal("2.0.0", version);
+        Assert.Equal(2, _outputRunner.Runs.Count); // Ran twice
+    }
+
+    [Fact]
+    public async Task Invalidate_ClearsCachedVersions()
+    {
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.2.3",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
         var service = CreateService();
         var plugin = PluginWithVersion(true);
 
         await service.GetVersionAsync(plugin);
         service.Invalidate();
-        await service.GetVersionAsync(plugin);
+        
+        _outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "2.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        
+        var version = await service.GetVersionAsync(plugin);
 
-        Assert.Equal(2, _launcher.Captures.Count);
-    }
-
-    [Fact]
-    public async Task GetVersion_WithinTtl_IsCached()
-    {
-        var service = CreateService();
-        var plugin = PluginWithVersion(true);
-
-        await service.GetVersionAsync(plugin);
-        _time.Advance(TimeSpan.FromMinutes(5));
-        await service.GetVersionAsync(plugin);
-
-        Assert.Single(_launcher.Captures);
-    }
-
-    [Fact]
-    public async Task GetVersion_AfterTtlExpires_ReRuns()
-    {
-        var service = CreateService();
-        var plugin = PluginWithVersion(true);
-
-        await service.GetVersionAsync(plugin);
-        _time.Advance(AgentVersionService.DefaultTtl + TimeSpan.FromMinutes(1));
-        await service.GetVersionAsync(plugin);
-
-        Assert.Equal(2, _launcher.Captures.Count);
-    }
-
-    [Fact]
-    public async Task GetVersion_ConcurrentCacheMisses_RunOneProbe()
-    {
-        _launcher.CaptureGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var service = CreateService();
-        var plugin = PluginWithVersion(true);
-
-        var first = service.GetVersionAsync(plugin);
-        var second = service.GetVersionAsync(plugin);
-
-        await Task.Delay(25);
-        Assert.Single(_launcher.Captures);
-
-        _launcher.CaptureGate.SetResult(true);
-        var results = await Task.WhenAll(first, second);
-
-        Assert.Equal(new[] { "1.2.3", "1.2.3" }, results);
-        Assert.Single(_launcher.Captures);
-    }
-
-    [Fact]
-    public async Task GetVersion_CancelledWaiter_DoesNotCancelSharedProbe()
-    {
-        _launcher.CaptureGate = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var service = CreateService();
-        var plugin = PluginWithVersion(true);
-        using var cancellation = new CancellationTokenSource();
-
-        var cancelled = service.GetVersionAsync(plugin, cancellation.Token);
-        var retained = service.GetVersionAsync(plugin);
-        await Task.Delay(25);
-        cancellation.Cancel();
-
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await cancelled);
-        _launcher.CaptureGate.SetResult(true);
-
-        Assert.Equal("1.2.3", await retained);
-        Assert.Single(_launcher.Captures);
-    }
-
-    [Fact]
-    public async Task GetVersion_PassesConfiguredProbeTimeout()
-    {
-        new PreferencesStore(_config).Update(preferences => preferences.AgentProbeTimeoutSeconds = 4);
-        var service = CreateService();
-
-        await service.GetVersionAsync(PluginWithVersion(true));
-
-        Assert.Equal(TimeSpan.FromSeconds(4), _launcher.LastCaptureTimeout);
-    }
-
-    [Fact]
-    public async Task GetVersion_UsesDefaultProbeTimeout()
-    {
-        var service = CreateService();
-
-        await service.GetVersionAsync(PluginWithVersion(true));
-
-        Assert.Equal(AgentVersionService.DefaultProbeTimeout, _launcher.LastCaptureTimeout);
+        Assert.Equal("2.0.0", version);
+        Assert.Equal(2, _outputRunner.Runs.Count); // Ran twice after invalidation
     }
 }

@@ -8,17 +8,17 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class ProcessRuntimePreferenceTarget : IRuntimePreferenceTarget
 {
-    private readonly IInteractiveProcessRunner _processRunner;
+    private readonly ProcessLauncher _processLauncher;
 
     /// <summary>
     ///   Creates the runtime preference target.
     /// </summary>
-    /// <param name="processRunner"> Interactive process boundary receiving the runtime. </param>
-    public ProcessRuntimePreferenceTarget(IInteractiveProcessRunner processRunner)
+    /// <param name="processLauncher"> Process launcher receiving the runtime. </param>
+    public ProcessRuntimePreferenceTarget(ProcessLauncher processLauncher)
     {
-        _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
+        _processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
     }
 
     /// <inheritdoc />
-    public void SetRuntime(RuntimeKind runtime) => _processRunner.SetRuntime(runtime);
+    public void SetRuntime(RuntimeKind runtime) => _processLauncher.SetRuntime(runtime);
 }

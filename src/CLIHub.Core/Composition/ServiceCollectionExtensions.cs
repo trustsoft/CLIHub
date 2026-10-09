@@ -81,7 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(
-            sp.GetRequiredService<IProcessOutputRunner>(),
+            sp.GetRequiredService<ProcessLauncher>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
         return services;
@@ -101,9 +101,10 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddWindowsInfrastructureServices(this IServiceCollection services)
     {
+        services.AddSingleton<RuntimeSelector>();
+        services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
+        services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
         services.AddSingleton<ProcessLauncher>();
-        services.AddSingleton<IInteractiveProcessRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
-        services.AddSingleton<IProcessOutputRunner>(sp => sp.GetRequiredService<ProcessLauncher>());
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));
