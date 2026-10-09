@@ -110,6 +110,55 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 
 ## Planned Next Steps
 
+### Phase 14: Agent Process Monitoring for Safe Updates
+**Goal:** Add monitoring of running agent processes to prevent updates while agents are active.
+
+**Priority:** High (critical for update safety)  
+**Estimated Effort:** 4-6 hours  
+**Complexity:** Medium-High
+
+**Current Problem:**
+- Update command doesn't check if agents are currently running
+- Updating while agents are active could cause crashes or data loss
+- No visibility into which agent processes are currently running
+
+**Proposed Solution:**
+
+**Phase 1: Core Process Detection (2-3 hours)**
+- Create `IAgentProcessInspector` interface for process detection
+- Implement `WindowsAgentProcessInspector` using WMI/Process API
+- Create `AgentProcessInstance` model (PID, executable path, command line, start time)
+- Add unit tests for process detection logic
+
+**Phase 2: Agent Matching Logic (1-2 hours)**
+- Create `AgentProcessMatcher` service
+- Implement matching rules (executable path, command line patterns)
+- Match running processes to registered agents/plugins
+- Add tests for matching logic with various edge cases
+
+**Phase 3: Update Command Integration (1-2 hours)**
+- Update `UpdateCommand.CanExecute` to check for running agent processes
+- Add double-check before starting update (processes might start between check and execution)
+- Update UI to show blocking reason when agents are running
+- Display list of running agents preventing update
+- Add integration tests for update blocking
+
+**Expected Benefits:**
+- Prevents update-related crashes and data corruption
+- Clear user feedback when update is blocked
+- Foundation for future "graceful shutdown" feature
+
+**Dependencies:**
+- Existing Infrastructure.Processes subsystem (Phase 11)
+- UpdateCommand and UpdateControl
+
+**Testing Strategy:**
+- Unit tests for process detection and matching (15+ tests)
+- Integration tests with mock processes
+- Manual testing with real agent processes
+
+---
+
 ### Phase 12: Simplify Preference Synchronization
 **Goal:** Reduce boilerplate in preference property setters.
 
