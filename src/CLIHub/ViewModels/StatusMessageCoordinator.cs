@@ -87,6 +87,16 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     public void ReportNoAgentsFound() =>
         CurrentMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
 
+    /// <summary>
+    ///   Reports when update is blocked due to running agents.
+    /// </summary>
+    /// <param name="runningAgentNames"> Names of agents currently running. </param>
+    public void ReportUpdateBlockedByRunningAgents(IReadOnlyList<string> runningAgentNames)
+    {
+        var agentList = string.Join(", ", runningAgentNames);
+        CurrentMessage = $"Cannot update while agents are running: {agentList}";
+    }
+
     private void OnProjectsChanged(object? sender, EventArgs e) =>
         CurrentMessage = "Projects refreshed";
 

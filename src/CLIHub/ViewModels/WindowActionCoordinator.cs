@@ -3,6 +3,7 @@ namespace CLIHub.ViewModels;
 using CLIHub;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
+using CLIHub.Core.Services;
 
 /// <summary>
 ///   Coordinates window-level actions and agent commands for the launch window.
@@ -12,6 +13,7 @@ public sealed class WindowActionCoordinator
 {
     private readonly LaunchCommandCoordinator _launchCoordinator;
     private readonly StatusMessageCoordinator _statusCoordinator;
+    private readonly AgentProcessMonitor _processMonitor;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IApplicationLifetime _applicationLifetime;
     private readonly IExternalLauncher _externalLauncher;
@@ -24,6 +26,7 @@ public sealed class WindowActionCoordinator
     /// </summary>
     /// <param name="launchCoordinator"> Agent command execution coordinator. </param>
     /// <param name="statusCoordinator"> Status message coordinator for outcome reporting. </param>
+    /// <param name="processMonitor"> Agent process monitor for update safety checks. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="applicationLifetime"> Application lifetime control for exit. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
@@ -33,6 +36,7 @@ public sealed class WindowActionCoordinator
     public WindowActionCoordinator(
         LaunchCommandCoordinator launchCoordinator,
         StatusMessageCoordinator statusCoordinator,
+        AgentProcessMonitor processMonitor,
         ISettingsLauncher settingsLauncher,
         IApplicationLifetime applicationLifetime,
         IExternalLauncher externalLauncher,
@@ -42,6 +46,7 @@ public sealed class WindowActionCoordinator
     {
         _launchCoordinator = launchCoordinator ?? throw new ArgumentNullException(nameof(launchCoordinator));
         _statusCoordinator = statusCoordinator ?? throw new ArgumentNullException(nameof(statusCoordinator));
+        _processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
         _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
         _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
@@ -63,8 +68,8 @@ public sealed class WindowActionCoordinator
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Init),
             () => _getSelectedAgent()?.CanInit ?? false);
         UpdateCommand = new RelayCommand(
-            () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Update),
-            () => _getSelectedAgent()?.CanUpdate ?? false);
+            ExecuteUpdate,
+            CanExecuteUpdate);
         VersionCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Version),
             () => _getSelectedAgent()?.CanShowVersion ?? false);
@@ -143,6 +148,38 @@ public sealed class WindowActionCoordinator
     }
 
     private bool HasSelectedAgent() => _getSelectedAgent() is not null;
+
+    private bool CanExecuteUpdate()
+    {
+        var agent = _getSelectedAgent();
+        if (agent is null || !agent.CanUpdate)
+        {
+            return false;
+        }
+
+        // Block update if any agents are currently running
+        if (_processMonitor.HasRunningAgents())
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ExecuteUpdate()
+    {
+        // Double-check for running agents at execution time
+        // (processes might have started between CanExecute check and execution)
+        var runningAgents = _processMonitor.GetRunningAgents();
+        if (runningAgents.Count > 0)
+        {
+            var agentNames = runningAgents.Select(a => a.Plugin.Name).ToList();
+            _statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
+            return;
+        }
+
+        _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Update);
+    }
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
         _launchCoordinator.RunAsync(

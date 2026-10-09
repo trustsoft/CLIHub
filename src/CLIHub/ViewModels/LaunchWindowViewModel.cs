@@ -51,6 +51,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="applicationLifetime"> Application lifetime control. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
     /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
+    /// <param name="processMonitor"> Agent process monitor for update safety checks. </param>
     public LaunchWindowViewModel(
         ProjectPaneController projectPane,
         AgentPaneController agentPane,
@@ -62,7 +63,8 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
         IExternalLauncher externalLauncher,
-        StatusMessageCoordinator statusCoordinator)
+        StatusMessageCoordinator statusCoordinator,
+        CLIHub.Core.Services.AgentProcessMonitor processMonitor)
     {
         _projectPane = projectPane;
         _agentPane = agentPane;
@@ -78,6 +80,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         _windowActions = new WindowActionCoordinator(
             launchCommandCoordinator,
             statusCoordinator,
+            processMonitor,
             settingsLauncher,
             applicationLifetime,
             externalLauncher,

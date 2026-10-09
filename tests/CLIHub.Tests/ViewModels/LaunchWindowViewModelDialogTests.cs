@@ -8,9 +8,11 @@ using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
+using CLIHub.Core.Services;
 using CLIHub.Core.Updates;
 using CLIHub.ViewModels;
 
@@ -60,7 +62,8 @@ public class LaunchWindowViewModelDialogTests
             notifications.Object,
             lifetime.Object,
             new Mock<IExternalLauncher>().Object,
-            statusCoordinator);
+            statusCoordinator,
+            CreateProcessMonitor());
 
         viewModel.AddProjectCommand.Execute(null);
 
@@ -89,6 +92,20 @@ public class LaunchWindowViewModelDialogTests
         UpdateControlViewModel updateControl)
     {
         return new StatusMessageCoordinator(projectPane, agentPane, updateControl);
+    }
+
+    private static AgentProcessMonitor CreateProcessMonitor()
+    {
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector.Setup(x => x.GetRunningProcesses()).Returns([]);
+        var catalog = new Mock<IPluginCatalog>();
+        catalog.Setup(x => x.GetAllPlugins()).Returns([]);
+        var matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
+        return new AgentProcessMonitor(
+            inspector.Object,
+            matcher,
+            catalog.Object,
+            NullLogger<AgentProcessMonitor>.Instance);
     }
 
     [Fact]
@@ -132,7 +149,8 @@ public class LaunchWindowViewModelDialogTests
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            statusCoordinator);
+            statusCoordinator,
+            CreateProcessMonitor());
 
         Assert.Same(projectPane.AddCommand, viewModel.AddProjectCommand);
         Assert.Same(projectPane.RemoveCommand, viewModel.RemoveProjectCommand);
@@ -181,7 +199,8 @@ public class LaunchWindowViewModelDialogTests
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            statusCoordinator);
+            statusCoordinator,
+            CreateProcessMonitor());
 
         var projectsChangedCount = 0;
         viewModel.PropertyChanged += (_, e) =>
