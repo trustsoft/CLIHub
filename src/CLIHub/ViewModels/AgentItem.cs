@@ -73,6 +73,21 @@ public sealed class AgentItem : INotifyPropertyChanged
     public bool CanResume => Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
 
     /// <summary>
+    ///   Whether the agent defines the init command.
+    /// </summary>
+    public bool CanInit => Plugin.Commands?.Get(AgentCommandKind.Init) != null;
+
+    /// <summary>
+    ///   Whether the agent defines the update command.
+    /// </summary>
+    public bool CanUpdate => Plugin.Commands?.Get(AgentCommandKind.Update) != null;
+
+    /// <summary>
+    ///   Whether the agent defines the version command.
+    /// </summary>
+    public bool CanShowVersion => Plugin.Commands?.Get(AgentCommandKind.Version) != null;
+
+    /// <summary>
     ///   Row opacity: normal when available, dimmed when not.
     /// </summary>
     public double RowOpacity => IsAvailable ? 1.0 : 0.4;

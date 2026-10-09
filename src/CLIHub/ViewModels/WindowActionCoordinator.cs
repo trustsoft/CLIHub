@@ -58,16 +58,16 @@ public sealed class WindowActionCoordinator
             HasSelectedAgent);
         ResumeCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Resume),
-            HasSelectedAgent);
+            () => _getSelectedAgent()?.CanResume ?? false);
         InitCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Init),
-            HasSelectedAgent);
+            () => _getSelectedAgent()?.CanInit ?? false);
         UpdateCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Update),
-            HasSelectedAgent);
+            () => _getSelectedAgent()?.CanUpdate ?? false);
         VersionCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Version),
-            HasSelectedAgent);
+            () => _getSelectedAgent()?.CanShowVersion ?? false);
 
         LaunchAgentCommand = new RelayCommand<AgentItem>(
             item => _ = RunAgentCommandAsync(item, AgentCommandKind.Launch),
