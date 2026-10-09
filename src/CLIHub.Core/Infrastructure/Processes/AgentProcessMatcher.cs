@@ -10,6 +10,10 @@ public sealed class AgentProcessMatcher
 {
     private readonly ILogger<AgentProcessMatcher> _logger;
 
+    /// <summary>
+    ///   Initializes a new instance of the <see cref="AgentProcessMatcher"/> class.
+    /// </summary>
+    /// <param name="logger"> The logger instance. </param>
     public AgentProcessMatcher(ILogger<AgentProcessMatcher> logger)
     {
         _logger = logger;
