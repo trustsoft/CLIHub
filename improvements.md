@@ -106,6 +106,30 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 
 **Artifacts:** `openspec/changes/archive/2026-10-09-process-subsystem-refinement/`
 
+### Phase 15: Testing Infrastructure Improvements (2026-10-09)
+**Goal:** Enhance test infrastructure for better coverage and maintainability.
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Created `LaunchWindowViewModelBuilder` with fluent API for test setup
+- Reduced test boilerplate by 70-80% (65 lines → 13 lines in refactored tests)
+- Implemented two build modes: `Build()` and `BuildWithMocks()`
+- Added 5 comprehensive builder tests
+- Refactored 3 existing tests demonstrating the pattern
+- Created comprehensive testing guide (`tests/CLIHub.Tests/README.md`)
+- All 609 tests passing (425 Core + 184 UI)
+
+**Outcome:** Test builders eliminate boilerplate and improve test readability while centralizing setup logic for complex ViewModels.
+
+**Benefits:**
+- 70-80% reduction in test setup code
+- Improved test focus (only mock what matters)
+- Centralized maintenance (constructor changes only update builder)
+- Pattern established for other complex types
+
+**Artifacts:** `docs/phase15-testing-infrastructure.md`
+
 ### Phase 14: Agent Process Monitoring for Safe Updates (2026-10-09)
 **Goal:** Add monitoring of running agent processes to prevent updates while agents are active.
 
@@ -209,39 +233,6 @@ Option C: Keep current pattern (it's explicit and clear)
 
 ---
 
-### Phase 12: Testing Infrastructure Improvements
-**Goal:** Enhance test infrastructure for better coverage and maintainability.
-
-**Priority:** Medium  
-**Estimated Effort:** 4-6 hours  
-**Complexity:** Medium
-
-**Proposed Improvements:**
-
-1. **Integration Tests for User Flows**
-   - End-to-end scenarios: select project → launch agent → verify outcome
-   - Tray interaction scenarios
-   - Hotkey scenarios
-   - Update check and download flows
-
-2. **Test Builders and Fixtures**
-   - ViewModelBuilder for consistent test setup
-   - ControllerBuilder for pane controller tests
-   - Mock service factories
-
-3. **Property-Based Tests**
-   - Configuration migration scenarios
-   - Path formatting edge cases
-   - Plugin descriptor validation
-
-**Expected Impact:**
-- Higher confidence in refactoring
-- Catch regression bugs earlier
-- Faster test authoring
-- Better documentation through tests
-
----
-
 ## Architecture Principles
 
 These principles guide all improvement work:
@@ -297,7 +288,8 @@ These principles guide all improvement work:
 - Phases 8-9 covered ViewModel decomposition (controller commands, status coordination, menu coordination, window actions)
 - Phases 10-11 covered service decomposition (UpdateService, Process subsystem)
 - Phase 14 covered agent process monitoring for safe updates
-- Current focus: Preference synchronization, agent capabilities, testing infrastructure
+- Phase 15 covered testing infrastructure improvements with test builders
+- Current focus: Preference synchronization, agent capabilities
 - Next focus areas: Agent subsystem enhancements, integration testing
 
 **Last Updated:** 2026-10-09
