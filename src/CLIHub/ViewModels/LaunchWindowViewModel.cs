@@ -145,6 +145,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     public UpdateControlViewModel UpdateControl { get; }
 
     /// <summary>
+    ///   Window-level action commands: launch, settings, data folder, exit.
+    /// </summary>
+    public WindowActionCoordinator WindowActions => _windowActions;
+
+    /// <summary>
     ///   The project that provides the launch context.
     /// </summary>
     public Project? SelectedProject
