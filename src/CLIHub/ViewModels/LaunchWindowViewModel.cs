@@ -8,6 +8,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Formatting;
+using CLIHub.Helpers;
 
 /// <summary>
 ///   State and commands for the launch window: the project and agent lists, the current
@@ -199,9 +200,10 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
                 return;
             }
 
-            _preferencesStore.Update(preferences => preferences.ShowOnlyProjectAgents = value);
-
-            RefreshAgents();
+            PreferenceSyncHelper.SyncPreference(
+                _preferencesStore,
+                preferences => preferences.ShowOnlyProjectAgents = value,
+                RefreshAgents);
         }
     }
 
@@ -219,9 +221,10 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
                 return;
             }
 
-            _preferencesStore.Update(preferences => preferences.PinLaunchWindow = value);
-
-            _statusCoordinator.ReportWindowPinChanged(value);
+            PreferenceSyncHelper.SyncPreference(
+                _preferencesStore,
+                preferences => preferences.PinLaunchWindow = value,
+                () => _statusCoordinator.ReportWindowPinChanged(value));
         }
     }
 
