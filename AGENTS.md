@@ -1,134 +1,60 @@
 # CLIHub Agent Instructions
 
-## Project Status
+Read [`docs/project-context.md`](docs/project-context.md) first. It is the compact project context and
+routes task-specific questions to the canonical documentation. Read only the relevant topic or OpenSpec
+spec; do not load the whole documentation tree.
 
-**Active WPF application.** Delivered capabilities (see `openspec/specs/`): agent commands, capability-aware command UI, detection, version display, availability display/filtering, agent process monitoring for safe updates, app lifecycle, hotkey support, logging, plugin seeding, logo cache, project management, update checking (check, download, apply), preferences window, window layout, launch window theme, settings theme, release notes, release notes display, CI build checks, tag-driven release pipeline, code style rules, and ViewModel test-builder infrastructure.
+## Project Rules
 
-## Documentation
-
-Single source of truth for each topic — link, don't duplicate:
-
-- `README.md` — user-facing overview and quickstart
-- `docs/vision.md` — vision, goals, roadmap
-- `docs/glossary.md` — canonical terminology (project, agent, plugin, agent command, availability); use these terms in docs, specs, and code
-- `docs/architecture.md` — architecture, responsibilities, plugin format, tech stack, `%APPDATA%` layout, security
-- `docs/repo-structure.md` — repository layout (where everything lives)
-- `docs/changelog-and-release-notes.md` — changelog & release-notes rationale and decision log (implemented)
-- `docs/releasing.md` — step-by-step release runbook (notes, tag, verification, rollback)
-- `openspec/specs/` — durable capability specs; `openspec/changes/archive/` — completed changes
-
-## Project Structure
-
-Application source lives under `src/` and tests under `tests/`; the solution is `CLIHub.sln` at the repository root. Do not create projects in the repo root. Full layout: [docs/repo-structure.md](docs/repo-structure.md).
-
-| Project | Path | Purpose |
-|---------|------|---------|
-| `CLIHub.Core` | `src/CLIHub.Core` | UI-independent core logic: models, services, contracts, plugin/agent handling, configuration, logging, and hotkey parsing. It contains explicit Windows infrastructure boundaries but has no WPF dependency. |
-| `CLIHub` | `src/CLIHub` | WPF application: startup/DI, system tray, global hotkey, windows, converters. |
-| `CLIHub.Core.Tests` | `tests/CLIHub.Core.Tests` | Core-only xUnit tests; references `CLIHub.Core` only. |
-| `CLIHub.Tests` | `tests/CLIHub.Tests` | WPF/application xUnit tests; references `CLIHub` and `CLIHub.Core`. |
-
-## Technology Stack
-
-.NET 10 (WPF for UI) · C# 14.0 · H.NotifyIcon.Wpf (tray) · Serilog (logging) · Microsoft.Extensions.DependencyInjection (DI) · Velopack (updates). Details: [docs/architecture.md](docs/architecture.md#technology-stack).
-
-## Key Conventions
-
-- **All code, comments, and UI text in English** - even though Russian is allowed for docs
-- **Nullable reference types enabled** - use `?` for nullable types
-- **JSON config** at `%APPDATA%\CLIHub\config.json` with camelCase serialization
-- **Plugin system** uses JSON descriptors in `%APPDATA%\CLIHub\plugins\<plugin-id>/plugin.json`
-- **Log location:** `%APPDATA%\CLIHub\logs\clihub-YYYYMMDD.log` with 7-day retention
+- Windows 10/11 only; the solution is a .NET 10 WPF application using C# 14.0.
+- `CLIHub.Core` has no WPF dependency. Keep UI-independent logic in Core and UI composition in `CLIHub`.
+- Plugins are JSON descriptors only. Do not load DLLs, execute plugin code in-process, or add Windows Forms.
+- Use the existing MVVM, coordinator, controller, service, and interface patterns before adding abstractions.
+- Preserve the single camelCase configuration document and its atomic persistence boundary.
+- Keep code, comments, and UI text in English. Documentation may use English or Russian when appropriate.
+- Do not create projects in the repository root; use the existing solution layout under `src/` and `tests/`.
 
 ## Code Style
 
-- **Nullable reference types** enabled globally.
-- **Implicit usings** enabled — no need for `using System;` etc.
-- **File-scoped namespaces** (`namespace X;` not block-scoped).
-- **Using placement**: the namespace declaration must be followed by using directives (place `using` directives after the file-scoped `namespace X;`). Under file-scoped namespaces those usings are inside the namespace, which is exactly what `csharp_using_directive_placement = inside_namespace` in `.editorconfig` enforces — do not change the editorconfig to `outside_namespace`.
-- **Using organization**: using directives form ordered groups separated by a blank line — BCL namespaces (`System.*`, plus `Windows.*`) first, then `Microsoft.*`, then the project's own `CLIHub.*`, then the remaining third-party namespaces; each group is sorted alphabetically by namespace name (`dotnet_sort_system_directives_first` in `.editorconfig` pins the BCL group first).
-- **Braces**: Use curly braces for if statements and loops.
-- **Naming**: PascalCase for public members, `_camelCase` for private instance and static fields, PascalCase for private `const` and `static readonly` fields. Test methods use `MethodOrScenario_Condition_ExpectedResult` pattern.
-- **XML documentation**: public types and members carry XML doc comments. Canonical examples: `src/CLIHub.Core/Models/AgentCommandKind.cs` and `src/CLIHub.Core/Models/AgentCommandResult.cs`. Conventions:
-  - `<summary>` is always multi-line; content lines are indented one space past the tag alignment (`///` followed by three spaces):
-    ```csharp
-    /// <summary>
-    ///   Outcome of executing an agent command.
-    /// </summary>
-    ```
-  - Other tags (`<param>`, `<returns>`, `<exception>`, …) stay on one line, padded with a single space inside both ends:
-    ```csharp
-    /// <param name="Success"> Whether the command succeeded. </param>
-    ```
-  - Doc text is full English sentences: capital first letter, trailing period.
-  - Positional record parameters are documented with `<param name="...">` tags in declaration order.
-- **Async patterns**: `async Task` / `ValueTask` used extensively; avoid `async void`.
-- **Reactive extensions (if needed)**: R3 (`ObservableCollections.R3`, `R3`) used for reactive patterns in ViewModels.
-- **MVVM**: Use the Model-View-ViewModel pattern for the WPF UI — keep views (XAML) and code-behind thin; put state, commands, and logic in view models under `src/CLIHub/ViewModels/`. (Some existing windows still carry logic in code-behind and are being migrated as they change.)
+- Nullable reference types, implicit usings, file-scoped namespaces, and braces are required.
+- Under a file-scoped namespace, place `using` directives after the namespace declaration and keep the configured
+  ordering from `.editorconfig`.
+- Use PascalCase for public members, `_camelCase` for private fields, and the test naming pattern
+  `MethodOrScenario_Condition_ExpectedResult`.
+- Public APIs need XML documentation. Use `async Task`/`ValueTask`; avoid `async void`.
+- Keep WPF code-behind thin; put state, commands, and workflows in ViewModels or their existing collaborators.
 
-## Build & Run
+## Commands
 
 ```powershell
-# From repo root
 dotnet build CLIHub.sln
+dotnet test CLIHub.sln
 dotnet run --project src/CLIHub/CLIHub.csproj
+openspec validate --all
 ```
 
-## OpenSpec Workflow
+## Documentation and OpenSpec
 
-No active change. Work is proposed and archived one change at a time.
+- `README.md` is user-facing documentation.
+- `docs/project-context.md` is the compact current context for agents.
+- `docs/architecture.md` is the architecture index; topic files under `docs/architecture/` hold focused detail.
+- `openspec/specs/` is the durable behavior contract. `openspec/changes/archive/` is historical context.
+- `docs/adr/` records why architectural decisions were made; it does not replace current implementation docs.
+- Propose and validate an OpenSpec change before implementation when the work changes a durable capability.
+- Archive completed changes after implementation and verification.
 
-```bash
-# List main specs (durable capabilities)
-openspec list --specs
+## Progressive Disclosure
 
-# Propose the next change
-openspec new change "<name>"
-openspec validate "<name>"
+1. Read this file and `docs/project-context.md`.
+2. Read one relevant architecture topic or OpenSpec capability spec.
+3. Inspect the source and tests for exact behavior and signatures.
+4. Read ADRs or archived changes only when the reason or history matters.
 
-# Implement, then archive (syncs specs)
-openspec archive "<name>"
-```
+Do not scan `openspec/changes/archive/`, `.opencode/`, `.pi/`, `graphify-out/`, `artifacts/`, or `obj/` for a
+normal implementation task.
 
-Authored specs live in `openspec/specs/`; completed changes in `openspec/changes/archive/`.
+## Codebase Navigation
 
-### Commit Structure For Changes
-
-Each completed OpenSpec change is normally committed in two commits:
-
-1. `refactor(...)` or `feat(...)` commit containing production code and tests.
-2. `docs:` commit containing the archived change, synchronized specs, and progress/documentation updates.
-
-Run the required build, test, and OpenSpec validation checks before creating the commits. Keep unrelated worktree changes out of both commits. If a change contains no production implementation, preserve the two-commit intent only when both commits have meaningful content; otherwise use the smallest honest commit structure.
-
-## Known Constraints
-
-- **Windows 10/11 only** - no cross-platform
-- **Single instance enforcement** via named mutex `Local\CLIHub.SingleInstance` (session-scoped) with named-pipe activation signaling
-- **No in-app terminal** - delegate to Windows Terminal
-- **Plugins are descriptors only** - no DLL loading, no in-process execution
-- **No Windows Forms** - banned, use WPF equivalents
-
-## File System Layout
-
-User data lives under `%APPDATA%\CLIHub\` (config, logs, plugins, cache). Full layout: [docs/architecture.md](docs/architecture.md#file-system-layout). Repository layout: [docs/repo-structure.md](docs/repo-structure.md).
-
-## What to Avoid
-
-- Do NOT use Windows Forms components (`System.Windows.Forms.*`)
-- Do NOT create WPF projects without a `.sln` file
-- Do NOT put source code in repo root instead of `src/`
-- Do NOT implement before discussing structure with user
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+When `graphify-out/graph.json` exists, use graphify for repository-level questions. Use CodeGraph for symbol
+and call-path exploration before broad grep/read loops. After modifying source code, refresh graphify as required
+by the repository tooling.

@@ -1,8 +1,8 @@
 # Release Runbook
 
 How to cut a CLIHub release. The pipeline (the `ci-build` and `release-pipeline` specs) does the
-building, packaging, and publishing; your job is the notes and the tag. Pipeline mechanics:
-[architecture.md → Packaging & CI/CD](architecture.md#packaging-cicd).
+building, packaging, and publishing; your job is the notes and the tag. The durable pipeline contract is
+[`openspec/specs/release-pipeline/spec.md`](../openspec/specs/release-pipeline/spec.md).
 
 ## Before you start
 

@@ -26,8 +26,9 @@ use these terms with these meanings.
 ## Agents and plugins
 
 - **Agent** — an AI coding agent CLI (OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude,
-  Qwen Code, or any user-added plugin). CLIHub never embeds or runs an agent in-process; it only
-  launches the agent's commands in an external terminal and inspects it with file-system checks.
+  Qwen Code, or any user-added plugin). CLIHub never embeds or runs an agent in-process; it launches
+  commands in an external terminal and uses declared filesystem markers plus Windows process inspection
+  for availability and update-safety decisions.
 - **Plugin** — the descriptor-only way to define an agent: a folder under
   `%APPDATA%\CLIHub\plugins\<id>\` containing a `plugin.json` [descriptor](#agents-and-plugins)
   and an optional `logo.png`. No DLLs, no code execution — a plugin is data. See

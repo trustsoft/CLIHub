@@ -1,110 +1,65 @@
 # Repository Structure
 
-```
+Use this file for navigation. Current behavior and architecture are summarized in
+[`docs/project-context.md`](project-context.md) and [`docs/architecture.md`](architecture.md).
+
+## Layout
+
+```text
 .
-├── src/                     # Application source (two projects)
-│   ├── CLIHub.Core/         # Business logic, services, models (no WPF dependencies)
-│   └── CLIHub/              # WPF application, UI, system tray, hotkey
-├── tests/                   # Test projects
-│   ├── CLIHub.Core.Tests/   # Core-only tests (xUnit, no WPF reference)
-│   └── CLIHub.Tests/        # WPF/application-specific tests (xUnit)
-├── docs/                    # Project documentation
-├── .github/workflows/       # GitHub Actions (ci.yml: build+test; release.yml: tag -> GitHub Releases)
-├── assets/                  # Application icon source files (not in the build)
-├── ui/                      # UI mockups and design references (not in the build)
-├── openspec/                # Specs (openspec/specs) + archived changes
-├── .opencode/               # OpenCode CLI configuration and skills
-├── .idea/                   # JetBrains Rider project settings
-├── .vs/                     # Visual Studio settings (git-ignored)
-├── .git/                    # Git metadata
-├── artifacts/               # Build output (git-ignored)
-├── obj/                     # Intermediate build artifacts (git-ignored)
-├── CHANGELOG.md             # Technical changelog (developers)
-├── RELEASE-NOTES.md         # User-facing release notes (embedded into the app)
-├── CLIHub.sln               # Visual Studio solution file
-├── Directory.Build.props    # MSBuild properties (build output paths)
-├── .editorconfig            # Code style rules (root; enforced at build)
-├── .gitignore               # Git exclusions
-└── AGENTS.md                # OpenCode agent instructions
+├── src/
+│   ├── CLIHub.Core/          # UI-independent Core logic, services, models, and infrastructure
+│   └── CLIHub/               # WPF application, tray, windows, startup, and UI workflows
+├── tests/
+│   ├── CLIHub.Core.Tests/    # Core-only xUnit tests
+│   └── CLIHub.Tests/         # Application and WPF-dependent xUnit tests
+├── docs/                     # Current project, architecture, release, glossary, and ADR docs
+├── openspec/
+│   ├── specs/                # Durable behavior contracts
+│   └── changes/archive/      # Completed change history
+├── .github/workflows/        # CI and tag-driven release workflows
+├── assets/                   # Application icon source material
+├── ui/mockups/               # UI design references, not build inputs
+├── .opencode/               # OpenCode tooling configuration and skills
+├── .pi/                     # Pi tooling configuration and prompts
+├── CLIHub.sln
+├── Directory.Build.props
+├── global.json
+├── .editorconfig
+├── README.md
+├── AGENTS.md
+├── CHANGELOG.md
+└── RELEASE-NOTES.md
 ```
 
-## Source Code
+Build output is redirected to the git-ignored `artifacts/` and `obj/` directories.
 
-**`src/`** — application projects; **`tests/`** — test projects. Responsibilities, dependency rules, and the plugin descriptor format are in [architecture.md](architecture.md); the folder inventory is below.
+## Source Navigation
 
-- **`src/CLIHub.Core/`** (`net10.0`, no WPF) — subsystem folders and matching namespaces: `Configuration/` (the shared `ConfigurationRepository` persistence boundary plus the narrower `PreferencesStore` and `ProjectStateStore` adapters), `Projects/`, `Plugins/` (the `PluginCatalog` boundary and compatibility `PluginManager` adapter), `Agents/`, `Updates/`, `Infrastructure/` (`FileSystem/`, `Processes/`, `Persistence/`, `Windows/`), and `Composition/`; shared folders remain `Models/`, `Hotkeys/`, `Logging/`, `Formatting/` (display formatting helpers such as `MiddleEllipsisFormatter`), `SeedPlugins/` (embedded built-in agent descriptors + logos), and `Services/` (the current `AgentProcessMonitor` location). Core contracts are colocated with their owning subsystem; the former broad `CLIHub.Core.Interfaces` namespace is removed. Core is UI-independent and Windows-aware; WPF is not referenced by this project.
-- **`src/CLIHub/`** (`net10.0-windows`) — folders: `Views/`, `Hotkeys/`, `Converters/`, `Interop/`, `ViewModels/`, `Themes/` (`LaunchTheme.xaml` palette, `Sizing.xaml` metrics, `Controls.xaml` shared keyed styles including the `DarkToolTip` base, `DarkScrollBar.xaml` shared slim dark scrollbar, `SettingsStyles.xaml` settings-window styles, `LaunchWindowStyles.xaml` and `WhatsNewStyles.xaml` window-scoped styles, `IconGlyphs.cs` Segoe MDL2 glyph constants); the implicit dark tooltip style and shared converters live in `App.xaml`; files: `Program.cs` (entry point + Velopack bootstrap), `App.xaml(.cs)`, `ApplicationBootstrapper.cs`, `ApplicationSession.cs`, `IApplicationSession.cs`, `IExternalLauncher.cs`, `ExternalLauncher.cs`, `TrayStateProjection.cs`, `TrayCommandHandlers.cs`, `ServiceRegistration.cs`, `IPreferenceApplier.cs`, `PreferenceApplier.cs`, `ISettingsLauncher.cs`, `SettingsLauncher.cs`, `IReleaseNotesLauncher.cs`, `ReleaseNotesLauncher.cs`, `TrayIconController.cs`, `AssemblyInfo.cs`, `app.ico`, `default-project.png`. `ViewModels/LaunchWindowViewModel.cs` composes `ProjectPaneController`, `AgentPaneController`, `LaunchCommandCoordinator`, `LaunchWindowActionBuilder`, and `UpdateControlViewModel`; pane controllers, update control, and the launch ViewModel dispose their own event subscriptions. `Views/LaunchWindow.xaml(.cs)` with `ViewModels/MenuAction.cs` (the data-driven pane Actions menus) is the application window; `Views/SettingsWindow.xaml(.cs)` with `ViewModels/SettingsViewModel.cs` is the settings window; `Views/WhatsNewWindow.xaml(.cs)` shows the release notes; `Views/MainWindow.xaml(.cs)` is a deprecated pre-redesign window, retained only as an unregistered reference. `TrayActions` adapts projected menu state and focused command handlers to the tray host interface.
-- **`tests/CLIHub.Core.Tests/`** (`net10.0`, xUnit) — Core-only service, model, formatting, logging, hotkey, release-notes, and infrastructure tests; references `CLIHub.Core` only and does not enable WPF.
-- **`tests/CLIHub.Tests/`** (`net10.0-windows`, xUnit) — application/UI composition, workflow, ViewModel, and WPF-dependent tests; references `CLIHub` and `CLIHub.Core`.
+- `CLIHub.Core` is organized by ownership: `Configuration/`, `Projects/`, `Plugins/`, `Agents/`, `Updates/`,
+  `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`, `Logging/`, `Formatting/`, and
+  embedded `SeedPlugins/`.
+- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, and the
+  application composition/startup files.
+- Core contracts are colocated with their owning subsystem. Exact class locations should be checked in the
+  source rather than inferred from this summary.
+- ViewModel test builders are under `tests/CLIHub.Tests/Builders/`; test-specific usage is documented in
+  [`tests/CLIHub.Tests/README.md`](../tests/CLIHub.Tests/README.md).
 
-The application test project also contains reusable builders under `tests/CLIHub.Tests/Builders/`; the
-`tests/CLIHub.Tests/README.md` documents the builder API and test-writing conventions.
+## Documentation Navigation
 
-## Documentation
+- [`docs/project-context.md`](project-context.md) — compact current context for agents.
+- [`docs/architecture.md`](architecture.md) — current architecture index.
+- [`docs/architecture/`](architecture/) — focused startup, configuration, plugin, process, and UI topics.
+- [`docs/glossary.md`](glossary.md) — canonical terminology.
+- [`docs/releasing.md`](releasing.md) — release runbook.
+- [`docs/adr/`](adr/) — architectural rationale.
+- [`openspec/specs/`](../openspec/specs/) — behavior contracts.
+- [`openspec/changes/archive/`](../openspec/changes/archive/) — historical proposals, designs, and tasks.
 
-Application update orchestration lives in `src/CLIHub/IUpdateWorkflow.cs` and `UpdateWorkflow.cs`. `ApplicationSession` wires its automatic-download outcomes to the WPF startup UI; startup, tray, release-notes, launch-window, and Settings adapters use the same workflow. The former `UpdateDownloadCoordinator` and `UpdateDownloadNotifier` files are retired. Core update contracts and the Velopack service remain under `src/CLIHub.Core/Updates/`. Agent process safety checks are implemented by `AgentProcessMonitor` and the process types under `src/CLIHub.Core/Infrastructure/Processes/`; see [architecture/processes.md](architecture/processes.md).
+## Root Configuration
 
-**`docs/`** — project documentation (markdown):
-
-- `vision.md` — vision, goals, audience, capability roadmap
-- `glossary.md` — canonical terminology used across docs, specs, and code
-- `architecture.md` — architecture, responsibilities, plugin format, technology decisions, conventions
-- `releasing.md` — step-by-step release runbook (notes, tag, verification, rollback)
-- `repo-structure.md` — this file
-- `phase-14-agent-process-monitoring.md` — completed process-safety phase record
-- `phase15-testing-infrastructure.md` — completed ViewModel test-builder phase record
-- `changelog-and-release-notes.md` — the rationale and decision log behind the changelog & release notes (implemented by the `release-notes` change)
-- `adr/` — architecture decision records (`NNNN-short-title.md`, one decision each); format and index in `adr/README.md`
-
-The two release-note documents live at the repository root rather than under `docs/` so they are the first
-thing a contributor sees and so the build can embed the user-facing one by path:
-
-- `CHANGELOG.md` — technical record of changes, for developers (Added / Changed / Fixed / Removed, spec
-  references, `**BREAKING**` markers)
-- `RELEASE-NOTES.md` — short user-facing notes (New / Improved / Fixed), written as plain text and embedded
-  into `CLIHub.Core`, so the application can show them in the **What's New** window without network access
-
-Both use the same version headings (`## <version> — <date>`) so a release lines up across the two files; the
-format and the display rules are described in [architecture.md](architecture.md).
-
-## Assets
-
-**`assets/`** — application icon source files (design-tool output): `appIcon/DS4.1F/` and `appIcon/GLM5.3F/` with PNG sizes and `.ico` files. Used as source material; the final `app.ico` is copied into `src/CLIHub/`, and agent logos are embedded under `src/CLIHub.Core/SeedPlugins/`. Not included in the build.
-
-## UI References
-
-**`ui/`** — reference mockups for UI work (not part of the build):
-
-- `ui/mockups/` — `popup-split.png` (launch window, delivered) and `settings.png` (Settings window), with a `README.md` describing each; see that README before further UI work
-
-## Planning Artifacts
-
-**`openspec/`** — spec-driven workflow via the OpenSpec CLI:
-
-- `config.yaml` — project configuration and compressed grounding context
-- `specs/` — durable capability specs (the source of truth for behavior)
-- `changes/archive/` — completed changes (proposals, design, deltas, tasks)
-
-See `openspec/config.yaml` for project context and [OpenSpec documentation](https://github.com/Fission-AI/OpenSpec) for workflow details.
-
-## Tooling Configuration
-
-**`.editorconfig`** — repository-wide code style rules (whitespace, naming, language style), one file at the root covering `src/`, `tests/`, and non-code files; enforced at build (see the `code-style` spec).
-**`.opencode/`** — OpenCode CLI configuration, skills, and commands.
-**`.idea/`**, **`.vs/`** — IDE settings (user-specific, not committed).
-**`.git/`** — Git metadata.
-
-## Solution Files
-
-**`CLIHub.sln`** — solution at the repository root, referencing the two application projects under `src/` and both test projects under `tests/`.
-
-**`Directory.Build.props`** — MSBuild properties shared by all projects:
-- `BaseOutputPath` → `artifacts/` (compiled binaries)
-- `BaseIntermediateOutputPath` → `obj/` (intermediate files)
-- `Version` → `0.9.0` (product version; the development default — a release takes its version from the pushed `v*` tag)
-- `EnforceCodeStyleInBuild` → `true` (code style checked as part of the build)
-
-## Build Output (git-ignored)
-
-- **`artifacts/`** — final binaries per project/configuration, e.g. `artifacts/CLIHub/Debug/net10.0-windows/CLIHub.exe`
-- **`obj/`** — intermediate build files, e.g. `obj/CLIHub/Debug/net10.0-windows/`
+- `Directory.Build.props` centralizes output paths, development version, and build style enforcement.
+- `global.json` pins the SDK policy.
+- `.editorconfig` defines repository-wide style rules.
+- `openspec/config.yaml` contains the compact grounding context for OpenSpec artifacts.

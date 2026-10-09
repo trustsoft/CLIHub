@@ -1,34 +1,29 @@
 # CLIHub
 
-A Windows system tray companion that launches AI agent CLIs (OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, Qwen Code, and any plugin) in the context of your current project.
+CLIHub is a Windows system-tray companion for launching AI agent CLIs in the context of the current
+project. Built-in descriptors cover OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code;
+additional agents can be added as JSON plugins.
 
 ## Features
 
-- **System tray launcher** — current project, recent projects, add project, launch agent, exit
-- **Global hotkey** — `Ctrl+Shift+A` toggles the window from any application; the combination is configurable (letters, digits, `F1`–`F24`, and named keys such as Enter, Tab, Esc, and the arrows)
-- **Projects** — track folders with auto-detected logos, recents, and a current-project context
-- **Agents as plugins** — JSON descriptors; built-in agents are seeded on first run with logos
-- **Agent commands** — launch, resume last session, version, update, initialize (per agent)
-- **Availability** — agents that are not installed on the host are never listed; agents unused in the current project are dimmed, or hidden via the filter
-- **Versions** — each agent's version is captured and shown in the list
-- **Resizable layout** — drag the divider between the Projects and AI Agents panes
-- **Runtime selection** — open agents in Windows Terminal, Command Prompt, or PowerShell
-- **Settings window** — a dark window matching the launch theme; change the runtime, global hotkey, agent probe caching/timeout, and the startup update check from the tray; changes apply without restart
-- **What's New** — read the release notes for each version from the tray; after an update, the notes for the new version open once
-- **Autostart** — start with Windows, and choose whether the window opens on startup (otherwise CLIHub starts in the tray)
-- **Updates** — checks for a new version on startup (with a tray notification) and on demand, shows the current version, and offers a one-click "Download and restart" action in the tray menu and the What's New window
-- **Safe updates** — the agent update command is disabled while a registered agent process is running and reports why the action is blocked
-- **Single instance** — a second launch activates the running instance
-- **Logging** — structured file logs with configurable level and 7-day retention
+- Project folders with current, recent, favorite, and logo-aware state.
+- Agent commands for launch, resume, version, update, and initialize.
+- Host/project availability detection, version display, and capability-aware actions.
+- Global hotkey (`Ctrl+Shift+A` by default) and a single-instance tray application.
+- Windows Terminal, Command Prompt, and PowerShell runtime selection.
+- Chromeless resizable launch window, Settings, and What's New windows with a shared dark theme.
+- Startup update checks, download-and-restart updates, release notes, and Windows autostart.
+- Agent update protection while a matching registered agent process is running.
+- Structured file logging with configurable level and seven-day retention.
 
 ## Requirements
 
-- Windows 10 or 11
-- .NET 10 Desktop Runtime (x64) to run an installed build — the installer offers to install it if missing
-- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (to build; the repository pins the SDK policy in `global.json`)
-- Windows Terminal (`wt.exe`) recommended for launching agents
+- Windows 10 or 11.
+- .NET 10 Desktop Runtime (x64) for installed builds; the installer can bootstrap it.
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) to build the repository.
+- Windows Terminal (`wt.exe`) is recommended for interactive agent commands.
 
-## Build & run
+## Build and Run
 
 ```powershell
 dotnet build CLIHub.sln
@@ -36,41 +31,32 @@ dotnet test CLIHub.sln
 dotnet run --project src/CLIHub/CLIHub.csproj
 ```
 
-## Using it
+## Basic Use
 
-1. Right-click the tray icon (or press **Ctrl+Shift+A**) to open CLIHub.
-2. **Add Project…** and pick a project folder.
-3. Select the project, then choose an agent and click **Launch** (or **Resume**, **Init**, **Update**, **Version**).
-4. Agents that are not installed on the host are not listed; agents not used in the current project are dimmed, or hidden via **Only agents available in project**.
-5. After CLIHub updates itself, **What's New** opens once with the notes for the new version; you can reopen it any time from the tray menu.
-6. When a newer version is available, install it from the tray menu or the What's New window: **Download and restart** fetches the update and relaunches CLIHub into it.
-7. If a registered agent is already running, close it before using its **Update** command; CLIHub keeps the action disabled while the process is detected.
+1. Open CLIHub from the tray icon or press `Ctrl+Shift+A`.
+2. Add a project folder and select it.
+3. Select an available agent and run the required command.
+4. Configure runtime, hotkey, probing, update checks, and display preferences in Settings.
+5. Close running registered agents before using an Update command; CLIHub keeps the action disabled while
+   a matching process is detected.
 
-## Data & configuration
+## Data and Plugins
 
-Everything lives under `%APPDATA%\CLIHub\`:
+User data is stored under `%APPDATA%\CLIHub\` (`config.json`, `logs\`, `plugins\`, and `cache\`). The
+configuration is one camelCase JSON document. Plugins are descriptor folders:
 
-```
-%APPDATA%\CLIHub\
-├── config.json              # projects, current project, preferences
-├── logs\clihub-YYYYMMDD.log # daily logs (7-day retention)
-├── plugins\<id>\            # plugin.json + logo.png (seeded on first run)
-└── cache\
+```text
+%APPDATA%\CLIHub\plugins\<id>\plugin.json
 ```
 
-Key preferences in `config.json` → `preferences`: `startWithWindows`, `showWindowOnStartup`, `hotkey`, `defaultRuntime`, `logLevel`, `terminalExecutable` (legacy), `showOnlyProjectAgents`, `agentProbeTtlMinutes`, `agentProbeTimeoutSeconds`, `checkForUpdatesOnStartup`, `pinLaunchWindow`, and `pathDisplayStyle`. Most are editable from the **Settings** window (tray menu). Full layout, schema, and migration details: [`docs/architecture/configuration.md`](docs/architecture/configuration.md).
-
-## Adding an agent plugin
-
-Create `%APPDATA%\CLIHub\plugins\<id>\plugin.json` (and optionally `logo.png`):
+Minimal descriptor:
 
 ```jsonc
 {
   "id": "my-agent",
   "name": "My Agent",
   "commands": {
-    "launch":  { "executable": "my-agent" },
-    "resume":  { "executable": "my-agent", "arguments": "--continue" },
+    "launch": { "executable": "my-agent" },
     "version": { "executable": "my-agent", "arguments": "--version" }
   },
   "detection": {
@@ -80,34 +66,25 @@ Create `%APPDATA%\CLIHub\plugins\<id>\plugin.json` (and optionally `logo.png`):
 }
 ```
 
-Only `launch` is required. Built-in descriptors for the six supported agents are embedded in the app and seeded when the plugins folder is empty; delete the folder to re-seed. Full descriptor format: [`docs/architecture/plugins.md`](docs/architecture/plugins.md).
+Only `launch` is required. The complete descriptor contract is in
+[`docs/architecture/plugins.md`](docs/architecture/plugins.md).
 
 ## Releases
 
-CI builds and tests every pull request and push to `master`. To cut a release:
+CI builds and tests pull requests and pushes to `master`. A `v*` tag starts the Windows packaging and GitHub
+Release workflow. Maintainers should follow [`docs/releasing.md`](docs/releasing.md).
 
-1. Add sections for the new version to both [`RELEASE-NOTES.md`](RELEASE-NOTES.md) and [`CHANGELOG.md`](CHANGELOG.md) (the release fails without a `RELEASE-NOTES.md` section).
-2. Push the version tag for the release version, for example: `git tag v0.9.0 && git push origin v0.9.0`.
-3. The pipeline tests, packages (framework-dependent win-x64 via `vpk`), and publishes the release to [GitHub Releases](https://github.com/trustsoft/clihub/releases); installed apps pick it up through the built-in updater.
+## Repository Map
 
-Details: [`docs/architecture.md → Packaging & CI/CD`](docs/architecture.md#packaging-cicd). Step-by-step runbook: [`docs/releasing.md`](docs/releasing.md).
-
-## Project layout
-
-```
-src/CLIHub.Core/       # business logic (net10.0, no WPF)
-src/CLIHub/            # WPF app (net10.0-windows)
-tests/CLIHub.Core.Tests/ # Core-only xUnit tests
-tests/CLIHub.Tests/      # WPF/application xUnit tests
+```text
+src/CLIHub.Core/       # UI-independent Core logic
+src/CLIHub/            # WPF application
+tests/CLIHub.Core.Tests/
+tests/CLIHub.Tests/
+docs/                  # current project and architecture documentation
+openspec/specs/        # durable behavior contracts
 ```
 
-## Documentation
-
-- [`docs/vision.md`](docs/vision.md) — vision and roadmap
-- [`docs/glossary.md`](docs/glossary.md) — terminology: project, agent, plugin, agent command, availability
-- [`docs/architecture.md`](docs/architecture.md) — architecture, plugin format, conventions
-- [`docs/repo-structure.md`](docs/repo-structure.md) — repository layout
-- [`docs/releasing.md`](docs/releasing.md) — step-by-step release runbook for maintainers
-- [`docs/changelog-and-release-notes.md`](docs/changelog-and-release-notes.md) — changelog & release-notes rationale and decision log
-- [`AGENTS.md`](AGENTS.md) — guidance for AI coding agents
-- `openspec/specs/` — durable capability specs
+For agent-oriented project context, read [`docs/project-context.md`](docs/project-context.md). The full
+documentation map is in [`AGENTS.md`](AGENTS.md); historical changes live under
+[`openspec/changes/archive/`](openspec/changes/archive/).
