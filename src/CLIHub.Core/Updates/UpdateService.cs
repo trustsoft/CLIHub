@@ -24,10 +24,12 @@ public class UpdateService : IUpdateService
     private readonly ILogger<UpdateService> _logger;
     private readonly UpdateManager? _injectedManager;
     private readonly Lazy<UpdateManager?> _defaultManager;
-    private readonly object _downloadGate = new();
     private readonly TimeSpan _checkTimeout;
-    private bool _isDownloading;
-    private VelopackAsset? _downloadedAsset;
+    private readonly UpdateChecker _checker;
+    private readonly UpdateDownloader _downloader;
+    private readonly UpdateInstaller _installer;
+    private readonly object _downloadGate = new();
+    private bool _isDownloadInProgress;
     private string? _lastKnownAvailableVersion;
 
     /// <summary>
@@ -38,6 +40,9 @@ public class UpdateService : IUpdateService
         _logger = logger;
         _checkTimeout = CheckTimeout;
         _defaultManager = new Lazy<UpdateManager?>(CreateDefaultManager);
+        _checker = new UpdateChecker(logger);
+        _downloader = new UpdateDownloader(logger);
+        _installer = new UpdateInstaller(logger);
     }
 
     /// <summary>
@@ -50,6 +55,9 @@ public class UpdateService : IUpdateService
         _checkTimeout = checkTimeout ?? CheckTimeout;
         _injectedManager = manager;
         _defaultManager = new Lazy<UpdateManager?>(() => manager);
+        _checker = new UpdateChecker(logger);
+        _downloader = new UpdateDownloader(logger);
+        _installer = new UpdateInstaller(logger);
     }
 
     /// <summary>
@@ -116,7 +124,7 @@ public class UpdateService : IUpdateService
         {
             lock (_downloadGate)
             {
-                return _isDownloading;
+                return _isDownloadInProgress;
             }
         }
     }
@@ -132,20 +140,20 @@ public class UpdateService : IUpdateService
     {
         lock (_downloadGate)
         {
-            if (_isDownloading)
+            if (_isDownloadInProgress)
             {
                 _logger.LogInformation("Update download requested while another download is running");
                 return new UpdateDownloadResult(UpdateDownloadStatus.AlreadyDownloading, null);
             }
 
-            _isDownloading = true;
+            _isDownloadInProgress = true;
         }
 
         try
         {
             var (result, update) = await CheckForUpdateCoreAsync(cancellationToken);
 
-            if (result.Status != UpdateStatus.UpdateAvailable || update?.TargetFullRelease is not { } asset)
+            if (result.Status != UpdateStatus.UpdateAvailable || update is null)
             {
                 var status = result.Status switch
                 {
@@ -158,35 +166,15 @@ public class UpdateService : IUpdateService
                 return new UpdateDownloadResult(status, null);
             }
 
-            try
-            {
-                await Manager!.DownloadUpdatesAsync(update, null, cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogWarning("Update download cancelled");
-                return new UpdateDownloadResult(UpdateDownloadStatus.Failed, result.AvailableVersion);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Update download failed");
-                return new UpdateDownloadResult(UpdateDownloadStatus.Failed, result.AvailableVersion);
-            }
+            var downloadResult = await _downloader.DownloadAsync(Manager!, update, cancellationToken);
 
-            lock (_downloadGate)
-            {
-                _downloadedAsset = asset;
-            }
-
-            var version = result.AvailableVersion;
-            _logger.LogInformation("Update downloaded: {Version}", version);
-            return new UpdateDownloadResult(UpdateDownloadStatus.Downloaded, version);
+            return downloadResult;
         }
         finally
         {
             lock (_downloadGate)
             {
-                _isDownloading = false;
+                _isDownloadInProgress = false;
             }
 
             RaiseStateChanged();
@@ -197,12 +185,7 @@ public class UpdateService : IUpdateService
     public void ApplyDownloadedUpdateAndRestart()
     {
         var manager = Manager;
-        VelopackAsset? asset;
-
-        lock (_downloadGate)
-        {
-            asset = _downloadedAsset;
-        }
+        var asset = _downloader.DownloadedAsset;
 
         if (manager is null || asset is null)
         {
@@ -212,7 +195,12 @@ public class UpdateService : IUpdateService
 
         try
         {
-            manager.ApplyUpdatesAndRestart(asset);
+            var result = _installer.ApplyAndRestart(manager, asset);
+            
+            if (result.Status == UpdateInstallStatus.Failed)
+            {
+                throw new InvalidOperationException("Failed to apply the downloaded update");
+            }
         }
         catch (Exception ex)
         {
