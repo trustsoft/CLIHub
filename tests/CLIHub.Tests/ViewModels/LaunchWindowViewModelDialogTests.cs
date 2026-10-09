@@ -43,6 +43,8 @@ public class LaunchWindowViewModelDialogTests
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
             operationLifetime.Object);
+        var updateControl = CreateUpdateControl(operationLifetime.Object);
+        var statusCoordinator = CreateStatusCoordinator(projectPane, agentPane, updateControl);
         var viewModel = new LaunchWindowViewModel(
             projectPane,
             agentPane,
@@ -52,12 +54,13 @@ public class LaunchWindowViewModelDialogTests
                 notifications.Object,
                 NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
-            CreateUpdateControl(operationLifetime.Object),
+            updateControl,
             new Mock<ISettingsLauncher>().Object,
             notifications.Object,
             lifetime.Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder());
+            new LaunchWindowActionBuilder(),
+            statusCoordinator);
 
         viewModel.AddProjectCommand.Execute(null);
 
@@ -78,6 +81,14 @@ public class LaunchWindowViewModelDialogTests
             updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             operationLifetime);
+    }
+
+    private static StatusMessageCoordinator CreateStatusCoordinator(
+        ProjectPaneController projectPane,
+        AgentPaneController agentPane,
+        UpdateControlViewModel updateControl)
+    {
+        return new StatusMessageCoordinator(projectPane, agentPane, updateControl);
     }
 
     [Fact]
@@ -104,6 +115,8 @@ public class LaunchWindowViewModelDialogTests
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
             operationLifetime.Object);
+        var updateControl = CreateUpdateControl(operationLifetime.Object);
+        var statusCoordinator = CreateStatusCoordinator(projectPane, agentPane, updateControl);
         var viewModel = new LaunchWindowViewModel(
             projectPane,
             agentPane,
@@ -113,12 +126,13 @@ public class LaunchWindowViewModelDialogTests
                 new Mock<IUserNotificationService>().Object,
                 NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
-            CreateUpdateControl(operationLifetime.Object),
+            updateControl,
             new Mock<ISettingsLauncher>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder());
+            new LaunchWindowActionBuilder(),
+            statusCoordinator);
 
         Assert.Same(projectPane.AddCommand, viewModel.AddProjectCommand);
         Assert.Same(projectPane.RemoveCommand, viewModel.RemoveProjectCommand);
@@ -151,6 +165,7 @@ public class LaunchWindowViewModelDialogTests
             new Mock<ILogoCacheService>().Object,
             operationLifetime.Object);
         var updateControl = CreateUpdateControl(operationLifetime.Object);
+        var statusCoordinator = CreateStatusCoordinator(projectPane, agentPane, updateControl);
         var viewModel = new LaunchWindowViewModel(
             projectPane,
             agentPane,
@@ -165,7 +180,8 @@ public class LaunchWindowViewModelDialogTests
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder());
+            new LaunchWindowActionBuilder(),
+            statusCoordinator);
 
         var projectsChangedCount = 0;
         viewModel.PropertyChanged += (_, e) =>

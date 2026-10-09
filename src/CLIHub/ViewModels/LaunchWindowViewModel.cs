@@ -27,6 +27,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private readonly IApplicationLifetime _applicationLifetime;
     private readonly IExternalLauncher _externalLauncher;
     private readonly LaunchWindowActionBuilder _actionBuilder;
+    private readonly StatusMessageCoordinator _statusCoordinator;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
@@ -35,7 +36,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private PathDisplayStyle _displayStyle = PathDisplayStyles.Default;
     private bool _suppressSelectionChange;
     private bool _suppressFilterChange;
-    private string _statusMessage = "CLIHub ready";
     private MenuAction? _filterAction;
     private bool _disposed;
 
@@ -52,6 +52,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
     /// <param name="actionBuilder"> Builder for the pane Actions menus. </param>
+    /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
     public LaunchWindowViewModel(
         ProjectPaneController projectPane,
         AgentPaneController agentPane,
@@ -62,7 +63,8 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
         IExternalLauncher externalLauncher,
-        LaunchWindowActionBuilder actionBuilder)
+        LaunchWindowActionBuilder actionBuilder,
+        StatusMessageCoordinator statusCoordinator)
     {
         _projectPane = projectPane;
         _agentPane = agentPane;
@@ -73,9 +75,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         _applicationLifetime = applicationLifetime;
         _externalLauncher = externalLauncher;
         _actionBuilder = actionBuilder;
+        _statusCoordinator = statusCoordinator;
+
+        _statusCoordinator.PropertyChanged += OnStatusCoordinatorPropertyChanged;
 
         UpdateControl = updateControl;
-        UpdateControl.OutcomeReported += OnUpdateOutcomeReported;
 
         AddProjectCommand = _projectPane.AddCommand;
         RemoveProjectCommand = _projectPane.RemoveCommand;
@@ -156,7 +160,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             }
 
             _projectPane.Select(value);
-            StatusMessage = $"Current project: {value.Name}";
+            _statusCoordinator.ReportProjectSelected(value.Name);
             RefreshAgents();
         }
     }
@@ -175,7 +179,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             }
 
             _agentPane.Select(value);
-            StatusMessage = $"Selected agent: {value.Name}";
+            _statusCoordinator.ReportAgentSelected(value.Name);
         }
     }
 
@@ -219,7 +223,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
             _preferencesStore.Update(preferences => preferences.PinLaunchWindow = value);
 
-            StatusMessage = value ? "Window pinned open" : "Window unpinned";
+            _statusCoordinator.ReportWindowPinChanged(value);
         }
     }
 
@@ -235,11 +239,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Transient status or error text shown in the footer.
     /// </summary>
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        private set => SetProperty(ref _statusMessage, value);
-    }
+    public string StatusMessage => _statusCoordinator.CurrentMessage;
 
     /// <summary>
     ///   Adds a project folder via the folder picker.
@@ -316,6 +316,14 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
 
+    private void OnStatusCoordinatorPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(StatusMessageCoordinator.CurrentMessage))
+        {
+            OnPropertyChanged(nameof(StatusMessage));
+        }
+    }
+
     private bool HasSelectedAgent() => SelectedAgent is not null;
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
@@ -323,7 +331,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             item,
             _projectPane.CurrentProject,
             kind,
-            message => StatusMessage = message,
+            _statusCoordinator.ReportCommandOutcome,
             RefreshAgents);
 
     /// <summary>
@@ -370,11 +378,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         try
         {
             _externalLauncher.Open(root);
-            StatusMessage = $"Opened {root}";
+            _statusCoordinator.ReportFolderOpen(root);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Could not open {root}: {ex.Message}";
+            _statusCoordinator.ReportFolderOpen(root, ex);
         }
     }
 
@@ -399,7 +407,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         if (!hasAgents)
         {
-            StatusMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
+            _statusCoordinator.ReportNoAgentsFound();
         }
     }
 
@@ -418,7 +426,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         _disposed = true;
         _projectPane.ProjectsChanged -= OnProjectsChanged;
-        UpdateControl.OutcomeReported -= OnUpdateOutcomeReported;
+        _statusCoordinator.PropertyChanged -= OnStatusCoordinatorPropertyChanged;
         if (_filterAction is not null)
         {
             _filterAction.PropertyChanged -= OnFilterActionChanged;
@@ -430,6 +438,4 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         RefreshProjects();
         RefreshAgents();
     }
-
-    private void OnUpdateOutcomeReported(object? sender, string message) => StatusMessage = message;
 }
