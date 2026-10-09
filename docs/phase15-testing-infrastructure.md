@@ -35,7 +35,7 @@ Created `LaunchWindowViewModelBuilder` that:
 
 1. **LaunchWindowViewModelBuilder** (`tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilder.cs`)
    - Fluent builder for creating test instances
-   - 370+ lines of reusable test infrastructure
+   - 362 lines of reusable test infrastructure
    - Handles all 12 dependencies with defaults
    - Supports both simple and mock-verification modes
 
@@ -145,7 +145,7 @@ The builder pattern can be applied to other complex types:
 ## Files Changed
 
 ### New Files
-- `tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilder.cs` (371 lines)
+- `tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilder.cs` (362 lines)
 - `tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilderTests.cs` (60 lines)
 - `tests/CLIHub.Tests/README.md` (280 lines)
 - `docs/phase15-testing-infrastructure.md` (this file)

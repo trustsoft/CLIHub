@@ -10,7 +10,7 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 
 **Purpose:** UI-independent application logic with explicit Windows infrastructure boundaries.
 
-**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppConfigDocument`, `AppPreferences`, `ConfigurationSnapshot`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `UpdateControlState`, and `ReleaseNote`.
+**Models:** `Plugin`, `PluginCommand`, `AgentCommands`, `AgentCommandKind`, `AgentDetection`, `AgentCommandResult`, `AgentProcessInstance`, `RunningAgent`, `ProcessCaptureResult`, `Project`, `RuntimeKind`/`RuntimeKinds`, `AppConfig`, `AppConfigDocument`, `AppPreferences`, `ConfigurationSnapshot`, `UpdateCheckResult`/`UpdateStatus`, `UpdateDownloadResult`/`UpdateDownloadStatus`, `UpdateControlState`, and `ReleaseNote`.
 
 **Subsystems:**
 - `Configuration/` — the `config.json` persistence document, detached snapshots, schema migrations, preference access, and the shared atomic write path
@@ -18,7 +18,7 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 - `Plugins/` — plugin discovery, validation, seeding, and plugin contracts
 - `Agents/` — agent commands, detection, version lookup, availability composition, and agent contracts
 - `Updates/` — update and release-note behavior and contracts
-- `Infrastructure/` — process execution, filesystem paths, logo persistence, Windows startup, and single-instance integration
+- `Infrastructure/` — process execution and agent-process inspection/matching, filesystem paths, logo persistence, Windows startup, and single-instance integration
 - `Composition/` — Core dependency injection registration grouped by subsystem
 
 **Services:**
@@ -33,6 +33,7 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 - `AgentDetectionService` — host install + per-project availability (file checks, TTL-cached per preference)
 - `AgentListComposer` — composes the launch-window agent list: drops agents that are not installed on the host, then applies the optional project-availability filter
 - `AgentVersionService` — version lookup with TTL caching and a configurable probe timeout
+- `AgentProcessMonitor` — matches accessible running processes to registered plugins so unsafe agent updates can be blocked
 - `UpdateService` — Velopack update check, download, and apply-and-restart (GitHub Releases source), current-version lookup, and shared download state
 - `ReleaseNotesService` — parses the embedded user-facing release notes, newest version first
 - `ProcessLauncher` — runtime-based spawning (Windows Terminal / Command Prompt / PowerShell) + output capture
@@ -42,7 +43,7 @@ CLIHub is a four-project solution: `CLIHub.Core` (logic) and `CLIHub` (WPF UI) u
 
 `AppConfigDocument` is the persistence representation of the existing flat `config.json` shape. `ProjectState` owns `Projects` and `CurrentProjectId`. `ProjectStateStore` and `PreferencesStore` expose narrower access boundaries over the same single configuration document, so separating responsibility does not split the physical file or atomic write path.
 
-**Interfaces:** `IConfigurationRepository` (shared persistence boundary), `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginCatalog`, `IPluginManager` (compatibility adapter), `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
+**Interfaces:** `IConfigurationRepository` (shared persistence boundary), `IProjectStateStore`, `IPreferencesStore`, `IProjectService`, `IPluginCatalog`, `IPluginManager` (compatibility adapter), `IPluginSeeder`, `IAgentCommandService`, `IAgentDetectionService`, `IAgentVersionService`, `IAgentProcessInspector`, `IProcessLauncher`, `IInteractiveProcessRunner`, `IProcessOutputRunner`, `IUpdateService`, `IReleaseNotesService`, `IStartupService`.
 
 **Utilities:** `HotkeyParser`/`HotkeyModifiers`/`HotkeyDefinition`, `LoggingSetup`/`LogLevelParser`/`PreferenceReader`, `MiddleEllipsisFormatter` and `PathLeftTrimFormatter` (path shortening for display, selected by `PathDisplayStyle`/`PathDisplayStyles`), `ServiceCollectionExtensions` (`AddClIHubCoreServices`).
 
@@ -116,7 +117,7 @@ CLIHub.Tests ────────> CLIHub ──> CLIHub.Core
 
 ## Capabilities (per `openspec/specs/`)
 
-`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `logo-cache`, `agent-commands`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `launch-window-theme`, `settings-theme`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`, `code-style`. Each spec defines observable behavior; see the corresponding spec for requirements.
+`app-lifecycle`, `logging`, `project-management`, `plugin-seeding`, `logo-cache`, `agent-commands`, `agent-ui`, `agent-detection`, `agent-version`, `agent-availability-display`, `hotkey-support`, `update-checking`, `main-window-layout`, `launch-window-theme`, `settings-theme`, `preferences-ui`, `release-notes`, `release-notes-display`, `ci-build`, `release-pipeline`, `code-style`. Each spec defines observable behavior; see the corresponding spec for requirements. Agent process monitoring is implemented and described in [architecture/processes.md](architecture/processes.md); its historical change record is archived under `openspec/changes/archive/2026-10-10-agent-process-monitoring/`.
 
 ## Decision Records
 
@@ -234,8 +235,8 @@ The rules live in the root [`.editorconfig`](../.editorconfig) and are enforced 
 ### Namespace Structure
 - `CLIHub.Core.Models`, `CLIHub.Core.Hotkeys`, `CLIHub.Core.Logging`, `CLIHub.Core.Formatting`
 - `CLIHub.Core.Configuration`, `CLIHub.Core.Projects`, `CLIHub.Core.Plugins`, `CLIHub.Core.Agents`, `CLIHub.Core.Updates`
-- `CLIHub.Core.Infrastructure.FileSystem`, `CLIHub.Core.Infrastructure.Persistence`, `CLIHub.Core.Infrastructure.Processes`, `CLIHub.Core.Infrastructure.Windows`, `CLIHub.Core.Composition`
-- Core contracts live beside their owning subsystem; the former `CLIHub.Core.Services` and `CLIHub.Core.Interfaces` namespaces are no longer used. Consumers of the public Core source API must update their using directives after this source-level namespace migration.
+- `CLIHub.Core.Infrastructure.FileSystem`, `CLIHub.Core.Infrastructure.Persistence`, `CLIHub.Core.Infrastructure.Processes`, `CLIHub.Core.Infrastructure.Windows`, `CLIHub.Core.Composition`, and the temporary `CLIHub.Core.Services` namespace for `AgentProcessMonitor`
+- Core contracts live beside their owning subsystem; the former broad `CLIHub.Core.Interfaces` namespace is no longer used. Most Core services also use their owning subsystem namespace; `AgentProcessMonitor` currently remains in `CLIHub.Core.Services` because the process-monitoring change has not yet been folded into the subsystem namespace layout.
 - `CLIHub` (App, controllers), `CLIHub.Views`, `CLIHub.Hotkeys`, `CLIHub.Interop`, `CLIHub.Converters`, `CLIHub.ViewModels`
 - `CLIHub.Themes` (XAML resource dictionaries; the only code is `IconGlyphs`, the compile-time checked Segoe MDL2 glyph constants referenced from XAML via `{x:Static themes:IconGlyphs.Name}`)
 

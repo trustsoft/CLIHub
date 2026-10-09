@@ -1,7 +1,8 @@
 # agent-ui Specification
 
 ## Purpose
-TBD - created by archiving change agent-command-capability-aware-ui. Update Purpose after archive.
+The agent UI exposes only the commands declared by each plugin descriptor, so unavailable actions are not
+presented as usable operations for the selected agent.
 
 ## Requirements
 

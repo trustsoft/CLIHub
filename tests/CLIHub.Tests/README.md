@@ -234,7 +234,7 @@ var preferences = new Mock<IPreferencesStore>();
 
 ### 3. Use Fakes for Reusable Behavior
 
-For test doubles needed across many tests, create a fake implementation in `tests/CLIHub.Tests/Fakes/`:
+For test doubles needed across many tests, create a fake implementation in `tests/CLIHub.Tests/Fakes/`.
 
 ```csharp
 public class FakeProjectService : IProjectService
@@ -246,13 +246,9 @@ public class FakeProjectService : IProjectService
 }
 ```
 
-Then use it consistently:
-```csharp
-var fakeService = new FakeProjectService();
-var viewModel = new LaunchWindowViewModelBuilder()
-    .WithProjectService(Mock.Get(fakeService))
-    .Build();
-```
+Use handwritten fakes when the system under test accepts the interface directly. Use the builder's
+`With...` methods with Moq objects when the test needs interaction verification; the builder's service
+override methods intentionally accept `Mock<T>` instances.
 
 ### 4. Test One Behavior Per Test
 
@@ -337,4 +333,4 @@ Potential enhancements to the test infrastructure:
 
 - [xUnit Documentation](https://xunit.net/)
 - [Moq Documentation](https://github.com/moq/moq4)
-- [WPF Testing Best Practices](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/walkthrough-arranging-controls-on-windows-forms)
+- [WPF documentation](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/)

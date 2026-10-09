@@ -143,7 +143,7 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 - Added `ReportUpdateBlockedByRunningAgents()` to `StatusMessageCoordinator`
 - Wired process monitor through `LaunchWindowViewModel`
 - Updated all tests to include process monitor dependency
-- All 604 tests passing (425 Core + 179 UI)
+- All 609 tests passing (425 Core + 184 UI)
 
 **Outcome:** Update command now prevents unsafe updates when agent processes are detected, with clear user feedback.
 
@@ -154,82 +154,25 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 
 ---
 
-## Planned Next Steps
+## Remaining Directions
 
-### Phase 12: Simplify Preference Synchronization
-**Goal:** Reduce boilerplate in preference property setters.
+### Phase 12: Simplify Preference Synchronization (Completed 2026-10-09)
 
-**Priority:** Low  
-**Estimated Effort:** 1-2 hours  
-**Complexity:** Low
-
-**Current Problem:**
-- Pattern `SetProperty → Update PreferencesStore → Side Effect` repeated in multiple properties
-- IsPinned, ShowOnlyProjectAgents, DisplayStyle all follow same pattern
-- Duplication and potential for inconsistency
-
-**Proposed Solution:**
-Option A: Create `PreferenceSyncHelper` utility with generic SetPreference method
-Option B: Extend `ObservableObject` base class with preference-aware setter
-Option C: Keep current pattern (it's explicit and clear)
-
-**Expected Impact:**
-- LaunchWindowViewModel: ~20-30 lines reduction if pursuing A or B
-- More DRY code, less duplication
-- May reduce clarity (explicit is better than implicit)
-
-**Recommendation:** Consider after current refactoring cycle; may not be worth the abstraction cost.
+`PreferenceSyncHelper` now centralizes the repeated preference-store update and side-effect pattern used
+by launch-window preferences. The helper has focused tests, and `LaunchWindowViewModel` uses it without
+changing the persisted configuration or runtime behavior.
 
 ---
 
-### Phase 13: Agent Subsystem Enhancement
-**Goal:** Add agent capability discovery and per-agent configuration.
+### Phase 13: Capability-Aware Agent UI (Completed 2026-10-09)
 
-**Priority:** Medium  
-**Estimated Effort:** 6-8 hours  
-**Complexity:** High
+The launch window now derives command availability from the selected plugin descriptor. `AgentItem`
+exposes `CanLaunch`, `CanResume`, `CanInit`, `CanUpdate`, and `CanShowVersion`, and
+`WindowActionCoordinator` uses those capabilities when enabling actions. Tests cover the capability
+matrix and the resulting command state.
 
-**Current Problem:**
-- All agents treated uniformly (same commands, same timeout, same behavior)
-- No way to specify custom commands per agent
-- No capability discovery (which commands does this agent support?)
-- No per-agent configuration (custom probe timeout, custom working directory)
-
-**Proposed Solution:**
-- Extend plugin.json with optional `capabilities` section
-- Add `supportedCommands` field (defaults to all if omitted)
-- Add `configuration` section for agent-specific settings
-- Update AgentDetectionService to expose capabilities
-- UI shows only supported commands for each agent
-- AgentCommandService validates commands against capabilities
-
-**Expected Impact:**
-- More flexible agent integration
-- Better UX (no disabled commands that don't work)
-- Easier to add new agent types
-- Foundation for future enhancements (custom commands, custom UI)
-
-**Example plugin.json enhancement:**
-```json
-{
-  "id": "example-agent",
-  "capabilities": {
-    "supportedCommands": ["launch", "resume", "version"],
-    "supportsProjectContext": true,
-    "customCommands": [
-      {
-        "id": "custom-action",
-        "name": "Custom Action",
-        "command": "agent-cli custom"
-      }
-    ]
-  },
-  "configuration": {
-    "probeTimeout": 5000,
-    "workingDirectory": "relative/path"
-  }
-}
-```
+The broader idea of per-agent configuration, custom commands, and configurable probe settings remains a
+future direction and is not part of the current plugin descriptor format.
 
 ---
 
@@ -289,7 +232,7 @@ These principles guide all improvement work:
 - Phases 10-11 covered service decomposition (UpdateService, Process subsystem)
 - Phase 14 covered agent process monitoring for safe updates
 - Phase 15 covered testing infrastructure improvements with test builders
-- Current focus: Preference synchronization, agent capabilities
-- Next focus areas: Agent subsystem enhancements, integration testing
+- Current focus: keeping the process-safety and test-builder documentation aligned with implementation
+- Next focus areas: deeper agent subsystem configuration and integration testing
 
 **Last Updated:** 2026-10-09
