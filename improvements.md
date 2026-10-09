@@ -69,11 +69,48 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 
 **Artifacts:** `openspec/changes/archive/2026-10-09-extract-window-action-coordinator/`
 
+### Phase 10: UpdateService Refactoring (2026-10-09)
+**Goal:** Extract update responsibilities from monolithic UpdateService.
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Created `VelopackManagerProvider` to isolate Velopack dependencies
+- Extracted `UpdateChecker` for version checking logic
+- Extracted `UpdateDownloader` with thread-safe download management
+- Extracted `UpdateInstaller` for update application
+- UpdateService refactored to orchestrate new components
+- All 555 tests passing (387 Core + 168 UI)
+
+**Outcome:** UpdateService successfully decomposed into focused components with clear separation of concerns.
+
+**Artifacts:** `openspec/changes/archive/2026-10-09-update-service-refactoring/`
+
+### Phase 11: Process Subsystem Refinement (2026-10-09)
+**Goal:** Separate runtime detection, process spawning, and output capture concerns.
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Created RuntimeType enum and RuntimeInfo record
+- Extracted `RuntimeSelector` with preference-based selection and caching
+- Created `ProcessResult` record for standardized outcomes
+- Extracted `WindowsInteractiveProcessRunner` implementing IInteractiveProcessRunner
+- Extracted `WindowsProcessOutputRunner` implementing IProcessOutputRunner
+- ProcessLauncher refactored to delegate to focused runners
+- Updated AgentCommandService and AgentVersionService to use new interfaces
+- Comprehensive tests added for all new components
+- All 555 tests passing
+
+**Outcome:** Process subsystem successfully decomposed with improved testability and separation of concerns.
+
+**Artifacts:** `openspec/changes/archive/2026-10-09-process-subsystem-refinement/`
+
 ---
 
 ## Planned Next Steps
 
-### Phase 10: Simplify Preference Synchronization
+### Phase 12: Simplify Preference Synchronization
 **Goal:** Reduce boilerplate in preference property setters.
 
 **Priority:** Low  
@@ -99,77 +136,7 @@ Option C: Keep current pattern (it's explicit and clear)
 
 ---
 
-### Phase 11: Process Subsystem Refinement
-**Goal:** Separate runtime detection, process spawning, and output capture concerns.
-
-**Priority:** High  
-**Estimated Effort:** 4-6 hours  
-**Complexity:** Medium
-
-**Current Problem:**
-- `ProcessLauncher` mixes multiple responsibilities (~200+ lines)
-- Runtime detection (Windows Terminal/CMD/PowerShell)
-- Process spawning (interactive vs captured)
-- Output capture and streaming
-- Hard to test process scenarios in isolation
-
-**Proposed Solution:**
-- Extract `RuntimeSelector` for runtime detection and selection
-- Split `IInteractiveProcessRunner` and `IProcessOutputRunner` into separate implementations
-- `ProcessLauncher` becomes composition layer
-- Improve test coverage for process scenarios
-
-**Expected Impact:**
-- Better separation of concerns
-- Easier to test each responsibility
-- Simplified adding new runtimes or process modes
-- Improved error handling and diagnostics
-
-**Files:**
-- New: `src/CLIHub.Core/Infrastructure/Processes/RuntimeSelector.cs`
-- New: `src/CLIHub.Core/Infrastructure/Processes/InteractiveProcessRunner.cs`
-- New: `src/CLIHub.Core/Infrastructure/Processes/OutputCaptureRunner.cs`
-- Modified: `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs` (becomes coordinator)
-- Tests: Comprehensive test coverage for each component
-
----
-
-### Phase 11: Process Subsystem Refinement
-**Goal:** Separate runtime detection, process spawning, and output capture concerns.
-
-**Priority:** High  
-**Estimated Effort:** 4-6 hours  
-**Complexity:** Medium
-
-**Current Problem:**
-- `ProcessLauncher` mixes multiple responsibilities (~200+ lines)
-- Runtime detection (Windows Terminal/CMD/PowerShell)
-- Process spawning (interactive vs captured)
-- Output capture and streaming
-- Hard to test process scenarios in isolation
-
-**Proposed Solution:**
-- Extract `RuntimeSelector` for runtime detection and selection
-- Split `IInteractiveProcessRunner` and `IProcessOutputRunner` into separate implementations
-- `ProcessLauncher` becomes composition layer
-- Improve test coverage for process scenarios
-
-**Expected Impact:**
-- Better separation of concerns
-- Easier to test each responsibility
-- Simplified adding new runtimes or process modes
-- Improved error handling and diagnostics
-
-**Files:**
-- New: `src/CLIHub.Core/Infrastructure/Processes/RuntimeSelector.cs`
-- New: `src/CLIHub.Core/Infrastructure/Processes/InteractiveProcessRunner.cs`
-- New: `src/CLIHub.Core/Infrastructure/Processes/OutputCaptureRunner.cs`
-- Modified: `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs` (becomes coordinator)
-- Tests: Comprehensive test coverage for each component
-
----
-
-### Phase 12: Agent Subsystem Enhancement
+### Phase 13: Agent Subsystem Enhancement
 **Goal:** Add agent capability discovery and per-agent configuration.
 
 **Priority:** Medium  
@@ -305,7 +272,9 @@ These principles guide all improvement work:
 
 - All phase numbers continue from previous refactoring work
 - Phases 1-7 covered startup orchestration, update workflow unification, tray state extraction
-- Current focus: ViewModel decomposition and status message coordination
-- Next focus areas: Menu coordination, process subsystem, agent capabilities
+- Phases 8-9 covered ViewModel decomposition (controller commands, status coordination, menu coordination, window actions)
+- Phases 10-11 covered service decomposition (UpdateService, Process subsystem)
+- Current focus: Preference synchronization, agent capabilities, testing infrastructure
+- Next focus areas: Agent subsystem enhancements, integration testing
 
 **Last Updated:** 2026-10-09
