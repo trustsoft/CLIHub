@@ -23,7 +23,7 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 ### Phase 9a: Extract StatusMessageCoordinator (2026-10-09)
 **Goal:** Centralize status message coordination from LaunchWindowViewModel.
 
-**Status:** 🚧 In Progress (implementation complete, tests pending)
+**Status:** ✅ Complete
 
 **Changes:**
 - Created `StatusMessageCoordinator` (~114 lines) with centralized status message logic
@@ -31,54 +31,49 @@ This document tracks ongoing and planned architectural improvements for CLIHub.
 - Exposes methods: ReportProjectSelected, ReportAgentSelected, ReportWindowPinChanged, ReportCommandOutcome, ReportFolderOpen, ReportNoAgentsFound
 - Registered as singleton in DI before LaunchWindowViewModel
 - LaunchWindowViewModel updated to use coordinator (10+ direct assignments replaced)
-- LaunchWindowViewModel: 435 → 441 lines (PropertyChanged forwarding added)
+- Comprehensive tests added for all coordinator methods
+- All tests passing
 
-**Next Steps:**
-- Create StatusMessageCoordinatorTests (13 test cases)
-- Run full test suite
-- Manual UI testing
-- Update and archive OpenSpec change
+**Artifacts:** `openspec/changes/archive/2026-10-09-extract-status-message-coordinator/`
 
-**Artifacts:** `openspec/changes/extract-status-message-coordinator/` (active)
+### Phase 9b: Extract MenuActionCoordinator (2026-10-09)
+**Goal:** Centralize menu action construction and state synchronization.
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Created `MenuActionCoordinator` that owns ProjectsActions and AgentsActions
+- Subscribes to command CanExecute changes and filter preference changes
+- Automatically rebuilds menus when state changes
+- ViewModel exposes coordinator properties for binding
+- LaunchWindowViewModel simplified significantly
+- Comprehensive tests added
+- All tests passing
+
+**Artifacts:** `openspec/changes/archive/2026-10-09-extract-menu-action-coordinator/`
+
+### Phase 9c: Extract WindowActionCoordinator (2026-10-09)
+**Goal:** Centralize window-level actions and agent commands.
+
+**Status:** ✅ Complete
+
+**Changes:**
+- Created `WindowActionCoordinator` (~154 lines) for window-level actions
+- Owns all command instances: Launch, Resume, Init, Update, Version, OpenSettings, OpenDataFolder, Exit
+- Delegates execution to LaunchCommandCoordinator and StatusMessageCoordinator
+- LaunchWindowViewModel uses pass-through pattern for all commands
+- Comprehensive tests added for all commands
+- All 556 tests passing
+
+**Outcome:** LaunchWindowViewModel successfully decomposed into focused coordinators with clear separation of concerns.
+
+**Artifacts:** `openspec/changes/archive/2026-10-09-extract-window-action-coordinator/`
 
 ---
 
 ## Planned Next Steps
 
-### Phase 9b: Extract MenuActionCoordinator
-**Goal:** Centralize menu action construction and state synchronization.
-
-**Priority:** Medium  
-**Estimated Effort:** 2-3 hours  
-**Complexity:** Low-Medium
-
-**Current Problem:**
-- `BuildActions()` and `OnFilterActionChanged` in LaunchWindowViewModel (~40-50 lines)
-- Menu construction logic mixed with state synchronization
-- Filter action checked state manually synchronized
-
-**Proposed Solution:**
-- Extract `MenuActionCoordinator` that owns ProjectsActions and AgentsActions
-- Subscribes to command CanExecute changes and filter preference changes
-- Automatically rebuilds menus when state changes
-- ViewModel exposes coordinator properties for binding
-
-**Expected Impact:**
-- LaunchWindowViewModel: ~390 lines → ~340-350 lines (~10% reduction)
-- MenuActionCoordinator: ~80-100 lines
-- Clearer separation of menu concerns
-- Easier to add new menu actions
-
-**Files:**
-- New: `src/CLIHub/ViewModels/MenuActionCoordinator.cs`
-- Modified: `src/CLIHub/ViewModels/LaunchWindowViewModel.cs`
-- Modified: `src/CLIHub/ServiceRegistration.cs`
-- New: `tests/CLIHub.Tests/ViewModels/MenuActionCoordinatorTests.cs`
-- Modified: `tests/CLIHub.Tests/ViewModels/LaunchWindowViewModelDialogTests.cs`
-
----
-
-### Phase 9c: Simplify Preference Synchronization
+### Phase 10: Simplify Preference Synchronization
 **Goal:** Reduce boilerplate in preference property setters.
 
 **Priority:** Low  
@@ -100,11 +95,11 @@ Option C: Keep current pattern (it's explicit and clear)
 - More DRY code, less duplication
 - May reduce clarity (explicit is better than implicit)
 
-**Recommendation:** Consider this after 9b is complete; may not be worth the abstraction cost.
+**Recommendation:** Consider after current refactoring cycle; may not be worth the abstraction cost.
 
 ---
 
-### Phase 10: Process Subsystem Refinement
+### Phase 11: Process Subsystem Refinement
 **Goal:** Separate runtime detection, process spawning, and output capture concerns.
 
 **Priority:** High  
@@ -139,7 +134,42 @@ Option C: Keep current pattern (it's explicit and clear)
 
 ---
 
-### Phase 11: Agent Subsystem Enhancement
+### Phase 11: Process Subsystem Refinement
+**Goal:** Separate runtime detection, process spawning, and output capture concerns.
+
+**Priority:** High  
+**Estimated Effort:** 4-6 hours  
+**Complexity:** Medium
+
+**Current Problem:**
+- `ProcessLauncher` mixes multiple responsibilities (~200+ lines)
+- Runtime detection (Windows Terminal/CMD/PowerShell)
+- Process spawning (interactive vs captured)
+- Output capture and streaming
+- Hard to test process scenarios in isolation
+
+**Proposed Solution:**
+- Extract `RuntimeSelector` for runtime detection and selection
+- Split `IInteractiveProcessRunner` and `IProcessOutputRunner` into separate implementations
+- `ProcessLauncher` becomes composition layer
+- Improve test coverage for process scenarios
+
+**Expected Impact:**
+- Better separation of concerns
+- Easier to test each responsibility
+- Simplified adding new runtimes or process modes
+- Improved error handling and diagnostics
+
+**Files:**
+- New: `src/CLIHub.Core/Infrastructure/Processes/RuntimeSelector.cs`
+- New: `src/CLIHub.Core/Infrastructure/Processes/InteractiveProcessRunner.cs`
+- New: `src/CLIHub.Core/Infrastructure/Processes/OutputCaptureRunner.cs`
+- Modified: `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs` (becomes coordinator)
+- Tests: Comprehensive test coverage for each component
+
+---
+
+### Phase 12: Agent Subsystem Enhancement
 **Goal:** Add agent capability discovery and per-agent configuration.
 
 **Priority:** Medium  
