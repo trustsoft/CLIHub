@@ -20,15 +20,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
     private readonly ProjectPaneController _projectPane;
     private readonly AgentPaneController _agentPane;
-    private readonly LaunchCommandCoordinator _launchCommandCoordinator;
     private readonly IPreferencesStore _preferencesStore;
     private readonly LaunchWindowActionBuilder _actionBuilder;
-    private readonly ISettingsLauncher _settingsLauncher;
     private readonly IUserNotificationService _notifications;
-    private readonly IApplicationLifetime _applicationLifetime;
-    private readonly IExternalLauncher _externalLauncher;
     private readonly MenuActionCoordinator _menuCoordinator;
     private readonly StatusMessageCoordinator _statusCoordinator;
+    private readonly WindowActionCoordinator _windowActions;
 
     private Project? _selectedProject;
     private AgentItem? _selectedAgent;
@@ -50,7 +47,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="updateControl"> Shared update control for this launch window. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
-    /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
+    /// <param name="applicationLifetime"> Application lifetime control. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
     /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
     public LaunchWindowViewModel(
@@ -68,39 +65,29 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     {
         _projectPane = projectPane;
         _agentPane = agentPane;
-        _launchCommandCoordinator = launchCommandCoordinator;
         _preferencesStore = preferencesStore;
         _actionBuilder = actionBuilder;
-        _settingsLauncher = settingsLauncher;
         _notifications = notifications;
-        _applicationLifetime = applicationLifetime;
-        _externalLauncher = externalLauncher;
         _statusCoordinator = statusCoordinator;
 
         _statusCoordinator.PropertyChanged += OnStatusCoordinatorPropertyChanged;
 
         UpdateControl = updateControl;
 
+        _windowActions = new WindowActionCoordinator(
+            launchCommandCoordinator,
+            statusCoordinator,
+            settingsLauncher,
+            applicationLifetime,
+            externalLauncher,
+            () => SelectedAgent,
+            () => _projectPane.CurrentProject,
+            RefreshAgents);
+
         AddProjectCommand = _projectPane.AddCommand;
         RemoveProjectCommand = _projectPane.RemoveCommand;
         ToggleFavoriteCommand = _projectPane.ToggleFavoriteCommand;
         RefreshCommand = _projectPane.RefreshCommand;
-        OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
-        OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
-        ExitCommand = new RelayCommand(_applicationLifetime.Shutdown);
-
-        LaunchCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Launch), HasSelectedAgent);
-        ResumeCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Resume), HasSelectedAgent);
-        InitCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Init), HasSelectedAgent);
-        UpdateCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Update), HasSelectedAgent);
-        VersionCommand = new RelayCommand(() => _ = RunAgentCommandAsync(SelectedAgent, AgentCommandKind.Version), HasSelectedAgent);
-
-        LaunchAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Launch),
-            item => item.CanLaunch);
-        ResumeAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
-            item => item.CanResume);
 
         var preferences = _preferencesStore.Load();
 
@@ -109,11 +96,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             RemoveProjectCommand,
             ToggleFavoriteCommand,
             RefreshCommand,
-            LaunchCommand,
-            ResumeCommand,
-            InitCommand,
-            UpdateCommand,
-            VersionCommand,
+            _windowActions.LaunchCommand,
+            _windowActions.ResumeCommand,
+            _windowActions.InitCommand,
+            _windowActions.UpdateCommand,
+            _windowActions.VersionCommand,
             _actionBuilder,
             preferences.ShowOnlyProjectAgents);
 
@@ -270,52 +257,52 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Opens the CLIHub data folder in Explorer.
     /// </summary>
-    public RelayCommand OpenDataFolderCommand { get; }
+    public RelayCommand OpenDataFolderCommand => _windowActions.OpenDataFolderCommand;
 
     /// <summary>
     ///   Opens the Settings window.
     /// </summary>
-    public RelayCommand OpenSettingsCommand { get; }
+    public RelayCommand OpenSettingsCommand => _windowActions.OpenSettingsCommand;
 
     /// <summary>
     ///   Exits the application.
     /// </summary>
-    public RelayCommand ExitCommand { get; }
+    public RelayCommand ExitCommand => _windowActions.ExitCommand;
 
     /// <summary>
     ///   Launches the selected agent in the current project.
     /// </summary>
-    public RelayCommand LaunchCommand { get; }
+    public RelayCommand LaunchCommand => _windowActions.LaunchCommand;
 
     /// <summary>
     ///   Resumes the selected agent in the current project.
     /// </summary>
-    public RelayCommand ResumeCommand { get; }
+    public RelayCommand ResumeCommand => _windowActions.ResumeCommand;
 
     /// <summary>
     ///   Initializes the selected agent in the current project.
     /// </summary>
-    public RelayCommand InitCommand { get; }
+    public RelayCommand InitCommand => _windowActions.InitCommand;
 
     /// <summary>
     ///   Updates the selected agent.
     /// </summary>
-    public RelayCommand UpdateCommand { get; }
+    public RelayCommand UpdateCommand => _windowActions.UpdateCommand;
 
     /// <summary>
     ///   Reports the selected agent's version in the status line.
     /// </summary>
-    public RelayCommand VersionCommand { get; }
+    public RelayCommand VersionCommand => _windowActions.VersionCommand;
 
     /// <summary>
     ///   Launches the agent of the activated row.
     /// </summary>
-    public RelayCommand<AgentItem> LaunchAgentCommand { get; }
+    public RelayCommand<AgentItem> LaunchAgentCommand => _windowActions.LaunchAgentCommand;
 
     /// <summary>
     ///   Resumes the agent of the activated row.
     /// </summary>
-    public RelayCommand<AgentItem> ResumeAgentCommand { get; }
+    public RelayCommand<AgentItem> ResumeAgentCommand => _windowActions.ResumeAgentCommand;
 
     /// <summary>
     ///   Applies a path display style changed in Settings to the running window.
@@ -327,31 +314,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         if (e.PropertyName == nameof(StatusMessageCoordinator.CurrentMessage))
         {
             OnPropertyChanged(nameof(StatusMessage));
-        }
-    }
-
-    private bool HasSelectedAgent() => SelectedAgent is not null;
-
-    private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
-        _launchCommandCoordinator.RunAsync(
-            item,
-            _projectPane.CurrentProject,
-            kind,
-            _statusCoordinator.ReportCommandOutcome,
-            RefreshAgents);
-
-    private void OpenDataFolder()
-    {
-        var root = AppPaths.Root;
-
-        try
-        {
-            _externalLauncher.Open(root);
-            _statusCoordinator.ReportFolderOpen(root);
-        }
-        catch (Exception ex)
-        {
-            _statusCoordinator.ReportFolderOpen(root, ex);
         }
     }
 
