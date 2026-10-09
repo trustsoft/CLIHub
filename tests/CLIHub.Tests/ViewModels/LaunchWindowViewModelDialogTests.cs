@@ -51,15 +51,15 @@ public class LaunchWindowViewModelDialogTests
             new LaunchCommandCoordinator(
                 new Mock<IAgentCommandWorkflow>().Object,
                 operationLifetime.Object,
-                notifications.Object,
+                new Mock<IUserNotificationService>().Object,
                 NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
+            new LaunchWindowActionBuilder(),
             updateControl,
             new Mock<ISettingsLauncher>().Object,
             notifications.Object,
             lifetime.Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder(),
             statusCoordinator);
 
         viewModel.AddProjectCommand.Execute(null);
@@ -126,12 +126,12 @@ public class LaunchWindowViewModelDialogTests
                 new Mock<IUserNotificationService>().Object,
                 NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
+            new LaunchWindowActionBuilder(),
             updateControl,
             new Mock<ISettingsLauncher>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder(),
             statusCoordinator);
 
         Assert.Same(projectPane.AddCommand, viewModel.AddProjectCommand);
@@ -175,12 +175,12 @@ public class LaunchWindowViewModelDialogTests
                 new Mock<IUserNotificationService>().Object,
                 NullLogger<LaunchCommandCoordinator>.Instance),
             preferences.Object,
+            new LaunchWindowActionBuilder(),
             updateControl,
             new Mock<ISettingsLauncher>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<IApplicationLifetime>().Object,
             new Mock<IExternalLauncher>().Object,
-            new LaunchWindowActionBuilder(),
             statusCoordinator);
 
         var projectsChangedCount = 0;

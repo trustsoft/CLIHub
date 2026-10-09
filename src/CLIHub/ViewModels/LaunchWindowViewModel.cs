@@ -22,11 +22,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private readonly AgentPaneController _agentPane;
     private readonly LaunchCommandCoordinator _launchCommandCoordinator;
     private readonly IPreferencesStore _preferencesStore;
+    private readonly LaunchWindowActionBuilder _actionBuilder;
     private readonly ISettingsLauncher _settingsLauncher;
     private readonly IUserNotificationService _notifications;
     private readonly IApplicationLifetime _applicationLifetime;
     private readonly IExternalLauncher _externalLauncher;
-    private readonly LaunchWindowActionBuilder _actionBuilder;
+    private readonly MenuActionCoordinator _menuCoordinator;
     private readonly StatusMessageCoordinator _statusCoordinator;
 
     private Project? _selectedProject;
@@ -36,7 +37,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private PathDisplayStyle _displayStyle = PathDisplayStyles.Default;
     private bool _suppressSelectionChange;
     private bool _suppressFilterChange;
-    private MenuAction? _filterAction;
     private bool _disposed;
 
     /// <summary>
@@ -46,35 +46,35 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="agentPane"> Agent-pane workflow boundary. </param>
     /// <param name="launchCommandCoordinator"> Agent-command workflow and result coordinator. </param>
     /// <param name="preferencesStore"> Store for persisted preferences. </param>
+    /// <param name="actionBuilder"> Action builder for menu construction. </param>
     /// <param name="updateControl"> Shared update control for this launch window. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
     /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control used by the Exit command. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
-    /// <param name="actionBuilder"> Builder for the pane Actions menus. </param>
     /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
     public LaunchWindowViewModel(
         ProjectPaneController projectPane,
         AgentPaneController agentPane,
         LaunchCommandCoordinator launchCommandCoordinator,
         IPreferencesStore preferencesStore,
+        LaunchWindowActionBuilder actionBuilder,
         UpdateControlViewModel updateControl,
         ISettingsLauncher settingsLauncher,
         IUserNotificationService notifications,
         IApplicationLifetime applicationLifetime,
         IExternalLauncher externalLauncher,
-        LaunchWindowActionBuilder actionBuilder,
         StatusMessageCoordinator statusCoordinator)
     {
         _projectPane = projectPane;
         _agentPane = agentPane;
         _launchCommandCoordinator = launchCommandCoordinator;
         _preferencesStore = preferencesStore;
+        _actionBuilder = actionBuilder;
         _settingsLauncher = settingsLauncher;
         _notifications = notifications;
         _applicationLifetime = applicationLifetime;
         _externalLauncher = externalLauncher;
-        _actionBuilder = actionBuilder;
         _statusCoordinator = statusCoordinator;
 
         _statusCoordinator.PropertyChanged += OnStatusCoordinatorPropertyChanged;
@@ -102,11 +102,24 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
             item => item.CanResume);
 
+        var preferences = _preferencesStore.Load();
+
+        _menuCoordinator = new MenuActionCoordinator(
+            AddProjectCommand,
+            RemoveProjectCommand,
+            ToggleFavoriteCommand,
+            RefreshCommand,
+            LaunchCommand,
+            ResumeCommand,
+            InitCommand,
+            UpdateCommand,
+            VersionCommand,
+            _actionBuilder,
+            preferences.ShowOnlyProjectAgents);
+
         _projectPane.ProjectsChanged += OnProjectsChanged;
 
         RefreshProjects();
-
-        var preferences = _preferencesStore.Load();
 
         _suppressFilterChange = true;
         ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents;
@@ -114,8 +127,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         _isPinned = preferences.PinLaunchWindow;
         _displayStyle = PathDisplayStyles.Parse(preferences.PathDisplayStyle);
-
-        BuildActions();
 
         RefreshAgents();
     }
@@ -133,12 +144,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Entries of the Projects pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> ProjectsActions { get; private set; } = Array.Empty<MenuAction>();
+    public IReadOnlyList<MenuAction> ProjectsActions => _menuCoordinator.ProjectsActions;
 
     /// <summary>
     ///   Entries of the Agents pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> AgentsActions { get; private set; } = Array.Empty<MenuAction>();
+    public IReadOnlyList<MenuAction> AgentsActions => _menuCoordinator.AgentsActions;
 
     /// <summary>
     ///   The shared update control: current version when idle, update and restart actions when
@@ -199,11 +210,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             _preferencesStore.Update(preferences => preferences.ShowOnlyProjectAgents = value);
 
             RefreshAgents();
-
-            if (_filterAction is { } action && action.IsChecked != value)
-            {
-                action.IsChecked = value;
-            }
         }
     }
 
@@ -334,43 +340,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             _statusCoordinator.ReportCommandOutcome,
             RefreshAgents);
 
-    /// <summary>
-    ///   Builds the per-pane actions menus from the existing commands, and wires the availability
-    ///   filter entry to its persisted preference.
-    /// </summary>
-    private void BuildActions()
-    {
-        var actions = _actionBuilder.Build(
-            AddProjectCommand,
-            RemoveProjectCommand,
-            ToggleFavoriteCommand,
-            RefreshCommand,
-            LaunchCommand,
-            ResumeCommand,
-            InitCommand,
-            UpdateCommand,
-            VersionCommand,
-            ShowOnlyProjectAgents);
-        ProjectsActions = actions.Projects;
-        AgentsActions = actions.Agents;
-        _filterAction = actions.FilterAction;
-
-        _filterAction.PropertyChanged += OnFilterActionChanged;
-    }
-
-    /// <summary>
-    ///   Mirrors the filter entry's checked state into the availability filter preference.
-    /// </summary>
-    private void OnFilterActionChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(MenuAction.IsChecked)
-            && _filterAction is { } action
-            && action.IsChecked != ShowOnlyProjectAgents)
-        {
-            ShowOnlyProjectAgents = action.IsChecked;
-        }
-    }
-
     private void OpenDataFolder()
     {
         var root = AppPaths.Root;
@@ -427,10 +396,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         _disposed = true;
         _projectPane.ProjectsChanged -= OnProjectsChanged;
         _statusCoordinator.PropertyChanged -= OnStatusCoordinatorPropertyChanged;
-        if (_filterAction is not null)
-        {
-            _filterAction.PropertyChanged -= OnFilterActionChanged;
-        }
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
