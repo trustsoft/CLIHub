@@ -48,10 +48,10 @@ The system SHALL run interactive commands in the configured runtime and capture 
 
 #### Scenario: Default runtime
 - **WHEN** no runtime preference is configured
-- **THEN** Windows Terminal is used
+- **THEN** PowerShell is used
 
 #### Scenario: Alternative runtime
-- **WHEN** the configured runtime is Command Prompt (`cmd`) or PowerShell (`ps`)
+- **WHEN** the configured runtime is Command Prompt (`cmd`), PowerShell 7 (`ps7`), or Git Bash (`bash`)
 - **THEN** the interactive command opens in that runtime in the project folder
 
 #### Scenario: Version is captured
@@ -76,7 +76,7 @@ The system SHALL report the outcome of an executed command.
 
 ### Requirement: Command arguments preserve boundaries
 
-The system SHALL preserve executable and argument boundaries when running plugin commands through Windows Terminal, Command Prompt, PowerShell, or captured command execution.
+The system SHALL preserve executable and argument boundaries when running plugin commands through Command Prompt, PowerShell, PowerShell 7, Git Bash, or captured command execution.
 
 #### Scenario: Executable path contains spaces
 - **WHEN** a plugin command uses an executable path containing spaces

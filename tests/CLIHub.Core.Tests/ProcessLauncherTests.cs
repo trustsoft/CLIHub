@@ -8,9 +8,10 @@ using CLIHub.Core.Infrastructure.Processes;
 public class ProcessLauncherTests
 {
     [Theory]
-    [InlineData(RuntimeKind.WindowsTerminal, "wt.exe")]
-    [InlineData(RuntimeKind.CommandPrompt, "cmd.exe")]
     [InlineData(RuntimeKind.PowerShell, "powershell.exe")]
+    [InlineData(RuntimeKind.PowerShell7, "pwsh.exe")]
+    [InlineData(RuntimeKind.CommandPrompt, "cmd.exe")]
+    [InlineData(RuntimeKind.GitBash, "bash.exe")]
     public void BuildStartInfo_UsesRuntimeExecutable(RuntimeKind runtime, string expectedFileName)
     {
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
@@ -18,7 +19,7 @@ public class ProcessLauncherTests
         var (fileName, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
 
         Assert.Equal(expectedFileName, fileName);
-        if (runtime == RuntimeKind.PowerShell)
+        if (runtime is RuntimeKind.PowerShell or RuntimeKind.PowerShell7)
         {
             var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
             var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -33,15 +34,17 @@ public class ProcessLauncherTests
     }
 
     [Fact]
-    public void BuildStartInfo_WindowsTerminal_IncludesWorkingDirectory()
+    public void BuildStartInfo_GitBash_UsesLoginInteractiveShell()
     {
-        var command = new PluginCommand { Executable = "opencode" };
+        var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
-        var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            RuntimeKind.WindowsTerminal, command, @"C:\proj");
+        var (fileName, arguments) = ProcessLauncher.BuildStartInfo(
+            RuntimeKind.GitBash, command, @"C:\proj");
 
-        Assert.Contains("-d \"C:\\proj\"", arguments);
-        Assert.Contains("cmd /d /k \"opencode\"", arguments);
+        Assert.Equal("bash.exe", fileName);
+        Assert.Contains("-lic", arguments);
+        Assert.Contains("opencode", arguments);
+        Assert.Contains("--continue", arguments);
     }
 
     [Fact]

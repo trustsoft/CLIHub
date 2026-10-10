@@ -19,11 +19,13 @@ public sealed class LegacyTerminalPreferenceMigration : IConfigMigration
         ArgumentNullException.ThrowIfNull(snapshot);
 
         var migrated = ConfigurationSnapshot.From(snapshot.ToAppConfig());
-        migrated.Preferences.DefaultRuntime = RuntimeKinds.TryParse(
-            migrated.Preferences.TerminalExecutable,
-            out var runtime)
-            ? runtime
-            : RuntimeKind.WindowsTerminal;
+        // Only a Command Prompt executable maps to its own runtime; Windows Terminal (wt.exe),
+        // PowerShell, and unknown values all resolve to the default PowerShell.
+        migrated.Preferences.DefaultRuntime =
+            RuntimeKinds.TryParse(migrated.Preferences.TerminalExecutable, out var runtime)
+            && runtime == RuntimeKind.CommandPrompt
+                ? RuntimeKind.CommandPrompt
+                : RuntimeKind.PowerShell;
 
         return migrated;
     }

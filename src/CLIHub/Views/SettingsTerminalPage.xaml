@@ -16,7 +16,13 @@
                  Style="{StaticResource SegmentGroup}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Segment}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="16"
+                               Height="16"
+                               Margin="0,0,7,0"
+                               Source="{Binding Icon}"/>
+                        <TextBlock Text="{Binding Segment}"/>
+                    </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>

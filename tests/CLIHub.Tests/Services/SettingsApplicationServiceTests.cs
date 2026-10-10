@@ -77,7 +77,7 @@ public class SettingsApplicationServiceTests
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
         applier.Setup(x => x.ApplyHotkey(It.IsAny<HotkeyDefinition>())).Returns(true);
         applier.Setup(x => x.ApplyHotkey(newHotkey)).Returns(false);
-        applier.Setup(x => x.ApplyRuntime(RuntimeKind.WindowsTerminal));
+        applier.Setup(x => x.ApplyRuntime(RuntimeKind.GitBash));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
         applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
         var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
@@ -95,7 +95,7 @@ public class SettingsApplicationServiceTests
         Assert.False(result.Success);
         Assert.Contains("global hotkey", result.Error, StringComparison.OrdinalIgnoreCase);
         preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
-        applier.Verify(x => x.ApplyRuntime(RuntimeKind.WindowsTerminal), Times.Once);
+        applier.Verify(x => x.ApplyRuntime(RuntimeKind.GitBash), Times.Once);
         applier.Verify(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim), Times.Once);
         applier.Verify(x => x.ApplyStartWithWindows(false), Times.Once);
     }
@@ -113,7 +113,7 @@ public class SettingsApplicationServiceTests
     private static Mock<IPreferenceApplier> CreateApplier() => new(MockBehavior.Strict);
 
     private static SettingsInput Input(string probeTtlText = "", string probeTimeoutText = "") => new(
-        RuntimeKind.WindowsTerminal,
+        RuntimeKind.PowerShell,
         PathDisplayStyle.LeftTrim,
         "Ctrl+Shift+A",
         probeTtlText,
@@ -124,7 +124,7 @@ public class SettingsApplicationServiceTests
 
     private static AppPreferences PreviousPreferences() => new()
     {
-        DefaultRuntime = RuntimeKind.WindowsTerminal,
+        DefaultRuntime = RuntimeKind.GitBash,
         PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
         Hotkey = "Ctrl+Shift+A",
         CheckForUpdatesOnStartup = true,

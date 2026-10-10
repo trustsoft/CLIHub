@@ -145,7 +145,7 @@ public class AppConfigSerializationTests
 
         var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!;
 
-        Assert.Equal(RuntimeKind.WindowsTerminal, document.ToAppConfig().Preferences.DefaultRuntime);
+        Assert.Equal(RuntimeKind.PowerShell, document.ToAppConfig().Preferences.DefaultRuntime);
     }
 
     [Fact]

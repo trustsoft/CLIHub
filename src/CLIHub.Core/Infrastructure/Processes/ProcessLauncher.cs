@@ -20,7 +20,7 @@ public sealed class ProcessLauncher
     private readonly IInteractiveProcessRunner _interactiveRunner;
     private readonly IProcessOutputRunner _outputRunner;
     
-    private RuntimeKind _runtime = RuntimeKind.WindowsTerminal;
+    private RuntimeKind _runtime = RuntimeKind.PowerShell;
 
     /// <summary>
     ///   Creates the launcher.
@@ -91,9 +91,8 @@ public sealed class ProcessLauncher
             // Create runtime info
             var runtimeType = _runtime switch
             {
-                RuntimeKind.WindowsTerminal => RuntimeType.WindowsTerminal,
                 RuntimeKind.CommandPrompt => RuntimeType.Cmd,
-                RuntimeKind.PowerShell => RuntimeType.PowerShell,
+                RuntimeKind.PowerShell or RuntimeKind.PowerShell7 => RuntimeType.PowerShell,
                 _ => RuntimeType.Cmd
             };
             

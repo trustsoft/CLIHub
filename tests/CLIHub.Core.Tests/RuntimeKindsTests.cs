@@ -8,15 +8,17 @@ public class RuntimeKindsTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("future-runtime")]
-    public void Parse_UnknownOrMissingValue_UsesWindowsTerminal(string? value)
+    [InlineData("wt")]
+    public void Parse_UnknownOrMissingValue_UsesPowerShell(string? value)
     {
-        Assert.Equal(RuntimeKind.WindowsTerminal, RuntimeKinds.Parse(value));
+        Assert.Equal(RuntimeKind.PowerShell, RuntimeKinds.Parse(value));
     }
 
     [Theory]
-    [InlineData(RuntimeKind.WindowsTerminal, RuntimeKinds.WindowsTerminalToken)]
-    [InlineData(RuntimeKind.CommandPrompt, RuntimeKinds.CommandPromptToken)]
     [InlineData(RuntimeKind.PowerShell, RuntimeKinds.PowerShellToken)]
+    [InlineData(RuntimeKind.PowerShell7, RuntimeKinds.PowerShell7Token)]
+    [InlineData(RuntimeKind.CommandPrompt, RuntimeKinds.CommandPromptToken)]
+    [InlineData(RuntimeKind.GitBash, RuntimeKinds.GitBashToken)]
     public void ToToken_UsesCanonicalStoredToken(RuntimeKind runtime, string token)
     {
         Assert.Equal(token, RuntimeKinds.ToToken(runtime));

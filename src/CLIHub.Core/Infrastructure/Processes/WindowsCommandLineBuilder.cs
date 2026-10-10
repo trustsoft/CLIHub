@@ -26,8 +26,9 @@ internal static class WindowsCommandLineBuilder
         return runtime switch
         {
             RuntimeKind.CommandPrompt => ("cmd.exe", $"/d /k {QuoteCmdCommand(commandLine)}"),
-            RuntimeKind.PowerShell => ("powershell.exe", $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}"),
-            _ => ("wt.exe", $"-d {QuoteWindowsPath(workingDirectory)} cmd /d /k {QuoteCmdCommand(commandLine)}")
+            RuntimeKind.PowerShell7 => ("pwsh.exe", $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}"),
+            RuntimeKind.GitBash => ("bash.exe", $"-lic {QuoteBashCommand(commandLine)}"),
+            _ => ("powershell.exe", $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}")
         };
     }
 
@@ -131,8 +132,26 @@ internal static class WindowsCommandLineBuilder
         return builder.ToString();
     }
 
-    private static string QuoteWindowsPath(string value) =>
-        $"\"{value.Replace("\"", "\\\"", StringComparison.Ordinal)}\"";
+    private static string QuoteBashCommand(string commandLine) =>
+        $"\"{EscapeBashArgumentTail(commandLine)}\"";
+
+    private static string EscapeBashArgumentTail(string arguments)
+    {
+        var builder = new StringBuilder(arguments.Length + 8);
+        foreach (var character in arguments)
+        {
+            // In a bash double-quoted string these characters are special; a leading backslash
+            // keeps them literal while leaving ordinary path separators readable.
+            if (character is '"' or '`' or '$' or '\\')
+            {
+                builder.Append('\\');
+            }
+
+            builder.Append(character);
+        }
+
+        return builder.ToString();
+    }
 
     private static string EncodePowerShell(string commandLine)
     {

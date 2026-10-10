@@ -73,7 +73,7 @@ public class SettingsNavigationTests
         {
             Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
-                DefaultRuntime = RuntimeKind.WindowsTerminal,
+                DefaultRuntime = RuntimeKind.PowerShell,
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                 CheckForUpdatesOnStartup = true,

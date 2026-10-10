@@ -28,7 +28,7 @@ public class LegacyTerminalPreferenceMigrationTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("unknown-terminal.exe")]
-    public void Migrate_MissingOrUnknownExecutable_UsesWindowsTerminal(string? executable)
+    public void Migrate_MissingOrUnknownExecutable_UsesPowerShell(string? executable)
     {
         var snapshot = new ConfigurationSnapshot();
         snapshot.Preferences.TerminalExecutable = executable ?? "wt.exe";
@@ -39,7 +39,7 @@ public class LegacyTerminalPreferenceMigrationTests
 
         var migrated = _migration.Migrate(snapshot);
 
-            Assert.Equal(RuntimeKind.WindowsTerminal, migrated.Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKind.PowerShell, migrated.Preferences.DefaultRuntime);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class LegacyTerminalPreferenceMigrationTests
                 path,
                 runner);
 
-            Assert.Equal(RuntimeKind.WindowsTerminal, repository.Read().Preferences.DefaultRuntime);
+            Assert.Equal(RuntimeKind.PowerShell, repository.Read().Preferences.DefaultRuntime);
         }
         finally
         {

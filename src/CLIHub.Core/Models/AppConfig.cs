@@ -43,9 +43,9 @@ public class AppPreferences
     public string TerminalExecutable { get; set; } = "wt.exe";
 
     /// <summary>
-    ///   Runtime used to launch interactive agent commands.
+    ///   Runtime used to launch interactive agent commands. Defaults to Windows PowerShell.
     /// </summary>
-    public RuntimeKind DefaultRuntime { get; set; } = RuntimeKind.WindowsTerminal;
+    public RuntimeKind DefaultRuntime { get; set; } = RuntimeKind.PowerShell;
 
     /// <summary>
     ///   Log level (Debug, Info, Warning, Error).

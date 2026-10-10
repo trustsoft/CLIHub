@@ -36,7 +36,7 @@ The settings content SHALL be laid out as sections introduced by uppercase muted
 
 ### Requirement: Segmented selectors
 
-The default-runtime and path-display selectors SHALL render as segmented controls: one bordered group of segments, one per option, with the selected segment visually highlighted using the accent.
+The default-runtime and path-display selectors SHALL render as segmented controls: one bordered group of segments, one per option, with the selected segment visually highlighted using the accent. Each runtime segment SHALL show an icon together with its label; each path-display segment SHALL show its label.
 
 #### Scenario: Selected segment is visible
 - **WHEN** a runtime or path-display option is selected
@@ -44,7 +44,7 @@ The default-runtime and path-display selectors SHALL render as segmented control
 
 #### Scenario: Segments carry short labels
 - **WHEN** the runtime selector is rendered
-- **THEN** its segments show the short tokens `cmd`, `ps`, and `wt` rather than the long combo-box labels
+- **THEN** each segment shows an icon (PowerShell, PowerShell 7, Command Prompt, Git Bash) with its label rather than a long combo-box label
 
 ### Requirement: Dark input controls
 

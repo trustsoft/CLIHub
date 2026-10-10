@@ -9,12 +9,13 @@ using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   A selectable default runtime with a friendly label and a short segment label.
+///   A selectable default runtime with a friendly label, a short segment label, and an icon.
 /// </summary>
 /// <param name="Kind"> The runtime kind. </param>
 /// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
 /// <param name="Segment"> Short label rendered by the segmented selector. </param>
-public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment);
+/// <param name="Icon"> Pack URI of the icon rendered beside the segment label. </param>
+public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment, string Icon);
 
 /// <summary>
 ///   A selectable path display style with a friendly label and a short segment label.
@@ -49,9 +50,10 @@ public sealed class SettingsViewModel : ObservableObject
 {
     private static readonly RuntimeOption[] RuntimeOptions =
     {
-        new(RuntimeKind.CommandPrompt, "cmd — Command Prompt", "cmd"),
-        new(RuntimeKind.PowerShell, "ps — PowerShell", "ps"),
-        new(RuntimeKind.WindowsTerminal, "wt — Windows Terminal", "wt")
+        new(RuntimeKind.PowerShell, "PowerShell", "PowerShell", "pack://application:,,,/Assets/powershell.png"),
+        new(RuntimeKind.PowerShell7, "PowerShell 7", "PowerShell 7", "pack://application:,,,/Assets/powershell7.png"),
+        new(RuntimeKind.CommandPrompt, "Command Prompt", "Command Prompt", "pack://application:,,,/Assets/cmd.png"),
+        new(RuntimeKind.GitBash, "Git Bash", "Git Bash", "pack://application:,,,/Assets/gitbash.png")
     };
 
     private static readonly PathDisplayOption[] PathDisplayOptions =
@@ -85,7 +87,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     private bool _startWithWindows;
     private bool _startMinimized = true;
-    private RuntimeOption _selectedRuntime = RuntimeOptions[2];
+    private RuntimeOption _selectedRuntime = RuntimeOptions[0];
     private PathDisplayOption _selectedPathDisplay = PathDisplayOptions[0];
     private string _hotkeyText = string.Empty;
     private IReadOnlyList<string> _hotkeyParts = [];
@@ -315,7 +317,7 @@ public sealed class SettingsViewModel : ObservableObject
         var draft = _settingsApplication.Load();
 
         _selectedRuntime = RuntimeOptions
-            .FirstOrDefault(o => o.Kind == draft.Runtime) ?? RuntimeOptions[2];
+            .FirstOrDefault(o => o.Kind == draft.Runtime) ?? RuntimeOptions[0];
         _selectedPathDisplay = PathDisplayOptions
             .FirstOrDefault(o => o.Style == draft.PathDisplayStyle) ?? PathDisplayOptions[0];
         _hotkeyText = HotkeyParser.Format(draft.Hotkey);

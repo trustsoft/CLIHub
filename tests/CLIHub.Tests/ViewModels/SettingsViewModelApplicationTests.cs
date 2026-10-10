@@ -69,7 +69,7 @@ public class SettingsViewModelApplicationTests
         {
             Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
-                DefaultRuntime = RuntimeKind.WindowsTerminal,
+                DefaultRuntime = RuntimeKind.PowerShell,
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                 CheckForUpdatesOnStartup = true,
@@ -78,7 +78,7 @@ public class SettingsViewModelApplicationTests
             Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
             Startup.Setup(x => x.IsEnabled()).Returns(false);
             Applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
-            Applier.Setup(x => x.ApplyRuntime(RuntimeKind.WindowsTerminal));
+            Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
             Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
             Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
             Applier.Setup(x => x.ApplyStartupUpdateCheck(true));

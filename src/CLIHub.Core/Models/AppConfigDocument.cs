@@ -114,7 +114,7 @@ internal sealed class AppConfigDocument
         public bool StartWithWindows { get; set; }
         public string Hotkey { get; set; } = "Ctrl+Shift+A";
         public string TerminalExecutable { get; set; } = "wt.exe";
-        public string DefaultRuntime { get; set; } = "wt";
+        public string DefaultRuntime { get; set; } = "ps";
         public string LogLevel { get; set; } = "Information";
         public bool ShowOnlyProjectAgents { get; set; }
         public int? AgentProbeTtlMinutes { get; set; }
