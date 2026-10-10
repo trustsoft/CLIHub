@@ -4,12 +4,11 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-using CLIHub.Core.Hotkeys;
 using CLIHub.Interop;
 using CLIHub.ViewModels;
 
 /// <summary>
-///   The Settings window: dark drawn chrome (no OS title bar) around the preference sections.
+///   The Settings window: dark drawn chrome (no OS title bar) around sidebar-navigated pages.
 /// </summary>
 public partial class SettingsWindow : Window
 {
@@ -93,83 +92,5 @@ public partial class SettingsWindow : Window
 
         Close();
         e.Handled = true;
-    }
-
-    /// <summary>
-    ///   A Border does not take keyboard focus on click the way a Control does, so the click
-    ///   handler has to move focus here — otherwise the PreviewKeyDown capture never runs.
-    /// </summary>
-    private void HotkeyField_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        HotkeyField.Focus();
-        e.Handled = true;
-    }
-
-    private void HotkeyField_PreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        e.Handled = true;
-
-        var key = e.Key == Key.System ? e.SystemKey : e.Key;
-
-        if (key == Key.Escape)
-        {
-            // Cancel capture; the field keeps its current value.
-            return;
-        }
-
-        if (key == Key.None || IsModifierKey(key))
-        {
-            return;
-        }
-
-        var modifiers = ToHotkeyModifiers(Keyboard.Modifiers);
-        if (modifiers == HotkeyModifiers.None)
-        {
-            _viewModel.SetHotkeyError("Hotkey must include at least one modifier (Ctrl, Shift, Alt, Win).");
-            return;
-        }
-
-        var definition = new HotkeyDefinition(modifiers, KeyInterop.VirtualKeyFromKey(key));
-        if (!HotkeyParser.TryParse(HotkeyParser.Format(definition), out _))
-        {
-            _viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1-F24, or a named key (Enter, Tab, Escape, arrows, and so on) with a modifier.");
-            return;
-        }
-
-        _viewModel.SetCapturedHotkey(definition);
-    }
-
-    private static bool IsModifierKey(Key key) => key is
-        Key.LeftCtrl or Key.RightCtrl or
-        Key.LeftShift or Key.RightShift or
-        Key.LeftAlt or Key.RightAlt or
-        Key.LWin or Key.RWin or
-        Key.System;
-
-    private static HotkeyModifiers ToHotkeyModifiers(ModifierKeys modifiers)
-    {
-        var result = HotkeyModifiers.None;
-
-        if (modifiers.HasFlag(ModifierKeys.Control))
-        {
-            result |= HotkeyModifiers.Control;
-        }
-
-        if (modifiers.HasFlag(ModifierKeys.Shift))
-        {
-            result |= HotkeyModifiers.Shift;
-        }
-
-        if (modifiers.HasFlag(ModifierKeys.Alt))
-        {
-            result |= HotkeyModifiers.Alt;
-        }
-
-        if (modifiers.HasFlag(ModifierKeys.Windows))
-        {
-            result |= HotkeyModifiers.Win;
-        }
-
-        return result;
     }
 }

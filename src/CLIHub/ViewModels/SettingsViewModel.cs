@@ -25,6 +25,23 @@ public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment
 public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, string Segment);
 
 /// <summary>
+///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
+///   whether its settings are implemented yet.
+/// </summary>
+/// <param name="Key"> Stable page key used to route the page view. </param>
+/// <param name="Title"> Display title shown in the sidebar and page header. </param>
+/// <param name="Group"> The navigation group the page belongs to. </param>
+/// <param name="IsImplemented"> Whether the page has implemented settings. </param>
+public sealed record SettingsPage(string Key, string Title, string Group, bool IsImplemented);
+
+/// <summary>
+///   A Settings navigation group: an uppercase label and its pages.
+/// </summary>
+/// <param name="Title"> The group label. </param>
+/// <param name="Pages"> The pages in the group, in display order. </param>
+public sealed record SettingsGroup(string Title, IReadOnlyList<SettingsPage> Pages);
+
+/// <summary>
 ///   View model for the Settings window: loads preferences, validates input, and applies
 ///   changes on save.
 /// </summary>
@@ -43,6 +60,23 @@ public sealed class SettingsViewModel : ObservableObject
         new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends", "Middle ellipsis")
     };
 
+    private static readonly SettingsPage[] AllPages =
+    {
+        new("general", "General & Startup", "General", true),
+        new("hotkeys", "Hotkeys & Launchers", "General", true),
+        new("projects", "Projects & Paths", "Engines & Repos", false),
+        new("agents", "CLI Agents", "Engines & Repos", true),
+        new("terminal", "Terminal Profiles", "Engines & Repos", true),
+        new("appearance", "Appearance", "System", true),
+        new("telemetry", "Telemetry & Logs", "System", false),
+        new("updates", "Updates", "System", true)
+    };
+
+    private static readonly SettingsGroup[] PagesByGroup = AllPages
+        .GroupBy(page => page.Group)
+        .Select(group => new SettingsGroup(group.Key, group.ToArray()))
+        .ToArray();
+
     private readonly SettingsApplicationService _settingsApplication;
     private readonly IUpdateVersionProvider _versionProvider;
     private readonly IUpdateWorkflow _updateWorkflow;
@@ -60,6 +94,7 @@ public sealed class SettingsViewModel : ObservableObject
     private bool _checkForUpdatesOnStartup = true;
     private string _updateMessage = string.Empty;
     private string? _validationError;
+    private SettingsPage _selectedPage = AllPages[0];
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -104,6 +139,25 @@ public sealed class SettingsViewModel : ObservableObject
     ///   The path display options offered by the segmented control.
     /// </summary>
     public IReadOnlyList<PathDisplayOption> PathDisplays => PathDisplayOptions;
+
+    /// <summary>
+    ///   The navigation pages, in display order.
+    /// </summary>
+    public IReadOnlyList<SettingsPage> Pages => AllPages;
+
+    /// <summary>
+    ///   The navigation groups and their pages, in display order.
+    /// </summary>
+    public IReadOnlyList<SettingsGroup> PageGroups => PagesByGroup;
+
+    /// <summary>
+    ///   The currently selected navigation page.
+    /// </summary>
+    public SettingsPage SelectedPage
+    {
+        get => _selectedPage;
+        set => SetProperty(ref _selectedPage, value);
+    }
 
     /// <summary>
     ///   The selected path display style.
@@ -273,6 +327,7 @@ public sealed class SettingsViewModel : ObservableObject
         _showWindowOnStartup = draft.ShowWindowOnStartup;
         _updateMessage = string.Empty;
         _validationError = null;
+        _selectedPage = AllPages[0];
 
         OnPropertyChanged(nameof(StartWithWindows));
         OnPropertyChanged(nameof(ShowWindowOnStartup));
@@ -285,6 +340,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(CheckForUpdatesOnStartup));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
+        OnPropertyChanged(nameof(SelectedPage));
     }
 
     /// <summary>

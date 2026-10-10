@@ -281,4 +281,60 @@
         <Setter Property="Padding" Value="20,10"/>
     </Style>
 
+    <!-- Sidebar navigation -->
+    <Style x:Key="SidebarGroupLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Margin" Value="10,12,0,4"/>
+    </Style>
+
+    <Style x:Key="SidebarItem" TargetType="ListBoxItem">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd"
+                            Margin="0,1"
+                            Padding="10,7"
+                            CornerRadius="5"
+                            Background="Transparent">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SidebarList" TargetType="ListBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource SidebarItem}"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+    </Style>
+
+    <!-- Page header -->
+    <Style x:Key="PageHeader" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Name}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style x:Key="EmptyStateText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
 </ResourceDictionary>

@@ -17,6 +17,13 @@
                     templates — only application-level implicit styles do.
                 -->
                 <ResourceDictionary Source="/Themes/DarkScrollBar.xaml"/>
+                <!--
+                    Settings window styles: shared with the extracted Settings pages (UserControls).
+                    A UserControl is built before it attaches to the window tree, so window-scoped
+                    resources are not reachable during its load — application-level placement is
+                    required, like the scrollbar and tooltip styles above. All styles are keyed.
+                -->
+                <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Shared converters, referenced from window content by key. -->

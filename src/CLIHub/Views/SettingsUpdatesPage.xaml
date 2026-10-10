@@ -1,0 +1,25 @@
+<UserControl x:Class="CLIHub.Views.SettingsUpdatesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Style="{StaticResource PageHeader}" Text="Updates"/>
+
+        <CheckBox Margin="0,16,0,0"
+                  HorizontalAlignment="Left"
+                  Content="Check for updates on startup"
+                  IsChecked="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
+                  Style="{StaticResource SettingsCheck}"/>
+
+        <Button Margin="0,12,0,0"
+                Command="{Binding CheckForUpdatesCommand}"
+                Content="Check for updates"
+                HorizontalAlignment="Left"
+                Style="{StaticResource NeutralButton}"/>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource StatusLine}"
+                   Text="{Binding UpdateMessage}"/>
+    </StackPanel>
+</UserControl>

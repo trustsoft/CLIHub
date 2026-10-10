@@ -1,0 +1,38 @@
+<UserControl x:Class="CLIHub.Views.SettingsHotkeysPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Style="{StaticResource PageHeader}" Text="Hotkeys &amp; Launchers"/>
+
+        <TextBlock Margin="0,16,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Global hotkey"/>
+        <Border x:Name="HotkeyField"
+                HorizontalAlignment="Left"
+                MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
+                PreviewKeyDown="HotkeyField_PreviewKeyDown"
+                Style="{StaticResource HotkeyField}">
+            <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
+            <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource HotkeyChip}">
+                            <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </Border>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Press a combination in the field. Esc cancels capture."/>
+    </StackPanel>
+</UserControl>

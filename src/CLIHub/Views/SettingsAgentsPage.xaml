@@ -1,0 +1,39 @@
+<UserControl x:Class="CLIHub.Views.SettingsAgentsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Style="{StaticResource PageHeader}" Text="CLI Agents"/>
+
+        <TextBlock Margin="0,16,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Agents probe"/>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
+                <TextBox Margin="0,6,0,0"
+                         Style="{StaticResource SettingsInput}"
+                         Tag="{Binding ProbeTtlWatermark}"
+                         Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
+                <TextBox Margin="0,6,0,0"
+                         Style="{StaticResource SettingsInput}"
+                         Tag="{Binding ProbeTimeoutWatermark}"
+                         Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+            </StackPanel>
+        </Grid>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Empty — use defaults."/>
+    </StackPanel>
+</UserControl>

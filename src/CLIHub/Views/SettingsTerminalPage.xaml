@@ -1,0 +1,27 @@
+<UserControl x:Class="CLIHub.Views.SettingsTerminalPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Style="{StaticResource PageHeader}" Text="Terminal Profiles"/>
+
+        <TextBlock Margin="0,16,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Default runtime"/>
+        <ListBox HorizontalAlignment="Left"
+                 ItemsSource="{Binding Runtimes}"
+                 SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
+                 Style="{StaticResource SegmentGroup}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Segment}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Runtime used to open interactive agent commands."/>
+    </StackPanel>
+</UserControl>

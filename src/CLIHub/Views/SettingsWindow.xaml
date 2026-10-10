@@ -5,12 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:themes="clr-namespace:CLIHub.Themes"
+        xmlns:conv="clr-namespace:CLIHub.Converters"
+        xmlns:views="clr-namespace:CLIHub.Views"
         mc:Ignorable="d"
         Title="Settings"
         Background="{StaticResource ChromeBgBrush}"
         FontFamily="{StaticResource Sizing.FontFamily.Text}"
-        Height="480" Width="420"
-        MinHeight="480" MinWidth="420"
+        Height="560" Width="760"
+        MinHeight="480" MinWidth="640"
         KeyDown="OnKeyDown"
         ResizeMode="CanResize"
         ShowInTaskbar="True"
@@ -25,8 +27,16 @@
                       UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
     <Window.Resources>
-        <!-- Window-scoped styles: this window's dark form styling. -->
-        <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
+        <ResourceDictionary>
+            <conv:UpperCaseTextConverter x:Key="UpperCase"/>
+
+            <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
+            <CollectionViewSource x:Key="NavPages" Source="{Binding Pages}">
+                <CollectionViewSource.GroupDescriptions>
+                    <PropertyGroupDescription PropertyName="Group"/>
+                </CollectionViewSource.GroupDescriptions>
+            </CollectionViewSource>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
@@ -59,127 +69,155 @@
                        VerticalAlignment="Bottom"
                        Fill="{StaticResource HairlineBrush}"/>
 
-            <!-- Sections -->
-            <ScrollViewer Grid.Row="2"
-                          Padding="20,6,20,16"
-                          HorizontalScrollBarVisibility="Disabled"
-                          VerticalScrollBarVisibility="Auto">
-                <StackPanel>
+            <!-- Body: sidebar navigation + active page -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <TextBlock Margin="0,14,0,8" Style="{StaticResource SectionLabel}" Text="STARTUP"/>
-                    <CheckBox HorizontalAlignment="Left"
-                              Content="Start with Windows"
-                              IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
-                              Style="{StaticResource SettingsCheck}"/>
-                    <CheckBox HorizontalAlignment="Left"
-                              Margin="0,8,0,0"
-                              Content="Show window on startup"
-                              IsChecked="{Binding ShowWindowOnStartup, Mode=TwoWay}"
-                              Style="{StaticResource SettingsCheck}"/>
-
-                    <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="DEFAULT RUNTIME"/>
-                    <ListBox HorizontalAlignment="Left"
-                             ItemsSource="{Binding Runtimes}"
-                             SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
-                             Style="{StaticResource SegmentGroup}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Segment}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <TextBlock Margin="0,8,0,0"
-                               Style="{StaticResource HintText}"
-                               Text="Runtime used to open interactive agent commands."/>
-
-                    <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="APPEARANCE"/>
-                    <ListBox HorizontalAlignment="Left"
-                             ItemsSource="{Binding PathDisplays}"
-                             SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
-                             Style="{StaticResource SegmentGroup}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Segment}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-                    <TextBlock Margin="0,8,0,0"
-                               Style="{StaticResource HintText}"
-                               Text="How long project paths are shortened in the launch window."/>
-
-                    <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="GLOBAL HOTKEY"/>
-                    <Border x:Name="HotkeyField"
-                            HorizontalAlignment="Left"
-                            MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
-                            PreviewKeyDown="HotkeyField_PreviewKeyDown"
-                            Style="{StaticResource HotkeyField}">
-                        <!-- -6 cancels the last chip's trailing margin, so the left and right
-                             insets of the field stay equal -->
-                        <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
+                <!-- Sidebar -->
+                <Border Grid.Column="0"
+                        Background="{StaticResource PopoverBgBrush}"
+                        BorderBrush="{StaticResource HairlineBrush}"
+                        BorderThickness="0,0,1,0">
+                    <ScrollViewer Padding="10,12,10,12"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <ListBox x:Name="NavList"
+                                 ItemsSource="{Binding Source={StaticResource NavPages}}"
+                                 SelectedItem="{Binding SelectedPage, Mode=TwoWay}"
+                                 Style="{StaticResource SidebarList}">
+                            <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Style="{StaticResource HotkeyChip}">
-                                        <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
-                                    </Border>
+                                    <TextBlock Text="{Binding Title}"/>
                                 </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Border>
-                    <TextBlock Margin="0,8,0,0"
-                               Style="{StaticResource HintText}"
-                               Text="Press a combination in the field. Esc cancels capture."/>
+                            </ListBox.ItemTemplate>
+                            <ListBox.GroupStyle>
+                                <GroupStyle>
+                                    <GroupStyle.HeaderTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource SidebarGroupLabel}"
+                                                       Text="{Binding Name, Converter={StaticResource UpperCase}}"/>
+                                        </DataTemplate>
+                                    </GroupStyle.HeaderTemplate>
+                                </GroupStyle>
+                            </ListBox.GroupStyle>
+                        </ListBox>
+                    </ScrollViewer>
+                </Border>
 
-                    <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="AGENTS PROBE"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
-                            <TextBox Margin="0,6,0,0"
-                                     Style="{StaticResource SettingsInput}"
-                                     Tag="{Binding ProbeTtlWatermark}"
-                                     Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
-                                     Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="1">
-                            <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
-                            <TextBox Margin="0,6,0,0"
-                                     Style="{StaticResource SettingsInput}"
-                                     Tag="{Binding ProbeTimeoutWatermark}"
-                                     Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
-                                     Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock Margin="0,8,0,0"
-                               Style="{StaticResource HintText}"
-                               Text="Empty — use defaults."/>
+                <!-- Active page -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <TextBlock Margin="0,24,0,8" Style="{StaticResource SectionLabel}" Text="UPDATES"/>
-                    <CheckBox HorizontalAlignment="Left"
-                              Content="Check for updates on startup"
-                              IsChecked="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
-                              Style="{StaticResource SettingsCheck}"/>
-                    <Button Margin="0,12,0,0"
-                            Command="{Binding CheckForUpdatesCommand}"
-                            Content="Check for updates"
-                            HorizontalAlignment="Left"
-                            Style="{StaticResource NeutralButton}"/>
-                    <TextBlock Margin="0,8,0,0"
-                               Style="{StaticResource StatusLine}"
-                               Text="{Binding UpdateMessage}"/>
+                    <ScrollViewer Grid.Row="0"
+                                  Padding="24,20,24,16"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                        <Grid>
+                            <views:SettingsGeneralPage>
+                                <views:SettingsGeneralPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="general">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsGeneralPage.Style>
+                            </views:SettingsGeneralPage>
 
-                    <TextBlock Margin="0,12,0,0"
+                            <views:SettingsHotkeysPage>
+                                <views:SettingsHotkeysPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="hotkeys">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsHotkeysPage.Style>
+                            </views:SettingsHotkeysPage>
+
+                            <views:SettingsTerminalPage>
+                                <views:SettingsTerminalPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="terminal">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsTerminalPage.Style>
+                            </views:SettingsTerminalPage>
+
+                            <views:SettingsAgentsPage>
+                                <views:SettingsAgentsPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="agents">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsAgentsPage.Style>
+                            </views:SettingsAgentsPage>
+
+                            <views:SettingsAppearancePage>
+                                <views:SettingsAppearancePage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="appearance">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsAppearancePage.Style>
+                            </views:SettingsAppearancePage>
+
+                            <views:SettingsUpdatesPage>
+                                <views:SettingsUpdatesPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="updates">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsUpdatesPage.Style>
+                            </views:SettingsUpdatesPage>
+
+                            <views:SettingsPlaceholderPage>
+                                <views:SettingsPlaceholderPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.IsImplemented}" Value="False">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsPlaceholderPage.Style>
+                            </views:SettingsPlaceholderPage>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <TextBlock Grid.Row="1"
+                               Margin="24,0,24,12"
                                Style="{StaticResource ErrorText}"
                                Text="{Binding ValidationError}"/>
-                </StackPanel>
-            </ScrollViewer>
+                </Grid>
+            </Grid>
 
             <!-- Footer: brand + version chip, Save/Cancel -->
             <Border Grid.Row="3" Style="{StaticResource FooterStrip}">
