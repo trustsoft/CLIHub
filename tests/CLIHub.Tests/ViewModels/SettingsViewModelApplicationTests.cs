@@ -62,7 +62,7 @@ public class SettingsViewModelApplicationTests
         public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
         public Mock<IStartupService> Startup { get; } = new(MockBehavior.Strict);
         public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateService> Updates { get; } = new();
+        public Mock<IUpdateWorkflow> Updates { get; } = new();
         public SettingsViewModel ViewModel { get; }
 
         public Fixture()

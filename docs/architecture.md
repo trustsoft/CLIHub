@@ -34,8 +34,8 @@ The launch window is the active shell. Its ViewModel composes project and agent 
 and action coordinators, update state, and application services. `MainWindow` is retained as an unregistered
 legacy reference.
 
-Application update entry points share `IUpdateWorkflow` in `src/CLIHub`. Core owns Velopack ports and update
-state; the application workflow owns cross-surface coordination and the existing apply policies.
+Application update entry points, including Settings, share `IUpdateWorkflow` in `src/CLIHub`. Core owns Velopack
+ports and update state; the application workflow owns cross-surface coordination and the existing apply policies.
 
 ## Core Ownership
 

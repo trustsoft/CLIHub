@@ -18,7 +18,7 @@ public class SettingsOperationLifetimeTests
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
-        var updates = new Mock<IUpdateService>();
+        var updates = new Mock<IUpdateWorkflow>();
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
         updates
             .Setup(x => x.CheckForUpdatesAsync(cancellation.Token))

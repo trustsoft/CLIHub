@@ -2,6 +2,9 @@ namespace CLIHub.Tests.ViewModels;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using CLIHub;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
@@ -30,6 +33,7 @@ public class SharedUpdatePresentationTests
         using var notes = new WhatsNewViewModel(Notes(), workflow, lifetime);
         using var control = new UpdateControlViewModel(workflow, NullLogger<UpdateControlViewModel>.Instance, lifetime);
         var startup = new UpdateStartupCoordinator(workflow, NullLogger<UpdateStartupCoordinator>.Instance);
+        var settings = CreateSettingsViewModel(workflow);
         string? notified = null;
 
         var startupTask = startup.CheckAsync(true, version => notified = version);
@@ -40,14 +44,24 @@ public class SharedUpdatePresentationTests
         Assert.False(control.UpdateControlCommand.CanExecute(null));
 
         var joiningCheck = workflow.CheckForUpdatesAsync();
+        var settingsTask = settings.CheckForUpdatesAsync();
         var available = status == UpdateStatus.UpdateAvailable ? "2.0" : null;
         core.SetupGet(x => x.LastKnownAvailableVersion).Returns(available);
         pending.SetResult(new(status, "1.0", available));
-        await Task.WhenAll(startupTask, joiningCheck);
+        await Task.WhenAll(startupTask, joiningCheck, settingsTask);
 
         Assert.False(projection.GetState().IsCheckingForUpdates);
         Assert.Equal(available, projection.GetState().AvailableUpdateVersion);
         Assert.Equal(available, notified);
+        Assert.Equal(
+            status == UpdateStatus.UpdateAvailable
+                ? "Update available: 2.0 (current v1.0)"
+                : status == UpdateStatus.UpToDate
+                    ? "Up to date (v1.0)"
+                    : status == UpdateStatus.NotInstalled
+                        ? "Updates apply to installed builds only."
+                        : "Update check failed or timed out.",
+            settings.UpdateMessage);
         Assert.Equal(available is not null, notes.CanDownloadUpdate);
         Assert.Equal(available is null, notes.CanCheckForUpdates);
         Assert.Equal(available is null ? "1.0" : "Update to 2.0", control.UpdateButtonText);
@@ -89,6 +103,25 @@ public class SharedUpdatePresentationTests
         var notes = new Mock<IReleaseNotesService>();
         notes.Setup(x => x.GetNotes()).Returns([]);
         return notes.Object;
+    }
+
+    private static SettingsViewModel CreateSettingsViewModel(IUpdateWorkflow workflow)
+    {
+        var preferences = new Mock<IPreferencesStore>();
+        var startup = new Mock<IStartupService>();
+        var applier = new Mock<IPreferenceApplier>();
+        var application = new SettingsApplicationService(
+            preferences.Object,
+            startup.Object,
+            applier.Object,
+            NullLogger<SettingsApplicationService>.Instance);
+
+        return new SettingsViewModel(
+            application,
+            workflow,
+            workflow,
+            Mock.Of<IApplicationOperationLifetime>(),
+            NullLogger<SettingsViewModel>.Instance);
     }
 
     private static TrayStateProjection CreateProjection(IUpdateWorkflow workflow)

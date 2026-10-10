@@ -30,7 +30,7 @@ public partial class MainWindow : Window
     private readonly IAgentVersionService _agentVersionService;
     private readonly IPreferencesStore _preferencesStore;
     private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateChecker _updateChecker;
+    private readonly IUpdateWorkflow _updateWorkflow;
     private readonly ILogger<MainWindow> _logger;
     private bool _suppressFilterEvent;
     private CancellationTokenSource? _versionPopulationCts;
@@ -46,7 +46,7 @@ public partial class MainWindow : Window
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="preferencesStore"> Store for the filter preference. </param>
     /// <param name="versionProvider"> Provides the version text. </param>
-    /// <param name="updateChecker"> Checks for available updates. </param>
+    /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="logger"> Logger for unexpected legacy window action failures. </param>
     public MainWindow(
         IPluginCatalog pluginCatalog,
@@ -56,7 +56,7 @@ public partial class MainWindow : Window
         IAgentVersionService agentVersionService,
         IPreferencesStore preferencesStore,
         IUpdateVersionProvider versionProvider,
-        IUpdateChecker updateChecker,
+        IUpdateWorkflow updateWorkflow,
         ILogger<MainWindow> logger)
     {
         InitializeComponent();
@@ -68,7 +68,7 @@ public partial class MainWindow : Window
         _agentVersionService = agentVersionService;
         _preferencesStore = preferencesStore;
         _versionProvider = versionProvider;
-        _updateChecker = updateChecker;
+        _updateWorkflow = updateWorkflow;
         _logger = logger;
 
         _projectService.ProjectsChanged += (_, _) => RefreshProjects();
@@ -96,7 +96,7 @@ public partial class MainWindow : Window
     {
         StatusText.Text = "Checking for updates...";
 
-        var result = await _updateChecker.CheckForUpdatesAsync();
+        var result = await _updateWorkflow.CheckForUpdatesAsync();
 
         StatusText.Text = result.Status switch
         {

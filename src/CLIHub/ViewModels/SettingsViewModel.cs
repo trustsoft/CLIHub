@@ -45,7 +45,7 @@ public sealed class SettingsViewModel : ObservableObject
 
     private readonly SettingsApplicationService _settingsApplication;
     private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateChecker _updateChecker;
+    private readonly IUpdateWorkflow _updateWorkflow;
     private readonly IApplicationOperationLifetime _operationLifetime;
     private readonly ILogger<SettingsViewModel> _logger;
 
@@ -66,19 +66,19 @@ public sealed class SettingsViewModel : ObservableObject
     /// </summary>
     /// <param name="settingsApplication"> Typed Settings draft and application service. </param>
     /// <param name="versionProvider"> Provides the current application version. </param>
-    /// <param name="updateChecker"> Checks for available updates. </param>
+    /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
         SettingsApplicationService settingsApplication,
         IUpdateVersionProvider versionProvider,
-        IUpdateChecker updateChecker,
+        IUpdateWorkflow updateWorkflow,
         IApplicationOperationLifetime operationLifetime,
         ILogger<SettingsViewModel> logger)
     {
         _settingsApplication = settingsApplication;
         _versionProvider = versionProvider;
-        _updateChecker = updateChecker;
+        _updateWorkflow = updateWorkflow;
         _operationLifetime = operationLifetime;
         _logger = logger;
 
@@ -317,7 +317,7 @@ public sealed class SettingsViewModel : ObservableObject
         UpdateCheckResult result;
         try
         {
-            result = await _updateChecker.CheckForUpdatesAsync(cancellationToken);
+            result = await _updateWorkflow.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
