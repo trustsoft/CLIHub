@@ -31,11 +31,10 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!--
-                Pane-list scrollbar thumbs use the row hover tone. The app-level implicit ScrollBar
-                style reads this key dynamically, so this window-scoped override reaches it.
+                ScrollThumbBrush is provided by the application-level palette (LaunchTheme.xaml /
+                LightTheme.xaml) and reached here through the DynamicResource lookup in the
+                application-level ScrollBar style; no window-scoped override is needed.
             -->
-            <SolidColorBrush x:Key="ScrollThumbBrush"
-                             Color="{Binding Color, Source={DynamicResource HoverOverlayBrush}}"/>
 
             <!--
                 Actions-menu item templates. They live here, not in the styles dictionary, because an
