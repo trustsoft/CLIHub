@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLIHub Settings</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            win: {
+              bg: '#18181c',
+              card: '#202024',
+              hover: '#29292e',
+              selected: '#303038',
+              border: '#33333b',
+              accent: '#0078d4',
+              subtle: '#888894'
+            }
+          },
+          fontFamily: {
+            sans: ['"Segoe UI Variable"', '"Segoe UI"', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"Cascadia Code"', '"Consolas"', 'monospace']
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    /* Custom scrollbar matching Windows 11 Fluent dark */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3a3a44;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4f4f5c;
+    }
+  </style>
+</head>
+<body class="bg-[#0f0f13] text-gray-200 min-h-screen flex items-center justify-center p-6 selection:bg-blue-600 selection:text-white">
+
+  <!-- Desktop Backdrop Simulation -->
+  <div class="w-full max-w-5xl bg-[#1e1e24]/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-[0_24px_60px_rgba(0,0,0,0.65)] overflow-hidden flex flex-col h-[740px]">
+    
+    <!-- Window Title Bar (Native Windows 11 Fluent style) -->
+    <header class="h-10 bg-[#16161a] border-b border-white/5 flex items-center justify-between px-3 select-none flex-shrink-0">
+      <!-- Title & Icon -->
+      <div class="flex items-center gap-2.5">
+        <div class="w-4 h-4 rounded bg-blue-600 flex items-center justify-center text-[10px] text-white font-bold shadow-sm">
+          <i class="fa-solid fa-terminal text-[9px]"></i>
+        </div>
+        <span class="text-xs font-medium text-gray-300 tracking-wide">CLIHub Settings</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/5">v0.9.0</span>
+      </div>
+
+      <!-- Window Control Buttons (Minimize, Maximize, Close) -->
+      <div class="flex items-center -mr-3 text-gray-400 text-xs">
+        <button class="w-11 h-10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" title="Minimize">
+          <i class="fa-regular fa-window-minimize text-[10px] -translate-y-1"></i>
+        </button>
+        <button class="w-11 h-10 flex items-center justify-center hover:bg-white/10 hover:text-white transition-colors" title="Maximize">
+          <i class="fa-regular fa-square text-[10px]"></i>
+        </button>
+        <button class="w-11 h-10 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors" title="Close">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Body: Sidebar + Main Content -->
+    <div class="flex flex-1 overflow-hidden">
+
+      <!-- Left Sidebar: Settings Categories -->
+      <aside class="w-64 bg-[#18181d] border-r border-white/5 flex flex-col p-3 flex-shrink-0">
+        
+        <!-- Settings Search -->
+        <div class="relative mb-3">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+          <input 
+            type="text" 
+            placeholder="Find a setting..." 
+            class="w-full bg-[#202026] text-xs text-gray-200 placeholder-gray-500 rounded-md pl-8 pr-3 py-1.5 border border-white/5 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/40 transition-all"
+          >
+        </div>
+
+        <!-- Category Navigation List -->
+        <nav class="space-y-1 flex-1 overflow-y-auto pr-1">
+          <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-2.5 py-1">General</div>
+          
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-white bg-blue-600/20 text-blue-400 border border-blue-500/30 transition-all text-left group">
+            <span class="w-5 text-center text-blue-400"><i class="fa-solid fa-sliders"></i></span>
+            <span class="flex-1">General & Startup</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+          </button>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-keyboard"></i></span>
+            <span class="flex-1">Hotkeys & Launchers</span>
+            <span class="text-[10px] font-mono text-gray-500">Alt+Space</span>
+          </button>
+
+          <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-2.5 pt-3 pb-1">Engines & Repos</div>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-folder-tree"></i></span>
+            <span class="flex-1">Projects & Paths</span>
+          </button>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-robot"></i></span>
+            <span class="flex-1">CLI Agents (Claude/Cline)</span>
+          </button>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-terminal"></i></span>
+            <span class="flex-1">Terminal Profiles</span>
+          </button>
+
+          <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-2.5 pt-3 pb-1">System</div>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-palette"></i></span>
+            <span class="flex-1">Appearance & Mica</span>
+          </button>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-shield-halved"></i></span>
+            <span class="flex-1">Telemetry & Logs</span>
+          </button>
+
+          <button class="w-full flex items-center gap-3 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-300 hover:bg-white/5 hover:text-white transition-all text-left group">
+            <span class="w-5 text-center text-gray-400 group-hover:text-blue-400"><i class="fa-solid fa-arrows-rotate"></i></span>
+            <span class="flex-1">Updates</span>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Latest</span>
+          </button>
+        </nav>
+
+        <!-- Quick Profile Card at bottom of sidebar -->
+        <div class="pt-3 border-t border-white/5 mt-auto">
+          <div class="flex items-center gap-2.5 p-2 rounded-lg bg-white/[0.03]">
+            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+              <i class="fa-solid fa-code text-[11px]"></i>
+            </div>
+            <div class="overflow-hidden">
+              <div class="text-xs font-medium text-gray-200 truncate">Dev Profile</div>
+              <div class="text-[10px] text-gray-400 truncate font-mono">D:\YandexDisk</div>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Right Main Content: Category Details (General & Hotkeys) -->
+      <main class="flex-1 bg-[#1a1a20] overflow-y-auto p-8 space-y-6">
+
+        <!-- Page Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-white/5">
+          <div>
+            <h1 class="text-xl font-semibold text-white tracking-tight flex items-center gap-2.5">
+              <span>Hotkeys & Quick Launcher</span>
+              <span class="text-xs font-normal text-gray-400 px-2 py-0.5 rounded bg-white/5">Global Hooks</span>
+            </h1>
+            <p class="text-xs text-gray-400 mt-1">Configure global hotkeys, quick launcher behavior and window placement.</p>
+          </div>
+          <button class="px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium shadow-sm transition-all flex items-center gap-1.5">
+            <i class="fa-solid fa-check text-[11px]"></i>
+            <span>Apply Changes</span>
+          </button>
+        </div>
+
+        <!-- Section 1: Activation Hotkeys -->
+        <div class="space-y-3">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Activation & Shortcuts</h2>
+          
+          <!-- Card: Quick Launcher Global Hotkey -->
+          <div class="bg-[#212127] border border-white/5 rounded-lg p-4 flex items-center justify-between hover:border-white/10 transition-colors">
+            <div class="space-y-1">
+              <div class="text-sm font-medium text-white flex items-center gap-2">
+                <span>Quick Launcher Popup Hotkey</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 font-medium">Active</span>
+              </div>
+              <div class="text-xs text-gray-400">Summons the borderless instant search & agent flyout window from anywhere</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <kbd class="px-2.5 py-1 rounded bg-[#16161b] border border-white/10 text-xs font-mono text-gray-300 shadow-inner">Alt</kbd>
+              <span class="text-gray-500 text-xs">+</span>
+              <kbd class="px-2.5 py-1 rounded bg-[#16161b] border border-white/10 text-xs font-mono text-gray-300 shadow-inner">Space</kbd>
+              <button class="ml-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-blue-500/10 rounded border border-blue-500/20 transition-colors">
+                Change
+              </button>
+            </div>
+          </div>
+
+          <!-- Card: Secondary Hotkey for Focused Agent Launcher -->
+          <div class="bg-[#212127] border border-white/5 rounded-lg p-4 flex items-center justify-between hover:border-white/10 transition-colors">
+            <div class="space-y-1">
+              <div class="text-sm font-medium text-white">Direct Agent Run Hotkey</div>
+              <div class="text-xs text-gray-400">Instantly launch default CLI agent (OpenCode / Cline) in current active project</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <kbd class="px-2.5 py-1 rounded bg-[#16161b] border border-white/10 text-xs font-mono text-gray-300 shadow-inner">Ctrl</kbd>
+              <span class="text-gray-500 text-xs">+</span>
+              <kbd class="px-2.5 py-1 rounded bg-[#16161b] border border-white/10 text-xs font-mono text-gray-300 shadow-inner">Shift</kbd>
+              <span class="text-gray-500 text-xs">+</span>
+              <kbd class="px-2.5 py-1 rounded bg-[#16161b] border border-white/10 text-xs font-mono text-gray-300 shadow-inner">Enter</kbd>
+              <button class="ml-2 px-2.5 py-1 text-xs text-blue-400 hover:bg-blue-500/10 rounded border border-blue-500/20 transition-colors">
+                Change
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Popup Window Behavior -->
+        <div class="space-y-3">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Popup Behavior & Styling</h2>
+
+          <!-- Setting item with Toggle: Hide window frame -->
+          <div class="bg-[#212127] border border-white/5 rounded-lg p-4 flex items-center justify-between hover:border-white/10 transition-colors">
+            <div>
+              <div class="text-sm font-medium text-white">Frameless Quick Launcher Mode</div>
+              <div class="text-xs text-gray-400">Hide native OS title bar and window control buttons on popup flyout</div>
+            </div>
+            <!-- Toggle switch (ON) -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-[#32323c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Setting item with Toggle: Hide on Esc or blur -->
+          <div class="bg-[#212127] border border-white/5 rounded-lg p-4 flex items-center justify-between hover:border-white/10 transition-colors">
+            <div>
+              <div class="text-sm font-medium text-white">Dismiss on Focus Loss / Esc</div>
+              <div class="text-xs text-gray-400">Automatically hide popup window when clicking outside or pressing Escape</div>
+            </div>
+            <!-- Toggle switch (ON) -->
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" checked class="sr-only peer">
+              <div class="w-11 h-6 bg-[#32323c] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+
+          <!-- Setting item with Select: Screen Position -->
+          <div class="bg-[#212127] border border-white/5 rounded-lg p-4 flex items-center justify-between hover:border-white/10 transition-colors">
+            <div>
+              <div class="text-sm font-medium text-white">Popup Screen Position</div>
+              <div class="text-xs text-gray-400">Where the launcher window appears when invoked</div>
+            </div>
+            <select class="bg-[#18181d] text-xs text-gray-200 border border-white/10 rounded-md px-3 py-1.5 focus:outline-none focus:border-blue-500">
+              <option selected>Center of Active Monitor</option>
+              <option>Top Center (Raycast style)</option>
+              <option>Remember Last Position</option>
+              <option>Near Mouse Cursor</option>
+            </select>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+
+    <!-- Windows 11 Status Footer Bar (Matching the user-requested status footer) -->
+    <footer class="h-9 bg-[#151518] border-t border-white/5 px-4 flex items-center justify-between text-xs select-none flex-shrink-0">
+      
+      <!-- Left side: App name, version, status badge -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1.5">
+          <span class="font-semibold text-gray-200 tracking-wide text-xs">CLIHub</span>
+          <span class="text-[10px] px-1.5 py-0.2 rounded bg-white/5 text-gray-400 font-mono border border-white/5">0.9.0</span>
+        </div>
+        
+        <span class="text-gray-600">|</span>
+        
+        <div class="flex items-center gap-1.5 text-gray-300">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="text-[11px] font-medium text-emerald-400/90">CLIHub ready</span>
+        </div>
+
+        <span class="text-gray-600">|</span>
+
+        <!-- Sync indicator -->
+        <div class="flex items-center gap-1 text-[11px] text-gray-400">
+          <i class="fa-solid fa-check text-emerald-400 text-[10px]"></i>
+          <span>All hooks registered</span>
+        </div>
+      </div>
+
+      <!-- Right side: Expanded System Commands & Control actions (as requested) -->
+      <div class="flex items-center gap-1 text-gray-400">
+        
+        <!-- Layout / Split Mode -->
+        <button class="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors" title="Toggle Layout / Split View">
+          <i class="fa-regular fa-window-restore text-[11px]"></i>
+        </button>
+
+        <!-- Compact / Minimize to Tray -->
+        <button class="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors" title="Minimize to System Tray">
+          <i class="fa-regular fa-window-minimize text-[10px] -translate-y-1"></i>
+        </button>
+
+        <!-- Reload / Sync Services -->
+        <button class="w-7 h-7 flex items-center justify-center rounded hover:bg-white/10 hover:text-white transition-colors" title="Reload Configurations & Agents">
+          <i class="fa-solid fa-arrows-rotate text-[11px]"></i>
+        </button>
+
+        <!-- Power / Terminate Daemon -->
+        <button class="w-7 h-7 flex items-center justify-center rounded hover:bg-red-500/20 hover:text-red-400 transition-colors ml-1" title="Shutdown Daemon">
+          <i class="fa-solid fa-power-off text-[11px]"></i>
+        </button>
+
+      </div>
+
+    </footer>
+
+  </div>
+
+</body>
+</html>

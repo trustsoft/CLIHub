@@ -2,7 +2,7 @@
 
 Reference images for UI work. The descriptions below are a snapshot of each image; the images are the source of truth and may be updated.
 
-Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` with the current dark theme.
+Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` with the current dark theme. `settings-target.html` is the **target** design for the Settings window — it is not implemented yet and supersedes `settings.png` as the design direction for future Settings work.
 
 ## `popup-split.png` — launch window (Popup)
 
@@ -14,13 +14,31 @@ A dark, two-pane launcher, presented as a chromeless popup: no title bar, a 1px 
 - **Footer:** left `CLIHub` + a version pill; right icon buttons — **folder** (open the data folder), **gear** (settings), **pin** (keep the window open) and **power** (exit); the update check sits next to the version pill and status text is centred.
 - Long lists scroll inside the panes; the window height follows the content up to a cap.
 
-## `settings.png` — Settings window
+## `settings-target.html` / `settings-target.png` — Settings window (TARGET, not implemented)
+
+An interactive HTML mockup (Tailwind CDN, dark Fluent style) of the Settings window CLIHub should move to; `settings-target.png` is its rendered snapshot at 1024×740. It replaces the single-column `settings.png` layout with a Windows 11 Fluent–style shell:
+
+- **Window:** native-looking title bar with app icon, `CLIHub Settings` title, version pill, and minimize/maximize/close buttons.
+- **Left sidebar:** `Find a setting...` search field and grouped category navigation — *General* (**General & Startup**, **Hotkeys & Launchers** with an `Alt+Space` badge), *Engines & Repos* (**Projects & Paths**, **CLI Agents (Claude/Cline)**, **Terminal Profiles**), *System* (**Appearance & Mica**, **Telemetry & Logs**, **Updates** with a `Latest` badge). A quick profile card sits at the bottom.
+- **Main content:** one page per category (the mockup shows "Hotkeys & Quick Launcher") with a page header, description, and an **Apply Changes** action; settings are rendered as cards with a title, hint, and an inline control:
+  - key-chip hotkey display with a **Change** button (Quick Launcher `Alt+Space`; Direct Agent Run `Ctrl+Shift+Enter`);
+  - toggle switches (Frameless Quick Launcher Mode; Dismiss on Focus Loss / Esc);
+  - a dropdown for popup screen position (Center of Active Monitor / Top Center / Remember Last Position / Near Mouse Cursor).
+- **Footer status bar:** `CLIHub` + version pill, a live status ("CLIHub ready" with a pulsing indicator), a sync note ("All hooks registered"), and right-aligned icon actions: toggle layout, minimize to tray, reload configurations, shutdown.
+
+The categories, hotkey cards, and status bar imply capabilities beyond the current preferences; a future OpenSpec change should scope which of them become real settings.
+
+## `settings.png` — Settings window (CURRENT, delivered)
+
+Rendered from the running application (v0.9.0, 630×806):
 
 - Title **Settings** with a close (×).
-- **DEFAULT RUNTIME:** segmented control `cmd | ps | wt` (wt selected).
+- **STARTUP:** checkboxes "Start with Windows" and "Show window on startup".
+- **DEFAULT RUNTIME:** segmented control `cmd | ps | wt`.
+- **APPEARANCE:** segmented control `Left trim | Middle ellipsis`; hint: "How long project paths are shortened in the launch window."
 - **GLOBAL HOTKEY:** a capture field showing key chips (e.g. `Ctrl Alt Space`); hint: "Press a combination in the field. Esc cancels capture."
-- **AGENTS PROBE:** numeric fields `TTL, minutes` (15) and `Timeout, seconds` (3); hint: "Empty — use defaults."
-- **UPDATES:** checkbox "Check for updates on startup" (on); button "Check for updates"; status line, e.g. "v0.6.0 — ready to install (install from tray)".
+- **AGENTS PROBE:** numeric fields `TTL, minutes` and `Timeout, seconds`; hint: "Empty - use defaults."
+- **UPDATES:** checkbox "Check for updates on startup"; button "Check for updates".
 - **Footer:** `CLIHub` + version pill; **Save** and **Cancel**.
 
 ## Elements/settings implied for implementation
