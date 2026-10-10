@@ -48,7 +48,7 @@ The system SHALL show the current application version to the user.
 
 ### Requirement: Manual update check
 
-The system SHALL allow the user to trigger an update check manually from the launch window, tray menu, and What's New window. Manual checks SHALL use the shared update state, and every entry point SHALL join an already-running check rather than starting a duplicate.
+The system SHALL allow the user to trigger an update check manually from the launch window, tray menu, What's New window, and Settings window. Manual checks SHALL use the shared update state, and every entry point SHALL join an already-running check rather than starting a duplicate.
 
 #### Scenario: Manual check
 - **WHEN** the user invokes "Check for updates" from an update entry point
@@ -70,9 +70,17 @@ The system SHALL allow the user to trigger an update check manually from the lau
 - **AND WHEN** the user invokes the action
 - **THEN** a manual check starts and the window reflects its checking state until it completes
 
+#### Scenario: Manual check from Settings
+- **WHEN** the user invokes "Check for updates" from Settings
+- **THEN** the check participates in the shared update lifecycle and Settings reports the outcome in its status message
+
+#### Scenario: Settings joins a check started elsewhere
+- **WHEN** an update check is already running from another entry point and the user invokes the Settings check
+- **THEN** Settings joins the active check without starting another underlying check and reports that check's outcome
+
 #### Scenario: Shared availability after a manual check
-- **WHEN** a manual check finds an available update
-- **THEN** the shared update state changes and the tray and What's New surfaces offer their existing download-and-restart action
+- **WHEN** a manual check finds an update
+- **THEN** the shared update state changes and all open update surfaces observe the same available version
 
 #### Scenario: No update or failed check
 - **WHEN** a manual check completes without an available update, fails, is cancelled, or reports that the application is not updater-installed
