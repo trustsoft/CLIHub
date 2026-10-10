@@ -94,6 +94,7 @@ public class SettingsViewModelApplicationTests
                 Updates.Object,
                 Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
+                new Mock<IExternalLauncher>().Object,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

@@ -1,10 +1,14 @@
 namespace CLIHub.ViewModels;
 
+using System.Windows;
+
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Logging;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 
@@ -24,6 +28,13 @@ public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment
 /// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
 /// <param name="Segment"> Short label rendered by the segmented selector. </param>
 public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, string Segment);
+
+/// <summary>
+///   A selectable log level.
+/// </summary>
+/// <param name="Value"> The stored level name. </param>
+/// <param name="Name"> Display name. </param>
+public sealed record LogLevelOption(string Value, string Name);
 
 /// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
@@ -70,8 +81,17 @@ public sealed class SettingsViewModel : ObservableObject
         new("agents", "CLI Agents", "Engines & Repos", true),
         new("terminal", "Terminal Profiles", "Engines & Repos", true),
         new("appearance", "Appearance", "System", true),
-        new("telemetry", "Telemetry & Logs", "System", false),
+        new("telemetry", "Telemetry & Logs", "System", true),
         new("updates", "Updates", "System", true)
+    };
+
+    private static readonly LogLevelOption[] LogLevelOptions =
+    {
+        new("Verbose", "Verbose"),
+        new("Debug", "Debug"),
+        new("Information", "Information"),
+        new("Warning", "Warning"),
+        new("Error", "Error")
     };
 
     private static readonly SettingsGroup[] PagesByGroup = AllPages
@@ -100,6 +120,10 @@ public sealed class SettingsViewModel : ObservableObject
     private string _updateMessage = string.Empty;
     private string? _validationError;
     private SettingsPage _selectedPage = AllPages[0];
+    private readonly IExternalLauncher _externalLauncher;
+    private LogLevelOption _selectedLogLevel = LogLevelOptions[2];
+    private string _logRetentionDaysText = "7";
+    private string _logFileSizeLimitText = "0";
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -108,18 +132,21 @@ public sealed class SettingsViewModel : ObservableObject
     /// <param name="versionProvider"> Provides the current application version. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
+    /// <param name="externalLauncher"> Operating-system path launcher for opening the log folder. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     public SettingsViewModel(
         SettingsApplicationService settingsApplication,
         IUpdateVersionProvider versionProvider,
         IUpdateWorkflow updateWorkflow,
         IApplicationOperationLifetime operationLifetime,
+        IExternalLauncher externalLauncher,
         ILogger<SettingsViewModel> logger)
     {
         _settingsApplication = settingsApplication;
         _versionProvider = versionProvider;
         _updateWorkflow = updateWorkflow;
         _operationLifetime = operationLifetime;
+        _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
         _logger = logger;
 
         Version = _versionProvider.GetCurrentVersion();
@@ -128,6 +155,8 @@ public sealed class SettingsViewModel : ObservableObject
         CancelCommand = new RelayCommand(Cancel);
         CheckForUpdatesCommand = new RelayCommand(() =>
             _ = _operationLifetime.RunAsync("Settings update check", RunUpdateCheckAsync));
+        CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(LogFilePath));
+        OpenLogFolderCommand = new RelayCommand(() => _externalLauncher.Open(AppPaths.LogsDirectory));
     }
 
     /// <summary>
@@ -294,6 +323,53 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    ///   The log level options offered by the selector.
+    /// </summary>
+    public IReadOnlyList<LogLevelOption> LogLevels => LogLevelOptions;
+
+    /// <summary>
+    ///   The selected log level.
+    /// </summary>
+    public LogLevelOption SelectedLogLevel
+    {
+        get => _selectedLogLevel;
+        set => SetProperty(ref _selectedLogLevel, value);
+    }
+
+    /// <summary>
+    ///   The number of daily log files to retain, as text.
+    /// </summary>
+    public string LogRetentionDaysText
+    {
+        get => _logRetentionDaysText;
+        set => SetProperty(ref _logRetentionDaysText, value);
+    }
+
+    /// <summary>
+    ///   The per-file log size limit in megabytes, as text (0 = unlimited).
+    /// </summary>
+    public string LogFileSizeLimitText
+    {
+        get => _logFileSizeLimitText;
+        set => SetProperty(ref _logFileSizeLimitText, value);
+    }
+
+    /// <summary>
+    ///   The current log file path.
+    /// </summary>
+    public string LogFilePath => LogFileLocator.CurrentLogFilePath(AppPaths.LogsDirectory);
+
+    /// <summary>
+    ///   Copies the current log file path to the clipboard.
+    /// </summary>
+    public RelayCommand CopyLogPathCommand { get; }
+
+    /// <summary>
+    ///   Opens the logs folder in the system file browser.
+    /// </summary>
+    public RelayCommand OpenLogFolderCommand { get; }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -358,6 +434,9 @@ public sealed class SettingsViewModel : ObservableObject
         _autoDownloadUpdates = draft.AutoDownloadUpdates;
         _notifyStableUpdates = draft.NotifyStableUpdates;
         _notifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
+        _selectedLogLevel = LogLevelOptions.FirstOrDefault(o => o.Value == draft.LogLevel) ?? LogLevelOptions[2];
+        _logRetentionDaysText = draft.LogRetentionDays.ToString();
+        _logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
@@ -376,6 +455,9 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(AutoDownloadUpdates));
         OnPropertyChanged(nameof(NotifyStableUpdates));
         OnPropertyChanged(nameof(NotifyPrereleaseUpdates));
+        OnPropertyChanged(nameof(SelectedLogLevel));
+        OnPropertyChanged(nameof(LogRetentionDaysText));
+        OnPropertyChanged(nameof(LogFileSizeLimitText));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -441,7 +523,10 @@ public sealed class SettingsViewModel : ObservableObject
             CheckForUpdatesOnStartup,
             AutoDownloadUpdates,
             NotifyStableUpdates,
-            NotifyPrereleaseUpdates);
+            NotifyPrereleaseUpdates,
+            SelectedLogLevel.Value,
+            LogRetentionDaysText,
+            LogFileSizeLimitText);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

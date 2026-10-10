@@ -79,6 +79,28 @@ public class LoggingSetupTests : IDisposable
         Assert.NotNull(content);
         Assert.Contains("debug-appears", content);
     }
+
+    [Fact]
+    public void CreateLogger_WithSizeLimit_RollsToMultipleFiles()
+    {
+        using (var logger = LoggingSetup.CreateLogger(
+            _dir,
+            LogEventLevel.Information,
+            retainedFileCountLimit: 7,
+            fileSizeLimitBytes: 1024))
+        {
+            for (var i = 0; i < 200; i++)
+            {
+                logger.Information("line {Index} {Padding}", i, new string('x', 50));
+            }
+
+            logger.Dispose();
+        }
+
+        var files = Directory.GetFiles(_dir, "clihub-*.log");
+
+        Assert.True(files.Length >= 2, $"expected size-based rollover, got {files.Length} files");
+    }
 }
 
 public class LogLevelParserTests
@@ -102,6 +124,17 @@ public class LogLevelParserTests
     public void Parse_UnknownValues_DefaultToInformation(string? input)
     {
         Assert.Equal(LogEventLevel.Information, LogLevelParser.Parse(input));
+    }
+}
+
+public class LogFileLocatorTests
+{
+    [Fact]
+    public void CurrentLogFilePath_UsesDatedFileName()
+    {
+        var path = LogFileLocator.CurrentLogFilePath(@"C:\logs", new DateTime(2026, 10, 10));
+
+        Assert.Equal(Path.Combine(@"C:\logs", "clihub-20261010.log"), path);
     }
 }
 

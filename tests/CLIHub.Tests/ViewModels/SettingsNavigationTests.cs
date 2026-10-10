@@ -34,7 +34,7 @@ public class SettingsNavigationTests
         var viewModel = new Fixture().ViewModel;
 
         Assert.False(viewModel.Pages.Single(page => page.Key == "projects").IsImplemented);
-        Assert.False(viewModel.Pages.Single(page => page.Key == "telemetry").IsImplemented);
+        Assert.True(viewModel.Pages.Single(page => page.Key == "telemetry").IsImplemented);
         Assert.True(viewModel.Pages.Single(page => page.Key == "general").IsImplemented);
     }
 
@@ -93,6 +93,7 @@ public class SettingsNavigationTests
                 Updates.Object,
                 Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
+                new Mock<IExternalLauncher>().Object,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

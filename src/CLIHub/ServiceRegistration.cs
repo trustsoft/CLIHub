@@ -86,6 +86,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<IUpdateVersionProvider>(),
             sp.GetRequiredService<IUpdateWorkflow>(),
             sp.GetRequiredService<IApplicationOperationLifetime>(),
+            sp.GetRequiredService<IExternalLauncher>(),
             sp.GetRequiredService<ILogger<SettingsViewModel>>()));
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());

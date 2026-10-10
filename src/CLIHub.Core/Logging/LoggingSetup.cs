@@ -14,7 +14,13 @@ public static class LoggingSetup
     /// </summary>
     /// <param name="logsDirectory"> Directory that receives the log files. </param>
     /// <param name="minimumLevel"> Minimum level to record. </param>
-    public static Logger CreateLogger(string logsDirectory, LogEventLevel minimumLevel)
+    /// <param name="retainedFileCountLimit"> Number of daily files to retain. </param>
+    /// <param name="fileSizeLimitBytes"> Per-file size limit in bytes, or null for unlimited. </param>
+    public static Logger CreateLogger(
+        string logsDirectory,
+        LogEventLevel minimumLevel,
+        int retainedFileCountLimit = 7,
+        long? fileSizeLimitBytes = null)
     {
         Directory.CreateDirectory(logsDirectory);
 
@@ -25,7 +31,9 @@ public static class LoggingSetup
             .WriteTo.File(
                 path: Path.Combine(logsDirectory, "clihub-.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 7,
+                retainedFileCountLimit: Math.Max(1, retainedFileCountLimit),
+                fileSizeLimitBytes: fileSizeLimitBytes,
+                rollOnFileSizeLimit: fileSizeLimitBytes is not null,
                 outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
     }

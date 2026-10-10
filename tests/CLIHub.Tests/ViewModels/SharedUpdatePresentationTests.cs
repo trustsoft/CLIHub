@@ -124,6 +124,7 @@ public class SharedUpdatePresentationTests
             workflow,
             workflow,
             Mock.Of<IApplicationOperationLifetime>(),
+            Mock.Of<IExternalLauncher>(),
             NullLogger<SettingsViewModel>.Instance);
     }
 

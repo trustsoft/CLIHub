@@ -21,6 +21,9 @@ using CLIHub.Core.Models;
 /// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
 /// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
 /// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
+/// <param name="LogLevel"> Selected log level name. </param>
+/// <param name="LogRetentionDaysText"> Retained daily log file count as text. </param>
+/// <param name="LogFileSizeLimitText"> Per-file log size limit in megabytes as text (0 = unlimited). </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -32,7 +35,10 @@ public sealed record SettingsInput(
     bool CheckForUpdatesOnStartup,
     bool AutoDownloadUpdates,
     bool NotifyStableUpdates,
-    bool NotifyPrereleaseUpdates);
+    bool NotifyPrereleaseUpdates,
+    string LogLevel,
+    string LogRetentionDaysText,
+    string LogFileSizeLimitText);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -48,6 +54,9 @@ public sealed record SettingsInput(
 /// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
 /// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
 /// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
+/// <param name="LogLevel"> Selected log level name. </param>
+/// <param name="LogRetentionDays"> Number of daily log files to retain. </param>
+/// <param name="LogFileSizeLimitMb"> Per-file log size limit in megabytes (0 = unlimited). </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -59,7 +68,10 @@ public sealed record SettingsDraft(
     bool CheckForUpdatesOnStartup,
     bool AutoDownloadUpdates,
     bool NotifyStableUpdates,
-    bool NotifyPrereleaseUpdates);
+    bool NotifyPrereleaseUpdates,
+    string LogLevel,
+    int LogRetentionDays,
+    int LogFileSizeLimitMb);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -131,7 +143,10 @@ public sealed class SettingsApplicationService
             preferences.CheckForUpdatesOnStartup,
             preferences.AutoDownloadUpdates,
             preferences.NotifyStableUpdates,
-            preferences.NotifyPrereleaseUpdates);
+            preferences.NotifyPrereleaseUpdates,
+            preferences.LogLevel,
+            preferences.LogRetentionDays,
+            preferences.LogFileSizeLimitMb);
     }
 
     /// <summary>
@@ -165,6 +180,18 @@ public sealed class SettingsApplicationService
             return false;
         }
 
+        if (!int.TryParse(input.LogRetentionDaysText?.Trim(), out var retentionDays) || retentionDays <= 0)
+        {
+            error = "Log retention must be a positive number of days.";
+            return false;
+        }
+
+        if (!int.TryParse(input.LogFileSizeLimitText?.Trim(), out var sizeLimitMb) || sizeLimitMb < 0)
+        {
+            error = "Log file size limit must be zero or a positive number of megabytes.";
+            return false;
+        }
+
         draft = new SettingsDraft(
             input.Runtime,
             input.PathDisplayStyle,
@@ -176,7 +203,10 @@ public sealed class SettingsApplicationService
             input.CheckForUpdatesOnStartup,
             input.AutoDownloadUpdates,
             input.NotifyStableUpdates,
-            input.NotifyPrereleaseUpdates);
+            input.NotifyPrereleaseUpdates,
+            input.LogLevel,
+            retentionDays,
+            sizeLimitMb);
         return true;
     }
 
@@ -222,6 +252,9 @@ public sealed class SettingsApplicationService
                 preferences.AutoDownloadUpdates = draft.AutoDownloadUpdates;
                 preferences.NotifyStableUpdates = draft.NotifyStableUpdates;
                 preferences.NotifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
+                preferences.LogLevel = draft.LogLevel;
+                preferences.LogRetentionDays = draft.LogRetentionDays;
+                preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
                 preferences.StartWithWindows = draft.StartWithWindows;
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;

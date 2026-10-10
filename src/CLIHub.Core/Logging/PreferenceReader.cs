@@ -35,4 +35,43 @@ public static class PreferenceReader
 
         return null;
     }
+
+    /// <summary>
+    ///   Reads <c>preferences.logRetentionDays</c> from the given config file. Returns null when
+    ///   the file, the property, or a usable value is absent.
+    /// </summary>
+    public static int? ReadLogRetentionDays(string configFilePath) =>
+        ReadInt(configFilePath, "logRetentionDays");
+
+    /// <summary>
+    ///   Reads <c>preferences.logFileSizeLimitMb</c> from the given config file. Returns null when
+    ///   the file, the property, or a usable value is absent.
+    /// </summary>
+    public static int? ReadLogFileSizeLimitMb(string configFilePath) =>
+        ReadInt(configFilePath, "logFileSizeLimitMb");
+
+    private static int? ReadInt(string configFilePath, string propertyName)
+    {
+        try
+        {
+            if (!File.Exists(configFilePath))
+            {
+                return null;
+            }
+
+            using var document = JsonDocument.Parse(File.ReadAllText(configFilePath));
+            if (document.RootElement.TryGetProperty("preferences", out var preferences) &&
+                preferences.TryGetProperty(propertyName, out var value) &&
+                value.TryGetInt32(out var result))
+            {
+                return result;
+            }
+        }
+        catch
+        {
+            // A malformed config must not prevent startup; fall through to the default.
+        }
+
+        return null;
+    }
 }

@@ -1,0 +1,70 @@
+<UserControl x:Class="CLIHub.Views.SettingsTelemetryPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+    <StackPanel>
+        <TextBlock Style="{StaticResource PageHeader}" Text="Telemetry &amp; Logs"/>
+
+        <TextBlock Margin="0,16,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Log level"/>
+        <ListBox HorizontalAlignment="Left"
+                 ItemsSource="{Binding LogLevels}"
+                 SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                 Style="{StaticResource SegmentGroup}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Takes effect after the next start."/>
+
+        <Grid Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                <TextBlock Style="{StaticResource FieldLabel}" Text="Retention, days"/>
+                <TextBox Margin="0,6,0,0"
+                         Style="{StaticResource SettingsInput}"
+                         Text="{Binding LogRetentionDaysText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <TextBlock x:Name="LogSizeLabel" Style="{StaticResource FieldLabel}" Text="Size limit, MB (0 = none)"/>
+                <TextBox Margin="0,6,0,0"
+                         Style="{StaticResource SettingsInput}"
+                         Text="{Binding LogFileSizeLimitText, UpdateSourceTrigger=PropertyChanged}"
+                         Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Margin="0,20,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Log file"/>
+        <StackPanel Orientation="Horizontal">
+            <Border MinWidth="320"
+                    Padding="8,6"
+                    Background="{StaticResource PopoverBgBrush}"
+                    BorderBrush="{StaticResource FieldStrokeBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                <TextBlock Style="{StaticResource HintText}" Text="{Binding LogFilePath}"/>
+            </Border>
+            <Button Margin="8,0,0,0"
+                    Command="{Binding CopyLogPathCommand}"
+                    Content="Copy path"
+                    Style="{StaticResource NeutralButton}"/>
+            <Button Margin="8,0,0,0"
+                    Command="{Binding OpenLogFolderCommand}"
+                    Content="Open log folder"
+                    Style="{StaticResource NeutralButton}"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

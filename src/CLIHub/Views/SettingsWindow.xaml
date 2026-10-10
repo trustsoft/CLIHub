@@ -197,6 +197,19 @@
                                 </views:SettingsUpdatesPage.Style>
                             </views:SettingsUpdatesPage>
 
+                            <views:SettingsTelemetryPage>
+                                <views:SettingsTelemetryPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="telemetry">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsTelemetryPage.Style>
+                            </views:SettingsTelemetryPage>
+
                             <views:SettingsPlaceholderPage>
                                 <views:SettingsPlaceholderPage.Style>
                                     <Style TargetType="UserControl">

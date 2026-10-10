@@ -73,6 +73,8 @@ public sealed class ConfigurationSnapshot
         TerminalExecutable = preferences.TerminalExecutable,
         DefaultRuntime = preferences.DefaultRuntime,
         LogLevel = preferences.LogLevel,
+        LogRetentionDays = preferences.LogRetentionDays,
+        LogFileSizeLimitMb = preferences.LogFileSizeLimitMb,
         ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents,
         AgentProbeTtlMinutes = preferences.AgentProbeTtlMinutes,
         AgentProbeTimeoutSeconds = preferences.AgentProbeTimeoutSeconds,

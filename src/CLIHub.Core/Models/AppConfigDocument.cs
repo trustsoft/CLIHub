@@ -116,6 +116,8 @@ internal sealed class AppConfigDocument
         public string TerminalExecutable { get; set; } = "wt.exe";
         public string DefaultRuntime { get; set; } = "ps";
         public string LogLevel { get; set; } = "Information";
+        public int LogRetentionDays { get; set; } = 7;
+        public int LogFileSizeLimitMb { get; set; }
         public bool ShowOnlyProjectAgents { get; set; }
         public int? AgentProbeTtlMinutes { get; set; }
         public int? AgentProbeTimeoutSeconds { get; set; }
@@ -136,6 +138,8 @@ internal sealed class AppConfigDocument
             TerminalExecutable = preferences.TerminalExecutable,
             DefaultRuntime = RuntimeKinds.ToToken(preferences.DefaultRuntime),
             LogLevel = preferences.LogLevel,
+            LogRetentionDays = preferences.LogRetentionDays,
+            LogFileSizeLimitMb = preferences.LogFileSizeLimitMb,
             ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents,
             AgentProbeTtlMinutes = preferences.AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = preferences.AgentProbeTimeoutSeconds,
@@ -158,6 +162,8 @@ internal sealed class AppConfigDocument
             TerminalExecutable = TerminalExecutable,
             DefaultRuntime = RuntimeKinds.Parse(DefaultRuntime),
             LogLevel = LogLevel,
+            LogRetentionDays = LogRetentionDays,
+            LogFileSizeLimitMb = LogFileSizeLimitMb,
             ShowOnlyProjectAgents = ShowOnlyProjectAgents,
             AgentProbeTtlMinutes = AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = AgentProbeTimeoutSeconds,

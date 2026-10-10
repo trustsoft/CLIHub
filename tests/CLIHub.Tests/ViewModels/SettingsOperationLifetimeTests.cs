@@ -38,6 +38,7 @@ public class SettingsOperationLifetimeTests
             updates.Object,
             updates.Object,
             lifetime.Object,
+            new Mock<IExternalLauncher>().Object,
             NullLogger<SettingsViewModel>.Instance);
 
         viewModel.CheckForUpdatesCommand.Execute(null);

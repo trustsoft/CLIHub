@@ -53,6 +53,16 @@ public class AppPreferences
     public string LogLevel { get; set; } = "Information";
 
     /// <summary>
+    ///   Number of daily log files to retain.
+    /// </summary>
+    public int LogRetentionDays { get; set; } = 7;
+
+    /// <summary>
+    ///   Per-file log size limit in megabytes; 0 means unlimited.
+    /// </summary>
+    public int LogFileSizeLimitMb { get; set; }
+
+    /// <summary>
     ///   When true, the agent list shows only agents available in the current project.
     ///   When false (default), unavailable agents are shown dimmed.
     /// </summary>
