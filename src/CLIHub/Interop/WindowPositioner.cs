@@ -4,8 +4,10 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 
+using CLIHub.Core.Models;
+
 /// <summary>
-///   Places the launch window on the monitor that currently contains the pointer, without
+///   Places the launch window according to the configured popup screen position, without
 ///   depending on Windows Forms.
 /// </summary>
 internal static class WindowPositioner
@@ -15,15 +17,105 @@ internal static class WindowPositioner
     private const uint SwpNoActivate = 0x0010;
     private const double MinimumMargin = 8d;
     private const double MinimumHeight = 240d;
+    private const int TopMargin = 24;
+    private const int CursorOffset = 12;
 
     /// <summary>
-    ///   Returns the work area of the monitor containing the pointer, in device-independent units.
+    ///   Places the window according to <paramref name="position"/>. The move itself is done in
+    ///   native screen coordinates: the window and the monitor work area are both measured by the
+    ///   operating system, so the result stays correct when the monitors use different scale factors.
     /// </summary>
-    internal static Rect GetPointerMonitorWorkArea(Window window)
+    internal static void Place(Window window, PopupScreenPosition position)
+    {
+        var handle = new WindowInteropHelper(window).EnsureHandle();
+
+        ApplyHeightCap(window, position);
+
+        if (!TryGetWorkArea(position, out var work) || !User32.GetWindowRect(handle, out var current))
+        {
+            PlaceUsingLayout(window, position);
+            return;
+        }
+
+        var width = current.Right - current.Left;
+        var height = current.Bottom - current.Top;
+
+        if (width <= 0 || height <= 0)
+        {
+            PlaceUsingLayout(window, position);
+            return;
+        }
+
+        var (left, top) = ComputePosition(position, work, width, height);
+
+        _ = User32.SetWindowPos(handle, IntPtr.Zero, left, top, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
+    }
+
+    private static (int Left, int Top) ComputePosition(
+        PopupScreenPosition position,
+        in User32.RECT work,
+        int width,
+        int height)
+    {
+        var workWidth = work.Right - work.Left;
+        var workHeight = work.Bottom - work.Top;
+
+        var left = position switch
+        {
+            PopupScreenPosition.CursorRelative => work.Left + CursorOffset,
+            _ => work.Left + Math.Max(0, (workWidth - width) / 2)
+        };
+
+        var top = position switch
+        {
+            PopupScreenPosition.TopCenter => work.Top + TopMargin,
+            PopupScreenPosition.CursorRelative => work.Top + CursorOffset,
+            _ => work.Top + Math.Max(0, (workHeight - height) / 2)
+        };
+
+        if (position == PopupScreenPosition.CursorRelative && User32.GetCursorPos(out var pointer))
+        {
+            left = pointer.X + CursorOffset;
+            top = pointer.Y + CursorOffset;
+        }
+
+        return Clamp(work, left, top, width, height);
+    }
+
+    private static (int Left, int Top) Clamp(in User32.RECT work, int left, int top, int width, int height)
+    {
+        var maxLeft = Math.Max(work.Left, work.Right - width);
+        var maxTop = Math.Max(work.Top, work.Bottom - height);
+
+        return (Math.Clamp(left, work.Left, maxLeft), Math.Clamp(top, work.Top, maxTop));
+    }
+
+    private static void ApplyHeightCap(Window window, PopupScreenPosition position)
+    {
+        var area = GetWorkArea(window, position);
+
+        window.MaxHeight = Math.Max(MinimumHeight, area.Height - (MinimumMargin * 2));
+    }
+
+    /// <summary>
+    ///   Fallback used before layout has produced a window rectangle: places the window using its
+    ///   own device-independent size.
+    /// </summary>
+    private static void PlaceUsingLayout(Window window, PopupScreenPosition position)
+    {
+        var area = GetWorkArea(window, position);
+        var width = ResolveSize(window.ActualWidth, window.Width, 480d);
+        var height = ResolveSize(window.ActualHeight, window.Height, 360d);
+
+        window.Left = area.Left + Math.Max(0d, (area.Width - width) / 2d);
+        window.Top = area.Top + Math.Max(0d, (area.Height - height) / 2d);
+    }
+
+    private static Rect GetWorkArea(Window window, PopupScreenPosition position)
     {
         var scale = GetDeviceToDiuScale(window);
 
-        if (TryGetPointerWorkArea(out var work))
+        if (TryGetWorkArea(position, out var work))
         {
             return new Rect(
                 work.Left * scale.X,
@@ -35,70 +127,27 @@ internal static class WindowPositioner
         return SystemParameters.WorkArea;
     }
 
-    /// <summary>
-    ///   Centres the window in the pointer's monitor work area and caps its height to that area.
-    ///   The move itself is done in native screen coordinates: the window and the monitor work area
-    ///   are both measured by the operating system, so the result stays correct when the monitors
-    ///   use different scale factors.
-    /// </summary>
-    internal static void PlaceOnPointerMonitor(Window window)
-    {
-        var handle = new WindowInteropHelper(window).EnsureHandle();
-
-        ApplyHeightCap(window);
-
-        if (!TryGetPointerWorkArea(out var work) || !User32.GetWindowRect(handle, out var current))
-        {
-            PlaceUsingLayout(window);
-            return;
-        }
-
-        var width = current.Right - current.Left;
-        var height = current.Bottom - current.Top;
-
-        if (width <= 0 || height <= 0)
-        {
-            PlaceUsingLayout(window);
-            return;
-        }
-
-        var left = work.Left + Math.Max(0, ((work.Right - work.Left) - width) / 2);
-        var top = work.Top + Math.Max(0, ((work.Bottom - work.Top) - height) / 2);
-
-        _ = User32.SetWindowPos(handle, IntPtr.Zero, left, top, 0, 0, SwpNoSize | SwpNoZOrder | SwpNoActivate);
-    }
-
-    private static void ApplyHeightCap(Window window)
-    {
-        var area = GetPointerMonitorWorkArea(window);
-
-        window.MaxHeight = Math.Max(MinimumHeight, area.Height - (MinimumMargin * 2));
-    }
-
-    /// <summary>
-    ///   Fallback used before layout has produced a window rectangle: places the window using its
-    ///   own device-independent size.
-    /// </summary>
-    private static void PlaceUsingLayout(Window window)
-    {
-        var area = GetPointerMonitorWorkArea(window);
-        var width = ResolveSize(window.ActualWidth, window.Width, 480d);
-        var height = ResolveSize(window.ActualHeight, window.Height, 360d);
-
-        window.Left = area.Left + Math.Max(0d, (area.Width - width) / 2d);
-        window.Top = area.Top + Math.Max(0d, (area.Height - height) / 2d);
-    }
-
-    private static bool TryGetPointerWorkArea(out User32.RECT work)
+    private static bool TryGetWorkArea(PopupScreenPosition position, out User32.RECT work)
     {
         work = default;
 
-        if (!User32.GetCursorPos(out var pointer))
+        IntPtr monitor;
+        if (position == PopupScreenPosition.PrimaryScreen)
         {
-            return false;
+            monitor = User32.MonitorFromPoint(
+                new User32.POINT { X = 0, Y = 0 },
+                User32.MONITOR_DEFAULTTOPRIMARY);
+        }
+        else
+        {
+            if (!User32.GetCursorPos(out var pointer))
+            {
+                return false;
+            }
+
+            monitor = User32.MonitorFromPoint(pointer, User32.MONITOR_DEFAULTTONEAREST);
         }
 
-        var monitor = User32.MonitorFromPoint(pointer, User32.MONITOR_DEFAULTTONEAREST);
         if (monitor == IntPtr.Zero)
         {
             return false;

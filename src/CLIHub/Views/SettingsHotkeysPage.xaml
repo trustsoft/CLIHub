@@ -34,5 +34,19 @@
         <TextBlock Margin="0,8,0,0"
                    Style="{StaticResource HintText}"
                    Text="Press a combination in the field. Esc cancels capture."/>
+
+        <TextBlock Margin="0,20,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Popup screen position"/>
+        <ListBox HorizontalAlignment="Left"
+                 ItemsSource="{Binding PopupPositions}"
+                 SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"
+                 Style="{StaticResource SegmentGroup}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </StackPanel>
 </UserControl>

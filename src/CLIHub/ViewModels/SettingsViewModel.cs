@@ -37,6 +37,13 @@ public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, stri
 public sealed record LogLevelOption(string Value, string Name);
 
 /// <summary>
+///   A selectable popup screen position.
+/// </summary>
+/// <param name="Position"> The position. </param>
+/// <param name="Name"> Display name. </param>
+public sealed record PopupPositionOption(PopupScreenPosition Position, string Name);
+
+/// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
 ///   whether its settings are implemented yet.
 /// </summary>
@@ -94,6 +101,14 @@ public sealed class SettingsViewModel : ObservableObject
         new("Error", "Error")
     };
 
+    private static readonly PopupPositionOption[] PopupPositionOptions =
+    {
+        new(PopupScreenPosition.Center, "Center of active monitor"),
+        new(PopupScreenPosition.TopCenter, "Top-center"),
+        new(PopupScreenPosition.CursorRelative, "Cursor-relative"),
+        new(PopupScreenPosition.PrimaryScreen, "Primary screen")
+    };
+
     private static readonly SettingsGroup[] PagesByGroup = AllPages
         .GroupBy(page => page.Group)
         .Select(group => new SettingsGroup(group.Key, group.ToArray()))
@@ -124,6 +139,7 @@ public sealed class SettingsViewModel : ObservableObject
     private LogLevelOption _selectedLogLevel = LogLevelOptions[2];
     private string _logRetentionDaysText = "7";
     private string _logFileSizeLimitText = "0";
+    private PopupPositionOption _selectedPopupPosition = PopupPositionOptions[0];
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -370,6 +386,20 @@ public sealed class SettingsViewModel : ObservableObject
     public RelayCommand OpenLogFolderCommand { get; }
 
     /// <summary>
+    ///   The popup screen position options offered by the selector.
+    /// </summary>
+    public IReadOnlyList<PopupPositionOption> PopupPositions => PopupPositionOptions;
+
+    /// <summary>
+    ///   The selected popup screen position.
+    /// </summary>
+    public PopupPositionOption SelectedPopupPosition
+    {
+        get => _selectedPopupPosition;
+        set => SetProperty(ref _selectedPopupPosition, value);
+    }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -437,6 +467,8 @@ public sealed class SettingsViewModel : ObservableObject
         _selectedLogLevel = LogLevelOptions.FirstOrDefault(o => o.Value == draft.LogLevel) ?? LogLevelOptions[2];
         _logRetentionDaysText = draft.LogRetentionDays.ToString();
         _logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
+        _selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
+            ?? PopupPositionOptions[0];
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
@@ -458,6 +490,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedLogLevel));
         OnPropertyChanged(nameof(LogRetentionDaysText));
         OnPropertyChanged(nameof(LogFileSizeLimitText));
+        OnPropertyChanged(nameof(SelectedPopupPosition));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -526,7 +559,8 @@ public sealed class SettingsViewModel : ObservableObject
             NotifyPrereleaseUpdates,
             SelectedLogLevel.Value,
             LogRetentionDaysText,
-            LogFileSizeLimitText);
+            LogFileSizeLimitText,
+            SelectedPopupPosition.Position);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

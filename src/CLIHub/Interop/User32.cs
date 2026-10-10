@@ -17,6 +17,11 @@ internal static partial class User32
     /// </summary>
     internal const uint MONITOR_DEFAULTTONEAREST = 2;
 
+    /// <summary>
+    ///   Returns the primary monitor for a point that is not inside any monitor.
+    /// </summary>
+    internal const uint MONITOR_DEFAULTTOPRIMARY = 1;
+
     [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     internal static partial bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);

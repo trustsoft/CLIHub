@@ -85,6 +85,7 @@ public sealed class ConfigurationSnapshot
         ShowWindowOnStartup = preferences.ShowWindowOnStartup,
         StartMinimized = preferences.StartMinimized,
         PinLaunchWindow = preferences.PinLaunchWindow,
+        PopupScreenPosition = preferences.PopupScreenPosition,
         PathDisplayStyle = preferences.PathDisplayStyle,
         LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
     };

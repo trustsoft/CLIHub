@@ -24,6 +24,7 @@ using CLIHub.Core.Models;
 /// <param name="LogLevel"> Selected log level name. </param>
 /// <param name="LogRetentionDaysText"> Retained daily log file count as text. </param>
 /// <param name="LogFileSizeLimitText"> Per-file log size limit in megabytes as text (0 = unlimited). </param>
+/// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -38,7 +39,8 @@ public sealed record SettingsInput(
     bool NotifyPrereleaseUpdates,
     string LogLevel,
     string LogRetentionDaysText,
-    string LogFileSizeLimitText);
+    string LogFileSizeLimitText,
+    PopupScreenPosition PopupScreenPosition);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -57,6 +59,7 @@ public sealed record SettingsInput(
 /// <param name="LogLevel"> Selected log level name. </param>
 /// <param name="LogRetentionDays"> Number of daily log files to retain. </param>
 /// <param name="LogFileSizeLimitMb"> Per-file log size limit in megabytes (0 = unlimited). </param>
+/// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -71,7 +74,8 @@ public sealed record SettingsDraft(
     bool NotifyPrereleaseUpdates,
     string LogLevel,
     int LogRetentionDays,
-    int LogFileSizeLimitMb);
+    int LogFileSizeLimitMb,
+    PopupScreenPosition PopupScreenPosition);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -146,7 +150,8 @@ public sealed class SettingsApplicationService
             preferences.NotifyPrereleaseUpdates,
             preferences.LogLevel,
             preferences.LogRetentionDays,
-            preferences.LogFileSizeLimitMb);
+            preferences.LogFileSizeLimitMb,
+            preferences.PopupScreenPosition);
     }
 
     /// <summary>
@@ -206,7 +211,8 @@ public sealed class SettingsApplicationService
             input.NotifyPrereleaseUpdates,
             input.LogLevel,
             retentionDays,
-            sizeLimitMb);
+            sizeLimitMb,
+            input.PopupScreenPosition);
         return true;
     }
 
@@ -255,6 +261,7 @@ public sealed class SettingsApplicationService
                 preferences.LogLevel = draft.LogLevel;
                 preferences.LogRetentionDays = draft.LogRetentionDays;
                 preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
+                preferences.PopupScreenPosition = draft.PopupScreenPosition;
                 preferences.StartWithWindows = draft.StartWithWindows;
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;

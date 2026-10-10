@@ -53,7 +53,8 @@ public class SettingsApplicationServiceTests
             false,
             "Information",
             7,
-            0);
+            0,
+            PopupScreenPosition.Center);
         applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
@@ -102,7 +103,8 @@ public class SettingsApplicationServiceTests
             false,
             "Information",
             7,
-            0));
+            0,
+            PopupScreenPosition.Center));
 
         Assert.False(result.Success);
         Assert.Contains("global hotkey", result.Error, StringComparison.OrdinalIgnoreCase);
@@ -138,7 +140,8 @@ public class SettingsApplicationServiceTests
         false,
         "Information",
         "7",
-        "0");
+        "0",
+        PopupScreenPosition.Center);
 
     private static AppPreferences PreviousPreferences() => new()
     {

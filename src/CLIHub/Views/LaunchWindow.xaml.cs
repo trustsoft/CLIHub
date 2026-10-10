@@ -10,6 +10,8 @@ using System.Windows.Media;
 using System.Windows.Threading;
 
 using CLIHub;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Models;
 using CLIHub.Interop;
 using CLIHub.ViewModels;
 
@@ -28,6 +30,7 @@ public partial class LaunchWindow : Window, IStartupWindow
 
     private readonly LaunchWindowViewModel _viewModel;
     private readonly PromptState _promptState;
+    private readonly IPreferencesStore _preferencesStore;
     private const double SplitterHitTolerance = 6d;
 
     private long _shownAt;
@@ -40,21 +43,28 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// </summary>
     /// <param name="viewModel"> The launch window view model. </param>
     /// <param name="promptState"> Modal prompt tracker used to keep the window visible. </param>
-    public LaunchWindow(LaunchWindowViewModel viewModel, PromptState promptState)
+    /// <param name="preferencesStore"> Preferences source for the popup screen position. </param>
+    public LaunchWindow(
+        LaunchWindowViewModel viewModel,
+        PromptState promptState,
+        IPreferencesStore preferencesStore)
     {
         InitializeComponent();
 
         _viewModel = viewModel;
         _promptState = promptState;
+        _preferencesStore = preferencesStore;
         DataContext = viewModel;
     }
 
     /// <summary>
-    ///   Shows the window centred in the work area of the monitor that contains the pointer.
+    ///   Shows the window at the configured popup screen position.
     /// </summary>
     public void ShowOnPointerMonitor()
     {
-        WindowPositioner.PlaceOnPointerMonitor(this);
+        var position = _preferencesStore.Load().PopupScreenPosition;
+
+        WindowPositioner.Place(this, position);
         Show();
 
         if (WindowState == WindowState.Minimized)
@@ -65,12 +75,14 @@ public partial class LaunchWindow : Window, IStartupWindow
         _shownAt = Environment.TickCount64;
         Activate();
 
-        // SizeToContent settles during the first layout pass, so centre again once the real
+        // SizeToContent settles during the first layout pass, so place again once the real
         // size is known.
         Dispatcher.BeginInvoke(
-            new Action<Window>(WindowPositioner.PlaceOnPointerMonitor),
+            new Action<Window, PopupScreenPosition>(static (window, popupPosition) =>
+                WindowPositioner.Place(window, popupPosition)),
             DispatcherPriority.Loaded,
-            this);
+            this,
+            position);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>

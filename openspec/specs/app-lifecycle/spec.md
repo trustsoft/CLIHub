@@ -144,7 +144,7 @@ The launch window SHALL behave as a popup shell that stays out of the way and ca
 
 #### Scenario: Positioned on the pointer's monitor
 - **WHEN** the launch window is shown from the tray, the global hotkey, a second-instance activation, or startup
-- **THEN** it is centered in the work area of the monitor that contains the pointer at that moment
+- **THEN** it is positioned according to the configured popup screen position, which defaults to centred in the work area of the monitor that contains the pointer at that moment
 
 ### Requirement: Single instance resource ownership
 
