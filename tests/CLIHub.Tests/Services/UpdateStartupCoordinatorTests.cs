@@ -7,6 +7,7 @@ using Moq;
 
 using CLIHub;
 using CLIHub.Core;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
@@ -91,6 +92,45 @@ public class UpdateStartupCoordinatorTests
         Assert.IsType<UpdateStartupCoordinator>(provider.GetRequiredService<IUpdateStartupCoordinator>());
     }
 
+    [Fact]
+    public async Task CheckAsync_StableNotificationsDisabled_DoesNotNotify()
+    {
+        var updateService = CreateUpdateService(
+            new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0"));
+        var coordinator = CreateCoordinator(updateService.Object, notifyStable: false, notifyPrerelease: true);
+        var notificationCount = 0;
+
+        await coordinator.CheckAsync(true, _ => notificationCount++);
+
+        Assert.Equal(0, notificationCount);
+    }
+
+    [Fact]
+    public async Task CheckAsync_PrereleaseAvailable_WhenDisabled_DoesNotNotify()
+    {
+        var updateService = CreateUpdateService(
+            new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0-beta.1"));
+        var coordinator = CreateCoordinator(updateService.Object, notifyStable: true, notifyPrerelease: false);
+        var notificationCount = 0;
+
+        await coordinator.CheckAsync(true, _ => notificationCount++);
+
+        Assert.Equal(0, notificationCount);
+    }
+
+    [Fact]
+    public async Task CheckAsync_PrereleaseAvailable_WhenEnabled_Notifies()
+    {
+        var updateService = CreateUpdateService(
+            new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0-beta.1"));
+        var coordinator = CreateCoordinator(updateService.Object, notifyStable: true, notifyPrerelease: true);
+        string? notifiedVersion = null;
+
+        await coordinator.CheckAsync(true, version => notifiedVersion = version);
+
+        Assert.Equal("1.1.0-beta.1", notifiedVersion);
+    }
+
     private static Mock<IUpdateWorkflow> CreateUpdateService(UpdateCheckResult result)
     {
         var service = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
@@ -100,6 +140,17 @@ public class UpdateStartupCoordinatorTests
         return service;
     }
 
-    private static UpdateStartupCoordinator CreateCoordinator(IUpdateWorkflow updateService) =>
-        new(updateService, NullLogger<UpdateStartupCoordinator>.Instance);
+    private static UpdateStartupCoordinator CreateCoordinator(
+        IUpdateWorkflow updateService,
+        bool notifyStable = true,
+        bool notifyPrerelease = false)
+    {
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        {
+            NotifyStableUpdates = notifyStable,
+            NotifyPrereleaseUpdates = notifyPrerelease
+        });
+        return new(updateService, preferences.Object, NullLogger<UpdateStartupCoordinator>.Instance);
+    }
 }

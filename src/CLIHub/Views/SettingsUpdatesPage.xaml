@@ -7,13 +7,36 @@
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="Updates"/>
 
+        <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+            <TextBlock Style="{StaticResource HintText}" Text="Current version: "/>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Version}"/>
+        </StackPanel>
+
         <CheckBox Margin="0,16,0,0"
                   HorizontalAlignment="Left"
                   Content="Check for updates on startup"
                   IsChecked="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
                   Style="{StaticResource SettingsCheck}"/>
 
-        <Button Margin="0,12,0,0"
+        <CheckBox Margin="0,12,0,0"
+                  HorizontalAlignment="Left"
+                  Content="Automatically download updates"
+                  IsChecked="{Binding AutoDownloadUpdates, Mode=TwoWay}"
+                  Style="{StaticResource SettingsCheck}"/>
+
+        <CheckBox Margin="0,12,0,0"
+                  HorizontalAlignment="Left"
+                  Content="Notify about stable releases"
+                  IsChecked="{Binding NotifyStableUpdates, Mode=TwoWay}"
+                  Style="{StaticResource SettingsCheck}"/>
+
+        <CheckBox Margin="0,12,0,0"
+                  HorizontalAlignment="Left"
+                  Content="Notify about pre-release versions"
+                  IsChecked="{Binding NotifyPrereleaseUpdates, Mode=TwoWay}"
+                  Style="{StaticResource SettingsCheck}"/>
+
+        <Button Margin="0,16,0,0"
                 Command="{Binding CheckForUpdatesCommand}"
                 Content="Check for updates"
                 HorizontalAlignment="Left"

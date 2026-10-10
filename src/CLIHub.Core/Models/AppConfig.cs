@@ -76,6 +76,22 @@ public class AppPreferences
     public bool CheckForUpdatesOnStartup { get; set; } = true;
 
     /// <summary>
+    ///   When true (default), an available update is downloaded automatically in the background.
+    /// </summary>
+    public bool AutoDownloadUpdates { get; set; } = true;
+
+    /// <summary>
+    ///   When true (default), the user is notified when a stable update is available.
+    /// </summary>
+    public bool NotifyStableUpdates { get; set; } = true;
+
+    /// <summary>
+    ///   When true (default is false), update checks include pre-release versions and the user is
+    ///   notified when a pre-release update is available.
+    /// </summary>
+    public bool NotifyPrereleaseUpdates { get; set; }
+
+    /// <summary>
     ///   Legacy startup-visibility preference. Superseded by <see cref="StartMinimized"/> and kept
     ///   only so the schema 1→2 migration can read existing configurations.
     /// </summary>

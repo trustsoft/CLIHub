@@ -2,6 +2,7 @@ namespace CLIHub;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
@@ -11,18 +12,22 @@ using CLIHub.Core.Updates;
 public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 {
     private readonly IUpdateWorkflow _updateWorkflow;
+    private readonly IPreferencesStore _preferences;
     private readonly ILogger<UpdateStartupCoordinator> _logger;
 
     /// <summary>
     ///   Creates the coordinator over the update service.
     /// </summary>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
+    /// <param name="preferencesStore"> Preferences source for notification gating. </param>
     /// <param name="logger"> Logger for disabled checks and unexpected failures. </param>
     public UpdateStartupCoordinator(
         IUpdateWorkflow updateWorkflow,
+        IPreferencesStore preferencesStore,
         ILogger<UpdateStartupCoordinator> logger)
     {
         _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -46,7 +51,15 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {
-                notifyUpdateAvailable(version);
+                var preferences = _preferences.Load();
+                var shouldNotify = VersionClassification.IsPrerelease(version)
+                    ? preferences.NotifyPrereleaseUpdates
+                    : preferences.NotifyStableUpdates;
+
+                if (shouldNotify)
+                {
+                    notifyUpdateAvailable(version);
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

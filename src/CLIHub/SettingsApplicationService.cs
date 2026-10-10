@@ -18,6 +18,9 @@ using CLIHub.Core.Models;
 /// <param name="StartWithWindows"> Whether Windows startup should be enabled. </param>
 /// <param name="StartMinimized"> Whether the application should start minimized to the tray. </param>
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
+/// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
+/// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
+/// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -26,7 +29,10 @@ public sealed record SettingsInput(
     string ProbeTimeoutText,
     bool StartWithWindows,
     bool StartMinimized,
-    bool CheckForUpdatesOnStartup);
+    bool CheckForUpdatesOnStartup,
+    bool AutoDownloadUpdates,
+    bool NotifyStableUpdates,
+    bool NotifyPrereleaseUpdates);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -39,6 +45,9 @@ public sealed record SettingsInput(
 /// <param name="StartWithWindows"> Whether Windows startup should be enabled. </param>
 /// <param name="StartMinimized"> Whether the application should start minimized to the tray. </param>
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
+/// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
+/// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
+/// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -47,7 +56,10 @@ public sealed record SettingsDraft(
     int? ProbeTimeoutSeconds,
     bool StartWithWindows,
     bool StartMinimized,
-    bool CheckForUpdatesOnStartup);
+    bool CheckForUpdatesOnStartup,
+    bool AutoDownloadUpdates,
+    bool NotifyStableUpdates,
+    bool NotifyPrereleaseUpdates);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -116,7 +128,10 @@ public sealed class SettingsApplicationService
             preferences.AgentProbeTimeoutSeconds,
             _startupService.IsEnabled(),
             preferences.StartMinimized,
-            preferences.CheckForUpdatesOnStartup);
+            preferences.CheckForUpdatesOnStartup,
+            preferences.AutoDownloadUpdates,
+            preferences.NotifyStableUpdates,
+            preferences.NotifyPrereleaseUpdates);
     }
 
     /// <summary>
@@ -158,7 +173,10 @@ public sealed class SettingsApplicationService
             timeout,
             input.StartWithWindows,
             input.StartMinimized,
-            input.CheckForUpdatesOnStartup);
+            input.CheckForUpdatesOnStartup,
+            input.AutoDownloadUpdates,
+            input.NotifyStableUpdates,
+            input.NotifyPrereleaseUpdates);
         return true;
     }
 
@@ -201,6 +219,9 @@ public sealed class SettingsApplicationService
                 preferences.AgentProbeTtlMinutes = draft.ProbeTtlMinutes;
                 preferences.AgentProbeTimeoutSeconds = draft.ProbeTimeoutSeconds;
                 preferences.CheckForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
+                preferences.AutoDownloadUpdates = draft.AutoDownloadUpdates;
+                preferences.NotifyStableUpdates = draft.NotifyStableUpdates;
+                preferences.NotifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
                 preferences.StartWithWindows = draft.StartWithWindows;
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;

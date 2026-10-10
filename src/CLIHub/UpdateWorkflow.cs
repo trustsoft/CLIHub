@@ -2,6 +2,7 @@ namespace CLIHub;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
@@ -17,6 +18,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     private readonly IUpdateStateSource _stateSource;
     private readonly IUpdateDownloader _downloader;
     private readonly IUpdateInstaller _installer;
+    private readonly IPreferencesStore _preferences;
     private readonly ILogger<UpdateWorkflow> _logger;
     private readonly Func<TimeSpan, CancellationToken, Task> _delay;
     private readonly object _checkLock = new();
@@ -32,6 +34,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     /// <param name="stateSource"> Shared Core update state. </param>
     /// <param name="downloader"> Core update downloader. </param>
     /// <param name="installer"> Core update installer. </param>
+    /// <param name="preferencesStore"> Preferences source for background auto-download. </param>
     /// <param name="logger"> Logger for failures and automatic-restart outcomes. </param>
     /// <param name="delay"> Optional cancellation-aware notification delay. </param>
     public UpdateWorkflow(
@@ -40,6 +43,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         IUpdateStateSource stateSource,
         IUpdateDownloader downloader,
         IUpdateInstaller installer,
+        IPreferencesStore preferencesStore,
         ILogger<UpdateWorkflow> logger,
         Func<TimeSpan, CancellationToken, Task>? delay = null)
     {
@@ -48,6 +52,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         _stateSource = stateSource ?? throw new ArgumentNullException(nameof(stateSource));
         _downloader = downloader ?? throw new ArgumentNullException(nameof(downloader));
         _installer = installer ?? throw new ArgumentNullException(nameof(installer));
+        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _delay = delay ?? ((duration, cancellationToken) => Task.Delay(duration, cancellationToken));
         _stateSource.UpdateStateChanged += OnSourceStateChanged;
@@ -202,6 +207,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         {
             OnSourceStateChanged(this, EventArgs.Empty);
             result = await _checker.CheckForUpdatesAsync(cancellationToken);
+            MaybeStartAutoDownload(result);
         }
         catch (Exception ex)
         {
@@ -243,6 +249,33 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         if (!_disposed)
         {
             UpdateStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    private void MaybeStartAutoDownload(UpdateCheckResult result)
+    {
+        if (result.Status != UpdateStatus.UpdateAvailable || result.AvailableVersion is null)
+        {
+            return;
+        }
+
+        if (!_preferences.Load().AutoDownloadUpdates)
+        {
+            return;
+        }
+
+        _ = AutoDownloadAsync();
+    }
+
+    private async Task AutoDownloadAsync()
+    {
+        try
+        {
+            await DownloadUpdateAsync(CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Automatic update download failed");
         }
     }
 }

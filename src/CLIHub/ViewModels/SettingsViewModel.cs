@@ -94,6 +94,9 @@ public sealed class SettingsViewModel : ObservableObject
     private string _probeTtlText = string.Empty;
     private string _probeTimeoutText = string.Empty;
     private bool _checkForUpdatesOnStartup = true;
+    private bool _autoDownloadUpdates = true;
+    private bool _notifyStableUpdates = true;
+    private bool _notifyPrereleaseUpdates;
     private string _updateMessage = string.Empty;
     private string? _validationError;
     private SettingsPage _selectedPage = AllPages[0];
@@ -264,6 +267,33 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    ///   Whether available updates are downloaded automatically in the background.
+    /// </summary>
+    public bool AutoDownloadUpdates
+    {
+        get => _autoDownloadUpdates;
+        set => SetProperty(ref _autoDownloadUpdates, value);
+    }
+
+    /// <summary>
+    ///   Whether stable update availability is notified.
+    /// </summary>
+    public bool NotifyStableUpdates
+    {
+        get => _notifyStableUpdates;
+        set => SetProperty(ref _notifyStableUpdates, value);
+    }
+
+    /// <summary>
+    ///   Whether pre-release versions are checked and notified.
+    /// </summary>
+    public bool NotifyPrereleaseUpdates
+    {
+        get => _notifyPrereleaseUpdates;
+        set => SetProperty(ref _notifyPrereleaseUpdates, value);
+    }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -325,6 +355,9 @@ public sealed class SettingsViewModel : ObservableObject
         _probeTtlText = draft.ProbeTtlMinutes?.ToString() ?? string.Empty;
         _probeTimeoutText = draft.ProbeTimeoutSeconds?.ToString() ?? string.Empty;
         _checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
+        _autoDownloadUpdates = draft.AutoDownloadUpdates;
+        _notifyStableUpdates = draft.NotifyStableUpdates;
+        _notifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
@@ -340,6 +373,9 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(ProbeTtlText));
         OnPropertyChanged(nameof(ProbeTimeoutText));
         OnPropertyChanged(nameof(CheckForUpdatesOnStartup));
+        OnPropertyChanged(nameof(AutoDownloadUpdates));
+        OnPropertyChanged(nameof(NotifyStableUpdates));
+        OnPropertyChanged(nameof(NotifyPrereleaseUpdates));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -402,7 +438,10 @@ public sealed class SettingsViewModel : ObservableObject
             ProbeTimeoutText,
             StartWithWindows,
             StartMinimized,
-            CheckForUpdatesOnStartup);
+            CheckForUpdatesOnStartup,
+            AutoDownloadUpdates,
+            NotifyStableUpdates,
+            NotifyPrereleaseUpdates);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

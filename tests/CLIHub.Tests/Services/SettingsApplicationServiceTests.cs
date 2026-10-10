@@ -47,6 +47,9 @@ public class SettingsApplicationServiceTests
             30,
             true,
             false,
+            false,
+            true,
+            true,
             false);
         applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
@@ -90,6 +93,9 @@ public class SettingsApplicationServiceTests
             30,
             true,
             false,
+            false,
+            true,
+            true,
             false));
 
         Assert.False(result.Success);
@@ -120,7 +126,10 @@ public class SettingsApplicationServiceTests
         probeTimeoutText,
         false,
         true,
-        true);
+        true,
+        true,
+        true,
+        false);
 
     private static AppPreferences PreviousPreferences() => new()
     {

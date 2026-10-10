@@ -2,6 +2,7 @@ namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
@@ -65,7 +66,7 @@ public class UpdateServiceTests : IDisposable
     }
 
     private UpdateService CreateDefaultService() =>
-        new(NullLogger<UpdateService>.Instance);
+        new(NullLogger<UpdateService>.Instance, new StubPreferencesStore());
 
     private UpdateService CreateInstalledService(string version)
     {
@@ -224,6 +225,13 @@ public class UpdateServiceTests : IDisposable
     {
         var exception = Record.Exception(() => CreateDefaultService().ApplyDownloadedUpdateAndRestart());
         Assert.Null(exception);
+    }
+
+    private sealed class StubPreferencesStore : IPreferencesStore
+    {
+        public AppPreferences Load() => new();
+
+        public void Update(Action<AppPreferences> update) => update(new AppPreferences());
     }
 }
 

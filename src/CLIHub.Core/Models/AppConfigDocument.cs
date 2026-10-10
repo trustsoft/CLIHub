@@ -120,6 +120,9 @@ internal sealed class AppConfigDocument
         public int? AgentProbeTtlMinutes { get; set; }
         public int? AgentProbeTimeoutSeconds { get; set; }
         public bool CheckForUpdatesOnStartup { get; set; } = true;
+        public bool AutoDownloadUpdates { get; set; } = true;
+        public bool NotifyStableUpdates { get; set; } = true;
+        public bool NotifyPrereleaseUpdates { get; set; }
         public bool ShowWindowOnStartup { get; set; } = true;
         public bool StartMinimized { get; set; } = true;
         public bool PinLaunchWindow { get; set; }
@@ -137,6 +140,9 @@ internal sealed class AppConfigDocument
             AgentProbeTtlMinutes = preferences.AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = preferences.AgentProbeTimeoutSeconds,
             CheckForUpdatesOnStartup = preferences.CheckForUpdatesOnStartup,
+            AutoDownloadUpdates = preferences.AutoDownloadUpdates,
+            NotifyStableUpdates = preferences.NotifyStableUpdates,
+            NotifyPrereleaseUpdates = preferences.NotifyPrereleaseUpdates,
             StartMinimized = preferences.StartMinimized,
             // Keep the legacy field non-stale so older readers stay consistent.
             ShowWindowOnStartup = !preferences.StartMinimized,
@@ -156,6 +162,9 @@ internal sealed class AppConfigDocument
             AgentProbeTtlMinutes = AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = AgentProbeTimeoutSeconds,
             CheckForUpdatesOnStartup = CheckForUpdatesOnStartup,
+            AutoDownloadUpdates = AutoDownloadUpdates,
+            NotifyStableUpdates = NotifyStableUpdates,
+            NotifyPrereleaseUpdates = NotifyPrereleaseUpdates,
             StartMinimized = StartMinimized,
             ShowWindowOnStartup = ShowWindowOnStartup,
             PinLaunchWindow = PinLaunchWindow,

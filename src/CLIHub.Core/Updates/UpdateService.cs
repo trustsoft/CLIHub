@@ -4,6 +4,7 @@ using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 using Velopack;
@@ -22,9 +23,13 @@ public class UpdateService : IUpdateService
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
 
     private readonly ILogger<UpdateService> _logger;
+    private readonly IPreferencesStore? _preferences;
     private readonly UpdateManager? _injectedManager;
-    private readonly Lazy<UpdateManager?> _defaultManager;
     private readonly TimeSpan _checkTimeout;
+    private readonly object _managerGate = new();
+    private UpdateManager? _cachedManager;
+    private bool _cachedManagerPrerelease;
+    private bool _managerCached;
     private readonly UpdateChecker _checker;
     private readonly UpdateDownloader _downloader;
     private readonly UpdateInstaller _installer;
@@ -35,11 +40,13 @@ public class UpdateService : IUpdateService
     /// <summary>
     ///   Creates the service using the default GitHub update source.
     /// </summary>
-    public UpdateService(ILogger<UpdateService> logger)
+    /// <param name="logger"> The service logger. </param>
+    /// <param name="preferencesStore"> Preferences source used to decide pre-release checks. </param>
+    public UpdateService(ILogger<UpdateService> logger, IPreferencesStore preferencesStore)
     {
         _logger = logger;
+        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _checkTimeout = CheckTimeout;
-        _defaultManager = new Lazy<UpdateManager?>(CreateDefaultManager);
         _checker = new UpdateChecker(logger);
         _downloader = new UpdateDownloader(logger);
         _installer = new UpdateInstaller(logger);
@@ -54,7 +61,6 @@ public class UpdateService : IUpdateService
         _logger = logger;
         _checkTimeout = checkTimeout ?? CheckTimeout;
         _injectedManager = manager;
-        _defaultManager = new Lazy<UpdateManager?>(() => manager);
         _checker = new UpdateChecker(logger);
         _downloader = new UpdateDownloader(logger);
         _installer = new UpdateInstaller(logger);
@@ -71,9 +77,27 @@ public class UpdateService : IUpdateService
         UpdateManager manager,
         TimeSpan? checkTimeout = null) => new(logger, manager, checkTimeout);
 
-    private UpdateManager? Manager => _injectedManager ?? _defaultManager.Value;
+    private UpdateManager? Manager => _injectedManager ?? GetDefaultManager();
 
-    private UpdateManager? CreateDefaultManager()
+    private UpdateManager? GetDefaultManager()
+    {
+        var prerelease = _preferences?.Load().NotifyPrereleaseUpdates ?? false;
+
+        lock (_managerGate)
+        {
+            if (_managerCached && _cachedManagerPrerelease == prerelease)
+            {
+                return _cachedManager;
+            }
+
+            _cachedManager = CreateDefaultManager(prerelease);
+            _cachedManagerPrerelease = prerelease;
+            _managerCached = true;
+            return _cachedManager;
+        }
+    }
+
+    private UpdateManager? CreateDefaultManager(bool prerelease)
     {
         try
         {
@@ -81,7 +105,7 @@ public class UpdateService : IUpdateService
             // folder (useful for testing and self-hosted mirrors) uses Velopack's default source.
             if (RepositoryUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase))
             {
-                return new UpdateManager(new GithubSource(RepositoryUrl, null, false));
+                return new UpdateManager(new GithubSource(RepositoryUrl, null, prerelease));
             }
 
             return new UpdateManager(RepositoryUrl);

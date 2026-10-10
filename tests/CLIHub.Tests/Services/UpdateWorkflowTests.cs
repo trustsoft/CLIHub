@@ -3,6 +3,7 @@ namespace CLIHub.Tests.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
@@ -260,9 +261,55 @@ public class UpdateWorkflowTests
         return core;
     }
 
+    [Fact]
+    public async Task CheckForUpdatesAsync_WhenAutoDownloadEnabled_DownloadsAvailableUpdate()
+    {
+        var pending = new TaskCompletionSource<UpdateCheckResult>();
+        var downloadStarted = new TaskCompletionSource();
+        var core = new Mock<IUpdateService>();
+        core.Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>())).Returns(pending.Task);
+        core.Setup(x => x.DownloadUpdateAsync(It.IsAny<CancellationToken>()))
+            .Returns(() =>
+            {
+                downloadStarted.TrySetResult();
+                return Task.FromResult(new UpdateDownloadResult(UpdateDownloadStatus.Downloaded, "2.0"));
+            });
+        using var workflow = Create(core.Object, autoDownload: true);
+
+        var check = workflow.CheckForUpdatesAsync();
+        pending.SetResult(new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0", "2.0"));
+        await check;
+
+        await downloadStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        core.Verify(x => x.DownloadUpdateAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_WhenAutoDownloadDisabled_DoesNotDownload()
+    {
+        var pending = new TaskCompletionSource<UpdateCheckResult>();
+        var core = new Mock<IUpdateService>();
+        core.Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>())).Returns(pending.Task);
+        using var workflow = Create(core.Object, autoDownload: false);
+
+        var check = workflow.CheckForUpdatesAsync();
+        pending.SetResult(new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0", "2.0"));
+        await check;
+
+        core.Verify(x => x.DownloadUpdateAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     internal static UpdateWorkflow Create(
         IUpdateService core,
-        Func<TimeSpan, CancellationToken, Task>? delay = null) =>
-        new(core, core, core, core, core, NullLogger<UpdateWorkflow>.Instance,
+        Func<TimeSpan, CancellationToken, Task>? delay = null,
+        bool autoDownload = false) =>
+        new(core, core, core, core, core, Preferences(autoDownload), NullLogger<UpdateWorkflow>.Instance,
             delay ?? ((_, _) => Task.CompletedTask));
+
+    private static IPreferencesStore Preferences(bool autoDownload)
+    {
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences { AutoDownloadUpdates = autoDownload });
+        return preferences.Object;
+    }
 }

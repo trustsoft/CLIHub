@@ -32,7 +32,10 @@ public class SharedUpdatePresentationTests
         var lifetime = Mock.Of<IApplicationOperationLifetime>();
         using var notes = new WhatsNewViewModel(Notes(), workflow, lifetime);
         using var control = new UpdateControlViewModel(workflow, NullLogger<UpdateControlViewModel>.Instance, lifetime);
-        var startup = new UpdateStartupCoordinator(workflow, NullLogger<UpdateStartupCoordinator>.Instance);
+        var startupPreferences = new Mock<IPreferencesStore>();
+        startupPreferences.Setup(x => x.Load()).Returns(new AppPreferences());
+        var startup = new UpdateStartupCoordinator(
+            workflow, startupPreferences.Object, NullLogger<UpdateStartupCoordinator>.Instance);
         var settings = CreateSettingsViewModel(workflow);
         string? notified = null;
 
