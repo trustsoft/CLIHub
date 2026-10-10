@@ -63,7 +63,8 @@ public sealed class ConfigurationSnapshot
         Path = project.Path,
         IsFavorite = project.IsFavorite,
         LastUsed = project.LastUsed,
-        LogoPath = project.LogoPath
+        LogoPath = project.LogoPath,
+        Source = project.Source
     };
 
     private static AppPreferences ClonePreferences(AppPreferences preferences) => new()
@@ -89,6 +90,10 @@ public sealed class ConfigurationSnapshot
         AppTheme = preferences.AppTheme,
         AccentColor = preferences.AccentColor,
         PathDisplayStyle = preferences.PathDisplayStyle,
-        LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
+        LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
+        WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
+        ScanDepth = preferences.ScanDepth,
+        IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
+        DiscoveryMode = preferences.DiscoveryMode
     };
 }

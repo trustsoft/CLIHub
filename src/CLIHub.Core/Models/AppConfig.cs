@@ -146,4 +146,26 @@ public class AppPreferences
     ///   What's New window automatically. Written by the application; not exposed in Settings.
     /// </summary>
     public string? LastSeenReleaseNotesVersion { get; set; }
+
+    /// <summary>
+    ///   Root directories watched for repository discovery. Null or empty means nothing is watched.
+    /// </summary>
+    public List<string>? WatchedDirectories { get; set; }
+
+    /// <summary>
+    ///   How many directory levels below each watched root are scanned. Defaults to 2.
+    /// </summary>
+    public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
+
+    /// <summary>
+    ///   Directory-name patterns skipped during scanning. Null means the built-in defaults are used;
+    ///   an empty list means no patterns are ignored.
+    /// </summary>
+    public List<string>? IgnoredPatterns { get; set; }
+
+    /// <summary>
+    ///   Which directories count as repositories during discovery. Defaults to
+    ///   <see cref="ProjectDiscoveryMode.Both"/>.
+    /// </summary>
+    public ProjectDiscoveryMode DiscoveryMode { get; set; } = ProjectDiscoveryModes.Default;
 }

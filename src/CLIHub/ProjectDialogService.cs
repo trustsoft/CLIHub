@@ -10,11 +10,14 @@ using Microsoft.Win32;
 public sealed class ProjectDialogService : IProjectDialogService
 {
     /// <inheritdoc />
-    public string? SelectProjectFolder()
+    public string? SelectProjectFolder() => SelectFolder("Select Project Folder");
+
+    /// <inheritdoc />
+    public string? SelectFolder(string title)
     {
         var dialog = new OpenFolderDialog
         {
-            Title = "Select Project Folder"
+            Title = title
         };
 
         return dialog.ShowDialog(Application.Current?.MainWindow) == true

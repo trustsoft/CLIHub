@@ -6,6 +6,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
+using CLIHub.Core.Scanning;
 
 /// <summary>
 ///   Raw values collected from the Settings form before validation.
@@ -27,6 +28,10 @@ using CLIHub.Core.Models;
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
 /// <param name="AccentColor"> The accent color as text. </param>
+/// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
+/// <param name="ScanDepthText"> Repository scan depth as text. </param>
+/// <param name="IgnoredPatterns"> Ignored directory-name patterns. </param>
+/// <param name="DiscoveryMode"> Which directories count as repositories. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -44,7 +49,11 @@ public sealed record SettingsInput(
     string LogFileSizeLimitText,
     PopupScreenPosition PopupScreenPosition,
     AppTheme AppTheme,
-    string AccentColor);
+    string AccentColor,
+    IReadOnlyList<string>? WatchedDirectories = null,
+    string ScanDepthText = "2",
+    IReadOnlyList<string>? IgnoredPatterns = null,
+    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -66,6 +75,10 @@ public sealed record SettingsInput(
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
 /// <param name="AccentColor"> The normalized accent color (#RRGGBB). </param>
+/// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
+/// <param name="ScanDepth"> Repository scan depth, within the allowed range. </param>
+/// <param name="IgnoredPatterns"> Ignored directory-name patterns (normalized). </param>
+/// <param name="DiscoveryMode"> Which directories count as repositories. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -83,7 +96,11 @@ public sealed record SettingsDraft(
     int LogFileSizeLimitMb,
     PopupScreenPosition PopupScreenPosition,
     AppTheme AppTheme,
-    string AccentColor);
+    string AccentColor,
+    IReadOnlyList<string>? WatchedDirectories = null,
+    int ScanDepth = ProjectScanningDefaults.DefaultScanDepth,
+    IReadOnlyList<string>? IgnoredPatterns = null,
+    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -112,6 +129,7 @@ public sealed class SettingsApplicationService
     private readonly IPreferencesStore _preferencesStore;
     private readonly IStartupService _startupService;
     private readonly IPreferenceApplier _applier;
+    private readonly IProjectScanner _projectScanner;
     private readonly ILogger<SettingsApplicationService> _logger;
 
     /// <summary>
@@ -120,16 +138,19 @@ public sealed class SettingsApplicationService
     /// <param name="preferencesStore"> Preferences persistence boundary. </param>
     /// <param name="startupService"> Windows startup registration state boundary. </param>
     /// <param name="applier"> Runtime system preference boundary. </param>
+    /// <param name="projectScanner"> Repository scanner reconfigured after scanning settings change. </param>
     /// <param name="logger"> Logger for application and rollback failures. </param>
     public SettingsApplicationService(
         IPreferencesStore preferencesStore,
         IStartupService startupService,
         IPreferenceApplier applier,
+        IProjectScanner projectScanner,
         ILogger<SettingsApplicationService> logger)
     {
         _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         _startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
         _applier = applier ?? throw new ArgumentNullException(nameof(applier));
+        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -161,7 +182,11 @@ public sealed class SettingsApplicationService
             preferences.LogFileSizeLimitMb,
             preferences.PopupScreenPosition,
             preferences.AppTheme,
-            preferences.AccentColor);
+            preferences.AccentColor,
+            preferences.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
+            ProjectScanningDefaults.NormalizeScanDepth(preferences.ScanDepth),
+            preferences.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
+            preferences.DiscoveryMode);
     }
 
     /// <summary>
@@ -213,6 +238,14 @@ public sealed class SettingsApplicationService
             return false;
         }
 
+        if (!int.TryParse(input.ScanDepthText?.Trim(), out var scanDepth)
+            || scanDepth < ProjectScanningDefaults.MinScanDepth
+            || scanDepth > ProjectScanningDefaults.MaxScanDepth)
+        {
+            error = $"Repository scan depth must be a whole number between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+            return false;
+        }
+
         draft = new SettingsDraft(
             input.Runtime,
             input.PathDisplayStyle,
@@ -230,8 +263,39 @@ public sealed class SettingsApplicationService
             sizeLimitMb,
             input.PopupScreenPosition,
             input.AppTheme,
-            accentColor);
+            accentColor,
+            NormalizeList(input.WatchedDirectories),
+            scanDepth,
+            NormalizeList(input.IgnoredPatterns),
+            input.DiscoveryMode);
         return true;
+    }
+
+    private static IReadOnlyList<string> NormalizeList(IReadOnlyList<string>? values)
+    {
+        if (values is null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var result = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var value in values)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            var trimmed = value.Trim();
+            if (seen.Add(trimmed))
+            {
+                result.Add(trimmed);
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -287,9 +351,16 @@ public sealed class SettingsApplicationService
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;
                 preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
+                preferences.WatchedDirectories = (draft.WatchedDirectories ?? Array.Empty<string>()).ToList();
+                preferences.ScanDepth = draft.ScanDepth;
+                preferences.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
+                preferences.DiscoveryMode = draft.DiscoveryMode;
             });
 
             _applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
+
+            // Reconfigure watching and rescan with the newly saved scanning settings.
+            _projectScanner.Reload();
             return SettingsApplicationResult.Applied;
         }
         catch (Exception ex)

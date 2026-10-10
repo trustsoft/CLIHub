@@ -87,6 +87,7 @@ internal sealed class AppConfigDocument
         public bool IsFavorite { get; set; }
         public DateTime LastUsed { get; set; }
         public string? LogoPath { get; set; }
+        public string Source { get; set; } = ProjectSources.ManualToken;
 
         public static ProjectDocument From(Project project) => new()
         {
@@ -95,7 +96,8 @@ internal sealed class AppConfigDocument
             Path = project.Path,
             IsFavorite = project.IsFavorite,
             LastUsed = project.LastUsed,
-            LogoPath = project.LogoPath
+            LogoPath = project.LogoPath,
+            Source = ProjectSources.ToToken(project.Source)
         };
 
         public Project ToProject() => new()
@@ -105,7 +107,8 @@ internal sealed class AppConfigDocument
             Path = Path,
             IsFavorite = IsFavorite,
             LastUsed = LastUsed,
-            LogoPath = LogoPath
+            LogoPath = LogoPath,
+            Source = ProjectSources.Parse(Source)
         };
     }
 
@@ -133,6 +136,10 @@ internal sealed class AppConfigDocument
         public string AccentColor { get; set; } = "#4CC2FF";
         public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
         public string? LastSeenReleaseNotesVersion { get; set; }
+        public List<string>? WatchedDirectories { get; set; }
+        public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
+        public List<string>? IgnoredPatterns { get; set; }
+        public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
 
         public static PreferencesDocument From(AppPreferences preferences) => new()
         {
@@ -158,7 +165,11 @@ internal sealed class AppConfigDocument
             AppTheme = AppThemes.ToToken(preferences.AppTheme),
             AccentColor = AccentPalette.Normalize(preferences.AccentColor),
             PathDisplayStyle = preferences.PathDisplayStyle,
-            LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
+            LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
+            WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
+            ScanDepth = preferences.ScanDepth,
+            IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
+            DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.DiscoveryMode)
         };
 
         public AppPreferences ToPreferences() => new()
@@ -184,7 +195,11 @@ internal sealed class AppConfigDocument
             AppTheme = AppThemes.Parse(AppTheme),
             AccentColor = AccentPalette.Normalize(AccentColor),
             PathDisplayStyle = PathDisplayStyle,
-            LastSeenReleaseNotesVersion = LastSeenReleaseNotesVersion
+            LastSeenReleaseNotesVersion = LastSeenReleaseNotesVersion,
+            WatchedDirectories = WatchedDirectories is null ? null : new List<string>(WatchedDirectories),
+            ScanDepth = ScanDepth,
+            IgnoredPatterns = IgnoredPatterns is null ? null : new List<string>(IgnoredPatterns),
+            DiscoveryMode = ProjectDiscoveryModes.Parse(DiscoveryMode)
         };
     }
 }

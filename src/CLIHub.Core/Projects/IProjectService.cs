@@ -33,11 +33,32 @@ public interface IProjectService
     Project? GetCurrentProject();
 
     /// <summary>
-    ///   Registers a project folder. Returns the existing project if the folder is already registered.
+    ///   Registers a project folder as a manual project. Returns the existing project if the folder
+    ///   is already registered (without changing its source).
     /// </summary>
     /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
     /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>
     Project AddProject(string folderPath);
+
+    /// <summary>
+    ///   Registers a discovered project folder. Returns the existing project if the folder is already
+    ///   registered (without reclassifying a manual project).
+    /// </summary>
+    /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
+    /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>
+    Project AddDiscoveredProject(string folderPath);
+
+    /// <summary>
+    ///   Reconciles the discovered-project subset: adds each discovered folder that is not yet
+    ///   registered and removes the listed discovered projects. Manually registered projects and
+    ///   unrelated projects are left untouched.
+    /// </summary>
+    /// <param name="discoveredPaths"> Folder paths discovered by scanning. </param>
+    /// <param name="removedProjectIds"> IDs of discovered projects to remove. </param>
+    /// <returns> True when the project set changed. </returns>
+    bool ReconcileDiscoveredProjects(
+        IReadOnlyCollection<string> discoveredPaths,
+        IReadOnlyCollection<string> removedProjectIds);
 
     /// <summary>
     ///   Removes a project from configuration. Does not delete files on disk.

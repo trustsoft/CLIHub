@@ -256,4 +256,88 @@ public class ProjectServiceTests : IDisposable
 
         Assert.Equal(cachedLogo, logoAfterRestart);
     }
+
+    [Fact]
+    public void AddProject_MarksManualSource()
+    {
+        var service = CreateService();
+
+        var project = service.AddProject(CreateTempDir());
+
+        Assert.Equal(ProjectSource.Manual, project.Source);
+    }
+
+    [Fact]
+    public void AddDiscoveredProject_MarksDiscoveredSource()
+    {
+        var service = CreateService();
+
+        var project = service.AddDiscoveredProject(CreateTempDir());
+
+        Assert.Equal(ProjectSource.Discovered, project.Source);
+    }
+
+    [Fact]
+    public void AddDiscoveredProject_ExistingManual_DoesNotReclassify()
+    {
+        var folder = CreateTempDir();
+        var service = CreateService();
+        var manual = service.AddProject(folder);
+
+        var discovered = service.AddDiscoveredProject(folder);
+
+        Assert.Equal(manual.Id, discovered.Id);
+        Assert.Equal(ProjectSource.Manual, discovered.Source);
+    }
+
+    [Fact]
+    public void ReconcileDiscoveredProjects_AddsDiscoveredAndNeverRemovesManual()
+    {
+        var manualFolder = CreateTempDir();
+        var discoveredFolder = CreateTempDir();
+        var config = new AppConfig
+        {
+            Projects = { new Project { Id = "m", Name = "m", Path = manualFolder, Source = ProjectSource.Manual } }
+        };
+        var service = CreateService(config);
+
+        var changed = service.ReconcileDiscoveredProjects([discoveredFolder, manualFolder], ["m"]);
+
+        Assert.True(changed);
+        var projects = service.GetAllProjects();
+        Assert.Equal(2, projects.Count);
+        Assert.Equal(ProjectSource.Manual, projects.Single(p => p.Path == manualFolder).Source);
+        Assert.Equal(ProjectSource.Discovered, projects.Single(p => p.Path == discoveredFolder).Source);
+    }
+
+    [Fact]
+    public void ReconcileDiscoveredProjects_RemovesListedDiscoveredProject()
+    {
+        var folder = CreateTempDir();
+        var config = new AppConfig
+        {
+            Projects = { new Project { Id = "d", Name = "d", Path = folder, Source = ProjectSource.Discovered } }
+        };
+        var service = CreateService(config);
+
+        var changed = service.ReconcileDiscoveredProjects([], ["d"]);
+
+        Assert.True(changed);
+        Assert.Empty(service.GetAllProjects());
+    }
+
+    [Fact]
+    public void ReconcileDiscoveredProjects_NoChanges_ReturnsFalse()
+    {
+        var folder = CreateTempDir();
+        var config = new AppConfig
+        {
+            Projects = { new Project { Id = "m", Name = "m", Path = folder, Source = ProjectSource.Manual } }
+        };
+        var service = CreateService(config);
+
+        var changed = service.ReconcileDiscoveredProjects([folder], []);
+
+        Assert.False(changed);
+    }
 }

@@ -29,13 +29,12 @@ public class SettingsNavigationTests
     }
 
     [Fact]
-    public void Catalog_MarksPagesWithoutSettingsAsUnimplemented()
+    public void Catalog_MarksAllPagesAsImplemented()
     {
         var viewModel = new Fixture().ViewModel;
 
-        Assert.False(viewModel.Pages.Single(page => page.Key == "projects").IsImplemented);
-        Assert.True(viewModel.Pages.Single(page => page.Key == "telemetry").IsImplemented);
-        Assert.True(viewModel.Pages.Single(page => page.Key == "general").IsImplemented);
+        Assert.True(viewModel.Pages.Single(page => page.Key == "projects").IsImplemented);
+        Assert.All(viewModel.Pages, page => Assert.True(page.IsImplemented));
     }
 
     [Fact]
@@ -87,6 +86,7 @@ public class SettingsNavigationTests
                 Preferences.Object,
                 Startup.Object,
                 Applier.Object,
+                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsApplicationService>.Instance);
             ViewModel = new SettingsViewModel(
                 application,
@@ -94,6 +94,8 @@ public class SettingsNavigationTests
                 Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
+                new Mock<IProjectDialogService>().Object,
+                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

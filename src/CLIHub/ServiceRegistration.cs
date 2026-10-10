@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
@@ -88,6 +89,8 @@ public static class ServiceRegistration
             sp.GetRequiredService<IUpdateWorkflow>(),
             sp.GetRequiredService<IApplicationOperationLifetime>(),
             sp.GetRequiredService<IExternalLauncher>(),
+            sp.GetRequiredService<IProjectDialogService>(),
+            sp.GetRequiredService<IProjectScanner>(),
             sp.GetRequiredService<ILogger<SettingsViewModel>>()));
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());

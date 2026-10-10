@@ -112,11 +112,115 @@ public class ProjectService : IProjectService
             return existing;
         }
 
+        var project = CreateProject(normalized, ProjectSource.Manual);
+        _projectState.Projects.Add(project);
+        _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
+        Persist();
+        return project;
+    }
+
+    /// <inheritdoc />
+    public Project AddDiscoveredProject(string folderPath)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            throw new ArgumentException("Folder path is required.", nameof(folderPath));
+        }
+
+        var normalized = ProjectPathPolicy.Normalize(folderPath);
+
+        if (!Directory.Exists(normalized))
+        {
+            throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
+        }
+
+        var existing = _projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        var project = CreateProject(normalized, ProjectSource.Discovered);
+        _projectState.Projects.Add(project);
+        _logger.LogInformation("Discovered project {ProjectName} at {Path}", project.Name, project.Path);
+        Persist();
+        return project;
+    }
+
+    /// <inheritdoc />
+    public bool ReconcileDiscoveredProjects(
+        IReadOnlyCollection<string> discoveredPaths,
+        IReadOnlyCollection<string> removedProjectIds)
+    {
+        ArgumentNullException.ThrowIfNull(discoveredPaths);
+        ArgumentNullException.ThrowIfNull(removedProjectIds);
+
+        var changed = false;
+
+        foreach (var path in discoveredPaths)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                continue;
+            }
+
+            var normalized = ProjectPathPolicy.Normalize(path);
+
+            if (_projectState.Projects.Any(p => ProjectPathPolicy.AreEqual(p.Path, normalized)))
+            {
+                continue;
+            }
+
+            if (!Directory.Exists(normalized))
+            {
+                continue;
+            }
+
+            _projectState.Projects.Add(CreateProject(normalized, ProjectSource.Discovered));
+            changed = true;
+        }
+
+        foreach (var id in removedProjectIds)
+        {
+            var project = _projectState.Projects.FirstOrDefault(p => p.Id == id && p.Source == ProjectSource.Discovered);
+            if (project is null)
+            {
+                continue;
+            }
+
+            _projectState.Projects.Remove(project);
+            _logoResolver.Remove(id);
+
+            if (_projectState.CurrentProjectId == id)
+            {
+                _projectState.CurrentProjectId = null;
+            }
+
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _logger.LogInformation(
+                "Reconciled discovered projects: {AddedOrRemoved} change(s)",
+                discoveredPaths.Count + removedProjectIds.Count);
+            Persist();
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    ///   Creates a project entry for a normalized folder path without adding it to the state.
+    /// </summary>
+    private Project CreateProject(string normalized, ProjectSource source)
+    {
         var project = new Project
         {
             Id = Guid.NewGuid().ToString("N"),
             Name = Path.GetFileName(normalized.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
             Path = normalized,
+            Source = source,
             IsFavorite = false,
             LastUsed = DateTime.UtcNow
         };
@@ -127,10 +231,6 @@ public class ProjectService : IProjectService
         }
 
         project.LogoPath = ResolveProjectLogo(project);
-
-        _projectState.Projects.Add(project);
-        _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
-        Persist();
         return project;
     }
 

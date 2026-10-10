@@ -149,6 +149,67 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void ProjectScanningPreferences_RoundTrip()
+    {
+        var config = new AppConfig();
+        config.Preferences.WatchedDirectories = ["C:\\Work"];
+        config.Preferences.ScanDepth = 4;
+        config.Preferences.IgnoredPatterns = ["node_modules", "*cache*"];
+        config.Preferences.DiscoveryMode = ProjectDiscoveryMode.Agents;
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(
+            JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
+            CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal(["C:\\Work"], restored.Preferences.WatchedDirectories);
+        Assert.Equal(4, restored.Preferences.ScanDepth);
+        Assert.Equal(["node_modules", "*cache*"], restored.Preferences.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.DiscoveryMode);
+    }
+
+    [Fact]
+    public void ProjectScanningPreferences_Absent_UseDefaults()
+    {
+        const string json = """
+        { "schemaVersion": 2, "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
+        """;
+
+        var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
+
+        Assert.Null(config.Preferences.WatchedDirectories);
+        Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, config.Preferences.ScanDepth);
+        Assert.Null(config.Preferences.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Both, config.Preferences.DiscoveryMode);
+    }
+
+    [Fact]
+    public void ProjectSource_RoundTrips()
+    {
+        var config = new AppConfig
+        {
+            Projects = { new Project { Id = "p", Name = "p", Path = "C:\\p", Source = ProjectSource.Discovered } }
+        };
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(
+            JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
+            CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal(ProjectSource.Discovered, restored.Projects[0].Source);
+    }
+
+    [Fact]
+    public void ProjectSource_Absent_ReadsAsManual()
+    {
+        const string json = """
+        { "schemaVersion": 2, "projects": [ { "id": "p", "name": "p", "path": "C:\\p" } ], "preferences": {}, "currentProjectId": null }
+        """;
+
+        var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal(ProjectSource.Manual, config.Projects[0].Source);
+    }
+
+    [Fact]
     public void ProjectState_TransfersProjectOwnershipWithoutChangingValues()
     {
         var config = new AppConfig

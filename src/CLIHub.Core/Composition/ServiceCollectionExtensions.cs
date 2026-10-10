@@ -10,6 +10,7 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
+using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 
 /// <summary>
@@ -34,9 +35,24 @@ public static class ServiceCollectionExtensions
         services.AddProjectServices(defaultLogoPath);
         services.AddPluginServices();
         services.AddAgentServices();
+        services.AddScanningServices();
         services.AddUpdateServices();
         services.AddWindowsInfrastructureServices();
 
+        return services;
+    }
+
+    private static IServiceCollection AddScanningServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IRepositoryWatcherFactory, FileSystemRepositoryWatcherFactory>();
+        services.AddSingleton<IScanTimerFactory, SystemScanTimerFactory>();
+        services.AddSingleton<IProjectScanner>(sp => new ProjectScanningService(
+            sp.GetRequiredService<IPreferencesStore>(),
+            sp.GetRequiredService<IProjectService>(),
+            sp.GetRequiredService<IPluginCatalog>(),
+            sp.GetRequiredService<IRepositoryWatcherFactory>(),
+            sp.GetRequiredService<IScanTimerFactory>(),
+            sp.GetRequiredService<ILogger<ProjectScanningService>>()));
         return services;
     }
 

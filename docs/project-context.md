@@ -57,6 +57,7 @@ Read only the documents relevant to the task:
 | Startup and shutdown | [`docs/architecture/startup.md`](architecture/startup.md) |
 | Configuration and persistence | [`docs/architecture/configuration.md`](architecture/configuration.md) |
 | Plugin descriptor format | [`docs/architecture/plugins.md`](architecture/plugins.md) |
+| Project scanning and background watcher | [`docs/architecture/scanning.md`](architecture/scanning.md) |
 | Process execution and agent safety | [`docs/architecture/processes.md`](architecture/processes.md) |
 | WPF resources and theming | [`docs/architecture/ui.md`](architecture/ui.md) |
 | Behavior contract | The relevant file under [`openspec/specs/`](../openspec/specs/) |

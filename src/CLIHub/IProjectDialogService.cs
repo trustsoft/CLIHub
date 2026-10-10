@@ -12,6 +12,13 @@ public interface IProjectDialogService
     string? SelectProjectFolder();
 
     /// <summary>
+    ///   Opens a folder picker with a custom title and returns the selected path, or null when cancelled.
+    /// </summary>
+    /// <param name="title"> The folder picker dialog title. </param>
+    /// <returns> The selected folder path, or null. </returns>
+    string? SelectFolder(string title);
+
+    /// <summary>
     ///   Asks the user to confirm removing a project from CLIHub.
     /// </summary>
     /// <param name="projectName"> The project name shown in the confirmation message. </param>

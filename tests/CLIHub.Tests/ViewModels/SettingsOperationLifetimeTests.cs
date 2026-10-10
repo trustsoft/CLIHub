@@ -34,11 +34,14 @@ public class SettingsOperationLifetimeTests
                 new Mock<IPreferencesStore>().Object,
                 new Mock<IStartupService>().Object,
                 new Mock<IPreferenceApplier>().Object,
+                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsApplicationService>.Instance),
             updates.Object,
             updates.Object,
             lifetime.Object,
             new Mock<IExternalLauncher>().Object,
+            new Mock<IProjectDialogService>().Object,
+            new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
             NullLogger<SettingsViewModel>.Instance);
 
         viewModel.CheckForUpdatesCommand.Execute(null);

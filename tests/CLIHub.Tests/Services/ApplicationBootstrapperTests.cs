@@ -116,6 +116,7 @@ public class ApplicationBootstrapperTests
         public Mock<IHotkeyStartupRegistrar> Hotkey { get; } = new(MockBehavior.Strict);
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
         public Mock<IOptionalStartupCoordinator> OptionalStartup { get; } = new(MockBehavior.Strict);
+        public Mock<CLIHub.Core.Scanning.IProjectScanner> ProjectScanner { get; } = new();
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
         public Mock<IStartupWindow> Window { get; } = new(MockBehavior.Strict);
 
@@ -129,6 +130,7 @@ public class ApplicationBootstrapperTests
                 Session.Object,
                 HotkeyFactory.Object,
                 OptionalStartup.Object,
+                ProjectScanner.Object,
                 NullLogger<ApplicationBootstrapper>.Instance);
         }
     }

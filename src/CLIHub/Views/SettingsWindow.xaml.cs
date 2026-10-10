@@ -25,6 +25,7 @@ public partial class SettingsWindow : Window
         _viewModel = viewModel;
         DataContext = viewModel;
         viewModel.RequestClose += (_, _) => Close();
+        Closed += (_, _) => _viewModel.Dispose();
     }
 
     /// <summary>

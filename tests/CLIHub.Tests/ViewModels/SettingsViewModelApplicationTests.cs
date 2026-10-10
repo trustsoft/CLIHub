@@ -89,6 +89,7 @@ public class SettingsViewModelApplicationTests
                 Preferences.Object,
                 Startup.Object,
                 Applier.Object,
+                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsApplicationService>.Instance);
             ViewModel = new SettingsViewModel(
                 application,
@@ -96,6 +97,8 @@ public class SettingsViewModelApplicationTests
                 Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
+                new Mock<IProjectDialogService>().Object,
+                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

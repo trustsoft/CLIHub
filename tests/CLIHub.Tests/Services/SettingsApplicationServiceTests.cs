@@ -128,6 +128,7 @@ public class SettingsApplicationServiceTests
             preferencesStore,
             startupService,
             applier,
+            new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
             NullLogger<SettingsApplicationService>.Instance);
 
     private static Mock<IPreferenceApplier> CreateApplier() => new(MockBehavior.Strict);

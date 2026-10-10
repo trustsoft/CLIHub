@@ -171,6 +171,19 @@
                                 </views:SettingsAgentsPage.Style>
                             </views:SettingsAgentsPage>
 
+                            <views:SettingsProjectsPage>
+                                <views:SettingsProjectsPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsProjectsPage.Style>
+                            </views:SettingsProjectsPage>
+
                             <views:SettingsAppearancePage>
                                 <views:SettingsAppearancePage.Style>
                                     <Style TargetType="UserControl">

@@ -42,6 +42,7 @@ ports and update state; the application workflow owns cross-surface coordination
 - `Configuration/` owns the single `config.json` document, migrations, snapshots, and atomic persistence.
 - `Projects/` owns project state, selection, recency, favorites, paths, and project logos.
 - `Plugins/` owns descriptor discovery, validation, catalog reload, and built-in seeding.
+- `Scanning/` owns watched-root repository discovery, the background watcher, and the scan status surface.
 - `Agents/` owns commands, detection, versions, availability composition, and command capability checks.
 - `Updates/` owns Core update/release-note contracts and Velopack integration.
 - `Infrastructure/` owns process runners, agent process inspection/matching, filesystem paths, logging
@@ -64,6 +65,7 @@ ports and update state; the application workflow owns cross-surface coordination
 - [Startup and shutdown](architecture/startup.md)
 - [Configuration persistence](architecture/configuration.md)
 - [Plugin descriptors](architecture/plugins.md)
+- [Project scanning](architecture/scanning.md)
 - [Process execution and agent safety](architecture/processes.md)
 - [WPF resources and theming](architecture/ui.md)
 - [Architecture decision records](adr/README.md)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Scanning;
 
 /// <summary>
 ///   Coordinates required and best-effort first-instance startup operations.
@@ -15,6 +16,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     private readonly IApplicationSession _session;
     private readonly Func<IHotkeyStartupRegistrar> _hotkeyStartupRegistrarFactory;
     private readonly IOptionalStartupCoordinator _optionalStartup;
+    private readonly IProjectScanner _projectScanner;
     private readonly ILogger<ApplicationBootstrapper> _logger;
 
     /// <summary>
@@ -25,6 +27,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="session"> First-instance session and application event owner. </param>
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="optionalStartup"> Optional startup operations coordinator. </param>
+    /// <param name="projectScanner"> Background repository scanner. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
     public ApplicationBootstrapper(
         IInstanceCoordinator instanceCoordinator,
@@ -32,6 +35,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         IApplicationSession session,
         Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
         IOptionalStartupCoordinator optionalStartup,
+        IProjectScanner projectScanner,
         ILogger<ApplicationBootstrapper> logger)
     {
         _instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
@@ -39,6 +43,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         _session = session ?? throw new ArgumentNullException(nameof(session));
         _hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
         _optionalStartup = optionalStartup ?? throw new ArgumentNullException(nameof(optionalStartup));
+        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -76,6 +81,8 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             hotkeyStartupRegistrar.Register(startupState.Preferences);
 
             _optionalStartup.RunOptionalStartup(startupState, startupUi, context);
+
+            _projectScanner.Start();
 
             _logger.LogInformation("CLIHub started");
         }

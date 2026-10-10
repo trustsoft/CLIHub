@@ -117,6 +117,7 @@ public class SharedUpdatePresentationTests
             preferences.Object,
             startup.Object,
             applier.Object,
+            Mock.Of<CLIHub.Core.Scanning.IProjectScanner>(),
             NullLogger<SettingsApplicationService>.Instance);
 
         return new SettingsViewModel(
@@ -125,6 +126,8 @@ public class SharedUpdatePresentationTests
             workflow,
             Mock.Of<IApplicationOperationLifetime>(),
             Mock.Of<IExternalLauncher>(),
+            Mock.Of<IProjectDialogService>(),
+            Mock.Of<CLIHub.Core.Scanning.IProjectScanner>(),
             NullLogger<SettingsViewModel>.Instance);
     }
 

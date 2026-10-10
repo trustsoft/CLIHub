@@ -1,5 +1,6 @@
 namespace CLIHub.ViewModels;
 
+using System.Collections.ObjectModel;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Logging;
+using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
 
@@ -51,6 +53,13 @@ public sealed record PopupPositionOption(PopupScreenPosition Position, string Na
 public sealed record AppThemeOption(AppTheme Theme, string Name);
 
 /// <summary>
+///   A selectable repository discovery mode.
+/// </summary>
+/// <param name="Mode"> The discovery mode. </param>
+/// <param name="Name"> Display name. </param>
+public sealed record DiscoveryModeOption(ProjectDiscoveryMode Mode, string Name);
+
+/// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
 ///   whether its settings are implemented yet.
 /// </summary>
@@ -71,7 +80,7 @@ public sealed record SettingsGroup(string Title, IReadOnlyList<SettingsPage> Pag
 ///   View model for the Settings window: loads preferences, validates input, and applies
 ///   changes on save.
 /// </summary>
-public sealed class SettingsViewModel : ObservableObject
+public sealed class SettingsViewModel : ObservableObject, IDisposable
 {
     private static readonly RuntimeOption[] RuntimeOptions =
     {
@@ -91,7 +100,7 @@ public sealed class SettingsViewModel : ObservableObject
     {
         new("general", "General & Startup", "General", true),
         new("hotkeys", "Hotkeys & Launchers", "General", true),
-        new("projects", "Projects & Paths", "Engines & Repos", false),
+        new("projects", "Projects & Paths", "Engines & Repos", true),
         new("agents", "CLI Agents", "Engines & Repos", true),
         new("terminal", "Terminal Profiles", "Engines & Repos", true),
         new("appearance", "Appearance", "System", true),
@@ -123,6 +132,13 @@ public sealed class SettingsViewModel : ObservableObject
         new(AppTheme.System, "System")
     };
 
+    private static readonly DiscoveryModeOption[] DiscoveryModeOptions =
+    {
+        new(ProjectDiscoveryMode.Git, "Git repositories"),
+        new(ProjectDiscoveryMode.Agents, "Agent folders"),
+        new(ProjectDiscoveryMode.Both, "Both")
+    };
+
     private static readonly SettingsGroup[] PagesByGroup = AllPages
         .GroupBy(page => page.Group)
         .Select(group => new SettingsGroup(group.Key, group.ToArray()))
@@ -132,6 +148,8 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly IUpdateVersionProvider _versionProvider;
     private readonly IUpdateWorkflow _updateWorkflow;
     private readonly IApplicationOperationLifetime _operationLifetime;
+    private readonly IProjectDialogService _dialogs;
+    private readonly IProjectScanner _projectScanner;
     private readonly ILogger<SettingsViewModel> _logger;
 
     private bool _startWithWindows;
@@ -156,6 +174,13 @@ public sealed class SettingsViewModel : ObservableObject
     private PopupPositionOption _selectedPopupPosition = PopupPositionOptions[0];
     private AppThemeOption _selectedAppTheme = AppThemeOptions[0];
     private string _accentText = AccentPalette.DefaultHex;
+    private string _scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
+    private DiscoveryModeOption _selectedDiscoveryMode = DiscoveryModeOptions[2];
+    private string _newIgnoredPatternText = string.Empty;
+    private string? _selectedWatchedDirectory;
+    private string? _selectedIgnoredPattern;
+    private string _watcherStatusText = "No watched directories configured.";
+    private bool _disposed;
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -166,12 +191,16 @@ public sealed class SettingsViewModel : ObservableObject
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="externalLauncher"> Operating-system path launcher for opening the log folder. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
+    /// <param name="dialogs"> Folder picker used to add watched directories. </param>
+    /// <param name="projectScanner"> Scanner whose status is shown on the Projects &amp; Paths page. </param>
     public SettingsViewModel(
         SettingsApplicationService settingsApplication,
         IUpdateVersionProvider versionProvider,
         IUpdateWorkflow updateWorkflow,
         IApplicationOperationLifetime operationLifetime,
         IExternalLauncher externalLauncher,
+        IProjectDialogService dialogs,
+        IProjectScanner projectScanner,
         ILogger<SettingsViewModel> logger)
     {
         _settingsApplication = settingsApplication;
@@ -179,6 +208,8 @@ public sealed class SettingsViewModel : ObservableObject
         _updateWorkflow = updateWorkflow;
         _operationLifetime = operationLifetime;
         _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
+        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         _logger = logger;
 
         Version = _versionProvider.GetCurrentVersion();
@@ -189,7 +220,16 @@ public sealed class SettingsViewModel : ObservableObject
             _ = _operationLifetime.RunAsync("Settings update check", RunUpdateCheckAsync));
         CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(LogFilePath));
         OpenLogFolderCommand = new RelayCommand(() => _externalLauncher.Open(AppPaths.LogsDirectory));
+        AddWatchedDirectoryCommand = new RelayCommand(AddWatchedDirectory);
+        RemoveWatchedDirectoryCommand = new RelayCommand(RemoveWatchedDirectory);
+        AddIgnoredPatternCommand = new RelayCommand(AddIgnoredPattern);
+        RemoveIgnoredPatternCommand = new RelayCommand(RemoveIgnoredPattern);
+
+        _projectScanner.StatusChanged += OnScannerStatusChanged;
+        _watcherStatusText = FormatScannerStatus(_projectScanner.Status);
     }
+
+    private const string NoWatchedDirectoriesStatus = "No watched directories configured.";
 
     /// <summary>
     ///   Raised when the window should close (on Save or Cancel).
@@ -466,6 +506,95 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    ///   Watched root directories edited on the Projects &amp; Paths page.
+    /// </summary>
+    public ObservableCollection<string> WatchedDirectories { get; } = new();
+
+    /// <summary>
+    ///   The watched directory selected for removal.
+    /// </summary>
+    public string? SelectedWatchedDirectory
+    {
+        get => _selectedWatchedDirectory;
+        set => SetProperty(ref _selectedWatchedDirectory, value);
+    }
+
+    /// <summary>
+    ///   The ignored directory-name patterns edited on the Projects &amp; Paths page.
+    /// </summary>
+    public ObservableCollection<string> IgnoredPatterns { get; } = new();
+
+    /// <summary>
+    ///   The ignored pattern selected for removal.
+    /// </summary>
+    public string? SelectedIgnoredPattern
+    {
+        get => _selectedIgnoredPattern;
+        set => SetProperty(ref _selectedIgnoredPattern, value);
+    }
+
+    /// <summary>
+    ///   The ignored pattern pending to be added.
+    /// </summary>
+    public string NewIgnoredPatternText
+    {
+        get => _newIgnoredPatternText;
+        set => SetProperty(ref _newIgnoredPatternText, value);
+    }
+
+    /// <summary>
+    ///   The repository scan depth as text.
+    /// </summary>
+    public string ScanDepthText
+    {
+        get => _scanDepthText;
+        set => SetProperty(ref _scanDepthText, value);
+    }
+
+    /// <summary>
+    ///   The repository discovery mode options offered by the selector.
+    /// </summary>
+    public IReadOnlyList<DiscoveryModeOption> DiscoveryModes => DiscoveryModeOptions;
+
+    /// <summary>
+    ///   The selected repository discovery mode.
+    /// </summary>
+    public DiscoveryModeOption SelectedDiscoveryMode
+    {
+        get => _selectedDiscoveryMode;
+        set => SetProperty(ref _selectedDiscoveryMode, value);
+    }
+
+    /// <summary>
+    ///   A read-only description of the background repository scanner status.
+    /// </summary>
+    public string WatcherStatusText
+    {
+        get => _watcherStatusText;
+        private set => SetProperty(ref _watcherStatusText, value);
+    }
+
+    /// <summary>
+    ///   Adds the folder selected by the user to the watched-directories list.
+    /// </summary>
+    public RelayCommand AddWatchedDirectoryCommand { get; }
+
+    /// <summary>
+    ///   Removes the selected watched directory.
+    /// </summary>
+    public RelayCommand RemoveWatchedDirectoryCommand { get; }
+
+    /// <summary>
+    ///   Adds the entered ignored pattern.
+    /// </summary>
+    public RelayCommand AddIgnoredPatternCommand { get; }
+
+    /// <summary>
+    ///   Removes the selected ignored pattern.
+    /// </summary>
+    public RelayCommand RemoveIgnoredPatternCommand { get; }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -539,6 +668,27 @@ public sealed class SettingsViewModel : ObservableObject
         _accentText = AccentPalette.Normalize(draft.AccentColor);
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
+
+        WatchedDirectories.Clear();
+        foreach (var directory in draft.WatchedDirectories ?? Array.Empty<string>())
+        {
+            WatchedDirectories.Add(directory);
+        }
+
+        IgnoredPatterns.Clear();
+        foreach (var pattern in draft.IgnoredPatterns ?? Array.Empty<string>())
+        {
+            IgnoredPatterns.Add(pattern);
+        }
+
+        _scanDepthText = draft.ScanDepth.ToString();
+        _selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
+            ?? DiscoveryModeOptions[2];
+        _newIgnoredPatternText = string.Empty;
+        _selectedWatchedDirectory = null;
+        _selectedIgnoredPattern = null;
+        _watcherStatusText = FormatScannerStatus(_projectScanner.Status);
+
         _updateMessage = string.Empty;
         _validationError = null;
         _selectedPage = AllPages[0];
@@ -562,6 +712,12 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(SelectedAppTheme));
         OnPropertyChanged(nameof(AccentText));
         OnPropertyChanged(nameof(SelectedAccent));
+        OnPropertyChanged(nameof(ScanDepthText));
+        OnPropertyChanged(nameof(SelectedDiscoveryMode));
+        OnPropertyChanged(nameof(NewIgnoredPatternText));
+        OnPropertyChanged(nameof(SelectedWatchedDirectory));
+        OnPropertyChanged(nameof(SelectedIgnoredPattern));
+        OnPropertyChanged(nameof(WatcherStatusText));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -585,6 +741,103 @@ public sealed class SettingsViewModel : ObservableObject
     ///   Closes the window without saving.
     /// </summary>
     public void Cancel() => RequestClose?.Invoke(this, EventArgs.Empty);
+
+    private void AddWatchedDirectory()
+    {
+        var folder = _dialogs.SelectFolder("Add Watched Directory");
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        if (!WatchedDirectories.Any(existing => string.Equals(existing, folder, StringComparison.OrdinalIgnoreCase)))
+        {
+            WatchedDirectories.Add(folder);
+        }
+
+        ValidationError = null;
+    }
+
+    private void RemoveWatchedDirectory()
+    {
+        if (SelectedWatchedDirectory is { } selected)
+        {
+            WatchedDirectories.Remove(selected);
+        }
+    }
+
+    private void AddIgnoredPattern()
+    {
+        var pattern = NewIgnoredPatternText.Trim();
+        if (pattern.Length == 0)
+        {
+            return;
+        }
+
+        if (!IgnoredPatterns.Any(existing => string.Equals(existing, pattern, StringComparison.OrdinalIgnoreCase)))
+        {
+            IgnoredPatterns.Add(pattern);
+        }
+
+        NewIgnoredPatternText = string.Empty;
+    }
+
+    private void RemoveIgnoredPattern()
+    {
+        if (SelectedIgnoredPattern is { } selected)
+        {
+            IgnoredPatterns.Remove(selected);
+        }
+    }
+
+    private void OnScannerStatusChanged(object? sender, ProjectScanStatus status)
+    {
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher is not null && !dispatcher.CheckAccess())
+        {
+            dispatcher.BeginInvoke(() => WatcherStatusText = FormatScannerStatus(status));
+            return;
+        }
+
+        WatcherStatusText = FormatScannerStatus(status);
+    }
+
+    private static string FormatScannerStatus(ProjectScanStatus? status)
+    {
+        if (status is null)
+        {
+            return NoWatchedDirectoriesStatus;
+        }
+
+        return status.State switch
+        {
+            ProjectScanState.NotConfigured => NoWatchedDirectoriesStatus,
+            ProjectScanState.Scanning => "Scanning…",
+            ProjectScanState.Error => $"Scan failed: {status.Error}",
+            _ => FormatIdleStatus(status)
+        };
+    }
+
+    private static string FormatIdleStatus(ProjectScanStatus status)
+    {
+        var when = status.LastScanUtc is { } last ? last.ToLocalTime().ToString("HH:mm:ss") : "never";
+        var noun = status.DiscoveredCount == 1 ? "project" : "projects";
+        return $"Watching · last scan {when} · {status.DiscoveredCount} discovered {noun}";
+    }
+
+    /// <summary>
+    ///   Detaches the scanner status subscription.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+        _projectScanner.StatusChanged -= OnScannerStatusChanged;
+    }
 
     /// <summary>
     ///   Checks for updates and reports the outcome in <see cref="UpdateMessage"/>.
@@ -633,7 +886,11 @@ public sealed class SettingsViewModel : ObservableObject
             LogFileSizeLimitText,
             SelectedPopupPosition.Position,
             SelectedAppTheme.Theme,
-            AccentText);
+            AccentText,
+            WatchedDirectories.ToList(),
+            ScanDepthText,
+            IgnoredPatterns.ToList(),
+            SelectedDiscoveryMode.Mode);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {
