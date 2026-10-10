@@ -16,7 +16,7 @@ using CLIHub.Core.Models;
 /// <param name="ProbeTtlText"> Probe TTL text, or empty for the default. </param>
 /// <param name="ProbeTimeoutText"> Probe timeout text, or empty for the default. </param>
 /// <param name="StartWithWindows"> Whether Windows startup should be enabled. </param>
-/// <param name="ShowWindowOnStartup"> Whether the launch window should be shown at startup. </param>
+/// <param name="StartMinimized"> Whether the application should start minimized to the tray. </param>
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
@@ -25,7 +25,7 @@ public sealed record SettingsInput(
     string ProbeTtlText,
     string ProbeTimeoutText,
     bool StartWithWindows,
-    bool ShowWindowOnStartup,
+    bool StartMinimized,
     bool CheckForUpdatesOnStartup);
 
 /// <summary>
@@ -37,7 +37,7 @@ public sealed record SettingsInput(
 /// <param name="ProbeTtlMinutes"> Probe TTL, or null for the default. </param>
 /// <param name="ProbeTimeoutSeconds"> Probe timeout, or null for the default. </param>
 /// <param name="StartWithWindows"> Whether Windows startup should be enabled. </param>
-/// <param name="ShowWindowOnStartup"> Whether the launch window should be shown at startup. </param>
+/// <param name="StartMinimized"> Whether the application should start minimized to the tray. </param>
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
@@ -46,7 +46,7 @@ public sealed record SettingsDraft(
     int? ProbeTtlMinutes,
     int? ProbeTimeoutSeconds,
     bool StartWithWindows,
-    bool ShowWindowOnStartup,
+    bool StartMinimized,
     bool CheckForUpdatesOnStartup);
 
 /// <summary>
@@ -115,7 +115,7 @@ public sealed class SettingsApplicationService
             preferences.AgentProbeTtlMinutes,
             preferences.AgentProbeTimeoutSeconds,
             _startupService.IsEnabled(),
-            preferences.ShowWindowOnStartup,
+            preferences.StartMinimized,
             preferences.CheckForUpdatesOnStartup);
     }
 
@@ -157,7 +157,7 @@ public sealed class SettingsApplicationService
             ttl,
             timeout,
             input.StartWithWindows,
-            input.ShowWindowOnStartup,
+            input.StartMinimized,
             input.CheckForUpdatesOnStartup);
         return true;
     }
@@ -202,7 +202,8 @@ public sealed class SettingsApplicationService
                 preferences.AgentProbeTimeoutSeconds = draft.ProbeTimeoutSeconds;
                 preferences.CheckForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
                 preferences.StartWithWindows = draft.StartWithWindows;
-                preferences.ShowWindowOnStartup = draft.ShowWindowOnStartup;
+                preferences.StartMinimized = draft.StartMinimized;
+                preferences.ShowWindowOnStartup = !draft.StartMinimized;
                 preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
             });
 

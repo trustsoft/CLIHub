@@ -11,7 +11,7 @@ public sealed class LegacyTerminalPreferenceMigration : IConfigMigration
     public int SourceVersion => AppConfigDocument.LegacySchemaVersion;
 
     /// <inheritdoc />
-    public int TargetVersion => AppConfigDocument.CurrentSchemaVersion;
+    public int TargetVersion => 1;
 
     /// <inheritdoc />
     public ConfigurationSnapshot Migrate(ConfigurationSnapshot snapshot)

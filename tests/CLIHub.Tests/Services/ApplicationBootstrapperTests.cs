@@ -20,7 +20,7 @@ public class ApplicationBootstrapperTests
         var fixture = new BootstrapperFixture();
         var startupState = new StartupState(new AppPreferences
         {
-            ShowWindowOnStartup = true,
+            StartMinimized = false,
             CheckForUpdatesOnStartup = true
         });
 
@@ -69,7 +69,7 @@ public class ApplicationBootstrapperTests
         var fixture = new BootstrapperFixture();
         var startupState = new StartupState(new AppPreferences
         {
-            ShowWindowOnStartup = false,
+            StartMinimized = true,
             CheckForUpdatesOnStartup = false
         });
 

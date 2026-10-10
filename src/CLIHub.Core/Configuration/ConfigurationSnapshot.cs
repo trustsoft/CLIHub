@@ -78,6 +78,7 @@ public sealed class ConfigurationSnapshot
         AgentProbeTimeoutSeconds = preferences.AgentProbeTimeoutSeconds,
         CheckForUpdatesOnStartup = preferences.CheckForUpdatesOnStartup,
         ShowWindowOnStartup = preferences.ShowWindowOnStartup,
+        StartMinimized = preferences.StartMinimized,
         PinLaunchWindow = preferences.PinLaunchWindow,
         PathDisplayStyle = preferences.PathDisplayStyle,
         LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion

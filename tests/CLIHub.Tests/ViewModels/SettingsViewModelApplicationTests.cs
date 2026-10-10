@@ -73,7 +73,7 @@ public class SettingsViewModelApplicationTests
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                 CheckForUpdatesOnStartup = true,
-                ShowWindowOnStartup = true
+                StartMinimized = true
             });
             Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
             Startup.Setup(x => x.IsEnabled()).Returns(false);

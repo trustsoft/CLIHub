@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddConfigurationServices(this IServiceCollection services)
     {
         services.AddSingleton<IConfigMigration, LegacyTerminalPreferenceMigration>();
+        services.AddSingleton<IConfigMigration, StartMinimizedMigration>();
         services.AddSingleton<IConfigMigrationRunner, ConfigMigrationRunner>();
         services.AddSingleton<IConfigurationRepository, ConfigurationRepository>();
         services.AddSingleton<IPreferencesStore, PreferencesStore>();

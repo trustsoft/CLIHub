@@ -42,7 +42,7 @@ public class ConfigurationRepositoryTests : IDisposable
 
         Assert.True(File.Exists(ConfigPath));
         Assert.Contains("\"currentProjectId\": \"abc\"", File.ReadAllText(ConfigPath));
-        Assert.Contains("\"schemaVersion\": 1", File.ReadAllText(ConfigPath));
+        Assert.Contains("\"schemaVersion\": 2", File.ReadAllText(ConfigPath));
     }
 
     [Fact]

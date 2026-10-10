@@ -84,7 +84,7 @@ public sealed class SettingsViewModel : ObservableObject
     private readonly ILogger<SettingsViewModel> _logger;
 
     private bool _startWithWindows;
-    private bool _showWindowOnStartup = true;
+    private bool _startMinimized = true;
     private RuntimeOption _selectedRuntime = RuntimeOptions[2];
     private PathDisplayOption _selectedPathDisplay = PathDisplayOptions[0];
     private string _hotkeyText = string.Empty;
@@ -178,12 +178,12 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    ///   Whether the launch window is shown at startup.
+    ///   Whether the application starts minimized in the system tray instead of showing the window.
     /// </summary>
-    public bool ShowWindowOnStartup
+    public bool StartMinimized
     {
-        get => _showWindowOnStartup;
-        set => SetProperty(ref _showWindowOnStartup, value);
+        get => _startMinimized;
+        set => SetProperty(ref _startMinimized, value);
     }
 
     /// <summary>
@@ -324,13 +324,13 @@ public sealed class SettingsViewModel : ObservableObject
         _probeTimeoutText = draft.ProbeTimeoutSeconds?.ToString() ?? string.Empty;
         _checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
         _startWithWindows = draft.StartWithWindows;
-        _showWindowOnStartup = draft.ShowWindowOnStartup;
+        _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
         _validationError = null;
         _selectedPage = AllPages[0];
 
         OnPropertyChanged(nameof(StartWithWindows));
-        OnPropertyChanged(nameof(ShowWindowOnStartup));
+        OnPropertyChanged(nameof(StartMinimized));
         OnPropertyChanged(nameof(SelectedRuntime));
         OnPropertyChanged(nameof(SelectedPathDisplay));
         OnPropertyChanged(nameof(HotkeyText));
@@ -399,7 +399,7 @@ public sealed class SettingsViewModel : ObservableObject
             ProbeTtlText,
             ProbeTimeoutText,
             StartWithWindows,
-            ShowWindowOnStartup,
+            StartMinimized,
             CheckForUpdatesOnStartup);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))

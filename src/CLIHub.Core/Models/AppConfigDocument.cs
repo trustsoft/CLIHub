@@ -15,7 +15,7 @@ internal sealed class AppConfigDocument
     /// <summary>
     ///   The current configuration schema version.
     /// </summary>
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
 
     /// <summary>
     ///   The schema version represented by documents without version metadata.
@@ -121,6 +121,7 @@ internal sealed class AppConfigDocument
         public int? AgentProbeTimeoutSeconds { get; set; }
         public bool CheckForUpdatesOnStartup { get; set; } = true;
         public bool ShowWindowOnStartup { get; set; } = true;
+        public bool StartMinimized { get; set; } = true;
         public bool PinLaunchWindow { get; set; }
         public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
         public string? LastSeenReleaseNotesVersion { get; set; }
@@ -136,7 +137,9 @@ internal sealed class AppConfigDocument
             AgentProbeTtlMinutes = preferences.AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = preferences.AgentProbeTimeoutSeconds,
             CheckForUpdatesOnStartup = preferences.CheckForUpdatesOnStartup,
-            ShowWindowOnStartup = preferences.ShowWindowOnStartup,
+            StartMinimized = preferences.StartMinimized,
+            // Keep the legacy field non-stale so older readers stay consistent.
+            ShowWindowOnStartup = !preferences.StartMinimized,
             PinLaunchWindow = preferences.PinLaunchWindow,
             PathDisplayStyle = preferences.PathDisplayStyle,
             LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
@@ -153,6 +156,7 @@ internal sealed class AppConfigDocument
             AgentProbeTtlMinutes = AgentProbeTtlMinutes,
             AgentProbeTimeoutSeconds = AgentProbeTimeoutSeconds,
             CheckForUpdatesOnStartup = CheckForUpdatesOnStartup,
+            StartMinimized = StartMinimized,
             ShowWindowOnStartup = ShowWindowOnStartup,
             PinLaunchWindow = PinLaunchWindow,
             PathDisplayStyle = PathDisplayStyle,

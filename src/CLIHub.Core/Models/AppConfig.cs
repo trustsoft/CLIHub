@@ -76,10 +76,16 @@ public class AppPreferences
     public bool CheckForUpdatesOnStartup { get; set; } = true;
 
     /// <summary>
-    ///   When true (default), the main window is shown at startup; when false, the
-    ///   application starts in the system tray. Applies to manual and Windows starts.
+    ///   Legacy startup-visibility preference. Superseded by <see cref="StartMinimized"/> and kept
+    ///   only so the schema 1→2 migration can read existing configurations.
     /// </summary>
     public bool ShowWindowOnStartup { get; set; } = true;
+
+    /// <summary>
+    ///   When true (default), CLIHub starts minimized in the system tray; when false, the main
+    ///   window is shown at startup. Applies to manual and Windows starts.
+    /// </summary>
+    public bool StartMinimized { get; set; } = true;
 
     /// <summary>
     ///   When true, the launch window stays visible when it loses focus instead of hiding.

@@ -19,7 +19,7 @@ public sealed class StartupStateLoaderTests
 
         var preferences = new AppPreferences
         {
-            ShowWindowOnStartup = true,
+            StartMinimized = true,
             CheckForUpdatesOnStartup = false
         };
 

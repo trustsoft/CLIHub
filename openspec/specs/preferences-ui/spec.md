@@ -33,7 +33,7 @@ The Settings window SHALL present a sidebar with the groups "General", "Engines 
 
 #### Scenario: Existing controls on their pages
 - **WHEN** the Settings window opens
-- **THEN** the "Start with Windows" and "Show window on startup" toggles appear on "General & Startup", the global-hotkey capture field on "Hotkeys & Launchers", the default-runtime selector on "Terminal Profiles", the agents-probe `TTL, minutes` and `Timeout, seconds` fields on "CLI Agents", the path display selector on "Appearance", and the "Check for updates on startup" toggle and manual update check on "Updates"
+- **THEN** the "Start with Windows" and "Start minimized to tray" toggles appear on "General & Startup", the global-hotkey capture field on "Hotkeys & Launchers", the default-runtime selector on "Terminal Profiles", the agents-probe `TTL, minutes` and `Timeout, seconds` fields on "CLI Agents", the path display selector on "Appearance", and the "Check for updates on startup" toggle and manual update check on "Updates"
 
 #### Scenario: Current values loaded
 - **WHEN** the Settings window opens
@@ -80,8 +80,8 @@ Saving SHALL validate a typed settings draft, apply all required system preferen
 
 #### Scenario: Startup window visibility applied
 
-- **WHEN** the user changes "Show window on startup" and saves
-- **THEN** the next application start shows or hides the main window accordingly
+- **WHEN** the user changes "Start minimized to tray" and saves
+- **THEN** the next application start shows the main window when the toggle is off and starts in the system tray when it is on
 
 #### Scenario: Invalid draft does not save
 

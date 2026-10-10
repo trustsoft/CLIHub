@@ -64,13 +64,13 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 
             context.SetMainWindow(startupUi.LaunchWindow);
 
-            if (startupState.Preferences.ShowWindowOnStartup)
+            if (!startupState.Preferences.StartMinimized)
             {
                 startupUi.ShowLaunchWindow();
             }
             else
             {
-                _logger.LogInformation("Starting in the system tray (show window on startup disabled)");
+                _logger.LogInformation("Starting in the system tray (start minimized enabled)");
             }
 
             hotkeyStartupRegistrar.Register(startupState.Preferences);

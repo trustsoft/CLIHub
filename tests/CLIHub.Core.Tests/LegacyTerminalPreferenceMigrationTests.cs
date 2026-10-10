@@ -75,7 +75,7 @@ public class LegacyTerminalPreferenceMigrationTests
 
         try
         {
-            var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration()]);
+            var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration(), new StartMinimizedMigration()]);
             using var repository = new ConfigurationRepository(
                 NullLogger<ConfigurationRepository>.Instance,
                 path,
@@ -84,7 +84,7 @@ public class LegacyTerminalPreferenceMigrationTests
             Assert.Equal(RuntimeKind.CommandPrompt, repository.Read().Preferences.DefaultRuntime);
             repository.Flush();
             var persisted = File.ReadAllText(path);
-            Assert.Contains("\"schemaVersion\": 1", persisted);
+            Assert.Contains("\"schemaVersion\": 2", persisted);
             Assert.Contains("\"defaultRuntime\": \"cmd\"", persisted);
         }
         finally
@@ -99,7 +99,7 @@ public class LegacyTerminalPreferenceMigrationTests
         var path = Path.Combine(Path.GetTempPath(), $"clihub-current-runtime-{Guid.NewGuid():N}.json");
         File.WriteAllText(path, """
         {
-          "schemaVersion": 1,
+          "schemaVersion": 2,
           "projects": [],
           "preferences": { "terminalExecutable": "cmd.exe", "defaultRuntime": "wt" },
           "currentProjectId": null
@@ -108,7 +108,7 @@ public class LegacyTerminalPreferenceMigrationTests
 
         try
         {
-            var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration()]);
+            var runner = new ConfigMigrationRunner([new LegacyTerminalPreferenceMigration(), new StartMinimizedMigration()]);
             using var repository = new ConfigurationRepository(
                 NullLogger<ConfigurationRepository>.Instance,
                 path,

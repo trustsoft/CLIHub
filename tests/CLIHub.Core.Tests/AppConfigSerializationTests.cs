@@ -68,7 +68,7 @@ public class AppConfigSerializationTests
     {
         var json = JsonSerializer.Serialize(AppConfigDocument.From(new AppConfig()), CoreJson.Options);
 
-        Assert.Contains("\"schemaVersion\": 1", json);
+        Assert.Contains("\"schemaVersion\": 2", json);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class AppConfigSerializationTests
                 AgentProbeTtlMinutes = 15,
                 AgentProbeTimeoutSeconds = 7,
                 CheckForUpdatesOnStartup = false,
-                ShowWindowOnStartup = false,
+                StartMinimized = true,
                 PinLaunchWindow = true,
                 PathDisplayStyle = "middleEllipsis",
                 LastSeenReleaseNotesVersion = "1.2.3"
@@ -125,7 +125,7 @@ public class AppConfigSerializationTests
         Assert.Equal(config.Preferences.AgentProbeTtlMinutes, restored.Preferences.AgentProbeTtlMinutes);
         Assert.Equal(config.Preferences.AgentProbeTimeoutSeconds, restored.Preferences.AgentProbeTimeoutSeconds);
         Assert.Equal(config.Preferences.CheckForUpdatesOnStartup, restored.Preferences.CheckForUpdatesOnStartup);
-        Assert.Equal(config.Preferences.ShowWindowOnStartup, restored.Preferences.ShowWindowOnStartup);
+        Assert.Equal(config.Preferences.StartMinimized, restored.Preferences.StartMinimized);
         Assert.Equal(config.Preferences.PinLaunchWindow, restored.Preferences.PinLaunchWindow);
         Assert.Equal(config.Preferences.PathDisplayStyle, restored.Preferences.PathDisplayStyle);
         Assert.Equal(config.Preferences.LastSeenReleaseNotesVersion, restored.Preferences.LastSeenReleaseNotesVersion);

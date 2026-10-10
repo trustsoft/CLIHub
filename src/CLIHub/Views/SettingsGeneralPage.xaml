@@ -18,11 +18,11 @@
 
         <CheckBox Margin="0,16,0,0"
                   HorizontalAlignment="Left"
-                  Content="Show window on startup"
-                  IsChecked="{Binding ShowWindowOnStartup, Mode=TwoWay}"
+                  Content="Start minimized to tray"
+                  IsChecked="{Binding StartMinimized, Mode=TwoWay}"
                   Style="{StaticResource SettingsCheck}"/>
         <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
-                   Text="Show the launch window when CLIHub starts; otherwise it opens in the tray."/>
+                   Text="Start CLIHub minimized in the system tray instead of showing the window."/>
     </StackPanel>
 </UserControl>
