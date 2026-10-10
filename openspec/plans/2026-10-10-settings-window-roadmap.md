@@ -77,7 +77,7 @@ SYSTEM
 |---|---|
 | Application Theme | ✅ Dark / Light / System |
 | Windows 11 Mica Material | ❌ |
-| Window Opacity & Blur | ✅ |
+| Window Opacity & Blur | ❌ убран (прозрачность не понравилась; blur не делаем) |
 | Accent Color | ✅ |
 | Compact Interface Density | 🟡 да, реализацию отложить |
 | Window Corner Radius | ❌ |
@@ -129,7 +129,8 @@ SYSTEM
 | `settings-general-startup` | Start minimized to tray (заменяет Show window on startup); System notifications. | `preferences-ui`, `app-lifecycle` | Фаза 0 |
 | `settings-hotkeys-popup` | Popup screen position; переосмысление dismiss-on-focus-loss vs pinning. | `hotkey-support`, `preferences-ui` | Фаза 0 |
 | `settings-terminal-profiles` | Расширенный список terminal hosts; отдельный default shell. | `preferences-ui`, `configuration-snapshot` | Фаза 0 |
-| `settings-appearance-theme` | Dark/Light/System; window opacity/blur; accent color. Сквозной по всем окнам. | `launch-window-theme`, `settings-theme` | Фаза 0 |
+| `settings-theme-mode` | Dark/Light/System; палитра выбирается при старте. Сквозной. | `application-theme`, `preferences-ui`, `configuration-snapshot` | Фаза 0 |
+| `settings-accent-color` | Accent color (пресеты + hex), применяется живьём. | `application-theme`, `preferences-ui`, `configuration-snapshot` | Фаза 0 |
 | `settings-logging` | Logging level; log file location (индикатор); rotation/size; Open log folder. | `logging` | Фаза 0 |
 | `settings-updates` | Auto-download в фоне; уведомления stable + pre-release; упрощённый version status. | `update-checking` | Фаза 0 |
 
@@ -153,7 +154,8 @@ settings-window-sidebar-shell
         ├── settings-general-startup
         ├── settings-hotkeys-popup
         ├── settings-terminal-profiles ──┐
-        ├── settings-appearance-theme    │
+        ├── settings-theme-mode          │
+        ├── settings-accent-color        │
         ├── settings-logging             │
         └── settings-updates             │
                                          ▼
