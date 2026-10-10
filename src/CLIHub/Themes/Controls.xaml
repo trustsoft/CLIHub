@@ -22,7 +22,7 @@
     <Style x:Key="SectionLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource SectionLabelBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SectionLabelBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
@@ -32,28 +32,28 @@
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <!-- Brand and version chip -->
     <Style x:Key="BrandText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="15"/>
         <Setter Property="FontWeight" Value="Medium"/>
-        <Setter Property="Foreground" Value="{StaticResource BrandBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="VersionChipBorder" TargetType="Border">
         <Setter Property="CornerRadius" Value="{StaticResource Sizing.CornerRadius.Chip}"/>
         <Setter Property="Padding" Value="6,2"/>
-        <Setter Property="Background" Value="{StaticResource ChipBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ChipBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ChipStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
     </Style>
 
     <Style x:Key="VersionChipText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     </Style>
 
     <!--
@@ -63,7 +63,7 @@
     <!-- Header strip of a drawn-chrome window: drag area behind the title and close button -->
     <Style x:Key="WindowHeader" TargetType="Grid">
         <Setter Property="Height" Value="{StaticResource Sizing.WindowHeader.Height}"/>
-        <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource StripBgBrush}"/>
     </Style>
 
     <!--
@@ -72,15 +72,15 @@
         window visual tree, so only an application-level implicit style reaches them.
     -->
     <Style x:Key="DarkToolTip" TargetType="ToolTip">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="HasDropShadow" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
                     <Border CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
-                            Background="{StaticResource PopoverBgBrush}"
-                            BorderBrush="{StaticResource FieldStrokeBrush}"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"
                             Padding="10,6">
                         <Border.Effect>
@@ -103,7 +103,7 @@
     -->
     <Style x:Key="IconChipButton" TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Foreground" Value="{StaticResource IconBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -115,13 +115,13 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -144,8 +144,8 @@
     -->
     <Style x:Key="QuietChipButton" TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Background" Value="{StaticResource ChipBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ChipStrokeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ChipBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ChipStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -161,14 +161,14 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource ControlStrokeBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource PressedOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                             <Setter Property="Cursor" Value="Arrow"/>
                         </Trigger>
                     </ControlTemplate.Triggers>

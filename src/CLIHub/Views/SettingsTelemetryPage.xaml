@@ -51,8 +51,8 @@
         <StackPanel Orientation="Horizontal">
             <Border MinWidth="320"
                     Padding="8,6"
-                    Background="{StaticResource PopoverBgBrush}"
-                    BorderBrush="{StaticResource FieldStrokeBrush}"
+                    Background="{DynamicResource PopoverBgBrush}"
+                    BorderBrush="{DynamicResource FieldStrokeBrush}"
                     BorderThickness="1"
                     CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
                 <TextBlock Style="{StaticResource HintText}" Text="{Binding LogFilePath}"/>

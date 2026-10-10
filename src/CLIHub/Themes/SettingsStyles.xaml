@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:themes="clr-namespace:CLIHub.Themes">
 
@@ -17,38 +17,38 @@
     <!-- Section rhythm: uppercase muted label, optional hint under the fields -->
     <Style x:Key="FieldLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style x:Key="HintText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 
     <Style x:Key="StatusLine" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 
     <Style x:Key="ErrorText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource DangerBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 
     <!-- Dark input field: rounded popover-toned box, accent border while capturing -->
     <Style x:Key="SettingsInput" TargetType="TextBox">
-        <Setter Property="Background" Value="{StaticResource PopoverBgBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PopoverBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource FieldStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Height" Value="30"/>
         <Setter Property="Padding" Value="4,0"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -63,7 +63,7 @@
                                  empty and unfocused (so the caret never overlaps it) -->
                             <TextBlock x:Name="Watermark"
                                        VerticalAlignment="Center"
-                                       Foreground="{StaticResource TextMutedBrush}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        IsHitTestVisible="False"
                                        Text="{TemplateBinding Tag}"
                                        Visibility="Collapsed"/>
@@ -71,7 +71,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -81,7 +81,7 @@
                             <Setter TargetName="Watermark" Property="Visibility" Value="Visible"/>
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -91,8 +91,8 @@
 
     <!-- Hotkey capture field: a focusable chip host, not a text box -->
     <Style x:Key="HotkeyField" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource PopoverBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource PopoverBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource FieldStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource Sizing.CornerRadius.Chip}"/>
         <Setter Property="Padding" Value="8"/>
@@ -101,14 +101,14 @@
         <Setter Property="Cursor" Value="Hand"/>
         <Style.Triggers>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="HotkeyChip" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource ThumbBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource ControlStrokeBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource ThumbBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource Sizing.CornerRadius.Chip}"/>
         <Setter Property="Padding" Value="9,4"/>
@@ -118,12 +118,12 @@
 
     <Style x:Key="HotkeyChipText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <!-- Checkbox: dark box, accent check -->
     <Style x:Key="SettingsCheck" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
@@ -135,15 +135,15 @@
                                 Height="18"
                                 VerticalAlignment="Center"
                                 CornerRadius="4"
-                                Background="{StaticResource ThumbBgBrush}"
-                                BorderBrush="{StaticResource ControlStrokeBrush}"
+                                Background="{DynamicResource ThumbBgBrush}"
+                                BorderBrush="{DynamicResource ControlStrokeBrush}"
                                 BorderThickness="1">
                             <TextBlock x:Name="Check"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                        FontSize="11"
-                                       Foreground="{StaticResource AccentBrush}"
+                                       Foreground="{DynamicResource AccentBrush}"
                                        Text="{x:Static themes:IconGlyphs.Checkmark}"
                                        Visibility="Collapsed"/>
                         </Border>
@@ -156,10 +156,10 @@
                             <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -185,14 +185,14 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSelectionBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -204,10 +204,10 @@
     <Style x:Key="SegmentGroup" TargetType="ListBox">
         <Setter Property="ItemContainerStyle" Value="{StaticResource SegmentItem}"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="{StaticResource FieldStrokeBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource FieldStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
@@ -235,8 +235,8 @@
     <!-- Footer buttons -->
     <Style x:Key="AccentButton" TargetType="Button">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource ChromeBgBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource ChromeBgBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="18,7"/>
@@ -258,8 +258,8 @@
                             <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Background" Value="{StaticResource ThumbBgBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource DisabledTextBrush}"/>
+                            <Setter Property="Background" Value="{DynamicResource ThumbBgBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -268,15 +268,15 @@
     </Style>
 
     <Style x:Key="NeutralButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
         <Setter Property="Padding" Value="18,7"/>
     </Style>
 
     <!-- Footer strip: brand + version chip on the left, Save/Cancel on the right -->
     <Style x:Key="FooterStrip" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource StripBgBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource StripBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}"/>
         <Setter Property="BorderThickness" Value="0,1,0,0"/>
         <Setter Property="Padding" Value="20,10"/>
     </Style>
@@ -284,14 +284,14 @@
     <!-- Sidebar navigation -->
     <Style x:Key="SidebarGroupLabel" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="Margin" Value="10,12,0,4"/>
     </Style>
 
     <Style x:Key="SidebarItem" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
@@ -304,11 +304,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource HoverOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentSelectionBrush}"/>
-                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSelectionBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -328,12 +328,12 @@
     <Style x:Key="PageHeader" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Name}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style x:Key="EmptyStateText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="TextWrapping" Value="Wrap"/>
     </Style>
 

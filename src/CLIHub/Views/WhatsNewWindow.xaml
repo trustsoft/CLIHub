@@ -6,7 +6,7 @@
         xmlns:themes="clr-namespace:CLIHub.Themes"
         mc:Ignorable="d"
         Title="What's New"
-        Background="{StaticResource ChromeBgBrush}"
+        Background="{DynamicResource ChromeBgBrush}"
         FontFamily="{StaticResource Sizing.FontFamily.Text}"
         Height="620" Width="520"
         MinHeight="280" MinWidth="380"
@@ -30,7 +30,7 @@
         <ResourceDictionary Source="/Themes/WhatsNewStyles.xaml"/>
     </Window.Resources>
 
-    <Border BorderBrush="{StaticResource FieldStrokeBrush}" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource FieldStrokeBrush}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -66,7 +66,7 @@
             <Rectangle Grid.Row="1"
                        Height="1"
                        VerticalAlignment="Bottom"
-                       Fill="{StaticResource HairlineBrush}"/>
+                       Fill="{DynamicResource HairlineBrush}"/>
 
             <!-- Notes: one section per version, newest first -->
             <ScrollViewer Grid.Row="1"
