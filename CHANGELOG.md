@@ -7,6 +7,29 @@ same version heading (`## <version> — <date>`) so a release lines up across th
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
 
+## 0.9.5 — 2026-10-10
+
+### Added
+
+- Capability-aware agent command UI: the launch window reflects each agent's supported commands (`agent-ui`)
+- Agent process monitoring that blocks the agent update action while a matching process is running (`agent-process-monitoring`)
+- Plugin catalog reload consumer that refreshes the agent list (`plugin-seeding`)
+- Configuration repository with immutable snapshots, a schema version, and a migration runner (`configuration-snapshot`)
+- Application operation lifetime for tracked background work, plus the shell coordinator and application host/session decomposition (`app-lifecycle`, `shell-coordinator`)
+- Architecture dependency-boundary enforcement tests and architecture decision records
+
+### Changed
+
+- All update entry points route through one shared update workflow, and the update service is split into focused checker, downloader, installer, and provider components (`update-checking`)
+- Core configuration boundary hardened while keeping the single camelCase document and its one atomic write path (`configuration-snapshot`)
+- Process subsystem refined around cancellation-safe interactive and output runners (`processes`)
+- Tray split into a state projection and command handlers, with tray actions separated from the host
+- Launch window view model decomposed into pane, menu, status-message, and window-action coordinators
+
+### Removed
+
+- The `IProcessLauncher` compatibility aggregate, replaced by the interactive and output process runner contracts (`processes`)
+
 ## 0.9.0 — 2026-10-05
 
 ### Added

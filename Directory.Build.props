@@ -12,7 +12,7 @@
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(_ProjectFolderName)\</BaseIntermediateOutputPath>
 
     <!-- Product version and a clean informational version (no +commit hash) -->
-    <Version>0.9.0</Version>
+    <Version>0.9.5</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <LangVersion>14.0</LangVersion>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>

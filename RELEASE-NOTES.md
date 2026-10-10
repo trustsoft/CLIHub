@@ -3,6 +3,24 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.9.5 — 2026-10-10
+
+### New
+
+- The launch window now offers only the actions each AI agent actually supports, so commands an agent cannot run no longer appear
+- CLIHub blocks an agent update while that agent is still running and explains why in the status area
+- Reloading the plugin catalog refreshes the AI Agents list without restarting
+
+### Improved
+
+- Every update entry point shares one update state, so the tray, What's New, the launcher, and Settings always agree
+- Settings apply more consistently, and the project path display style now follows your choice
+- The launch window's Actions menus render more cleanly
+
+### Fixed
+
+- Background version and update work now finishes or cancels cleanly instead of leaving stale state or hanging
+
 ## 0.9.0 — 2026-10-05
 
 ### New
