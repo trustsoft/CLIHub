@@ -62,6 +62,18 @@ public class PreferenceApplierTests
     }
 
     [Fact]
+    public void ApplyAccent_ForwardsToAccentTarget()
+    {
+        var accent = new Mock<IAccentPreferenceTarget>(MockBehavior.Strict);
+        accent.Setup(x => x.SetAccent("#10B981"));
+        var applier = CreateApplier(accent: accent.Object);
+
+        applier.ApplyAccent("#10B981");
+
+        accent.Verify(x => x.SetAccent("#10B981"), Times.Once);
+    }
+
+    [Fact]
     public void AddClIHubServices_RegistersNarrowRuntimeTarget()
     {
         var services = new ServiceCollection();
@@ -91,11 +103,13 @@ public class PreferenceApplierTests
         IRuntimePreferenceTarget? runtime = null,
         IGlobalHotkeyService? hotkey = null,
         IStartupService? startup = null,
-        IPathDisplayStyleTarget? display = null) =>
+        IPathDisplayStyleTarget? display = null,
+        IAccentPreferenceTarget? accent = null) =>
         new(
             runtime ?? new Mock<IRuntimePreferenceTarget>().Object,
             hotkey ?? new Mock<IGlobalHotkeyService>().Object,
             startup ?? new Mock<IStartupService>().Object,
             display ?? new Mock<IPathDisplayStyleTarget>().Object,
+            accent ?? new Mock<IAccentPreferenceTarget>().Object,
             NullLogger<PreferenceApplier>.Instance);
 }

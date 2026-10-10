@@ -87,6 +87,7 @@ public sealed class ConfigurationSnapshot
         PinLaunchWindow = preferences.PinLaunchWindow,
         PopupScreenPosition = preferences.PopupScreenPosition,
         AppTheme = preferences.AppTheme,
+        AccentColor = preferences.AccentColor,
         PathDisplayStyle = preferences.PathDisplayStyle,
         LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
     };

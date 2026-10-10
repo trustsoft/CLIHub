@@ -155,6 +155,7 @@ public sealed class SettingsViewModel : ObservableObject
     private string _logFileSizeLimitText = "0";
     private PopupPositionOption _selectedPopupPosition = PopupPositionOptions[0];
     private AppThemeOption _selectedAppTheme = AppThemeOptions[0];
+    private string _accentText = AccentPalette.DefaultHex;
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -429,6 +430,42 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    ///   The accent color presets offered by the selector.
+    /// </summary>
+    public IReadOnlyList<AccentOption> AccentOptions => AccentPalette.Presets;
+
+    /// <summary>
+    ///   The accent color text as <c>#RRGGBB</c>.
+    /// </summary>
+    public string AccentText
+    {
+        get => _accentText;
+        set
+        {
+            if (SetProperty(ref _accentText, value))
+            {
+                OnPropertyChanged(nameof(SelectedAccent));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The preset matching the current accent, or null for a custom value.
+    /// </summary>
+    public AccentOption? SelectedAccent
+    {
+        get => AccentOptions.FirstOrDefault(o =>
+            string.Equals(AccentPalette.Normalize(o.Hex), AccentPalette.Normalize(_accentText), StringComparison.Ordinal));
+        set
+        {
+            if (value is not null)
+            {
+                AccentText = value.Hex;
+            }
+        }
+    }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -499,6 +536,7 @@ public sealed class SettingsViewModel : ObservableObject
         _selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
             ?? PopupPositionOptions[0];
         _selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
+        _accentText = AccentPalette.Normalize(draft.AccentColor);
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
@@ -522,6 +560,8 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(LogFileSizeLimitText));
         OnPropertyChanged(nameof(SelectedPopupPosition));
         OnPropertyChanged(nameof(SelectedAppTheme));
+        OnPropertyChanged(nameof(AccentText));
+        OnPropertyChanged(nameof(SelectedAccent));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -592,7 +632,8 @@ public sealed class SettingsViewModel : ObservableObject
             LogRetentionDaysText,
             LogFileSizeLimitText,
             SelectedPopupPosition.Position,
-            SelectedAppTheme.Theme);
+            SelectedAppTheme.Theme,
+            AccentText);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

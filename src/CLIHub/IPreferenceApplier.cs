@@ -34,4 +34,10 @@ public interface IPreferenceApplier
     ///   Returns false when the registration could not be updated.
     /// </summary>
     bool ApplyStartWithWindows(bool enabled);
+
+    /// <summary>
+    ///   Applies the application accent color.
+    /// </summary>
+    /// <param name="accentHex"> The accent as <c>#RRGGBB</c>. </param>
+    void ApplyAccent(string accentHex);
 }

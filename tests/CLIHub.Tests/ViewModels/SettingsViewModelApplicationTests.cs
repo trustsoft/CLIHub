@@ -82,6 +82,7 @@ public class SettingsViewModelApplicationTests
             Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
             Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
             Applier.Setup(x => x.ApplyStartupUpdateCheck(true));
+            Applier.Setup(x => x.ApplyAccent(It.IsAny<string>()));
             Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
 
             var application = new SettingsApplicationService(

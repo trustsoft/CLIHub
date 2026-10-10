@@ -130,6 +130,11 @@ public class AppPreferences
     public AppTheme AppTheme { get; set; } = AppTheme.Dark;
 
     /// <summary>
+    ///   The application accent color as <c>#RRGGBB</c>. Defaults to Sky.
+    /// </summary>
+    public string AccentColor { get; set; } = AccentPalette.DefaultHex;
+
+    /// <summary>
     ///   How long project paths are shortened in the launch window: "leftTrim" (default) keeps
     ///   the end of the path, "middleEllipsis" keeps both ends.
     /// </summary>

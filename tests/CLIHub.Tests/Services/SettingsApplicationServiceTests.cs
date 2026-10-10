@@ -55,12 +55,14 @@ public class SettingsApplicationServiceTests
             7,
             0,
             PopupScreenPosition.Center,
-            AppTheme.Dark);
+            AppTheme.Dark,
+            "#4CC2FF");
         applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
         applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
         applier.Setup(x => x.ApplyStartupUpdateCheck(false));
+        applier.Setup(x => x.ApplyAccent("#4CC2FF"));
         var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
 
         var result = service.Save(draft);
@@ -88,6 +90,7 @@ public class SettingsApplicationServiceTests
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.GitBash));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
         applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
+        applier.Setup(x => x.ApplyAccent("#4CC2FF"));
         var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
 
         var result = service.Save(new SettingsDraft(
@@ -106,7 +109,8 @@ public class SettingsApplicationServiceTests
             7,
             0,
             PopupScreenPosition.Center,
-            AppTheme.Dark));
+            AppTheme.Dark,
+            "#4CC2FF"));
 
         Assert.False(result.Success);
         Assert.Contains("global hotkey", result.Error, StringComparison.OrdinalIgnoreCase);
@@ -144,7 +148,8 @@ public class SettingsApplicationServiceTests
         "7",
         "0",
         PopupScreenPosition.Center,
-        AppTheme.Dark);
+        AppTheme.Dark,
+        "#4CC2FF");
 
     private static AppPreferences PreviousPreferences() => new()
     {

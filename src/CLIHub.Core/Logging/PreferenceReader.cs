@@ -57,6 +57,13 @@ public static class PreferenceReader
     public static string? ReadAppTheme(string configFilePath) =>
         ReadString(configFilePath, "appTheme");
 
+    /// <summary>
+    ///   Reads <c>preferences.accentColor</c> from the given config file. Returns null when the
+    ///   file, the property, or a usable value is absent.
+    /// </summary>
+    public static string? ReadAccentColor(string configFilePath) =>
+        ReadString(configFilePath, "accentColor");
+
     private static string? ReadString(string configFilePath, string propertyName)
     {
         try

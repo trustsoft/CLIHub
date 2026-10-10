@@ -130,6 +130,7 @@ internal sealed class AppConfigDocument
         public bool PinLaunchWindow { get; set; }
         public string PopupScreenPosition { get; set; } = "center";
         public string AppTheme { get; set; } = "dark";
+        public string AccentColor { get; set; } = "#4CC2FF";
         public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
         public string? LastSeenReleaseNotesVersion { get; set; }
 
@@ -155,6 +156,7 @@ internal sealed class AppConfigDocument
             PinLaunchWindow = preferences.PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.ToToken(preferences.PopupScreenPosition),
             AppTheme = AppThemes.ToToken(preferences.AppTheme),
+            AccentColor = AccentPalette.Normalize(preferences.AccentColor),
             PathDisplayStyle = preferences.PathDisplayStyle,
             LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion
         };
@@ -180,6 +182,7 @@ internal sealed class AppConfigDocument
             PinLaunchWindow = PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.Parse(PopupScreenPosition),
             AppTheme = AppThemes.Parse(AppTheme),
+            AccentColor = AccentPalette.Normalize(AccentColor),
             PathDisplayStyle = PathDisplayStyle,
             LastSeenReleaseNotesVersion = LastSeenReleaseNotesVersion
         };

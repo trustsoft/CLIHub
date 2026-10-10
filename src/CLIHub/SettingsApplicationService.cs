@@ -26,6 +26,7 @@ using CLIHub.Core.Models;
 /// <param name="LogFileSizeLimitText"> Per-file log size limit in megabytes as text (0 = unlimited). </param>
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
+/// <param name="AccentColor"> The accent color as text. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -42,7 +43,8 @@ public sealed record SettingsInput(
     string LogRetentionDaysText,
     string LogFileSizeLimitText,
     PopupScreenPosition PopupScreenPosition,
-    AppTheme AppTheme);
+    AppTheme AppTheme,
+    string AccentColor);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -63,6 +65,7 @@ public sealed record SettingsInput(
 /// <param name="LogFileSizeLimitMb"> Per-file log size limit in megabytes (0 = unlimited). </param>
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
+/// <param name="AccentColor"> The normalized accent color (#RRGGBB). </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -79,7 +82,8 @@ public sealed record SettingsDraft(
     int LogRetentionDays,
     int LogFileSizeLimitMb,
     PopupScreenPosition PopupScreenPosition,
-    AppTheme AppTheme);
+    AppTheme AppTheme,
+    string AccentColor);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -156,7 +160,8 @@ public sealed class SettingsApplicationService
             preferences.LogRetentionDays,
             preferences.LogFileSizeLimitMb,
             preferences.PopupScreenPosition,
-            preferences.AppTheme);
+            preferences.AppTheme,
+            preferences.AccentColor);
     }
 
     /// <summary>
@@ -202,6 +207,12 @@ public sealed class SettingsApplicationService
             return false;
         }
 
+        if (!AccentPalette.TryNormalize(input.AccentColor, out var accentColor))
+        {
+            error = "Accent color must be a hex value like #RRGGBB.";
+            return false;
+        }
+
         draft = new SettingsDraft(
             input.Runtime,
             input.PathDisplayStyle,
@@ -218,7 +229,8 @@ public sealed class SettingsApplicationService
             retentionDays,
             sizeLimitMb,
             input.PopupScreenPosition,
-            input.AppTheme);
+            input.AppTheme,
+            accentColor);
         return true;
     }
 
@@ -246,6 +258,7 @@ public sealed class SettingsApplicationService
 
             _applier.ApplyRuntime(draft.Runtime);
             _applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
+            _applier.ApplyAccent(draft.AccentColor);
 
             if (!_applier.ApplyHotkey(draft.Hotkey))
             {
@@ -269,6 +282,7 @@ public sealed class SettingsApplicationService
                 preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
                 preferences.PopupScreenPosition = draft.PopupScreenPosition;
                 preferences.AppTheme = draft.AppTheme;
+                preferences.AccentColor = draft.AccentColor;
                 preferences.StartWithWindows = draft.StartWithWindows;
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;
@@ -290,6 +304,7 @@ public sealed class SettingsApplicationService
     {
         TryRollback("runtime", () => _applier.ApplyRuntime(previous.DefaultRuntime));
         TryRollback("path display style", () => _applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
+        TryRollback("accent", () => _applier.ApplyAccent(previous.AccentColor));
         TryRollback("hotkey", () => _applier.ApplyHotkey(previousHotkey));
         TryRollback("Windows startup", () => _applier.ApplyStartWithWindows(previousStartupState));
     }

@@ -16,6 +16,7 @@ public sealed class PreferenceApplier : IPreferenceApplier
     private readonly IGlobalHotkeyService _hotkey;
     private readonly IStartupService _startupService;
     private readonly IPathDisplayStyleTarget _displayStyle;
+    private readonly IAccentPreferenceTarget _accent;
     private readonly ILogger<PreferenceApplier> _logger;
 
     /// <summary>
@@ -25,18 +26,21 @@ public sealed class PreferenceApplier : IPreferenceApplier
     /// <param name="hotkey"> Hotkey target receiving the hotkey change. </param>
     /// <param name="startupService"> Startup service receiving the start-with-Windows change. </param>
     /// <param name="displayStyle"> Display-style target receiving path changes. </param>
+    /// <param name="accent"> Accent target receiving the accent change. </param>
     /// <param name="logger"> Logger. </param>
     public PreferenceApplier(
         IRuntimePreferenceTarget runtime,
         IGlobalHotkeyService hotkey,
         IStartupService startupService,
         IPathDisplayStyleTarget displayStyle,
+        IAccentPreferenceTarget accent,
         ILogger<PreferenceApplier> logger)
     {
         _runtime = runtime;
         _hotkey = hotkey;
         _startupService = startupService;
         _displayStyle = displayStyle;
+        _accent = accent;
         _logger = logger;
     }
 
@@ -92,5 +96,12 @@ public sealed class PreferenceApplier : IPreferenceApplier
         }
 
         return updated;
+    }
+
+    /// <inheritdoc />
+    public void ApplyAccent(string accentHex)
+    {
+        _accent.SetAccent(accentHex);
+        _logger.LogInformation("Accent color set to {Accent}", accentHex);
     }
 }

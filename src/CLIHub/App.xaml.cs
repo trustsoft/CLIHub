@@ -2,6 +2,7 @@ namespace CLIHub;
 
 using System;
 using System.Windows;
+using System.Windows.Media;
 
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Windows;
@@ -24,6 +25,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         ApplyTheme();
+        ApplyAccent();
 
         _host = new ApplicationHost();
         _host.Start(
@@ -48,6 +50,29 @@ public partial class App : Application
         {
             Source = new Uri("pack://application:,,,/CLIHub;component/Themes/LightTheme.xaml", UriKind.Absolute)
         });
+    }
+
+    /// <summary>
+    ///   Applies the stored accent color by overriding the application-level accent brushes when it
+    ///   differs from the default, before any window is created.
+    /// </summary>
+    private static void ApplyAccent()
+    {
+        var accent = AccentPalette.Normalize(PreferenceReader.ReadAccentColor(AppPaths.ConfigFile));
+        if (accent == AccentPalette.DefaultHex || Current is not { } application)
+        {
+            return;
+        }
+
+        application.Resources["AccentBrush"] = CreateBrush(AccentPalette.Opaque(accent));
+        application.Resources["AccentSelectionBrush"] = CreateBrush(AccentPalette.SelectionTint(accent));
+    }
+
+    private static SolidColorBrush CreateBrush(string argbHex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(argbHex));
+        brush.Freeze();
+        return brush;
     }
 
     /// <summary>

@@ -80,6 +80,7 @@ public static class ServiceRegistration
         services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
 
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
+        services.AddSingleton<IAccentPreferenceTarget, WpfAccentPreferenceTarget>();
         services.AddSingleton<SettingsApplicationService>();
         services.AddTransient<SettingsViewModel>(sp => new SettingsViewModel(
             sp.GetRequiredService<SettingsApplicationService>(),
