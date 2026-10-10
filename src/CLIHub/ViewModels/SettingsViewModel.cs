@@ -44,6 +44,13 @@ public sealed record LogLevelOption(string Value, string Name);
 public sealed record PopupPositionOption(PopupScreenPosition Position, string Name);
 
 /// <summary>
+///   A selectable application theme.
+/// </summary>
+/// <param name="Theme"> The theme. </param>
+/// <param name="Name"> Display name. </param>
+public sealed record AppThemeOption(AppTheme Theme, string Name);
+
+/// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
 ///   whether its settings are implemented yet.
 /// </summary>
@@ -109,6 +116,13 @@ public sealed class SettingsViewModel : ObservableObject
         new(PopupScreenPosition.PrimaryScreen, "Primary screen")
     };
 
+    private static readonly AppThemeOption[] AppThemeOptions =
+    {
+        new(AppTheme.Dark, "Dark"),
+        new(AppTheme.Light, "Light"),
+        new(AppTheme.System, "System")
+    };
+
     private static readonly SettingsGroup[] PagesByGroup = AllPages
         .GroupBy(page => page.Group)
         .Select(group => new SettingsGroup(group.Key, group.ToArray()))
@@ -140,6 +154,7 @@ public sealed class SettingsViewModel : ObservableObject
     private string _logRetentionDaysText = "7";
     private string _logFileSizeLimitText = "0";
     private PopupPositionOption _selectedPopupPosition = PopupPositionOptions[0];
+    private AppThemeOption _selectedAppTheme = AppThemeOptions[0];
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -400,6 +415,20 @@ public sealed class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
+    ///   The application theme options offered by the selector.
+    /// </summary>
+    public IReadOnlyList<AppThemeOption> AppThemes => AppThemeOptions;
+
+    /// <summary>
+    ///   The selected application theme.
+    /// </summary>
+    public AppThemeOption SelectedAppTheme
+    {
+        get => _selectedAppTheme;
+        set => SetProperty(ref _selectedAppTheme, value);
+    }
+
+    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -469,6 +498,7 @@ public sealed class SettingsViewModel : ObservableObject
         _logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
         _selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
             ?? PopupPositionOptions[0];
+        _selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
         _startWithWindows = draft.StartWithWindows;
         _startMinimized = draft.StartMinimized;
         _updateMessage = string.Empty;
@@ -491,6 +521,7 @@ public sealed class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(LogRetentionDaysText));
         OnPropertyChanged(nameof(LogFileSizeLimitText));
         OnPropertyChanged(nameof(SelectedPopupPosition));
+        OnPropertyChanged(nameof(SelectedAppTheme));
         OnPropertyChanged(nameof(UpdateMessage));
         OnPropertyChanged(nameof(ValidationError));
         OnPropertyChanged(nameof(SelectedPage));
@@ -560,7 +591,8 @@ public sealed class SettingsViewModel : ObservableObject
             SelectedLogLevel.Value,
             LogRetentionDaysText,
             LogFileSizeLimitText,
-            SelectedPopupPosition.Position);
+            SelectedPopupPosition.Position,
+            SelectedAppTheme.Theme);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

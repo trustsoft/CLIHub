@@ -50,6 +50,37 @@ public static class PreferenceReader
     public static int? ReadLogFileSizeLimitMb(string configFilePath) =>
         ReadInt(configFilePath, "logFileSizeLimitMb");
 
+    /// <summary>
+    ///   Reads <c>preferences.appTheme</c> from the given config file. Returns null when the file,
+    ///   the property, or a usable value is absent.
+    /// </summary>
+    public static string? ReadAppTheme(string configFilePath) =>
+        ReadString(configFilePath, "appTheme");
+
+    private static string? ReadString(string configFilePath, string propertyName)
+    {
+        try
+        {
+            if (!File.Exists(configFilePath))
+            {
+                return null;
+            }
+
+            using var document = JsonDocument.Parse(File.ReadAllText(configFilePath));
+            if (document.RootElement.TryGetProperty("preferences", out var preferences) &&
+                preferences.TryGetProperty(propertyName, out var value))
+            {
+                return value.GetString();
+            }
+        }
+        catch
+        {
+            // A malformed config must not prevent startup; fall through to the default.
+        }
+
+        return null;
+    }
+
     private static int? ReadInt(string configFilePath, string propertyName)
     {
         try

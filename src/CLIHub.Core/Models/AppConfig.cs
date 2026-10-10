@@ -125,6 +125,11 @@ public class AppPreferences
     public PopupScreenPosition PopupScreenPosition { get; set; } = PopupScreenPosition.Center;
 
     /// <summary>
+    ///   The application-wide visual theme. Defaults to dark.
+    /// </summary>
+    public AppTheme AppTheme { get; set; } = AppTheme.Dark;
+
+    /// <summary>
     ///   How long project paths are shortened in the launch window: "leftTrim" (default) keeps
     ///   the end of the path, "middleEllipsis" keeps both ends.
     /// </summary>

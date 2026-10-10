@@ -9,6 +9,23 @@
 
         <TextBlock Margin="0,16,0,8"
                    Style="{StaticResource FieldLabel}"
+                   Text="Application theme"/>
+        <ListBox HorizontalAlignment="Left"
+                 ItemsSource="{Binding AppThemes}"
+                 SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"
+                 Style="{StaticResource SegmentGroup}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Takes effect after the next start. System follows Windows."/>
+
+        <TextBlock Margin="0,20,0,8"
+                   Style="{StaticResource FieldLabel}"
                    Text="Path display"/>
         <ListBox HorizontalAlignment="Left"
                  ItemsSource="{Binding PathDisplays}"

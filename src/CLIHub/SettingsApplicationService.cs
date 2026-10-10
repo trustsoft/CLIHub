@@ -25,6 +25,7 @@ using CLIHub.Core.Models;
 /// <param name="LogRetentionDaysText"> Retained daily log file count as text. </param>
 /// <param name="LogFileSizeLimitText"> Per-file log size limit in megabytes as text (0 = unlimited). </param>
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
+/// <param name="AppTheme"> The application-wide visual theme. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -40,7 +41,8 @@ public sealed record SettingsInput(
     string LogLevel,
     string LogRetentionDaysText,
     string LogFileSizeLimitText,
-    PopupScreenPosition PopupScreenPosition);
+    PopupScreenPosition PopupScreenPosition,
+    AppTheme AppTheme);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -60,6 +62,7 @@ public sealed record SettingsInput(
 /// <param name="LogRetentionDays"> Number of daily log files to retain. </param>
 /// <param name="LogFileSizeLimitMb"> Per-file log size limit in megabytes (0 = unlimited). </param>
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
+/// <param name="AppTheme"> The application-wide visual theme. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -75,7 +78,8 @@ public sealed record SettingsDraft(
     string LogLevel,
     int LogRetentionDays,
     int LogFileSizeLimitMb,
-    PopupScreenPosition PopupScreenPosition);
+    PopupScreenPosition PopupScreenPosition,
+    AppTheme AppTheme);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -151,7 +155,8 @@ public sealed class SettingsApplicationService
             preferences.LogLevel,
             preferences.LogRetentionDays,
             preferences.LogFileSizeLimitMb,
-            preferences.PopupScreenPosition);
+            preferences.PopupScreenPosition,
+            preferences.AppTheme);
     }
 
     /// <summary>
@@ -212,7 +217,8 @@ public sealed class SettingsApplicationService
             input.LogLevel,
             retentionDays,
             sizeLimitMb,
-            input.PopupScreenPosition);
+            input.PopupScreenPosition,
+            input.AppTheme);
         return true;
     }
 
@@ -262,6 +268,7 @@ public sealed class SettingsApplicationService
                 preferences.LogRetentionDays = draft.LogRetentionDays;
                 preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
                 preferences.PopupScreenPosition = draft.PopupScreenPosition;
+                preferences.AppTheme = draft.AppTheme;
                 preferences.StartWithWindows = draft.StartWithWindows;
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;

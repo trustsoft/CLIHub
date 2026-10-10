@@ -2,15 +2,13 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Shared styles: typography and control templates used by more than one window. Merged from
-        the window style dictionaries, not from App.xaml: StaticResource inside a dictionary
-        resolves only against that dictionary's own merged dictionaries, so every consumer merges
-        its dependencies explicitly (palette and Sizing first, then this dictionary). All styles
-        are keyed - nothing here is implicit, so windows keep their own look.
+        Shared styles: typography and control templates used by more than one window. Palette brushes
+        are referenced with DynamicResource and resolve from the application-level palette, so this
+        dictionary merges only the structural sizing tokens. All styles are keyed - nothing here is
+        implicit, so windows keep their own look.
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
         <ResourceDictionary Source="/Themes/Sizing.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 

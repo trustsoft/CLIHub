@@ -1,6 +1,12 @@
 namespace CLIHub;
 
+using System;
 using System.Windows;
+
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Logging;
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   Interaction logic for App.xaml
@@ -17,10 +23,31 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        ApplyTheme();
+
         _host = new ApplicationHost();
         _host.Start(
             action => Dispatcher.Invoke(action),
             window => MainWindow = (Window)window);
+    }
+
+    /// <summary>
+    ///   Applies the light palette on top of the base palette when the effective theme is light.
+    ///   Resolved before any window is created, so the choice applies on this start.
+    /// </summary>
+    private static void ApplyTheme()
+    {
+        var theme = AppThemes.Parse(PreferenceReader.ReadAppTheme(AppPaths.ConfigFile));
+        var useLight = theme == AppTheme.Light || (theme == AppTheme.System && SystemTheme.IsLight());
+        if (!useLight || Current is not { } application)
+        {
+            return;
+        }
+
+        application.Resources.MergedDictionaries.Add(new ResourceDictionary
+        {
+            Source = new Uri("pack://application:,,,/CLIHub;component/Themes/LightTheme.xaml", UriKind.Absolute)
+        });
     }
 
     /// <summary>
