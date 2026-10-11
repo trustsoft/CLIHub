@@ -6,33 +6,6 @@ presented as usable operations for the selected agent.
 
 ## Requirements
 
-### Requirement: REQ-AGENT-CAP-001: Agent Capability Detection
-
-The system SHALL detect which commands each agent supports by checking the presence of command definitions in the agent's plugin.json file.
-
-#### Scenario: Detect Init Command Support
-```
-GIVEN an agent with plugin.json containing an init command definition
-WHEN the system checks CanInit property
-THEN it SHALL return true
-```
-
-#### Scenario: Detect Missing Init Command
-```
-GIVEN an agent with plugin.json lacking an init command definition
-WHEN the system checks CanInit property
-THEN it SHALL return false
-```
-
-#### Scenario: Handle Null Commands Collection
-```
-GIVEN an agent with null Commands collection in plugin.json
-WHEN the system checks CanInit property
-THEN it SHALL return false without throwing exception
-```
-
----
-
 ### Requirement: REQ-AGENT-CAP-002: Update Command Support Detection
 
 The system SHALL detect whether an agent supports the update command.
@@ -69,33 +42,6 @@ THEN it SHALL return true
 GIVEN an agent with plugin.json lacking a version command definition
 WHEN the system checks CanVersion property
 THEN it SHALL return false
-```
-
----
-
-### Requirement: REQ-AGENT-CAP-004: Menu Command Enablement Based on Capabilities
-
-The system SHALL enable menu commands in the Actions menu only when the selected agent supports those commands.
-
-#### Scenario: Enable Init Command for Capable Agent
-```
-GIVEN an agent that supports the init command is selected
-WHEN the user opens the Actions menu
-THEN the Initialize menu item SHALL be enabled
-```
-
-#### Scenario: Disable Init Command for Incapable Agent
-```
-GIVEN an agent that does not support the init command is selected
-WHEN the user opens the Actions menu
-THEN the Initialize menu item SHALL be disabled
-```
-
-#### Scenario: Disable All Commands When No Agent Selected
-```
-GIVEN no agent is selected
-WHEN the user opens the Actions menu
-THEN all agent-specific commands SHALL be disabled
 ```
 
 ---
@@ -243,3 +189,80 @@ WHEN the system checks any capability property
 THEN it SHALL return false
 AND no exception SHALL be thrown
 ```
+
+### Requirement: Menu command enablement based on capabilities
+
+The system SHALL enable menu commands in the Actions menu only when the selected agent supports those commands.
+
+#### Scenario: Enable Launch Command for Capable Agent
+```
+GIVEN an agent that supports the launch command is selected
+WHEN the user opens the Actions menu
+THEN the Launch menu item SHALL be enabled
+```
+
+#### Scenario: Disable Resume Command for Incapable Agent
+```
+GIVEN an agent that does not support the resume command is selected
+WHEN the user opens the Actions menu
+THEN the Resume Session menu item SHALL be disabled
+```
+
+#### Scenario: Disable All Commands When No Agent Selected
+```
+GIVEN no agent is selected
+WHEN the user opens the Actions menu
+THEN all agent-specific commands SHALL be disabled
+```
+
+### Requirement: Agent card content
+
+An agent's management card SHALL present its declared identity and state: display name and logo, host installation status, installed version, plugin folder path, declared command set, and declared detection markers.
+
+#### Scenario: Identity shown
+- **WHEN** an agent card is shown
+- **THEN** it shows the agent's display name and logo (falling back to the default logo)
+
+#### Scenario: Installation status shown
+- **WHEN** an agent card is shown
+- **THEN** it indicates whether the agent is installed on the host
+
+#### Scenario: Installed version shown
+- **WHEN** an agent card is shown
+- **THEN** it shows the installed version, or an "unknown" placeholder when the version is not available
+
+#### Scenario: Plugin path shown
+- **WHEN** an agent card is shown
+- **THEN** it shows the folder the agent's `plugin.json` was loaded from
+
+#### Scenario: Command set shown
+- **WHEN** an agent card is shown
+- **THEN** it lists which named commands the agent declares (launch, resume, version, update)
+
+#### Scenario: Detection markers shown
+- **WHEN** an agent card is shown
+- **THEN** it lists the agent's declared host system paths and project indicators
+
+#### Scenario: No detection markers
+- **WHEN** an agent declares no detection markers
+- **THEN** the card indicates that none are declared without showing an error
+
+### Requirement: Agent card action availability
+
+The card SHALL present actions appropriate to the agent's declared capabilities and current state.
+
+#### Scenario: Test always available
+- **WHEN** an agent card is shown
+- **THEN** "Test" is available
+
+#### Scenario: Update requires the update command
+- **WHEN** an agent does not declare an `update` command
+- **THEN** "Update" is unavailable on its card
+
+#### Scenario: Update blocked by a running agent
+- **WHEN** a matching agent process is running
+- **THEN** "Update" is unavailable and the card explains that a running agent blocks it
+
+#### Scenario: Edit Config requires a plugin file
+- **WHEN** the agent's `plugin.json` path is known
+- **THEN** "Edit Config" is available; otherwise it is unavailable

@@ -293,7 +293,6 @@ public partial class MainWindow : Window
 
     private void Launch_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Launch);
     private void Resume_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Resume);
-    private void Init_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Init);
     private void Update_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Update);
     private void Version_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Version);
 

@@ -11,7 +11,6 @@ internal static class IconGlyphs
     public const string FavoriteStar = "\uE734";
     public const string Refresh = "\uE72C";
     public const string Play = "\uE768";
-    public const string Initialize = "\uE8F4";
     public const string Update = "\uE896";
     public const string Version = "\uE946";
     public const string Filter = "\uE71C";

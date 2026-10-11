@@ -73,11 +73,6 @@ public sealed class AgentItem : INotifyPropertyChanged
     public bool CanResume => Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
 
     /// <summary>
-    ///   Whether the agent defines the init command.
-    /// </summary>
-    public bool CanInit => Plugin.Commands?.Get(AgentCommandKind.Init) != null;
-
-    /// <summary>
     ///   Whether the agent defines the update command.
     /// </summary>
     public bool CanUpdate => Plugin.Commands?.Get(AgentCommandKind.Update) != null;

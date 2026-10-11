@@ -68,7 +68,7 @@ The system SHALL give each pane a header that names the pane and exposes that pa
 
 #### Scenario: Agents actions offered
 - **WHEN** the Agents actions menu is open
-- **THEN** it offers launch, resume, initialize, update, and version for the selected agent, refreshing agents, and toggling the availability filter
+- **THEN** it offers launch, resume, update, and version for the selected agent, refreshing agents, and toggling the availability filter
 
 #### Scenario: Filter state shown in the menu
 - **WHEN** the Agents actions menu is open

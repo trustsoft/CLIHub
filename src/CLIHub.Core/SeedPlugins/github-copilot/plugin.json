@@ -5,8 +5,7 @@
   "commands": {
     "launch": { "executable": "copilot" },
     "version": { "executable": "copilot", "arguments": "--version" },
-    "update": { "executable": "copilot", "arguments": "update" },
-    "init": { "executable": "copilot", "arguments": "init" }
+    "update": { "executable": "copilot", "arguments": "update" }
   },
   "detection": {
     "systemPaths": [

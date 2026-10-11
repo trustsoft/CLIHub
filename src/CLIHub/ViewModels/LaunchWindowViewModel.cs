@@ -102,7 +102,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             RefreshCommand,
             _windowActions.LaunchCommand,
             _windowActions.ResumeCommand,
-            _windowActions.InitCommand,
             _windowActions.UpdateCommand,
             _windowActions.VersionCommand,
             _actionBuilder,
@@ -289,11 +288,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     ///   Resumes the selected agent in the current project.
     /// </summary>
     public RelayCommand ResumeCommand => _windowActions.ResumeCommand;
-
-    /// <summary>
-    ///   Initializes the selected agent in the current project.
-    /// </summary>
-    public RelayCommand InitCommand => _windowActions.InitCommand;
 
     /// <summary>
     ///   Updates the selected agent.

@@ -12,15 +12,19 @@ A plugin SHALL describe its commands as a named set rather than an ordered list.
 
 #### Scenario: Commands are named
 - **WHEN** a plugin defines commands
-- **THEN** each command is identified by a kind: `launch`, `resume`, `version`, `update`, or `init`
+- **THEN** each command is identified by a kind: `launch`, `resume`, `version`, or `update`
 
 #### Scenario: Launch command required
 - **WHEN** a plugin is loaded and does not define a `launch` command
 - **THEN** the plugin is rejected with a logged warning
 
 #### Scenario: Optional commands
-- **WHEN** a plugin omits `resume`, `version`, `update`, or `init`
+- **WHEN** a plugin omits `resume`, `version`, or `update`
 - **THEN** the plugin loads successfully and only the defined commands are offered
+
+#### Scenario: Unknown command kind is ignored
+- **WHEN** a plugin descriptor contains a command kind that is not recognized (for example a legacy `init`)
+- **THEN** the extra field is ignored and the plugin still loads with its recognized commands
 
 ### Requirement: Execute a command in a project
 
@@ -43,7 +47,7 @@ The system SHALL execute an agent command using the current project's folder as 
 The system SHALL run interactive commands in the configured runtime and capture the output of the version command.
 
 #### Scenario: Interactive command opens a terminal
-- **WHEN** `launch`, `resume`, `init`, or `update` is executed
+- **WHEN** `launch`, `resume`, or `update` is executed
 - **THEN** it opens in the configured runtime in the project folder
 
 #### Scenario: Default runtime
@@ -101,3 +105,19 @@ The system SHALL report a failed command when runtime construction or process st
 #### Scenario: Captured command times out
 - **WHEN** a captured command exceeds its configured timeout
 - **THEN** the process is terminated and the operation reports a timeout failure
+
+### Requirement: Project-independent agent update
+
+The system SHALL run an agent's `update` command in the user profile directory when the update is requested outside a project context, such as from the Settings window.
+
+#### Scenario: Update without a project
+- **WHEN** an agent update is requested and no project is current
+- **THEN** the update command runs interactively with the user profile directory as the working directory
+
+#### Scenario: Update with a project context
+- **WHEN** an agent update is requested from a surface where a project is current
+- **THEN** the update command runs in that project's folder
+
+#### Scenario: Update still respects capabilities
+- **WHEN** an agent does not declare an `update` command
+- **THEN** the update request is rejected with a message that the agent does not support it

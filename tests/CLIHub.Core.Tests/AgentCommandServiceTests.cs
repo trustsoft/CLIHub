@@ -59,7 +59,6 @@ public class AgentCommandServiceTests : IDisposable
     [Theory]
     [InlineData(AgentCommandKind.Launch)]
     [InlineData(AgentCommandKind.Resume)]
-    [InlineData(AgentCommandKind.Init)]
     [InlineData(AgentCommandKind.Update)]
     public async Task InteractiveCommands_LaunchTerminal(AgentCommandKind kind)
     {
@@ -67,7 +66,6 @@ public class AgentCommandServiceTests : IDisposable
         {
             Launch = new PluginCommand { Name = "Launch", Executable = "test" },
             Resume = new PluginCommand { Name = "Resume", Executable = "test" },
-            Init = new PluginCommand { Name = "Init", Executable = "test" },
             Update = new PluginCommand { Name = "Update", Executable = "test" }
         });
 

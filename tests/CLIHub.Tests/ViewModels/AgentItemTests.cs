@@ -45,24 +45,6 @@ public sealed class AgentItemTests
     }
 
     [Fact]
-    public void CanInit_WhenInitCommandExists_ReturnsTrue()
-    {
-        var plugin = CreatePluginWithCommands(AgentCommandKind.Init);
-        var item = new AgentItem { Plugin = plugin, Name = "Test" };
-
-        Assert.True(item.CanInit);
-    }
-
-    [Fact]
-    public void CanInit_WhenInitCommandMissing_ReturnsFalse()
-    {
-        var plugin = CreatePluginWithCommands();
-        var item = new AgentItem { Plugin = plugin, Name = "Test" };
-
-        Assert.False(item.CanInit);
-    }
-
-    [Fact]
     public void CanUpdate_WhenUpdateCommandExists_ReturnsTrue()
     {
         var plugin = CreatePluginWithCommands(AgentCommandKind.Update);
@@ -104,14 +86,12 @@ public sealed class AgentItemTests
         var plugin = CreatePluginWithCommands(
             AgentCommandKind.Launch,
             AgentCommandKind.Resume,
-            AgentCommandKind.Init,
             AgentCommandKind.Update,
             AgentCommandKind.Version);
         var item = new AgentItem { Plugin = plugin, Name = "Test" };
 
         Assert.True(item.CanLaunch);
         Assert.True(item.CanResume);
-        Assert.True(item.CanInit);
         Assert.True(item.CanUpdate);
         Assert.True(item.CanShowVersion);
     }
@@ -130,7 +110,6 @@ public sealed class AgentItemTests
 
         Assert.False(item.CanLaunch);
         Assert.False(item.CanResume);
-        Assert.False(item.CanInit);
         Assert.False(item.CanUpdate);
         Assert.False(item.CanShowVersion);
     }
@@ -141,7 +120,6 @@ public sealed class AgentItemTests
         {
             Launch = kinds.Contains(AgentCommandKind.Launch) ? new PluginCommand { Executable = "test" } : null,
             Resume = kinds.Contains(AgentCommandKind.Resume) ? new PluginCommand { Executable = "test" } : null,
-            Init = kinds.Contains(AgentCommandKind.Init) ? new PluginCommand { Executable = "test" } : null,
             Update = kinds.Contains(AgentCommandKind.Update) ? new PluginCommand { Executable = "test" } : null,
             Version = kinds.Contains(AgentCommandKind.Version) ? new PluginCommand { Executable = "test" } : null
         };

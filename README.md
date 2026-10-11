@@ -7,7 +7,7 @@ additional agents can be added as JSON plugins.
 ## Features
 
 - Project folders with current, recent, favorite, and logo-aware state.
-- Agent commands for launch, resume, version, update, and initialize.
+- Agent commands for launch, resume, version, and update.
 - Host/project availability detection, version display, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+A` by default) and a single-instance tray application.
 - Windows Terminal, Command Prompt, and PowerShell runtime selection.

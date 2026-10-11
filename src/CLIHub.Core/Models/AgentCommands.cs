@@ -27,11 +27,6 @@ public class AgentCommands
     public PluginCommand? Update { get; set; }
 
     /// <summary>
-    ///   Command that initializes the agent in the project.
-    /// </summary>
-    public PluginCommand? Init { get; set; }
-
-    /// <summary>
     ///   Returns the command for the given kind.
     /// </summary>
     /// <param name="kind"> The command kind to look up. </param>
@@ -42,7 +37,6 @@ public class AgentCommands
         AgentCommandKind.Resume => Resume,
         AgentCommandKind.Version => Version,
         AgentCommandKind.Update => Update,
-        AgentCommandKind.Init => Init,
         _ => null
     };
 }

@@ -64,9 +64,6 @@ public sealed class WindowActionCoordinator
         ResumeCommand = new RelayCommand(
             () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Resume),
             () => _getSelectedAgent()?.CanResume ?? false);
-        InitCommand = new RelayCommand(
-            () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Init),
-            () => _getSelectedAgent()?.CanInit ?? false);
         UpdateCommand = new RelayCommand(
             ExecuteUpdate,
             CanExecuteUpdate);
@@ -106,11 +103,6 @@ public sealed class WindowActionCoordinator
     ///   Resumes the selected agent in the current project.
     /// </summary>
     public RelayCommand ResumeCommand { get; }
-
-    /// <summary>
-    ///   Initializes the selected agent in the current project.
-    /// </summary>
-    public RelayCommand InitCommand { get; }
 
     /// <summary>
     ///   Updates the selected agent.

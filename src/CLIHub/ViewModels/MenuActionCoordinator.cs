@@ -48,7 +48,6 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
     /// <param name="refresh"> Command for refreshing the project list. </param>
     /// <param name="launch"> Command for launching the selected agent. </param>
     /// <param name="resume"> Command for resuming an agent in the selected project. </param>
-    /// <param name="initialize"> Command for initializing a new agent in the selected project. </param>
     /// <param name="update"> Command for updating the selected agent. </param>
     /// <param name="showVersion"> Command for showing agent version. </param>
     /// <param name="actionBuilder"> Builder for constructing the action menu structures. </param>
@@ -60,7 +59,6 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
         ICommand refresh,
         ICommand launch,
         ICommand resume,
-        ICommand initialize,
         ICommand update,
         ICommand showVersion,
         LaunchWindowActionBuilder actionBuilder,
@@ -72,7 +70,6 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(refresh);
         ArgumentNullException.ThrowIfNull(launch);
         ArgumentNullException.ThrowIfNull(resume);
-        ArgumentNullException.ThrowIfNull(initialize);
         ArgumentNullException.ThrowIfNull(update);
         ArgumentNullException.ThrowIfNull(showVersion);
         ArgumentNullException.ThrowIfNull(actionBuilder);
@@ -84,7 +81,6 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
             refresh,
             launch,
             resume,
-            initialize,
             update,
             showVersion,
             initialFilterState);

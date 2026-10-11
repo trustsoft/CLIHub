@@ -18,7 +18,6 @@ public sealed class LaunchWindowActionBuilder
     /// <param name="refresh"> Refreshes project and agent state. </param>
     /// <param name="launch"> Launches the selected agent. </param>
     /// <param name="resume"> Resumes the selected agent. </param>
-    /// <param name="initialize"> Initializes the selected agent. </param>
     /// <param name="update"> Updates the selected agent. </param>
     /// <param name="showVersion"> Shows the selected agent's version. </param>
     /// <param name="showOnlyProjectAgents"> Initial state of the project-availability filter. </param>
@@ -30,7 +29,6 @@ public sealed class LaunchWindowActionBuilder
         ICommand refresh,
         ICommand launch,
         ICommand resume,
-        ICommand initialize,
         ICommand update,
         ICommand showVersion,
         bool showOnlyProjectAgents)
@@ -41,7 +39,6 @@ public sealed class LaunchWindowActionBuilder
         ArgumentNullException.ThrowIfNull(refresh);
         ArgumentNullException.ThrowIfNull(launch);
         ArgumentNullException.ThrowIfNull(resume);
-        ArgumentNullException.ThrowIfNull(initialize);
         ArgumentNullException.ThrowIfNull(update);
         ArgumentNullException.ThrowIfNull(showVersion);
 
@@ -65,7 +62,6 @@ public sealed class LaunchWindowActionBuilder
             {
                 new() { Label = "Launch", Glyph = IconGlyphs.Play, Command = launch },
                 new() { Label = "Resume Session", Glyph = IconGlyphs.Refresh, Command = resume },
-                new() { Label = "Initialize", Glyph = IconGlyphs.Initialize, Command = initialize },
                 new() { Label = "Update", Glyph = IconGlyphs.Update, Command = update },
                 new() { Label = "Show Version", Glyph = IconGlyphs.Version, Command = showVersion },
                 MenuAction.Separator(),

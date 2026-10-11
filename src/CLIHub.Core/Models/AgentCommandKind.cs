@@ -23,10 +23,5 @@ public enum AgentCommandKind
     /// <summary>
     ///   Update the agent.
     /// </summary>
-    Update,
-
-    /// <summary>
-    ///   Initialize the agent in the project.
-    /// </summary>
-    Init
+    Update
 }
