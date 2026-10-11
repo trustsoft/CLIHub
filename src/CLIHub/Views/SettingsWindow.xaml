@@ -156,7 +156,7 @@
                     </Grid.RowDefinitions>
 
                     <ScrollViewer Grid.Row="0"
-                                  Padding="24,20,24,16"
+                                  Padding="24"
                                   HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                         <Grid>
@@ -281,8 +281,20 @@
 
                     <TextBlock Grid.Row="1"
                                Margin="24,0,24,12"
-                               Style="{StaticResource ErrorText}"
-                               Text="{Binding ValidationError}"/>
+                               Text="{Binding ValidationError}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource ErrorText}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ValidationError}" Value="{x:Null}">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ValidationError}" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </Grid>
             </Grid>
 

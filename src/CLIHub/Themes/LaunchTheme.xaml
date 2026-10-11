@@ -48,5 +48,7 @@
 
     <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFD97B7B"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF4ADE80"/>
+    <SolidColorBrush x:Key="SuccessSelectionBrush" Color="#1F4ADE80"/>
 
 </ResourceDictionary>

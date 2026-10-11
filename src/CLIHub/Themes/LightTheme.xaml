@@ -42,5 +42,7 @@
 
     <!-- Status -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFC0392B"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF107C41"/>
+    <SolidColorBrush x:Key="SuccessSelectionBrush" Color="#1F107C41"/>
 
 </ResourceDictionary>

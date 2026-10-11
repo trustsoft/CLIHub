@@ -55,6 +55,12 @@ internal static partial class User32
     internal static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
 
     /// <summary>
+    ///   Returns the dots-per-inch of the window's monitor, used to convert layout units to pixels.
+    /// </summary>
+    [LibraryImport("user32.dll")]
+    internal static partial uint GetDpiForWindow(IntPtr hwnd);
+
+    /// <summary>
     ///   Fills <paramref name="info"/> with the monitor's bounds and work area (physical pixels).
     /// </summary>
     [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW", SetLastError = true)]

@@ -3,31 +3,35 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="Terminal Profiles"/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Default runtime"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding Runtimes}"
-                 SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <Image Width="16"
-                               Height="16"
-                               Margin="0,0,7,0"
-                               Source="{Binding Icon}"/>
-                        <TextBlock Text="{Binding Segment}"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBlock Margin="0,8,0,0"
+        <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
-                   Text="Runtime used to open interactive agent commands."/>
+                   Text="The shell used to open interactive agent commands."/>
+
+        <views:SettingCard Margin="0,16,0,0"
+                           Title="Default runtime"
+                           Hint="Runtime used to open interactive agent commands."
+                           Icon="{x:Static themes:IconGlyphs.Terminal}"
+                           Placement="Stacked">
+            <ListBox ItemsSource="{Binding Runtimes}"
+                     SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
+                     Style="{StaticResource SegmentGroup}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <Image Width="16"
+                                   Height="16"
+                                   Margin="0,0,7,0"
+                                   Source="{Binding Icon}"/>
+                            <TextBlock Text="{Binding Segment}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </views:SettingCard>
     </StackPanel>
 </UserControl>

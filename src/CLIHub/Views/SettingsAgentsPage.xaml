@@ -65,9 +65,20 @@
                                 <TextBlock Margin="0,2,0,0"
                                            Style="{StaticResource HintText}"
                                            Text="{Binding Version, StringFormat=Version: {0}}"/>
-                                <TextBlock Margin="0,2,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding ConfigPath}"/>
+                                <TextBlock Margin="0,2,0,0" Text="{Binding ConfigPath}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ConfigPath}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding ConfigPath}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
 
                                 <TextBlock Margin="0,8,0,0"
                                            Style="{StaticResource FieldLabel}"
@@ -103,9 +114,20 @@
                                             IsEnabled="{Binding CanEditConfig}"
                                             Style="{StaticResource NeutralButton}"/>
                                 </StackPanel>
-                                <TextBlock Margin="0,4,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding UpdateNote}"/>
+                                <TextBlock Margin="0,4,0,0" Text="{Binding UpdateNote}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding UpdateNote}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding UpdateNote}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Grid>
                     </Border>

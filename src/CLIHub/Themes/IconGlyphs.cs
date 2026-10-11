@@ -20,6 +20,15 @@ internal static class IconGlyphs
     public const string Robot = "\uE99A";
     public const string Palette = "\uE790";
     public const string Diagnostic = "\uE9D9";
+    public const string Power = "\uE7E8";
+    public const string ChevronDown = "\uE70D";
+    public const string Location = "\uE81D";
+    public const string Brightness = "\uE706";
+    public const string Page = "\uE7C3";
+    public const string Document = "\uE8A5";
+    public const string Sync = "\uE895";
+    public const string Ringer = "\uEA8F";
+    public const string Info = "\uE946";
     public const string Filter = "\uE71C";
     public const string FolderOpen = "\uE8B7";
     public const string Settings = "\uE713";

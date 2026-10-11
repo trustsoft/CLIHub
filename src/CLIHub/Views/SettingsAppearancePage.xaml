@@ -3,71 +3,72 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="Appearance"/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Application theme"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding AppThemes}"
-                 SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBlock Margin="0,8,0,0"
+        <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
-                   Text="Takes effect after the next start. System follows Windows."/>
+                   Text="Theme, accent color, and how project paths are shown."/>
 
-        <TextBlock Margin="0,20,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Accent color"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding AccentOptions}"
-                 SelectedItem="{Binding SelectedAccent, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal">
-                        <Border Width="14"
-                                Height="14"
-                                Margin="0,0,7,0"
-                                CornerRadius="7"
-                                Background="{Binding Hex}"/>
+        <views:SectionHeader Text="THEME"/>
+        <views:SettingCard Title="Application theme"
+                           Hint="Takes effect after the next start. System follows Windows."
+                           Icon="{x:Static themes:IconGlyphs.Brightness}">
+            <ListBox ItemsSource="{Binding AppThemes}"
+                     SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"
+                     Style="{StaticResource SegmentGroup}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBox Margin="0,8,0,0"
-                 HorizontalAlignment="Left"
-                 Width="140"
-                 Style="{StaticResource SettingsInput}"
-                 Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"/>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Enter #RRGGBB for a custom accent. Applies immediately on save."/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </views:SettingCard>
 
-        <TextBlock Margin="0,20,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Path display"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding PathDisplays}"
-                 SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Segment}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="How long project paths are shortened in the launch window."/>
+        <views:SettingCard Title="Accent color"
+                           Hint="Pick a preset or enter #RRGGBB. Applies immediately on save."
+                           Icon="{x:Static themes:IconGlyphs.Palette}"
+                           Placement="Stacked">
+            <StackPanel>
+                <ListBox ItemsSource="{Binding AccentOptions}"
+                         SelectedItem="{Binding SelectedAccent, Mode=TwoWay}"
+                         Style="{StaticResource SegmentGroup}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Width="14"
+                                        Height="14"
+                                        Margin="0,0,7,0"
+                                        CornerRadius="7"
+                                        Background="{Binding Hex}"/>
+                                <TextBlock Text="{Binding Name}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBox Margin="0,8,0,0"
+                         HorizontalAlignment="Left"
+                         Width="140"
+                         Style="{StaticResource SettingsInput}"
+                         Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"/>
+            </StackPanel>
+        </views:SettingCard>
+
+        <views:SectionHeader Text="PATHS"/>
+        <views:SettingCard Title="Path display"
+                           Hint="How long project paths are shortened in the launch window."
+                           Icon="{x:Static themes:IconGlyphs.FolderOpen}">
+            <ListBox ItemsSource="{Binding PathDisplays}"
+                     SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
+                     Style="{StaticResource SegmentGroup}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Segment}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </views:SettingCard>
     </StackPanel>
 </UserControl>

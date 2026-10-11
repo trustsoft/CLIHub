@@ -3,50 +3,55 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="Hotkeys &amp; Quick Launcher"/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Global hotkey"/>
-        <Border x:Name="HotkeyField"
-                HorizontalAlignment="Left"
-                MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
-                PreviewKeyDown="HotkeyField_PreviewKeyDown"
-                Style="{StaticResource HotkeyField}">
-            <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
-            <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border Style="{StaticResource HotkeyChip}">
-                            <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </Border>
-        <TextBlock Margin="0,8,0,0"
+        <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
-                   Text="Press a combination in the field. Esc cancels capture."/>
+                   Text="The global hotkey and where the launcher appears."/>
 
-        <TextBlock Margin="0,20,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Popup screen position"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding PopupPositions}"
-                 SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <views:SectionHeader Text="ACTIVATION"/>
+        <views:SettingCard Title="Global hotkey"
+                           Hint="Press a combination in the field. Esc cancels capture."
+                           Icon="{x:Static themes:IconGlyphs.Keyboard}">
+            <Border x:Name="HotkeyField"
+                    MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
+                    PreviewKeyDown="HotkeyField_PreviewKeyDown"
+                    Style="{StaticResource HotkeyField}">
+                <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
+                <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource HotkeyChip}">
+                                <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </views:SettingCard>
+
+        <views:SectionHeader Text="POPUP"/>
+        <views:SettingCard Title="Popup screen position"
+                           Hint="Where the launch window appears when it is shown."
+                           Icon="{x:Static themes:IconGlyphs.Location}"
+                           Placement="Stacked">
+            <ListBox ItemsSource="{Binding PopupPositions}"
+                     SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"
+                     Style="{StaticResource SegmentGroup}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </views:SettingCard>
     </StackPanel>
 </UserControl>

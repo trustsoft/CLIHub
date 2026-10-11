@@ -69,8 +69,10 @@ public partial class SettingsWindow : Window
 
     /// <summary>
     ///   Constrains a maximized window to the monitor work area, so the taskbar never hides the footer.
+    ///   Because handling this message bypasses WPF's own handler, the minimum tracking size is set
+    ///   here too, so the window cannot be resized below <see cref="Window.MinWidth"/>/<see cref="Window.MinHeight"/>.
     /// </summary>
-    private static IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    private IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg != User32.WM_GETMINMAXINFO)
         {
@@ -89,11 +91,16 @@ public partial class SettingsWindow : Window
             return IntPtr.Zero;
         }
 
+        var dpi = User32.GetDpiForWindow(hwnd);
+        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
+
         var minMax = Marshal.PtrToStructure<User32.MINMAXINFO>(lParam);
         minMax.ptMaxPosition.X = info.rcWork.Left - info.rcMonitor.Left;
         minMax.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
         minMax.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
         minMax.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
+        minMax.ptMinTrackSize.X = (int)Math.Ceiling(MinWidth * scale);
+        minMax.ptMinTrackSize.Y = (int)Math.Ceiling(MinHeight * scale);
         Marshal.StructureToPtr(minMax, lParam, false);
         handled = true;
         return IntPtr.Zero;
