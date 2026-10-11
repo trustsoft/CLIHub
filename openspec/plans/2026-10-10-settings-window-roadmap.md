@@ -191,3 +191,25 @@ Deep-планы не делаем заранее на всю Фазу 2 — то
 - **Dismiss on Focus Loss / Esc** — как совместить с существующим pinning окна запуска (🔁 пересмотреть в `settings-hotkeys-popup`).
 - **Auto-detect** — уточнить маркеры именно AI-агентов (без OpenSpec) в `settings-projects-scanning`.
 - **Метрики агентов** — финальные названия и источники данных в `settings-agents-management`.
+
+## 10. Фаза 3 — движение к целевому виду (settings-target)
+
+- **Источник:** `ui/mockups/settings-target.html` (+ `settings-target.png`), помечен как **target** и заменяет `settings.png`. Описание — в `ui/mockups/README.md`.
+- **Назначение:** приблизить окно Settings к целевому Fluent-виду **пошагово**, лёгкими срезами.
+
+### 10.1 Срез этой фазы
+| ID | Scope | Дельта спеки | Зависит |
+|---|---|---|---|
+| `settings-window-chrome` | Титульная строка как в target: иконка, «CLIHub Settings», пилюля версии, нарисованные кнопки min/max/close (+ maximize/restore). Footer и Save/Cancel — без изменений. | `settings-theme` | Фаза 2 |
+| `settings-sidebar-icons` | Ведущая иконка у каждого пункта сайдбара (без бейджей). Переименование страницы Hotkeys → «Hotkeys & Quick Launcher». | `settings-theme`, `preferences-ui` | `settings-window-chrome` (не обязателен) |
+
+### 10.2 Отложено (Фаза 4+)
+- Пер-/страничный заголовок с описанием и кнопкой **Apply Changes**; превращение footer в статус-строку.
+- Действия в статус-footer: reload configs & agents, minimize to tray, shutdown.
+- Поиск «Find a setting…» (страницы / страницы+настройки).
+- Раскладка настроек **карточками** (title + hint + inline-контрол) через все страницы.
+- Карточка профиля внизу сайдбара.
+- Пересмотр названий остальных страниц (решаем по каждому имени отдельно; на этой фазе меняется только Hotkeys).
+
+### 10.3 Явные non-goals целевого макета
+Mica, Frameless Quick Launcher Mode, Direct Agent Run hotkey, дополнительные позиции окна (Remember Last Position / Near Mouse Cursor) — отклонены или отложены решениями из раздела 2.

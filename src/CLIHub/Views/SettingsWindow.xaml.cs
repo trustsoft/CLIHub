@@ -1,5 +1,7 @@
 namespace CLIHub.Views;
 
+using System.Runtime.InteropServices;
+
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -58,8 +60,44 @@ public partial class SettingsWindow : Window
         Activate();
     }
 
-    private void OnSourceInitialized(object? sender, EventArgs e) =>
-        DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        var handle = new WindowInteropHelper(this).EnsureHandle();
+        DwmApi.TryRoundCorners(handle);
+        HwndSource.FromHwnd(handle)?.AddHook(OnWindowMessage);
+    }
+
+    /// <summary>
+    ///   Constrains a maximized window to the monitor work area, so the taskbar never hides the footer.
+    /// </summary>
+    private static IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg != User32.WM_GETMINMAXINFO)
+        {
+            return IntPtr.Zero;
+        }
+
+        var monitor = User32.MonitorFromWindow(hwnd, User32.MONITOR_DEFAULTTONEAREST);
+        if (monitor == IntPtr.Zero)
+        {
+            return IntPtr.Zero;
+        }
+
+        var info = new User32.MONITORINFO { cbSize = Marshal.SizeOf<User32.MONITORINFO>() };
+        if (!User32.GetMonitorInfo(monitor, ref info))
+        {
+            return IntPtr.Zero;
+        }
+
+        var minMax = Marshal.PtrToStructure<User32.MINMAXINFO>(lParam);
+        minMax.ptMaxPosition.X = info.rcWork.Left - info.rcMonitor.Left;
+        minMax.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
+        minMax.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
+        minMax.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
+        Marshal.StructureToPtr(minMax, lParam, false);
+        handled = true;
+        return IntPtr.Zero;
+    }
 
     /// <summary>
     ///   Moves the window while the drawn header is dragged. The close button handles the press
@@ -81,6 +119,9 @@ public partial class SettingsWindow : Window
             // The button was released before the move started.
         }
     }
+
+    private void OnMaximizeRestoreClick(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
     private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
 

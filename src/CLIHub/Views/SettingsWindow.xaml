@@ -9,6 +9,7 @@
         xmlns:views="clr-namespace:CLIHub.Views"
         mc:Ignorable="d"
         Title="Settings"
+        Icon="pack://application:,,,/app.ico"
         Background="{DynamicResource ChromeBgBrush}"
         FontFamily="{StaticResource Sizing.FontFamily.Text}"
         Height="560" Width="760"
@@ -51,17 +52,49 @@
             <!-- Inset top highlight (shared chrome) -->
             <Rectangle Grid.Row="0" Height="1" Fill="{DynamicResource TopHighlightBrush}"/>
 
-            <!-- Drawn header: title, close button, drag -->
+            <!-- Drawn header: app identity, maximize/restore, close, drag -->
             <Grid Grid.Row="1"
                   MouseLeftButtonDown="OnHeaderMouseDown"
                   Style="{StaticResource WindowHeader}">
-                <TextBlock Style="{StaticResource WindowTitle}" Text="Settings"/>
-                <Button HorizontalAlignment="Right"
-                        Click="OnCloseClick"
-                        Style="{StaticResource WindowCloseButton}"
-                        ToolTip="Close">
-                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="{x:Static themes:IconGlyphs.Close}"/>
-                </Button>
+                <StackPanel Margin="12,0,0,0"
+                            HorizontalAlignment="Left"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Image Width="16"
+                           Height="16"
+                           RenderOptions.BitmapScalingMode="HighQuality"
+                           Source="pack://application:,,,/app.ico"/>
+                    <TextBlock Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="13"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Text="CLIHub - Settings"/>
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Click="OnMaximizeRestoreClick"
+                            Style="{StaticResource WindowCloseButton}"
+                            ToolTip="Maximize">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="10">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="{x:Static themes:IconGlyphs.Maximize}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                            <Setter Property="Text" Value="{x:Static themes:IconGlyphs.Restore}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Button>
+                    <Button Click="OnCloseClick"
+                            Style="{StaticResource WindowCloseButton}"
+                            ToolTip="Close">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="{x:Static themes:IconGlyphs.Close}"/>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <Rectangle Grid.Row="1"

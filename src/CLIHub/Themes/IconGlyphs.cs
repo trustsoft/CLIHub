@@ -13,6 +13,13 @@ internal static class IconGlyphs
     public const string Play = "\uE768";
     public const string Update = "\uE896";
     public const string Version = "\uE946";
+    public const string Terminal = "\uE756";
+    public const string Maximize = "\uE922";
+    public const string Restore = "\uE923";
+    public const string Keyboard = "\uE765";
+    public const string Robot = "\uE99A";
+    public const string Palette = "\uE790";
+    public const string Diagnostic = "\uE9D9";
     public const string Filter = "\uE71C";
     public const string FolderOpen = "\uE8B7";
     public const string Settings = "\uE713";

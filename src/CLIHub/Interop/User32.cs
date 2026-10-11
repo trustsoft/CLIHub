@@ -13,6 +13,11 @@ internal static partial class User32
     internal const int WM_HOTKEY = 0x0312;
 
     /// <summary>
+    ///   Sent to a window when its size or position is about to change, used to constrain maximize.
+    /// </summary>
+    internal const int WM_GETMINMAXINFO = 0x0024;
+
+    /// <summary>
     ///   Returns the monitor nearest to a point when the point is not inside any monitor.
     /// </summary>
     internal const uint MONITOR_DEFAULTTONEAREST = 2;
@@ -42,6 +47,12 @@ internal static partial class User32
     /// </summary>
     [LibraryImport("user32.dll", SetLastError = true)]
     internal static partial IntPtr MonitorFromPoint(POINT point, uint flags);
+
+    /// <summary>
+    ///   Returns the handle of the monitor that contains the window, or the nearest one.
+    /// </summary>
+    [LibraryImport("user32.dll", SetLastError = true)]
+    internal static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
 
     /// <summary>
     ///   Fills <paramref name="info"/> with the monitor's bounds and work area (physical pixels).
@@ -87,5 +98,18 @@ internal static partial class User32
         public RECT rcMonitor;
         public RECT rcWork;
         public uint dwFlags;
+    }
+
+    /// <summary>
+    ///   Receives the sizing information for <see cref="WM_GETMINMAXINFO"/>.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MINMAXINFO
+    {
+        public POINT ptReserved;
+        public POINT ptMaxSize;
+        public POINT ptMaxPosition;
+        public POINT ptMinTrackSize;
+        public POINT ptMaxTrackSize;
     }
 }
