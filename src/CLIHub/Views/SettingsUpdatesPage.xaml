@@ -16,6 +16,10 @@
             <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Version}"/>
         </StackPanel>
 
+        <Rectangle Height="1"
+                   Margin="0,14,0,0"
+                   Fill="{DynamicResource HairlineBrush}"/>
+
         <controls:SectionHeader Text="AUTOMATIC"/>
         <controls:SettingsGroup>
             <controls:SettingCard Title="Check for updates on startup"

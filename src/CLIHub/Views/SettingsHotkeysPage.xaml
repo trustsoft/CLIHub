@@ -12,6 +12,10 @@
                    Style="{StaticResource HintText}"
                    Text="The global hotkey and where the launcher appears."/>
 
+        <Rectangle Height="1"
+                   Margin="0,14,0,0"
+                   Fill="{DynamicResource HairlineBrush}"/>
+
         <controls:SectionHeader Text="ACTIVATION"/>
         <controls:SettingCard Title="Global hotkey"
                            Hint="Press a combination in the field. Esc cancels capture."

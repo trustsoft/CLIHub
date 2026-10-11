@@ -12,6 +12,10 @@
                    Style="{StaticResource HintText}"
                    Text="Startup behavior and how the window opens."/>
 
+        <Rectangle Height="1"
+                   Margin="0,14,0,0"
+                   Fill="{DynamicResource HairlineBrush}"/>
+
         <controls:SettingCard Margin="0,16,0,8"
                            Title="Start with Windows"
                            Hint="Launch CLIHub automatically when you sign in to Windows."

@@ -16,6 +16,10 @@
                    Style="{StaticResource HintText}"
                    Text="{Binding AgentsState.Metrics}"/>
 
+        <Rectangle Height="1"
+                   Margin="0,14,0,0"
+                   Fill="{DynamicResource HairlineBrush}"/>
+
         <controls:SectionHeader Text="MANAGEMENT"/>
         <controls:SettingCard Title="Default agent"
                            Hint="Preselected when the launch window opens."
