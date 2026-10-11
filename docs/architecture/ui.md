@@ -18,6 +18,17 @@ To add a window:
 3. Merge it from the window's `Window.Resources`; reference colors exclusively through palette brushes, metrics through `Sizing.*`, glyphs through `IconGlyphs`.
 4. Add tooltips as plain `ToolTip="..."` attributes — the app-level implicit style themes them automatically.
 
+## SpacedPanel
+
+Use `CLIHub.Controls.SpacedPanel` for simple vertical or horizontal groups where a uniform gap belongs
+between visible siblings. Bind `Spacing` to a role-specific `Sizing.Spacing.*` resource when the same
+rhythm is shared by more than one view. Keep outer margins, card padding, and optical one-off offsets on
+the relevant element.
+
+Keep `Grid` for pane layouts, list rows, star-sized columns, and any composition that depends on explicit
+width relationships. Do not use `SpacedPanel` as an item panel for virtualized lists; it is a small
+one-dimensional layout helper rather than a replacement for WPF's virtualizing panels.
+
 To create a new palette (compile-time theme choice, applied at startup):
 1. Copy `LaunchTheme.xaml` to a new file and change the colors.
 2. Point the palette merges in `App.xaml` and `Controls.xaml` at the new file.

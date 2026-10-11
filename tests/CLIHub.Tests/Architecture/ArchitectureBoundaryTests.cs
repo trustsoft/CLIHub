@@ -133,6 +133,7 @@ public sealed class ArchitectureBoundaryTests
     {
         var relative = Path.GetRelativePath(sourceRoot, path);
         return relative.StartsWith("Views" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+            || relative.StartsWith("Controls" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("Converters" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("Interop" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("Hotkeys" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
