@@ -21,7 +21,7 @@ To add a window:
 ## SpacedPanel
 
 Use `CLIHub.Controls.SpacedPanel` for simple vertical or horizontal groups where a uniform gap belongs
-between visible siblings. Bind `Spacing` to a role-specific `Sizing.Spacing.*` resource when the same
+between visible siblings. Bind `Spacing` to the shared `Sizing.Spacing` resource when the same
 rhythm is shared by more than one view. Keep outer margins, card padding, and optical one-off offsets on
 the relevant element.
 

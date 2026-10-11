@@ -28,7 +28,7 @@
                          Style="{StaticResource SettingsList}"/>
                 <controls:SpacedPanel Margin="0,8,0,0"
                                       Orientation="Horizontal"
-                                      Spacing="{StaticResource Sizing.Spacing.Action}">
+                                      Spacing="{StaticResource Sizing.Spacing}">
                     <Button Command="{Binding AddWatchedDirectoryCommand}"
                             Content="Add folder…"
                             Style="{StaticResource NeutralButton}"/>

@@ -65,7 +65,7 @@
                            Icon="{x:Static themes:IconGlyphs.Document}"
                            Placement="Stacked">
             <controls:SpacedPanel Orientation="Horizontal"
-                                  Spacing="{StaticResource Sizing.Spacing.Action}">
+                                  Spacing="{StaticResource Sizing.Spacing}">
                 <Border MinWidth="320"
                         Padding="8,6"
                         Background="{DynamicResource PopoverBgBrush}"

@@ -1,4 +1,4 @@
-namespace CLIHub.Views;
+namespace CLIHub.Behaviors;
 
 using System.Collections.Specialized;
 using System.Windows;

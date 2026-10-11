@@ -65,9 +65,8 @@
          smallest width a menu may take. -->
     <sys:Double x:Key="Sizing.ActionsMenu.MinWidth">176</sys:Double>
 
-    <!-- Inter-element gaps used by simple one-dimensional groups. -->
-    <sys:Double x:Key="Sizing.Spacing.Inline">7</sys:Double>
-    <sys:Double x:Key="Sizing.Spacing.Action">8</sys:Double>
+    <!-- Gap between adjacent controls in simple one-dimensional groups. -->
+    <sys:Double x:Key="Sizing.Spacing">8</sys:Double>
 
     <!-- Shape roles (shared corner-radius vocabulary) -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>

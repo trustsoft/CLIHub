@@ -28,7 +28,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <controls:SpacedPanel Orientation="Horizontal"
-                                              Spacing="{StaticResource Sizing.Spacing.Inline}">
+                                              Spacing="{StaticResource Sizing.Spacing}">
                             <Image Width="16"
                                    Height="16"
                                    Source="{Binding Icon}"/>
