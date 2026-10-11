@@ -30,6 +30,7 @@
         <views:SettingCard Title="Accent color"
                            Hint="Pick a preset or enter #RRGGBB. Applies immediately on save."
                            Icon="{x:Static themes:IconGlyphs.Palette}"
+                           HorizontalContentAlignment="Left"
                            Placement="Stacked">
             <StackPanel>
                 <ListBox ItemsSource="{Binding AccentOptions}"

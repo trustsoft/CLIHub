@@ -3,96 +3,101 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="Projects &amp; Paths"/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Watched directories"/>
-        <ListBox MinHeight="84"
-                 ItemsSource="{Binding WatchedDirectories}"
-                 SelectedItem="{Binding SelectedWatchedDirectory, Mode=TwoWay}"
-                 Style="{StaticResource SettingsList}"/>
-        <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
-            <Button Command="{Binding AddWatchedDirectoryCommand}"
-                    Content="Add folder…"
-                    Style="{StaticResource NeutralButton}"/>
-            <Button Margin="8,0,0,0"
-                    Command="{Binding RemoveWatchedDirectoryCommand}"
-                    Content="Remove"
-                    Style="{StaticResource NeutralButton}"/>
-        </StackPanel>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Root folders CLIHub scans for repositories. Nothing is watched while this list is empty."/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Repository scan depth"/>
-        <TextBox HorizontalAlignment="Left"
-                 Style="{StaticResource SettingsInput}"
-                 Text="{Binding ScanDepthText, UpdateSourceTrigger=PropertyChanged}"
-                 Width="120"/>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="How many directory levels below each watched root are scanned (1-8)."/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Repository discovery"/>
-        <ListBox HorizontalAlignment="Left"
-                 ItemsSource="{Binding DiscoveryModes}"
-                 SelectedItem="{Binding SelectedDiscoveryMode, Mode=TwoWay}"
-                 Style="{StaticResource SegmentGroup}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Which directories count as repositories: Git repositories (.git), Agent folders (plugin markers), or Both."/>
-
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Ignored directory patterns"/>
-        <ListBox MinHeight="64"
-                 ItemsSource="{Binding IgnoredPatterns}"
-                 SelectedItem="{Binding SelectedIgnoredPattern, Mode=TwoWay}"
-                 Style="{StaticResource SettingsList}"/>
-        <Grid Margin="0,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0"
-                     Style="{StaticResource SettingsInput}"
-                     Tag="Folder name or pattern"
-                     Text="{Binding NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
-            <Button Grid.Column="1"
-                    Margin="8,0,0,0"
-                    Command="{Binding AddIgnoredPatternCommand}"
-                    Content="Add"
-                    Style="{StaticResource NeutralButton}"/>
-            <Button Grid.Column="2"
-                    Margin="8,0,0,0"
-                    Command="{Binding RemoveIgnoredPatternCommand}"
-                    Content="Remove"
-                    Style="{StaticResource NeutralButton}"/>
-        </Grid>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Folder names skipped while scanning. '*' matches any characters; matching is case-insensitive."/>
-
-        <TextBlock Margin="0,20,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Background watcher"/>
-        <TextBlock Style="{StaticResource StatusLine}" Text="{Binding WatcherStatusText}"/>
         <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
-                   Text="Status is read-only; watching starts automatically when at least one directory is configured."/>
+                   Text="Watched directories, discovery rules, and the background watcher."/>
+
+        <views:SectionHeader Text="REPOSITORIES"/>
+        <views:SettingCard Title="Watched directories"
+                           Hint="Root folders CLIHub scans for repositories. Nothing is watched while this list is empty."
+                           Icon="{x:Static themes:IconGlyphs.FolderOpen}"
+                           Placement="Stacked">
+            <StackPanel>
+                <ListBox MinHeight="84"
+                         ItemsSource="{Binding WatchedDirectories}"
+                         SelectedItem="{Binding SelectedWatchedDirectory, Mode=TwoWay}"
+                         Style="{StaticResource SettingsList}"/>
+                <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                    <Button Command="{Binding AddWatchedDirectoryCommand}"
+                            Content="Add folder…"
+                            Style="{StaticResource NeutralButton}"/>
+                    <Button Margin="8,0,0,0"
+                            Command="{Binding RemoveWatchedDirectoryCommand}"
+                            Content="Remove"
+                            Style="{StaticResource NeutralButton}"/>
+                </StackPanel>
+            </StackPanel>
+        </views:SettingCard>
+
+        <views:SettingCard Title="Repository scan depth"
+                           Hint="How many directory levels below each watched root are scanned (1-8)."
+                           Icon="{x:Static themes:IconGlyphs.Zoom}">
+            <TextBox HorizontalAlignment="Left"
+                     Width="120"
+                     Style="{StaticResource SettingsInput}"
+                     Text="{Binding ScanDepthText, UpdateSourceTrigger=PropertyChanged}"/>
+        </views:SettingCard>
+
+        <views:SettingCard Title="Repository discovery"
+                           Hint="Which directories count as repositories: Git repositories (.git), Agent folders (plugin markers), or Both."
+                           Icon="{x:Static themes:IconGlyphs.Filter}"
+                           HorizontalContentAlignment="Left"
+                           Placement="Stacked">
+            <ListBox ItemsSource="{Binding DiscoveryModes}"
+                     SelectedItem="{Binding SelectedDiscoveryMode, Mode=TwoWay}"
+                     Style="{StaticResource SegmentGroup}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </views:SettingCard>
+
+        <views:SettingCard Title="Ignored directory patterns"
+                           Hint="Folder names skipped while scanning. '*' matches any characters; matching is case-insensitive."
+                           Icon="{x:Static themes:IconGlyphs.Blocked}"
+                           Placement="Stacked">
+            <StackPanel>
+                <ListBox MinHeight="64"
+                         ItemsSource="{Binding IgnoredPatterns}"
+                         SelectedItem="{Binding SelectedIgnoredPattern, Mode=TwoWay}"
+                         Style="{StaticResource SettingsList}"/>
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             Style="{StaticResource SettingsInput}"
+                             Tag="Folder name or pattern"
+                             Text="{Binding NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
+                    <Button Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Command="{Binding AddIgnoredPatternCommand}"
+                            Content="Add"
+                            Style="{StaticResource NeutralButton}"/>
+                    <Button Grid.Column="2"
+                            Margin="8,0,0,0"
+                            Command="{Binding RemoveIgnoredPatternCommand}"
+                            Content="Remove"
+                            Style="{StaticResource NeutralButton}"/>
+                </Grid>
+            </StackPanel>
+        </views:SettingCard>
+
+        <views:SectionHeader Text="BACKGROUND WATCHER"/>
+        <views:SettingCard Title="Watcher status"
+                           Hint="Status is read-only; watching starts automatically when at least one directory is configured."
+                           Icon="{x:Static themes:IconGlyphs.Sync}"
+                           Placement="Stacked">
+            <TextBlock Style="{StaticResource StatusLine}" Text="{Binding WatcherStatusText}"/>
+        </views:SettingCard>
     </StackPanel>
 </UserControl>

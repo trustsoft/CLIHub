@@ -7,7 +7,15 @@ using CLIHub.Core.Models;
 /// </summary>
 /// <param name="Id"> The agent plugin id, or null for no default. </param>
 /// <param name="Name"> The display name. </param>
-public sealed record AgentOption(string? Id, string Name);
+/// <param name="Version"> The installed version, or null when unknown. </param>
+public sealed record AgentOption(string? Id, string Name, string? Version = null)
+{
+    /// <summary>
+    ///   The display text: the name with the installed version in parentheses when it is known.
+    /// </summary>
+    public string DisplayName =>
+        string.IsNullOrEmpty(Version) || Version == "…" ? Name : $"{Name} ({Version})";
+}
 
 /// <summary>
 ///   A management card for a single agent on the CLI Agents settings page.

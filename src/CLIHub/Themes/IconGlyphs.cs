@@ -29,6 +29,9 @@ internal static class IconGlyphs
     public const string Sync = "\uE895";
     public const string Ringer = "\uEA8F";
     public const string Info = "\uE946";
+    public const string Zoom = "\uE71E";
+    public const string Blocked = "\uE733";
+    public const string Copy = "\uE8C8";
     public const string Filter = "\uE71C";
     public const string FolderOpen = "\uE8B7";
     public const string Settings = "\uE713";

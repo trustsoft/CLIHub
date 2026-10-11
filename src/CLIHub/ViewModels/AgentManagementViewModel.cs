@@ -139,7 +139,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private void RebuildDefaultAgentOptions(string? defaultAgentId)
     {
         var options = new List<AgentOption> { NoneOption };
-        options.AddRange(Cards.Select(card => new AgentOption(card.PluginId, card.Name)));
+        options.AddRange(Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version)));
         DefaultAgentOptions = options;
 
         SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
@@ -161,6 +161,11 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 {
                     card.Version = version ?? "unknown";
                 }
+            }
+
+            if (!_disposed)
+            {
+                RebuildDefaultAgentOptions(SelectedDefaultAgent?.Id);
             }
         });
 

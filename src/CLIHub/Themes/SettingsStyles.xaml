@@ -277,7 +277,7 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             Padding="{TemplateBinding Padding}">
                         <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
-                            <ItemsPresenter/>
+                            <ItemsPresenter Margin="0,0,2,0"/>
                         </ScrollViewer>
                     </Border>
                 </ControlTemplate>
@@ -434,6 +434,11 @@
         <Setter Property="Padding" Value="18,7"/>
     </Style>
 
+    <!-- Icon-only chip button: same surface as NeutralButton, compact padding -->
+    <Style x:Key="SettingsIconButton" TargetType="Button" BasedOn="{StaticResource NeutralButton}">
+        <Setter Property="Padding" Value="9,7"/>
+    </Style>
+
     <!-- Footer strip: brand + version chip on the left, Save/Cancel on the right -->
     <Style x:Key="FooterStrip" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource StripBgBrush}"/>
@@ -532,6 +537,8 @@
     <!-- Setting card: leading icon + title + optional badge + hint, with the control inline -->
     <Style TargetType="{x:Type views:SettingCard}">
         <Setter Property="Margin" Value="0,0,0,8"/>
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type views:SettingCard}">
@@ -607,8 +614,8 @@
                                               Grid.Row="0"
                                               Grid.Column="1"
                                               Margin="16,0,0,0"
-                                              HorizontalAlignment="Right"
-                                              VerticalAlignment="Center"/>
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -633,7 +640,7 @@
                             <Setter TargetName="ContentHost" Property="Grid.Column" Value="0"/>
                             <Setter TargetName="ContentHost" Property="Grid.ColumnSpan" Value="2"/>
                             <Setter TargetName="ContentHost" Property="Margin" Value="0,12,0,0"/>
-                            <Setter TargetName="ContentHost" Property="HorizontalAlignment" Value="Stretch"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         </Trigger>
                         <Trigger Property="Grouped" Value="True">
                             <Setter TargetName="Card" Property="Background" Value="Transparent"/>

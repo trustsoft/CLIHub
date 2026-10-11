@@ -42,6 +42,7 @@
         <views:SettingCard Title="Popup screen position"
                            Hint="Where the launch window appears when it is shown."
                            Icon="{x:Static themes:IconGlyphs.Location}"
+                           HorizontalContentAlignment="Left"
                            Placement="Stacked">
             <ListBox ItemsSource="{Binding PopupPositions}"
                      SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"

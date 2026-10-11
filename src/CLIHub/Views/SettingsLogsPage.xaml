@@ -16,6 +16,7 @@
         <views:SettingCard Title="Log level"
                            Hint="Takes effect after the next start."
                            Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                           HorizontalContentAlignment="Left"
                            Placement="Stacked">
             <ListBox ItemsSource="{Binding LogLevels}"
                      SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"

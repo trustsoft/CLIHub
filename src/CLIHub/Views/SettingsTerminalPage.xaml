@@ -16,6 +16,7 @@
                            Title="Default runtime"
                            Hint="Runtime used to open interactive agent commands."
                            Icon="{x:Static themes:IconGlyphs.Terminal}"
+                           HorizontalContentAlignment="Left"
                            Placement="Stacked">
             <ListBox ItemsSource="{Binding Runtimes}"
                      SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"

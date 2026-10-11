@@ -3,32 +3,36 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="CLI Agents"/>
         <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource HintText}"
+                   Text="Installed CLI agents, the default agent, and probe settings."/>
+        <TextBlock Margin="0,6,0,0"
+                   Style="{StaticResource HintText}"
                    Text="{Binding AgentsState.Metrics}"/>
 
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Default agent"/>
-        <ListBox Width="280"
-                 HorizontalAlignment="Left"
-                 ItemsSource="{Binding AgentsState.DefaultAgentOptions}"
-                 SelectedItem="{Binding AgentsState.SelectedDefaultAgent, Mode=TwoWay}"
-                 Style="{StaticResource SettingsList}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Preselected when the launch window opens."/>
+        <views:SectionHeader Text="MANAGEMENT"/>
+        <views:SettingCard Title="Default agent"
+                           Hint="Preselected when the launch window opens."
+                           Icon="{x:Static themes:IconGlyphs.Robot}">
+            <ComboBox HorizontalAlignment="Right"
+                      ItemsSource="{Binding AgentsState.DefaultAgentOptions}"
+                      SelectedItem="{Binding AgentsState.SelectedDefaultAgent, Mode=TwoWay}"
+                      Style="{StaticResource SettingsComboBox}"
+                      views:ComboBoxBehaviors.AutoWidthToItems="True">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}"/>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+        </views:SettingCard>
 
-        <TextBlock Margin="0,20,0,8"
+        <TextBlock Margin="0,8,0,8"
                    Style="{StaticResource FieldLabel}"
                    Text="Agents"/>
         <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
@@ -46,17 +50,22 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <Image Grid.Column="0"
-                                   Width="32"
-                                   Height="32"
-                                   VerticalAlignment="Top"
-                                   RenderOptions.BitmapScalingMode="HighQuality"
-                                   Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
-                                   Stretch="Uniform"/>
+                            <Border Grid.Column="0"
+                                    Width="32"
+                                    Height="32"
+                                    VerticalAlignment="Top"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                                Stretch="Uniform"/>
+                                </Border.Background>
+                            </Border>
 
                             <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
-                                           FontWeight="SemiBold"
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
+                                           FontWeight="Medium"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding Name}"/>
                                 <TextBlock Margin="0,4,0,0"
@@ -135,33 +144,33 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <TextBlock Margin="0,16,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Agents probe"/>
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
-                <TextBox Margin="0,6,0,0"
-                         Style="{StaticResource SettingsInput}"
-                         Tag="{Binding ProbeTtlWatermark}"
-                         Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
-                         Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
-            </StackPanel>
-            <StackPanel Grid.Column="1">
-                <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
-                <TextBox Margin="0,6,0,0"
-                         Style="{StaticResource SettingsInput}"
-                         Tag="{Binding ProbeTimeoutWatermark}"
-                         Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
-                         Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
-            </StackPanel>
-        </Grid>
-        <TextBlock Margin="0,8,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Empty — use defaults."/>
+        <views:SectionHeader Text="PROBE"/>
+        <views:SettingCard Title="Agents probe"
+                           Hint="Empty — use defaults."
+                           Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                           Placement="Stacked">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,15,0">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
+                    <TextBox Margin="0,6,0,0"
+                             Style="{StaticResource SettingsInput}"
+                             Tag="{Binding ProbeTtlWatermark}"
+                             Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1">
+                    <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
+                    <TextBox Margin="0,6,0,0"
+                             Style="{StaticResource SettingsInput}"
+                             Tag="{Binding ProbeTimeoutWatermark}"
+                             Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
+                             Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+                </StackPanel>
+            </Grid>
+        </views:SettingCard>
     </StackPanel>
 </UserControl>
