@@ -4,7 +4,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
-             xmlns:views="clr-namespace:CLIHub.Views"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -17,8 +16,8 @@
                    Margin="0,14,0,0"
                    Fill="{DynamicResource HairlineBrush}"/>
 
-        <views:SectionHeader Text="LOGGING"/>
-        <views:SettingCard Title="Log level"
+        <controls:SectionHeader Text="LOGGING"/>
+        <controls:SettingCard Title="Log level"
                            Hint="Takes effect after the next start."
                            Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                            HorizontalContentAlignment="Left"
@@ -32,9 +31,9 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SettingCard Title="Retention &amp; size"
+        <controls:SettingCard Title="Retention &amp; size"
                            Hint="Daily log files to keep and the per-file limit (0 = unlimited)."
                            Icon="{x:Static themes:IconGlyphs.Page}"
                            Placement="Stacked">
@@ -58,10 +57,10 @@
                              Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
                 </StackPanel>
             </Grid>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SectionHeader Text="LOG FILE"/>
-        <views:SettingCard Title="Log file"
+        <controls:SectionHeader Text="LOG FILE"/>
+        <controls:SettingCard Title="Log file"
                            Hint="The current log file path."
                            Icon="{x:Static themes:IconGlyphs.Document}"
                            Placement="Stacked">
@@ -92,6 +91,6 @@
                                Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
                 </Button>
             </controls:SpacedPanel>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>

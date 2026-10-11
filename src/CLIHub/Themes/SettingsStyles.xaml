@@ -1,7 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:themes="clr-namespace:CLIHub.Themes"
-                    xmlns:views="clr-namespace:CLIHub.Views">
+                    xmlns:controls="clr-namespace:CLIHub.Controls">
 
     <!--
         Settings window styles. Merged from SettingsWindow.xaml (not from App.xaml) so styling
@@ -505,11 +505,11 @@
     </Style>
 
     <!-- Section header: uppercase muted label with an optional accent marker -->
-    <Style TargetType="{x:Type views:SectionHeader}">
+    <Style TargetType="{x:Type controls:SectionHeader}">
         <Setter Property="Margin" Value="0,18,0,8"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type views:SectionHeader}">
+                <ControlTemplate TargetType="{x:Type controls:SectionHeader}">
                     <StackPanel Orientation="Horizontal">
                         <Border x:Name="Marker"
                                 Width="3"
@@ -535,13 +535,13 @@
     </Style>
 
     <!-- Setting card: leading icon + title + optional badge + hint, with the control inline -->
-    <Style TargetType="{x:Type views:SettingCard}">
+    <Style TargetType="{x:Type controls:SettingCard}">
         <Setter Property="Margin" Value="0,0,0,8"/>
         <Setter Property="HorizontalContentAlignment" Value="Right"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type views:SettingCard}">
+                <ControlTemplate TargetType="{x:Type controls:SettingCard}">
                     <Border x:Name="Card"
                             Padding="12"
                             Background="{DynamicResource PopoverBgBrush}"
@@ -656,7 +656,7 @@
     </Style>
 
     <!-- Grouped settings: one bordered surface, hairline separators between rows -->
-    <Style TargetType="{x:Type views:SettingsGroup}">
+    <Style TargetType="{x:Type controls:SettingsGroup}">
         <Setter Property="AlternationCount" Value="1000000"/>
         <Setter Property="ItemContainerStyle">
             <Setter.Value>
@@ -682,7 +682,7 @@
         </Setter>
         <Setter Property="Template">
             <Setter.Value>
-                <ControlTemplate TargetType="{x:Type views:SettingsGroup}">
+                <ControlTemplate TargetType="{x:Type controls:SettingsGroup}">
                     <Border Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"

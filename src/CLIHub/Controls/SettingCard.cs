@@ -1,4 +1,4 @@
-namespace CLIHub.Views;
+namespace CLIHub.Controls;
 
 using System.Windows;
 using System.Windows.Controls;

@@ -4,7 +4,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
-             xmlns:views="clr-namespace:CLIHub.Views"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -17,7 +16,7 @@
                    Margin="0,14,0,0"
                    Fill="{DynamicResource HairlineBrush}"/>
 
-        <views:SettingCard Margin="0,16,0,0"
+        <controls:SettingCard Margin="0,16,0,0"
                            Title="Default runtime"
                            Hint="Runtime used to open interactive agent commands."
                            Icon="{x:Static themes:IconGlyphs.Terminal}"
@@ -38,6 +37,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>

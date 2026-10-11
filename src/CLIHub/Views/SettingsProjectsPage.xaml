@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -12,8 +12,8 @@
                    Style="{StaticResource HintText}"
                    Text="Watched directories, discovery rules, and the background watcher."/>
 
-        <views:SectionHeader Text="REPOSITORIES"/>
-        <views:SettingCard Title="Watched directories"
+        <controls:SectionHeader Text="REPOSITORIES"/>
+        <controls:SettingCard Title="Watched directories"
                            Hint="Root folders CLIHub scans for repositories. Nothing is watched while this list is empty."
                            Icon="{x:Static themes:IconGlyphs.FolderOpen}"
                            Placement="Stacked">
@@ -22,28 +22,29 @@
                          ItemsSource="{Binding WatchedDirectories}"
                          SelectedItem="{Binding SelectedWatchedDirectory, Mode=TwoWay}"
                          Style="{StaticResource SettingsList}"/>
-                <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
+                <controls:SpacedPanel Margin="0,8,0,0"
+                                      Orientation="Horizontal"
+                                      Spacing="{StaticResource Sizing.Spacing.Action}">
                     <Button Command="{Binding AddWatchedDirectoryCommand}"
                             Content="Add folder…"
                             Style="{StaticResource NeutralButton}"/>
-                    <Button Margin="8,0,0,0"
-                            Command="{Binding RemoveWatchedDirectoryCommand}"
+                    <Button Command="{Binding RemoveWatchedDirectoryCommand}"
                             Content="Remove"
                             Style="{StaticResource NeutralButton}"/>
-                </StackPanel>
+                </controls:SpacedPanel>
             </StackPanel>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SettingCard Title="Repository scan depth"
+        <controls:SettingCard Title="Repository scan depth"
                            Hint="How many directory levels below each watched root are scanned (1-8)."
                            Icon="{x:Static themes:IconGlyphs.Zoom}">
             <TextBox HorizontalAlignment="Left"
                      Width="120"
                      Style="{StaticResource SettingsInput}"
                      Text="{Binding ScanDepthText, UpdateSourceTrigger=PropertyChanged}"/>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SettingCard Title="Repository discovery"
+        <controls:SettingCard Title="Repository discovery"
                            Hint="Which directories count as repositories: Git repositories (.git), Agent folders (plugin markers), or Both."
                            Icon="{x:Static themes:IconGlyphs.Filter}"
                            HorizontalContentAlignment="Left"
@@ -57,9 +58,9 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SettingCard Title="Ignored directory patterns"
+        <controls:SettingCard Title="Ignored directory patterns"
                            Hint="Folder names skipped while scanning. '*' matches any characters; matching is case-insensitive."
                            Icon="{x:Static themes:IconGlyphs.Blocked}"
                            Placement="Stacked">
@@ -90,14 +91,14 @@
                             Style="{StaticResource NeutralButton}"/>
                 </Grid>
             </StackPanel>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SectionHeader Text="BACKGROUND WATCHER"/>
-        <views:SettingCard Title="Watcher status"
+        <controls:SectionHeader Text="BACKGROUND WATCHER"/>
+        <controls:SettingCard Title="Watcher status"
                            Hint="Status is read-only; watching starts automatically when at least one directory is configured."
                            Icon="{x:Static themes:IconGlyphs.Sync}"
                            Placement="Stacked">
             <TextBlock Style="{StaticResource StatusLine}" Text="{Binding WatcherStatusText}"/>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>

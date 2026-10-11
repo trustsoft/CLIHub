@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -16,44 +16,44 @@
             <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Version}"/>
         </StackPanel>
 
-        <views:SectionHeader Text="AUTOMATIC"/>
-        <views:SettingsGroup>
-            <views:SettingCard Title="Check for updates on startup"
+        <controls:SectionHeader Text="AUTOMATIC"/>
+        <controls:SettingsGroup>
+            <controls:SettingCard Title="Check for updates on startup"
                                Hint="Look for a new version when CLIHub starts."
                                Icon="{x:Static themes:IconGlyphs.Sync}"
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
                           Style="{StaticResource SettingsCheck}"/>
-            </views:SettingCard>
-            <views:SettingCard Title="Automatically download updates"
+            </controls:SettingCard>
+            <controls:SettingCard Title="Automatically download updates"
                                Hint="Download an available update in the background."
                                Icon="{x:Static themes:IconGlyphs.Update}"
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding AutoDownloadUpdates, Mode=TwoWay}"
                           Style="{StaticResource SettingsCheck}"/>
-            </views:SettingCard>
-            <views:SettingCard Title="Notify about stable releases"
+            </controls:SettingCard>
+            <controls:SettingCard Title="Notify about stable releases"
                                Hint="Show a notification when a stable update is available."
                                Icon="{x:Static themes:IconGlyphs.Ringer}"
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding NotifyStableUpdates, Mode=TwoWay}"
                           Style="{StaticResource SettingsCheck}"/>
-            </views:SettingCard>
-            <views:SettingCard Title="Notify about pre-release versions"
+            </controls:SettingCard>
+            <controls:SettingCard Title="Notify about pre-release versions"
                                Hint="Include pre-release versions and notify when one is available."
                                Icon="{x:Static themes:IconGlyphs.Info}"
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding NotifyPrereleaseUpdates, Mode=TwoWay}"
                           Style="{StaticResource SettingsCheck}"/>
-            </views:SettingCard>
-        </views:SettingsGroup>
+            </controls:SettingCard>
+        </controls:SettingsGroup>
 
-        <views:SectionHeader Text="MANUAL"/>
-        <views:SettingCard Title="Update status"
+        <controls:SectionHeader Text="MANUAL"/>
+        <controls:SettingCard Title="Update status"
                            Hint="Run a check now and see the result."
                            Icon="{x:Static themes:IconGlyphs.Update}"
                            Placement="Stacked">
@@ -77,6 +77,6 @@
                     </TextBlock.Style>
                 </TextBlock>
             </StackPanel>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>

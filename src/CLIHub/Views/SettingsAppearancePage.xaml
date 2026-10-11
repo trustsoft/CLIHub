@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:views="clr-namespace:CLIHub.Views"
+             xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -12,8 +12,8 @@
                    Style="{StaticResource HintText}"
                    Text="Theme, accent color, and how project paths are shown."/>
 
-        <views:SectionHeader Text="THEME"/>
-        <views:SettingCard Title="Application theme"
+        <controls:SectionHeader Text="THEME"/>
+        <controls:SettingCard Title="Application theme"
                            Hint="Takes effect after the next start. System follows Windows."
                            Icon="{x:Static themes:IconGlyphs.Brightness}">
             <ListBox ItemsSource="{Binding AppThemes}"
@@ -25,9 +25,9 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SettingCard Title="Accent color"
+        <controls:SettingCard Title="Accent color"
                            Hint="Pick a preset or enter #RRGGBB. Applies immediately on save."
                            Icon="{x:Static themes:IconGlyphs.Palette}"
                            HorizontalContentAlignment="Left"
@@ -55,10 +55,10 @@
                          Style="{StaticResource SettingsInput}"
                          Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"/>
             </StackPanel>
-        </views:SettingCard>
+        </controls:SettingCard>
 
-        <views:SectionHeader Text="PATHS"/>
-        <views:SettingCard Title="Path display"
+        <controls:SectionHeader Text="PATHS"/>
+        <controls:SettingCard Title="Path display"
                            Hint="How long project paths are shortened in the launch window."
                            Icon="{x:Static themes:IconGlyphs.FolderOpen}">
             <ListBox ItemsSource="{Binding PathDisplays}"
@@ -70,6 +70,6 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>

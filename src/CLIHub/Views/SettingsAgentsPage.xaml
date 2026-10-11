@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:views="clr-namespace:CLIHub.Views"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
@@ -15,8 +16,8 @@
                    Style="{StaticResource HintText}"
                    Text="{Binding AgentsState.Metrics}"/>
 
-        <views:SectionHeader Text="MANAGEMENT"/>
-        <views:SettingCard Title="Default agent"
+        <controls:SectionHeader Text="MANAGEMENT"/>
+        <controls:SettingCard Title="Default agent"
                            Hint="Preselected when the launch window opens."
                            Icon="{x:Static themes:IconGlyphs.Robot}">
             <ComboBox HorizontalAlignment="Right"
@@ -30,7 +31,7 @@
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-        </views:SettingCard>
+        </controls:SettingCard>
 
         <TextBlock Margin="0,8,0,8"
                    Style="{StaticResource FieldLabel}"
@@ -105,24 +106,24 @@
                                            Text="{Binding Message}"
                                            Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
 
-                                <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                <controls:SpacedPanel Margin="0,10,0,0"
+                                                      Orientation="Horizontal"
+                                                      Spacing="{StaticResource Sizing.Spacing.Action}">
                                     <Button Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Content="Test"
                                             Style="{StaticResource NeutralButton}"/>
-                                    <Button Margin="8,0,0,0"
-                                            Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <Button Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Content="Update"
                                             IsEnabled="{Binding CanUpdate}"
                                             Style="{StaticResource NeutralButton}"/>
-                                    <Button Margin="8,0,0,0"
-                                            Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    <Button Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Content="Edit Config"
                                             IsEnabled="{Binding CanEditConfig}"
                                             Style="{StaticResource NeutralButton}"/>
-                                </StackPanel>
+                                </controls:SpacedPanel>
                                 <TextBlock Margin="0,4,0,0" Text="{Binding UpdateNote}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
@@ -144,8 +145,8 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <views:SectionHeader Text="PROBE"/>
-        <views:SettingCard Title="Agents probe"
+        <controls:SectionHeader Text="PROBE"/>
+        <controls:SettingCard Title="Agents probe"
                            Hint="Empty — use defaults."
                            Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                            Placement="Stacked">
@@ -171,6 +172,6 @@
                              Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
                 </StackPanel>
             </Grid>
-        </views:SettingCard>
+        </controls:SettingCard>
     </StackPanel>
 </UserControl>
