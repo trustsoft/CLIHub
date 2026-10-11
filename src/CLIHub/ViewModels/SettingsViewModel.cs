@@ -193,6 +193,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
     /// <param name="projectScanner"> Scanner whose status is shown on the Projects &amp; Paths page. </param>
+    /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
     public SettingsViewModel(
         SettingsApplicationService settingsApplication,
         IUpdateVersionProvider versionProvider,
@@ -201,6 +202,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         IExternalLauncher externalLauncher,
         IProjectDialogService dialogs,
         IProjectScanner projectScanner,
+        IAgentManagementSection agentsState,
         ILogger<SettingsViewModel> logger)
     {
         _settingsApplication = settingsApplication;
@@ -210,6 +212,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
         _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
+        AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
         _logger = logger;
 
         Version = _versionProvider.GetCurrentVersion();
@@ -255,6 +258,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   The navigation groups and their pages, in display order.
     /// </summary>
     public IReadOnlyList<SettingsGroup> PageGroups => PagesByGroup;
+
+    /// <summary>
+    ///   The agent-management section shown on the CLI Agents page.
+    /// </summary>
+    public IAgentManagementSection AgentsState { get; }
 
     /// <summary>
     ///   The currently selected navigation page.
@@ -689,6 +697,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         _selectedIgnoredPattern = null;
         _watcherStatusText = FormatScannerStatus(_projectScanner.Status);
 
+        AgentsState.Load(draft.DefaultAgentId);
+
         _updateMessage = string.Empty;
         _validationError = null;
         _selectedPage = AllPages[0];
@@ -837,6 +847,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         _disposed = true;
         _projectScanner.StatusChanged -= OnScannerStatusChanged;
+        AgentsState.Dispose();
     }
 
     /// <summary>
@@ -890,7 +901,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             WatchedDirectories.ToList(),
             ScanDepthText,
             IgnoredPatterns.ToList(),
-            SelectedDiscoveryMode.Mode);
+            SelectedDiscoveryMode.Mode,
+            AgentsState.CurrentDefaultAgentId);
 
         if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

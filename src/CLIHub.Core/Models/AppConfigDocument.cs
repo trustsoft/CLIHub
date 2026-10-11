@@ -140,6 +140,7 @@ internal sealed class AppConfigDocument
         public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
         public List<string>? IgnoredPatterns { get; set; }
         public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
+        public string? DefaultAgentId { get; set; }
 
         public static PreferencesDocument From(AppPreferences preferences) => new()
         {
@@ -169,7 +170,8 @@ internal sealed class AppConfigDocument
             WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
             ScanDepth = preferences.ScanDepth,
             IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
-            DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.DiscoveryMode)
+            DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.DiscoveryMode),
+            DefaultAgentId = preferences.DefaultAgentId
         };
 
         public AppPreferences ToPreferences() => new()
@@ -199,7 +201,8 @@ internal sealed class AppConfigDocument
             WatchedDirectories = WatchedDirectories is null ? null : new List<string>(WatchedDirectories),
             ScanDepth = ScanDepth,
             IgnoredPatterns = IgnoredPatterns is null ? null : new List<string>(IgnoredPatterns),
-            DiscoveryMode = ProjectDiscoveryModes.Parse(DiscoveryMode)
+            DiscoveryMode = ProjectDiscoveryModes.Parse(DiscoveryMode),
+            DefaultAgentId = DefaultAgentId
         };
     }
 }

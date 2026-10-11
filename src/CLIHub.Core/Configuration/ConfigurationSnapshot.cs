@@ -94,6 +94,7 @@ public sealed class ConfigurationSnapshot
         WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
         ScanDepth = preferences.ScanDepth,
         IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
-        DiscoveryMode = preferences.DiscoveryMode
+        DiscoveryMode = preferences.DiscoveryMode,
+        DefaultAgentId = preferences.DefaultAgentId
     };
 }

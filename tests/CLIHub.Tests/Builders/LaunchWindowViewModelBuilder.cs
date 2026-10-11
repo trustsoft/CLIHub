@@ -97,6 +97,15 @@ public class LaunchWindowViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom agent detection service mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithAgentDetectionService(Mock<IAgentDetectionService> detection)
+    {
+        _agentDetectionService = detection;
+        return this;
+    }
+
+    /// <summary>
     ///   Provides a custom project dialog service mock.
     /// </summary>
     public LaunchWindowViewModelBuilder WithProjectDialogService(Mock<IProjectDialogService> dialogService)

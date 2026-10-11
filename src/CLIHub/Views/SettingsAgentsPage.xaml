@@ -6,6 +6,112 @@
              mc:Ignorable="d">
     <StackPanel>
         <TextBlock Style="{StaticResource PageHeader}" Text="CLI Agents"/>
+        <TextBlock Margin="0,6,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="{Binding AgentsState.Metrics}"/>
+
+        <TextBlock Margin="0,16,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Default agent"/>
+        <ListBox Width="280"
+                 HorizontalAlignment="Left"
+                 ItemsSource="{Binding AgentsState.DefaultAgentOptions}"
+                 SelectedItem="{Binding AgentsState.SelectedDefaultAgent, Mode=TwoWay}"
+                 Style="{StaticResource SettingsList}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <TextBlock Margin="0,8,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Preselected when the launch window opens."/>
+
+        <TextBlock Margin="0,20,0,8"
+                   Style="{StaticResource FieldLabel}"
+                   Text="Agents"/>
+        <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,10"
+                            Padding="12"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Image Grid.Column="0"
+                                   Width="32"
+                                   Height="32"
+                                   VerticalAlignment="Top"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                   Stretch="Uniform"/>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding Name}"/>
+                                <TextBlock Margin="0,4,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding StatusText}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding Version, StringFormat=Version: {0}}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding ConfigPath}"/>
+
+                                <TextBlock Margin="0,8,0,0"
+                                           Style="{StaticResource FieldLabel}"
+                                           Text="Commands"/>
+                                <TextBlock Style="{StaticResource HintText}" Text="{Binding CommandsText}"/>
+
+                                <TextBlock Margin="0,8,0,0"
+                                           Style="{StaticResource FieldLabel}"
+                                           Text="Detection markers"/>
+                                <TextBlock Style="{StaticResource HintText}" Text="{Binding HostMarkersText}"/>
+                                <TextBlock Style="{StaticResource HintText}" Text="{Binding ProjectMarkersText}"/>
+
+                                <TextBlock Margin="0,6,0,0"
+                                           Style="{StaticResource StatusLine}"
+                                           Text="{Binding Message}"
+                                           Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
+
+                                <StackPanel Margin="0,10,0,0" Orientation="Horizontal">
+                                    <Button Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Content="Test"
+                                            Style="{StaticResource NeutralButton}"/>
+                                    <Button Margin="8,0,0,0"
+                                            Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Content="Update"
+                                            IsEnabled="{Binding CanUpdate}"
+                                            Style="{StaticResource NeutralButton}"/>
+                                    <Button Margin="8,0,0,0"
+                                            Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Content="Edit Config"
+                                            IsEnabled="{Binding CanEditConfig}"
+                                            Style="{StaticResource NeutralButton}"/>
+                                </StackPanel>
+                                <TextBlock Margin="0,4,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding UpdateNote}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
 
         <TextBlock Margin="0,16,0,8"
                    Style="{StaticResource FieldLabel}"

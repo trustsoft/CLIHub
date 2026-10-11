@@ -65,6 +65,7 @@ public partial class LaunchWindow : Window, IStartupWindow
         var position = _preferencesStore.Load().PopupScreenPosition;
 
         WindowPositioner.Place(this, position);
+        _viewModel.ApplyDefaultAgentSelection();
         Show();
 
         if (WindowState == WindowState.Minimized)

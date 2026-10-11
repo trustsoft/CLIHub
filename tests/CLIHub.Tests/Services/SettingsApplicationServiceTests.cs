@@ -120,6 +120,50 @@ public class SettingsApplicationServiceTests
         applier.Verify(x => x.ApplyStartWithWindows(false), Times.Once);
     }
 
+    [Fact]
+    public void Save_DefaultAgentId_PersistsValue()
+    {
+        var captured = new AppPreferences();
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        preferencesStore.Setup(x => x.Load()).Returns(PreviousPreferences());
+        preferencesStore
+            .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+            .Callback<Action<AppPreferences>>(update => update(captured));
+        var startup = new Mock<IStartupService>(MockBehavior.Strict);
+        startup.Setup(x => x.IsEnabled()).Returns(false);
+        var applier = CreateApplier();
+        applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
+        applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
+        applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
+        applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
+        applier.Setup(x => x.ApplyStartupUpdateCheck(false));
+        applier.Setup(x => x.ApplyAccent("#4CC2FF"));
+        var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
+
+        var result = service.Save(new SettingsDraft(
+            RuntimeKind.PowerShell,
+            PathDisplayStyle.MiddleEllipsis,
+            HotkeyParser.Default,
+            15,
+            30,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            "Information",
+            7,
+            0,
+            PopupScreenPosition.Center,
+            AppTheme.Dark,
+            "#4CC2FF",
+            DefaultAgentId: "opencode"));
+
+        Assert.True(result.Success);
+        Assert.Equal("opencode", captured.DefaultAgentId);
+    }
+
     private static SettingsApplicationService CreateService(
         IPreferencesStore preferencesStore,
         IStartupService startupService,

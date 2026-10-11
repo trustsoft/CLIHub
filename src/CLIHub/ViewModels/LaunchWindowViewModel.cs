@@ -336,6 +336,25 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         }
     }
 
+    /// <summary>
+    ///   Preselects the stored default agent when the window is shown. Does nothing when no default
+    ///   is stored or the stored agent is not present.
+    /// </summary>
+    public void ApplyDefaultAgentSelection()
+    {
+        var defaultAgentId = _preferencesStore.Load().DefaultAgentId;
+        if (string.IsNullOrWhiteSpace(defaultAgentId))
+        {
+            return;
+        }
+
+        var match = Agents.FirstOrDefault(agent => agent.Plugin.Id == defaultAgentId);
+        if (match is not null)
+        {
+            SelectedAgent = match;
+        }
+    }
+
     private void RefreshAgents()
     {
         var hasAgents = _agentPane.Refresh(_projectPane.CurrentProject?.Path, ShowOnlyProjectAgents);

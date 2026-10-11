@@ -95,6 +95,7 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddAgentServices(this IServiceCollection services)
     {
         services.AddSingleton<IAgentCommandService, AgentCommandService>();
+        services.AddSingleton<IAgentManagementService, AgentManagementService>();
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(

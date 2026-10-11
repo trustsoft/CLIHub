@@ -183,6 +183,31 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void DefaultAgentId_RoundTrips()
+    {
+        var config = new AppConfig();
+        config.Preferences.DefaultAgentId = "opencode";
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(
+            JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
+            CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal("opencode", restored.Preferences.DefaultAgentId);
+    }
+
+    [Fact]
+    public void DefaultAgentId_Absent_ReadsAsNull()
+    {
+        const string json = """
+        { "schemaVersion": 2, "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
+        """;
+
+        var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
+
+        Assert.Null(config.Preferences.DefaultAgentId);
+    }
+
+    [Fact]
     public void ProjectSource_RoundTrips()
     {
         var config = new AppConfig

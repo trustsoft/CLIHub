@@ -53,7 +53,8 @@ public sealed record SettingsInput(
     IReadOnlyList<string>? WatchedDirectories = null,
     string ScanDepthText = "2",
     IReadOnlyList<string>? IgnoredPatterns = null,
-    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both);
+    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
+    string? DefaultAgentId = null);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -100,7 +101,8 @@ public sealed record SettingsDraft(
     IReadOnlyList<string>? WatchedDirectories = null,
     int ScanDepth = ProjectScanningDefaults.DefaultScanDepth,
     IReadOnlyList<string>? IgnoredPatterns = null,
-    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both);
+    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
+    string? DefaultAgentId = null);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -186,7 +188,8 @@ public sealed class SettingsApplicationService
             preferences.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
             ProjectScanningDefaults.NormalizeScanDepth(preferences.ScanDepth),
             preferences.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
-            preferences.DiscoveryMode);
+            preferences.DiscoveryMode,
+            preferences.DefaultAgentId);
     }
 
     /// <summary>
@@ -267,7 +270,8 @@ public sealed class SettingsApplicationService
             NormalizeList(input.WatchedDirectories),
             scanDepth,
             NormalizeList(input.IgnoredPatterns),
-            input.DiscoveryMode);
+            input.DiscoveryMode,
+            string.IsNullOrWhiteSpace(input.DefaultAgentId) ? null : input.DefaultAgentId);
         return true;
     }
 
@@ -355,6 +359,7 @@ public sealed class SettingsApplicationService
                 preferences.ScanDepth = draft.ScanDepth;
                 preferences.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
                 preferences.DiscoveryMode = draft.DiscoveryMode;
+                preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;
             });
 
             _applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);

@@ -96,6 +96,7 @@ public class SettingsNavigationTests
                 new Mock<IExternalLauncher>().Object,
                 new Mock<IProjectDialogService>().Object,
                 new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
+                Mock.Of<IAgentManagementSection>(),
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

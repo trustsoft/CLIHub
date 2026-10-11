@@ -168,4 +168,9 @@ public class AppPreferences
     ///   <see cref="ProjectDiscoveryMode.Both"/>.
     /// </summary>
     public ProjectDiscoveryMode DiscoveryMode { get; set; } = ProjectDiscoveryModes.Default;
+
+    /// <summary>
+    ///   ID of the agent the launch window preselects, or null for none.
+    /// </summary>
+    public string? DefaultAgentId { get; set; }
 }

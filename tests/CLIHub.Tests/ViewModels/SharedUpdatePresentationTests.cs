@@ -128,6 +128,7 @@ public class SharedUpdatePresentationTests
             Mock.Of<IExternalLauncher>(),
             Mock.Of<IProjectDialogService>(),
             Mock.Of<CLIHub.Core.Scanning.IProjectScanner>(),
+            Mock.Of<IAgentManagementSection>(),
             NullLogger<SettingsViewModel>.Instance);
     }
 
