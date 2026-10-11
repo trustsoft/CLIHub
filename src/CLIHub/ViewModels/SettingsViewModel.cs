@@ -106,7 +106,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new("agents", "CLI Agents", "Engines & Repos", true, IconGlyphs.Robot),
         new("terminal", "Terminal Profiles", "Engines & Repos", true, IconGlyphs.Terminal),
         new("appearance", "Appearance", "System", true, IconGlyphs.Palette),
-        new("telemetry", "Telemetry & Logs", "System", true, IconGlyphs.Diagnostic),
+        new("telemetry", "Logs", "System", true, IconGlyphs.Diagnostic),
         new("updates", "Updates", "System", true, IconGlyphs.Update)
     };
 

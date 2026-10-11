@@ -107,7 +107,7 @@ The system SHALL support configurable log retention (number of retained files/da
 The system SHALL surface the current log file location to the user and let them copy it and open the log folder.
 
 #### Scenario: Location shown
-- **WHEN** the Telemetry & Logs page is shown
+- **WHEN** the Logs page is shown
 - **THEN** the current log file path under `%APPDATA%\CLIHub\logs\` is displayed
 
 #### Scenario: Copy path

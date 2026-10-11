@@ -251,8 +251,8 @@
                                 </views:SettingsUpdatesPage.Style>
                             </views:SettingsUpdatesPage>
 
-                            <views:SettingsTelemetryPage>
-                                <views:SettingsTelemetryPage.Style>
+                            <views:SettingsLogsPage>
+                                <views:SettingsLogsPage.Style>
                                     <Style TargetType="UserControl">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                         <Style.Triggers>
@@ -261,8 +261,8 @@
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </views:SettingsTelemetryPage.Style>
-                            </views:SettingsTelemetryPage>
+                                </views:SettingsLogsPage.Style>
+                            </views:SettingsLogsPage>
 
                             <views:SettingsPlaceholderPage>
                                 <views:SettingsPlaceholderPage.Style>
