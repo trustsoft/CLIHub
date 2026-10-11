@@ -123,7 +123,15 @@
                                  Style="{StaticResource SidebarList}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Title}"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Width="18"
+                                                   VerticalAlignment="Center"
+                                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   Text="{Binding Icon}"/>
+                                        <TextBlock VerticalAlignment="Center" Text="{Binding Title}"/>
+                                    </StackPanel>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                             <ListBox.GroupStyle>

@@ -104,11 +104,15 @@ Validation and error messages SHALL remain clearly readable on the dark surfaces
 
 ### Requirement: Sidebar navigation styling
 
-The Settings window SHALL render a sidebar navigation region in the shared dark palette: an uppercase muted label per group, one navigable item per page, and the active page highlighted with the accent. The active page's content SHALL be shown in the content area under a page header, and the sidebar SHALL remain readable on the dark surface.
+The Settings window SHALL render a sidebar navigation region in the shared dark palette: an uppercase muted label per group, one navigable item per page with a leading icon, and the active page highlighted with the accent. The active page's content SHALL be shown in the content area under a page header, and the sidebar SHALL remain readable on the dark surface.
 
 #### Scenario: Group labels and items
 - **WHEN** the sidebar is rendered
 - **THEN** each group ("General", "Engines & Repos", "System") has an uppercase muted label and its pages appear as navigable items
+
+#### Scenario: Each item shows a leading icon
+- **WHEN** the sidebar is rendered
+- **THEN** every page item shows a leading icon before its title
 
 #### Scenario: Active page highlighted
 - **WHEN** a page is active

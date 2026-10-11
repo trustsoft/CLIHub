@@ -6,6 +6,7 @@ using System.Windows;
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
+using CLIHub.Themes;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
@@ -67,7 +68,8 @@ public sealed record DiscoveryModeOption(ProjectDiscoveryMode Mode, string Name)
 /// <param name="Title"> Display title shown in the sidebar and page header. </param>
 /// <param name="Group"> The navigation group the page belongs to. </param>
 /// <param name="IsImplemented"> Whether the page has implemented settings. </param>
-public sealed record SettingsPage(string Key, string Title, string Group, bool IsImplemented);
+/// <param name="Icon"> The Segoe MDL2 glyph shown before the page title in the sidebar. </param>
+public sealed record SettingsPage(string Key, string Title, string Group, bool IsImplemented, string Icon);
 
 /// <summary>
 ///   A Settings navigation group: an uppercase label and its pages.
@@ -98,14 +100,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly SettingsPage[] AllPages =
     {
-        new("general", "General & Startup", "General", true),
-        new("hotkeys", "Hotkeys & Launchers", "General", true),
-        new("projects", "Projects & Paths", "Engines & Repos", true),
-        new("agents", "CLI Agents", "Engines & Repos", true),
-        new("terminal", "Terminal Profiles", "Engines & Repos", true),
-        new("appearance", "Appearance", "System", true),
-        new("telemetry", "Telemetry & Logs", "System", true),
-        new("updates", "Updates", "System", true)
+        new("general", "General & Startup", "General", true, IconGlyphs.Settings),
+        new("hotkeys", "Hotkeys & Quick Launcher", "General", true, IconGlyphs.Keyboard),
+        new("projects", "Projects & Paths", "Engines & Repos", true, IconGlyphs.FolderOpen),
+        new("agents", "CLI Agents", "Engines & Repos", true, IconGlyphs.Robot),
+        new("terminal", "Terminal Profiles", "Engines & Repos", true, IconGlyphs.Terminal),
+        new("appearance", "Appearance", "System", true, IconGlyphs.Palette),
+        new("telemetry", "Telemetry & Logs", "System", true, IconGlyphs.Diagnostic),
+        new("updates", "Updates", "System", true, IconGlyphs.Update)
     };
 
     private static readonly LogLevelOption[] LogLevelOptions =

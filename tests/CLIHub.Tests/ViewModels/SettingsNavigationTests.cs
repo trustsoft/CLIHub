@@ -29,6 +29,15 @@ public class SettingsNavigationTests
     }
 
     [Fact]
+    public void Catalog_EveryPageHasAnIcon_AndHotkeysTitleMatchesTarget()
+    {
+        var viewModel = new Fixture().ViewModel;
+
+        Assert.All(viewModel.Pages, page => Assert.False(string.IsNullOrEmpty(page.Icon)));
+        Assert.Equal("Hotkeys & Quick Launcher", viewModel.Pages.Single(page => page.Key == "hotkeys").Title);
+    }
+
+    [Fact]
     public void Catalog_MarksAllPagesAsImplemented()
     {
         var viewModel = new Fixture().ViewModel;
