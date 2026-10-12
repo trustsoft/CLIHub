@@ -44,7 +44,7 @@ The system SHALL use structured logging with timestamp, level, and message.
 
 ### Requirement: Configurable log levels
 
-The system SHALL support standard log levels (Debug, Information, Warning, Error).
+The system SHALL support the standard log levels `Verbose`, `Debug`, `Information`, `Warning`, `Error`, and `Fatal`.
 
 #### Scenario: Debug level enabled
 - **WHEN** the minimum level is Debug
@@ -53,6 +53,10 @@ The system SHALL support standard log levels (Debug, Information, Warning, Error
 #### Scenario: Information level configured
 - **WHEN** the minimum level is Information
 - **THEN** Information, Warning, and Error messages are written and Debug messages are suppressed
+
+#### Scenario: Verbose level enabled
+- **WHEN** the minimum level is Verbose
+- **THEN** Verbose, Debug, Information, Warning, Error, and Fatal messages are written to file
 
 ### Requirement: Framework noise filtering
 
@@ -84,11 +88,11 @@ The system SHALL flush and close the logger on application exit.
 
 ### Requirement: Configurable log retention and file size limit
 
-The system SHALL support configurable log retention (number of retained files/days) and an optional per-file size limit, applied when the logger is created at startup.
+The system SHALL support configurable log retention (number of retained days) and an optional per-file size limit, applied when the logger is created at startup.
 
 #### Scenario: Default retention and size limit
 - **WHEN** no log retention or size-limit preference is stored
-- **THEN** log files are retained for 7 files and no per-file size limit is applied
+- **THEN** log files are retained for 7 days and no per-file size limit is applied
 
 #### Scenario: Configured retention applied
 - **WHEN** a log retention preference is stored

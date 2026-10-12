@@ -1,7 +1,7 @@
 # Process Execution
 
 ## External Integration
-- **Windows Terminal** (`wt.exe`) — spawns CLI tool sessions
+- **Windows shells** (`powershell.exe`, `pwsh.exe`, `cmd.exe`, `bash.exe`) — spawn CLI tool sessions through the configured runtime
 - **Windows process APIs** (`System.Diagnostics.Process`) — enumerates accessible processes for agent safety checks
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
 - **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`

@@ -10,7 +10,7 @@ Window inventory and MVVM responsibilities: [../architecture.md](../architecture
 
 ## XAML Themes and Styles Recipe
 
-Layering: `LaunchTheme.xaml` (palette — the only place with colors) + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
+Layering: `LaunchTheme.xaml` (dark palette) and `LightTheme.xaml` (light palette, merged at startup when the light theme is active) + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
 
 To add a window:
 1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the palette and sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries).
@@ -29,7 +29,9 @@ Keep `Grid` for pane layouts, list rows, star-sized columns, and any composition
 width relationships. Do not use `SpacedPanel` as an item panel for virtualized lists; it is a small
 one-dimensional layout helper rather than a replacement for WPF's virtualizing panels.
 
-To create a new palette (compile-time theme choice, applied at startup):
-1. Copy `LaunchTheme.xaml` to a new file and change the colors.
-2. Point the palette merges in `App.xaml` and `Controls.xaml` at the new file.
-Runtime re-theming without restart would require brushes referenced via `DynamicResource` — deliberately deferred until a second theme ships.
+The dark and light palettes (`LaunchTheme.xaml`, `LightTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and `App.xaml` merges the light palette on top of the dark base at startup when the effective theme is light.
+
+To add another palette (chosen at startup):
+1. Copy `LaunchTheme.xaml` to a new file and define the same brush keys with new colors.
+2. Merge it from `App.xaml` when the corresponding theme is active.
+Switching the palette without a restart is not supported; a theme change takes effect on the next start.

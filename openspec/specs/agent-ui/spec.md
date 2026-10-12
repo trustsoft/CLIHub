@@ -112,10 +112,11 @@ The system SHALL update command enabled/disabled states immediately when agent s
 
 #### Scenario: Update Commands on Selection Change
 ```
-GIVEN agent A is selected with Resume enabled and Init disabled
-WHEN the user selects agent B that has Init but not Resume
+GIVEN agent A is selected with Resume and Update enabled and Version disabled
+WHEN the user selects agent B that declares Version but neither Resume nor Update
 THEN Resume SHALL become disabled
-AND Init SHALL become enabled
+AND Update SHALL become disabled
+AND Version SHALL become enabled
 AND the change SHALL occur within 50ms
 ```
 

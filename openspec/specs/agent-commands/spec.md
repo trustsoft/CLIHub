@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the named command set an AI agent exposes (launch, resume, version, update, init) and executes those commands in the context of a project directory.
+Defines the named command set an AI agent exposes (launch, resume, version, update) and executes those commands in the context of a project directory.
 
 ## Requirements
 

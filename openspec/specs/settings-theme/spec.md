@@ -2,17 +2,17 @@
 
 ## Purpose
 
-Defines the dark visual theme of the Settings window, matching the launch window's visual language — the shared palette, drawn chrome, sectioned form layout, and dark controls — so the window reads as part of the same application rather than a light system dialog.
+Defines the shared theme of the Settings window, matching the launch window's visual language — the application palette (dark by default, light when the application theme is light), drawn chrome, card layout, and themed controls — so the window reads as part of the same application rather than a system dialog.
 
 ## Requirements
 
 ### Requirement: Dark settings window chrome
 
-The Settings window SHALL be rendered with the shared dark palette and drawn chrome instead of the system light window: no OS title bar, a title bar showing the application icon and the "CLIHub - Settings" title, drawn maximize/restore and close buttons, header drag, rounded corners, and Escape closing the window. The title bar SHALL NOT show a version pill or a minimize button.
+The Settings window SHALL be rendered with the application's shared theme palette (the dark palette by default, the light palette when the effective application theme is light) and drawn chrome instead of the system window: no OS title bar, a title bar showing the application icon and the "CLIHub - Settings" title, drawn maximize/restore and close buttons, header drag, rounded corners, and Escape closing the window. The title bar SHALL NOT show a version pill or a minimize button.
 
-#### Scenario: Dark surfaces
+#### Scenario: Themed surfaces
 - **WHEN** the Settings window is shown
-- **THEN** the window background, header, content area, and footer use the dark palette shared with the launch window
+- **THEN** the window background, header, content area, and footer use the palette shared with the launch window for the active theme
 
 #### Scenario: Title bar shows identity
 - **WHEN** the Settings window is shown

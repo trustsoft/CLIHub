@@ -55,8 +55,8 @@ ports and update state; the application workflow owns cross-surface coordination
 - Project folders are launch context and are not modified by project registration/removal.
 - `config.json` remains one camelCase document with one atomic write boundary.
 - UI code depends on narrow interfaces such as `IPreferencesStore` rather than the full configuration document.
-- Interactive process launching and captured output are separate contracts; `IProcessLauncher` is the
-  compatibility aggregate.
+- Interactive process launching and captured output are separate contracts (`IInteractiveProcessRunner`,
+  `IProcessOutputRunner`); no compatibility aggregate is registered.
 - Production Core services expose one public DI constructor.
 - A running matching agent process blocks the agent update action and the action checks again before execution.
 

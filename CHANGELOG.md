@@ -5,7 +5,8 @@ User-facing notes for the same releases live in [RELEASE-NOTES.md](RELEASE-NOTES
 same version heading (`## <version> — <date>`) so a release lines up across them.
 
 Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing behavior or
-configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`.
+configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
+internal-refactor names refer to `openspec/changes/archive/<name>`.
 
 ## 0.9.5 — 2026-10-10
 
@@ -22,13 +23,13 @@ configuration is marked `**BREAKING**`. Capability names in parentheses refer to
 
 - All update entry points route through one shared update workflow, and the update service is split into focused checker, downloader, installer, and provider components (`update-checking`)
 - Core configuration boundary hardened while keeping the single camelCase document and its one atomic write path (`configuration-snapshot`)
-- Process subsystem refined around cancellation-safe interactive and output runners (`processes`)
+- Process subsystem refined around cancellation-safe interactive and output runners (`process-subsystem-refinement`)
 - Tray split into a state projection and command handlers, with tray actions separated from the host
 - Launch window view model decomposed into pane, menu, status-message, and window-action coordinators
 
 ### Removed
 
-- The `IProcessLauncher` compatibility aggregate, replaced by the interactive and output process runner contracts (`processes`)
+- The `IProcessLauncher` compatibility aggregate, replaced by the interactive and output process runner contracts (`retire-compatibility-adapters`)
 
 ## 0.9.0 — 2026-10-05
 

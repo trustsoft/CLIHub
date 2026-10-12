@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provides a Settings window where users view and change application preferences — launch runtime, global hotkey, agent probe caching/timeout, and the startup update check — without editing `config.json` by hand.
+Provides a Settings window where users view and change application preferences — startup behavior, hotkey and popup position, terminal runtime, agents and probing, project scanning, appearance, logging, and updates — without editing `config.json` by hand.
 
 ## Requirements
 
@@ -214,7 +214,7 @@ The Updates page SHALL offer the "Check for updates on startup" toggle, the manu
 - **WHEN** the Updates page is shown
 - **THEN** the version status shows the current version and the check status (up to date, or update available with the version) without commit, target, or agent-protocol detail
 
-### Requirement: Telemetry and Logs page options
+### Requirement: Logs page options
 
 The Logs page SHALL offer a log-level selector (Verbose, Debug, Information, Warning, Error), a retention-days field, a file-size-limit field, the current log file path with a Copy action, and an "Open log folder" action.
 
