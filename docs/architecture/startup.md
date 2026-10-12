@@ -31,7 +31,7 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 4. **ApplicationBootstrapper** (session and hotkey setup):
    - Starts `ApplicationSession`, which delegates shell creation to `ShellCoordinator`. The coordinator creates the startup UI (tray and launch window) and wires workflow-state, download-outcome, update-request, and second-instance activation subscriptions. Download requests use the singleton `IUpdateWorkflow`; downloaded/failed outcomes are dispatched to the startup UI for tray notifications. The session owns the coordinator's disposal lifecycle.
    - Assigns the session's launch window to `Application.MainWindow`.
-   - Shows the launch window when `ShowWindowOnStartup` is enabled; otherwise keeps the application in the tray.
+   - Shows the launch window when `startMinimized` is disabled; otherwise keeps the application in the tray.
    - Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
    - Delegates optional operations to `OptionalStartupCoordinator`.
 

@@ -6,7 +6,7 @@ Accepted — 2026-10-06. Implemented by the original application scaffold and en
 
 ## Context
 
-CLIHub is a WPF application whose value is Windows integration: system tray, global hotkeys, Windows Terminal spawning, per-user registry startup, and single-instance enforcement. Business logic (configuration, projects, plugins, agents, updates) is independent of any of that presentation detail, but not independent of Windows itself.
+CLIHub is a WPF application whose value is Windows integration: system tray, global hotkeys, external terminal spawning, per-user registry startup, and single-instance enforcement. Business logic (configuration, projects, plugins, agents, updates) is independent of any of that presentation detail, but not independent of Windows itself.
 
 If the business logic lives inside the WPF project, it can only be tested through WPF types, and every UI refactor risks breaking persistence or agent handling. Conversely, pretending the application is platform-neutral would hide the Windows integration behind abstractions nobody needs — CLIHub will never run anywhere but Windows.
 

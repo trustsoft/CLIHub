@@ -10,8 +10,8 @@ additional agents can be added as JSON plugins.
 - Agent commands for launch, resume, version, and update.
 - Host/project availability detection, version display, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+A` by default) and a single-instance tray application.
-- Windows Terminal, Command Prompt, and PowerShell runtime selection.
-- Chromeless resizable launch window, Settings, and What's New windows with a shared dark theme.
+- PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection.
+- Chromeless resizable launch window, Settings, and What's New windows with a shared Dark/Light theme.
 - Startup update checks, download-and-restart updates, release notes, and Windows autostart.
 - Agent update protection while a matching registered agent process is running.
 - Structured file logging with configurable level and seven-day retention.
@@ -21,7 +21,8 @@ additional agents can be added as JSON plugins.
 - Windows 10 or 11.
 - .NET 10 Desktop Runtime (x64) for installed builds; the installer can bootstrap it.
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) to build the repository.
-- Windows Terminal (`wt.exe`) is recommended for interactive agent commands.
+- An interactive shell for agent commands: PowerShell (the built-in default), PowerShell 7,
+  Command Prompt, or Git Bash.
 
 ## Build and Run
 

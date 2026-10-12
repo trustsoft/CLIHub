@@ -34,7 +34,7 @@ only `New`, `Improved`, and `Fixed`; entries are plain text without Markdown emp
 list item. **The release fails if there is no section for the tagged version** — this is deliberate,
 so a release can never ship without its notes.
 
-**`CHANGELOG.md`** (technical, for developers): `## [0.9.0] — YYYY-MM-DD` with `Added` / `Changed` /
+**`CHANGELOG.md`** (technical, for developers): `## 0.9.0 — YYYY-MM-DD` with `Added` / `Changed` /
 `Fixed` / `Removed` groups, `**BREAKING**` markers, and spec references where useful.
 
 Commit the notes to `master` (for example `docs: release notes for 0.9.0`) and wait for CI to go

@@ -18,8 +18,10 @@ use these terms with these meanings.
 - **Launch context** — the current project's folder, used as the working directory of a launched
   agent or any other [agent command](#agents-and-plugins).
 - **Recent projects** — projects ordered by last-used time (selection or a launch updates the
-  timestamp); shown first in the project list and tray menu.
-- **Favorite project** — a project flagged by the user; favorites can be pinned above recents.
+  timestamp); the tray menu lists them by recency, while the launch-window project list shows all
+  projects in stored order.
+- **Favorite project** — a project flagged by the user; marked in the project list and the tray
+  menu and toggled from the project pane.
 - **Project logo** — an image resolved from well-known filenames in the project folder
   (for example `logo.png`, `icon.png`); falls back to a built-in default logo.
 
@@ -41,15 +43,15 @@ use these terms with these meanings.
   empty. Seeding never overwrites or deletes existing plugin files; delete the plugins folder to
   re-seed. See [plugin-seeding](../openspec/specs/plugin-seeding/spec.md).
 - **Agent command** — a named operation an agent exposes, identified by its kind: `launch`,
-  `resume`, `version`, `update`, or `init`. A plugin defines commands as a named set, not an
+  `resume`, `version`, or `update`. A plugin defines commands as a named set, not an
   ordered list; requesting a kind the plugin does not define is rejected. See
   [agent-commands](../openspec/specs/agent-commands/spec.md).
-  - *Interactive commands* (`launch`, `resume`, `init`, `update`) open in the configured
+  - *Interactive commands* (`launch`, `resume`, `update`) open in the configured
     [runtime](#agents-and-plugins) with the project folder as the working directory.
   - *Captured commands* (`version`) run headlessly and their standard output is parsed —
     see [agent-version](../openspec/specs/agent-version/spec.md).
-- **Runtime** — the terminal application used for interactive agent commands: Windows Terminal
-  (default), Command Prompt, or PowerShell. Configured via the `defaultRuntime` preference.
+- **Runtime** — the shell used for interactive agent commands: PowerShell (default), PowerShell 7,
+  Command Prompt, or Git Bash. Configured via the `defaultRuntime` preference.
 
 ## Detection and availability
 
@@ -88,8 +90,9 @@ use these terms with these meanings.
 - **Single instance** — a second CLIHub launch does not start a new process; it activates the
   running instance via a named mutex and a named-pipe activation signal.
 - **Preferences** — user settings persisted under the `preferences` object of `config.json`
-  (hotkey, runtime, log level, filter, probe TTL/timeout, autostart, update check). Editable from
-  the Settings window; changes apply without restart.
+  (startup behavior, hotkey and popup position, runtime, agent probing, project scanning,
+  appearance, logging, updates, and the availability filter). Editable from the Settings window;
+  most changes apply without restart, while the theme takes effect on the next start.
 - **Settings window** — the window (opened from the tray) where preferences are edited.
 
 ## Releases and updates
