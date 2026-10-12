@@ -12,10 +12,10 @@ public sealed class LaunchCommandCoordinator
     private const string NoProjectMessage = "Select a project before running an agent command.";
     private const string NoAgentMessage = "Select an agent before running an agent command.";
 
-    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly IUserNotificationService _notifications;
-    private readonly ILogger<LaunchCommandCoordinator> _logger;
+    private readonly IAgentCommandWorkflow agentCommandWorkflow;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly IUserNotificationService notifications;
+    private readonly ILogger<LaunchCommandCoordinator> logger;
 
     /// <summary>
     ///   Creates the coordinator over the shared agent workflow and application lifetime.
@@ -30,10 +30,10 @@ public sealed class LaunchCommandCoordinator
         IUserNotificationService notifications,
         ILogger<LaunchCommandCoordinator> logger)
     {
-        _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -56,12 +56,12 @@ public sealed class LaunchCommandCoordinator
         ArgumentNullException.ThrowIfNull(refreshAgents);
 
         var operationName = $"{kind} {item?.Name ?? "agent command"}";
-        return _operationLifetime.RunAsync(
+        return this.operationLifetime.RunAsync(
             operationName,
             cancellationToken => AsyncOperationRunner.RunAsync(
                 operationName,
-                () => ExecuteAsync(item, project, kind, reportStatus, refreshAgents, cancellationToken),
-                _logger,
+                () => this.ExecuteAsync(item, project, kind, reportStatus, refreshAgents, cancellationToken),
+                this.logger,
                 reportStatus,
                 cancellationToken));
     }
@@ -94,7 +94,7 @@ public sealed class LaunchCommandCoordinator
 
         reportStatus($"{kind} {item.Name}...");
 
-        var result = await _agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind, cancellationToken);
+        var result = await this.agentCommandWorkflow.ExecuteAsync(item.Plugin, project, kind, cancellationToken);
         var error = result.Error ?? "no error details";
 
         if (kind == AgentCommandKind.Version)
@@ -103,7 +103,7 @@ public sealed class LaunchCommandCoordinator
             {
                 var version = result.Output ?? string.Empty;
                 reportStatus($"{item.Name} version: {result.Output}");
-                _notifications.ShowInformation(version, $"{item.Name} version");
+                this.notifications.ShowInformation(version, $"{item.Name} version");
             }
             else
             {

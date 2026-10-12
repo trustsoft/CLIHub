@@ -10,11 +10,11 @@ internal sealed class FakeRepositoryWatcher : IRepositoryWatcher
     public bool Started { get; private set; }
     public bool Disposed { get; private set; }
 
-    public void Start() => Started = true;
+    public void Start() => this.Started = true;
 
-    public void Stop() => Started = false;
+    public void Stop() => this.Started = false;
 
-    public void Dispose() => Disposed = true;
+    public void Dispose() => this.Disposed = true;
 
     public void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
@@ -28,9 +28,9 @@ internal sealed class FakeRepositoryWatcherFactory : IRepositoryWatcherFactory
 
     public IRepositoryWatcher Create(IReadOnlyList<string> roots)
     {
-        CreatedRoots.Add(roots);
+        this.CreatedRoots.Add(roots);
         var watcher = new FakeRepositoryWatcher();
-        Watchers.Add(watcher);
+        this.Watchers.Add(watcher);
         return watcher;
     }
 }
@@ -42,11 +42,11 @@ internal sealed class FakeScanTimer : IScanTimer
     public TimeSpan? Armed { get; private set; }
     public bool Disposed { get; private set; }
 
-    public void Arm(TimeSpan delay) => Armed = delay;
+    public void Arm(TimeSpan delay) => this.Armed = delay;
 
-    public void Cancel() => Armed = null;
+    public void Cancel() => this.Armed = null;
 
-    public void Dispose() => Disposed = true;
+    public void Dispose() => this.Disposed = true;
 
     public void Fire() => Elapsed?.Invoke(this, EventArgs.Empty);
 }
@@ -58,7 +58,7 @@ internal sealed class FakeScanTimerFactory : IScanTimerFactory
     public IScanTimer Create()
     {
         var timer = new FakeScanTimer();
-        Timers.Add(timer);
+        this.Timers.Add(timer);
         return timer;
     }
 }

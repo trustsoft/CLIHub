@@ -10,8 +10,8 @@ using Velopack.Sources;
 /// </summary>
 internal sealed class VelopackManagerProvider
 {
-    private readonly ILogger _logger;
-    private readonly Lazy<UpdateManager?> _manager;
+    private readonly ILogger logger;
+    private readonly Lazy<UpdateManager?> manager;
 
     /// <summary>
     ///   Creates the provider with the given repository URL.
@@ -20,8 +20,8 @@ internal sealed class VelopackManagerProvider
     /// <param name="logger"> Logger for initialization failures. </param>
     public VelopackManagerProvider(string repositoryUrl, ILogger logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _manager = new Lazy<UpdateManager?>(() => CreateManager(repositoryUrl));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.manager = new Lazy<UpdateManager?>(() => this.CreateManager(repositoryUrl));
     }
 
     /// <summary>
@@ -31,19 +31,19 @@ internal sealed class VelopackManagerProvider
     public VelopackManagerProvider(UpdateManager manager)
     {
         ArgumentNullException.ThrowIfNull(manager);
-        _logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
-        _manager = new Lazy<UpdateManager?>(() => manager);
+        this.logger = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+        this.manager = new Lazy<UpdateManager?>(() => manager);
     }
 
     /// <summary>
     ///   Gets the UpdateManager, or null if Velopack is not initialized.
     /// </summary>
-    public UpdateManager? Manager => _manager.Value;
+    public UpdateManager? Manager => this.manager.Value;
 
     /// <summary>
     ///   Gets a value indicating whether a manager is available.
     /// </summary>
-    public bool IsAvailable => Manager is not null;
+    public bool IsAvailable => this.Manager is not null;
 
     private UpdateManager? CreateManager(string repositoryUrl)
     {
@@ -62,7 +62,7 @@ internal sealed class VelopackManagerProvider
         {
             // Thrown when VelopackApp.Build().Run() has not initialized a locator
             // (for example, running under a test host).
-            _logger.LogDebug(ex, "Velopack is not initialized; update checks are disabled");
+            this.logger.LogDebug(ex, "Velopack is not initialized; update checks are disabled");
             return null;
         }
     }

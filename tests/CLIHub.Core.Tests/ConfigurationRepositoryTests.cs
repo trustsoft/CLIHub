@@ -7,24 +7,24 @@ using CLIHub.Core.Models;
 
 public class ConfigurationRepositoryTests : IDisposable
 {
-    private readonly string _tempDir;
-    private readonly CapturingLogger _logger = new();
+    private readonly string tempDir;
+    private readonly CapturingLogger logger = new();
 
     public ConfigurationRepositoryTests()
     {
-        _tempDir = Path.Combine(Path.GetTempPath(), "clihub-config-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_tempDir);
+        this.tempDir = Path.Combine(Path.GetTempPath(), "clihub-config-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.tempDir);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_tempDir, recursive: true); } catch { }
+        try { Directory.Delete(this.tempDir, recursive: true); } catch { }
     }
 
-    private string ConfigPath => Path.Combine(_tempDir, "config.json");
+    private string ConfigPath => Path.Combine(this.tempDir, "config.json");
 
     private ConfigurationRepository CreateRepository(string? configPath = null) =>
-        new(_logger, configPath ?? ConfigPath);
+        new(this.logger, configPath ?? this.ConfigPath);
 
     private static string ReadProjectId(string path)
     {
@@ -35,14 +35,14 @@ public class ConfigurationRepositoryTests : IDisposable
     [Fact]
     public void Update_Flush_WritesConfigFile()
     {
-        var repository = CreateRepository();
+        var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "abc");
 
         repository.Flush();
 
-        Assert.True(File.Exists(ConfigPath));
-        Assert.Contains("\"currentProjectId\": \"abc\"", File.ReadAllText(ConfigPath));
-        Assert.Contains("\"schemaVersion\": 2", File.ReadAllText(ConfigPath));
+        Assert.True(File.Exists(this.ConfigPath));
+        Assert.Contains("\"currentProjectId\": \"abc\"", File.ReadAllText(this.ConfigPath));
+        Assert.Contains("\"schemaVersion\": 2", File.ReadAllText(this.ConfigPath));
     }
 
     [Fact]
@@ -55,9 +55,9 @@ public class ConfigurationRepositoryTests : IDisposable
           "currentProjectId": null
         }
         """;
-        File.WriteAllText(ConfigPath, legacyJson);
+        File.WriteAllText(this.ConfigPath, legacyJson);
 
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
 
         Assert.Equal("Ctrl+Alt+L", repository.Read().Preferences.Hotkey);
     }
@@ -73,13 +73,13 @@ public class ConfigurationRepositoryTests : IDisposable
           "currentProjectId": "future-project"
         }
         """;
-        File.WriteAllText(ConfigPath, futureJson);
+        File.WriteAllText(this.ConfigPath, futureJson);
 
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
 
         Assert.Null(repository.Read().CurrentProjectId);
-        Assert.Equal(futureJson, File.ReadAllText(ConfigPath));
-        Assert.Contains(_logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
+        Assert.Equal(futureJson, File.ReadAllText(this.ConfigPath));
+        Assert.Contains(this.logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
     }
 
     [Fact]
@@ -93,25 +93,25 @@ public class ConfigurationRepositoryTests : IDisposable
           "currentProjectId": "invalid-project"
         }
         """;
-        File.WriteAllText(ConfigPath, invalidJson);
+        File.WriteAllText(this.ConfigPath, invalidJson);
 
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
 
         Assert.Null(repository.Read().CurrentProjectId);
-        Assert.Equal(invalidJson, File.ReadAllText(ConfigPath));
-        Assert.Contains(_logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
+        Assert.Equal(invalidJson, File.ReadAllText(this.ConfigPath));
+        Assert.Contains(this.logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
     }
 
     [Fact]
     public void Update_RapidConsecutiveUpdates_FlushPersistsLatest()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "first");
         repository.Update(snapshot => snapshot.CurrentProjectId = "second");
 
         repository.Flush();
 
-        var content = File.ReadAllText(ConfigPath);
+        var content = File.ReadAllText(this.ConfigPath);
         Assert.Contains("\"currentProjectId\": \"second\"", content);
         Assert.DoesNotContain("\"currentProjectId\": \"first\"", content);
     }
@@ -119,7 +119,7 @@ public class ConfigurationRepositoryTests : IDisposable
     [Fact]
     public async Task Update_ConcurrentUpdates_FollowedByKnownLatestUpdate_PersistsLatestJson()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         var start = new Barrier(8);
 
         var saves = Enumerable.Range(0, 8)
@@ -134,13 +134,13 @@ public class ConfigurationRepositoryTests : IDisposable
         repository.Update(snapshot => snapshot.CurrentProjectId = "known-latest");
         repository.Flush();
 
-        Assert.Equal("known-latest", ReadProjectId(ConfigPath));
+        Assert.Equal("known-latest", ReadProjectId(this.ConfigPath));
     }
 
     [Fact]
     public async Task Update_ConcurrentSections_PreservesBothChanges()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         var start = new Barrier(2);
 
         var projectUpdate = Task.Run(() =>
@@ -165,7 +165,7 @@ public class ConfigurationRepositoryTests : IDisposable
     [Fact]
     public void Update_CallbackFailure_DoesNotPublishPartialSnapshot()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "before");
 
         Assert.Throws<InvalidOperationException>(() => repository.Update(snapshot =>
@@ -180,18 +180,18 @@ public class ConfigurationRepositoryTests : IDisposable
     [Fact]
     public void Flush_ImmediatelyAfterUpdate_MakesLatestJsonDurable()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
 
         repository.Update(snapshot => snapshot.CurrentProjectId = "flush-now");
         repository.Flush();
 
-        Assert.Equal("flush-now", ReadProjectId(ConfigPath));
+        Assert.Equal("flush-now", ReadProjectId(this.ConfigPath));
     }
 
     [Fact]
     public void Read_ReturnsDetachedSnapshot_WhenNestedValuesAreMutated()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         repository.Update(snapshot =>
         {
             snapshot.CurrentProjectId = "project-1";
@@ -213,7 +213,7 @@ public class ConfigurationRepositoryTests : IDisposable
     [Fact]
     public void Update_WhileWorkerIsExiting_StartsReplacementWorkerAndPersistsValue()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         using var workerExit = new ManualResetEventSlim();
         using var allowWorkerExit = new ManualResetEventSlim();
 
@@ -230,19 +230,19 @@ public class ConfigurationRepositoryTests : IDisposable
         allowWorkerExit.Set();
         repository.Flush();
 
-        Assert.Equal("second-worker", ReadProjectId(ConfigPath));
+        Assert.Equal("second-worker", ReadProjectId(this.ConfigPath));
     }
 
     [Fact]
     public void Dispose_FlushesPendingWrites()
     {
-        var repository = CreateRepository();
+        var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "pending");
 
         repository.Dispose();
 
-        Assert.True(File.Exists(ConfigPath), "dispose must flush pending changes");
-        Assert.Contains("\"currentProjectId\": \"pending\"", File.ReadAllText(ConfigPath));
+        Assert.True(File.Exists(this.ConfigPath), "dispose must flush pending changes");
+        Assert.Contains("\"currentProjectId\": \"pending\"", File.ReadAllText(this.ConfigPath));
 
         repository.Dispose();
     }
@@ -251,36 +251,36 @@ public class ConfigurationRepositoryTests : IDisposable
     public void Update_FailedWrite_LogsWarningAndDoesNotThrow()
     {
         // The target file path is occupied by a directory, so the final rename must fail.
-        Directory.CreateDirectory(ConfigPath);
-        var repository = CreateRepository();
+        Directory.CreateDirectory(this.ConfigPath);
+        var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "abc");
 
         var exception = Record.Exception(repository.Flush);
 
         Assert.Null(exception);
-        Assert.Contains(_logger.Warnings, w => w.Contains("Could not write the configuration"));
+        Assert.Contains(this.logger.Warnings, w => w.Contains("Could not write the configuration"));
     }
 
     [Fact]
     public void Update_WhenAtomicReplacementCannotCreateTempFile_PreservesPreviousValidJson()
     {
-        using var repository = CreateRepository();
+        using var repository = this.CreateRepository();
         repository.Update(snapshot => snapshot.CurrentProjectId = "baseline");
         repository.Flush();
 
-        Directory.CreateDirectory(ConfigPath + ".tmp");
+        Directory.CreateDirectory(this.ConfigPath + ".tmp");
 
         repository.Update(snapshot => snapshot.CurrentProjectId = "replacement");
         repository.Flush();
 
-        Assert.Equal("baseline", ReadProjectId(ConfigPath));
-        Assert.Contains(_logger.Warnings, w => w.Contains("Could not write the configuration"));
+        Assert.Equal("baseline", ReadProjectId(this.ConfigPath));
+        Assert.Contains(this.logger.Warnings, w => w.Contains("Could not write the configuration"));
     }
 
     [Fact]
     public void Constructor_NullLogger_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new ConfigurationRepository(null!, ConfigPath));
+        Assert.Throws<ArgumentNullException>(() => new ConfigurationRepository(null!, this.ConfigPath));
     }
 
     private sealed class CapturingLogger : ILogger<ConfigurationRepository>
@@ -295,7 +295,7 @@ public class ConfigurationRepositoryTests : IDisposable
         {
             if (logLevel == LogLevel.Warning)
             {
-                Warnings.Add(formatter(state, exception));
+                this.Warnings.Add(formatter(state, exception));
             }
         }
     }

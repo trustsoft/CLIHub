@@ -8,21 +8,21 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class FakeConfigurationRepository : IConfigurationRepository
 {
-    private readonly object _gate = new();
-    private ConfigurationSnapshot _snapshot;
+    private readonly object gate = new();
+    private ConfigurationSnapshot snapshot;
 
     public FakeConfigurationRepository(AppConfig? initial = null)
     {
-        _snapshot = ConfigurationSnapshot.From(initial ?? new AppConfig());
+        this.snapshot = ConfigurationSnapshot.From(initial ?? new AppConfig());
     }
 
     public int UpdateCount { get; private set; }
 
     public ConfigurationSnapshot Read()
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            return ConfigurationSnapshot.From(_snapshot.ToAppConfig());
+            return ConfigurationSnapshot.From(this.snapshot.ToAppConfig());
         }
     }
 
@@ -30,12 +30,12 @@ public sealed class FakeConfigurationRepository : IConfigurationRepository
     {
         ArgumentNullException.ThrowIfNull(update);
 
-        lock (_gate)
+        lock (this.gate)
         {
-            var updated = ConfigurationSnapshot.From(_snapshot.ToAppConfig());
+            var updated = ConfigurationSnapshot.From(this.snapshot.ToAppConfig());
             update(updated);
-            _snapshot = ConfigurationSnapshot.From(updated.ToAppConfig());
-            UpdateCount++;
+            this.snapshot = ConfigurationSnapshot.From(updated.ToAppConfig());
+            this.UpdateCount++;
         }
     }
 

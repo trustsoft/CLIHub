@@ -128,11 +128,11 @@ public sealed record SettingsApplicationResult(bool Success, string? Error)
 /// </summary>
 public sealed class SettingsApplicationService
 {
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly IStartupService _startupService;
-    private readonly IPreferenceApplier _applier;
-    private readonly IProjectScanner _projectScanner;
-    private readonly ILogger<SettingsApplicationService> _logger;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly IStartupService startupService;
+    private readonly IPreferenceApplier applier;
+    private readonly IProjectScanner projectScanner;
+    private readonly ILogger<SettingsApplicationService> logger;
 
     /// <summary>
     ///   Creates the Settings application service.
@@ -149,11 +149,11 @@ public sealed class SettingsApplicationService
         IProjectScanner projectScanner,
         ILogger<SettingsApplicationService> logger)
     {
-        _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
-        _applier = applier ?? throw new ArgumentNullException(nameof(applier));
-        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
+        this.applier = applier ?? throw new ArgumentNullException(nameof(applier));
+        this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -162,7 +162,7 @@ public sealed class SettingsApplicationService
     /// <returns> The current Settings draft. </returns>
     public SettingsDraft Load()
     {
-        var preferences = _preferencesStore.Load();
+        var preferences = this.preferencesStore.Load();
         var hotkey = HotkeyParser.TryParse(preferences.Hotkey, out var parsedHotkey) && parsedHotkey is not null
             ? parsedHotkey
             : HotkeyParser.Default;
@@ -173,7 +173,7 @@ public sealed class SettingsApplicationService
             hotkey,
             preferences.AgentProbeTtlMinutes,
             preferences.AgentProbeTimeoutSeconds,
-            _startupService.IsEnabled(),
+            this.startupService.IsEnabled(),
             preferences.StartMinimized,
             preferences.CheckForUpdatesOnStartup,
             preferences.AutoDownloadUpdates,
@@ -311,31 +311,31 @@ public sealed class SettingsApplicationService
     {
         ArgumentNullException.ThrowIfNull(draft);
 
-        var previousPreferences = _preferencesStore.Load();
-        var previousStartupState = _startupService.IsEnabled();
+        var previousPreferences = this.preferencesStore.Load();
+        var previousStartupState = this.startupService.IsEnabled();
         var previousHotkey = ParseHotkey(previousPreferences.Hotkey);
 
         try
         {
-            if (!_applier.ApplyStartWithWindows(draft.StartWithWindows))
+            if (!this.applier.ApplyStartWithWindows(draft.StartWithWindows))
             {
-                Rollback(previousPreferences, previousStartupState, previousHotkey);
+                this.Rollback(previousPreferences, previousStartupState, previousHotkey);
                 return SettingsApplicationResult.Failed(
                     "Could not update the Windows startup registration. Changes were not saved.");
             }
 
-            _applier.ApplyRuntime(draft.Runtime);
-            _applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
-            _applier.ApplyAccent(draft.AccentColor);
+            this.applier.ApplyRuntime(draft.Runtime);
+            this.applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
+            this.applier.ApplyAccent(draft.AccentColor);
 
-            if (!_applier.ApplyHotkey(draft.Hotkey))
+            if (!this.applier.ApplyHotkey(draft.Hotkey))
             {
-                Rollback(previousPreferences, previousStartupState, previousHotkey);
+                this.Rollback(previousPreferences, previousStartupState, previousHotkey);
                 return SettingsApplicationResult.Failed(
                     "Could not register the global hotkey. Changes were not saved.");
             }
 
-            _preferencesStore.Update(preferences =>
+            this.preferencesStore.Update(preferences =>
             {
                 preferences.DefaultRuntime = draft.Runtime;
                 preferences.Hotkey = HotkeyParser.Format(draft.Hotkey);
@@ -362,27 +362,27 @@ public sealed class SettingsApplicationService
                 preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;
             });
 
-            _applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
+            this.applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
 
             // Reconfigure watching and rescan with the newly saved scanning settings.
-            _projectScanner.Reload();
+            this.projectScanner.Reload();
             return SettingsApplicationResult.Applied;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Applying Settings failed; rolling back system preferences");
-            Rollback(previousPreferences, previousStartupState, previousHotkey);
+            this.logger.LogWarning(ex, "Applying Settings failed; rolling back system preferences");
+            this.Rollback(previousPreferences, previousStartupState, previousHotkey);
             return SettingsApplicationResult.Failed($"Could not save settings: {ex.Message}");
         }
     }
 
     private void Rollback(AppPreferences previous, bool previousStartupState, HotkeyDefinition previousHotkey)
     {
-        TryRollback("runtime", () => _applier.ApplyRuntime(previous.DefaultRuntime));
-        TryRollback("path display style", () => _applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
-        TryRollback("accent", () => _applier.ApplyAccent(previous.AccentColor));
-        TryRollback("hotkey", () => _applier.ApplyHotkey(previousHotkey));
-        TryRollback("Windows startup", () => _applier.ApplyStartWithWindows(previousStartupState));
+        this.TryRollback("runtime", () => this.applier.ApplyRuntime(previous.DefaultRuntime));
+        this.TryRollback("path display style", () => this.applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
+        this.TryRollback("accent", () => this.applier.ApplyAccent(previous.AccentColor));
+        this.TryRollback("hotkey", () => this.applier.ApplyHotkey(previousHotkey));
+        this.TryRollback("Windows startup", () => this.applier.ApplyStartWithWindows(previousStartupState));
     }
 
     private void TryRollback(string setting, Action rollback)
@@ -393,7 +393,7 @@ public sealed class SettingsApplicationService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not roll back Settings value {Setting}", setting);
+            this.logger.LogWarning(ex, "Could not roll back Settings value {Setting}", setting);
         }
     }
 

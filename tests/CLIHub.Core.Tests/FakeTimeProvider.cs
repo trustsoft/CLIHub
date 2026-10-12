@@ -5,11 +5,11 @@ namespace CLIHub.Tests.Services;
 /// </summary>
 public sealed class FakeTimeProvider : TimeProvider
 {
-    private DateTimeOffset _now;
+    private DateTimeOffset now;
 
-    public FakeTimeProvider(DateTimeOffset start) => _now = start;
+    public FakeTimeProvider(DateTimeOffset start) => this.now = start;
 
-    public override DateTimeOffset GetUtcNow() => _now;
+    public override DateTimeOffset GetUtcNow() => this.now;
 
-    public void Advance(TimeSpan by) => _now += by;
+    public void Advance(TimeSpan by) => this.now += by;
 }

@@ -8,31 +8,31 @@ using CLIHub.Core.Plugins;
 
 public class PluginCatalogTests : IDisposable
 {
-    private readonly string _root;
+    private readonly string root;
 
     public PluginCatalogTests()
     {
-        _root = Path.Combine(Path.GetTempPath(), "clihub-plugins-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_root);
+        this.root = Path.Combine(Path.GetTempPath(), "clihub-plugins-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.root);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_root, recursive: true); } catch { }
+        try { Directory.Delete(this.root, recursive: true); } catch { }
     }
 
     private void WritePlugin(string dirName, string json)
     {
-        var dir = Path.Combine(_root, dirName);
+        var dir = Path.Combine(this.root, dirName);
         Directory.CreateDirectory(dir);
         File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
     }
 
     private PluginCatalog CreateManager() =>
-        new(NullLogger<PluginCatalog>.Instance, CreateCache(), _root);
+        new(NullLogger<PluginCatalog>.Instance, this.CreateCache(), this.root);
 
     private LogoCacheService CreateCache() =>
-        new(NullLogger<LogoCacheService>.Instance, Path.Combine(_root, "logos-state.json"));
+        new(NullLogger<LogoCacheService>.Instance, Path.Combine(this.root, "logos-state.json"));
 
     private const string ValidJson = """
     {
@@ -46,8 +46,8 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_ValidPlugin_IsLoaded()
     {
-        WritePlugin("opencode", ValidJson);
-        var manager = CreateManager();
+        this.WritePlugin("opencode", ValidJson);
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -60,10 +60,10 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_MissingLaunchCommand_IsSkipped()
     {
-        WritePlugin("nolau", """
+        this.WritePlugin("nolau", """
         { "id": "nolau", "name": "NoLa", "commands": { "version": { "executable": "x" } } }
         """);
-        var manager = CreateManager();
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -73,10 +73,10 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_MissingName_IsSkipped()
     {
-        WritePlugin("noname", """
+        this.WritePlugin("noname", """
         { "id": "noname", "commands": { "launch": { "executable": "x" } } }
         """);
-        var manager = CreateManager();
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -86,8 +86,8 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_MalformedJson_IsSkipped()
     {
-        WritePlugin("broken", "{ not valid json ");
-        var manager = CreateManager();
+        this.WritePlugin("broken", "{ not valid json ");
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -97,9 +97,9 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_DuplicateId_LoadsOnlyOne()
     {
-        WritePlugin("first", ValidJson);
-        WritePlugin("second", ValidJson);
-        var manager = CreateManager();
+        this.WritePlugin("first", ValidJson);
+        this.WritePlugin("second", ValidJson);
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -109,9 +109,9 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_DirectoriesAreLoadedInDeterministicOrder()
     {
-        WritePlugin("zeta", ValidJson.Replace("opencode", "zeta", StringComparison.Ordinal));
-        WritePlugin("Alpha", ValidJson.Replace("opencode", "alpha", StringComparison.Ordinal));
-        var manager = CreateManager();
+        this.WritePlugin("zeta", ValidJson.Replace("opencode", "zeta", StringComparison.Ordinal));
+        this.WritePlugin("Alpha", ValidJson.Replace("opencode", "alpha", StringComparison.Ordinal));
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
 
@@ -121,27 +121,27 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_DuplicateId_UsesDeterministicWinnerAndLogsBothDirectories()
     {
-        WritePlugin("second", ValidJson);
-        WritePlugin("first", ValidJson);
+        this.WritePlugin("second", ValidJson);
+        this.WritePlugin("first", ValidJson);
         var logger = new RecordingLogger<PluginCatalog>();
-        var manager = new PluginCatalog(logger, CreateCache(), _root);
+        var manager = new PluginCatalog(logger, this.CreateCache(), this.root);
 
         manager.LoadPlugins();
 
         var plugin = Assert.Single(manager.GetAllPlugins());
-        Assert.Equal(Path.Combine(_root, "first"), plugin.PluginDirectory);
+        Assert.Equal(Path.Combine(this.root, "first"), plugin.PluginDirectory);
         Assert.Contains(
             logger.Messages,
             message => message.Contains("Duplicate plugin ID opencode", StringComparison.Ordinal)
-                && message.Contains(Path.Combine(_root, "second"), StringComparison.Ordinal)
-                && message.Contains(Path.Combine(_root, "first"), StringComparison.Ordinal));
+                && message.Contains(Path.Combine(this.root, "second"), StringComparison.Ordinal)
+                && message.Contains(Path.Combine(this.root, "first"), StringComparison.Ordinal));
     }
 
     [Fact]
     public void LoadPlugins_IsIdempotent()
     {
-        WritePlugin("opencode", ValidJson);
-        var manager = CreateManager();
+        this.WritePlugin("opencode", ValidJson);
+        var manager = this.CreateManager();
 
         manager.LoadPlugins();
         manager.LoadPlugins();
@@ -152,8 +152,8 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void ReloadPlugins_RescansSnapshotAndRaisesNotificationAfterReplacement()
     {
-        WritePlugin("opencode", ValidJson);
-        var catalog = CreateManager();
+        this.WritePlugin("opencode", ValidJson);
+        var catalog = this.CreateManager();
         catalog.LoadPlugins();
         var notificationCount = 0;
         var snapshots = new List<int>();
@@ -163,10 +163,10 @@ public class PluginCatalogTests : IDisposable
             snapshots.Add(catalog.GetAllPlugins().Count);
         };
 
-        WritePlugin("pi", ValidJson.Replace("opencode", "pi", StringComparison.Ordinal));
+        this.WritePlugin("pi", ValidJson.Replace("opencode", "pi", StringComparison.Ordinal));
         catalog.ReloadPlugins();
 
-        Directory.Delete(Path.Combine(_root, "pi"), recursive: true);
+        Directory.Delete(Path.Combine(this.root, "pi"), recursive: true);
         catalog.ReloadPlugins();
 
         Assert.Equal(2, notificationCount);
@@ -177,8 +177,8 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_DoesNotRaiseReloadNotification()
     {
-        WritePlugin("opencode", ValidJson);
-        var catalog = CreateManager();
+        this.WritePlugin("opencode", ValidJson);
+        var catalog = this.CreateManager();
         var notificationCount = 0;
         catalog.PluginsChanged += (_, _) => notificationCount++;
 
@@ -190,17 +190,17 @@ public class PluginCatalogTests : IDisposable
     [Fact]
     public void LoadPlugins_SecondManager_SharesCache_ReusesCachedLogoWithoutRescan()
     {
-        WritePlugin("opencode", ValidJson);
-        var pluginDir = Path.Combine(_root, "opencode");
+        this.WritePlugin("opencode", ValidJson);
+        var pluginDir = Path.Combine(this.root, "opencode");
         File.WriteAllBytes(Path.Combine(pluginDir, "logo.png"), [0x89, 0x50]);
 
-        var cache = CreateCache();
-        var first = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, _root);
+        var cache = this.CreateCache();
+        var first = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.root);
         first.LoadPlugins();
         var cachedLogo = first.GetAllPlugins().Single().LogoPath;
 
         File.Delete(Path.Combine(pluginDir, "logo.png"));
-        var second = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, _root);
+        var second = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.root);
         second.LoadPlugins();
 
         Assert.Equal(cachedLogo, second.GetAllPlugins().Single().LogoPath);
@@ -221,7 +221,7 @@ public class PluginCatalogTests : IDisposable
             Exception? exception,
             Func<TState, Exception?, string> formatter)
         {
-            Messages.Add(formatter(state, exception));
+            this.Messages.Add(formatter(state, exception));
         }
 
         private sealed class NullScope : IDisposable

@@ -21,22 +21,36 @@ The repository SHALL have exactly one `.editorconfig`, located at the repository
 
 ### Requirement: Naming conventions are machine-enforced
 
-The style configuration SHALL flag violations of the project naming conventions: private instance and static fields in `_camelCase`, private constants and private static readonly fields in PascalCase, and interface names with the `I` prefix.
+The style configuration SHALL flag violations of the project naming conventions: private instance and static fields in `camelCase` without an underscore prefix, private constants and private static readonly fields in PascalCase, and interface names with the `I` prefix.
 
 #### Scenario: Interface without the I prefix
 
 - **WHEN** an interface is declared without the `I` prefix (e.g. `interface Foo`)
 - **THEN** the style configuration reports a naming warning
 
-#### Scenario: Prefixed private instance field
+#### Scenario: Underscore-prefixed private instance field
 
 - **WHEN** a private instance field is declared with the underscore prefix (e.g. `_services`)
-- **THEN** no naming warning is reported
+- **THEN** the style configuration reports a naming warning
 
 #### Scenario: PascalCase private constant
 
 - **WHEN** a private constant is declared in PascalCase (e.g. `ResourceMarker`)
 - **THEN** no naming warning is reported
+
+### Requirement: Instance member access is qualified with `this`
+
+The style configuration SHALL flag unqualified access to an instance member (field, property, method, or event) from within its declaring type, requiring the `this.` qualifier.
+
+#### Scenario: Unqualified instance member access
+
+- **WHEN** an instance method assigns to a private instance field without the `this.` qualifier (e.g. `services = value`)
+- **THEN** the style configuration reports a style violation
+
+#### Scenario: Qualified instance member access
+
+- **WHEN** instance member access is written with the `this.` qualifier (e.g. `this.services = value`)
+- **THEN** no violation is reported
 
 ### Requirement: Style configuration contains only applicable rules
 

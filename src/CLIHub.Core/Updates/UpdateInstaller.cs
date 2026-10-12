@@ -11,7 +11,7 @@ using Velopack;
 /// </summary>
 internal sealed class UpdateInstaller
 {
-    private readonly ILogger _logger;
+    private readonly ILogger logger;
 
     /// <summary>
     ///   Creates the update installer.
@@ -19,7 +19,7 @@ internal sealed class UpdateInstaller
     /// <param name="logger"> Logger for installation operations. </param>
     public UpdateInstaller(ILogger logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ internal sealed class UpdateInstaller
 
         if (asset is null)
         {
-            _logger.LogWarning("No downloaded update to install");
+            this.logger.LogWarning("No downloaded update to install");
             return new UpdateInstallResult(UpdateInstallStatus.NoDownload);
         }
 
@@ -42,18 +42,18 @@ internal sealed class UpdateInstaller
 
         try
         {
-            _logger.LogInformation("Applying update and restarting: {Version}", version);
+            this.logger.LogInformation("Applying update and restarting: {Version}", version);
             
             // This method does not return if successful - it terminates the current process
             manager.ApplyUpdatesAndRestart(asset);
 
             // If we reach here, restart failed
-            _logger.LogWarning("Update restart failed for version {Version}", version);
+            this.logger.LogWarning("Update restart failed for version {Version}", version);
             return new UpdateInstallResult(UpdateInstallStatus.Failed);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to apply update {Version}", version);
+            this.logger.LogWarning(ex, "Failed to apply update {Version}", version);
             return new UpdateInstallResult(UpdateInstallStatus.Failed);
         }
     }
@@ -70,7 +70,7 @@ internal sealed class UpdateInstaller
 
         if (asset is null)
         {
-            _logger.LogWarning("No downloaded update to install");
+            this.logger.LogWarning("No downloaded update to install");
             return new UpdateInstallResult(UpdateInstallStatus.NoDownload);
         }
 
@@ -78,18 +78,18 @@ internal sealed class UpdateInstaller
 
         try
         {
-            _logger.LogInformation("Applying update and exiting: {Version}", version);
+            this.logger.LogInformation("Applying update and exiting: {Version}", version);
             
             // This method does not return if successful - it terminates the current process
             manager.ApplyUpdatesAndExit(asset);
 
             // If we reach here, exit failed
-            _logger.LogWarning("Update exit failed for version {Version}", version);
+            this.logger.LogWarning("Update exit failed for version {Version}", version);
             return new UpdateInstallResult(UpdateInstallStatus.Failed);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to apply update {Version}", version);
+            this.logger.LogWarning(ex, "Failed to apply update {Version}", version);
             return new UpdateInstallResult(UpdateInstallStatus.Failed);
         }
     }

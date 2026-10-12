@@ -5,9 +5,9 @@ namespace CLIHub;
 /// </summary>
 public sealed class TrayActions : ITrayActions, IDisposable
 {
-    private readonly TrayStateProjection _projection;
-    private readonly TrayCommandHandlers _handlers;
-    private bool _disposed;
+    private readonly TrayStateProjection projection;
+    private readonly TrayCommandHandlers handlers;
+    private bool disposed;
 
     /// <inheritdoc />
     public event EventHandler? StateChanged;
@@ -25,29 +25,29 @@ public sealed class TrayActions : ITrayActions, IDisposable
     /// <param name="handlers"> User-invoked tray command handlers. </param>
     public TrayActions(TrayStateProjection projection, TrayCommandHandlers handlers)
     {
-        _projection = projection ?? throw new ArgumentNullException(nameof(projection));
-        _handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
-        _projection.StateChanged += OnStateChanged;
-        _handlers.UpdateDownloadRequested += OnUpdateDownloadRequested;
-        Commands = _handlers.CreateCommands(_projection.SetCurrentProject, static () => { });
+        this.projection = projection ?? throw new ArgumentNullException(nameof(projection));
+        this.handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
+        this.projection.StateChanged += this.OnStateChanged;
+        this.handlers.UpdateDownloadRequested += this.OnUpdateDownloadRequested;
+        this.Commands = this.handlers.CreateCommands(this.projection.SetCurrentProject, static () => { });
     }
 
     /// <inheritdoc />
-    public TrayMenuState GetState() => _projection.GetState();
+    public TrayMenuState GetState() => this.projection.GetState();
 
     /// <summary>
     ///   Releases event subscriptions to the composed tray services.
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projection.StateChanged -= OnStateChanged;
-        _handlers.UpdateDownloadRequested -= OnUpdateDownloadRequested;
+        this.disposed = true;
+        this.projection.StateChanged -= this.OnStateChanged;
+        this.handlers.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
     }
 
     private void OnStateChanged(object? sender, EventArgs e) => StateChanged?.Invoke(this, e);

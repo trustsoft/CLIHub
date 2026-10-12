@@ -7,8 +7,8 @@ using CLIHub.Core.Infrastructure.Windows;
 /// </summary>
 public sealed class InstanceCoordinator : IInstanceCoordinator
 {
-    private readonly ISingleInstanceGuard _singleInstanceGuard;
-    private readonly IApplicationLifetime _applicationLifetime;
+    private readonly ISingleInstanceGuard singleInstanceGuard;
+    private readonly IApplicationLifetime applicationLifetime;
 
     /// <summary>
     ///   Creates the instance coordinator.
@@ -19,17 +19,17 @@ public sealed class InstanceCoordinator : IInstanceCoordinator
         ISingleInstanceGuard singleInstanceGuard,
         IApplicationLifetime applicationLifetime)
     {
-        _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
-        _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+        this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
+        this.applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
     }
 
     /// <inheritdoc />
     public InstanceStatus Coordinate()
     {
-        if (!_singleInstanceGuard.IsFirstInstance)
+        if (!this.singleInstanceGuard.IsFirstInstance)
         {
-            _singleInstanceGuard.SignalActivation();
-            _applicationLifetime.Shutdown();
+            this.singleInstanceGuard.SignalActivation();
+            this.applicationLifetime.Shutdown();
             return InstanceStatus.SecondInstance;
         }
 

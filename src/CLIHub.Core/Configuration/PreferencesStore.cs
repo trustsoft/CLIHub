@@ -7,7 +7,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class PreferencesStore : IPreferencesStore
 {
-    private readonly IConfigurationRepository _repository;
+    private readonly IConfigurationRepository repository;
 
     /// <summary>
     ///   Creates the store over the configuration repository.
@@ -15,17 +15,17 @@ public sealed class PreferencesStore : IPreferencesStore
     /// <param name="repository"> The configuration repository. </param>
     public PreferencesStore(IConfigurationRepository repository)
     {
-        _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        this.repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
     /// <inheritdoc />
-    public AppPreferences Load() => _repository.Read().Preferences;
+    public AppPreferences Load() => this.repository.Read().Preferences;
 
     /// <inheritdoc />
     public void Update(Action<AppPreferences> update)
     {
         ArgumentNullException.ThrowIfNull(update);
 
-        _repository.Update(snapshot => update(snapshot.Preferences));
+        this.repository.Update(snapshot => update(snapshot.Preferences));
     }
 }

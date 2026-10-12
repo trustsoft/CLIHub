@@ -11,10 +11,10 @@ using CLIHub.Core.Models;
 /// </summary>
 public class ProjectService : IProjectService
 {
-    private readonly IProjectStateStore _projectStateStore;
-    private readonly ProjectLogoResolver _logoResolver;
-    private readonly ILogger<ProjectService> _logger;
-    private readonly ProjectState _projectState;
+    private readonly IProjectStateStore projectStateStore;
+    private readonly ProjectLogoResolver logoResolver;
+    private readonly ILogger<ProjectService> logger;
+    private readonly ProjectState projectState;
 
     /// <inheritdoc />
     public event EventHandler? ProjectsChanged;
@@ -30,18 +30,18 @@ public class ProjectService : IProjectService
         ILogoCacheService logoCache,
         ILogger<ProjectService> logger)
     {
-        _projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
-        _logoResolver = new ProjectLogoResolver(logoCache);
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _projectState = _projectStateStore.Load();
-        ClearStaleCurrentProject();
+        this.projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
+        this.logoResolver = new ProjectLogoResolver(logoCache);
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.projectState = this.projectStateStore.Load();
+        this.ClearStaleCurrentProject();
     }
 
     /// <inheritdoc />
     public IReadOnlyList<Project> GetAllProjects()
     {
-        RefreshLogos();
-        return _projectState.Projects.ToList();
+        this.RefreshLogos();
+        return this.projectState.Projects.ToList();
     }
 
     /// <inheritdoc />
@@ -52,8 +52,8 @@ public class ProjectService : IProjectService
             return Array.Empty<Project>();
         }
 
-        RefreshLogos();
-        return _projectState.Projects
+        this.RefreshLogos();
+        return this.projectState.Projects
             .OrderByDescending(p => p.LastUsed)
             .Take(limit)
             .ToList();
@@ -62,15 +62,15 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public Project? GetCurrentProject()
     {
-        if (_projectState.CurrentProjectId == null)
+        if (this.projectState.CurrentProjectId == null)
         {
             return null;
         }
 
-        var project = _projectState.Projects.FirstOrDefault(p => p.Id == _projectState.CurrentProjectId);
+        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == this.projectState.CurrentProjectId);
         if (project != null)
         {
-            project.LogoPath = ResolveProjectLogo(project);
+            project.LogoPath = this.ResolveProjectLogo(project);
         }
 
         return project;
@@ -78,9 +78,9 @@ public class ProjectService : IProjectService
 
     private void RefreshLogos()
     {
-        foreach (var project in _projectState.Projects)
+        foreach (var project in this.projectState.Projects)
         {
-            project.LogoPath = ResolveProjectLogo(project);
+            project.LogoPath = this.ResolveProjectLogo(project);
         }
     }
 
@@ -89,7 +89,7 @@ public class ProjectService : IProjectService
     ///   to <see cref="DefaultLogoPath"/> when no logo is found.
     /// </summary>
     private string? ResolveProjectLogo(Project project) =>
-        _logoResolver.Resolve(project, DefaultLogoPath);
+        this.logoResolver.Resolve(project, this.DefaultLogoPath);
 
     /// <inheritdoc />
     public Project AddProject(string folderPath)
@@ -106,16 +106,16 @@ public class ProjectService : IProjectService
             throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
         }
 
-        var existing = _projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
+        var existing = this.projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
         if (existing != null)
         {
             return existing;
         }
 
-        var project = CreateProject(normalized, ProjectSource.Manual);
-        _projectState.Projects.Add(project);
-        _logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
-        Persist();
+        var project = this.CreateProject(normalized, ProjectSource.Manual);
+        this.projectState.Projects.Add(project);
+        this.logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
+        this.Persist();
         return project;
     }
 
@@ -134,16 +134,16 @@ public class ProjectService : IProjectService
             throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
         }
 
-        var existing = _projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
+        var existing = this.projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
         if (existing != null)
         {
             return existing;
         }
 
-        var project = CreateProject(normalized, ProjectSource.Discovered);
-        _projectState.Projects.Add(project);
-        _logger.LogInformation("Discovered project {ProjectName} at {Path}", project.Name, project.Path);
-        Persist();
+        var project = this.CreateProject(normalized, ProjectSource.Discovered);
+        this.projectState.Projects.Add(project);
+        this.logger.LogInformation("Discovered project {ProjectName} at {Path}", project.Name, project.Path);
+        this.Persist();
         return project;
     }
 
@@ -166,7 +166,7 @@ public class ProjectService : IProjectService
 
             var normalized = ProjectPathPolicy.Normalize(path);
 
-            if (_projectState.Projects.Any(p => ProjectPathPolicy.AreEqual(p.Path, normalized)))
+            if (this.projectState.Projects.Any(p => ProjectPathPolicy.AreEqual(p.Path, normalized)))
             {
                 continue;
             }
@@ -176,24 +176,24 @@ public class ProjectService : IProjectService
                 continue;
             }
 
-            _projectState.Projects.Add(CreateProject(normalized, ProjectSource.Discovered));
+            this.projectState.Projects.Add(this.CreateProject(normalized, ProjectSource.Discovered));
             changed = true;
         }
 
         foreach (var id in removedProjectIds)
         {
-            var project = _projectState.Projects.FirstOrDefault(p => p.Id == id && p.Source == ProjectSource.Discovered);
+            var project = this.projectState.Projects.FirstOrDefault(p => p.Id == id && p.Source == ProjectSource.Discovered);
             if (project is null)
             {
                 continue;
             }
 
-            _projectState.Projects.Remove(project);
-            _logoResolver.Remove(id);
+            this.projectState.Projects.Remove(project);
+            this.logoResolver.Remove(id);
 
-            if (_projectState.CurrentProjectId == id)
+            if (this.projectState.CurrentProjectId == id)
             {
-                _projectState.CurrentProjectId = null;
+                this.projectState.CurrentProjectId = null;
             }
 
             changed = true;
@@ -201,10 +201,10 @@ public class ProjectService : IProjectService
 
         if (changed)
         {
-            _logger.LogInformation(
+            this.logger.LogInformation(
                 "Reconciled discovered projects: {AddedOrRemoved} change(s)",
                 discoveredPaths.Count + removedProjectIds.Count);
-            Persist();
+            this.Persist();
         }
 
         return changed;
@@ -230,83 +230,83 @@ public class ProjectService : IProjectService
             project.Name = normalized;
         }
 
-        project.LogoPath = ResolveProjectLogo(project);
+        project.LogoPath = this.ResolveProjectLogo(project);
         return project;
     }
 
     /// <inheritdoc />
     public void RemoveProject(string projectId)
     {
-        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
         }
 
-        _projectState.Projects.Remove(project);
-        _logoResolver.Remove(projectId);
-        _logger.LogInformation("Removed project {ProjectName}", project.Name);
+        this.projectState.Projects.Remove(project);
+        this.logoResolver.Remove(projectId);
+        this.logger.LogInformation("Removed project {ProjectName}", project.Name);
 
-        if (_projectState.CurrentProjectId == projectId)
+        if (this.projectState.CurrentProjectId == projectId)
         {
-            _projectState.CurrentProjectId = null;
+            this.projectState.CurrentProjectId = null;
         }
 
-        Persist();
+        this.Persist();
     }
 
     /// <inheritdoc />
     public void SetCurrentProject(string projectId)
     {
-        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
         }
 
-        _projectState.CurrentProjectId = projectId;
+        this.projectState.CurrentProjectId = projectId;
         project.LastUsed = DateTime.UtcNow;
-        _logger.LogDebug("Current project set to {ProjectName}", project.Name);
-        Persist();
+        this.logger.LogDebug("Current project set to {ProjectName}", project.Name);
+        this.Persist();
     }
 
     /// <inheritdoc />
     public void ToggleFavorite(string projectId)
     {
-        var project = _projectState.Projects.FirstOrDefault(p => p.Id == projectId);
+        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == projectId);
         if (project == null)
         {
             return;
         }
 
         project.IsFavorite = !project.IsFavorite;
-        Persist();
+        this.Persist();
     }
 
     /// <summary>
     ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath"/>.
     /// </summary>
-    internal string? ResolveLogo(string projectPath) => _logoResolver.ResolvePath(projectPath, DefaultLogoPath);
+    internal string? ResolveLogo(string projectPath) => this.logoResolver.ResolvePath(projectPath, this.DefaultLogoPath);
 
     private void ClearStaleCurrentProject()
     {
-        if (_projectState.CurrentProjectId == null)
+        if (this.projectState.CurrentProjectId == null)
         {
             return;
         }
 
-        var matches = _projectState.Projects.Any(p => p.Id == _projectState.CurrentProjectId);
+        var matches = this.projectState.Projects.Any(p => p.Id == this.projectState.CurrentProjectId);
         if (!matches)
         {
-            _logger.LogDebug("Clearing stale current project id {ProjectId}", _projectState.CurrentProjectId);
-            _projectState.CurrentProjectId = null;
-            Persist();
+            this.logger.LogDebug("Clearing stale current project id {ProjectId}", this.projectState.CurrentProjectId);
+            this.projectState.CurrentProjectId = null;
+            this.Persist();
         }
     }
 
     private void Persist()
     {
-        _projectStateStore.Update(state => _projectState.CopyTo(state));
+        this.projectStateStore.Update(state => this.projectState.CopyTo(state));
         ProjectsChanged?.Invoke(this, EventArgs.Empty);
     }
 

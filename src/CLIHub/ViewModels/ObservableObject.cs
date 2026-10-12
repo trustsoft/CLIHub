@@ -34,7 +34,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
         }
 
         field = value;
-        OnPropertyChanged(propertyName);
+        this.OnPropertyChanged(propertyName);
         return true;
     }
 }

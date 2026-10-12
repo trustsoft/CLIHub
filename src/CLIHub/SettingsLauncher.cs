@@ -8,8 +8,8 @@ using CLIHub.Views;
 /// </summary>
 public sealed class SettingsLauncher : ISettingsLauncher
 {
-    private readonly Func<SettingsWindow> _factory;
-    private SettingsWindow? _window;
+    private readonly Func<SettingsWindow> factory;
+    private SettingsWindow? window;
 
     /// <summary>
     ///   Creates the launcher with the DI-provided window factory.
@@ -17,7 +17,7 @@ public sealed class SettingsLauncher : ISettingsLauncher
     /// <param name="factory"> Factory that creates the <see cref="SettingsWindow"/> on demand. </param>
     public SettingsLauncher(Func<SettingsWindow> factory)
     {
-        _factory = factory;
+        this.factory = factory;
     }
 
     /// <summary>
@@ -25,12 +25,12 @@ public sealed class SettingsLauncher : ISettingsLauncher
     /// </summary>
     public void ShowSettings()
     {
-        if (_window is null)
+        if (this.window is null)
         {
-            _window = _factory();
-            _window.Closed += (_, _) => _window = null;
+            this.window = this.factory();
+            this.window.Closed += (_, _) => this.window = null;
         }
 
-        _window.ShowSettings();
+        this.window.ShowSettings();
     }
 }

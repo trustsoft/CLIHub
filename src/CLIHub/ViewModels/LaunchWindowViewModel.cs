@@ -19,23 +19,23 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 {
     private const string NoProjectSelectedMessage = "Select a project first.";
 
-    private readonly ProjectPaneController _projectPane;
-    private readonly AgentPaneController _agentPane;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly LaunchWindowActionBuilder _actionBuilder;
-    private readonly IUserNotificationService _notifications;
-    private readonly MenuActionCoordinator _menuCoordinator;
-    private readonly StatusMessageCoordinator _statusCoordinator;
-    private readonly WindowActionCoordinator _windowActions;
+    private readonly ProjectPaneController projectPane;
+    private readonly AgentPaneController agentPane;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly LaunchWindowActionBuilder actionBuilder;
+    private readonly IUserNotificationService notifications;
+    private readonly MenuActionCoordinator menuCoordinator;
+    private readonly StatusMessageCoordinator statusCoordinator;
+    private readonly WindowActionCoordinator windowActions;
 
-    private Project? _selectedProject;
-    private AgentItem? _selectedAgent;
-    private bool _showOnlyProjectAgents;
-    private bool _isPinned;
-    private PathDisplayStyle _displayStyle = PathDisplayStyles.Default;
-    private bool _suppressSelectionChange;
-    private bool _suppressFilterChange;
-    private bool _disposed;
+    private Project? selectedProject;
+    private AgentItem? selectedAgent;
+    private bool showOnlyProjectAgents;
+    private bool isPinned;
+    private PathDisplayStyle displayStyle = PathDisplayStyles.Default;
+    private bool suppressSelectionChange;
+    private bool suppressFilterChange;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the view model with its services and loads projects and agents.
@@ -66,80 +66,80 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         StatusMessageCoordinator statusCoordinator,
         CLIHub.Core.Services.AgentProcessMonitor processMonitor)
     {
-        _projectPane = projectPane;
-        _agentPane = agentPane;
-        _preferencesStore = preferencesStore;
-        _actionBuilder = actionBuilder;
-        _notifications = notifications;
-        _statusCoordinator = statusCoordinator;
+        this.projectPane = projectPane;
+        this.agentPane = agentPane;
+        this.preferencesStore = preferencesStore;
+        this.actionBuilder = actionBuilder;
+        this.notifications = notifications;
+        this.statusCoordinator = statusCoordinator;
 
-        _statusCoordinator.PropertyChanged += OnStatusCoordinatorPropertyChanged;
+        this.statusCoordinator.PropertyChanged += this.OnStatusCoordinatorPropertyChanged;
 
-        UpdateControl = updateControl;
+        this.UpdateControl = updateControl;
 
-        _windowActions = new WindowActionCoordinator(
+        this.windowActions = new WindowActionCoordinator(
             launchCommandCoordinator,
             statusCoordinator,
             processMonitor,
             settingsLauncher,
             applicationLifetime,
             externalLauncher,
-            () => SelectedAgent,
-            () => _projectPane.CurrentProject,
-            RefreshAgents);
+            () => this.SelectedAgent,
+            () => this.projectPane.CurrentProject,
+            this.RefreshAgents);
 
-        AddProjectCommand = _projectPane.AddCommand;
-        RemoveProjectCommand = _projectPane.RemoveCommand;
-        ToggleFavoriteCommand = _projectPane.ToggleFavoriteCommand;
-        RefreshCommand = _projectPane.RefreshCommand;
+        this.AddProjectCommand = this.projectPane.AddCommand;
+        this.RemoveProjectCommand = this.projectPane.RemoveCommand;
+        this.ToggleFavoriteCommand = this.projectPane.ToggleFavoriteCommand;
+        this.RefreshCommand = this.projectPane.RefreshCommand;
 
-        var preferences = _preferencesStore.Load();
+        var preferences = this.preferencesStore.Load();
 
-        _menuCoordinator = new MenuActionCoordinator(
-            AddProjectCommand,
-            RemoveProjectCommand,
-            ToggleFavoriteCommand,
-            RefreshCommand,
-            _windowActions.LaunchCommand,
-            _windowActions.ResumeCommand,
-            _windowActions.UpdateCommand,
-            _windowActions.VersionCommand,
-            _actionBuilder,
+        this.menuCoordinator = new MenuActionCoordinator(
+            this.AddProjectCommand,
+            this.RemoveProjectCommand,
+            this.ToggleFavoriteCommand,
+            this.RefreshCommand,
+            this.windowActions.LaunchCommand,
+            this.windowActions.ResumeCommand,
+            this.windowActions.UpdateCommand,
+            this.windowActions.VersionCommand,
+            this.actionBuilder,
             preferences.ShowOnlyProjectAgents);
 
-        _projectPane.ProjectsChanged += OnProjectsChanged;
+        this.projectPane.ProjectsChanged += this.OnProjectsChanged;
 
-        RefreshProjects();
+        this.RefreshProjects();
 
-        _suppressFilterChange = true;
-        ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents;
-        _suppressFilterChange = false;
+        this.suppressFilterChange = true;
+        this.ShowOnlyProjectAgents = preferences.ShowOnlyProjectAgents;
+        this.suppressFilterChange = false;
 
-        _isPinned = preferences.PinLaunchWindow;
-        _displayStyle = PathDisplayStyles.Parse(preferences.PathDisplayStyle);
+        this.isPinned = preferences.PinLaunchWindow;
+        this.displayStyle = PathDisplayStyles.Parse(preferences.PathDisplayStyle);
 
-        RefreshAgents();
+        this.RefreshAgents();
     }
 
     /// <summary>
     ///   Registered projects shown in the Projects pane.
     /// </summary>
-    public ObservableCollection<Project> Projects => _projectPane.Projects;
+    public ObservableCollection<Project> Projects => this.projectPane.Projects;
 
     /// <summary>
     ///   Agents shown in the Agents pane.
     /// </summary>
-    public ObservableCollection<AgentItem> Agents => _agentPane.Agents;
+    public ObservableCollection<AgentItem> Agents => this.agentPane.Agents;
 
     /// <summary>
     ///   Entries of the Projects pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> ProjectsActions => _menuCoordinator.ProjectsActions;
+    public IReadOnlyList<MenuAction> ProjectsActions => this.menuCoordinator.ProjectsActions;
 
     /// <summary>
     ///   Entries of the Agents pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> AgentsActions => _menuCoordinator.AgentsActions;
+    public IReadOnlyList<MenuAction> AgentsActions => this.menuCoordinator.AgentsActions;
 
     /// <summary>
     ///   The shared update control: current version when idle, update and restart actions when
@@ -150,24 +150,24 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Window-level action commands: launch, settings, data folder, exit.
     /// </summary>
-    public WindowActionCoordinator WindowActions => _windowActions;
+    public WindowActionCoordinator WindowActions => this.windowActions;
 
     /// <summary>
     ///   The project that provides the launch context.
     /// </summary>
     public Project? SelectedProject
     {
-        get => _selectedProject;
+        get => this.selectedProject;
         set
         {
-            if (!SetProperty(ref _selectedProject, value) || _suppressSelectionChange || value is null)
+            if (!this.SetProperty(ref this.selectedProject, value) || this.suppressSelectionChange || value is null)
             {
                 return;
             }
 
-            _projectPane.Select(value);
-            _statusCoordinator.ReportProjectSelected(value.Name);
-            RefreshAgents();
+            this.projectPane.Select(value);
+            this.statusCoordinator.ReportProjectSelected(value.Name);
+            this.RefreshAgents();
         }
     }
 
@@ -176,16 +176,16 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public AgentItem? SelectedAgent
     {
-        get => _selectedAgent;
+        get => this.selectedAgent;
         set
         {
-            if (!SetProperty(ref _selectedAgent, value) || value is null)
+            if (!this.SetProperty(ref this.selectedAgent, value) || value is null)
             {
                 return;
             }
 
-            _agentPane.Select(value);
-            _statusCoordinator.ReportAgentSelected(value.Name);
+            this.agentPane.Select(value);
+            this.statusCoordinator.ReportAgentSelected(value.Name);
         }
     }
 
@@ -194,18 +194,18 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public bool ShowOnlyProjectAgents
     {
-        get => _showOnlyProjectAgents;
+        get => this.showOnlyProjectAgents;
         set
         {
-            if (!SetProperty(ref _showOnlyProjectAgents, value) || _suppressFilterChange)
+            if (!this.SetProperty(ref this.showOnlyProjectAgents, value) || this.suppressFilterChange)
             {
                 return;
             }
 
             PreferenceSyncHelper.SyncPreference(
-                _preferencesStore,
+                this.preferencesStore,
                 preferences => preferences.ShowOnlyProjectAgents = value,
-                RefreshAgents);
+                this.RefreshAgents);
         }
     }
 
@@ -215,18 +215,18 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public bool IsPinned
     {
-        get => _isPinned;
+        get => this.isPinned;
         set
         {
-            if (!SetProperty(ref _isPinned, value))
+            if (!this.SetProperty(ref this.isPinned, value))
             {
                 return;
             }
 
             PreferenceSyncHelper.SyncPreference(
-                _preferencesStore,
+                this.preferencesStore,
                 preferences => preferences.PinLaunchWindow = value,
-                () => _statusCoordinator.ReportWindowPinChanged(value));
+                () => this.statusCoordinator.ReportWindowPinChanged(value));
         }
     }
 
@@ -235,14 +235,14 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public PathDisplayStyle DisplayStyle
     {
-        get => _displayStyle;
-        private set => SetProperty(ref _displayStyle, value);
+        get => this.displayStyle;
+        private set => this.SetProperty(ref this.displayStyle, value);
     }
 
     /// <summary>
     ///   Transient status or error text shown in the footer.
     /// </summary>
-    public string StatusMessage => _statusCoordinator.CurrentMessage;
+    public string StatusMessage => this.statusCoordinator.CurrentMessage;
 
     /// <summary>
     ///   Adds a project folder via the folder picker.
@@ -267,72 +267,72 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Opens the CLIHub data folder in Explorer.
     /// </summary>
-    public RelayCommand OpenDataFolderCommand => _windowActions.OpenDataFolderCommand;
+    public RelayCommand OpenDataFolderCommand => this.windowActions.OpenDataFolderCommand;
 
     /// <summary>
     ///   Opens the Settings window.
     /// </summary>
-    public RelayCommand OpenSettingsCommand => _windowActions.OpenSettingsCommand;
+    public RelayCommand OpenSettingsCommand => this.windowActions.OpenSettingsCommand;
 
     /// <summary>
     ///   Exits the application.
     /// </summary>
-    public RelayCommand ExitCommand => _windowActions.ExitCommand;
+    public RelayCommand ExitCommand => this.windowActions.ExitCommand;
 
     /// <summary>
     ///   Launches the selected agent in the current project.
     /// </summary>
-    public RelayCommand LaunchCommand => _windowActions.LaunchCommand;
+    public RelayCommand LaunchCommand => this.windowActions.LaunchCommand;
 
     /// <summary>
     ///   Resumes the selected agent in the current project.
     /// </summary>
-    public RelayCommand ResumeCommand => _windowActions.ResumeCommand;
+    public RelayCommand ResumeCommand => this.windowActions.ResumeCommand;
 
     /// <summary>
     ///   Updates the selected agent.
     /// </summary>
-    public RelayCommand UpdateCommand => _windowActions.UpdateCommand;
+    public RelayCommand UpdateCommand => this.windowActions.UpdateCommand;
 
     /// <summary>
     ///   Reports the selected agent's version in the status line.
     /// </summary>
-    public RelayCommand VersionCommand => _windowActions.VersionCommand;
+    public RelayCommand VersionCommand => this.windowActions.VersionCommand;
 
     /// <summary>
     ///   Launches the agent of the activated row.
     /// </summary>
-    public RelayCommand<AgentItem> LaunchAgentCommand => _windowActions.LaunchAgentCommand;
+    public RelayCommand<AgentItem> LaunchAgentCommand => this.windowActions.LaunchAgentCommand;
 
     /// <summary>
     ///   Resumes the agent of the activated row.
     /// </summary>
-    public RelayCommand<AgentItem> ResumeAgentCommand => _windowActions.ResumeAgentCommand;
+    public RelayCommand<AgentItem> ResumeAgentCommand => this.windowActions.ResumeAgentCommand;
 
     /// <summary>
     ///   Applies a path display style changed in Settings to the running window.
     /// </summary>
-    public void ApplyPathDisplayStyle(PathDisplayStyle style) => DisplayStyle = style;
+    public void ApplyPathDisplayStyle(PathDisplayStyle style) => this.DisplayStyle = style;
 
     private void OnStatusCoordinatorPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(StatusMessageCoordinator.CurrentMessage))
         {
-            OnPropertyChanged(nameof(StatusMessage));
+            this.OnPropertyChanged(nameof(this.StatusMessage));
         }
     }
 
     private void RefreshProjects()
     {
-        _suppressSelectionChange = true;
+        this.suppressSelectionChange = true;
 
         try
         {
-            SetProperty(ref _selectedProject, _projectPane.Refresh());
+            this.SetProperty(ref this.selectedProject, this.projectPane.Refresh());
         }
         finally
         {
-            _suppressSelectionChange = false;
+            this.suppressSelectionChange = false;
         }
     }
 
@@ -342,51 +342,51 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public void ApplyDefaultAgentSelection()
     {
-        var defaultAgentId = _preferencesStore.Load().DefaultAgentId;
+        var defaultAgentId = this.preferencesStore.Load().DefaultAgentId;
         if (string.IsNullOrWhiteSpace(defaultAgentId))
         {
             return;
         }
 
-        var match = Agents.FirstOrDefault(agent => agent.Plugin.Id == defaultAgentId);
+        var match = this.Agents.FirstOrDefault(agent => agent.Plugin.Id == defaultAgentId);
         if (match is not null)
         {
-            SelectedAgent = match;
+            this.SelectedAgent = match;
         }
     }
 
     private void RefreshAgents()
     {
-        var hasAgents = _agentPane.Refresh(_projectPane.CurrentProject?.Path, ShowOnlyProjectAgents);
-        SetProperty(ref _selectedAgent, _agentPane.SelectedAgent);
+        var hasAgents = this.agentPane.Refresh(this.projectPane.CurrentProject?.Path, this.ShowOnlyProjectAgents);
+        this.SetProperty(ref this.selectedAgent, this.agentPane.SelectedAgent);
 
         if (!hasAgents)
         {
-            _statusCoordinator.ReportNoAgentsFound();
+            this.statusCoordinator.ReportNoAgentsFound();
         }
     }
 
     private void ShowWarning(string message) =>
-        _notifications.ShowWarning(message);
+        this.notifications.ShowWarning(message);
 
     /// <summary>
     ///   Removes subscriptions owned by the launch-window composition model.
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projectPane.ProjectsChanged -= OnProjectsChanged;
-        _statusCoordinator.PropertyChanged -= OnStatusCoordinatorPropertyChanged;
+        this.disposed = true;
+        this.projectPane.ProjectsChanged -= this.OnProjectsChanged;
+        this.statusCoordinator.PropertyChanged -= this.OnStatusCoordinatorPropertyChanged;
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
-        RefreshProjects();
-        RefreshAgents();
+        this.RefreshProjects();
+        this.RefreshAgents();
     }
 }

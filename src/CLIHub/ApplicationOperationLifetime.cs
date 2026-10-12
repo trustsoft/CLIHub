@@ -12,13 +12,13 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     /// </summary>
     public static readonly TimeSpan DefaultShutdownTimeout = TimeSpan.FromSeconds(2);
 
-    private readonly CancellationTokenSource _cancellation = new();
-    private readonly ILogger<ApplicationOperationLifetime> _logger;
-    private readonly object _sync = new();
-    private readonly HashSet<Task> _operations = [];
-    private Task? _stopTask;
-    private bool _stopped;
-    private bool _disposed;
+    private readonly CancellationTokenSource cancellation = new();
+    private readonly ILogger<ApplicationOperationLifetime> logger;
+    private readonly object sync = new();
+    private readonly HashSet<Task> operations = [];
+    private Task? stopTask;
+    private bool stopped;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the application operation lifetime.
@@ -26,11 +26,11 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     /// <param name="logger"> Logger for operation failures, cancellation, and timeouts. </param>
     public ApplicationOperationLifetime(ILogger<ApplicationOperationLifetime> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
-    public CancellationToken Token => _cancellation.Token;
+    public CancellationToken Token => this.cancellation.Token;
 
     /// <inheritdoc />
     public Task RunAsync(string operationName, Func<CancellationToken, Task> operation)
@@ -38,16 +38,16 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
         ArgumentException.ThrowIfNullOrWhiteSpace(operationName);
         ArgumentNullException.ThrowIfNull(operation);
 
-        lock (_sync)
+        lock (this.sync)
         {
-            if (_stopped || _disposed)
+            if (this.stopped || this.disposed)
             {
                 return Task.CompletedTask;
             }
 
-            var task = RunObservedAsync(operationName, operation);
-            _operations.Add(task);
-            _ = RemoveCompletedAsync(task);
+            var task = this.RunObservedAsync(operationName, operation);
+            this.operations.Add(task);
+            _ = this.RemoveCompletedAsync(task);
             return task;
         }
     }
@@ -57,34 +57,34 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(timeout, TimeSpan.Zero);
 
-        lock (_sync)
+        lock (this.sync)
         {
-            if (_stopTask is not null)
+            if (this.stopTask is not null)
             {
-                return _stopTask;
+                return this.stopTask;
             }
 
-            _stopped = true;
-            _cancellation.Cancel();
-            _stopTask = StopCoreAsync(timeout, _operations.ToArray());
-            return _stopTask;
+            this.stopped = true;
+            this.cancellation.Cancel();
+            this.stopTask = this.StopCoreAsync(timeout, this.operations.ToArray());
+            return this.stopTask;
         }
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        lock (_sync)
+        lock (this.sync)
         {
-            if (_disposed)
+            if (this.disposed)
             {
                 return;
             }
 
-            _disposed = true;
-            _stopped = true;
-            _cancellation.Cancel();
-            _cancellation.Dispose();
+            this.disposed = true;
+            this.stopped = true;
+            this.cancellation.Cancel();
+            this.cancellation.Dispose();
         }
     }
 
@@ -94,15 +94,15 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     {
         try
         {
-            await operation(_cancellation.Token);
+            await operation(this.cancellation.Token);
         }
-        catch (OperationCanceledException) when (_cancellation.IsCancellationRequested)
+        catch (OperationCanceledException) when (this.cancellation.IsCancellationRequested)
         {
-            _logger.LogInformation("Application operation cancelled: {OperationName}", operationName);
+            this.logger.LogInformation("Application operation cancelled: {OperationName}", operationName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Application operation failed: {OperationName}", operationName);
+            this.logger.LogError(ex, "Application operation failed: {OperationName}", operationName);
         }
     }
 
@@ -110,9 +110,9 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     {
         await operation;
 
-        lock (_sync)
+        lock (this.sync)
         {
-            _operations.Remove(operation);
+            this.operations.Remove(operation);
         }
     }
 
@@ -129,7 +129,7 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
         }
         catch (TimeoutException)
         {
-            _logger.LogWarning(
+            this.logger.LogWarning(
                 "Application shutdown timed out while waiting for {OperationCount} operation(s)",
                 operations.Count);
         }

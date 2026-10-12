@@ -11,15 +11,15 @@ using CLIHub.Core.Services;
 /// </summary>
 public sealed class WindowActionCoordinator
 {
-    private readonly LaunchCommandCoordinator _launchCoordinator;
-    private readonly StatusMessageCoordinator _statusCoordinator;
-    private readonly AgentProcessMonitor _processMonitor;
-    private readonly ISettingsLauncher _settingsLauncher;
-    private readonly IApplicationLifetime _applicationLifetime;
-    private readonly IExternalLauncher _externalLauncher;
-    private readonly Func<AgentItem?> _getSelectedAgent;
-    private readonly Func<Project?> _getCurrentProject;
-    private readonly Action _refreshAgents;
+    private readonly LaunchCommandCoordinator launchCoordinator;
+    private readonly StatusMessageCoordinator statusCoordinator;
+    private readonly AgentProcessMonitor processMonitor;
+    private readonly ISettingsLauncher settingsLauncher;
+    private readonly IApplicationLifetime applicationLifetime;
+    private readonly IExternalLauncher externalLauncher;
+    private readonly Func<AgentItem?> getSelectedAgent;
+    private readonly Func<Project?> getCurrentProject;
+    private readonly Action refreshAgents;
 
     /// <summary>
     ///   Creates the window action coordinator with its dependencies and state providers.
@@ -44,38 +44,38 @@ public sealed class WindowActionCoordinator
         Func<Project?> getCurrentProject,
         Action refreshAgents)
     {
-        _launchCoordinator = launchCoordinator ?? throw new ArgumentNullException(nameof(launchCoordinator));
-        _statusCoordinator = statusCoordinator ?? throw new ArgumentNullException(nameof(statusCoordinator));
-        _processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
-        _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
-        _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
-        _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
-        _getSelectedAgent = getSelectedAgent ?? throw new ArgumentNullException(nameof(getSelectedAgent));
-        _getCurrentProject = getCurrentProject ?? throw new ArgumentNullException(nameof(getCurrentProject));
-        _refreshAgents = refreshAgents ?? throw new ArgumentNullException(nameof(refreshAgents));
+        this.launchCoordinator = launchCoordinator ?? throw new ArgumentNullException(nameof(launchCoordinator));
+        this.statusCoordinator = statusCoordinator ?? throw new ArgumentNullException(nameof(statusCoordinator));
+        this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
+        this.settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
+        this.applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+        this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
+        this.getSelectedAgent = getSelectedAgent ?? throw new ArgumentNullException(nameof(getSelectedAgent));
+        this.getCurrentProject = getCurrentProject ?? throw new ArgumentNullException(nameof(getCurrentProject));
+        this.refreshAgents = refreshAgents ?? throw new ArgumentNullException(nameof(refreshAgents));
 
-        OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
-        OpenSettingsCommand = new RelayCommand(() => _settingsLauncher.ShowSettings());
-        ExitCommand = new RelayCommand(_applicationLifetime.Shutdown);
+        this.OpenDataFolderCommand = new RelayCommand(this.OpenDataFolder);
+        this.OpenSettingsCommand = new RelayCommand(() => this.settingsLauncher.ShowSettings());
+        this.ExitCommand = new RelayCommand(this.applicationLifetime.Shutdown);
 
-        LaunchCommand = new RelayCommand(
-            () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Launch),
-            HasSelectedAgent);
-        ResumeCommand = new RelayCommand(
-            () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Resume),
-            () => _getSelectedAgent()?.CanResume ?? false);
-        UpdateCommand = new RelayCommand(
-            ExecuteUpdate,
-            CanExecuteUpdate);
-        VersionCommand = new RelayCommand(
-            () => _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Version),
-            () => _getSelectedAgent()?.CanShowVersion ?? false);
+        this.LaunchCommand = new RelayCommand(
+            () => _ = this.RunAgentCommandAsync(this.getSelectedAgent(), AgentCommandKind.Launch),
+            this.HasSelectedAgent);
+        this.ResumeCommand = new RelayCommand(
+            () => _ = this.RunAgentCommandAsync(this.getSelectedAgent(), AgentCommandKind.Resume),
+            () => this.getSelectedAgent()?.CanResume ?? false);
+        this.UpdateCommand = new RelayCommand(
+            this.ExecuteUpdate,
+            this.CanExecuteUpdate);
+        this.VersionCommand = new RelayCommand(
+            () => _ = this.RunAgentCommandAsync(this.getSelectedAgent(), AgentCommandKind.Version),
+            () => this.getSelectedAgent()?.CanShowVersion ?? false);
 
-        LaunchAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Launch),
+        this.LaunchAgentCommand = new RelayCommand<AgentItem>(
+            item => _ = this.RunAgentCommandAsync(item, AgentCommandKind.Launch),
             item => item.CanLaunch);
-        ResumeAgentCommand = new RelayCommand<AgentItem>(
-            item => _ = RunAgentCommandAsync(item, AgentCommandKind.Resume),
+        this.ResumeAgentCommand = new RelayCommand<AgentItem>(
+            item => _ = this.RunAgentCommandAsync(item, AgentCommandKind.Resume),
             item => item.CanResume);
     }
 
@@ -130,27 +130,27 @@ public sealed class WindowActionCoordinator
 
         try
         {
-            _externalLauncher.Open(root);
-            _statusCoordinator.ReportFolderOpen(root);
+            this.externalLauncher.Open(root);
+            this.statusCoordinator.ReportFolderOpen(root);
         }
         catch (Exception ex)
         {
-            _statusCoordinator.ReportFolderOpen(root, ex);
+            this.statusCoordinator.ReportFolderOpen(root, ex);
         }
     }
 
-    private bool HasSelectedAgent() => _getSelectedAgent() is not null;
+    private bool HasSelectedAgent() => this.getSelectedAgent() is not null;
 
     private bool CanExecuteUpdate()
     {
-        var agent = _getSelectedAgent();
+        var agent = this.getSelectedAgent();
         if (agent is null || !agent.CanUpdate)
         {
             return false;
         }
 
         // Block update if any agents are currently running
-        if (_processMonitor.HasRunningAgents())
+        if (this.processMonitor.HasRunningAgents())
         {
             return false;
         }
@@ -162,22 +162,22 @@ public sealed class WindowActionCoordinator
     {
         // Double-check for running agents at execution time
         // (processes might have started between CanExecute check and execution)
-        var runningAgents = _processMonitor.GetRunningAgents();
+        var runningAgents = this.processMonitor.GetRunningAgents();
         if (runningAgents.Count > 0)
         {
             var agentNames = runningAgents.Select(a => a.Plugin.Name).ToList();
-            _statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
+            this.statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
             return;
         }
 
-        _ = RunAgentCommandAsync(_getSelectedAgent(), AgentCommandKind.Update);
+        _ = this.RunAgentCommandAsync(this.getSelectedAgent(), AgentCommandKind.Update);
     }
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
-        _launchCoordinator.RunAsync(
+        this.launchCoordinator.RunAsync(
             item,
-            _getCurrentProject(),
+            this.getCurrentProject(),
             kind,
-            _statusCoordinator.ReportCommandOutcome,
-            _refreshAgents);
+            this.statusCoordinator.ReportCommandOutcome,
+            this.refreshAgents);
 }

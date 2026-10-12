@@ -19,7 +19,8 @@ spec; do not load the whole documentation tree.
 - Nullable reference types, implicit usings, file-scoped namespaces, and braces are required.
 - Under a file-scoped namespace, place `using` directives after the namespace declaration and keep the configured
   ordering from `.editorconfig`.
-- Use PascalCase for public members, `_camelCase` for private fields, and the test naming pattern
+- Use PascalCase for public members and `camelCase` (no underscore prefix) for private fields, qualify
+  instance member access with `this.`, and use the test naming pattern
   `MethodOrScenario_Condition_ExpectedResult`.
 - Public APIs need XML documentation. Use `async Task`/`ValueTask`; avoid `async void`.
 - Keep WPF code-behind thin; put state, commands, and workflows in ViewModels or their existing collaborators.

@@ -25,8 +25,8 @@ public sealed class SectionHeader : ContentControl
     /// </summary>
     public string Text
     {
-        get => (string)GetValue(TextProperty);
-        set => SetValue(TextProperty, value);
+        get => (string)this.GetValue(TextProperty);
+        set => this.SetValue(TextProperty, value);
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ public sealed class SectionHeader : ContentControl
     /// </summary>
     public bool ShowMarker
     {
-        get => (bool)GetValue(ShowMarkerProperty);
-        set => SetValue(ShowMarkerProperty, value);
+        get => (bool)this.GetValue(ShowMarkerProperty);
+        set => this.SetValue(ShowMarkerProperty, value);
     }
 }

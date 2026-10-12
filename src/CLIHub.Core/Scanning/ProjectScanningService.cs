@@ -16,24 +16,24 @@ public sealed class ProjectScanningService : IProjectScanner
 {
     private static readonly TimeSpan DebounceDelay = TimeSpan.FromMilliseconds(750);
 
-    private readonly IPreferencesStore _preferences;
-    private readonly IProjectService _projects;
-    private readonly IPluginCatalog _plugins;
-    private readonly IRepositoryWatcherFactory _watcherFactory;
-    private readonly IScanTimerFactory _timerFactory;
-    private readonly ILogger<ProjectScanningService> _logger;
-    private readonly TimeProvider _time;
+    private readonly IPreferencesStore preferences;
+    private readonly IProjectService projects;
+    private readonly IPluginCatalog plugins;
+    private readonly IRepositoryWatcherFactory watcherFactory;
+    private readonly IScanTimerFactory timerFactory;
+    private readonly ILogger<ProjectScanningService> logger;
+    private readonly TimeProvider time;
 
-    private readonly object _gate = new();
-    private readonly SemaphoreSlim _scanGate = new(1, 1);
+    private readonly object gate = new();
+    private readonly SemaphoreSlim scanGate = new(1, 1);
 
-    private SynchronizationContext? _context;
-    private IRepositoryWatcher? _watcher;
-    private IScanTimer? _timer;
-    private bool _started;
-    private bool _disposed;
-    private int _scanPending;
-    private ProjectScanStatus _status = ProjectScanStatus.NotConfigured;
+    private SynchronizationContext? context;
+    private IRepositoryWatcher? watcher;
+    private IScanTimer? timer;
+    private bool started;
+    private bool disposed;
+    private int scanPending;
+    private ProjectScanStatus status = ProjectScanStatus.NotConfigured;
 
     /// <summary>
     ///   Creates the scanner.
@@ -56,51 +56,51 @@ public sealed class ProjectScanningService : IProjectScanner
         TimeProvider? timeProvider = null,
         SynchronizationContext? synchronizationContext = null)
     {
-        _preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
-        _projects = projects ?? throw new ArgumentNullException(nameof(projects));
-        _plugins = plugins ?? throw new ArgumentNullException(nameof(plugins));
-        _watcherFactory = watcherFactory ?? throw new ArgumentNullException(nameof(watcherFactory));
-        _timerFactory = timerFactory ?? throw new ArgumentNullException(nameof(timerFactory));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _time = timeProvider ?? TimeProvider.System;
-        _context = synchronizationContext;
+        this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+        this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
+        this.plugins = plugins ?? throw new ArgumentNullException(nameof(plugins));
+        this.watcherFactory = watcherFactory ?? throw new ArgumentNullException(nameof(watcherFactory));
+        this.timerFactory = timerFactory ?? throw new ArgumentNullException(nameof(timerFactory));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.time = timeProvider ?? TimeProvider.System;
+        this.context = synchronizationContext;
     }
 
     /// <inheritdoc />
     public event EventHandler<ProjectScanStatus>? StatusChanged;
 
     /// <inheritdoc />
-    public ProjectScanStatus Status => _status;
+    public ProjectScanStatus Status => this.status;
 
     /// <inheritdoc />
     public void Start()
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_disposed || _started)
+            if (this.disposed || this.started)
             {
                 return;
             }
 
-            _started = true;
-            _context ??= SynchronizationContext.Current;
+            this.started = true;
+            this.context ??= SynchronizationContext.Current;
         }
 
-        Configure();
+        this.Configure();
     }
 
     /// <inheritdoc />
     public void Reload()
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_disposed || !_started)
+            if (this.disposed || !this.started)
             {
                 return;
             }
         }
 
-        Configure();
+        this.Configure();
     }
 
     /// <inheritdoc />
@@ -109,16 +109,16 @@ public sealed class ProjectScanningService : IProjectScanner
         IRepositoryWatcher? watcher;
         IScanTimer? timer;
 
-        lock (_gate)
+        lock (this.gate)
         {
-            watcher = _watcher;
-            timer = _timer;
-            _watcher = null;
-            _timer = null;
+            watcher = this.watcher;
+            timer = this.timer;
+            this.watcher = null;
+            this.timer = null;
         }
 
-        Detach(watcher, timer);
-        Publish(_status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
+        this.Detach(watcher, timer);
+        this.Publish(this.status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
     }
 
     /// <inheritdoc />
@@ -127,127 +127,127 @@ public sealed class ProjectScanningService : IProjectScanner
         IRepositoryWatcher? watcher;
         IScanTimer? timer;
 
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_disposed)
+            if (this.disposed)
             {
                 return;
             }
 
-            _disposed = true;
-            _started = false;
-            watcher = _watcher;
-            timer = _timer;
-            _watcher = null;
-            _timer = null;
+            this.disposed = true;
+            this.started = false;
+            watcher = this.watcher;
+            timer = this.timer;
+            this.watcher = null;
+            this.timer = null;
         }
 
-        Detach(watcher, timer);
-        _scanGate.Dispose();
+        this.Detach(watcher, timer);
+        this.scanGate.Dispose();
     }
 
     private void Configure()
     {
-        var options = ProjectScanningOptions.From(_preferences.Load());
+        var options = ProjectScanningOptions.From(this.preferences.Load());
 
         IRepositoryWatcher? oldWatcher;
         IScanTimer? oldTimer;
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_disposed)
+            if (this.disposed)
             {
                 return;
             }
 
-            oldWatcher = _watcher;
-            oldTimer = _timer;
-            _watcher = null;
-            _timer = null;
+            oldWatcher = this.watcher;
+            oldTimer = this.timer;
+            this.watcher = null;
+            this.timer = null;
         }
 
-        Detach(oldWatcher, oldTimer);
+        this.Detach(oldWatcher, oldTimer);
 
         if (options.WatchedDirectories.Count == 0)
         {
-            Publish(_status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
+            this.Publish(this.status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
 
             // Still reconcile so discovered projects under removed roots are cleaned up.
-            RequestScan();
+            this.RequestScan();
             return;
         }
 
-        var timer = _timerFactory.Create();
-        timer.Elapsed += OnDebounceElapsed;
-        var watcher = _watcherFactory.Create(options.WatchedDirectories);
-        watcher.Changed += OnWatcherChanged;
-        watcher.Overflow += OnWatcherOverflow;
+        var timer = this.timerFactory.Create();
+        timer.Elapsed += this.OnDebounceElapsed;
+        var watcher = this.watcherFactory.Create(options.WatchedDirectories);
+        watcher.Changed += this.OnWatcherChanged;
+        watcher.Overflow += this.OnWatcherOverflow;
         watcher.Start();
 
-        lock (_gate)
+        lock (this.gate)
         {
-            if (_disposed)
+            if (this.disposed)
             {
-                Detach(watcher, timer);
+                this.Detach(watcher, timer);
                 return;
             }
 
-            _timer = timer;
-            _watcher = watcher;
+            this.timer = timer;
+            this.watcher = watcher;
         }
 
-        Publish(_status with { State = ProjectScanState.Idle, IsWatching = true, IsScanning = false });
-        RequestScan();
+        this.Publish(this.status with { State = ProjectScanState.Idle, IsWatching = true, IsScanning = false });
+        this.RequestScan();
     }
 
     private void Detach(IRepositoryWatcher? watcher, IScanTimer? timer)
     {
         if (watcher is not null)
         {
-            watcher.Changed -= OnWatcherChanged;
-            watcher.Overflow -= OnWatcherOverflow;
+            watcher.Changed -= this.OnWatcherChanged;
+            watcher.Overflow -= this.OnWatcherOverflow;
             watcher.Dispose();
         }
 
         if (timer is not null)
         {
-            timer.Elapsed -= OnDebounceElapsed;
+            timer.Elapsed -= this.OnDebounceElapsed;
             timer.Dispose();
         }
     }
 
     private void OnWatcherChanged(object? sender, EventArgs e)
     {
-        lock (_gate)
+        lock (this.gate)
         {
-            _timer?.Arm(DebounceDelay);
+            this.timer?.Arm(DebounceDelay);
         }
     }
 
-    private void OnDebounceElapsed(object? sender, EventArgs e) => RequestScan();
+    private void OnDebounceElapsed(object? sender, EventArgs e) => this.RequestScan();
 
     private void OnWatcherOverflow(object? sender, EventArgs e)
     {
-        _logger.LogWarning("Repository watcher buffer overflow; performing a full rescan");
-        Configure();
+        this.logger.LogWarning("Repository watcher buffer overflow; performing a full rescan");
+        this.Configure();
     }
 
     private void RequestScan()
     {
-        if (Interlocked.Exchange(ref _scanPending, 1) == 1)
+        if (Interlocked.Exchange(ref this.scanPending, 1) == 1)
         {
             return;
         }
 
-        _ = ScanLoopAsync();
+        _ = this.ScanLoopAsync();
     }
 
     private async Task ScanLoopAsync()
     {
-        while (Interlocked.Exchange(ref _scanPending, 0) == 1)
+        while (Interlocked.Exchange(ref this.scanPending, 0) == 1)
         {
             try
             {
-                await _scanGate.WaitAsync().ConfigureAwait(false);
+                await this.scanGate.WaitAsync().ConfigureAwait(false);
             }
             catch (ObjectDisposedException)
             {
@@ -256,27 +256,27 @@ public sealed class ProjectScanningService : IProjectScanner
 
             try
             {
-                await RunScanAsync().ConfigureAwait(false);
+                await this.RunScanAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Project scan failed");
-                Publish(_status with { State = ProjectScanState.Error, IsScanning = false, Error = ex.Message });
+                this.logger.LogError(ex, "Project scan failed");
+                this.Publish(this.status with { State = ProjectScanState.Error, IsScanning = false, Error = ex.Message });
             }
             finally
             {
-                _scanGate.Release();
+                this.scanGate.Release();
             }
         }
     }
 
     private async Task RunScanAsync()
     {
-        var options = ProjectScanningOptions.From(_preferences.Load());
-        var plugins = _plugins.GetAllPlugins();
+        var options = ProjectScanningOptions.From(this.preferences.Load());
+        var plugins = this.plugins.GetAllPlugins();
         var configured = options.WatchedDirectories.Count > 0;
 
-        Publish(_status with
+        this.Publish(this.status with
         {
             State = configured ? ProjectScanState.Scanning : ProjectScanState.NotConfigured,
             IsWatching = configured,
@@ -287,19 +287,19 @@ public sealed class ProjectScanningService : IProjectScanner
         var result = await Task.Run(() => RepositoryDiscovery.Enumerate(
             options,
             plugins,
-            (root, ex) => _logger.LogWarning(ex, "Could not scan watched directory {Root}", root))).ConfigureAwait(false);
+            (root, ex) => this.logger.LogWarning(ex, "Could not scan watched directory {Root}", root))).ConfigureAwait(false);
 
-        Post(() =>
+        this.Post(() =>
         {
-            var removed = ComputeRemovals(result.DiscoveredPaths, options.WatchedDirectories, result.ScannedRoots);
-            _projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
+            var removed = this.ComputeRemovals(result.DiscoveredPaths, options.WatchedDirectories, result.ScannedRoots);
+            this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
 
-            Publish(_status with
+            this.Publish(this.status with
             {
                 State = configured ? ProjectScanState.Idle : ProjectScanState.NotConfigured,
                 IsWatching = configured,
                 IsScanning = false,
-                LastScanUtc = _time.GetUtcNow(),
+                LastScanUtc = this.time.GetUtcNow(),
                 DiscoveredCount = result.DiscoveredPaths.Count,
                 Error = null
             });
@@ -311,7 +311,7 @@ public sealed class ProjectScanningService : IProjectScanner
         IReadOnlyList<string> watchedRoots,
         IReadOnlyList<string> scannedRoots)
     {
-        var existing = _projects.GetAllProjects();
+        var existing = this.projects.GetAllProjects();
         var discovered = new HashSet<string>(discoveredPaths.Select(ProjectPathPolicy.Normalize), StringComparer.OrdinalIgnoreCase);
         var roots = watchedRoots
             .Where(root => !string.IsNullOrWhiteSpace(root))
@@ -345,15 +345,15 @@ public sealed class ProjectScanningService : IProjectScanner
         return removals;
     }
 
-    private void Publish(ProjectScanStatus status) => Post(() =>
+    private void Publish(ProjectScanStatus status) => this.Post(() =>
     {
-        _status = status;
+        this.status = status;
         StatusChanged?.Invoke(this, status);
     });
 
     private void Post(Action action)
     {
-        var context = _context;
+        var context = this.context;
 
         if (context is null || context == SynchronizationContext.Current)
         {

@@ -14,7 +14,7 @@ public partial class SettingsHotkeysPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsHotkeysPage() => InitializeComponent();
+    public SettingsHotkeysPage() => this.InitializeComponent();
 
     /// <summary>
     ///   A Border does not take keyboard focus on click the way a Control does, so the click
@@ -22,7 +22,7 @@ public partial class SettingsHotkeysPage : UserControl
     /// </summary>
     private void HotkeyField_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        HotkeyField.Focus();
+        this.HotkeyField.Focus();
         e.Handled = true;
     }
 
@@ -30,7 +30,7 @@ public partial class SettingsHotkeysPage : UserControl
     {
         e.Handled = true;
 
-        if (DataContext is not SettingsViewModel viewModel)
+        if (this.DataContext is not SettingsViewModel viewModel)
         {
             return;
         }

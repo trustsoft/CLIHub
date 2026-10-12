@@ -10,5 +10,5 @@ public partial class SettingsLogsPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsLogsPage() => InitializeComponent();
+    public SettingsLogsPage() => this.InitializeComponent();
 }

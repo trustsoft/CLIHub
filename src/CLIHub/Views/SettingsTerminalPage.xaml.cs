@@ -10,5 +10,5 @@ public partial class SettingsTerminalPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsTerminalPage() => InitializeComponent();
+    public SettingsTerminalPage() => this.InitializeComponent();
 }

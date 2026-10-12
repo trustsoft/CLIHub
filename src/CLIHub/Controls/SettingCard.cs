@@ -87,8 +87,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public string Title
     {
-        get => (string)GetValue(TitleProperty);
-        set => SetValue(TitleProperty, value);
+        get => (string)this.GetValue(TitleProperty);
+        set => this.SetValue(TitleProperty, value);
     }
 
     /// <summary>
@@ -96,8 +96,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public string Hint
     {
-        get => (string)GetValue(HintProperty);
-        set => SetValue(HintProperty, value);
+        get => (string)this.GetValue(HintProperty);
+        set => this.SetValue(HintProperty, value);
     }
 
     /// <summary>
@@ -105,8 +105,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public string Icon
     {
-        get => (string)GetValue(IconProperty);
-        set => SetValue(IconProperty, value);
+        get => (string)this.GetValue(IconProperty);
+        set => this.SetValue(IconProperty, value);
     }
 
     /// <summary>
@@ -114,8 +114,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public string Badge
     {
-        get => (string)GetValue(BadgeProperty);
-        set => SetValue(BadgeProperty, value);
+        get => (string)this.GetValue(BadgeProperty);
+        set => this.SetValue(BadgeProperty, value);
     }
 
     /// <summary>
@@ -123,8 +123,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public SettingBadgeTone BadgeTone
     {
-        get => (SettingBadgeTone)GetValue(BadgeToneProperty);
-        set => SetValue(BadgeToneProperty, value);
+        get => (SettingBadgeTone)this.GetValue(BadgeToneProperty);
+        set => this.SetValue(BadgeToneProperty, value);
     }
 
     /// <summary>
@@ -132,8 +132,8 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public SettingCardPlacement Placement
     {
-        get => (SettingCardPlacement)GetValue(PlacementProperty);
-        set => SetValue(PlacementProperty, value);
+        get => (SettingCardPlacement)this.GetValue(PlacementProperty);
+        set => this.SetValue(PlacementProperty, value);
     }
 
     /// <summary>
@@ -141,7 +141,7 @@ public sealed class SettingCard : ContentControl
     /// </summary>
     public bool Grouped
     {
-        get => (bool)GetValue(GroupedProperty);
-        set => SetValue(GroupedProperty, value);
+        get => (bool)this.GetValue(GroupedProperty);
+        set => this.SetValue(GroupedProperty, value);
     }
 }

@@ -13,18 +13,18 @@ public sealed class StartupService : IStartupService
     /// </summary>
     public const string ValueName = "CLIHub";
 
-    private readonly IStartupRegistry _registry;
-    private readonly ILogger<StartupService> _logger;
-    private readonly Func<string?> _executablePathProvider;
+    private readonly IStartupRegistry registry;
+    private readonly ILogger<StartupService> logger;
+    private readonly Func<string?> executablePathProvider;
 
     internal StartupService(
         IStartupRegistry registry,
         ILogger<StartupService> logger,
         Func<string?>? executablePathProvider = null)
     {
-        _registry = registry;
-        _logger = logger;
-        _executablePathProvider = executablePathProvider ?? DefaultExecutablePath;
+        this.registry = registry;
+        this.logger = logger;
+        this.executablePathProvider = executablePathProvider ?? DefaultExecutablePath;
     }
 
     /// <inheritdoc />
@@ -32,11 +32,11 @@ public sealed class StartupService : IStartupService
     {
         try
         {
-            return !string.IsNullOrWhiteSpace(_registry.GetValue(ValueName));
+            return !string.IsNullOrWhiteSpace(this.registry.GetValue(ValueName));
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not read the startup registration");
+            this.logger.LogWarning(ex, "Could not read the startup registration");
             return false;
         }
     }
@@ -48,27 +48,27 @@ public sealed class StartupService : IStartupService
         {
             if (enabled)
             {
-                var path = _executablePathProvider();
+                var path = this.executablePathProvider();
                 if (string.IsNullOrWhiteSpace(path))
                 {
-                    _logger.LogWarning("Cannot enable startup: the executable path is unknown");
+                    this.logger.LogWarning("Cannot enable startup: the executable path is unknown");
                     return false;
                 }
 
-                _registry.SetValue(ValueName, Quote(path));
-                _logger.LogInformation("Startup registration set to {Path}", path);
+                this.registry.SetValue(ValueName, Quote(path));
+                this.logger.LogInformation("Startup registration set to {Path}", path);
             }
             else
             {
-                _registry.DeleteValue(ValueName);
-                _logger.LogInformation("Startup registration removed");
+                this.registry.DeleteValue(ValueName);
+                this.logger.LogInformation("Startup registration removed");
             }
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not update the startup registration");
+            this.logger.LogWarning(ex, "Could not update the startup registration");
             return false;
         }
     }

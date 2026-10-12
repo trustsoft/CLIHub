@@ -132,7 +132,7 @@ public class StatusMessageCoordinatorTests
     {
         var coordinator = CreateCoordinator();
         var updateControl = coordinator.GetType()
-            .GetField("_updateControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            .GetField("updateControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             ?.GetValue(coordinator) as UpdateControlViewModel;
 
         Assert.NotNull(updateControl);
@@ -174,7 +174,7 @@ public class StatusMessageCoordinatorTests
     {
         var coordinator = CreateCoordinator();
         var updateControl = coordinator.GetType()
-            .GetField("_updateControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            .GetField("updateControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
             ?.GetValue(coordinator) as UpdateControlViewModel;
 
         Assert.NotNull(updateControl);

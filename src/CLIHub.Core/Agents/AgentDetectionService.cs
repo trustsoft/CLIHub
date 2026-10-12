@@ -13,40 +13,40 @@ public class AgentDetectionService : IAgentDetectionService
 {
     internal static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
 
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly TimeProvider _timeProvider;
-    private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
+    private readonly IPreferencesStore preferencesStore;
+    private readonly TimeProvider timeProvider;
+    private readonly ConcurrentDictionary<string, CacheEntry> cache = new();
 
     /// <summary>
     ///   Creates the service with an optional time source for tests.
     /// </summary>
     public AgentDetectionService(IPreferencesStore preferencesStore, TimeProvider? timeProvider = null)
     {
-        _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _timeProvider = timeProvider ?? TimeProvider.System;
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <inheritdoc />
     public bool IsInstalledInSystem(Plugin plugin) =>
-        GetOrCheck($"sys:{plugin.Id}", () => CheckSystem(plugin));
+        this.GetOrCheck($"sys:{plugin.Id}", () => CheckSystem(plugin));
 
     /// <inheritdoc />
     public bool IsAvailableInProject(Plugin plugin, string projectPath) =>
-        GetOrCheck($"proj:{plugin.Id}:{projectPath}", () => CheckProject(plugin, projectPath));
+        this.GetOrCheck($"proj:{plugin.Id}:{projectPath}", () => CheckProject(plugin, projectPath));
 
     /// <inheritdoc />
-    public void Invalidate() => _cache.Clear();
+    public void Invalidate() => this.cache.Clear();
 
     private bool GetOrCheck(string key, Func<bool> compute)
     {
-        var now = _timeProvider.GetUtcNow();
-        if (_cache.TryGetValue(key, out var entry) && now - entry.Timestamp < Ttl)
+        var now = this.timeProvider.GetUtcNow();
+        if (this.cache.TryGetValue(key, out var entry) && now - entry.Timestamp < this.Ttl)
         {
             return entry.Value;
         }
 
         var value = compute();
-        _cache[key] = new CacheEntry(value, now);
+        this.cache[key] = new CacheEntry(value, now);
         return value;
     }
 
@@ -54,7 +54,7 @@ public class AgentDetectionService : IAgentDetectionService
     {
         get
         {
-            var minutes = _preferencesStore.Load().AgentProbeTtlMinutes;
+            var minutes = this.preferencesStore.Load().AgentProbeTtlMinutes;
             return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
         }
     }

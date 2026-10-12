@@ -10,8 +10,8 @@ using CLIHub.Core.Models;
 /// </summary>
 public class AgentCommandService : IAgentCommandService
 {
-    private readonly ProcessLauncher _processLauncher;
-    private readonly ILogger<AgentCommandService> _logger;
+    private readonly ProcessLauncher processLauncher;
+    private readonly ILogger<AgentCommandService> logger;
 
     /// <summary>
     ///   Creates the service.
@@ -20,8 +20,8 @@ public class AgentCommandService : IAgentCommandService
         ProcessLauncher processLauncher,
         ILogger<AgentCommandService> logger)
     {
-        _processLauncher = processLauncher;
-        _logger = logger;
+        this.processLauncher = processLauncher;
+        this.logger = logger;
     }
 
     /// <inheritdoc />
@@ -34,23 +34,23 @@ public class AgentCommandService : IAgentCommandService
         var command = plugin.Commands?.Get(kind);
         if (command == null)
         {
-            _logger.LogWarning("{PluginName} does not define a {Kind} command", plugin.Name, kind);
+            this.logger.LogWarning("{PluginName} does not define a {Kind} command", plugin.Name, kind);
             return new AgentCommandResult(false, null, $"{plugin.Name} does not support the {kind} command");
         }
 
         if (string.IsNullOrWhiteSpace(projectPath) || !Directory.Exists(projectPath))
         {
-            _logger.LogWarning("Cannot run {Kind} for {PluginName}: project folder '{ProjectPath}' does not exist",
+            this.logger.LogWarning("Cannot run {Kind} for {PluginName}: project folder '{ProjectPath}' does not exist",
                 kind, plugin.Name, projectPath);
             return new AgentCommandResult(false, null, "Project folder does not exist");
         }
 
         if (kind == AgentCommandKind.Version)
         {
-            return await RunVersionAsync(plugin, command, projectPath, cancellationToken);
+            return await this.RunVersionAsync(plugin, command, projectPath, cancellationToken);
         }
 
-        var started = _processLauncher.LaunchProcess(command, projectPath);
+        var started = this.processLauncher.LaunchProcess(command, projectPath);
         return started
             ? new AgentCommandResult(true, null, null)
             : new AgentCommandResult(false, null, $"Failed to launch {plugin.Name}");
@@ -62,7 +62,7 @@ public class AgentCommandService : IAgentCommandService
         string projectPath,
         CancellationToken cancellationToken)
     {
-        var result = await _processLauncher.CaptureOutputAsync(
+        var result = await this.processLauncher.CaptureOutputAsync(
             command.Executable, command.Arguments, projectPath, cancellationToken);
 
         if (!result.Started || result.ExitCode != 0)
@@ -73,7 +73,7 @@ public class AgentCommandService : IAgentCommandService
             return new AgentCommandResult(false, result.StdOut, error);
         }
 
-        _logger.LogInformation("Retrieved version for {PluginName}: {Version}", plugin.Name, result.StdOut);
+        this.logger.LogInformation("Retrieved version for {PluginName}: {Version}", plugin.Name, result.StdOut);
         return new AgentCommandResult(true, result.StdOut, null);
     }
 }

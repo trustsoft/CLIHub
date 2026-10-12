@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
 {
-    private readonly ILogger<WindowsInteractiveProcessRunner> _logger;
+    private readonly ILogger<WindowsInteractiveProcessRunner> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="WindowsInteractiveProcessRunner"/> class.
@@ -20,7 +20,7 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
     /// <param name="logger"> Logger for process operations. </param>
     public WindowsInteractiveProcessRunner(ILogger<WindowsInteractiveProcessRunner> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -32,7 +32,7 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
         ArgumentNullException.ThrowIfNull(commandLine);
         ArgumentNullException.ThrowIfNull(runtime);
 
-        _logger.LogDebug("Launching interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
+        this.logger.LogDebug("Launching interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
 
         var startInfo = new ProcessStartInfo
         {
@@ -54,23 +54,23 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
                 throw new InvalidOperationException($"Failed to start process: {runtime.ExecutablePath}");
             }
 
-            _logger.LogDebug("Process started with PID {ProcessId}", process.Id);
+            this.logger.LogDebug("Process started with PID {ProcessId}", process.Id);
 
             await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
             int exitCode = process.ExitCode;
-            _logger.LogDebug("Process {ProcessId} exited with code {ExitCode}", process.Id, exitCode);
+            this.logger.LogDebug("Process {ProcessId} exited with code {ExitCode}", process.Id, exitCode);
 
             return exitCode;
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Process launch was cancelled");
+            this.logger.LogWarning("Process launch was cancelled");
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to launch interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
+            this.logger.LogError(ex, "Failed to launch interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
             throw new InvalidOperationException($"Failed to launch process: {ex.Message}", ex);
         }
     }

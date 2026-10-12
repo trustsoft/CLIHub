@@ -11,7 +11,7 @@ public sealed class PluginValidationResult
     /// <param name="errors"> Validation errors in rule evaluation order. </param>
     public PluginValidationResult(IEnumerable<string> errors)
     {
-        Errors = errors?.ToArray() ?? throw new ArgumentNullException(nameof(errors));
+        this.Errors = errors?.ToArray() ?? throw new ArgumentNullException(nameof(errors));
     }
 
     /// <summary>
@@ -22,5 +22,5 @@ public sealed class PluginValidationResult
     /// <summary>
     ///   Indicates whether the descriptor passed validation.
     /// </summary>
-    public bool IsValid => Errors.Count == 0;
+    public bool IsValid => this.Errors.Count == 0;
 }

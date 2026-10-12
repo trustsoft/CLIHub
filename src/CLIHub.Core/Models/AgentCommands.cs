@@ -33,10 +33,10 @@ public class AgentCommands
     /// <returns> The command for the kind, or null when it is not defined. </returns>
     public PluginCommand? Get(AgentCommandKind kind) => kind switch
     {
-        AgentCommandKind.Launch => Launch,
-        AgentCommandKind.Resume => Resume,
-        AgentCommandKind.Version => Version,
-        AgentCommandKind.Update => Update,
+        AgentCommandKind.Launch => this.Launch,
+        AgentCommandKind.Resume => this.Resume,
+        AgentCommandKind.Version => this.Version,
+        AgentCommandKind.Update => this.Update,
         _ => null
     };
 }

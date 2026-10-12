@@ -63,7 +63,7 @@ public sealed class AsyncOperationRunnerTests
         {
             if (logLevel >= LogLevel.Error)
             {
-                Errors.Add(new LogEntry(exception, formatter(state, exception)));
+                this.Errors.Add(new LogEntry(exception, formatter(state, exception)));
             }
         }
 

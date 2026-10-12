@@ -89,13 +89,13 @@ public class ConfigMigrationRunnerTests
 
     private sealed class RecordingMigration : IConfigMigration
     {
-        private readonly List<int>? _calls;
+        private readonly List<int>? calls;
 
         public RecordingMigration(int sourceVersion, int targetVersion, List<int>? calls = null)
         {
-            SourceVersion = sourceVersion;
-            TargetVersion = targetVersion;
-            _calls = calls;
+            this.SourceVersion = sourceVersion;
+            this.TargetVersion = targetVersion;
+            this.calls = calls;
         }
 
         public int SourceVersion { get; }
@@ -104,8 +104,8 @@ public class ConfigMigrationRunnerTests
 
         public ConfigurationSnapshot Migrate(ConfigurationSnapshot snapshot)
         {
-            Calls.Add(SourceVersion);
-            _calls?.Add(SourceVersion);
+            this.Calls.Add(this.SourceVersion);
+            this.calls?.Add(this.SourceVersion);
             return snapshot;
         }
     }

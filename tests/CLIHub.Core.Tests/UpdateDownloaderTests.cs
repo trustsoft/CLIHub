@@ -12,26 +12,26 @@ using Velopack.Sources;
 
 public class UpdateDownloaderTests : IDisposable
 {
-    private readonly string _packagesDir;
-    private readonly UpdateDownloader _downloader;
+    private readonly string packagesDir;
+    private readonly UpdateDownloader downloader;
 
     public UpdateDownloaderTests()
     {
-        _packagesDir = Path.Combine(Path.GetTempPath(), "clihub-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_packagesDir);
-        _downloader = new UpdateDownloader(NullLogger.Instance);
+        this.packagesDir = Path.Combine(Path.GetTempPath(), "clihub-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.packagesDir);
+        this.downloader = new UpdateDownloader(NullLogger.Instance);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_packagesDir, recursive: true); } catch { }
+        try { Directory.Delete(this.packagesDir, recursive: true); } catch { }
     }
 
     [Fact]
     public async Task DownloadAsync_WhenNoAsset_ReturnsFailed()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var source = new SuccessfulSource();
         var manager = new UpdateManager(source, null, locator);
 
@@ -39,32 +39,32 @@ public class UpdateDownloaderTests : IDisposable
         var update = new UpdateInfo(null!, false);
 
         // Act
-        var result = await _downloader.DownloadAsync(manager, update, CancellationToken.None);
+        var result = await this.downloader.DownloadAsync(manager, update, CancellationToken.None);
 
         // Assert
         Assert.Equal(UpdateDownloadStatus.Failed, result.Status);
         Assert.Null(result.AvailableVersion);
-        Assert.False(_downloader.IsDownloading);
+        Assert.False(this.downloader.IsDownloading);
     }
 
     [Fact]
     public async Task DownloadAsync_WhenConcurrent_ReturnsAlreadyDownloading()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var delayedSource = new DelayedSource(TimeSpan.FromSeconds(2));
         var manager = new UpdateManager(delayedSource, null, locator);
 
         var update = CreateFakeUpdate("2.0.0");
 
         // Act - start first download
-        var firstTask = _downloader.DownloadAsync(manager, update, CancellationToken.None);
+        var firstTask = this.downloader.DownloadAsync(manager, update, CancellationToken.None);
 
         // Wait a bit to ensure first download started
         await Task.Delay(50);
 
         // Try second concurrent download
-        var result = await _downloader.DownloadAsync(manager, update, CancellationToken.None);
+        var result = await this.downloader.DownloadAsync(manager, update, CancellationToken.None);
 
         // Assert
         Assert.Equal(UpdateDownloadStatus.AlreadyDownloading, result.Status);
@@ -78,7 +78,7 @@ public class UpdateDownloaderTests : IDisposable
     public async Task DownloadAsync_WhenCancelled_ReturnsFailed()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var delayedSource = new DelayedSource(TimeSpan.FromSeconds(10));
         var manager = new UpdateManager(delayedSource, null, locator);
 
@@ -87,26 +87,26 @@ public class UpdateDownloaderTests : IDisposable
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
 
         // Act
-        var result = await _downloader.DownloadAsync(manager, update, cts.Token);
+        var result = await this.downloader.DownloadAsync(manager, update, cts.Token);
 
         // Assert
         Assert.Equal(UpdateDownloadStatus.Failed, result.Status);
         Assert.Equal("2.0.0", result.AvailableVersion);
-        Assert.False(_downloader.IsDownloading);
+        Assert.False(this.downloader.IsDownloading);
     }
 
     [Fact]
     public void IsDownloading_Initially_ReturnsFalse()
     {
         // Assert
-        Assert.False(_downloader.IsDownloading);
+        Assert.False(this.downloader.IsDownloading);
     }
 
     [Fact]
     public void DownloadedAsset_Initially_ReturnsNull()
     {
         // Assert
-        Assert.Null(_downloader.DownloadedAsset);
+        Assert.Null(this.downloader.DownloadedAsset);
     }
 
     private static UpdateInfo CreateFakeUpdate(string version)
@@ -155,11 +155,11 @@ public class UpdateDownloaderTests : IDisposable
     /// </summary>
     private sealed class DelayedSource : IUpdateSource
     {
-        private readonly TimeSpan _delay;
+        private readonly TimeSpan delay;
 
         public DelayedSource(TimeSpan delay)
         {
-            _delay = delay;
+            this.delay = delay;
         }
 
         public Task<VelopackAssetFeed> GetReleaseFeed(
@@ -179,7 +179,7 @@ public class UpdateDownloaderTests : IDisposable
             Action<int>? progress,
             CancellationToken cancelToken)
         {
-            await Task.Delay(_delay, cancelToken);
+            await Task.Delay(this.delay, cancelToken);
         }
     }
 }

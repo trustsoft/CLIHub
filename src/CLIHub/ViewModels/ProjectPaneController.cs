@@ -10,10 +10,10 @@ using CLIHub.Core.Projects;
 /// </summary>
 public sealed class ProjectPaneController : IDisposable
 {
-    private readonly IProjectService _projectService;
-    private readonly IProjectDialogService _dialogs;
-    private readonly PromptState _promptState;
-    private bool _disposed;
+    private readonly IProjectService projectService;
+    private readonly IProjectDialogService dialogs;
+    private readonly PromptState promptState;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the project-pane workflow boundary.
@@ -26,15 +26,15 @@ public sealed class ProjectPaneController : IDisposable
         IProjectDialogService dialogs,
         PromptState promptState)
     {
-        _projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
-        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
-        _promptState = promptState ?? throw new ArgumentNullException(nameof(promptState));
-        _projectService.ProjectsChanged += OnProjectsChanged;
+        this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+        this.promptState = promptState ?? throw new ArgumentNullException(nameof(promptState));
+        this.projectService.ProjectsChanged += this.OnProjectsChanged;
 
-        AddCommand = new RelayCommand(() => _ = AddProject());
-        RemoveCommand = new RelayCommand(() => _ = RemoveSelectedProject(), () => CurrentProject is not null);
-        ToggleFavoriteCommand = new RelayCommand(() => _ = ToggleFavorite(), () => CurrentProject is not null);
-        RefreshCommand = new RelayCommand(() => _ = Refresh());
+        this.AddCommand = new RelayCommand(() => _ = this.AddProject());
+        this.RemoveCommand = new RelayCommand(() => _ = this.RemoveSelectedProject(), () => this.CurrentProject is not null);
+        this.ToggleFavoriteCommand = new RelayCommand(() => _ = this.ToggleFavorite(), () => this.CurrentProject is not null);
+        this.RefreshCommand = new RelayCommand(() => _ = this.Refresh());
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed class ProjectPaneController : IDisposable
     /// <summary>
     ///   Returns the current project from the project service.
     /// </summary>
-    public Project? CurrentProject => _projectService.GetCurrentProject();
+    public Project? CurrentProject => this.projectService.GetCurrentProject();
 
     /// <summary>
     ///   Synchronizes the collection while preserving existing project instances.
@@ -78,28 +78,28 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> The project selected by the project service, if it is visible. </returns>
     public Project? Refresh()
     {
-        var projects = _projectService.GetAllProjects();
+        var projects = this.projectService.GetAllProjects();
 
-        for (var index = Projects.Count - 1; index >= 0; index--)
+        for (var index = this.Projects.Count - 1; index >= 0; index--)
         {
-            if (projects.All(project => project.Id != Projects[index].Id))
+            if (projects.All(project => project.Id != this.Projects[index].Id))
             {
-                Projects.RemoveAt(index);
+                this.Projects.RemoveAt(index);
             }
         }
 
         foreach (var project in projects)
         {
-            if (Projects.All(existing => existing.Id != project.Id))
+            if (this.Projects.All(existing => existing.Id != project.Id))
             {
-                Projects.Add(project);
+                this.Projects.Add(project);
             }
         }
 
-        var current = _projectService.GetCurrentProject();
+        var current = this.projectService.GetCurrentProject();
         return current is null
             ? null
-            : Projects.FirstOrDefault(project => project.Id == current.Id);
+            : this.Projects.FirstOrDefault(project => project.Id == current.Id);
     }
 
     /// <summary>
@@ -114,7 +114,7 @@ public sealed class ProjectPaneController : IDisposable
             return false;
         }
 
-        _projectService.SetCurrentProject(project.Id);
+        this.projectService.SetCurrentProject(project.Id);
         return true;
     }
 
@@ -124,17 +124,17 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> The added project, or null when folder selection was cancelled. </returns>
     public Project? AddProject()
     {
-        using (_promptState.Begin())
+        using (this.promptState.Begin())
         {
-            var folderPath = _dialogs.SelectProjectFolder();
+            var folderPath = this.dialogs.SelectProjectFolder();
             if (folderPath is null)
             {
                 return null;
             }
 
-            var project = _projectService.AddProject(folderPath);
-            _projectService.SetCurrentProject(project.Id);
-            Refresh();
+            var project = this.projectService.AddProject(folderPath);
+            this.projectService.SetCurrentProject(project.Id);
+            this.Refresh();
             return project;
         }
     }
@@ -145,22 +145,22 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> True when a project was removed. </returns>
     public bool RemoveSelectedProject()
     {
-        var project = CurrentProject;
+        var project = this.CurrentProject;
         if (project is null)
         {
             return false;
         }
 
-        using (_promptState.Begin())
+        using (this.promptState.Begin())
         {
-            if (!_dialogs.ConfirmProjectRemoval(project.Name))
+            if (!this.dialogs.ConfirmProjectRemoval(project.Name))
             {
                 return false;
             }
         }
 
-        _projectService.RemoveProject(project.Id);
-        Refresh();
+        this.projectService.RemoveProject(project.Id);
+        this.Refresh();
         return true;
     }
 
@@ -170,19 +170,19 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> The current project after the mutation, or null when none is selected. </returns>
     public Project? ToggleFavorite()
     {
-        var project = CurrentProject;
+        var project = this.CurrentProject;
         if (project is null)
         {
             return null;
         }
 
-        _projectService.ToggleFavorite(project.Id);
+        this.projectService.ToggleFavorite(project.Id);
         return project;
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
-        Refresh();
+        this.Refresh();
         ProjectsChanged?.Invoke(this, e);
     }
 
@@ -191,12 +191,12 @@ public sealed class ProjectPaneController : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projectService.ProjectsChanged -= OnProjectsChanged;
+        this.disposed = true;
+        this.projectService.ProjectsChanged -= this.OnProjectsChanged;
     }
 }

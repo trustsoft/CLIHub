@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class AgentProcessMatcher
 {
-    private readonly ILogger<AgentProcessMatcher> _logger;
+    private readonly ILogger<AgentProcessMatcher> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="AgentProcessMatcher"/> class.
@@ -16,7 +16,7 @@ public sealed class AgentProcessMatcher
     /// <param name="logger"> The logger instance. </param>
     public AgentProcessMatcher(ILogger<AgentProcessMatcher> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public sealed class AgentProcessMatcher
         }
 
         // Check if process is a runtime (node, python, etc.) running the agent script
-        if (IsRuntimeProcess(processInstance, plugin))
+        if (this.IsRuntimeProcess(processInstance, plugin))
         {
             return true;
         }

@@ -9,14 +9,14 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class ApplicationSession : IApplicationSession
 {
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly Func<IApplicationStartupUi> _startupUiFactory;
-    private readonly Func<IUpdateRequestSource> _updateRequestSourceFactory;
-    private readonly ISingleInstanceGuard _singleInstanceGuard;
-    private readonly IUpdateWorkflow _updateWorkflow;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly Func<IApplicationStartupUi> startupUiFactory;
+    private readonly Func<IUpdateRequestSource> updateRequestSourceFactory;
+    private readonly ISingleInstanceGuard singleInstanceGuard;
+    private readonly IUpdateWorkflow updateWorkflow;
 
-    private IShellCoordinator? _shellCoordinator;
-    private bool _disposed;
+    private IShellCoordinator? shellCoordinator;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the application session with lazy shell factories and update workflow.
@@ -33,11 +33,11 @@ public sealed class ApplicationSession : IApplicationSession
         ISingleInstanceGuard singleInstanceGuard,
         IUpdateWorkflow updateWorkflow)
     {
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
-        _updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
-        _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
-        _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
+        this.updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
+        this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
+        this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
     }
 
     /// <inheritdoc />
@@ -46,38 +46,38 @@ public sealed class ApplicationSession : IApplicationSession
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(context.Dispatch);
 
-        if (_disposed)
+        if (this.disposed)
         {
             throw new ObjectDisposedException(nameof(ApplicationSession));
         }
 
-        if (_shellCoordinator is not null)
+        if (this.shellCoordinator is not null)
         {
-            return _shellCoordinator.StartupUi;
+            return this.shellCoordinator.StartupUi;
         }
 
-        _shellCoordinator = new ShellCoordinator(
-            _operationLifetime,
-            _startupUiFactory,
-            _updateRequestSourceFactory,
-            _singleInstanceGuard,
-            _updateWorkflow,
+        this.shellCoordinator = new ShellCoordinator(
+            this.operationLifetime,
+            this.startupUiFactory,
+            this.updateRequestSourceFactory,
+            this.singleInstanceGuard,
+            this.updateWorkflow,
             context);
 
-        return _shellCoordinator.StartupUi;
+        return this.shellCoordinator.StartupUi;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
+        this.disposed = true;
 
-        _shellCoordinator?.Dispose();
+        this.shellCoordinator?.Dispose();
     }
 }
 

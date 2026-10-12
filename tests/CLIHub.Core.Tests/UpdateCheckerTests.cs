@@ -12,31 +12,31 @@ using Velopack.Sources;
 
 public class UpdateCheckerTests : IDisposable
 {
-    private readonly string _packagesDir;
-    private readonly UpdateChecker _checker;
+    private readonly string packagesDir;
+    private readonly UpdateChecker checker;
 
     public UpdateCheckerTests()
     {
-        _packagesDir = Path.Combine(Path.GetTempPath(), "clihub-test-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_packagesDir);
-        _checker = new UpdateChecker(NullLogger.Instance);
+        this.packagesDir = Path.Combine(Path.GetTempPath(), "clihub-test-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.packagesDir);
+        this.checker = new UpdateChecker(NullLogger.Instance);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_packagesDir, recursive: true); } catch { }
+        try { Directory.Delete(this.packagesDir, recursive: true); } catch { }
     }
 
     [Fact]
     public async Task CheckAsync_WithNoUpdate_ReturnsUpToDate()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
-        var source = new SimpleFileSource(new DirectoryInfo(_packagesDir));
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
+        var source = new SimpleFileSource(new DirectoryInfo(this.packagesDir));
         var manager = new UpdateManager(source, null, locator);
 
         // Act
-        var (result, update) = await _checker.CheckAsync(
+        var (result, update) = await this.checker.CheckAsync(
             manager,
             "1.0.0",
             TimeSpan.FromSeconds(5),
@@ -53,12 +53,12 @@ public class UpdateCheckerTests : IDisposable
     public async Task CheckAsync_WhenTimeout_ReturnsFailed()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var delayedSource = new DelayedSource(TimeSpan.FromSeconds(10), fail: false);
         var manager = new UpdateManager(delayedSource, null, locator);
 
         // Act
-        var (result, update) = await _checker.CheckAsync(
+        var (result, update) = await this.checker.CheckAsync(
             manager,
             "1.0.0",
             TimeSpan.FromMilliseconds(100),
@@ -75,14 +75,14 @@ public class UpdateCheckerTests : IDisposable
     public async Task CheckAsync_WhenCancelled_ReturnsFailed()
     {
         // Arrange
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var delayedSource = new DelayedSource(TimeSpan.FromSeconds(10), fail: false);
         var manager = new UpdateManager(delayedSource, null, locator);
 
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
 
         // Act
-        var (result, update) = await _checker.CheckAsync(
+        var (result, update) = await this.checker.CheckAsync(
             manager,
             "1.0.0",
             TimeSpan.FromSeconds(30),
@@ -100,13 +100,13 @@ public class UpdateCheckerTests : IDisposable
     /// </summary>
     private sealed class DelayedSource : IUpdateSource
     {
-        private readonly TimeSpan _delay;
-        private readonly bool _fail;
+        private readonly TimeSpan delay;
+        private readonly bool fail;
 
         public DelayedSource(TimeSpan delay, bool fail)
         {
-            _delay = delay;
-            _fail = fail;
+            this.delay = delay;
+            this.fail = fail;
         }
 
         public async Task<VelopackAssetFeed> GetReleaseFeed(
@@ -116,9 +116,9 @@ public class UpdateCheckerTests : IDisposable
             Guid? stagingId,
             VelopackAsset? latestLocalRelease)
         {
-            await Task.Delay(_delay);
+            await Task.Delay(this.delay);
 
-            if (_fail)
+            if (this.fail)
             {
                 throw new InvalidOperationException("Simulated check failure");
             }

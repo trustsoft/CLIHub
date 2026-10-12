@@ -204,19 +204,19 @@ public sealed class SpacedPanelTests
 
     private sealed class ProbeElement : FrameworkElement
     {
-        private readonly Size _desiredSize;
+        private readonly Size desiredSize;
 
         public ProbeElement(Size desiredSize)
         {
-            _desiredSize = desiredSize;
+            this.desiredSize = desiredSize;
         }
 
         public Size LastMeasureConstraint { get; private set; }
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            LastMeasureConstraint = availableSize;
-            return _desiredSize;
+            this.LastMeasureConstraint = availableSize;
+            return this.desiredSize;
         }
     }
 }

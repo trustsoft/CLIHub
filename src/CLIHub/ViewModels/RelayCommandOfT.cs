@@ -8,8 +8,8 @@ using System.Windows.Input;
 /// <typeparam name="T"> The type of the command parameter. </typeparam>
 public sealed class RelayCommand<T> : ICommand
 {
-    private readonly Action<T> _execute;
-    private readonly Func<T, bool>? _canExecute;
+    private readonly Action<T> execute;
+    private readonly Func<T, bool>? canExecute;
 
     /// <summary>
     ///   Creates the command.
@@ -18,8 +18,8 @@ public sealed class RelayCommand<T> : ICommand
     /// <param name="canExecute"> Optional availability predicate. </param>
     public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
     {
-        _execute = execute;
-        _canExecute = canExecute;
+        this.execute = execute;
+        this.canExecute = canExecute;
     }
 
     /// <inheritdoc />
@@ -31,14 +31,14 @@ public sealed class RelayCommand<T> : ICommand
 
     /// <inheritdoc />
     public bool CanExecute(object? parameter) =>
-        parameter is T typed && (_canExecute?.Invoke(typed) ?? true);
+        parameter is T typed && (this.canExecute?.Invoke(typed) ?? true);
 
     /// <inheritdoc />
     public void Execute(object? parameter)
     {
         if (parameter is T typed)
         {
-            _execute(typed);
+            this.execute(typed);
         }
     }
 }

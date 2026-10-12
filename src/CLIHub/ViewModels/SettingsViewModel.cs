@@ -146,43 +146,43 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         .Select(group => new SettingsGroup(group.Key, group.ToArray()))
         .ToArray();
 
-    private readonly SettingsApplicationService _settingsApplication;
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateWorkflow _updateWorkflow;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly IProjectDialogService _dialogs;
-    private readonly IProjectScanner _projectScanner;
-    private readonly ILogger<SettingsViewModel> _logger;
+    private readonly SettingsApplicationService settingsApplication;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IUpdateWorkflow updateWorkflow;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly IProjectDialogService dialogs;
+    private readonly IProjectScanner projectScanner;
+    private readonly ILogger<SettingsViewModel> logger;
 
-    private bool _startWithWindows;
-    private bool _startMinimized = true;
-    private RuntimeOption _selectedRuntime = RuntimeOptions[0];
-    private PathDisplayOption _selectedPathDisplay = PathDisplayOptions[0];
-    private string _hotkeyText = string.Empty;
-    private IReadOnlyList<string> _hotkeyParts = [];
-    private string _probeTtlText = string.Empty;
-    private string _probeTimeoutText = string.Empty;
-    private bool _checkForUpdatesOnStartup = true;
-    private bool _autoDownloadUpdates = true;
-    private bool _notifyStableUpdates = true;
-    private bool _notifyPrereleaseUpdates;
-    private string _updateMessage = string.Empty;
-    private string? _validationError;
-    private SettingsPage _selectedPage = AllPages[0];
-    private readonly IExternalLauncher _externalLauncher;
-    private LogLevelOption _selectedLogLevel = LogLevelOptions[2];
-    private string _logRetentionDaysText = "7";
-    private string _logFileSizeLimitText = "0";
-    private PopupPositionOption _selectedPopupPosition = PopupPositionOptions[0];
-    private AppThemeOption _selectedAppTheme = AppThemeOptions[0];
-    private string _accentText = AccentPalette.DefaultHex;
-    private string _scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
-    private DiscoveryModeOption _selectedDiscoveryMode = DiscoveryModeOptions[2];
-    private string _newIgnoredPatternText = string.Empty;
-    private string? _selectedWatchedDirectory;
-    private string? _selectedIgnoredPattern;
-    private string _watcherStatusText = "No watched directories configured.";
-    private bool _disposed;
+    private bool startWithWindows;
+    private bool startMinimized = true;
+    private RuntimeOption selectedRuntime = RuntimeOptions[0];
+    private PathDisplayOption selectedPathDisplay = PathDisplayOptions[0];
+    private string hotkeyText = string.Empty;
+    private IReadOnlyList<string> hotkeyParts = [];
+    private string probeTtlText = string.Empty;
+    private string probeTimeoutText = string.Empty;
+    private bool checkForUpdatesOnStartup = true;
+    private bool autoDownloadUpdates = true;
+    private bool notifyStableUpdates = true;
+    private bool notifyPrereleaseUpdates;
+    private string updateMessage = string.Empty;
+    private string? validationError;
+    private SettingsPage selectedPage = AllPages[0];
+    private readonly IExternalLauncher externalLauncher;
+    private LogLevelOption selectedLogLevel = LogLevelOptions[2];
+    private string logRetentionDaysText = "7";
+    private string logFileSizeLimitText = "0";
+    private PopupPositionOption selectedPopupPosition = PopupPositionOptions[0];
+    private AppThemeOption selectedAppTheme = AppThemeOptions[0];
+    private string accentText = AccentPalette.DefaultHex;
+    private string scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
+    private DiscoveryModeOption selectedDiscoveryMode = DiscoveryModeOptions[2];
+    private string newIgnoredPatternText = string.Empty;
+    private string? selectedWatchedDirectory;
+    private string? selectedIgnoredPattern;
+    private string watcherStatusText = "No watched directories configured.";
+    private bool disposed;
 
     /// <summary>
     ///   Creates the view model with its services.
@@ -207,31 +207,31 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         IAgentManagementSection agentsState,
         ILogger<SettingsViewModel> logger)
     {
-        _settingsApplication = settingsApplication;
-        _versionProvider = versionProvider;
-        _updateWorkflow = updateWorkflow;
-        _operationLifetime = operationLifetime;
-        _externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
-        _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
-        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
-        AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
-        _logger = logger;
+        this.settingsApplication = settingsApplication;
+        this.versionProvider = versionProvider;
+        this.updateWorkflow = updateWorkflow;
+        this.operationLifetime = operationLifetime;
+        this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
+        this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
+        this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
+        this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
+        this.logger = logger;
 
-        Version = _versionProvider.GetCurrentVersion();
+        this.Version = this.versionProvider.GetCurrentVersion();
 
-        SaveCommand = new RelayCommand(Save);
-        CancelCommand = new RelayCommand(Cancel);
-        CheckForUpdatesCommand = new RelayCommand(() =>
-            _ = _operationLifetime.RunAsync("Settings update check", RunUpdateCheckAsync));
-        CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(LogFilePath));
-        OpenLogFolderCommand = new RelayCommand(() => _externalLauncher.Open(AppPaths.LogsDirectory));
-        AddWatchedDirectoryCommand = new RelayCommand(AddWatchedDirectory);
-        RemoveWatchedDirectoryCommand = new RelayCommand(RemoveWatchedDirectory);
-        AddIgnoredPatternCommand = new RelayCommand(AddIgnoredPattern);
-        RemoveIgnoredPatternCommand = new RelayCommand(RemoveIgnoredPattern);
+        this.SaveCommand = new RelayCommand(this.Save);
+        this.CancelCommand = new RelayCommand(this.Cancel);
+        this.CheckForUpdatesCommand = new RelayCommand(() =>
+            _ = this.operationLifetime.RunAsync("Settings update check", this.RunUpdateCheckAsync));
+        this.CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(this.LogFilePath));
+        this.OpenLogFolderCommand = new RelayCommand(() => this.externalLauncher.Open(AppPaths.LogsDirectory));
+        this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
+        this.RemoveWatchedDirectoryCommand = new RelayCommand(this.RemoveWatchedDirectory);
+        this.AddIgnoredPatternCommand = new RelayCommand(this.AddIgnoredPattern);
+        this.RemoveIgnoredPatternCommand = new RelayCommand(this.RemoveIgnoredPattern);
 
-        _projectScanner.StatusChanged += OnScannerStatusChanged;
-        _watcherStatusText = FormatScannerStatus(_projectScanner.Status);
+        this.projectScanner.StatusChanged += this.OnScannerStatusChanged;
+        this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
     }
 
     private const string NoWatchedDirectoriesStatus = "No watched directories configured.";
@@ -271,8 +271,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public SettingsPage SelectedPage
     {
-        get => _selectedPage;
-        set => SetProperty(ref _selectedPage, value);
+        get => this.selectedPage;
+        set => this.SetProperty(ref this.selectedPage, value);
     }
 
     /// <summary>
@@ -280,8 +280,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public PathDisplayOption SelectedPathDisplay
     {
-        get => _selectedPathDisplay;
-        set => SetProperty(ref _selectedPathDisplay, value);
+        get => this.selectedPathDisplay;
+        set => this.SetProperty(ref this.selectedPathDisplay, value);
     }
 
     /// <summary>
@@ -289,8 +289,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool StartWithWindows
     {
-        get => _startWithWindows;
-        set => SetProperty(ref _startWithWindows, value);
+        get => this.startWithWindows;
+        set => this.SetProperty(ref this.startWithWindows, value);
     }
 
     /// <summary>
@@ -298,8 +298,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool StartMinimized
     {
-        get => _startMinimized;
-        set => SetProperty(ref _startMinimized, value);
+        get => this.startMinimized;
+        set => this.SetProperty(ref this.startMinimized, value);
     }
 
     /// <summary>
@@ -307,8 +307,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public RuntimeOption SelectedRuntime
     {
-        get => _selectedRuntime;
-        set => SetProperty(ref _selectedRuntime, value);
+        get => this.selectedRuntime;
+        set => this.SetProperty(ref this.selectedRuntime, value);
     }
 
     /// <summary>
@@ -316,12 +316,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string HotkeyText
     {
-        get => _hotkeyText;
+        get => this.hotkeyText;
         set
         {
-            if (SetProperty(ref _hotkeyText, value))
+            if (this.SetProperty(ref this.hotkeyText, value))
             {
-                HotkeyParts = SplitHotkeyParts(value);
+                this.HotkeyParts = SplitHotkeyParts(value);
             }
         }
     }
@@ -331,8 +331,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public IReadOnlyList<string> HotkeyParts
     {
-        get => _hotkeyParts;
-        private set => SetProperty(ref _hotkeyParts, value);
+        get => this.hotkeyParts;
+        private set => this.SetProperty(ref this.hotkeyParts, value);
     }
 
     private static IReadOnlyList<string> SplitHotkeyParts(string? text) =>
@@ -345,8 +345,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string ProbeTtlText
     {
-        get => _probeTtlText;
-        set => SetProperty(ref _probeTtlText, value);
+        get => this.probeTtlText;
+        set => this.SetProperty(ref this.probeTtlText, value);
     }
 
     /// <summary>
@@ -354,8 +354,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string ProbeTimeoutText
     {
-        get => _probeTimeoutText;
-        set => SetProperty(ref _probeTimeoutText, value);
+        get => this.probeTimeoutText;
+        set => this.SetProperty(ref this.probeTimeoutText, value);
     }
 
     /// <summary>
@@ -373,8 +373,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool CheckForUpdatesOnStartup
     {
-        get => _checkForUpdatesOnStartup;
-        set => SetProperty(ref _checkForUpdatesOnStartup, value);
+        get => this.checkForUpdatesOnStartup;
+        set => this.SetProperty(ref this.checkForUpdatesOnStartup, value);
     }
 
     /// <summary>
@@ -382,8 +382,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool AutoDownloadUpdates
     {
-        get => _autoDownloadUpdates;
-        set => SetProperty(ref _autoDownloadUpdates, value);
+        get => this.autoDownloadUpdates;
+        set => this.SetProperty(ref this.autoDownloadUpdates, value);
     }
 
     /// <summary>
@@ -391,8 +391,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool NotifyStableUpdates
     {
-        get => _notifyStableUpdates;
-        set => SetProperty(ref _notifyStableUpdates, value);
+        get => this.notifyStableUpdates;
+        set => this.SetProperty(ref this.notifyStableUpdates, value);
     }
 
     /// <summary>
@@ -400,8 +400,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public bool NotifyPrereleaseUpdates
     {
-        get => _notifyPrereleaseUpdates;
-        set => SetProperty(ref _notifyPrereleaseUpdates, value);
+        get => this.notifyPrereleaseUpdates;
+        set => this.SetProperty(ref this.notifyPrereleaseUpdates, value);
     }
 
     /// <summary>
@@ -414,8 +414,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public LogLevelOption SelectedLogLevel
     {
-        get => _selectedLogLevel;
-        set => SetProperty(ref _selectedLogLevel, value);
+        get => this.selectedLogLevel;
+        set => this.SetProperty(ref this.selectedLogLevel, value);
     }
 
     /// <summary>
@@ -423,8 +423,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string LogRetentionDaysText
     {
-        get => _logRetentionDaysText;
-        set => SetProperty(ref _logRetentionDaysText, value);
+        get => this.logRetentionDaysText;
+        set => this.SetProperty(ref this.logRetentionDaysText, value);
     }
 
     /// <summary>
@@ -432,8 +432,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string LogFileSizeLimitText
     {
-        get => _logFileSizeLimitText;
-        set => SetProperty(ref _logFileSizeLimitText, value);
+        get => this.logFileSizeLimitText;
+        set => this.SetProperty(ref this.logFileSizeLimitText, value);
     }
 
     /// <summary>
@@ -461,8 +461,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public PopupPositionOption SelectedPopupPosition
     {
-        get => _selectedPopupPosition;
-        set => SetProperty(ref _selectedPopupPosition, value);
+        get => this.selectedPopupPosition;
+        set => this.SetProperty(ref this.selectedPopupPosition, value);
     }
 
     /// <summary>
@@ -475,8 +475,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public AppThemeOption SelectedAppTheme
     {
-        get => _selectedAppTheme;
-        set => SetProperty(ref _selectedAppTheme, value);
+        get => this.selectedAppTheme;
+        set => this.SetProperty(ref this.selectedAppTheme, value);
     }
 
     /// <summary>
@@ -489,12 +489,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string AccentText
     {
-        get => _accentText;
+        get => this.accentText;
         set
         {
-            if (SetProperty(ref _accentText, value))
+            if (this.SetProperty(ref this.accentText, value))
             {
-                OnPropertyChanged(nameof(SelectedAccent));
+                this.OnPropertyChanged(nameof(this.SelectedAccent));
             }
         }
     }
@@ -504,13 +504,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public AccentOption? SelectedAccent
     {
-        get => AccentOptions.FirstOrDefault(o =>
-            string.Equals(AccentPalette.Normalize(o.Hex), AccentPalette.Normalize(_accentText), StringComparison.Ordinal));
+        get => this.AccentOptions.FirstOrDefault(o =>
+            string.Equals(AccentPalette.Normalize(o.Hex), AccentPalette.Normalize(this.accentText), StringComparison.Ordinal));
         set
         {
             if (value is not null)
             {
-                AccentText = value.Hex;
+                this.AccentText = value.Hex;
             }
         }
     }
@@ -525,8 +525,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string? SelectedWatchedDirectory
     {
-        get => _selectedWatchedDirectory;
-        set => SetProperty(ref _selectedWatchedDirectory, value);
+        get => this.selectedWatchedDirectory;
+        set => this.SetProperty(ref this.selectedWatchedDirectory, value);
     }
 
     /// <summary>
@@ -539,8 +539,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string? SelectedIgnoredPattern
     {
-        get => _selectedIgnoredPattern;
-        set => SetProperty(ref _selectedIgnoredPattern, value);
+        get => this.selectedIgnoredPattern;
+        set => this.SetProperty(ref this.selectedIgnoredPattern, value);
     }
 
     /// <summary>
@@ -548,8 +548,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string NewIgnoredPatternText
     {
-        get => _newIgnoredPatternText;
-        set => SetProperty(ref _newIgnoredPatternText, value);
+        get => this.newIgnoredPatternText;
+        set => this.SetProperty(ref this.newIgnoredPatternText, value);
     }
 
     /// <summary>
@@ -557,8 +557,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string ScanDepthText
     {
-        get => _scanDepthText;
-        set => SetProperty(ref _scanDepthText, value);
+        get => this.scanDepthText;
+        set => this.SetProperty(ref this.scanDepthText, value);
     }
 
     /// <summary>
@@ -571,8 +571,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public DiscoveryModeOption SelectedDiscoveryMode
     {
-        get => _selectedDiscoveryMode;
-        set => SetProperty(ref _selectedDiscoveryMode, value);
+        get => this.selectedDiscoveryMode;
+        set => this.SetProperty(ref this.selectedDiscoveryMode, value);
     }
 
     /// <summary>
@@ -580,8 +580,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string WatcherStatusText
     {
-        get => _watcherStatusText;
-        private set => SetProperty(ref _watcherStatusText, value);
+        get => this.watcherStatusText;
+        private set => this.SetProperty(ref this.watcherStatusText, value);
     }
 
     /// <summary>
@@ -609,8 +609,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string UpdateMessage
     {
-        get => _updateMessage;
-        private set => SetProperty(ref _updateMessage, value);
+        get => this.updateMessage;
+        private set => this.SetProperty(ref this.updateMessage, value);
     }
 
     /// <summary>
@@ -618,8 +618,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public string? ValidationError
     {
-        get => _validationError;
-        private set => SetProperty(ref _validationError, value);
+        get => this.validationError;
+        private set => this.SetProperty(ref this.validationError, value);
     }
 
     /// <summary>
@@ -645,9 +645,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private Task RunUpdateCheckAsync(CancellationToken cancellationToken) =>
         AsyncOperationRunner.RunAsync(
             "Settings update check",
-            () => CheckForUpdatesAsync(cancellationToken),
-            _logger,
-            message => UpdateMessage = message,
+            () => this.CheckForUpdatesAsync(cancellationToken),
+            this.logger,
+            message => this.UpdateMessage = message,
             cancellationToken);
 
     /// <summary>
@@ -655,84 +655,84 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Load()
     {
-        var draft = _settingsApplication.Load();
+        var draft = this.settingsApplication.Load();
 
-        _selectedRuntime = RuntimeOptions
+        this.selectedRuntime = RuntimeOptions
             .FirstOrDefault(o => o.Kind == draft.Runtime) ?? RuntimeOptions[0];
-        _selectedPathDisplay = PathDisplayOptions
+        this.selectedPathDisplay = PathDisplayOptions
             .FirstOrDefault(o => o.Style == draft.PathDisplayStyle) ?? PathDisplayOptions[0];
-        _hotkeyText = HotkeyParser.Format(draft.Hotkey);
-        _hotkeyParts = SplitHotkeyParts(_hotkeyText);
-        _probeTtlText = draft.ProbeTtlMinutes?.ToString() ?? string.Empty;
-        _probeTimeoutText = draft.ProbeTimeoutSeconds?.ToString() ?? string.Empty;
-        _checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
-        _autoDownloadUpdates = draft.AutoDownloadUpdates;
-        _notifyStableUpdates = draft.NotifyStableUpdates;
-        _notifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
-        _selectedLogLevel = LogLevelOptions.FirstOrDefault(o => o.Value == draft.LogLevel) ?? LogLevelOptions[2];
-        _logRetentionDaysText = draft.LogRetentionDays.ToString();
-        _logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
-        _selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
+        this.hotkeyText = HotkeyParser.Format(draft.Hotkey);
+        this.hotkeyParts = SplitHotkeyParts(this.hotkeyText);
+        this.probeTtlText = draft.ProbeTtlMinutes?.ToString() ?? string.Empty;
+        this.probeTimeoutText = draft.ProbeTimeoutSeconds?.ToString() ?? string.Empty;
+        this.checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
+        this.autoDownloadUpdates = draft.AutoDownloadUpdates;
+        this.notifyStableUpdates = draft.NotifyStableUpdates;
+        this.notifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
+        this.selectedLogLevel = LogLevelOptions.FirstOrDefault(o => o.Value == draft.LogLevel) ?? LogLevelOptions[2];
+        this.logRetentionDaysText = draft.LogRetentionDays.ToString();
+        this.logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
+        this.selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
             ?? PopupPositionOptions[0];
-        _selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
-        _accentText = AccentPalette.Normalize(draft.AccentColor);
-        _startWithWindows = draft.StartWithWindows;
-        _startMinimized = draft.StartMinimized;
+        this.selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
+        this.accentText = AccentPalette.Normalize(draft.AccentColor);
+        this.startWithWindows = draft.StartWithWindows;
+        this.startMinimized = draft.StartMinimized;
 
-        WatchedDirectories.Clear();
+        this.WatchedDirectories.Clear();
         foreach (var directory in draft.WatchedDirectories ?? Array.Empty<string>())
         {
-            WatchedDirectories.Add(directory);
+            this.WatchedDirectories.Add(directory);
         }
 
-        IgnoredPatterns.Clear();
+        this.IgnoredPatterns.Clear();
         foreach (var pattern in draft.IgnoredPatterns ?? Array.Empty<string>())
         {
-            IgnoredPatterns.Add(pattern);
+            this.IgnoredPatterns.Add(pattern);
         }
 
-        _scanDepthText = draft.ScanDepth.ToString();
-        _selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
+        this.scanDepthText = draft.ScanDepth.ToString();
+        this.selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
             ?? DiscoveryModeOptions[2];
-        _newIgnoredPatternText = string.Empty;
-        _selectedWatchedDirectory = null;
-        _selectedIgnoredPattern = null;
-        _watcherStatusText = FormatScannerStatus(_projectScanner.Status);
+        this.newIgnoredPatternText = string.Empty;
+        this.selectedWatchedDirectory = null;
+        this.selectedIgnoredPattern = null;
+        this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
 
-        AgentsState.Load(draft.DefaultAgentId);
+        this.AgentsState.Load(draft.DefaultAgentId);
 
-        _updateMessage = string.Empty;
-        _validationError = null;
-        _selectedPage = AllPages[0];
+        this.updateMessage = string.Empty;
+        this.validationError = null;
+        this.selectedPage = AllPages[0];
 
-        OnPropertyChanged(nameof(StartWithWindows));
-        OnPropertyChanged(nameof(StartMinimized));
-        OnPropertyChanged(nameof(SelectedRuntime));
-        OnPropertyChanged(nameof(SelectedPathDisplay));
-        OnPropertyChanged(nameof(HotkeyText));
-        OnPropertyChanged(nameof(HotkeyParts));
-        OnPropertyChanged(nameof(ProbeTtlText));
-        OnPropertyChanged(nameof(ProbeTimeoutText));
-        OnPropertyChanged(nameof(CheckForUpdatesOnStartup));
-        OnPropertyChanged(nameof(AutoDownloadUpdates));
-        OnPropertyChanged(nameof(NotifyStableUpdates));
-        OnPropertyChanged(nameof(NotifyPrereleaseUpdates));
-        OnPropertyChanged(nameof(SelectedLogLevel));
-        OnPropertyChanged(nameof(LogRetentionDaysText));
-        OnPropertyChanged(nameof(LogFileSizeLimitText));
-        OnPropertyChanged(nameof(SelectedPopupPosition));
-        OnPropertyChanged(nameof(SelectedAppTheme));
-        OnPropertyChanged(nameof(AccentText));
-        OnPropertyChanged(nameof(SelectedAccent));
-        OnPropertyChanged(nameof(ScanDepthText));
-        OnPropertyChanged(nameof(SelectedDiscoveryMode));
-        OnPropertyChanged(nameof(NewIgnoredPatternText));
-        OnPropertyChanged(nameof(SelectedWatchedDirectory));
-        OnPropertyChanged(nameof(SelectedIgnoredPattern));
-        OnPropertyChanged(nameof(WatcherStatusText));
-        OnPropertyChanged(nameof(UpdateMessage));
-        OnPropertyChanged(nameof(ValidationError));
-        OnPropertyChanged(nameof(SelectedPage));
+        this.OnPropertyChanged(nameof(this.StartWithWindows));
+        this.OnPropertyChanged(nameof(this.StartMinimized));
+        this.OnPropertyChanged(nameof(this.SelectedRuntime));
+        this.OnPropertyChanged(nameof(this.SelectedPathDisplay));
+        this.OnPropertyChanged(nameof(this.HotkeyText));
+        this.OnPropertyChanged(nameof(this.HotkeyParts));
+        this.OnPropertyChanged(nameof(this.ProbeTtlText));
+        this.OnPropertyChanged(nameof(this.ProbeTimeoutText));
+        this.OnPropertyChanged(nameof(this.CheckForUpdatesOnStartup));
+        this.OnPropertyChanged(nameof(this.AutoDownloadUpdates));
+        this.OnPropertyChanged(nameof(this.NotifyStableUpdates));
+        this.OnPropertyChanged(nameof(this.NotifyPrereleaseUpdates));
+        this.OnPropertyChanged(nameof(this.SelectedLogLevel));
+        this.OnPropertyChanged(nameof(this.LogRetentionDaysText));
+        this.OnPropertyChanged(nameof(this.LogFileSizeLimitText));
+        this.OnPropertyChanged(nameof(this.SelectedPopupPosition));
+        this.OnPropertyChanged(nameof(this.SelectedAppTheme));
+        this.OnPropertyChanged(nameof(this.AccentText));
+        this.OnPropertyChanged(nameof(this.SelectedAccent));
+        this.OnPropertyChanged(nameof(this.ScanDepthText));
+        this.OnPropertyChanged(nameof(this.SelectedDiscoveryMode));
+        this.OnPropertyChanged(nameof(this.NewIgnoredPatternText));
+        this.OnPropertyChanged(nameof(this.SelectedWatchedDirectory));
+        this.OnPropertyChanged(nameof(this.SelectedIgnoredPattern));
+        this.OnPropertyChanged(nameof(this.WatcherStatusText));
+        this.OnPropertyChanged(nameof(this.UpdateMessage));
+        this.OnPropertyChanged(nameof(this.ValidationError));
+        this.OnPropertyChanged(nameof(this.SelectedPage));
     }
 
     /// <summary>
@@ -740,14 +740,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public void SetCapturedHotkey(HotkeyDefinition definition)
     {
-        HotkeyText = HotkeyParser.Format(definition);
-        ValidationError = null;
+        this.HotkeyText = HotkeyParser.Format(definition);
+        this.ValidationError = null;
     }
 
     /// <summary>
     ///   Reports an invalid hotkey capture without changing the current value.
     /// </summary>
-    public void SetHotkeyError(string message) => ValidationError = message;
+    public void SetHotkeyError(string message) => this.ValidationError = message;
 
     /// <summary>
     ///   Closes the window without saving.
@@ -756,49 +756,49 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private void AddWatchedDirectory()
     {
-        var folder = _dialogs.SelectFolder("Add Watched Directory");
+        var folder = this.dialogs.SelectFolder("Add Watched Directory");
         if (string.IsNullOrWhiteSpace(folder))
         {
             return;
         }
 
-        if (!WatchedDirectories.Any(existing => string.Equals(existing, folder, StringComparison.OrdinalIgnoreCase)))
+        if (!this.WatchedDirectories.Any(existing => string.Equals(existing, folder, StringComparison.OrdinalIgnoreCase)))
         {
-            WatchedDirectories.Add(folder);
+            this.WatchedDirectories.Add(folder);
         }
 
-        ValidationError = null;
+        this.ValidationError = null;
     }
 
     private void RemoveWatchedDirectory()
     {
-        if (SelectedWatchedDirectory is { } selected)
+        if (this.SelectedWatchedDirectory is { } selected)
         {
-            WatchedDirectories.Remove(selected);
+            this.WatchedDirectories.Remove(selected);
         }
     }
 
     private void AddIgnoredPattern()
     {
-        var pattern = NewIgnoredPatternText.Trim();
+        var pattern = this.NewIgnoredPatternText.Trim();
         if (pattern.Length == 0)
         {
             return;
         }
 
-        if (!IgnoredPatterns.Any(existing => string.Equals(existing, pattern, StringComparison.OrdinalIgnoreCase)))
+        if (!this.IgnoredPatterns.Any(existing => string.Equals(existing, pattern, StringComparison.OrdinalIgnoreCase)))
         {
-            IgnoredPatterns.Add(pattern);
+            this.IgnoredPatterns.Add(pattern);
         }
 
-        NewIgnoredPatternText = string.Empty;
+        this.NewIgnoredPatternText = string.Empty;
     }
 
     private void RemoveIgnoredPattern()
     {
-        if (SelectedIgnoredPattern is { } selected)
+        if (this.SelectedIgnoredPattern is { } selected)
         {
-            IgnoredPatterns.Remove(selected);
+            this.IgnoredPatterns.Remove(selected);
         }
     }
 
@@ -807,11 +807,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher is not null && !dispatcher.CheckAccess())
         {
-            dispatcher.BeginInvoke(() => WatcherStatusText = FormatScannerStatus(status));
+            dispatcher.BeginInvoke(() => this.WatcherStatusText = FormatScannerStatus(status));
             return;
         }
 
-        WatcherStatusText = FormatScannerStatus(status);
+        this.WatcherStatusText = FormatScannerStatus(status);
     }
 
     private static string FormatScannerStatus(ProjectScanStatus? status)
@@ -842,14 +842,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projectScanner.StatusChanged -= OnScannerStatusChanged;
-        AgentsState.Dispose();
+        this.disposed = true;
+        this.projectScanner.StatusChanged -= this.OnScannerStatusChanged;
+        this.AgentsState.Dispose();
     }
 
     /// <summary>
@@ -858,20 +858,20 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <returns> A task that completes when the check finishes. </returns>
     public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
-        UpdateMessage = "Checking for updates...";
+        this.UpdateMessage = "Checking for updates...";
 
         UpdateCheckResult result;
         try
         {
-            result = await _updateWorkflow.CheckForUpdatesAsync(cancellationToken);
+            result = await this.updateWorkflow.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            UpdateMessage = "Update check cancelled.";
+            this.UpdateMessage = "Update check cancelled.";
             return;
         }
 
-        UpdateMessage = result.Status switch
+        this.UpdateMessage = result.Status switch
         {
             UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
             UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
@@ -883,39 +883,39 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private void Save()
     {
         var input = new SettingsInput(
-            SelectedRuntime.Kind,
-            SelectedPathDisplay.Style,
-            HotkeyText,
-            ProbeTtlText,
-            ProbeTimeoutText,
-            StartWithWindows,
-            StartMinimized,
-            CheckForUpdatesOnStartup,
-            AutoDownloadUpdates,
-            NotifyStableUpdates,
-            NotifyPrereleaseUpdates,
-            SelectedLogLevel.Value,
-            LogRetentionDaysText,
-            LogFileSizeLimitText,
-            SelectedPopupPosition.Position,
-            SelectedAppTheme.Theme,
-            AccentText,
-            WatchedDirectories.ToList(),
-            ScanDepthText,
-            IgnoredPatterns.ToList(),
-            SelectedDiscoveryMode.Mode,
-            AgentsState.CurrentDefaultAgentId);
+            this.SelectedRuntime.Kind,
+            this.SelectedPathDisplay.Style,
+            this.HotkeyText,
+            this.ProbeTtlText,
+            this.ProbeTimeoutText,
+            this.StartWithWindows,
+            this.StartMinimized,
+            this.CheckForUpdatesOnStartup,
+            this.AutoDownloadUpdates,
+            this.NotifyStableUpdates,
+            this.NotifyPrereleaseUpdates,
+            this.SelectedLogLevel.Value,
+            this.LogRetentionDaysText,
+            this.LogFileSizeLimitText,
+            this.SelectedPopupPosition.Position,
+            this.SelectedAppTheme.Theme,
+            this.AccentText,
+            this.WatchedDirectories.ToList(),
+            this.ScanDepthText,
+            this.IgnoredPatterns.ToList(),
+            this.SelectedDiscoveryMode.Mode,
+            this.AgentsState.CurrentDefaultAgentId);
 
-        if (!_settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
+        if (!this.settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {
-            ValidationError = validationError;
+            this.ValidationError = validationError;
             return;
         }
 
-        var result = _settingsApplication.Save(draft!);
+        var result = this.settingsApplication.Save(draft!);
         if (!result.Success)
         {
-            ValidationError = result.Error;
+            this.ValidationError = result.Error;
             return;
         }
 

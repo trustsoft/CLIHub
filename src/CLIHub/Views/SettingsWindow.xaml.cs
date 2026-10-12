@@ -14,7 +14,7 @@ using CLIHub.ViewModels;
 /// </summary>
 public partial class SettingsWindow : Window
 {
-    private readonly SettingsViewModel _viewModel;
+    private readonly SettingsViewModel viewModel;
 
     /// <summary>
     ///   Creates the window and binds it to the settings view model.
@@ -22,12 +22,12 @@ public partial class SettingsWindow : Window
     /// <param name="viewModel"> The settings view model. </param>
     public SettingsWindow(SettingsViewModel viewModel)
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        _viewModel = viewModel;
-        DataContext = viewModel;
-        viewModel.RequestClose += (_, _) => Close();
-        Closed += (_, _) => _viewModel.Dispose();
+        this.viewModel = viewModel;
+        this.DataContext = viewModel;
+        viewModel.RequestClose += (_, _) => this.Close();
+        Closed += (_, _) => this.viewModel.Dispose();
     }
 
     /// <summary>
@@ -36,35 +36,35 @@ public partial class SettingsWindow : Window
     /// </summary>
     public void ShowSettings()
     {
-        _viewModel.Load();
+        this.viewModel.Load();
 
         // The launch window stays on top of other windows, so the Settings window has to be owned
         // by it to be visible above it.
-        if (Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
+        if (this.Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
         {
-            Owner = owner;
+            this.Owner = owner;
         }
 
         if (Application.Current?.MainWindow is { } launch)
         {
-            Height = Math.Max(MinHeight, launch.ActualHeight);
+            this.Height = Math.Max(this.MinHeight, launch.ActualHeight);
         }
 
-        Show();
+        this.Show();
 
-        if (WindowState == WindowState.Minimized)
+        if (this.WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            this.WindowState = WindowState.Normal;
         }
 
-        Activate();
+        this.Activate();
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
         var handle = new WindowInteropHelper(this).EnsureHandle();
         DwmApi.TryRoundCorners(handle);
-        HwndSource.FromHwnd(handle)?.AddHook(OnWindowMessage);
+        HwndSource.FromHwnd(handle)?.AddHook(this.OnWindowMessage);
     }
 
     /// <summary>
@@ -99,8 +99,8 @@ public partial class SettingsWindow : Window
         minMax.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
         minMax.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
         minMax.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
-        minMax.ptMinTrackSize.X = (int)Math.Ceiling(MinWidth * scale);
-        minMax.ptMinTrackSize.Y = (int)Math.Ceiling(MinHeight * scale);
+        minMax.ptMinTrackSize.X = (int)Math.Ceiling(this.MinWidth * scale);
+        minMax.ptMinTrackSize.Y = (int)Math.Ceiling(this.MinHeight * scale);
         Marshal.StructureToPtr(minMax, lParam, false);
         handled = true;
         return IntPtr.Zero;
@@ -119,7 +119,7 @@ public partial class SettingsWindow : Window
 
         try
         {
-            DragMove();
+            this.DragMove();
         }
         catch (InvalidOperationException)
         {
@@ -128,9 +128,9 @@ public partial class SettingsWindow : Window
     }
 
     private void OnMaximizeRestoreClick(object sender, RoutedEventArgs e) =>
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+    private void OnCloseClick(object sender, RoutedEventArgs e) => this.Close();
 
     private void OnKeyDown(object sender, KeyEventArgs e)
     {
@@ -139,7 +139,7 @@ public partial class SettingsWindow : Window
             return;
         }
 
-        Close();
+        this.Close();
         e.Handled = true;
     }
 }

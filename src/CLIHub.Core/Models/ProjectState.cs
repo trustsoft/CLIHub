@@ -55,8 +55,8 @@ public sealed class ProjectState
     /// <param name="config"> The configuration to update. </param>
     public void ApplyTo(AppConfig config)
     {
-        config.Projects = Projects;
-        config.CurrentProjectId = CurrentProjectId;
+        config.Projects = this.Projects;
+        config.CurrentProjectId = this.CurrentProjectId;
     }
 
     /// <summary>
@@ -67,8 +67,8 @@ public sealed class ProjectState
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        snapshot.Projects = Projects;
-        snapshot.CurrentProjectId = CurrentProjectId;
+        snapshot.Projects = this.Projects;
+        snapshot.CurrentProjectId = this.CurrentProjectId;
     }
 
     /// <summary>
@@ -80,7 +80,7 @@ public sealed class ProjectState
         ArgumentNullException.ThrowIfNull(target);
 
         target.Projects.Clear();
-        target.Projects.AddRange(Projects);
-        target.CurrentProjectId = CurrentProjectId;
+        target.Projects.AddRange(this.Projects);
+        target.CurrentProjectId = this.CurrentProjectId;
     }
 }

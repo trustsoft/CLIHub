@@ -11,11 +11,11 @@ using CLIHub.Core.Services;
 /// </summary>
 public sealed class AgentManagementService : IAgentManagementService
 {
-    private readonly IAgentDetectionService _detection;
-    private readonly IAgentVersionService _version;
-    private readonly IAgentCommandService _commands;
-    private readonly AgentProcessMonitor _processMonitor;
-    private readonly ILogger<AgentManagementService> _logger;
+    private readonly IAgentDetectionService detection;
+    private readonly IAgentVersionService version;
+    private readonly IAgentCommandService commands;
+    private readonly AgentProcessMonitor processMonitor;
+    private readonly ILogger<AgentManagementService> logger;
 
     /// <summary>
     ///   Creates the service.
@@ -32,11 +32,11 @@ public sealed class AgentManagementService : IAgentManagementService
         AgentProcessMonitor processMonitor,
         ILogger<AgentManagementService> logger)
     {
-        _detection = detection ?? throw new ArgumentNullException(nameof(detection));
-        _version = version ?? throw new ArgumentNullException(nameof(version));
-        _commands = commands ?? throw new ArgumentNullException(nameof(commands));
-        _processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
+        this.version = version ?? throw new ArgumentNullException(nameof(version));
+        this.commands = commands ?? throw new ArgumentNullException(nameof(commands));
+        this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -44,13 +44,13 @@ public sealed class AgentManagementService : IAgentManagementService
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        _detection.Invalidate();
-        _version.Invalidate();
+        this.detection.Invalidate();
+        this.version.Invalidate();
 
-        var installed = _detection.IsInstalledInSystem(plugin);
-        var version = await _version.GetVersionAsync(plugin, cancellationToken).ConfigureAwait(false);
+        var installed = this.detection.IsInstalledInSystem(plugin);
+        var version = await this.version.GetVersionAsync(plugin, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Probed {PluginId}: installed={Installed}, version={Version}", plugin.Id, installed, version);
+        this.logger.LogInformation("Probed {PluginId}: installed={Installed}, version={Version}", plugin.Id, installed, version);
         return new AgentProbeResult(installed, version);
     }
 
@@ -66,7 +66,7 @@ public sealed class AgentManagementService : IAgentManagementService
                 $"{plugin.Name} does not support the update command");
         }
 
-        var runningAgents = _processMonitor.GetRunningAgents();
+        var runningAgents = this.processMonitor.GetRunningAgents();
         if (runningAgents.Count > 0)
         {
             var names = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
@@ -76,7 +76,7 @@ public sealed class AgentManagementService : IAgentManagementService
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var result = await _commands
+        var result = await this.commands
             .ExecuteAsync(plugin, AgentCommandKind.Update, workingDirectory, cancellationToken)
             .ConfigureAwait(false);
 

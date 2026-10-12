@@ -10,8 +10,8 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class MenuActionCoordinator : ObservableObject, IDisposable
 {
-    private readonly MenuAction _filterAction;
-    private bool _disposed;
+    private readonly MenuAction filterAction;
+    private bool disposed;
 
     /// <summary>
     ///   Actions displayed in the Projects pane.
@@ -29,12 +29,12 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
     /// </summary>
     public bool ShowOnlyProjectAgents
     {
-        get => _filterAction.IsChecked;
+        get => this.filterAction.IsChecked;
         set
         {
-            if (_filterAction.IsChecked != value)
+            if (this.filterAction.IsChecked != value)
             {
-                _filterAction.IsChecked = value;
+                this.filterAction.IsChecked = value;
             }
         }
     }
@@ -85,11 +85,11 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
             showVersion,
             initialFilterState);
 
-        ProjectsActions = actions.Projects;
-        AgentsActions = actions.Agents;
-        _filterAction = actions.FilterAction;
+        this.ProjectsActions = actions.Projects;
+        this.AgentsActions = actions.Agents;
+        this.filterAction = actions.FilterAction;
 
-        _filterAction.PropertyChanged += OnFilterActionChanged;
+        this.filterAction.PropertyChanged += this.OnFilterActionChanged;
     }
 
     /// <summary>
@@ -99,7 +99,7 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
     {
         if (e.PropertyName == nameof(MenuAction.IsChecked))
         {
-            OnPropertyChanged(nameof(ShowOnlyProjectAgents));
+            this.OnPropertyChanged(nameof(this.ShowOnlyProjectAgents));
         }
     }
 
@@ -108,12 +108,12 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _filterAction.PropertyChanged -= OnFilterActionChanged;
+        this.disposed = true;
+        this.filterAction.PropertyChanged -= this.OnFilterActionChanged;
     }
 }

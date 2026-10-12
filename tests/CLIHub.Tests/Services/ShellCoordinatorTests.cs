@@ -167,46 +167,46 @@ public class ShellCoordinatorTests
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
         public ShellCoordinator Coordinator { get; }
 
-        private Action<Action>? _dispatchAction;
+        private Action<Action>? dispatchAction;
 
         public CoordinatorFixture()
         {
-            StartupUi.Setup(x => x.RefreshMenu());
-            StartupUi.Setup(x => x.ShowLaunchWindow());
-            StartupUi.As<IDisposable>().Setup(x => x.Dispose());
-            OperationLifetime
+            this.StartupUi.Setup(x => x.RefreshMenu());
+            this.StartupUi.Setup(x => x.ShowLaunchWindow());
+            this.StartupUi.As<IDisposable>().Setup(x => x.Dispose());
+            this.OperationLifetime
                 .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
                 .Returns((string _, Func<CancellationToken, Task> operation) =>
                 {
                     operation(CancellationToken.None);
                     return Task.CompletedTask;
                 });
-            UpdateWorkflow
+            this.UpdateWorkflow
                 .Setup(x => x.DownloadAndApplyAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
             var context = new ApplicationStartupContext(
                 action =>
                 {
-                    if (_dispatchAction is not null)
+                    if (this.dispatchAction is not null)
                     {
-                        _dispatchAction(action);
+                        this.dispatchAction(action);
                     }
                 },
                 _ => { });
 
-            Coordinator = new ShellCoordinator(
-                OperationLifetime.Object,
-                () => StartupUi.Object,
-                () => UpdateRequestSource.Object,
-                Guard.Object,
-                UpdateWorkflow.Object,
+            this.Coordinator = new ShellCoordinator(
+                this.OperationLifetime.Object,
+                () => this.StartupUi.Object,
+                () => this.UpdateRequestSource.Object,
+                this.Guard.Object,
+                this.UpdateWorkflow.Object,
                 context);
         }
 
         public void SetupDispatch(Action<Action> dispatchAction)
         {
-            _dispatchAction = dispatchAction;
+            this.dispatchAction = dispatchAction;
         }
     }
 }

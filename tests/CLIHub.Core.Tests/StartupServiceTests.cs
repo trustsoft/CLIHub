@@ -8,30 +8,30 @@ public class StartupServiceTests
 {
     private const string ExePath = @"C:\Program Files\CLIHub\CLIHub.exe";
 
-    private readonly FakeStartupRegistry _registry = new();
+    private readonly FakeStartupRegistry registry = new();
 
     private StartupService CreateService(Func<string?>? pathProvider = null) =>
-        new(_registry, NullLogger<StartupService>.Instance, pathProvider ?? (() => ExePath));
+        new(this.registry, NullLogger<StartupService>.Instance, pathProvider ?? (() => ExePath));
 
     [Fact]
     public void IsEnabled_NoRegistration_ReturnsFalse()
     {
-        Assert.False(CreateService().IsEnabled());
+        Assert.False(this.CreateService().IsEnabled());
     }
 
     [Fact]
     public void SetEnabled_True_StoresQuotedExecutablePath()
     {
-        Assert.True(CreateService().SetEnabled(true));
+        Assert.True(this.CreateService().SetEnabled(true));
 
-        Assert.True(_registry.Values.TryGetValue(StartupService.ValueName, out var value));
+        Assert.True(this.registry.Values.TryGetValue(StartupService.ValueName, out var value));
         Assert.Equal($"\"{ExePath}\"", value);
     }
 
     [Fact]
     public void IsEnabled_AfterEnable_ReturnsTrue()
     {
-        var service = CreateService();
+        var service = this.CreateService();
         service.SetEnabled(true);
 
         Assert.True(service.IsEnabled());
@@ -40,7 +40,7 @@ public class StartupServiceTests
     [Fact]
     public void SetEnabled_False_RemovesRegistration()
     {
-        var service = CreateService();
+        var service = this.CreateService();
         service.SetEnabled(true);
 
         Assert.True(service.SetEnabled(false));
@@ -50,7 +50,7 @@ public class StartupServiceTests
     [Fact]
     public void SetEnabled_UnknownExecutablePath_ReturnsFalseAndDoesNotRegister()
     {
-        var service = CreateService(() => null);
+        var service = this.CreateService(() => null);
 
         Assert.False(service.SetEnabled(true));
         Assert.False(service.IsEnabled());
@@ -59,9 +59,9 @@ public class StartupServiceTests
     [Fact]
     public void SetEnabled_RegistryError_ReturnsFalseWithoutThrowing()
     {
-        _registry.ThrowOnAccess = true;
+        this.registry.ThrowOnAccess = true;
 
-        Assert.False(CreateService().SetEnabled(true));
-        Assert.False(CreateService().IsEnabled());
+        Assert.False(this.CreateService().SetEnabled(true));
+        Assert.False(this.CreateService().IsEnabled());
     }
 }

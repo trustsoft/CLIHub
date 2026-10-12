@@ -8,7 +8,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class ProcessRuntimePreferenceTarget : IRuntimePreferenceTarget
 {
-    private readonly ProcessLauncher _processLauncher;
+    private readonly ProcessLauncher processLauncher;
 
     /// <summary>
     ///   Creates the runtime preference target.
@@ -16,9 +16,9 @@ public sealed class ProcessRuntimePreferenceTarget : IRuntimePreferenceTarget
     /// <param name="processLauncher"> Process launcher receiving the runtime. </param>
     public ProcessRuntimePreferenceTarget(ProcessLauncher processLauncher)
     {
-        _processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
+        this.processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
     }
 
     /// <inheritdoc />
-    public void SetRuntime(RuntimeKind runtime) => _processLauncher.SetRuntime(runtime);
+    public void SetRuntime(RuntimeKind runtime) => this.processLauncher.SetRuntime(runtime);
 }

@@ -22,9 +22,9 @@ public partial class WhatsNewWindow : Window
     /// <param name="viewModel"> The What's New view model. </param>
     public WhatsNewWindow(WhatsNewViewModel viewModel)
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        DataContext = viewModel;
+        this.DataContext = viewModel;
     }
 
     /// <summary>
@@ -34,19 +34,19 @@ public partial class WhatsNewWindow : Window
     {
         // The launch window stays on top of other windows, so this window has to be owned by it
         // to be visible above it.
-        if (Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
+        if (this.Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
         {
-            Owner = owner;
+            this.Owner = owner;
         }
 
-        Show();
+        this.Show();
 
-        if (WindowState == WindowState.Minimized)
+        if (this.WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            this.WindowState = WindowState.Normal;
         }
 
-        Activate();
+        this.Activate();
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
@@ -65,7 +65,7 @@ public partial class WhatsNewWindow : Window
 
         try
         {
-            DragMove();
+            this.DragMove();
         }
         catch (InvalidOperationException)
         {
@@ -73,11 +73,11 @@ public partial class WhatsNewWindow : Window
         }
     }
 
-    private void OnCloseClick(object sender, RoutedEventArgs e) => Close();
+    private void OnCloseClick(object sender, RoutedEventArgs e) => this.Close();
 
     private void OnInstallClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is WhatsNewViewModel viewModel)
+        if (this.DataContext is WhatsNewViewModel viewModel)
         {
             viewModel.RequestInstallUpdate();
         }
@@ -85,7 +85,7 @@ public partial class WhatsNewWindow : Window
 
     private void OnCheckClick(object sender, RoutedEventArgs e)
     {
-        if (DataContext is WhatsNewViewModel viewModel)
+        if (this.DataContext is WhatsNewViewModel viewModel)
         {
             viewModel.RequestCheckForUpdates();
         }
@@ -98,7 +98,7 @@ public partial class WhatsNewWindow : Window
             return;
         }
 
-        Close();
+        this.Close();
         e.Handled = true;
     }
 }

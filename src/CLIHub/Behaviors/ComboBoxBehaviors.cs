@@ -64,47 +64,47 @@ public static class ComboBoxBehaviors
     {
         private const double ChromeWidth = 38;
 
-        private readonly ComboBox _combo;
+        private readonly ComboBox combo;
 
         public AutoWidthObserver(ComboBox combo)
         {
-            _combo = combo;
-            combo.Loaded += OnLoaded;
-            ((INotifyCollectionChanged)combo.Items).CollectionChanged += OnItemsChanged;
+            this.combo = combo;
+            combo.Loaded += this.OnLoaded;
+            ((INotifyCollectionChanged)combo.Items).CollectionChanged += this.OnItemsChanged;
         }
 
         public void Detach()
         {
-            _combo.Loaded -= OnLoaded;
-            ((INotifyCollectionChanged)_combo.Items).CollectionChanged -= OnItemsChanged;
+            this.combo.Loaded -= this.OnLoaded;
+            ((INotifyCollectionChanged)this.combo.Items).CollectionChanged -= this.OnItemsChanged;
         }
 
-        private void OnLoaded(object sender, RoutedEventArgs e) => UpdateWidth();
+        private void OnLoaded(object sender, RoutedEventArgs e) => this.UpdateWidth();
 
-        private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) => UpdateWidth();
+        private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e) => this.UpdateWidth();
 
         private void UpdateWidth()
         {
             var widest = 0.0;
 
-            foreach (var item in _combo.Items)
+            foreach (var item in this.combo.Items)
             {
                 var presenter = new ContentPresenter
                 {
                     Content = item,
-                    ContentTemplate = _combo.ItemTemplate,
-                    ContentStringFormat = _combo.ItemStringFormat
+                    ContentTemplate = this.combo.ItemTemplate,
+                    ContentStringFormat = this.combo.ItemStringFormat
                 };
 
-                TextElement.SetFontFamily(presenter, _combo.FontFamily);
-                TextElement.SetFontSize(presenter, _combo.FontSize);
+                TextElement.SetFontFamily(presenter, this.combo.FontFamily);
+                TextElement.SetFontSize(presenter, this.combo.FontSize);
                 presenter.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 widest = Math.Max(widest, presenter.DesiredSize.Width);
             }
 
             if (widest > 0)
             {
-                _combo.Width = Math.Ceiling(widest) + ChromeWidth;
+                this.combo.Width = Math.Ceiling(widest) + ChromeWidth;
             }
         }
     }

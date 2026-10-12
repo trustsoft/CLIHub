@@ -7,7 +7,7 @@ using CLIHub.Core.Models;
 
 public class LegacyTerminalPreferenceMigrationTests
 {
-    private readonly LegacyTerminalPreferenceMigration _migration = new();
+    private readonly LegacyTerminalPreferenceMigration migration = new();
 
     [Theory]
     [InlineData("wt.exe", "wt")]
@@ -19,7 +19,7 @@ public class LegacyTerminalPreferenceMigrationTests
         var snapshot = new ConfigurationSnapshot();
         snapshot.Preferences.TerminalExecutable = executable;
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
             Assert.Equal(RuntimeKinds.Parse(expected), migrated.Preferences.DefaultRuntime);
     }
@@ -37,7 +37,7 @@ public class LegacyTerminalPreferenceMigrationTests
             snapshot.Preferences.TerminalExecutable = string.Empty;
         }
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
             Assert.Equal(RuntimeKind.PowerShell, migrated.Preferences.DefaultRuntime);
     }
@@ -54,7 +54,7 @@ public class LegacyTerminalPreferenceMigrationTests
         snapshot.Preferences.TerminalExecutable = "cmd.exe";
         snapshot.Preferences.Hotkey = "Ctrl+Alt+P";
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
         Assert.Equal(project.Id, migrated.CurrentProjectId);
         Assert.Equal(project.Name, migrated.Projects.Single().Name);

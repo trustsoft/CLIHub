@@ -28,15 +28,15 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// </summary>
     private const long DeactivationGraceMilliseconds = 400;
 
-    private readonly LaunchWindowViewModel _viewModel;
-    private readonly PromptState _promptState;
-    private readonly IPreferencesStore _preferencesStore;
+    private readonly LaunchWindowViewModel viewModel;
+    private readonly PromptState promptState;
+    private readonly IPreferencesStore preferencesStore;
     private const double SplitterHitTolerance = 6d;
 
-    private long _shownAt;
-    private bool _draggingSplitter;
-    private double _dragStartX;
-    private double _dragStartProjectsWidth;
+    private long shownAt;
+    private bool draggingSplitter;
+    private double dragStartX;
+    private double dragStartProjectsWidth;
 
     /// <summary>
     ///   Creates the window and binds it to the shared view model.
@@ -49,12 +49,12 @@ public partial class LaunchWindow : Window, IStartupWindow
         PromptState promptState,
         IPreferencesStore preferencesStore)
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        _viewModel = viewModel;
-        _promptState = promptState;
-        _preferencesStore = preferencesStore;
-        DataContext = viewModel;
+        this.viewModel = viewModel;
+        this.promptState = promptState;
+        this.preferencesStore = preferencesStore;
+        this.DataContext = viewModel;
     }
 
     /// <summary>
@@ -62,23 +62,23 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// </summary>
     public void ShowOnPointerMonitor()
     {
-        var position = _preferencesStore.Load().PopupScreenPosition;
+        var position = this.preferencesStore.Load().PopupScreenPosition;
 
         WindowPositioner.Place(this, position);
-        _viewModel.ApplyDefaultAgentSelection();
-        Show();
+        this.viewModel.ApplyDefaultAgentSelection();
+        this.Show();
 
-        if (WindowState == WindowState.Minimized)
+        if (this.WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            this.WindowState = WindowState.Normal;
         }
 
-        _shownAt = Environment.TickCount64;
-        Activate();
+        this.shownAt = Environment.TickCount64;
+        this.Activate();
 
         // SizeToContent settles during the first layout pass, so place again once the real
         // size is known.
-        Dispatcher.BeginInvoke(
+        this.Dispatcher.BeginInvoke(
             new Action<Window, PopupScreenPosition>(static (window, popupPosition) =>
                 WindowPositioner.Place(window, popupPosition)),
             DispatcherPriority.Loaded,
@@ -91,17 +91,17 @@ public partial class LaunchWindow : Window, IStartupWindow
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
-        if (_viewModel.IsPinned || _promptState.IsPromptOpen)
+        if (this.viewModel.IsPinned || this.promptState.IsPromptOpen)
         {
             return;
         }
 
-        if (Environment.TickCount64 - _shownAt < DeactivationGraceMilliseconds)
+        if (Environment.TickCount64 - this.shownAt < DeactivationGraceMilliseconds)
         {
             return;
         }
 
-        Hide();
+        this.Hide();
     }
 
     /// <summary>
@@ -115,9 +115,9 @@ public partial class LaunchWindow : Window, IStartupWindow
             return;
         }
 
-        if (!CloseActionsMenus())
+        if (!this.CloseActionsMenus())
         {
-            Hide();
+            this.Hide();
         }
 
         e.Handled = true;
@@ -131,7 +131,7 @@ public partial class LaunchWindow : Window, IStartupWindow
     {
         if (e.Key == Key.Escape)
         {
-            CloseActionsMenus();
+            this.CloseActionsMenus();
             e.Handled = true;
         }
     }
@@ -142,10 +142,10 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// <returns> True when either menu was open. </returns>
     private bool CloseActionsMenus()
     {
-        var wasOpen = ProjectsActionsPopup.IsOpen || AgentsActionsPopup.IsOpen;
+        var wasOpen = this.ProjectsActionsPopup.IsOpen || this.AgentsActionsPopup.IsOpen;
 
-        ProjectsActionsPopup.IsOpen = false;
-        AgentsActionsPopup.IsOpen = false;
+        this.ProjectsActionsPopup.IsOpen = false;
+        this.AgentsActionsPopup.IsOpen = false;
 
         return wasOpen;
     }
@@ -156,12 +156,12 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// </summary>
     private void OnWindowMouseDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.OriginalSource is not DependencyObject source || IsInsidePane(source))
+        if (e.OriginalSource is not DependencyObject source || this.IsInsidePane(source))
         {
             return;
         }
 
-        var dividerCenter = PanesGrid.ColumnDefinitions[0].ActualWidth + (PaneSplitter.ActualWidth / 2);
+        var dividerCenter = this.PanesGrid.ColumnDefinitions[0].ActualWidth + (this.PaneSplitter.ActualWidth / 2);
         var position = e.GetPosition(this);
 
         if (Math.Abs(position.X - dividerCenter) > SplitterHitTolerance)
@@ -169,10 +169,10 @@ public partial class LaunchWindow : Window, IStartupWindow
             return;
         }
 
-        _draggingSplitter = true;
-        _dragStartX = position.X;
-        _dragStartProjectsWidth = PanesGrid.ColumnDefinitions[0].ActualWidth;
-        CaptureMouse();
+        this.draggingSplitter = true;
+        this.dragStartX = position.X;
+        this.dragStartProjectsWidth = this.PanesGrid.ColumnDefinitions[0].ActualWidth;
+        this.CaptureMouse();
         e.Handled = true;
     }
 
@@ -184,12 +184,12 @@ public partial class LaunchWindow : Window, IStartupWindow
     {
         for (var current = source; current != null; current = VisualTreeHelper.GetParent(current))
         {
-            if (ReferenceEquals(current, PaneSplitter))
+            if (ReferenceEquals(current, this.PaneSplitter))
             {
                 return false;
             }
 
-            if (ReferenceEquals(current, PanesGrid))
+            if (ReferenceEquals(current, this.PanesGrid))
             {
                 return true;
             }
@@ -205,8 +205,8 @@ public partial class LaunchWindow : Window, IStartupWindow
     /// </summary>
     private void ApplyProjectsPaneWidth(double width)
     {
-        var projects = PanesGrid.ColumnDefinitions[0];
-        var agents = PanesGrid.ColumnDefinitions[2];
+        var projects = this.PanesGrid.ColumnDefinitions[0];
+        var agents = this.PanesGrid.ColumnDefinitions[2];
 
         agents.Width = GridLength.Auto;
 
@@ -217,23 +217,23 @@ public partial class LaunchWindow : Window, IStartupWindow
 
     private void OnSplitterMouseMove(object sender, MouseEventArgs e)
     {
-        if (!_draggingSplitter)
+        if (!this.draggingSplitter)
         {
             return;
         }
 
-        ApplyProjectsPaneWidth(_dragStartProjectsWidth + (e.GetPosition(this).X - _dragStartX));
+        this.ApplyProjectsPaneWidth(this.dragStartProjectsWidth + (e.GetPosition(this).X - this.dragStartX));
     }
 
     private void OnSplitterMouseUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_draggingSplitter)
+        if (!this.draggingSplitter)
         {
             return;
         }
 
-        _draggingSplitter = false;
-        ReleaseMouseCapture();
+        this.draggingSplitter = false;
+        this.ReleaseMouseCapture();
         e.Handled = true;
     }
 
@@ -258,7 +258,7 @@ public partial class LaunchWindow : Window, IStartupWindow
     ///   Closes the actions menu the clicked entry belongs to. A popup does not close when an entry
     ///   inside it is clicked, so the click handler closes both.
     /// </summary>
-    private void OnMenuActionInvoked(object sender, RoutedEventArgs e) => CloseActionsMenus();
+    private void OnMenuActionInvoked(object sender, RoutedEventArgs e) => this.CloseActionsMenus();
 
     /// <summary>
     ///   Hides the window instead of closing it; the application lives in the tray.
@@ -268,7 +268,7 @@ public partial class LaunchWindow : Window, IStartupWindow
     {
         // Hide instead of exiting: the window is put away with Escape, the tray menu, or Exit.
         e.Cancel = true;
-        Hide();
+        this.Hide();
         base.OnClosing(e);
     }
 }

@@ -15,8 +15,8 @@ public class PluginSeeder : IPluginSeeder
     private const string DescriptorSuffix = ".plugin.json";
     private const string LogoSuffix = ".logo.png";
 
-    private readonly ILogger<PluginSeeder> _logger;
-    private readonly string _pluginsPath;
+    private readonly ILogger<PluginSeeder> logger;
+    private readonly string pluginsPath;
 
     /// <summary>
     ///   Creates the seeder for the given plugins root.
@@ -25,8 +25,8 @@ public class PluginSeeder : IPluginSeeder
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
     public PluginSeeder(ILogger<PluginSeeder> logger, string? pluginsPath = null)
     {
-        _logger = logger;
-        _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
+        this.logger = logger;
+        this.pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
     }
 
     /// <inheritdoc />
@@ -34,12 +34,12 @@ public class PluginSeeder : IPluginSeeder
     {
         try
         {
-            if (HasAnyPlugin(_pluginsPath))
+            if (HasAnyPlugin(this.pluginsPath))
             {
                 return 0;
             }
 
-            Directory.CreateDirectory(_pluginsPath);
+            Directory.CreateDirectory(this.pluginsPath);
 
             var assembly = typeof(PluginSeeder).Assembly;
             var resources = assembly.GetManifestResourceNames()
@@ -66,7 +66,7 @@ public class PluginSeeder : IPluginSeeder
 
                 if (string.IsNullOrWhiteSpace(id))
                 {
-                    _logger.LogWarning("Skipped seed descriptor {Resource}: missing id", name);
+                    this.logger.LogWarning("Skipped seed descriptor {Resource}: missing id", name);
                     continue;
                 }
 
@@ -79,7 +79,7 @@ public class PluginSeeder : IPluginSeeder
             foreach (var (_, _, json) in descriptorResources)
             {
                 var id = ReadPluginId(json)!; // validated above
-                var directory = Path.Combine(_pluginsPath, id);
+                var directory = Path.Combine(this.pluginsPath, id);
                 if (File.Exists(Path.Combine(directory, "plugin.json")))
                 {
                     continue;
@@ -88,7 +88,7 @@ public class PluginSeeder : IPluginSeeder
                 Directory.CreateDirectory(directory);
                 File.WriteAllText(Path.Combine(directory, "plugin.json"), json);
                 descriptorsWritten++;
-                _logger.LogInformation("Seeded plugin descriptor {PluginId}", id);
+                this.logger.LogInformation("Seeded plugin descriptor {PluginId}", id);
             }
 
             foreach (var name in resources.Where(n => n.EndsWith(LogoSuffix, StringComparison.Ordinal)))
@@ -96,11 +96,11 @@ public class PluginSeeder : IPluginSeeder
                 var key = ExtractKey(name, LogoSuffix);
                 if (!idByKey.TryGetValue(key, out var id))
                 {
-                    _logger.LogWarning("Skipped seed logo {Resource}: no matching descriptor", name);
+                    this.logger.LogWarning("Skipped seed logo {Resource}: no matching descriptor", name);
                     continue;
                 }
 
-                var directory = Path.Combine(_pluginsPath, id);
+                var directory = Path.Combine(this.pluginsPath, id);
                 var target = Path.Combine(directory, "logo.png");
                 if (File.Exists(target))
                 {
@@ -116,19 +116,19 @@ public class PluginSeeder : IPluginSeeder
                 Directory.CreateDirectory(directory);
                 using var destination = File.Create(target);
                 source.CopyTo(destination);
-                _logger.LogInformation("Seeded logo for {PluginId}", id);
+                this.logger.LogInformation("Seeded logo for {PluginId}", id);
             }
 
             if (descriptorsWritten > 0)
             {
-                _logger.LogInformation("Seeded {Count} plugin descriptor(s)", descriptorsWritten);
+                this.logger.LogInformation("Seeded {Count} plugin descriptor(s)", descriptorsWritten);
             }
 
             return descriptorsWritten;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Plugin seeding failed; continuing without seeding");
+            this.logger.LogWarning(ex, "Plugin seeding failed; continuing without seeding");
             return 0;
         }
     }

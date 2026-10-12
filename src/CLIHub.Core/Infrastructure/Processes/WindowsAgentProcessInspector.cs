@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging;
 [SupportedOSPlatform("windows")]
 public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
 {
-    private readonly ILogger<WindowsAgentProcessInspector> _logger;
+    private readonly ILogger<WindowsAgentProcessInspector> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="WindowsAgentProcessInspector"/> class.
@@ -22,7 +22,7 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
     /// <param name="logger"> Logger for diagnostics. </param>
     public WindowsAgentProcessInspector(ILogger<WindowsAgentProcessInspector> logger)
     {
-        _logger = logger;
+        this.logger = logger;
     }
 
     /// <inheritdoc />
@@ -95,7 +95,7 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to enumerate processes");
+            this.logger.LogWarning(ex, "Failed to enumerate processes");
         }
 
         return instances;

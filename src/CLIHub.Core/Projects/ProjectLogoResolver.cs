@@ -14,7 +14,7 @@ internal sealed class ProjectLogoResolver
         "icon.png", "icon.jpg", "favicon.png"
     };
 
-    private readonly ILogoCacheService _logoCache;
+    private readonly ILogoCacheService logoCache;
 
     /// <summary>
     ///   Creates the resolver over the shared logo cache.
@@ -22,7 +22,7 @@ internal sealed class ProjectLogoResolver
     /// <param name="logoCache"> The logo cache. </param>
     public ProjectLogoResolver(ILogoCacheService logoCache)
     {
-        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
+        this.logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ internal sealed class ProjectLogoResolver
     /// <param name="defaultLogoPath"> The fallback logo path. </param>
     /// <returns> The resolved logo path, or the fallback path. </returns>
     public string? Resolve(Project project, string? defaultLogoPath) =>
-        _logoCache.GetOrResolve($"project:{project.Id}", () => Scan(project.Path)) ?? defaultLogoPath;
+        this.logoCache.GetOrResolve($"project:{project.Id}", () => Scan(project.Path)) ?? defaultLogoPath;
 
     /// <summary>
     ///   Resolves a logo path without using a project cache key.
@@ -47,7 +47,7 @@ internal sealed class ProjectLogoResolver
     ///   Removes the cached logo for a project.
     /// </summary>
     /// <param name="projectId"> The project identifier. </param>
-    public void Remove(string projectId) => _logoCache.Remove($"project:{projectId}");
+    public void Remove(string projectId) => this.logoCache.Remove($"project:{projectId}");
 
     private static string? Scan(string projectPath)
     {

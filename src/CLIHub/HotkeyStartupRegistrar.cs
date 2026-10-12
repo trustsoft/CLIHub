@@ -11,8 +11,8 @@ using CLIHub.Hotkeys;
 /// </summary>
 public sealed class HotkeyStartupRegistrar : IHotkeyStartupRegistrar
 {
-    private readonly IGlobalHotkeyService _hotkeyService;
-    private readonly ILogger<HotkeyStartupRegistrar> _logger;
+    private readonly IGlobalHotkeyService hotkeyService;
+    private readonly ILogger<HotkeyStartupRegistrar> logger;
 
     /// <summary>
     ///   Creates the startup registrar over the global hotkey boundary.
@@ -23,8 +23,8 @@ public sealed class HotkeyStartupRegistrar : IHotkeyStartupRegistrar
         IGlobalHotkeyService hotkeyService,
         ILogger<HotkeyStartupRegistrar> logger)
     {
-        _hotkeyService = hotkeyService ?? throw new ArgumentNullException(nameof(hotkeyService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.hotkeyService = hotkeyService ?? throw new ArgumentNullException(nameof(hotkeyService));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -39,12 +39,12 @@ public sealed class HotkeyStartupRegistrar : IHotkeyStartupRegistrar
         }
         else
         {
-            _logger.LogWarning(
+            this.logger.LogWarning(
                 "Invalid hotkey '{Hotkey}' in config; using default Ctrl+Shift+A",
                 preferences.Hotkey);
             definition = HotkeyParser.Default;
         }
 
-        _hotkeyService.Register(definition);
+        this.hotkeyService.Register(definition);
     }
 }

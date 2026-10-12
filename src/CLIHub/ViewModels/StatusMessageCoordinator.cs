@@ -8,11 +8,11 @@ using CLIHub;
 /// </summary>
 public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
 {
-    private readonly ProjectPaneController _projectPane;
-    private readonly AgentPaneController _agentPane;
-    private readonly UpdateControlViewModel _updateControl;
-    private string _currentMessage = "CLIHub ready";
-    private bool _disposed;
+    private readonly ProjectPaneController projectPane;
+    private readonly AgentPaneController agentPane;
+    private readonly UpdateControlViewModel updateControl;
+    private string currentMessage = "CLIHub ready";
+    private bool disposed;
 
     /// <summary>
     ///   Creates a status message coordinator that subscribes to events from controllers
@@ -26,12 +26,12 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
         AgentPaneController agentPane,
         UpdateControlViewModel updateControl)
     {
-        _projectPane = projectPane ?? throw new ArgumentNullException(nameof(projectPane));
-        _agentPane = agentPane ?? throw new ArgumentNullException(nameof(agentPane));
-        _updateControl = updateControl ?? throw new ArgumentNullException(nameof(updateControl));
+        this.projectPane = projectPane ?? throw new ArgumentNullException(nameof(projectPane));
+        this.agentPane = agentPane ?? throw new ArgumentNullException(nameof(agentPane));
+        this.updateControl = updateControl ?? throw new ArgumentNullException(nameof(updateControl));
 
-        _projectPane.ProjectsChanged += OnProjectsChanged;
-        _updateControl.OutcomeReported += OnUpdateOutcomeReported;
+        this.projectPane.ProjectsChanged += this.OnProjectsChanged;
+        this.updateControl.OutcomeReported += this.OnUpdateOutcomeReported;
     }
 
     /// <summary>
@@ -39,8 +39,8 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     /// </summary>
     public string CurrentMessage
     {
-        get => _currentMessage;
-        private set => SetProperty(ref _currentMessage, value);
+        get => this.currentMessage;
+        private set => this.SetProperty(ref this.currentMessage, value);
     }
 
     /// <summary>
@@ -48,28 +48,28 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     /// </summary>
     /// <param name="projectName"> Name of the selected project. </param>
     public void ReportProjectSelected(string projectName) =>
-        CurrentMessage = $"Current project: {projectName}";
+        this.CurrentMessage = $"Current project: {projectName}";
 
     /// <summary>
     ///   Reports an agent selection status.
     /// </summary>
     /// <param name="agentName"> Name of the selected agent. </param>
     public void ReportAgentSelected(string agentName) =>
-        CurrentMessage = $"Selected agent: {agentName}";
+        this.CurrentMessage = $"Selected agent: {agentName}";
 
     /// <summary>
     ///   Reports a window pin status change.
     /// </summary>
     /// <param name="isPinned"> Whether the window is now pinned. </param>
     public void ReportWindowPinChanged(bool isPinned) =>
-        CurrentMessage = isPinned ? "Window pinned open" : "Window unpinned";
+        this.CurrentMessage = isPinned ? "Window pinned open" : "Window unpinned";
 
     /// <summary>
     ///   Reports a command execution outcome.
     /// </summary>
     /// <param name="message"> The outcome message to display. </param>
     public void ReportCommandOutcome(string message) =>
-        CurrentMessage = message;
+        this.CurrentMessage = message;
 
     /// <summary>
     ///   Reports a folder open success or error.
@@ -77,7 +77,7 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     /// <param name="path"> The folder path that was opened or attempted. </param>
     /// <param name="error"> The exception if the operation failed, or null if successful. </param>
     public void ReportFolderOpen(string path, Exception? error = null) =>
-        CurrentMessage = error is null
+        this.CurrentMessage = error is null
             ? $"Opened {path}"
             : $"Could not open {path}: {error.Message}";
 
@@ -85,7 +85,7 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     ///   Reports when no agents are found.
     /// </summary>
     public void ReportNoAgentsFound() =>
-        CurrentMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
+        this.CurrentMessage = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
 
     /// <summary>
     ///   Reports when update is blocked due to running agents.
@@ -94,27 +94,27 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     public void ReportUpdateBlockedByRunningAgents(IReadOnlyList<string> runningAgentNames)
     {
         var agentList = string.Join(", ", runningAgentNames);
-        CurrentMessage = $"Cannot update while agents are running: {agentList}";
+        this.CurrentMessage = $"Cannot update while agents are running: {agentList}";
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e) =>
-        CurrentMessage = "Projects refreshed";
+        this.CurrentMessage = "Projects refreshed";
 
     private void OnUpdateOutcomeReported(object? sender, string message) =>
-        CurrentMessage = message;
+        this.CurrentMessage = message;
 
     /// <summary>
     ///   Unsubscribes from all event sources.
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projectPane.ProjectsChanged -= OnProjectsChanged;
-        _updateControl.OutcomeReported -= OnUpdateOutcomeReported;
+        this.disposed = true;
+        this.projectPane.ProjectsChanged -= this.OnProjectsChanged;
+        this.updateControl.OutcomeReported -= this.OnUpdateOutcomeReported;
     }
 }

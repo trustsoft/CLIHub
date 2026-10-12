@@ -6,27 +6,27 @@ using CLIHub.Core.Configuration;
 
 public class AgentDetectionServiceTests : IDisposable
 {
-    private readonly string _projectDir;
-    private readonly FakeConfigurationRepository _config = new();
-    private readonly FakeTimeProvider _time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
-    private readonly AgentDetectionService _service;
+    private readonly string projectDir;
+    private readonly FakeConfigurationRepository config = new();
+    private readonly FakeTimeProvider time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+    private readonly AgentDetectionService service;
 
     public AgentDetectionServiceTests()
     {
-        _projectDir = Path.Combine(Path.GetTempPath(), "clihub-detect-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_projectDir);
-        _service = new AgentDetectionService(new PreferencesStore(_config), _time);
+        this.projectDir = Path.Combine(Path.GetTempPath(), "clihub-detect-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.projectDir);
+        this.service = new AgentDetectionService(new PreferencesStore(this.config), this.time);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_projectDir, recursive: true); } catch { }
+        try { Directory.Delete(this.projectDir, recursive: true); } catch { }
     }
 
     [Fact]
     public void IsInstalledInSystem_MarkerPresent_ReturnsTrue()
     {
-        var marker = Path.Combine(_projectDir, "installed-marker");
+        var marker = Path.Combine(this.projectDir, "installed-marker");
         Directory.CreateDirectory(marker);
         var plugin = new Plugin
         {
@@ -34,7 +34,7 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { SystemPaths = { marker } }
         };
 
-        Assert.True(_service.IsInstalledInSystem(plugin));
+        Assert.True(this.service.IsInstalledInSystem(plugin));
     }
 
     [Fact]
@@ -43,10 +43,10 @@ public class AgentDetectionServiceTests : IDisposable
         var plugin = new Plugin
         {
             Id = "a", Name = "A",
-            Detection = new AgentDetection { SystemPaths = { Path.Combine(_projectDir, "missing") } }
+            Detection = new AgentDetection { SystemPaths = { Path.Combine(this.projectDir, "missing") } }
         };
 
-        Assert.False(_service.IsInstalledInSystem(plugin));
+        Assert.False(this.service.IsInstalledInSystem(plugin));
     }
 
     [Fact]
@@ -58,20 +58,20 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { SystemPaths = { "%TEMP%" } }
         };
 
-        Assert.True(_service.IsInstalledInSystem(plugin));
+        Assert.True(this.service.IsInstalledInSystem(plugin));
     }
 
     [Fact]
     public void IsAvailableInProject_IndicatorPresent_ReturnsTrue()
     {
-        Directory.CreateDirectory(Path.Combine(_projectDir, ".opencode"));
+        Directory.CreateDirectory(Path.Combine(this.projectDir, ".opencode"));
         var plugin = new Plugin
         {
             Id = "a", Name = "A",
             Detection = new AgentDetection { ProjectIndicators = { ".opencode" } }
         };
 
-        Assert.True(_service.IsAvailableInProject(plugin, _projectDir));
+        Assert.True(this.service.IsAvailableInProject(plugin, this.projectDir));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { ProjectIndicators = { ".opencode" } }
         };
 
-        Assert.False(_service.IsAvailableInProject(plugin, _projectDir));
+        Assert.False(this.service.IsAvailableInProject(plugin, this.projectDir));
     }
 
     [Fact]
@@ -95,13 +95,13 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { ProjectIndicators = { ".opencode" } }
         };
 
-        Assert.False(_service.IsAvailableInProject(plugin, Path.Combine(_projectDir, "nope")));
+        Assert.False(this.service.IsAvailableInProject(plugin, Path.Combine(this.projectDir, "nope")));
     }
 
     [Fact]
     public void IsInstalledInSystem_WithinTtl_ReturnsCachedValue()
     {
-        var marker = Path.Combine(_projectDir, "cached-marker");
+        var marker = Path.Combine(this.projectDir, "cached-marker");
         File.WriteAllText(marker, string.Empty);
         var plugin = new Plugin
         {
@@ -109,19 +109,19 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { SystemPaths = { marker } }
         };
 
-        Assert.True(_service.IsInstalledInSystem(plugin));
+        Assert.True(this.service.IsInstalledInSystem(plugin));
 
         File.Delete(marker);
-        Assert.True(_service.IsInstalledInSystem(plugin)); // served from cache
+        Assert.True(this.service.IsInstalledInSystem(plugin)); // served from cache
 
-        _time.Advance(AgentDetectionService.DefaultTtl + TimeSpan.FromMinutes(1));
-        Assert.False(_service.IsInstalledInSystem(plugin)); // TTL expired -> re-checked
+        this.time.Advance(AgentDetectionService.DefaultTtl + TimeSpan.FromMinutes(1));
+        Assert.False(this.service.IsInstalledInSystem(plugin)); // TTL expired -> re-checked
     }
 
     [Fact]
     public void Invalidate_ForcesReCheck()
     {
-        var marker = Path.Combine(_projectDir, "invalidate-marker");
+        var marker = Path.Combine(this.projectDir, "invalidate-marker");
         File.WriteAllText(marker, string.Empty);
         var plugin = new Plugin
         {
@@ -129,20 +129,20 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { SystemPaths = { marker } }
         };
 
-        Assert.True(_service.IsInstalledInSystem(plugin));
+        Assert.True(this.service.IsInstalledInSystem(plugin));
 
         File.Delete(marker);
-        Assert.True(_service.IsInstalledInSystem(plugin)); // served from cache
+        Assert.True(this.service.IsInstalledInSystem(plugin)); // served from cache
 
-        _service.Invalidate();
-        Assert.False(_service.IsInstalledInSystem(plugin)); // re-checked after invalidation
+        this.service.Invalidate();
+        Assert.False(this.service.IsInstalledInSystem(plugin)); // re-checked after invalidation
     }
 
     [Fact]
     public void IsInstalledInSystem_RespectsConfiguredTtl()
     {
-        new PreferencesStore(_config).Update(preferences => preferences.AgentProbeTtlMinutes = 1);
-        var marker = Path.Combine(_projectDir, "short-ttl-marker");
+        new PreferencesStore(this.config).Update(preferences => preferences.AgentProbeTtlMinutes = 1);
+        var marker = Path.Combine(this.projectDir, "short-ttl-marker");
         File.WriteAllText(marker, string.Empty);
         var plugin = new Plugin
         {
@@ -150,10 +150,10 @@ public class AgentDetectionServiceTests : IDisposable
             Detection = new AgentDetection { SystemPaths = { marker } }
         };
 
-        Assert.True(_service.IsInstalledInSystem(plugin));
+        Assert.True(this.service.IsInstalledInSystem(plugin));
         File.Delete(marker);
 
-        _time.Advance(TimeSpan.FromMinutes(2));
-        Assert.False(_service.IsInstalledInSystem(plugin));
+        this.time.Advance(TimeSpan.FromMinutes(2));
+        Assert.False(this.service.IsInstalledInSystem(plugin));
     }
 }

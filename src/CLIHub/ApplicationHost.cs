@@ -16,7 +16,7 @@ using Serilog;
 /// </summary>
 public sealed class ApplicationHost : IApplicationHost
 {
-    private ServiceProvider? _services;
+    private ServiceProvider? services;
 
     /// <inheritdoc />
     public void Start(Action<Action> dispatch, Action<object> setMainWindow)
@@ -31,9 +31,9 @@ public sealed class ApplicationHost : IApplicationHost
 
         var services = new ServiceCollection();
         services.AddClIHubServices();
-        _services = services.BuildServiceProvider();
+        this.services = services.BuildServiceProvider();
 
-        _services.GetRequiredService<IApplicationBootstrapper>().Start(
+        this.services.GetRequiredService<IApplicationBootstrapper>().Start(
             new ApplicationStartupContext(dispatch, setMainWindow));
     }
 
@@ -44,7 +44,7 @@ public sealed class ApplicationHost : IApplicationHost
 
         try
         {
-            _services?.GetService<IApplicationSession>()?.Dispose();
+            this.services?.GetService<IApplicationSession>()?.Dispose();
         }
         catch (Exception ex)
         {
@@ -53,7 +53,7 @@ public sealed class ApplicationHost : IApplicationHost
 
         try
         {
-            _services?
+            this.services?
                 .GetService<IApplicationOperationLifetime>()?
                 .StopAsync(ApplicationOperationLifetime.DefaultShutdownTimeout)
                 .GetAwaiter()
@@ -64,7 +64,7 @@ public sealed class ApplicationHost : IApplicationHost
             Log.Warning(ex, "Application operation shutdown failed");
         }
 
-        _services?.Dispose();
+        this.services?.Dispose();
 
         Log.CloseAndFlush();
     }

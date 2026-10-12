@@ -11,13 +11,13 @@ using CLIHub.Core.Scanning;
 /// </summary>
 public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 {
-    private readonly IInstanceCoordinator _instanceCoordinator;
-    private readonly IStartupStateLoader _startupStateLoader;
-    private readonly IApplicationSession _session;
-    private readonly Func<IHotkeyStartupRegistrar> _hotkeyStartupRegistrarFactory;
-    private readonly IOptionalStartupCoordinator _optionalStartup;
-    private readonly IProjectScanner _projectScanner;
-    private readonly ILogger<ApplicationBootstrapper> _logger;
+    private readonly IInstanceCoordinator instanceCoordinator;
+    private readonly IStartupStateLoader startupStateLoader;
+    private readonly IApplicationSession session;
+    private readonly Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory;
+    private readonly IOptionalStartupCoordinator optionalStartup;
+    private readonly IProjectScanner projectScanner;
+    private readonly ILogger<ApplicationBootstrapper> logger;
 
     /// <summary>
     ///   Creates the application startup orchestrator.
@@ -38,13 +38,13 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         IProjectScanner projectScanner,
         ILogger<ApplicationBootstrapper> logger)
     {
-        _instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
-        _startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));
-        _session = session ?? throw new ArgumentNullException(nameof(session));
-        _hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
-        _optionalStartup = optionalStartup ?? throw new ArgumentNullException(nameof(optionalStartup));
-        _projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
+        this.startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));
+        this.session = session ?? throw new ArgumentNullException(nameof(session));
+        this.hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
+        this.optionalStartup = optionalStartup ?? throw new ArgumentNullException(nameof(optionalStartup));
+        this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -54,7 +54,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         ArgumentNullException.ThrowIfNull(context.Dispatch);
         ArgumentNullException.ThrowIfNull(context.SetMainWindow);
 
-        var instanceStatus = _instanceCoordinator.Coordinate();
+        var instanceStatus = this.instanceCoordinator.Coordinate();
         if (instanceStatus == InstanceStatus.SecondInstance)
         {
             return;
@@ -62,10 +62,10 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 
         try
         {
-            var startupState = _startupStateLoader.Load();
+            var startupState = this.startupStateLoader.Load();
 
-            var startupUi = _session.Start(context);
-            var hotkeyStartupRegistrar = _hotkeyStartupRegistrarFactory();
+            var startupUi = this.session.Start(context);
+            var hotkeyStartupRegistrar = this.hotkeyStartupRegistrarFactory();
 
             context.SetMainWindow(startupUi.LaunchWindow);
 
@@ -75,20 +75,20 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             }
             else
             {
-                _logger.LogInformation("Starting in the system tray (start minimized enabled)");
+                this.logger.LogInformation("Starting in the system tray (start minimized enabled)");
             }
 
             hotkeyStartupRegistrar.Register(startupState.Preferences);
 
-            _optionalStartup.RunOptionalStartup(startupState, startupUi, context);
+            this.optionalStartup.RunOptionalStartup(startupState, startupUi, context);
 
-            _projectScanner.Start();
+            this.projectScanner.Start();
 
-            _logger.LogInformation("CLIHub started");
+            this.logger.LogInformation("CLIHub started");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "CLIHub startup failed");
+            this.logger.LogError(ex, "CLIHub startup failed");
             throw;
         }
     }

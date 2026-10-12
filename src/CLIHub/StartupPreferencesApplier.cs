@@ -9,8 +9,8 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
 {
-    private readonly ProcessLauncher _processLauncher;
-    private readonly IStartupService _startupService;
+    private readonly ProcessLauncher processLauncher;
+    private readonly IStartupService startupService;
 
     /// <summary>
     ///   Creates the applier with the process runtime and Windows startup boundaries.
@@ -21,8 +21,8 @@ public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
         ProcessLauncher processLauncher,
         IStartupService startupService)
     {
-        _processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
-        _startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
+        this.processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
+        this.startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
     }
 
     /// <inheritdoc />
@@ -30,7 +30,7 @@ public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
-        _processLauncher.SetRuntime(preferences.DefaultRuntime);
-        _startupService.SetEnabled(preferences.StartWithWindows);
+        this.processLauncher.SetRuntime(preferences.DefaultRuntime);
+        this.startupService.SetEnabled(preferences.StartWithWindows);
     }
 }

@@ -23,18 +23,18 @@ using CLIHub.ViewModels;
 /// </remarks>
 public partial class MainWindow : Window
 {
-    private readonly IPluginCatalog _pluginCatalog;
-    private readonly IProjectService _projectService;
-    private readonly IAgentCommandService _agentCommandService;
-    private readonly IAgentDetectionService _agentDetectionService;
-    private readonly IAgentVersionService _agentVersionService;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateWorkflow _updateWorkflow;
-    private readonly ILogger<MainWindow> _logger;
-    private bool _suppressFilterEvent;
-    private CancellationTokenSource? _versionPopulationCts;
-    private int _versionPopulationGeneration;
+    private readonly IPluginCatalog pluginCatalog;
+    private readonly IProjectService projectService;
+    private readonly IAgentCommandService agentCommandService;
+    private readonly IAgentDetectionService agentDetectionService;
+    private readonly IAgentVersionService agentVersionService;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IUpdateWorkflow updateWorkflow;
+    private readonly ILogger<MainWindow> logger;
+    private bool suppressFilterEvent;
+    private CancellationTokenSource? versionPopulationCts;
+    private int versionPopulationGeneration;
 
     /// <summary>
     ///   Creates the window and performs the initial project and agent load.
@@ -59,46 +59,46 @@ public partial class MainWindow : Window
         IUpdateWorkflow updateWorkflow,
         ILogger<MainWindow> logger)
     {
-        InitializeComponent();
+        this.InitializeComponent();
 
-        _pluginCatalog = pluginCatalog;
-        _projectService = projectService;
-        _agentCommandService = agentCommandService;
-        _agentDetectionService = agentDetectionService;
-        _agentVersionService = agentVersionService;
-        _preferencesStore = preferencesStore;
-        _versionProvider = versionProvider;
-        _updateWorkflow = updateWorkflow;
-        _logger = logger;
+        this.pluginCatalog = pluginCatalog;
+        this.projectService = projectService;
+        this.agentCommandService = agentCommandService;
+        this.agentDetectionService = agentDetectionService;
+        this.agentVersionService = agentVersionService;
+        this.preferencesStore = preferencesStore;
+        this.versionProvider = versionProvider;
+        this.updateWorkflow = updateWorkflow;
+        this.logger = logger;
 
-        _projectService.ProjectsChanged += (_, _) => RefreshProjects();
+        this.projectService.ProjectsChanged += (_, _) => this.RefreshProjects();
 
-        _suppressFilterEvent = true;
-        FilterUnavailableCheckBox.IsChecked = _preferencesStore.Load().ShowOnlyProjectAgents;
-        _suppressFilterEvent = false;
+        this.suppressFilterEvent = true;
+        this.FilterUnavailableCheckBox.IsChecked = this.preferencesStore.Load().ShowOnlyProjectAgents;
+        this.suppressFilterEvent = false;
 
-        AppVersionText.Text = $"v{_versionProvider.GetCurrentVersion()}";
+        this.AppVersionText.Text = $"v{this.versionProvider.GetCurrentVersion()}";
 
-        RefreshProjects();
-        RefreshAgents();
+        this.RefreshProjects();
+        this.RefreshAgents();
     }
 
     private void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         _ = AsyncOperationRunner.RunAsync(
             "Legacy window update check",
-            CheckForUpdatesAsync,
-            _logger,
-            message => StatusText.Text = message);
+            this.CheckForUpdatesAsync,
+            this.logger,
+            message => this.StatusText.Text = message);
     }
 
     private async Task CheckForUpdatesAsync()
     {
-        StatusText.Text = "Checking for updates...";
+        this.StatusText.Text = "Checking for updates...";
 
-        var result = await _updateWorkflow.CheckForUpdatesAsync();
+        var result = await this.updateWorkflow.CheckForUpdatesAsync();
 
-        StatusText.Text = result.Status switch
+        this.StatusText.Text = result.Status switch
         {
             UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
             UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
@@ -109,15 +109,15 @@ public partial class MainWindow : Window
 
     private void Filter_Toggled(object sender, RoutedEventArgs e)
     {
-        if (_suppressFilterEvent)
+        if (this.suppressFilterEvent)
         {
             return;
         }
 
-        _preferencesStore.Update(preferences =>
-            preferences.ShowOnlyProjectAgents = FilterUnavailableCheckBox.IsChecked == true);
+        this.preferencesStore.Update(preferences =>
+            preferences.ShowOnlyProjectAgents = this.FilterUnavailableCheckBox.IsChecked == true);
 
-        RefreshAgents();
+        this.RefreshAgents();
     }
 
     /// <summary>
@@ -128,38 +128,38 @@ public partial class MainWindow : Window
     {
         // Hide to tray instead of closing the application
         e.Cancel = true;
-        Hide();
+        this.Hide();
         base.OnClosing(e);
     }
 
     private void RefreshProjects()
     {
-        var projects = _projectService.GetAllProjects().ToList();
-        ProjectList.ItemsSource = projects;
+        var projects = this.projectService.GetAllProjects().ToList();
+        this.ProjectList.ItemsSource = projects;
 
-        var current = _projectService.GetCurrentProject();
+        var current = this.projectService.GetCurrentProject();
         if (current != null)
         {
-            ProjectList.SelectedItem = projects.FirstOrDefault(p => p.Id == current.Id);
+            this.ProjectList.SelectedItem = projects.FirstOrDefault(p => p.Id == current.Id);
         }
     }
 
     private void RefreshAgents()
     {
-        _versionPopulationCts?.Cancel();
-        _versionPopulationCts?.Dispose();
-        _versionPopulationCts = new CancellationTokenSource();
-        var generation = ++_versionPopulationGeneration;
-        var cancellationToken = _versionPopulationCts.Token;
+        this.versionPopulationCts?.Cancel();
+        this.versionPopulationCts?.Dispose();
+        this.versionPopulationCts = new CancellationTokenSource();
+        var generation = ++this.versionPopulationGeneration;
+        var cancellationToken = this.versionPopulationCts.Token;
 
-        var currentProject = _projectService.GetCurrentProject()?.Path;
-        var filterUnavailable = FilterUnavailableCheckBox.IsChecked == true && currentProject != null;
+        var currentProject = this.projectService.GetCurrentProject()?.Path;
+        var filterUnavailable = this.FilterUnavailableCheckBox.IsChecked == true && currentProject != null;
         var items = new List<AgentItem>();
 
-        foreach (var plugin in _pluginCatalog.GetAllPlugins())
+        foreach (var plugin in this.pluginCatalog.GetAllPlugins())
         {
-            var inSystem = _agentDetectionService.IsInstalledInSystem(plugin);
-            var inProject = currentProject != null && _agentDetectionService.IsAvailableInProject(plugin, currentProject);
+            var inSystem = this.agentDetectionService.IsInstalledInSystem(plugin);
+            var inProject = currentProject != null && this.agentDetectionService.IsAvailableInProject(plugin, currentProject);
 
             if (filterUnavailable && !inProject)
             {
@@ -178,15 +178,15 @@ public partial class MainWindow : Window
             });
         }
 
-        AgentList.ItemsSource = items;
+        this.AgentList.ItemsSource = items;
 
         if (items.Count == 0)
         {
-            StatusText.Text = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
+            this.StatusText.Text = "No agents found. Add plugin.json files under %APPDATA%\\CLIHub\\plugins\\";
         }
         else
         {
-            _ = PopulateVersionsAsync(items, generation, cancellationToken);
+            _ = this.PopulateVersionsAsync(items, generation, cancellationToken);
         }
     }
 
@@ -199,8 +199,8 @@ public partial class MainWindow : Window
         {
             await Task.WhenAll(items.Select(async item =>
             {
-                var version = await _agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == _versionPopulationGeneration)
+                var version = await this.agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
                     item.Version = version ?? "unknown";
                 }
@@ -217,27 +217,27 @@ public partial class MainWindow : Window
 
     private void Refresh_Click(object sender, RoutedEventArgs e)
     {
-        _agentVersionService.Invalidate();
-        _agentDetectionService.Invalidate();
-        RefreshAgents();
-        StatusText.Text = "Refreshed agents, versions and availability.";
+        this.agentVersionService.Invalidate();
+        this.agentDetectionService.Invalidate();
+        this.RefreshAgents();
+        this.StatusText.Text = "Refreshed agents, versions and availability.";
     }
 
     private void ProjectList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (ProjectList.SelectedItem is Project project)
+        if (this.ProjectList.SelectedItem is Project project)
         {
-            _projectService.SetCurrentProject(project.Id);
-            StatusText.Text = $"Current project: {project.Name}";
-            RefreshAgents();
+            this.projectService.SetCurrentProject(project.Id);
+            this.StatusText.Text = $"Current project: {project.Name}";
+            this.RefreshAgents();
         }
     }
 
     private void AgentList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (AgentList.SelectedItem is AgentItem item)
+        if (this.AgentList.SelectedItem is AgentItem item)
         {
-            StatusText.Text = $"Selected agent: {item.Name}";
+            this.StatusText.Text = $"Selected agent: {item.Name}";
         }
     }
 
@@ -252,9 +252,9 @@ public partial class MainWindow : Window
         {
             try
             {
-                var project = _projectService.AddProject(dialog.FolderName);
-                _projectService.SetCurrentProject(project.Id);
-                StatusText.Text = $"Added project: {project.Name}";
+                var project = this.projectService.AddProject(dialog.FolderName);
+                this.projectService.SetCurrentProject(project.Id);
+                this.StatusText.Text = $"Added project: {project.Name}";
             }
             catch (Exception ex)
             {
@@ -269,9 +269,9 @@ public partial class MainWindow : Window
 
     private void RemoveProject_Click(object sender, RoutedEventArgs e)
     {
-        if (ProjectList.SelectedItem is not Project project)
+        if (this.ProjectList.SelectedItem is not Project project)
         {
-            StatusText.Text = "Select a project to remove.";
+            this.StatusText.Text = "Select a project to remove.";
             return;
         }
 
@@ -286,35 +286,35 @@ public partial class MainWindow : Window
             return;
         }
 
-        _projectService.RemoveProject(project.Id);
-        StatusText.Text = $"Removed project: {project.Name}";
-        RefreshAgents();
+        this.projectService.RemoveProject(project.Id);
+        this.StatusText.Text = $"Removed project: {project.Name}";
+        this.RefreshAgents();
     }
 
-    private void Launch_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Launch);
-    private void Resume_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Resume);
-    private void Update_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Update);
-    private void Version_Click(object sender, RoutedEventArgs e) => StartAgentCommand(AgentCommandKind.Version);
+    private void Launch_Click(object sender, RoutedEventArgs e) => this.StartAgentCommand(AgentCommandKind.Launch);
+    private void Resume_Click(object sender, RoutedEventArgs e) => this.StartAgentCommand(AgentCommandKind.Resume);
+    private void Update_Click(object sender, RoutedEventArgs e) => this.StartAgentCommand(AgentCommandKind.Update);
+    private void Version_Click(object sender, RoutedEventArgs e) => this.StartAgentCommand(AgentCommandKind.Version);
 
     private void StartAgentCommand(AgentCommandKind kind) =>
         _ = AsyncOperationRunner.RunAsync(
             $"Legacy window {kind} command",
-            () => ExecuteAsync(kind),
-            _logger,
-            message => StatusText.Text = message);
+            () => this.ExecuteAsync(kind),
+            this.logger,
+            message => this.StatusText.Text = message);
 
     private async Task ExecuteAsync(AgentCommandKind kind)
     {
-        if (AgentList.SelectedItem is not AgentItem item)
+        if (this.AgentList.SelectedItem is not AgentItem item)
         {
-            StatusText.Text = "Select an agent first.";
+            this.StatusText.Text = "Select an agent first.";
             return;
         }
 
-        var project = _projectService.GetCurrentProject();
+        var project = this.projectService.GetCurrentProject();
         if (project == null)
         {
-            StatusText.Text = "Select a project before running an agent command.";
+            this.StatusText.Text = "Select a project before running an agent command.";
             MessageBox.Show(
                 "Select a project before running an agent command.",
                 "CLIHub",
@@ -323,29 +323,29 @@ public partial class MainWindow : Window
             return;
         }
 
-        StatusText.Text = $"{kind} {item.Name}...";
+        this.StatusText.Text = $"{kind} {item.Name}...";
 
-        var result = await _agentCommandService.ExecuteAsync(item.Plugin, kind, project.Path);
+        var result = await this.agentCommandService.ExecuteAsync(item.Plugin, kind, project.Path);
 
         if (kind == AgentCommandKind.Version)
         {
             if (result.Success)
             {
-                StatusText.Text = $"{item.Name} version: {result.Output}";
+                this.StatusText.Text = $"{item.Name} version: {result.Output}";
                 MessageBox.Show(result.Output ?? string.Empty, $"{item.Name} version");
             }
             else
             {
-                StatusText.Text = $"{item.Name} version failed: {result.Error}";
+                this.StatusText.Text = $"{item.Name} version failed: {result.Error}";
             }
         }
         else
         {
-            StatusText.Text = result.Success
+            this.StatusText.Text = result.Success
                 ? $"{kind} started for {item.Name}"
                 : $"{kind} failed: {result.Error}";
         }
 
-        RefreshAgents();
+        this.RefreshAgents();
     }
 }

@@ -12,12 +12,12 @@ using CLIHub.Hotkeys;
 /// </summary>
 public sealed class PreferenceApplier : IPreferenceApplier
 {
-    private readonly IRuntimePreferenceTarget _runtime;
-    private readonly IGlobalHotkeyService _hotkey;
-    private readonly IStartupService _startupService;
-    private readonly IPathDisplayStyleTarget _displayStyle;
-    private readonly IAccentPreferenceTarget _accent;
-    private readonly ILogger<PreferenceApplier> _logger;
+    private readonly IRuntimePreferenceTarget runtime;
+    private readonly IGlobalHotkeyService hotkey;
+    private readonly IStartupService startupService;
+    private readonly IPathDisplayStyleTarget displayStyle;
+    private readonly IAccentPreferenceTarget accent;
+    private readonly ILogger<PreferenceApplier> logger;
 
     /// <summary>
     ///   Creates the applier with the services it forwards preference changes to.
@@ -36,40 +36,40 @@ public sealed class PreferenceApplier : IPreferenceApplier
         IAccentPreferenceTarget accent,
         ILogger<PreferenceApplier> logger)
     {
-        _runtime = runtime;
-        _hotkey = hotkey;
-        _startupService = startupService;
-        _displayStyle = displayStyle;
-        _accent = accent;
-        _logger = logger;
+        this.runtime = runtime;
+        this.hotkey = hotkey;
+        this.startupService = startupService;
+        this.displayStyle = displayStyle;
+        this.accent = accent;
+        this.logger = logger;
     }
 
     /// <inheritdoc />
     public void ApplyRuntime(RuntimeKind runtime)
     {
-        _runtime.SetRuntime(runtime);
-        _logger.LogInformation("Default runtime set to {Runtime}", runtime);
+        this.runtime.SetRuntime(runtime);
+        this.logger.LogInformation("Default runtime set to {Runtime}", runtime);
     }
 
     /// <inheritdoc />
     public void ApplyPathDisplayStyle(PathDisplayStyle style)
     {
-        _displayStyle.ApplyPathDisplayStyle(style);
-        _logger.LogInformation("Path display style set to {Style}", style);
+        this.displayStyle.ApplyPathDisplayStyle(style);
+        this.logger.LogInformation("Path display style set to {Style}", style);
     }
 
     /// <inheritdoc />
     public bool ApplyHotkey(HotkeyDefinition definition)
     {
-        var registered = _hotkey.ReRegister(definition);
+        var registered = this.hotkey.ReRegister(definition);
 
         if (registered)
         {
-            _logger.LogInformation("Global hotkey changed to {Hotkey}", HotkeyParser.Format(definition));
+            this.logger.LogInformation("Global hotkey changed to {Hotkey}", HotkeyParser.Format(definition));
         }
         else
         {
-            _logger.LogWarning(
+            this.logger.LogWarning(
                 "Could not register new hotkey {Hotkey}; the previous combination was kept",
                 HotkeyParser.Format(definition));
         }
@@ -79,20 +79,20 @@ public sealed class PreferenceApplier : IPreferenceApplier
 
     /// <inheritdoc />
     public void ApplyStartupUpdateCheck(bool enabled) =>
-        _logger.LogInformation("Startup update check set to {Enabled} (applies on next start)", enabled);
+        this.logger.LogInformation("Startup update check set to {Enabled} (applies on next start)", enabled);
 
     /// <inheritdoc />
     public bool ApplyStartWithWindows(bool enabled)
     {
-        var updated = _startupService.SetEnabled(enabled);
+        var updated = this.startupService.SetEnabled(enabled);
 
         if (updated)
         {
-            _logger.LogInformation("Start with Windows set to {Enabled}", enabled);
+            this.logger.LogInformation("Start with Windows set to {Enabled}", enabled);
         }
         else
         {
-            _logger.LogWarning("Could not update the start-with-Windows registration");
+            this.logger.LogWarning("Could not update the start-with-Windows registration");
         }
 
         return updated;
@@ -101,7 +101,7 @@ public sealed class PreferenceApplier : IPreferenceApplier
     /// <inheritdoc />
     public void ApplyAccent(string accentHex)
     {
-        _accent.SetAccent(accentHex);
-        _logger.LogInformation("Accent color set to {Accent}", accentHex);
+        this.accent.SetAccent(accentHex);
+        this.logger.LogInformation("Accent color set to {Accent}", accentHex);
     }
 }

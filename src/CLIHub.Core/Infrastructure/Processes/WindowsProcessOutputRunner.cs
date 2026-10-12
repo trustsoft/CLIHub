@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
 {
-    private readonly ILogger<WindowsProcessOutputRunner> _logger;
+    private readonly ILogger<WindowsProcessOutputRunner> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="WindowsProcessOutputRunner"/> class.
@@ -20,7 +20,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
     /// <param name="logger"> Logger for process operations. </param>
     public WindowsProcessOutputRunner(ILogger<WindowsProcessOutputRunner> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -33,7 +33,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
         ArgumentNullException.ThrowIfNull(commandLine);
         ArgumentNullException.ThrowIfNull(runtime);
 
-        _logger.LogDebug("Running process with output capture: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
+        this.logger.LogDebug("Running process with output capture: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
 
         try
         {
@@ -80,7 +80,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
             var stderr = (await stderrTask).Trim();
             int exitCode = timedOut ? -1 : process.ExitCode;
 
-            _logger.LogDebug(
+            this.logger.LogDebug(
                 "Process completed: ExitCode={ExitCode}, TimedOut={TimedOut}, StdOut={StdOutLength} chars, StdErr={StdErrLength} chars",
                 exitCode, timedOut, stdout.Length, stderr.Length);
 
@@ -94,7 +94,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            _logger.LogWarning(ex, "Failed to run process with command line: {CommandLine}", commandLine);
+            this.logger.LogWarning(ex, "Failed to run process with command line: {CommandLine}", commandLine);
             throw new InvalidOperationException($"Failed to run process: {ex.Message}", ex);
         }
     }

@@ -124,13 +124,13 @@ public class ApplicationBootstrapperTests
 
         public BootstrapperFixture()
         {
-            Bootstrapper = new ApplicationBootstrapper(
-                InstanceCoordinator.Object,
-                StartupStateLoader.Object,
-                Session.Object,
-                HotkeyFactory.Object,
-                OptionalStartup.Object,
-                ProjectScanner.Object,
+            this.Bootstrapper = new ApplicationBootstrapper(
+                this.InstanceCoordinator.Object,
+                this.StartupStateLoader.Object,
+                this.Session.Object,
+                this.HotkeyFactory.Object,
+                this.OptionalStartup.Object,
+                this.ProjectScanner.Object,
                 NullLogger<ApplicationBootstrapper>.Instance);
         }
     }

@@ -7,39 +7,39 @@ using Serilog.Events;
 
 public class LoggingSetupTests : IDisposable
 {
-    private readonly string _dir;
+    private readonly string dir;
 
     public LoggingSetupTests()
     {
-        _dir = Path.Combine(Path.GetTempPath(), "clihub-log-" + Guid.NewGuid().ToString("N"));
+        this.dir = Path.Combine(Path.GetTempPath(), "clihub-log-" + Guid.NewGuid().ToString("N"));
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_dir, recursive: true); } catch { }
+        try { Directory.Delete(this.dir, recursive: true); } catch { }
     }
 
     private string? ReadSingleLogFile()
     {
-        if (!Directory.Exists(_dir))
+        if (!Directory.Exists(this.dir))
         {
             return null;
         }
 
-        var file = Directory.GetFiles(_dir, "clihub-*.log").FirstOrDefault();
+        var file = Directory.GetFiles(this.dir, "clihub-*.log").FirstOrDefault();
         return file == null ? null : File.ReadAllText(file);
     }
 
     [Fact]
     public void CreateLogger_WritesEntry_WithExpectedFormat()
     {
-        using (var logger = LoggingSetup.CreateLogger(_dir, LogEventLevel.Information))
+        using (var logger = LoggingSetup.CreateLogger(this.dir, LogEventLevel.Information))
         {
             logger.Information("hello {Name}", "world");
             logger.Dispose();
         }
 
-        var content = ReadSingleLogFile();
+        var content = this.ReadSingleLogFile();
 
         Assert.NotNull(content);
         Assert.Contains("hello", content);
@@ -51,14 +51,14 @@ public class LoggingSetupTests : IDisposable
     [Fact]
     public void CreateLogger_AtInformation_SuppressesDebug()
     {
-        using (var logger = LoggingSetup.CreateLogger(_dir, LogEventLevel.Information))
+        using (var logger = LoggingSetup.CreateLogger(this.dir, LogEventLevel.Information))
         {
             logger.Debug("debug-should-not-appear");
             logger.Information("info-appears");
             logger.Dispose();
         }
 
-        var content = ReadSingleLogFile();
+        var content = this.ReadSingleLogFile();
 
         Assert.NotNull(content);
         Assert.Contains("info-appears", content);
@@ -68,13 +68,13 @@ public class LoggingSetupTests : IDisposable
     [Fact]
     public void CreateLogger_AtDebug_IncludesDebug()
     {
-        using (var logger = LoggingSetup.CreateLogger(_dir, LogEventLevel.Debug))
+        using (var logger = LoggingSetup.CreateLogger(this.dir, LogEventLevel.Debug))
         {
             logger.Debug("debug-appears");
             logger.Dispose();
         }
 
-        var content = ReadSingleLogFile();
+        var content = this.ReadSingleLogFile();
 
         Assert.NotNull(content);
         Assert.Contains("debug-appears", content);
@@ -84,7 +84,7 @@ public class LoggingSetupTests : IDisposable
     public void CreateLogger_WithSizeLimit_RollsToMultipleFiles()
     {
         using (var logger = LoggingSetup.CreateLogger(
-            _dir,
+            this.dir,
             LogEventLevel.Information,
             retainedFileCountLimit: 7,
             fileSizeLimitBytes: 1024))
@@ -97,7 +97,7 @@ public class LoggingSetupTests : IDisposable
             logger.Dispose();
         }
 
-        var files = Directory.GetFiles(_dir, "clihub-*.log");
+        var files = Directory.GetFiles(this.dir, "clihub-*.log");
 
         Assert.True(files.Length >= 2, $"expected size-based rollover, got {files.Length} files");
     }

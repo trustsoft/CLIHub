@@ -37,8 +37,8 @@ public sealed class SpacedPanel : Panel
     /// </summary>
     public Orientation Orientation
     {
-        get => (Orientation)GetValue(OrientationProperty);
-        set => SetValue(OrientationProperty, value);
+        get => (Orientation)this.GetValue(OrientationProperty);
+        set => this.SetValue(OrientationProperty, value);
     }
 
     /// <summary>
@@ -47,14 +47,14 @@ public sealed class SpacedPanel : Panel
     /// </summary>
     public double Spacing
     {
-        get => (double)GetValue(SpacingProperty);
-        set => SetValue(SpacingProperty, value);
+        get => (double)this.GetValue(SpacingProperty);
+        set => this.SetValue(SpacingProperty, value);
     }
 
     /// <inheritdoc />
     protected override Size MeasureOverride(Size availableSize)
     {
-        var isVertical = Orientation == Orientation.Vertical;
+        var isVertical = this.Orientation == Orientation.Vertical;
         var childConstraint = isVertical
             ? new Size(availableSize.Width, double.PositiveInfinity)
             : new Size(double.PositiveInfinity, availableSize.Height);
@@ -62,7 +62,7 @@ public sealed class SpacedPanel : Panel
         var crossLength = 0d;
         var visibleChildCount = 0;
 
-        foreach (UIElement child in InternalChildren)
+        foreach (UIElement child in this.InternalChildren)
         {
             if (child.Visibility == Visibility.Collapsed)
             {
@@ -88,7 +88,7 @@ public sealed class SpacedPanel : Panel
 
         if (visibleChildCount > 1)
         {
-            totalLength += (visibleChildCount - 1) * Spacing;
+            totalLength += (visibleChildCount - 1) * this.Spacing;
         }
 
         return isVertical
@@ -99,11 +99,11 @@ public sealed class SpacedPanel : Panel
     /// <inheritdoc />
     protected override Size ArrangeOverride(Size finalSize)
     {
-        var isVertical = Orientation == Orientation.Vertical;
+        var isVertical = this.Orientation == Orientation.Vertical;
         var currentLength = 0d;
         var hasArrangedChild = false;
 
-        foreach (UIElement child in InternalChildren)
+        foreach (UIElement child in this.InternalChildren)
         {
             if (child.Visibility == Visibility.Collapsed)
             {
@@ -112,7 +112,7 @@ public sealed class SpacedPanel : Panel
 
             if (hasArrangedChild)
             {
-                currentLength += Spacing;
+                currentLength += this.Spacing;
             }
 
             var desiredSize = child.DesiredSize;

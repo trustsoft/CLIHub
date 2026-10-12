@@ -66,7 +66,7 @@ internal sealed class AppConfigDocument
     ///   Creates the public configuration model from the persistence document.
     /// </summary>
     /// <returns> The public configuration model. </returns>
-    public AppConfig ToAppConfig() => ToSnapshot().ToAppConfig();
+    public AppConfig ToAppConfig() => this.ToSnapshot().ToAppConfig();
 
     /// <summary>
     ///   Creates detached configuration state from the persistence document.
@@ -74,9 +74,9 @@ internal sealed class AppConfigDocument
     /// <returns> Detached configuration state. </returns>
     public ConfigurationSnapshot ToSnapshot() => new()
     {
-        Projects = (Projects ?? []).Select(project => project.ToProject()).ToList(),
-        Preferences = (Preferences ?? new PreferencesDocument()).ToPreferences(),
-        CurrentProjectId = CurrentProjectId
+        Projects = (this.Projects ?? []).Select(project => project.ToProject()).ToList(),
+        Preferences = (this.Preferences ?? new PreferencesDocument()).ToPreferences(),
+        CurrentProjectId = this.CurrentProjectId
     };
 
     internal sealed class ProjectDocument
@@ -102,13 +102,13 @@ internal sealed class AppConfigDocument
 
         public Project ToProject() => new()
         {
-            Id = Id,
-            Name = Name,
-            Path = Path,
-            IsFavorite = IsFavorite,
-            LastUsed = LastUsed,
-            LogoPath = LogoPath,
-            Source = ProjectSources.Parse(Source)
+            Id = this.Id,
+            Name = this.Name,
+            Path = this.Path,
+            IsFavorite = this.IsFavorite,
+            LastUsed = this.LastUsed,
+            LogoPath = this.LogoPath,
+            Source = ProjectSources.Parse(this.Source)
         };
     }
 
@@ -176,33 +176,33 @@ internal sealed class AppConfigDocument
 
         public AppPreferences ToPreferences() => new()
         {
-            StartWithWindows = StartWithWindows,
-            Hotkey = Hotkey,
-            TerminalExecutable = TerminalExecutable,
-            DefaultRuntime = RuntimeKinds.Parse(DefaultRuntime),
-            LogLevel = LogLevel,
-            LogRetentionDays = LogRetentionDays,
-            LogFileSizeLimitMb = LogFileSizeLimitMb,
-            ShowOnlyProjectAgents = ShowOnlyProjectAgents,
-            AgentProbeTtlMinutes = AgentProbeTtlMinutes,
-            AgentProbeTimeoutSeconds = AgentProbeTimeoutSeconds,
-            CheckForUpdatesOnStartup = CheckForUpdatesOnStartup,
-            AutoDownloadUpdates = AutoDownloadUpdates,
-            NotifyStableUpdates = NotifyStableUpdates,
-            NotifyPrereleaseUpdates = NotifyPrereleaseUpdates,
-            StartMinimized = StartMinimized,
-            ShowWindowOnStartup = ShowWindowOnStartup,
-            PinLaunchWindow = PinLaunchWindow,
-            PopupScreenPosition = PopupScreenPositions.Parse(PopupScreenPosition),
-            AppTheme = AppThemes.Parse(AppTheme),
-            AccentColor = AccentPalette.Normalize(AccentColor),
-            PathDisplayStyle = PathDisplayStyle,
-            LastSeenReleaseNotesVersion = LastSeenReleaseNotesVersion,
-            WatchedDirectories = WatchedDirectories is null ? null : new List<string>(WatchedDirectories),
-            ScanDepth = ScanDepth,
-            IgnoredPatterns = IgnoredPatterns is null ? null : new List<string>(IgnoredPatterns),
-            DiscoveryMode = ProjectDiscoveryModes.Parse(DiscoveryMode),
-            DefaultAgentId = DefaultAgentId
+            StartWithWindows = this.StartWithWindows,
+            Hotkey = this.Hotkey,
+            TerminalExecutable = this.TerminalExecutable,
+            DefaultRuntime = RuntimeKinds.Parse(this.DefaultRuntime),
+            LogLevel = this.LogLevel,
+            LogRetentionDays = this.LogRetentionDays,
+            LogFileSizeLimitMb = this.LogFileSizeLimitMb,
+            ShowOnlyProjectAgents = this.ShowOnlyProjectAgents,
+            AgentProbeTtlMinutes = this.AgentProbeTtlMinutes,
+            AgentProbeTimeoutSeconds = this.AgentProbeTimeoutSeconds,
+            CheckForUpdatesOnStartup = this.CheckForUpdatesOnStartup,
+            AutoDownloadUpdates = this.AutoDownloadUpdates,
+            NotifyStableUpdates = this.NotifyStableUpdates,
+            NotifyPrereleaseUpdates = this.NotifyPrereleaseUpdates,
+            StartMinimized = this.StartMinimized,
+            ShowWindowOnStartup = this.ShowWindowOnStartup,
+            PinLaunchWindow = this.PinLaunchWindow,
+            PopupScreenPosition = PopupScreenPositions.Parse(this.PopupScreenPosition),
+            AppTheme = AppThemes.Parse(this.AppTheme),
+            AccentColor = AccentPalette.Normalize(this.AccentColor),
+            PathDisplayStyle = this.PathDisplayStyle,
+            LastSeenReleaseNotesVersion = this.LastSeenReleaseNotesVersion,
+            WatchedDirectories = this.WatchedDirectories is null ? null : new List<string>(this.WatchedDirectories),
+            ScanDepth = this.ScanDepth,
+            IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
+            DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode),
+            DefaultAgentId = this.DefaultAgentId
         };
     }
 }

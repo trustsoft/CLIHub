@@ -7,9 +7,9 @@ using CLIHub.Views;
 /// </summary>
 public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
 {
-    private readonly TrayIconController _tray;
-    private readonly LaunchWindow _launchWindow;
-    private bool _disposed;
+    private readonly TrayIconController tray;
+    private readonly LaunchWindow launchWindow;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the startup UI adapter over the tray and launch window.
@@ -18,31 +18,31 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
     /// <param name="launchWindow"> The launch window. </param>
     public WpfApplicationStartupUi(TrayIconController tray, LaunchWindow launchWindow)
     {
-        _tray = tray ?? throw new ArgumentNullException(nameof(tray));
-        _launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
-        _tray.UpdateDownloadRequested += OnUpdateDownloadRequested;
+        this.tray = tray ?? throw new ArgumentNullException(nameof(tray));
+        this.launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
+        this.tray.UpdateDownloadRequested += this.OnUpdateDownloadRequested;
     }
 
     /// <inheritdoc />
     public event EventHandler? UpdateDownloadRequested;
 
     /// <inheritdoc />
-    public IStartupWindow LaunchWindow => _launchWindow;
+    public IStartupWindow LaunchWindow => this.launchWindow;
 
     /// <inheritdoc />
-    public void RefreshMenu() => _tray.RefreshMenu();
+    public void RefreshMenu() => this.tray.RefreshMenu();
 
     /// <inheritdoc />
-    public void ShowLaunchWindow() => _tray.ShowLaunchWindow();
+    public void ShowLaunchWindow() => this.tray.ShowLaunchWindow();
 
     /// <inheritdoc />
-    public void NotifyUpdateAvailable(string version) => _tray.NotifyUpdateAvailable(version);
+    public void NotifyUpdateAvailable(string version) => this.tray.NotifyUpdateAvailable(version);
 
     /// <inheritdoc />
-    public void NotifyUpdateDownloaded(string version) => _tray.NotifyUpdateDownloaded(version);
+    public void NotifyUpdateDownloaded(string version) => this.tray.NotifyUpdateDownloaded(version);
 
     /// <inheritdoc />
-    public void NotifyUpdateFailed(string version) => _tray.NotifyUpdateFailed(version);
+    public void NotifyUpdateFailed(string version) => this.tray.NotifyUpdateFailed(version);
 
     private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
         UpdateDownloadRequested?.Invoke(this, e);
@@ -50,12 +50,12 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _tray.UpdateDownloadRequested -= OnUpdateDownloadRequested;
+        this.disposed = true;
+        this.tray.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
     }
 }

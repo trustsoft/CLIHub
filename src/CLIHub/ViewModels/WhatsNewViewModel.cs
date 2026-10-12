@@ -20,11 +20,11 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     private static readonly string[] GroupLabels = { "New", "Improved", "Fixed" };
 
-    private readonly IUpdateWorkflow _updates;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private bool _isUpdateAvailable;
-    private bool _isDownloading;
-    private bool _disposed;
+    private readonly IUpdateWorkflow updates;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private bool isUpdateAvailable;
+    private bool isDownloading;
+    private bool disposed;
 
     /// <summary>
     ///   Raised when the user asks to download the update and restart.
@@ -42,13 +42,13 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
         IUpdateWorkflow updates,
         IApplicationOperationLifetime operationLifetime)
     {
-        _updates = updates;
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.updates = updates;
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
 
-        Versions = BuildVersions(releaseNotes.GetNotes());
+        this.Versions = BuildVersions(releaseNotes.GetNotes());
 
-        updates.UpdateStateChanged += OnUpdateStateChanged;
-        RefreshUpdateState();
+        updates.UpdateStateChanged += this.OnUpdateStateChanged;
+        this.RefreshUpdateState();
     }
 
     /// <summary>
@@ -59,15 +59,15 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// <summary>
     ///   Whether there is nothing to show, so the window displays its empty message instead.
     /// </summary>
-    public bool HasNoNotes => Versions.Count == 0;
+    public bool HasNoNotes => this.Versions.Count == 0;
 
     /// <summary>
     ///   Whether an update is available to download.
     /// </summary>
     public bool IsUpdateAvailable
     {
-        get => _isUpdateAvailable;
-        private set => SetProperty(ref _isUpdateAvailable, value);
+        get => this.isUpdateAvailable;
+        private set => this.SetProperty(ref this.isUpdateAvailable, value);
     }
 
     /// <summary>
@@ -75,48 +75,48 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public bool IsDownloading
     {
-        get => _isDownloading;
-        private set => SetProperty(ref _isDownloading, value);
+        get => this.isDownloading;
+        private set => this.SetProperty(ref this.isDownloading, value);
     }
 
     /// <summary>
     ///   Whether an update check is currently running.
     /// </summary>
-    public bool IsCheckingForUpdates => _updates.IsCheckingForUpdates;
+    public bool IsCheckingForUpdates => this.updates.IsCheckingForUpdates;
 
     /// <summary>
     ///   Whether the install action can start a download right now.
     /// </summary>
-    public bool CanDownloadUpdate => IsUpdateAvailable && !IsDownloading;
+    public bool CanDownloadUpdate => this.IsUpdateAvailable && !this.IsDownloading;
 
     /// <summary>
     ///   Whether the user can start a manual update check.
     /// </summary>
-    public bool CanCheckForUpdates => !IsUpdateAvailable && !IsDownloading && !IsCheckingForUpdates;
+    public bool CanCheckForUpdates => !this.IsUpdateAvailable && !this.IsDownloading && !this.IsCheckingForUpdates;
 
     /// <summary>
     ///   Whether the manual update-check action should remain visible.
     /// </summary>
-    public bool ShowCheckForUpdates => !IsUpdateAvailable;
+    public bool ShowCheckForUpdates => !this.IsUpdateAvailable;
 
     /// <summary>
     ///   The caption of the manual update-check action.
     /// </summary>
-    public string CheckActionText => IsCheckingForUpdates ? "Checking for updates..." : "Check for updates";
+    public string CheckActionText => this.IsCheckingForUpdates ? "Checking for updates..." : "Check for updates";
 
     /// <summary>
     ///   The caption of the install action, naming the version or the running download.
     /// </summary>
-    public string InstallActionText => IsDownloading
+    public string InstallActionText => this.IsDownloading
         ? "Downloading update…"
-        : $"Download {_updates.LastKnownAvailableVersion} and restart";
+        : $"Download {this.updates.LastKnownAvailableVersion} and restart";
 
     /// <summary>
     ///   Asks the application to download the update and restart; ignored while a download runs.
     /// </summary>
     public void RequestInstallUpdate()
     {
-        if (!IsDownloading && IsUpdateAvailable)
+        if (!this.IsDownloading && this.IsUpdateAvailable)
         {
             UpdateRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -127,12 +127,12 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public void RequestCheckForUpdates()
     {
-        if (!CanCheckForUpdates)
+        if (!this.CanCheckForUpdates)
         {
             return;
         }
 
-        _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
+        _ = this.operationLifetime.RunAsync("Manual update check", this.CheckForUpdatesAsync);
     }
 
     /// <summary>
@@ -140,53 +140,53 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public void Dispose()
     {
-        _disposed = true;
-        _updates.UpdateStateChanged -= OnUpdateStateChanged;
+        this.disposed = true;
+        this.updates.UpdateStateChanged -= this.OnUpdateStateChanged;
     }
 
     private void OnUpdateStateChanged(object? sender, EventArgs e)
     {
         if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
         {
-            _ = dispatcher.BeginInvoke(RefreshUpdateState);
+            _ = dispatcher.BeginInvoke(this.RefreshUpdateState);
             return;
         }
 
-        RefreshUpdateState();
+        this.RefreshUpdateState();
     }
 
     private void RefreshUpdateState()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        IsUpdateAvailable = _updates.LastKnownAvailableVersion != null;
-        IsDownloading = _updates.IsDownloading;
-        NotifyCheckStateChanged();
+        this.IsUpdateAvailable = this.updates.LastKnownAvailableVersion != null;
+        this.IsDownloading = this.updates.IsDownloading;
+        this.NotifyCheckStateChanged();
     }
 
     private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await _updates.CheckForUpdatesAsync(cancellationToken);
+            await this.updates.CheckForUpdatesAsync(cancellationToken);
         }
         finally
         {
-            RefreshUpdateState();
+            this.RefreshUpdateState();
         }
     }
 
     private void NotifyCheckStateChanged()
     {
-        OnPropertyChanged(nameof(CanDownloadUpdate));
-        OnPropertyChanged(nameof(IsCheckingForUpdates));
-        OnPropertyChanged(nameof(CanCheckForUpdates));
-        OnPropertyChanged(nameof(ShowCheckForUpdates));
-        OnPropertyChanged(nameof(CheckActionText));
-        OnPropertyChanged(nameof(InstallActionText));
+        this.OnPropertyChanged(nameof(this.CanDownloadUpdate));
+        this.OnPropertyChanged(nameof(this.IsCheckingForUpdates));
+        this.OnPropertyChanged(nameof(this.CanCheckForUpdates));
+        this.OnPropertyChanged(nameof(this.ShowCheckForUpdates));
+        this.OnPropertyChanged(nameof(this.CheckActionText));
+        this.OnPropertyChanged(nameof(this.InstallActionText));
     }
 
     private static IReadOnlyList<WhatsNewVersion> BuildVersions(IReadOnlyList<ReleaseNote> notes)

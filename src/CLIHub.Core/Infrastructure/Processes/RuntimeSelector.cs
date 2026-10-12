@@ -8,8 +8,8 @@ using System.IO;
 /// </summary>
 public sealed class RuntimeSelector
 {
-    private RuntimeInfo? _cachedRuntime;
-    private readonly object _lock = new();
+    private RuntimeInfo? cachedRuntime;
+    private readonly object gate = new();
 
     /// <summary>
     ///   Selects the best available runtime for executing commands.
@@ -17,20 +17,20 @@ public sealed class RuntimeSelector
     /// <returns> Information about the selected runtime. </returns>
     public RuntimeInfo SelectRuntime()
     {
-        if (_cachedRuntime is not null)
+        if (this.cachedRuntime is not null)
         {
-            return _cachedRuntime;
+            return this.cachedRuntime;
         }
 
-        lock (_lock)
+        lock (this.gate)
         {
-            if (_cachedRuntime is not null)
+            if (this.cachedRuntime is not null)
             {
-                return _cachedRuntime;
+                return this.cachedRuntime;
             }
 
-            _cachedRuntime = DetectRuntime();
-            return _cachedRuntime;
+            this.cachedRuntime = DetectRuntime();
+            return this.cachedRuntime;
         }
     }
 

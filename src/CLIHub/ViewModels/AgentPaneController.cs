@@ -17,16 +17,16 @@ public sealed class AgentPaneController : IDisposable
     private static readonly string DefaultAgentLogoPath =
         Path.Combine(AppContext.BaseDirectory, "default-project.png");
 
-    private readonly IPluginCatalog _pluginCatalog;
-    private readonly IAgentDetectionService _agentDetectionService;
-    private readonly IAgentVersionService _agentVersionService;
-    private readonly ILogoCacheService _logoCacheService;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private CancellationTokenSource? _versionPopulationCts;
-    private int _versionPopulationGeneration;
-    private string? _currentProjectPath;
-    private bool _showOnlyProjectAgents;
-    private bool _disposed;
+    private readonly IPluginCatalog pluginCatalog;
+    private readonly IAgentDetectionService agentDetectionService;
+    private readonly IAgentVersionService agentVersionService;
+    private readonly ILogoCacheService logoCacheService;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private CancellationTokenSource? versionPopulationCts;
+    private int versionPopulationGeneration;
+    private string? currentProjectPath;
+    private bool showOnlyProjectAgents;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the agent-pane workflow boundary.
@@ -43,14 +43,14 @@ public sealed class AgentPaneController : IDisposable
         ILogoCacheService logoCacheService,
         IApplicationOperationLifetime operationLifetime)
     {
-        _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
-        _agentDetectionService = agentDetectionService ?? throw new ArgumentNullException(nameof(agentDetectionService));
-        _agentVersionService = agentVersionService ?? throw new ArgumentNullException(nameof(agentVersionService));
-        _logoCacheService = logoCacheService ?? throw new ArgumentNullException(nameof(logoCacheService));
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _pluginCatalog.PluginsChanged += OnPluginsChanged;
+        this.pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
+        this.agentDetectionService = agentDetectionService ?? throw new ArgumentNullException(nameof(agentDetectionService));
+        this.agentVersionService = agentVersionService ?? throw new ArgumentNullException(nameof(agentVersionService));
+        this.logoCacheService = logoCacheService ?? throw new ArgumentNullException(nameof(logoCacheService));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.pluginCatalog.PluginsChanged += this.OnPluginsChanged;
 
-        RefreshCommand = new RelayCommand(() => _ = Refresh(_currentProjectPath, _showOnlyProjectAgents));
+        this.RefreshCommand = new RelayCommand(() => _ = this.Refresh(this.currentProjectPath, this.showOnlyProjectAgents));
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public sealed class AgentPaneController : IDisposable
     ///   Updates the selected agent row.
     /// </summary>
     /// <param name="agent"> Agent row to select, or null to clear selection. </param>
-    public void Select(AgentItem? agent) => SelectedAgent = agent;
+    public void Select(AgentItem? agent) => this.SelectedAgent = agent;
 
     /// <summary>
     ///   Rebuilds agent rows and starts cancellable version population.
@@ -82,44 +82,44 @@ public sealed class AgentPaneController : IDisposable
     /// <returns> True when at least one agent row is available. </returns>
     public bool Refresh(string? currentProjectPath, bool showOnlyProjectAgents)
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return false;
         }
 
-        _currentProjectPath = currentProjectPath;
-        _showOnlyProjectAgents = showOnlyProjectAgents;
-        _versionPopulationCts?.Cancel();
-        _versionPopulationCts?.Dispose();
-        _versionPopulationCts = new CancellationTokenSource();
-        var generation = ++_versionPopulationGeneration;
-        var refreshCancellationToken = _versionPopulationCts.Token;
+        this.currentProjectPath = currentProjectPath;
+        this.showOnlyProjectAgents = showOnlyProjectAgents;
+        this.versionPopulationCts?.Cancel();
+        this.versionPopulationCts?.Dispose();
+        this.versionPopulationCts = new CancellationTokenSource();
+        var generation = ++this.versionPopulationGeneration;
+        var refreshCancellationToken = this.versionPopulationCts.Token;
 
         var entries = AgentListComposer.Compose(
-            _pluginCatalog.GetAllPlugins(),
-            _agentDetectionService,
+            this.pluginCatalog.GetAllPlugins(),
+            this.agentDetectionService,
             currentProjectPath,
             showOnlyProjectAgents);
-        var selectedPluginId = SelectedAgent?.Plugin.Id;
+        var selectedPluginId = this.SelectedAgent?.Plugin.Id;
 
-        SelectedAgent = AgentListSynchronizer.Synchronize(
-            Agents,
+        this.SelectedAgent = AgentListSynchronizer.Synchronize(
+            this.Agents,
             entries,
             DefaultAgentLogoPath,
             selectedPluginId);
 
-        if (Agents.Count > 0)
+        if (this.Agents.Count > 0)
         {
-            _ = _operationLifetime.RunAsync(
+            _ = this.operationLifetime.RunAsync(
                 "Agent version population",
-                applicationToken => PopulateVersionsAsync(
-                    Agents.ToList(),
+                applicationToken => this.PopulateVersionsAsync(
+                    this.Agents.ToList(),
                     generation,
                     refreshCancellationToken,
                     applicationToken));
         }
 
-        return Agents.Count > 0;
+        return this.Agents.Count > 0;
     }
 
     /// <summary>
@@ -127,20 +127,20 @@ public sealed class AgentPaneController : IDisposable
     /// </summary>
     public void InvalidateCaches()
     {
-        _logoCacheService.InvalidateAll();
-        _agentVersionService.Invalidate();
-        _agentDetectionService.Invalidate();
+        this.logoCacheService.InvalidateAll();
+        this.agentVersionService.Invalidate();
+        this.agentDetectionService.Invalidate();
     }
 
     private void OnPluginsChanged(object? sender, EventArgs e)
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        InvalidateCaches();
-        Refresh(_currentProjectPath, _showOnlyProjectAgents);
+        this.InvalidateCaches();
+        this.Refresh(this.currentProjectPath, this.showOnlyProjectAgents);
     }
 
     /// <summary>
@@ -148,17 +148,17 @@ public sealed class AgentPaneController : IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _versionPopulationGeneration++;
-        _versionPopulationCts?.Cancel();
-        _versionPopulationCts?.Dispose();
-        _versionPopulationCts = null;
-        _pluginCatalog.PluginsChanged -= OnPluginsChanged;
+        this.disposed = true;
+        this.versionPopulationGeneration++;
+        this.versionPopulationCts?.Cancel();
+        this.versionPopulationCts?.Dispose();
+        this.versionPopulationCts = null;
+        this.pluginCatalog.PluginsChanged -= this.OnPluginsChanged;
     }
 
     private async Task PopulateVersionsAsync(
@@ -176,8 +176,8 @@ public sealed class AgentPaneController : IDisposable
         {
             await Task.WhenAll(items.Select(async item =>
             {
-                var version = await _agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == _versionPopulationGeneration)
+                var version = await this.agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
+                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
                     item.Version = version ?? "unknown";
                 }

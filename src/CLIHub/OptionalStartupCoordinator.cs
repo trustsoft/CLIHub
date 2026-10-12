@@ -9,10 +9,10 @@ using CLIHub.Core.Infrastructure.Windows;
 /// </summary>
 public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
 {
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly IReleaseNotesStartupCoordinator _releaseNotesStartup;
-    private readonly IUpdateStartupCoordinator _updateStartup;
-    private readonly ILogger<OptionalStartupCoordinator> _logger;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly IReleaseNotesStartupCoordinator releaseNotesStartup;
+    private readonly IUpdateStartupCoordinator updateStartup;
+    private readonly ILogger<OptionalStartupCoordinator> logger;
 
     /// <summary>
 ///   Creates the optional startup coordinator.
@@ -27,10 +27,10 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
         IUpdateStartupCoordinator updateStartup,
         ILogger<OptionalStartupCoordinator> logger)
     {
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
-        _updateStartup = updateStartup ?? throw new ArgumentNullException(nameof(updateStartup));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
+        this.updateStartup = updateStartup ?? throw new ArgumentNullException(nameof(updateStartup));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -43,12 +43,12 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
         ArgumentNullException.ThrowIfNull(startupUi);
         ArgumentNullException.ThrowIfNull(context);
 
-        RunBestEffort("release notes", () => _releaseNotesStartup.Evaluate(startupState.Preferences));
-        RunBestEffort(
+        this.RunBestEffort("release notes", () => this.releaseNotesStartup.Evaluate(startupState.Preferences));
+        this.RunBestEffort(
             "startup update check",
-            () => _ = _operationLifetime.RunAsync(
+            () => _ = this.operationLifetime.RunAsync(
                 "Startup update check",
-                cancellationToken => RunStartupUpdateCheckAsync(
+                cancellationToken => this.RunStartupUpdateCheckAsync(
                     startupState.Preferences.CheckForUpdatesOnStartup,
                     startupUi,
                     context,
@@ -63,14 +63,14 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
     {
         try
         {
-            await _updateStartup.CheckAsync(
+            await this.updateStartup.CheckAsync(
                 enabled,
                 version => context.Dispatch(() => startupUi.NotifyUpdateAvailable(version)),
                 cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Startup update check failed");
+            this.logger.LogWarning(ex, "Startup update check failed");
         }
     }
 
@@ -82,7 +82,7 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Optional startup operation failed: {Operation}", operation);
+            this.logger.LogWarning(ex, "Optional startup operation failed: {Operation}", operation);
         }
     }
 }

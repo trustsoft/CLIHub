@@ -9,31 +9,31 @@ using CLIHub.Tests.Fakes;
 
 public class AgentCommandServiceTests : IDisposable
 {
-    private readonly string _projectDir;
-    private readonly FakeInteractiveProcessRunner _interactiveRunner = new();
-    private readonly FakeProcessOutputRunner _outputRunner = new();
-    private readonly ProcessLauncher _launcher;
-    private readonly AgentCommandService _service;
+    private readonly string projectDir;
+    private readonly FakeInteractiveProcessRunner interactiveRunner = new();
+    private readonly FakeProcessOutputRunner outputRunner = new();
+    private readonly ProcessLauncher launcher;
+    private readonly AgentCommandService service;
 
     public AgentCommandServiceTests()
     {
-        _projectDir = Path.Combine(Path.GetTempPath(), "clihub-agent-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_projectDir);
-        
-        _launcher = new ProcessLauncher(
+        this.projectDir = Path.Combine(Path.GetTempPath(), "clihub-agent-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.projectDir);
+
+        this.launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             new RuntimeSelector(),
-            _interactiveRunner,
-            _outputRunner);
-        
-        _service = new AgentCommandService(
-            _launcher,
+            this.interactiveRunner,
+            this.outputRunner);
+
+        this.service = new AgentCommandService(
+            this.launcher,
             NullLogger<AgentCommandService>.Instance);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_projectDir, recursive: true); } catch { }
+        try { Directory.Delete(this.projectDir, recursive: true); } catch { }
     }
 
     private static Plugin PluginWith(AgentCommands commands) =>
@@ -48,12 +48,12 @@ public class AgentCommandServiceTests : IDisposable
             Version = new PluginCommand { Name = "Version", Executable = "test", Arguments = "--version" }
         });
 
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Version, _projectDir);
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Version, this.projectDir);
 
         Assert.True(result.Success);
         Assert.Equal("1.2.3", result.Output);
-        Assert.Single(_outputRunner.Runs);
-        Assert.Empty(_interactiveRunner.Launches);
+        Assert.Single(this.outputRunner.Runs);
+        Assert.Empty(this.interactiveRunner.Launches);
     }
 
     [Theory]
@@ -69,11 +69,11 @@ public class AgentCommandServiceTests : IDisposable
             Update = new PluginCommand { Name = "Update", Executable = "test" }
         });
 
-        var result = await _service.ExecuteAsync(plugin, kind, _projectDir);
+        var result = await this.service.ExecuteAsync(plugin, kind, this.projectDir);
 
         Assert.True(result.Success);
-        Assert.Single(_interactiveRunner.Launches);
-        Assert.Empty(_outputRunner.Runs);
+        Assert.Single(this.interactiveRunner.Launches);
+        Assert.Empty(this.outputRunner.Runs);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class AgentCommandServiceTests : IDisposable
             Launch = new PluginCommand { Name = "Launch", Executable = "test" }
         });
 
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Version, _projectDir);
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Version, this.projectDir);
 
         Assert.False(result.Success);
         Assert.Contains("does not support", result.Error);
@@ -98,7 +98,7 @@ public class AgentCommandServiceTests : IDisposable
             Launch = new PluginCommand { Name = "Launch", Executable = "test" }
         });
 
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Launch, "/nonexistent");
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Launch, "/nonexistent");
 
         Assert.False(result.Success);
         Assert.Contains("does not exist", result.Error);
@@ -106,7 +106,7 @@ public class AgentCommandServiceTests : IDisposable
     [Fact]
     public async Task Version_NonZeroExitCode_ReturnsFailure()
     {
-        _outputRunner.Result = new ProcessResult
+        this.outputRunner.Result = new ProcessResult
         {
             ExitCode = 1,
             StandardOutput = string.Empty,
@@ -119,7 +119,7 @@ public class AgentCommandServiceTests : IDisposable
             Version = new PluginCommand { Name = "Version", Executable = "test", Arguments = "--version" }
         });
 
-        var result = await _service.ExecuteAsync(plugin, AgentCommandKind.Version, _projectDir);
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Version, this.projectDir);
 
         Assert.False(result.Success);
         Assert.Contains("Command not found", result.Error);

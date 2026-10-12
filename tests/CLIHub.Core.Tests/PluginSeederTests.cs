@@ -7,41 +7,41 @@ using CLIHub.Core.Plugins;
 
 public class PluginSeederTests : IDisposable
 {
-    private readonly string _pluginsPath;
+    private readonly string pluginsPath;
 
     public PluginSeederTests()
     {
-        _pluginsPath = Path.Combine(Path.GetTempPath(), "clihub-seed-" + Guid.NewGuid().ToString("N"));
+        this.pluginsPath = Path.Combine(Path.GetTempPath(), "clihub-seed-" + Guid.NewGuid().ToString("N"));
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_pluginsPath, recursive: true); } catch { }
+        try { Directory.Delete(this.pluginsPath, recursive: true); } catch { }
     }
 
     private PluginSeeder CreateSeeder() =>
-        new(NullLogger<PluginSeeder>.Instance, _pluginsPath);
+        new(NullLogger<PluginSeeder>.Instance, this.pluginsPath);
 
     [Fact]
     public void SeedIfEmpty_EmptyFolder_WritesSixDescriptors()
     {
-        var written = CreateSeeder().SeedIfEmpty();
+        var written = this.CreateSeeder().SeedIfEmpty();
 
         Assert.Equal(6, written);
         foreach (var id in new[] { "opencode", "pi", "cline-cli", "github-copilot", "openclaude", "qwen-code" })
         {
-            Assert.True(File.Exists(Path.Combine(_pluginsPath, id, "plugin.json")), $"missing {id}");
+            Assert.True(File.Exists(Path.Combine(this.pluginsPath, id, "plugin.json")), $"missing {id}");
         }
     }
 
     [Fact]
     public void SeedIfEmpty_EmptyFolder_WritesLogoForEachAgent()
     {
-        CreateSeeder().SeedIfEmpty();
+        this.CreateSeeder().SeedIfEmpty();
 
         foreach (var id in new[] { "opencode", "pi", "cline-cli", "github-copilot", "openclaude", "qwen-code" })
         {
-            var logo = Path.Combine(_pluginsPath, id, "logo.png");
+            var logo = Path.Combine(this.pluginsPath, id, "logo.png");
             Assert.True(File.Exists(logo), $"missing logo for {id}");
             Assert.True(new FileInfo(logo).Length > 0, $"empty logo for {id}");
         }
@@ -50,14 +50,14 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void SeedIfEmpty_DoesNotOverwriteExistingLogo()
     {
-        var opencodeDir = Path.Combine(_pluginsPath, "opencode");
+        var opencodeDir = Path.Combine(this.pluginsPath, "opencode");
         Directory.CreateDirectory(opencodeDir);
         File.WriteAllText(Path.Combine(opencodeDir, "plugin.json"),
             """{ "id": "opencode", "name": "OpenCode", "commands": { "launch": { "executable": "opencode" } } }""");
         var customLogo = Path.Combine(opencodeDir, "logo.png");
         File.WriteAllBytes(customLogo, new byte[] { 1, 2, 3, 4 });
 
-        CreateSeeder().SeedIfEmpty();
+        this.CreateSeeder().SeedIfEmpty();
 
         Assert.Equal(new byte[] { 1, 2, 3, 4 }, File.ReadAllBytes(customLogo));
     }
@@ -65,21 +65,21 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void SeedIfEmpty_ExistingPlugin_DoesNothing()
     {
-        var existingDir = Path.Combine(_pluginsPath, "custom");
+        var existingDir = Path.Combine(this.pluginsPath, "custom");
         Directory.CreateDirectory(existingDir);
         File.WriteAllText(Path.Combine(existingDir, "plugin.json"),
             """{ "id": "custom", "name": "Custom", "commands": { "launch": { "executable": "x" } } }""");
 
-        var written = CreateSeeder().SeedIfEmpty();
+        var written = this.CreateSeeder().SeedIfEmpty();
 
         Assert.Equal(0, written);
-        Assert.False(Directory.Exists(Path.Combine(_pluginsPath, "opencode")));
+        Assert.False(Directory.Exists(Path.Combine(this.pluginsPath, "opencode")));
     }
 
     [Fact]
     public void SeedIfEmpty_IsIdempotent()
     {
-        var seeder = CreateSeeder();
+        var seeder = this.CreateSeeder();
         Assert.Equal(6, seeder.SeedIfEmpty());
         Assert.Equal(0, seeder.SeedIfEmpty());
     }
@@ -89,12 +89,12 @@ public class PluginSeederTests : IDisposable
     {
         // A plugin directory that has a descriptor makes the folder non-empty,
         // so seeding is skipped and the file is preserved verbatim.
-        var opencodeDir = Path.Combine(_pluginsPath, "opencode");
+        var opencodeDir = Path.Combine(this.pluginsPath, "opencode");
         Directory.CreateDirectory(opencodeDir);
         const string content = """{ "id": "opencode", "name": "Edited", "commands": { "launch": { "executable": "opencode" } } }""";
         File.WriteAllText(Path.Combine(opencodeDir, "plugin.json"), content);
 
-        var written = CreateSeeder().SeedIfEmpty();
+        var written = this.CreateSeeder().SeedIfEmpty();
 
         Assert.Equal(0, written);
         Assert.Equal(content, File.ReadAllText(Path.Combine(opencodeDir, "plugin.json")));
@@ -103,10 +103,10 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void SeededDescriptors_LoadAsValidPlugins()
     {
-        CreateSeeder().SeedIfEmpty();
+        this.CreateSeeder().SeedIfEmpty();
 
-        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(_pluginsPath, "logos-state.json"));
-        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, _pluginsPath);
+        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.pluginsPath, "logos-state.json"));
+        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.pluginsPath);
         catalog.LoadPlugins();
 
         var plugins = catalog.GetAllPlugins().ToList();

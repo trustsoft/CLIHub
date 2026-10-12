@@ -5,10 +5,10 @@ namespace CLIHub.Core.Configuration;
 /// </summary>
 public sealed class ConfigMigrationRunner : IConfigMigrationRunner
 {
-    private readonly IReadOnlyDictionary<int, IConfigMigration> _migrations;
+    private readonly IReadOnlyDictionary<int, IConfigMigration> migrations;
 
     /// <inheritdoc />
-    public bool HasMigrations => _migrations.Count > 0;
+    public bool HasMigrations => this.migrations.Count > 0;
 
     /// <summary>
     ///   Creates a runner from registered migrations.
@@ -28,7 +28,7 @@ public sealed class ConfigMigrationRunner : IConfigMigrationRunner
             throw new ArgumentException("Configuration migrations cannot have duplicate source versions.", nameof(migrations));
         }
 
-        _migrations = registered.ToDictionary(m => m.SourceVersion);
+        this.migrations = registered.ToDictionary(m => m.SourceVersion);
     }
 
     /// <inheritdoc />
@@ -54,7 +54,7 @@ public sealed class ConfigMigrationRunner : IConfigMigrationRunner
 
         while (currentVersion < targetVersion)
         {
-            if (!_migrations.TryGetValue(currentVersion, out var migration))
+            if (!this.migrations.TryGetValue(currentVersion, out var migration))
             {
                 throw new InvalidOperationException(
                     $"No configuration migration is registered from schema version {currentVersion}.");

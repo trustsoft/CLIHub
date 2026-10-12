@@ -11,10 +11,10 @@ using Velopack;
 /// </summary>
 internal sealed class UpdateDownloader
 {
-    private readonly ILogger _logger;
-    private readonly object _downloadGate = new();
-    private bool _isDownloading;
-    private VelopackAsset? _downloadedAsset;
+    private readonly ILogger logger;
+    private readonly object downloadGate = new();
+    private bool isDownloading;
+    private VelopackAsset? downloadedAsset;
 
     /// <summary>
     ///   Creates the update downloader.
@@ -22,7 +22,7 @@ internal sealed class UpdateDownloader
     /// <param name="logger"> Logger for download operations. </param>
     public UpdateDownloader(ILogger logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -32,9 +32,9 @@ internal sealed class UpdateDownloader
     {
         get
         {
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                return _isDownloading;
+                return this.isDownloading;
             }
         }
     }
@@ -46,9 +46,9 @@ internal sealed class UpdateDownloader
     {
         get
         {
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                return _downloadedAsset;
+                return this.downloadedAsset;
             }
         }
     }
@@ -68,15 +68,15 @@ internal sealed class UpdateDownloader
         ArgumentNullException.ThrowIfNull(manager);
         ArgumentNullException.ThrowIfNull(update);
 
-        lock (_downloadGate)
+        lock (this.downloadGate)
         {
-            if (_isDownloading)
+            if (this.isDownloading)
             {
-                _logger.LogInformation("Update download requested while another download is running");
+                this.logger.LogInformation("Update download requested while another download is running");
                 return new UpdateDownloadResult(UpdateDownloadStatus.AlreadyDownloading, null);
             }
 
-            _isDownloading = true;
+            this.isDownloading = true;
         }
 
         try
@@ -84,7 +84,7 @@ internal sealed class UpdateDownloader
             var asset = update.TargetFullRelease;
             if (asset is null)
             {
-                _logger.LogWarning("Update has no target release asset");
+                this.logger.LogWarning("Update has no target release asset");
                 return new UpdateDownloadResult(UpdateDownloadStatus.Failed, null);
             }
 
@@ -96,28 +96,28 @@ internal sealed class UpdateDownloader
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning("Update download cancelled");
+                this.logger.LogWarning("Update download cancelled");
                 return new UpdateDownloadResult(UpdateDownloadStatus.Failed, version);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Update download failed");
+                this.logger.LogWarning(ex, "Update download failed");
                 return new UpdateDownloadResult(UpdateDownloadStatus.Failed, version);
             }
 
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                _downloadedAsset = asset;
+                this.downloadedAsset = asset;
             }
 
-            _logger.LogInformation("Update downloaded: {Version}", version);
+            this.logger.LogInformation("Update downloaded: {Version}", version);
             return new UpdateDownloadResult(UpdateDownloadStatus.Downloaded, version);
         }
         finally
         {
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                _isDownloading = false;
+                this.isDownloading = false;
             }
         }
     }

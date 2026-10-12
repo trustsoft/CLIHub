@@ -10,5 +10,5 @@ public partial class SettingsAgentsPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsAgentsPage() => InitializeComponent();
+    public SettingsAgentsPage() => this.InitializeComponent();
 }

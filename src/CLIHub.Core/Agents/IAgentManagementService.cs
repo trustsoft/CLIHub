@@ -37,7 +37,7 @@ public sealed record AgentUpdateResult(AgentUpdateOutcome Outcome, string? Messa
     /// <summary>
     ///   Whether the update command was started.
     /// </summary>
-    public bool Started => Outcome == AgentUpdateOutcome.Started;
+    public bool Started => this.Outcome == AgentUpdateOutcome.Started;
 }
 
 /// <summary>

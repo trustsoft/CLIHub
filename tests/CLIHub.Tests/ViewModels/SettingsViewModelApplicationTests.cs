@@ -67,7 +67,7 @@ public class SettingsViewModelApplicationTests
 
         public Fixture()
         {
-            Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+            this.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
                 DefaultRuntime = RuntimeKind.PowerShell,
                 Hotkey = "Ctrl+Shift+A",
@@ -75,26 +75,26 @@ public class SettingsViewModelApplicationTests
                 CheckForUpdatesOnStartup = true,
                 StartMinimized = true
             });
-            Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
-            Startup.Setup(x => x.IsEnabled()).Returns(false);
-            Applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
-            Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
-            Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
-            Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
-            Applier.Setup(x => x.ApplyStartupUpdateCheck(true));
-            Applier.Setup(x => x.ApplyAccent(It.IsAny<string>()));
-            Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
+            this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
+            this.Startup.Setup(x => x.IsEnabled()).Returns(false);
+            this.Applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
+            this.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
+            this.Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
+            this.Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
+            this.Applier.Setup(x => x.ApplyStartupUpdateCheck(true));
+            this.Applier.Setup(x => x.ApplyAccent(It.IsAny<string>()));
+            this.Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
 
             var application = new SettingsApplicationService(
-                Preferences.Object,
-                Startup.Object,
-                Applier.Object,
+                this.Preferences.Object,
+                this.Startup.Object,
+                this.Applier.Object,
                 new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsApplicationService>.Instance);
-            ViewModel = new SettingsViewModel(
+            this.ViewModel = new SettingsViewModel(
                 application,
-                Updates.Object,
-                Updates.Object,
+                this.Updates.Object,
+                this.Updates.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
                 new Mock<IProjectDialogService>().Object,

@@ -5,7 +5,7 @@ using CLIHub.Core.Models;
 
 public class StartMinimizedMigrationTests
 {
-    private readonly StartMinimizedMigration _migration = new();
+    private readonly StartMinimizedMigration migration = new();
 
     [Fact]
     public void Migrate_ShowWindowEnabled_SetsStartMinimizedDisabled()
@@ -13,7 +13,7 @@ public class StartMinimizedMigrationTests
         var snapshot = new ConfigurationSnapshot();
         snapshot.Preferences.ShowWindowOnStartup = true;
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
         Assert.False(migrated.Preferences.StartMinimized);
     }
@@ -24,7 +24,7 @@ public class StartMinimizedMigrationTests
         var snapshot = new ConfigurationSnapshot();
         snapshot.Preferences.ShowWindowOnStartup = false;
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
         Assert.True(migrated.Preferences.StartMinimized);
     }
@@ -41,7 +41,7 @@ public class StartMinimizedMigrationTests
         snapshot.Preferences.ShowWindowOnStartup = false;
         snapshot.Preferences.Hotkey = "Ctrl+Alt+P";
 
-        var migrated = _migration.Migrate(snapshot);
+        var migrated = this.migration.Migrate(snapshot);
 
         Assert.Equal(project.Id, migrated.CurrentProjectId);
         Assert.Equal(project.Name, migrated.Projects.Single().Name);

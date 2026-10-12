@@ -12,7 +12,7 @@ using Velopack.Exceptions;
 /// </summary>
 internal sealed class UpdateChecker
 {
-    private readonly ILogger _logger;
+    private readonly ILogger logger;
 
     /// <summary>
     ///   Creates the update checker.
@@ -20,7 +20,7 @@ internal sealed class UpdateChecker
     /// <param name="logger"> Logger for check operations. </param>
     public UpdateChecker(ILogger logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -48,8 +48,8 @@ internal sealed class UpdateChecker
 
             if (completed != checkTask)
             {
-                _ = ObserveLateUpdateCheckAsync(checkTask);
-                _logger.LogWarning("Update check timed out after {Seconds}s", timeout.TotalSeconds);
+                _ = this.ObserveLateUpdateCheckAsync(checkTask);
+                this.logger.LogWarning("Update check timed out after {Seconds}s", timeout.TotalSeconds);
                 return (new UpdateCheckResult(UpdateStatus.Failed, currentVersion, null), null);
             }
 
@@ -57,26 +57,26 @@ internal sealed class UpdateChecker
             if (update?.TargetFullRelease?.Version is { } version)
             {
                 var available = Normalize(version.ToString());
-                _logger.LogInformation("Update available: {Version}", available);
+                this.logger.LogInformation("Update available: {Version}", available);
                 return (new UpdateCheckResult(UpdateStatus.UpdateAvailable, currentVersion, available), update);
             }
 
-            _logger.LogInformation("No update available");
+            this.logger.LogInformation("No update available");
             return (new UpdateCheckResult(UpdateStatus.UpToDate, currentVersion, null), null);
         }
         catch (NotInstalledException)
         {
-            _logger.LogInformation("Update check skipped: the application is not a Velopack install");
+            this.logger.LogInformation("Update check skipped: the application is not a Velopack install");
             return (new UpdateCheckResult(UpdateStatus.NotInstalled, currentVersion, null), null);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Update check cancelled");
+            this.logger.LogWarning("Update check cancelled");
             return (new UpdateCheckResult(UpdateStatus.Failed, currentVersion, null), null);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Update check failed");
+            this.logger.LogWarning(ex, "Update check failed");
             return (new UpdateCheckResult(UpdateStatus.Failed, currentVersion, null), null);
         }
     }
@@ -89,7 +89,7 @@ internal sealed class UpdateChecker
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Late update check completed after timeout");
+            this.logger.LogDebug(ex, "Late update check completed after timeout");
         }
     }
 

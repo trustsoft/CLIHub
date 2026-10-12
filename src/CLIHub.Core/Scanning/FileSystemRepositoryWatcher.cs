@@ -7,18 +7,18 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class FileSystemRepositoryWatcherFactory : IRepositoryWatcherFactory
 {
-    private readonly ILogger<FileSystemRepositoryWatcher>? _logger;
+    private readonly ILogger<FileSystemRepositoryWatcher>? logger;
 
     /// <summary>
     ///   Creates the factory.
     /// </summary>
     /// <param name="logger"> Optional logger for watcher setup and disposal issues. </param>
     public FileSystemRepositoryWatcherFactory(ILogger<FileSystemRepositoryWatcher>? logger = null) =>
-        _logger = logger;
+        this.logger = logger;
 
     /// <inheritdoc />
     public IRepositoryWatcher Create(IReadOnlyList<string> roots) =>
-        new FileSystemRepositoryWatcher(roots, _logger);
+        new FileSystemRepositoryWatcher(roots, this.logger);
 }
 
 /// <summary>
@@ -28,8 +28,8 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
 {
     private const int BufferSize = 64 * 1024;
 
-    private readonly List<FileSystemWatcher> _watchers = new();
-    private bool _disposed;
+    private readonly List<FileSystemWatcher> watchers = new();
+    private bool disposed;
 
     /// <summary>
     ///   Creates a watcher over the supplied roots. Roots that do not exist are skipped.
@@ -57,11 +57,11 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
                     InternalBufferSize = BufferSize
                 };
 
-                watcher.Created += OnChanged;
-                watcher.Deleted += OnChanged;
-                watcher.Renamed += OnRenamed;
-                watcher.Error += OnError;
-                _watchers.Add(watcher);
+                watcher.Created += this.OnChanged;
+                watcher.Deleted += this.OnChanged;
+                watcher.Renamed += this.OnRenamed;
+                watcher.Error += this.OnError;
+                this.watchers.Add(watcher);
             }
             catch (Exception ex)
             {
@@ -79,7 +79,7 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
     /// <inheritdoc />
     public void Start()
     {
-        foreach (var watcher in _watchers)
+        foreach (var watcher in this.watchers)
         {
             watcher.EnableRaisingEvents = true;
         }
@@ -88,7 +88,7 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
     /// <inheritdoc />
     public void Stop()
     {
-        foreach (var watcher in _watchers)
+        foreach (var watcher in this.watchers)
         {
             watcher.EnableRaisingEvents = false;
         }
@@ -97,23 +97,23 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
+        this.disposed = true;
 
-        foreach (var watcher in _watchers)
+        foreach (var watcher in this.watchers)
         {
-            watcher.Created -= OnChanged;
-            watcher.Deleted -= OnChanged;
-            watcher.Renamed -= OnRenamed;
-            watcher.Error -= OnError;
+            watcher.Created -= this.OnChanged;
+            watcher.Deleted -= this.OnChanged;
+            watcher.Renamed -= this.OnRenamed;
+            watcher.Error -= this.OnError;
             watcher.Dispose();
         }
 
-        _watchers.Clear();
+        this.watchers.Clear();
     }
 
     private void OnChanged(object sender, FileSystemEventArgs e) => Changed?.Invoke(this, EventArgs.Empty);

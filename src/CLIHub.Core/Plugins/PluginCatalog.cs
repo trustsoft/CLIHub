@@ -11,12 +11,12 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class PluginCatalog : IPluginCatalog
 {
-    private readonly ILogger<PluginCatalog> _logger;
-    private readonly ILogoCacheService _logoCache;
-    private readonly IPluginDescriptorReader _descriptorReader;
-    private readonly IPluginDescriptorValidator _descriptorValidator;
-    private readonly string _pluginsPath;
-    private IReadOnlyList<Plugin> _plugins = Array.Empty<Plugin>();
+    private readonly ILogger<PluginCatalog> logger;
+    private readonly ILogoCacheService logoCache;
+    private readonly IPluginDescriptorReader descriptorReader;
+    private readonly IPluginDescriptorValidator descriptorValidator;
+    private readonly string pluginsPath;
+    private IReadOnlyList<Plugin> plugins = Array.Empty<Plugin>();
 
     /// <inheritdoc />
     public event EventHandler? PluginsChanged;
@@ -36,23 +36,23 @@ public sealed class PluginCatalog : IPluginCatalog
         IPluginDescriptorReader? descriptorReader = null,
         IPluginDescriptorValidator? descriptorValidator = null)
     {
-        _logger = logger;
-        _logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
-        _pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
-        _descriptorReader = descriptorReader ?? new PluginDescriptorReader();
-        _descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
+        this.logger = logger;
+        this.logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
+        this.pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
+        this.descriptorReader = descriptorReader ?? new PluginDescriptorReader();
+        this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
     }
 
     /// <inheritdoc />
     public void LoadPlugins()
     {
-        _plugins = LoadPluginsCore();
+        this.plugins = this.LoadPluginsCore();
     }
 
     /// <inheritdoc />
     public void ReloadPlugins()
     {
-        _plugins = LoadPluginsCore();
+        this.plugins = this.LoadPluginsCore();
         PluginsChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -60,7 +60,7 @@ public sealed class PluginCatalog : IPluginCatalog
     {
         var plugins = new List<Plugin>();
 
-        var pluginsPath = _pluginsPath;
+        var pluginsPath = this.pluginsPath;
 
         if (!Directory.Exists(pluginsPath))
         {
@@ -72,27 +72,27 @@ public sealed class PluginCatalog : IPluginCatalog
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
             .ThenBy(path => path, StringComparer.Ordinal)
             .ToArray();
-        _logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
+        this.logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
 
         foreach (var pluginDir in pluginDirectories)
         {
             try
             {
-                var descriptor = _descriptorReader.Read(pluginDir);
+                var descriptor = this.descriptorReader.Read(pluginDir);
                 if (descriptor.Error is not null)
                 {
-                    _logger.LogWarning(descriptor.Error, "Failed to load plugin.json from {Directory}", pluginDir);
+                    this.logger.LogWarning(descriptor.Error, "Failed to load plugin.json from {Directory}", pluginDir);
                     continue;
                 }
 
                 var plugin = descriptor.Plugin;
 
-                if (plugin != null && ValidatePlugin(plugin, pluginDir))
+                if (plugin != null && this.ValidatePlugin(plugin, pluginDir))
                 {
                     var loadedDirectory = FindLoadedPluginDirectory(plugins, plugin.Id, pluginDir);
                     if (loadedDirectory is not null)
                     {
-                        _logger.LogWarning(
+                        this.logger.LogWarning(
                             "Duplicate plugin ID {PluginId} in {Directory}; skipped; loaded from {LoadedDirectory}",
                             plugin.Id,
                             pluginDir,
@@ -101,36 +101,36 @@ public sealed class PluginCatalog : IPluginCatalog
                     }
 
                     plugin.PluginDirectory = pluginDir;
-                    plugin.LogoPath = _logoCache.GetOrResolve(
+                    plugin.LogoPath = this.logoCache.GetOrResolve(
                         $"plugin:{plugin.Id}",
                         () => LoadPluginLogo(pluginDir));
 
                     plugins.Add(plugin);
-                    _logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
+                    this.logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", pluginDir);
+                this.logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", pluginDir);
             }
         }
 
-        _logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
+        this.logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
         return plugins;
     }
 
     /// <inheritdoc />
     public IReadOnlyList<Plugin> GetAllPlugins()
     {
-        return _plugins;
+        return this.plugins;
     }
 
     private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
     {
-        var result = _descriptorValidator.Validate(plugin);
+        var result = this.descriptorValidator.Validate(plugin);
         if (!result.IsValid)
         {
-            _logger.LogWarning(
+            this.logger.LogWarning(
                 "Invalid plugin in {Directory}: {Errors}",
                 pluginDirectory,
                 string.Join("; ", result.Errors));

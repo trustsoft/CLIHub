@@ -9,10 +9,10 @@ using CLIHub.Core.Projects;
 /// </summary>
 public sealed class TrayStateProjection : IDisposable
 {
-    private readonly IProjectService _projects;
-    private readonly IPluginCatalog _pluginCatalog;
-    private readonly IUpdateWorkflow _updates;
-    private bool _disposed;
+    private readonly IProjectService projects;
+    private readonly IPluginCatalog pluginCatalog;
+    private readonly IUpdateWorkflow updates;
+    private bool disposed;
 
     /// <summary>
     ///   Raised when one of the projected source values changes.
@@ -30,49 +30,49 @@ public sealed class TrayStateProjection : IDisposable
         IPluginCatalog pluginCatalog,
         IUpdateWorkflow updates)
     {
-        _projects = projects ?? throw new ArgumentNullException(nameof(projects));
-        _pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
-        _updates = updates ?? throw new ArgumentNullException(nameof(updates));
+        this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
+        this.pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
+        this.updates = updates ?? throw new ArgumentNullException(nameof(updates));
 
-        _projects.ProjectsChanged += OnSourceStateChanged;
-        _pluginCatalog.PluginsChanged += OnSourceStateChanged;
-        _updates.UpdateStateChanged += OnSourceStateChanged;
+        this.projects.ProjectsChanged += this.OnSourceStateChanged;
+        this.pluginCatalog.PluginsChanged += this.OnSourceStateChanged;
+        this.updates.UpdateStateChanged += this.OnSourceStateChanged;
     }
 
     /// <summary>
     ///   Gets whether a manual update check is currently running.
     /// </summary>
-    public bool IsCheckingForUpdates => _updates.IsCheckingForUpdates;
+    public bool IsCheckingForUpdates => this.updates.IsCheckingForUpdates;
 
     /// <summary>
     ///   Builds a snapshot from the current project, plugin, and update state.
     /// </summary>
     public TrayMenuState GetState() => new(
-        _projects.GetCurrentProject(),
-        _projects.GetRecentProjects(10),
-        _pluginCatalog.GetAllPlugins().Where(plugin => plugin.Commands?.Launch is not null).ToArray(),
-        _updates.LastKnownAvailableVersion,
-        _updates.IsDownloading,
-        IsCheckingForUpdates);
+        this.projects.GetCurrentProject(),
+        this.projects.GetRecentProjects(10),
+        this.pluginCatalog.GetAllPlugins().Where(plugin => plugin.Commands?.Launch is not null).ToArray(),
+        this.updates.LastKnownAvailableVersion,
+        this.updates.IsDownloading,
+        this.IsCheckingForUpdates);
 
     /// <summary>
     ///   Persists the selected project from a recent-project menu action.
     /// </summary>
     /// <param name="projectId"> ID of the selected project. </param>
-    public void SetCurrentProject(string projectId) => _projects.SetCurrentProject(projectId);
+    public void SetCurrentProject(string projectId) => this.projects.SetCurrentProject(projectId);
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _projects.ProjectsChanged -= OnSourceStateChanged;
-        _pluginCatalog.PluginsChanged -= OnSourceStateChanged;
-        _updates.UpdateStateChanged -= OnSourceStateChanged;
+        this.disposed = true;
+        this.projects.ProjectsChanged -= this.OnSourceStateChanged;
+        this.pluginCatalog.PluginsChanged -= this.OnSourceStateChanged;
+        this.updates.UpdateStateChanged -= this.OnSourceStateChanged;
     }
 
     private void OnSourceStateChanged(object? sender, EventArgs e) => StateChanged?.Invoke(this, EventArgs.Empty);

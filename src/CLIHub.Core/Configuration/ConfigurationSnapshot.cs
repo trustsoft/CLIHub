@@ -45,16 +45,16 @@ public sealed class ConfigurationSnapshot
     /// <returns> A detached application configuration. </returns>
     public AppConfig ToAppConfig() => new()
     {
-        Projects = Projects.Select(CloneProject).ToList(),
-        Preferences = ClonePreferences(Preferences),
-        CurrentProjectId = CurrentProjectId
+        Projects = this.Projects.Select(CloneProject).ToList(),
+        Preferences = ClonePreferences(this.Preferences),
+        CurrentProjectId = this.CurrentProjectId
     };
 
     /// <summary>
     ///   Creates a detached copy of this snapshot.
     /// </summary>
     /// <returns> A detached snapshot copy. </returns>
-    public ConfigurationSnapshot Clone() => From(ToAppConfig());
+    public ConfigurationSnapshot Clone() => From(this.ToAppConfig());
 
     private static Project CloneProject(Project project) => new()
     {

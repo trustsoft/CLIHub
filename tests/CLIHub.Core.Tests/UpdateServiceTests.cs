@@ -13,17 +13,17 @@ using Velopack.Sources;
 
 public class UpdateServiceTests : IDisposable
 {
-    private readonly string _packagesDir;
+    private readonly string packagesDir;
 
     public UpdateServiceTests()
     {
-        _packagesDir = Path.Combine(Path.GetTempPath(), "clihub-velopack-" + Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_packagesDir);
+        this.packagesDir = Path.Combine(Path.GetTempPath(), "clihub-velopack-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(this.packagesDir);
     }
 
     public void Dispose()
     {
-        try { Directory.Delete(_packagesDir, recursive: true); } catch { }
+        try { Directory.Delete(this.packagesDir, recursive: true); } catch { }
     }
 
     /// <summary>
@@ -32,13 +32,13 @@ public class UpdateServiceTests : IDisposable
     /// </summary>
     private sealed class DelayedSource : IUpdateSource
     {
-        private readonly TimeSpan _delay;
-        private readonly bool _fail;
+        private readonly TimeSpan delay;
+        private readonly bool fail;
 
         public DelayedSource(TimeSpan delay, bool fail = false)
         {
-            _delay = delay;
-            _fail = fail;
+            this.delay = delay;
+            this.fail = fail;
         }
 
         public async Task<VelopackAssetFeed> GetReleaseFeed(
@@ -48,8 +48,8 @@ public class UpdateServiceTests : IDisposable
             Guid? stagingId,
             VelopackAsset? latestLocalRelease)
         {
-            await Task.Delay(_delay);
-            if (_fail)
+            await Task.Delay(this.delay);
+            if (this.fail)
             {
                 throw new InvalidOperationException("late update feed failure");
             }
@@ -70,22 +70,22 @@ public class UpdateServiceTests : IDisposable
 
     private UpdateService CreateInstalledService(string version)
     {
-        var locator = new TestVelopackLocator("CLIHub", version, _packagesDir);
-        var source = new SimpleFileSource(new DirectoryInfo(_packagesDir));
+        var locator = new TestVelopackLocator("CLIHub", version, this.packagesDir);
+        var source = new SimpleFileSource(new DirectoryInfo(this.packagesDir));
         var manager = new UpdateManager(source, null, locator);
         return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager);
     }
 
     private UpdateService CreateDelayedService(TimeSpan delay)
     {
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var manager = new UpdateManager(new DelayedSource(delay), null, locator);
         return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager);
     }
 
     private UpdateService CreateDelayedService(TimeSpan delay, TimeSpan checkTimeout, bool fail = false)
     {
-        var locator = new TestVelopackLocator("CLIHub", "1.0.0", _packagesDir);
+        var locator = new TestVelopackLocator("CLIHub", "1.0.0", this.packagesDir);
         var manager = new UpdateManager(new DelayedSource(delay, fail), null, locator);
         return UpdateService.CreateForTesting(NullLogger<UpdateService>.Instance, manager, checkTimeout);
     }
@@ -93,7 +93,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public void GetCurrentVersion_NotInstalled_UsesAssemblyVersion()
     {
-        var version = CreateDefaultService().GetCurrentVersion();
+        var version = this.CreateDefaultService().GetCurrentVersion();
         Assert.False(string.IsNullOrWhiteSpace(version));
         Assert.DoesNotContain("+", version);
     }
@@ -101,7 +101,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task CheckForUpdates_WhenNotInstalled_ReturnsNotInstalledWithoutNetwork()
     {
-        var result = await CreateDefaultService().CheckForUpdatesAsync();
+        var result = await this.CreateDefaultService().CheckForUpdatesAsync();
 
         Assert.Equal(UpdateStatus.NotInstalled, result.Status);
         Assert.Null(result.AvailableVersion);
@@ -110,7 +110,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task CheckForUpdates_InstalledWithNoReleases_ReturnsUpToDate()
     {
-        var result = await CreateInstalledService("1.0.0").CheckForUpdatesAsync();
+        var result = await this.CreateInstalledService("1.0.0").CheckForUpdatesAsync();
 
         Assert.Equal(UpdateStatus.UpToDate, result.Status);
         Assert.Equal("1.0.0", result.CurrentVersion);
@@ -120,14 +120,14 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task CheckForUpdates_NeverThrows()
     {
-        var exception = await Record.ExceptionAsync(() => CreateDefaultService().CheckForUpdatesAsync());
+        var exception = await Record.ExceptionAsync(() => this.CreateDefaultService().CheckForUpdatesAsync());
         Assert.Null(exception);
     }
 
     [Fact]
     public async Task CheckForUpdates_TimeoutObservesLateSuccessAndLeavesStateClear()
     {
-        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20));
+        var service = this.CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20));
 
         var result = await service.CheckForUpdatesAsync();
 
@@ -140,7 +140,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task CheckForUpdates_TimeoutObservesLateFailure()
     {
-        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20), fail: true);
+        var service = this.CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(20), fail: true);
 
         var result = await service.CheckForUpdatesAsync();
 
@@ -152,7 +152,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task CheckForUpdates_CancellationObservesLateCompletionAndLeavesStateClear()
     {
-        var service = CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromSeconds(2));
+        var service = this.CreateDelayedService(TimeSpan.FromMilliseconds(150), TimeSpan.FromSeconds(2));
         using var cancellation = new CancellationTokenSource();
         cancellation.Cancel();
 
@@ -165,29 +165,29 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public void IsDownloading_InitiallyFalse()
     {
-        Assert.False(CreateDefaultService().IsDownloading);
+        Assert.False(this.CreateDefaultService().IsDownloading);
     }
 
     [Fact]
     public void LastKnownAvailableVersion_InitiallyNull()
     {
-        Assert.Null(CreateDefaultService().LastKnownAvailableVersion);
+        Assert.Null(this.CreateDefaultService().LastKnownAvailableVersion);
     }
 
     [Fact]
     public async Task DownloadUpdate_NotInstalled_ReturnsNotInstalled()
     {
-        var result = await CreateDefaultService().DownloadUpdateAsync();
+        var result = await this.CreateDefaultService().DownloadUpdateAsync();
 
         Assert.Equal(UpdateDownloadStatus.NotInstalled, result.Status);
         Assert.Null(result.AvailableVersion);
-        Assert.False(CreateDefaultService().IsDownloading);
+        Assert.False(this.CreateDefaultService().IsDownloading);
     }
 
     [Fact]
     public async Task DownloadUpdate_InstalledWithNoReleases_ReturnsNoUpdate()
     {
-        var service = CreateInstalledService("1.0.0");
+        var service = this.CreateInstalledService("1.0.0");
 
         var result = await service.DownloadUpdateAsync();
 
@@ -199,7 +199,7 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task DownloadUpdate_SecondCallWhileRunning_ReturnsAlreadyDownloading()
     {
-        var service = CreateDelayedService(TimeSpan.FromSeconds(2));
+        var service = this.CreateDelayedService(TimeSpan.FromSeconds(2));
 
         var first = service.DownloadUpdateAsync();
         var second = await service.DownloadUpdateAsync();
@@ -216,14 +216,14 @@ public class UpdateServiceTests : IDisposable
     [Fact]
     public async Task DownloadUpdate_NeverThrows()
     {
-        var exception = await Record.ExceptionAsync(() => CreateDefaultService().DownloadUpdateAsync());
+        var exception = await Record.ExceptionAsync(() => this.CreateDefaultService().DownloadUpdateAsync());
         Assert.Null(exception);
     }
 
     [Fact]
     public void ApplyDownloadedUpdateAndRestart_WithoutDownloadedUpdate_DoesNotThrow()
     {
-        var exception = Record.Exception(() => CreateDefaultService().ApplyDownloadedUpdateAndRestart());
+        var exception = Record.Exception(() => this.CreateDefaultService().ApplyDownloadedUpdateAndRestart());
         Assert.Null(exception);
     }
 

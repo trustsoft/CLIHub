@@ -15,17 +15,17 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
 {
     private const int HotkeyId = 0xC1A0;
 
-    private readonly ILogger<GlobalHotkeyService> _logger;
-    private readonly HwndSource _source;
-    private readonly IntPtr _handle;
-    private readonly Action _onPressed;
-    private bool _registered;
-    private HotkeyDefinition? _current;
+    private readonly ILogger<GlobalHotkeyService> logger;
+    private readonly HwndSource source;
+    private readonly IntPtr handle;
+    private readonly Action onPressed;
+    private bool registered;
+    private HotkeyDefinition? current;
 
     /// <summary>
     ///   True when a hotkey is currently registered.
     /// </summary>
-    public bool IsRegistered => _registered;
+    public bool IsRegistered => this.registered;
 
     /// <summary>
     ///   Hooks the window's message loop so hotkey messages can be observed.
@@ -35,13 +35,13 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     /// <param name="logger"> Logger. </param>
     public GlobalHotkeyService(Window window, Action onPressed, ILogger<GlobalHotkeyService> logger)
     {
-        _logger = logger;
-        _onPressed = onPressed;
+        this.logger = logger;
+        this.onPressed = onPressed;
 
-        _handle = new WindowInteropHelper(window).EnsureHandle();
-        _source = HwndSource.FromHwnd(_handle)
+        this.handle = new WindowInteropHelper(window).EnsureHandle();
+        this.source = HwndSource.FromHwnd(this.handle)
                   ?? throw new InvalidOperationException("Could not obtain an HwndSource for the window.");
-        _source.AddHook(WndProc);
+        this.source.AddHook(this.WndProc);
     }
 
     /// <summary>
@@ -49,28 +49,28 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     /// </summary>
     public bool Register(HotkeyDefinition definition)
     {
-        if (_registered)
+        if (this.registered)
         {
             return true;
         }
 
-        _registered = User32.RegisterHotKey(_handle, HotkeyId, (uint)definition.Modifiers, (uint)definition.VirtualKey);
+        this.registered = User32.RegisterHotKey(this.handle, HotkeyId, (uint)definition.Modifiers, (uint)definition.VirtualKey);
 
-        if (_registered)
+        if (this.registered)
         {
-            _current = definition;
-            _logger.LogInformation(
+            this.current = definition;
+            this.logger.LogInformation(
                 "Registered global hotkey (modifiers {Modifiers}, vk 0x{VirtualKey:X2})",
                 definition.Modifiers, definition.VirtualKey);
         }
         else
         {
-            _logger.LogWarning(
+            this.logger.LogWarning(
                 "Failed to register global hotkey (modifiers {Modifiers}, vk 0x{VirtualKey:X2}); it may be in use",
                 definition.Modifiers, definition.VirtualKey);
         }
 
-        return _registered;
+        return this.registered;
     }
 
     /// <summary>
@@ -80,22 +80,22 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     /// </summary>
     public bool ReRegister(HotkeyDefinition definition)
     {
-        var previous = _current;
+        var previous = this.current;
 
-        if (_registered)
+        if (this.registered)
         {
-            User32.UnregisterHotKey(_handle, HotkeyId);
-            _registered = false;
+            User32.UnregisterHotKey(this.handle, HotkeyId);
+            this.registered = false;
         }
 
-        if (Register(definition))
+        if (this.Register(definition))
         {
             return true;
         }
 
         if (previous is not null)
         {
-            Register(previous);
+            this.Register(previous);
         }
 
         return false;
@@ -105,7 +105,7 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     {
         if (msg == User32.WM_HOTKEY && wParam.ToInt32() == HotkeyId)
         {
-            _onPressed();
+            this.onPressed();
             handled = true;
         }
 
@@ -117,13 +117,13 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_registered)
+        if (this.registered)
         {
-            User32.UnregisterHotKey(_handle, HotkeyId);
-            _registered = false;
+            User32.UnregisterHotKey(this.handle, HotkeyId);
+            this.registered = false;
         }
 
-        _source.RemoveHook(WndProc);
+        this.source.RemoveHook(this.WndProc);
     }
 }
 

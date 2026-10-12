@@ -14,7 +14,7 @@ public sealed record AgentOption(string? Id, string Name, string? Version = null
     ///   The display text: the name with the installed version in parentheses when it is known.
     /// </summary>
     public string DisplayName =>
-        string.IsNullOrEmpty(Version) || Version == "…" ? Name : $"{Name} ({Version})";
+        string.IsNullOrEmpty(this.Version) || this.Version == "…" ? this.Name : $"{this.Name} ({this.Version})";
 }
 
 /// <summary>
@@ -22,11 +22,11 @@ public sealed record AgentOption(string? Id, string Name, string? Version = null
 /// </summary>
 public sealed class AgentCardItem : ObservableObject
 {
-    private bool _isInstalled;
-    private string _version;
-    private bool _canUpdate;
-    private string? _updateNote;
-    private string? _message;
+    private bool isInstalled;
+    private string version;
+    private bool canUpdate;
+    private string? updateNote;
+    private string? message;
 
     /// <summary>
     ///   Creates a card from the agent's plugin descriptor and current state.
@@ -38,16 +38,16 @@ public sealed class AgentCardItem : ObservableObject
     /// <param name="configPath"> The path to the agent's plugin.json, or null. </param>
     public AgentCardItem(Plugin plugin, string? logoPath, bool isInstalled, string version, string? configPath)
     {
-        Plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
-        PluginId = plugin.Id;
-        Name = plugin.Name;
-        LogoPath = logoPath;
-        ConfigPath = configPath;
-        CommandLabels = BuildCommandLabels(plugin.Commands);
-        HostMarkers = plugin.Detection?.SystemPaths?.ToArray() ?? [];
-        ProjectMarkers = plugin.Detection?.ProjectIndicators?.ToArray() ?? [];
-        _isInstalled = isInstalled;
-        _version = version;
+        this.Plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
+        this.PluginId = plugin.Id;
+        this.Name = plugin.Name;
+        this.LogoPath = logoPath;
+        this.ConfigPath = configPath;
+        this.CommandLabels = BuildCommandLabels(plugin.Commands);
+        this.HostMarkers = plugin.Detection?.SystemPaths?.ToArray() ?? [];
+        this.ProjectMarkers = plugin.Detection?.ProjectIndicators?.ToArray() ?? [];
+        this.isInstalled = isInstalled;
+        this.version = version;
     }
 
     /// <summary>
@@ -93,44 +93,44 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   Whether the agent declares any host markers.
     /// </summary>
-    public bool HasHostMarkers => HostMarkers.Count > 0;
+    public bool HasHostMarkers => this.HostMarkers.Count > 0;
 
     /// <summary>
     ///   Whether the agent declares any project indicators.
     /// </summary>
-    public bool HasProjectMarkers => ProjectMarkers.Count > 0;
+    public bool HasProjectMarkers => this.ProjectMarkers.Count > 0;
 
     /// <summary>
     ///   Whether the agent declares any commands.
     /// </summary>
-    public bool HasCommands => CommandLabels.Count > 0;
+    public bool HasCommands => this.CommandLabels.Count > 0;
 
     /// <summary>
     ///   The declared command kinds as a single line, or an em dash when none are declared.
     /// </summary>
-    public string CommandsText => CommandLabels.Count > 0 ? string.Join(", ", CommandLabels) : "—";
+    public string CommandsText => this.CommandLabels.Count > 0 ? string.Join(", ", this.CommandLabels) : "—";
 
     /// <summary>
     ///   The declared host markers as a single line, or an em dash when none are declared.
     /// </summary>
-    public string HostMarkersText => HostMarkers.Count > 0 ? string.Join(", ", HostMarkers) : "—";
+    public string HostMarkersText => this.HostMarkers.Count > 0 ? string.Join(", ", this.HostMarkers) : "—";
 
     /// <summary>
     ///   The declared project indicators as a single line, or an em dash when none are declared.
     /// </summary>
-    public string ProjectMarkersText => ProjectMarkers.Count > 0 ? string.Join(", ", ProjectMarkers) : "—";
+    public string ProjectMarkersText => this.ProjectMarkers.Count > 0 ? string.Join(", ", this.ProjectMarkers) : "—";
 
     /// <summary>
     ///   Whether the agent is installed on the host.
     /// </summary>
     public bool IsInstalled
     {
-        get => _isInstalled;
+        get => this.isInstalled;
         set
         {
-            if (SetProperty(ref _isInstalled, value))
+            if (this.SetProperty(ref this.isInstalled, value))
             {
-                OnPropertyChanged(nameof(StatusText));
+                this.OnPropertyChanged(nameof(this.StatusText));
             }
         }
     }
@@ -138,15 +138,15 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   The installation status text.
     /// </summary>
-    public string StatusText => IsInstalled ? "Installed" : "Not installed";
+    public string StatusText => this.IsInstalled ? "Installed" : "Not installed";
 
     /// <summary>
     ///   The installed version, or an "unknown" placeholder.
     /// </summary>
     public string Version
     {
-        get => _version;
-        set => SetProperty(ref _version, value);
+        get => this.version;
+        set => this.SetProperty(ref this.version, value);
     }
 
     /// <summary>
@@ -154,8 +154,8 @@ public sealed class AgentCardItem : ObservableObject
     /// </summary>
     public bool CanUpdate
     {
-        get => _canUpdate;
-        set => SetProperty(ref _canUpdate, value);
+        get => this.canUpdate;
+        set => this.SetProperty(ref this.canUpdate, value);
     }
 
     /// <summary>
@@ -163,26 +163,26 @@ public sealed class AgentCardItem : ObservableObject
     /// </summary>
     public string? UpdateNote
     {
-        get => _updateNote;
-        set => SetProperty(ref _updateNote, value);
+        get => this.updateNote;
+        set => this.SetProperty(ref this.updateNote, value);
     }
 
     /// <summary>
     ///   Whether the Edit Config action is available.
     /// </summary>
-    public bool CanEditConfig => ConfigPath is not null;
+    public bool CanEditConfig => this.ConfigPath is not null;
 
     /// <summary>
     ///   The last action outcome message, or null.
     /// </summary>
     public string? Message
     {
-        get => _message;
+        get => this.message;
         set
         {
-            if (SetProperty(ref _message, value))
+            if (this.SetProperty(ref this.message, value))
             {
-                OnPropertyChanged(nameof(HasMessage));
+                this.OnPropertyChanged(nameof(this.HasMessage));
             }
         }
     }
@@ -190,7 +190,7 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   Whether the card has an action outcome message to show.
     /// </summary>
-    public bool HasMessage => !string.IsNullOrEmpty(Message);
+    public bool HasMessage => !string.IsNullOrEmpty(this.Message);
 
     private static IReadOnlyList<string> BuildCommandLabels(AgentCommands? commands)
     {

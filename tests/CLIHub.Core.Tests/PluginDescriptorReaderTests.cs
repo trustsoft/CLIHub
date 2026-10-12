@@ -4,21 +4,21 @@ using CLIHub.Core.Plugins;
 
 public class PluginDescriptorReaderTests : IDisposable
 {
-    private readonly string _root = Path.Combine(
+    private readonly string root = Path.Combine(
         Path.GetTempPath(),
         "clihub-plugin-reader-" + Guid.NewGuid().ToString("N"));
 
     public void Dispose()
     {
-        try { Directory.Delete(_root, recursive: true); } catch { }
+        try { Directory.Delete(this.root, recursive: true); } catch { }
     }
 
     [Fact]
     public void Read_MissingDescriptor_ReturnsNoPluginAndNoError()
     {
-        Directory.CreateDirectory(_root);
+        Directory.CreateDirectory(this.root);
 
-        var result = new PluginDescriptorReader().Read(_root);
+        var result = new PluginDescriptorReader().Read(this.root);
 
         Assert.Null(result.Plugin);
         Assert.Null(result.Error);
@@ -27,8 +27,8 @@ public class PluginDescriptorReaderTests : IDisposable
     [Fact]
     public void Read_ValidDescriptor_DeserializesPlugin()
     {
-        Directory.CreateDirectory(_root);
-        File.WriteAllText(Path.Combine(_root, "plugin.json"), """
+        Directory.CreateDirectory(this.root);
+        File.WriteAllText(Path.Combine(this.root, "plugin.json"), """
         {
           "id": "opencode",
           "name": "OpenCode",
@@ -36,7 +36,7 @@ public class PluginDescriptorReaderTests : IDisposable
         }
         """);
 
-        var result = new PluginDescriptorReader().Read(_root);
+        var result = new PluginDescriptorReader().Read(this.root);
 
         Assert.Null(result.Error);
         Assert.NotNull(result.Plugin);
@@ -47,10 +47,10 @@ public class PluginDescriptorReaderTests : IDisposable
     [Fact]
     public void Read_JsonNull_ReturnsNoPluginAndNoError()
     {
-        Directory.CreateDirectory(_root);
-        File.WriteAllText(Path.Combine(_root, "plugin.json"), "null");
+        Directory.CreateDirectory(this.root);
+        File.WriteAllText(Path.Combine(this.root, "plugin.json"), "null");
 
-        var result = new PluginDescriptorReader().Read(_root);
+        var result = new PluginDescriptorReader().Read(this.root);
 
         Assert.Null(result.Plugin);
         Assert.Null(result.Error);
@@ -59,10 +59,10 @@ public class PluginDescriptorReaderTests : IDisposable
     [Fact]
     public void Read_MalformedJson_ReturnsError()
     {
-        Directory.CreateDirectory(_root);
-        File.WriteAllText(Path.Combine(_root, "plugin.json"), "{ not valid json");
+        Directory.CreateDirectory(this.root);
+        File.WriteAllText(Path.Combine(this.root, "plugin.json"), "{ not valid json");
 
-        var result = new PluginDescriptorReader().Read(_root);
+        var result = new PluginDescriptorReader().Read(this.root);
 
         Assert.Null(result.Plugin);
         Assert.IsType<System.Text.Json.JsonException>(result.Error);

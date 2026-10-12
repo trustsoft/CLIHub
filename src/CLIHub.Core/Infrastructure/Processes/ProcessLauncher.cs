@@ -15,12 +15,12 @@ public sealed class ProcessLauncher
 {
     private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);
 
-    private readonly ILogger<ProcessLauncher> _logger;
-    private readonly RuntimeSelector _runtimeSelector;
-    private readonly IInteractiveProcessRunner _interactiveRunner;
-    private readonly IProcessOutputRunner _outputRunner;
+    private readonly ILogger<ProcessLauncher> logger;
+    private readonly RuntimeSelector runtimeSelector;
+    private readonly IInteractiveProcessRunner interactiveRunner;
+    private readonly IProcessOutputRunner outputRunner;
     
-    private RuntimeKind _runtime = RuntimeKind.PowerShell;
+    private RuntimeKind runtime = RuntimeKind.PowerShell;
 
     /// <summary>
     ///   Creates the launcher.
@@ -31,21 +31,21 @@ public sealed class ProcessLauncher
         IInteractiveProcessRunner interactiveRunner,
         IProcessOutputRunner outputRunner)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _runtimeSelector = runtimeSelector ?? throw new ArgumentNullException(nameof(runtimeSelector));
-        _interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
-        _outputRunner = outputRunner ?? throw new ArgumentNullException(nameof(outputRunner));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.runtimeSelector = runtimeSelector ?? throw new ArgumentNullException(nameof(runtimeSelector));
+        this.interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
+        this.outputRunner = outputRunner ?? throw new ArgumentNullException(nameof(outputRunner));
     }
 
     /// <summary>
     ///   Sets the runtime used to launch interactive agent commands.
     /// </summary>
-    public void SetRuntime(RuntimeKind runtime) => _runtime = runtime;
+    public void SetRuntime(RuntimeKind runtime) => this.runtime = runtime;
 
     /// <summary>
     ///   Gets the configured runtime.
     /// </summary>
-    public RuntimeKind GetRuntime() => _runtime;
+    public RuntimeKind GetRuntime() => this.runtime;
 
     /// <summary>
     ///   Launches a process for the specified plugin command in the given project directory.
@@ -57,39 +57,39 @@ public sealed class ProcessLauncher
     {
         if (command == null)
         {
-            _logger.LogError("Plugin command cannot be null");
+            this.logger.LogError("Plugin command cannot be null");
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(command.Executable))
         {
-            _logger.LogError("Executable path is required in plugin command {CommandName}", command.Name);
+            this.logger.LogError("Executable path is required in plugin command {CommandName}", command.Name);
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(workingDirectory))
         {
-            _logger.LogError("Working directory cannot be null or empty");
+            this.logger.LogError("Working directory cannot be null or empty");
             return false;
         }
 
         if (!Directory.Exists(workingDirectory))
         {
-            _logger.LogError("Working directory does not exist: {WorkingDirectory}", workingDirectory);
+            this.logger.LogError("Working directory does not exist: {WorkingDirectory}", workingDirectory);
             return false;
         }
 
-        _logger.LogInformation(
+        this.logger.LogInformation(
             "Launching {CommandName} ({Executable}) in {WorkingDirectory} via {Runtime}",
-            command.Name, command.Executable, workingDirectory, _runtime);
+            command.Name, command.Executable, workingDirectory, this.runtime);
 
         try
         {
             // Build command line for the runtime
-            var (fileName, arguments) = BuildStartInfo(_runtime, command, workingDirectory);
+            var (fileName, arguments) = BuildStartInfo(this.runtime, command, workingDirectory);
             
             // Create runtime info
-            var runtimeType = _runtime switch
+            var runtimeType = this.runtime switch
             {
                 RuntimeKind.CommandPrompt => RuntimeType.Cmd,
                 RuntimeKind.PowerShell or RuntimeKind.PowerShell7 => RuntimeType.PowerShell,
@@ -103,27 +103,27 @@ public sealed class ProcessLauncher
             };
 
             // Delegate to the interactive runner
-            _ = _interactiveRunner.LaunchAsync(arguments, runtime, CancellationToken.None);
-            _logger.LogInformation("Launched {CommandName} in {WorkingDirectory}", command.Name, workingDirectory);
+            _ = this.interactiveRunner.LaunchAsync(arguments, runtime, CancellationToken.None);
+            this.logger.LogInformation("Launched {CommandName} in {WorkingDirectory}", command.Name, workingDirectory);
             return true;
         }
         catch (System.ComponentModel.Win32Exception ex)
         {
-            _logger.LogError(ex, "Failed to start {Executable}", command.Executable);
+            this.logger.LogError(ex, "Failed to start {Executable}", command.Executable);
             if (ex.Message.Contains("not found"))
             {
-                _logger.LogWarning("Make sure {Executable} is on PATH or provide a full path", command.Executable);
+                this.logger.LogWarning("Make sure {Executable} is on PATH or provide a full path", command.Executable);
             }
             return false;
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogError(ex, "Access denied when starting {Executable}", command.Executable);
+            this.logger.LogError(ex, "Access denied when starting {Executable}", command.Executable);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error launching process");
+            this.logger.LogError(ex, "Unexpected error launching process");
             return false;
         }
     }
@@ -164,7 +164,7 @@ public sealed class ProcessLauncher
             var fullCommandLine = $"/D \"{workingDirectory}\" {commandLine}";
 
             // Run with output capture
-            var result = await _outputRunner.RunAsync(
+            var result = await this.outputRunner.RunAsync(
                 fullCommandLine,
                 runtime,
                 timeout ?? DefaultCaptureTimeout,
@@ -191,7 +191,7 @@ public sealed class ProcessLauncher
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to capture output from {Executable}", executable);
+            this.logger.LogWarning(ex, "Failed to capture output from {Executable}", executable);
             return new ProcessCaptureResult(false, -1, string.Empty, ex.Message);
         }
     }

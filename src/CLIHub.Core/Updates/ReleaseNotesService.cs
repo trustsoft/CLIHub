@@ -33,8 +33,8 @@ public class ReleaseNotesService : IReleaseNotesService
     private const string ImprovedGroup = "Improved";
     private const string FixedGroup = "Fixed";
 
-    private readonly ILogger<ReleaseNotesService> _logger;
-    private readonly Lazy<IReadOnlyList<ReleaseNote>> _notes;
+    private readonly ILogger<ReleaseNotesService> logger;
+    private readonly Lazy<IReadOnlyList<ReleaseNote>> notes;
 
     /// <summary>
     ///   Creates the service, reading the notes embedded in this assembly.
@@ -55,12 +55,12 @@ public class ReleaseNotesService : IReleaseNotesService
 
     private ReleaseNotesService(ILogger<ReleaseNotesService> logger, Func<string?> readNotes)
     {
-        _logger = logger;
-        _notes = new Lazy<IReadOnlyList<ReleaseNote>>(() => Parse(readNotes()));
+        this.logger = logger;
+        this.notes = new Lazy<IReadOnlyList<ReleaseNote>>(() => this.Parse(readNotes()));
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<ReleaseNote> GetNotes() => _notes.Value;
+    public IReadOnlyList<ReleaseNote> GetNotes() => this.notes.Value;
 
     /// <inheritdoc />
     public ReleaseNote? GetNote(string version)
@@ -71,7 +71,7 @@ public class ReleaseNotesService : IReleaseNotesService
         }
 
         var wanted = version.Trim();
-        var notes = GetNotes();
+        var notes = this.GetNotes();
 
         var exact = notes.FirstOrDefault(note =>
             string.Equals(note.Version, wanted, StringComparison.OrdinalIgnoreCase));
@@ -92,7 +92,7 @@ public class ReleaseNotesService : IReleaseNotesService
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            _logger.LogWarning("Release notes are empty or missing; no notes will be shown");
+            this.logger.LogWarning("Release notes are empty or missing; no notes will be shown");
             return Array.Empty<ReleaseNote>();
         }
 
@@ -124,7 +124,7 @@ public class ReleaseNotesService : IReleaseNotesService
                     notes.Add(pending.ToNote());
                 }
 
-                pending = StartNote(line[VersionMarker.Length..].Trim(), lineNumber);
+                pending = this.StartNote(line[VersionMarker.Length..].Trim(), lineNumber);
                 group = null;
                 continue;
             }
@@ -160,7 +160,7 @@ public class ReleaseNotesService : IReleaseNotesService
         }
 
         var ordered = OrderByVersion(notes);
-        _logger.LogInformation("Read {Count} release note(s)", ordered.Count);
+        this.logger.LogInformation("Read {Count} release note(s)", ordered.Count);
         return ordered;
     }
 
@@ -171,7 +171,7 @@ public class ReleaseNotesService : IReleaseNotesService
             return new PendingNote(version, date);
         }
 
-        _logger.LogWarning(
+        this.logger.LogWarning(
             "Skipped the release notes section at line {Line}: '{Heading}' is not a '<version> — <date>' heading",
             lineNumber,
             heading);
@@ -281,14 +281,14 @@ public class ReleaseNotesService : IReleaseNotesService
     /// </summary>
     private sealed class PendingNote
     {
-        private readonly List<string> _new = new();
-        private readonly List<string> _improved = new();
-        private readonly List<string> _fixed = new();
+        private readonly List<string> newEntries = new();
+        private readonly List<string> improvedEntries = new();
+        private readonly List<string> fixedEntries = new();
 
         public PendingNote(string version, string date)
         {
-            Version = version;
-            Date = date;
+            this.Version = version;
+            this.Date = date;
         }
 
         public string Version { get; }
@@ -303,17 +303,17 @@ public class ReleaseNotesService : IReleaseNotesService
         {
             if (name.Equals(NewGroup, StringComparison.OrdinalIgnoreCase))
             {
-                return _new;
+                return this.newEntries;
             }
 
             if (name.Equals(ImprovedGroup, StringComparison.OrdinalIgnoreCase))
             {
-                return _improved;
+                return this.improvedEntries;
             }
 
-            return name.Equals(FixedGroup, StringComparison.OrdinalIgnoreCase) ? _fixed : null;
+            return name.Equals(FixedGroup, StringComparison.OrdinalIgnoreCase) ? this.fixedEntries : null;
         }
 
-        public ReleaseNote ToNote() => new(Version, Date, _new, _improved, _fixed);
+        public ReleaseNote ToNote() => new(this.Version, this.Date, this.newEntries, this.improvedEntries, this.fixedEntries);
     }
 }

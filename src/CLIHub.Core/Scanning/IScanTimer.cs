@@ -45,10 +45,10 @@ public sealed class SystemScanTimerFactory : IScanTimerFactory
 
 internal sealed class SystemScanTimer : IScanTimer
 {
-    private readonly System.Threading.Timer _timer;
+    private readonly System.Threading.Timer timer;
 
     public SystemScanTimer() =>
-        _timer = new System.Threading.Timer(
+        this.timer = new System.Threading.Timer(
             _ => Elapsed?.Invoke(this, EventArgs.Empty),
             null,
             Timeout.InfiniteTimeSpan,
@@ -56,9 +56,9 @@ internal sealed class SystemScanTimer : IScanTimer
 
     public event EventHandler? Elapsed;
 
-    public void Arm(TimeSpan delay) => _timer.Change(delay, Timeout.InfiniteTimeSpan);
+    public void Arm(TimeSpan delay) => this.timer.Change(delay, Timeout.InfiniteTimeSpan);
 
-    public void Cancel() => _timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+    public void Cancel() => this.timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
 
-    public void Dispose() => _timer.Dispose();
+    public void Dispose() => this.timer.Dispose();
 }

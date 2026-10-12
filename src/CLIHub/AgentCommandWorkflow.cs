@@ -8,7 +8,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class AgentCommandWorkflow : IAgentCommandWorkflow
 {
-    private readonly IAgentCommandService _agentCommands;
+    private readonly IAgentCommandService agentCommands;
 
     /// <summary>
     ///   Creates the workflow over the Core agent command service.
@@ -16,7 +16,7 @@ public sealed class AgentCommandWorkflow : IAgentCommandWorkflow
     /// <param name="agentCommands"> Agent command service. </param>
     public AgentCommandWorkflow(IAgentCommandService agentCommands)
     {
-        _agentCommands = agentCommands ?? throw new ArgumentNullException(nameof(agentCommands));
+        this.agentCommands = agentCommands ?? throw new ArgumentNullException(nameof(agentCommands));
     }
 
     /// <inheritdoc />
@@ -25,5 +25,5 @@ public sealed class AgentCommandWorkflow : IAgentCommandWorkflow
         Project project,
         AgentCommandKind kind,
         CancellationToken cancellationToken = default) =>
-        _agentCommands.ExecuteAsync(plugin, kind, project.Path, cancellationToken);
+        this.agentCommands.ExecuteAsync(plugin, kind, project.Path, cancellationToken);
 }

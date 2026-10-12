@@ -10,20 +10,20 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class AgentItem : INotifyPropertyChanged
 {
-    private Plugin _plugin = null!;
-    private string _name = string.Empty;
-    private string _status = string.Empty;
-    private string? _logoPath;
-    private bool _isAvailable = true;
-    private string _version = "…";
+    private Plugin plugin = null!;
+    private string name = string.Empty;
+    private string status = string.Empty;
+    private string? logoPath;
+    private bool isAvailable = true;
+    private string version = "…";
 
     /// <summary>
     ///   The agent plugin this row represents.
     /// </summary>
     public required Plugin Plugin
     {
-        get => _plugin;
-        init => _plugin = value;
+        get => this.plugin;
+        init => this.plugin = value;
     }
 
     /// <summary>
@@ -31,8 +31,8 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public required string Name
     {
-        get => _name;
-        init => _name = value;
+        get => this.name;
+        init => this.name = value;
     }
 
     /// <summary>
@@ -40,8 +40,8 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public string Status
     {
-        get => _status;
-        init => _status = value;
+        get => this.status;
+        init => this.status = value;
     }
 
     /// <summary>
@@ -49,8 +49,8 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public string? LogoPath
     {
-        get => _logoPath;
-        init => _logoPath = value;
+        get => this.logoPath;
+        init => this.logoPath = value;
     }
 
     /// <summary>
@@ -58,50 +58,50 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public bool IsAvailable
     {
-        get => _isAvailable;
-        init => _isAvailable = value;
+        get => this.isAvailable;
+        init => this.isAvailable = value;
     }
 
     /// <summary>
     ///   Whether the agent defines the launch command.
     /// </summary>
-    public bool CanLaunch => Plugin.Commands?.Get(AgentCommandKind.Launch) != null;
+    public bool CanLaunch => this.Plugin.Commands?.Get(AgentCommandKind.Launch) != null;
 
     /// <summary>
     ///   Whether the agent defines the resume command.
     /// </summary>
-    public bool CanResume => Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
+    public bool CanResume => this.Plugin.Commands?.Get(AgentCommandKind.Resume) != null;
 
     /// <summary>
     ///   Whether the agent defines the update command.
     /// </summary>
-    public bool CanUpdate => Plugin.Commands?.Get(AgentCommandKind.Update) != null;
+    public bool CanUpdate => this.Plugin.Commands?.Get(AgentCommandKind.Update) != null;
 
     /// <summary>
     ///   Whether the agent defines the version command.
     /// </summary>
-    public bool CanShowVersion => Plugin.Commands?.Get(AgentCommandKind.Version) != null;
+    public bool CanShowVersion => this.Plugin.Commands?.Get(AgentCommandKind.Version) != null;
 
     /// <summary>
     ///   Row opacity: normal when available, dimmed when not.
     /// </summary>
-    public double RowOpacity => IsAvailable ? 1.0 : 0.4;
+    public double RowOpacity => this.IsAvailable ? 1.0 : 0.4;
 
     /// <summary>
     ///   Version string; starts as a placeholder and updates when resolved.
     /// </summary>
     public string Version
     {
-        get => _version;
+        get => this.version;
         set
         {
-            if (_version == value)
+            if (this.version == value)
             {
                 return;
             }
 
-            _version = value;
-            OnPropertyChanged();
+            this.version = value;
+            this.OnPropertyChanged();
         }
     }
 
@@ -114,15 +114,15 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// <param name="isAvailable"> Whether the agent is available in the current project. </param>
     public void Update(Plugin plugin, string name, string? logoPath, bool isAvailable)
     {
-        SetValue(ref _plugin, plugin, nameof(Plugin));
-        SetValue(ref _name, name, nameof(Name));
-        SetValue(ref _logoPath, logoPath, nameof(LogoPath));
+        this.SetValue(ref this.plugin, plugin, nameof(this.Plugin));
+        this.SetValue(ref this.name, name, nameof(this.Name));
+        this.SetValue(ref this.logoPath, logoPath, nameof(this.LogoPath));
 
-        if (_isAvailable != isAvailable)
+        if (this.isAvailable != isAvailable)
         {
-            _isAvailable = isAvailable;
-            OnPropertyChanged(nameof(IsAvailable));
-            OnPropertyChanged(nameof(RowOpacity));
+            this.isAvailable = isAvailable;
+            this.OnPropertyChanged(nameof(this.IsAvailable));
+            this.OnPropertyChanged(nameof(this.RowOpacity));
         }
     }
 
@@ -140,6 +140,6 @@ public sealed class AgentItem : INotifyPropertyChanged
         }
 
         field = value;
-        OnPropertyChanged(propertyName);
+        this.OnPropertyChanged(propertyName);
     }
 }

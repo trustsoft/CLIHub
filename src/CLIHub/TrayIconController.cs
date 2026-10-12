@@ -12,10 +12,10 @@ using H.NotifyIcon;
 /// </summary>
 public sealed class TrayIconController : ITrayHost, IDisposable
 {
-    private readonly ITrayActions _actions;
-    private readonly TrayMenuBuilder _menuBuilder;
-    private readonly LaunchWindow _launchWindow;
-    private readonly TaskbarIcon _taskbarIcon;
+    private readonly ITrayActions actions;
+    private readonly TrayMenuBuilder menuBuilder;
+    private readonly LaunchWindow launchWindow;
+    private readonly TaskbarIcon taskbarIcon;
 
     /// <summary>
     ///   Raised when the user clicks the tray's download-and-restart update action.
@@ -33,23 +33,23 @@ public sealed class TrayIconController : ITrayHost, IDisposable
         TrayMenuBuilder menuBuilder,
         LaunchWindow launchWindow)
     {
-        _actions = actions ?? throw new ArgumentNullException(nameof(actions));
-        _menuBuilder = menuBuilder ?? throw new ArgumentNullException(nameof(menuBuilder));
-        _launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
+        this.actions = actions ?? throw new ArgumentNullException(nameof(actions));
+        this.menuBuilder = menuBuilder ?? throw new ArgumentNullException(nameof(menuBuilder));
+        this.launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
 
-        _actions.StateChanged += OnStateChanged;
-        _actions.UpdateDownloadRequested += OnUpdateDownloadRequested;
+        this.actions.StateChanged += this.OnStateChanged;
+        this.actions.UpdateDownloadRequested += this.OnUpdateDownloadRequested;
 
-        _taskbarIcon = new TaskbarIcon
+        this.taskbarIcon = new TaskbarIcon
         {
             IconSource = new BitmapImage(new Uri("pack://application:,,,/app.ico")),
             ToolTipText = "CLIHub - AI Agent Launcher"
         };
 
-        _taskbarIcon.TrayLeftMouseUp += (_, _) => ShowLaunchWindow();
+        this.taskbarIcon.TrayLeftMouseUp += (_, _) => this.ShowLaunchWindow();
 
-        RefreshMenu();
-        _taskbarIcon.ForceCreate();
+        this.RefreshMenu();
+        this.taskbarIcon.ForceCreate();
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     /// </summary>
     public void ShowLaunchWindow()
     {
-        _launchWindow.ShowOnPointerMonitor();
+        this.launchWindow.ShowOnPointerMonitor();
     }
 
     /// <summary>
@@ -65,13 +65,13 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     /// </summary>
     public void ToggleLaunchWindow()
     {
-        if (_launchWindow.IsVisible)
+        if (this.launchWindow.IsVisible)
         {
-            _launchWindow.Hide();
+            this.launchWindow.Hide();
         }
         else
         {
-            ShowLaunchWindow();
+            this.ShowLaunchWindow();
         }
     }
 
@@ -82,7 +82,7 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     {
         try
         {
-            _taskbarIcon.ShowNotification("Update available", $"CLIHub {version} is available.");
+            this.taskbarIcon.ShowNotification("Update available", $"CLIHub {version} is available.");
         }
         catch
         {
@@ -97,7 +97,7 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     {
         try
         {
-            _taskbarIcon.ShowNotification("Update downloaded", $"CLIHub {version} was downloaded. Restarting…");
+            this.taskbarIcon.ShowNotification("Update downloaded", $"CLIHub {version} was downloaded. Restarting…");
         }
         catch
         {
@@ -112,7 +112,7 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     {
         try
         {
-            _taskbarIcon.ShowNotification(
+            this.taskbarIcon.ShowNotification(
                 "Update failed",
                 $"Downloading CLIHub {version} failed. The current version keeps running.");
         }
@@ -127,13 +127,13 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     /// </summary>
     public void RefreshMenu()
     {
-        var commands = _actions.Commands with
+        var commands = this.actions.Commands with
         {
             RequestUpdateDownload = () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
-            ShowLaunchWindow = ShowLaunchWindow,
+            ShowLaunchWindow = this.ShowLaunchWindow,
             Exit = () => Application.Current?.Shutdown()
         };
-        _taskbarIcon.ContextMenu = _menuBuilder.Build(_actions.GetState(), commands);
+        this.taskbarIcon.ContextMenu = this.menuBuilder.Build(this.actions.GetState(), commands);
     }
 
     /// <summary>
@@ -141,20 +141,20 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     /// </summary>
     public void Dispose()
     {
-        _actions.StateChanged -= OnStateChanged;
-        _actions.UpdateDownloadRequested -= OnUpdateDownloadRequested;
-        _taskbarIcon.Dispose();
+        this.actions.StateChanged -= this.OnStateChanged;
+        this.actions.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
+        this.taskbarIcon.Dispose();
     }
 
     private void OnStateChanged(object? sender, EventArgs e)
     {
         if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
         {
-            _ = dispatcher.BeginInvoke(RefreshMenu);
+            _ = dispatcher.BeginInvoke(this.RefreshMenu);
             return;
         }
 
-        RefreshMenu();
+        this.RefreshMenu();
     }
 
     private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>

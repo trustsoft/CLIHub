@@ -20,34 +20,34 @@ using CLIHub.ViewModels;
 /// </summary>
 public class LaunchWindowViewModelBuilder
 {
-    private Mock<IProjectService>? _projectService;
-    private Mock<IPluginCatalog>? _pluginCatalog;
-    private Mock<IAgentDetectionService>? _agentDetectionService;
-    private Mock<IAgentVersionService>? _agentVersionService;
-    private Mock<ILogoCacheService>? _logoCacheService;
-    private Mock<IPreferencesStore>? _preferencesStore;
-    private Mock<IProjectDialogService>? _projectDialogService;
-    private Mock<IAgentCommandWorkflow>? _agentCommandWorkflow;
-    private Mock<IUpdateWorkflow>? _updateWorkflow;
-    private Mock<IUserNotificationService>? _userNotificationService;
-    private Mock<IApplicationLifetime>? _applicationLifetime;
-    private Mock<IApplicationOperationLifetime>? _operationLifetime;
-    private Mock<ISettingsLauncher>? _settingsLauncher;
-    private Mock<IExternalLauncher>? _externalLauncher;
-    private Mock<IAgentProcessInspector>? _processInspector;
+    private Mock<IProjectService>? projectService;
+    private Mock<IPluginCatalog>? pluginCatalog;
+    private Mock<IAgentDetectionService>? agentDetectionService;
+    private Mock<IAgentVersionService>? agentVersionService;
+    private Mock<ILogoCacheService>? logoCacheService;
+    private Mock<IPreferencesStore>? preferencesStore;
+    private Mock<IProjectDialogService>? projectDialogService;
+    private Mock<IAgentCommandWorkflow>? agentCommandWorkflow;
+    private Mock<IUpdateWorkflow>? updateWorkflow;
+    private Mock<IUserNotificationService>? userNotificationService;
+    private Mock<IApplicationLifetime>? applicationLifetime;
+    private Mock<IApplicationOperationLifetime>? operationLifetime;
+    private Mock<ISettingsLauncher>? settingsLauncher;
+    private Mock<IExternalLauncher>? externalLauncher;
+    private Mock<IAgentProcessInspector>? processInspector;
 
-    private Project[]? _projects;
-    private Project? _currentProject;
-    private Plugin[]? _plugins;
-    private AppPreferences? _preferences;
-    private string? _currentVersion;
+    private Project[]? projects;
+    private Project? currentProject;
+    private Plugin[]? plugins;
+    private AppPreferences? preferences;
+    private string? currentVersion;
 
     /// <summary>
     ///   Configures the project service with specific projects.
     /// </summary>
     public LaunchWindowViewModelBuilder WithProjects(params Project[] projects)
     {
-        _projects = projects;
+        this.projects = projects;
         return this;
     }
 
@@ -56,7 +56,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithCurrentProject(Project? project)
     {
-        _currentProject = project;
+        this.currentProject = project;
         return this;
     }
 
@@ -65,7 +65,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithPlugins(params Plugin[] plugins)
     {
-        _plugins = plugins;
+        this.plugins = plugins;
         return this;
     }
 
@@ -74,7 +74,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithPreferences(AppPreferences preferences)
     {
-        _preferences = preferences;
+        this.preferences = preferences;
         return this;
     }
 
@@ -83,7 +83,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithProjectService(Mock<IProjectService> projectService)
     {
-        _projectService = projectService;
+        this.projectService = projectService;
         return this;
     }
 
@@ -92,7 +92,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithPluginCatalog(Mock<IPluginCatalog> pluginCatalog)
     {
-        _pluginCatalog = pluginCatalog;
+        this.pluginCatalog = pluginCatalog;
         return this;
     }
 
@@ -101,7 +101,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithAgentDetectionService(Mock<IAgentDetectionService> detection)
     {
-        _agentDetectionService = detection;
+        this.agentDetectionService = detection;
         return this;
     }
 
@@ -110,7 +110,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithProjectDialogService(Mock<IProjectDialogService> dialogService)
     {
-        _projectDialogService = dialogService;
+        this.projectDialogService = dialogService;
         return this;
     }
 
@@ -119,7 +119,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithUserNotificationService(Mock<IUserNotificationService> notificationService)
     {
-        _userNotificationService = notificationService;
+        this.userNotificationService = notificationService;
         return this;
     }
 
@@ -128,7 +128,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithApplicationLifetime(Mock<IApplicationLifetime> lifetime)
     {
-        _applicationLifetime = lifetime;
+        this.applicationLifetime = lifetime;
         return this;
     }
 
@@ -137,7 +137,7 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModelBuilder WithUpdateWorkflow(Mock<IUpdateWorkflow> updateWorkflow)
     {
-        _updateWorkflow = updateWorkflow;
+        this.updateWorkflow = updateWorkflow;
         return this;
     }
 
@@ -146,21 +146,21 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public LaunchWindowViewModel Build()
     {
-        var projectService = _projectService ?? CreateDefaultProjectService();
-        var pluginCatalog = _pluginCatalog ?? CreateDefaultPluginCatalog();
-        var agentDetectionService = _agentDetectionService ?? new Mock<IAgentDetectionService>();
-        var agentVersionService = _agentVersionService ?? new Mock<IAgentVersionService>();
-        var logoCacheService = _logoCacheService ?? new Mock<ILogoCacheService>();
-        var preferencesStore = _preferencesStore ?? CreateDefaultPreferencesStore();
-        var projectDialogService = _projectDialogService ?? new Mock<IProjectDialogService>();
-        var agentCommandWorkflow = _agentCommandWorkflow ?? new Mock<IAgentCommandWorkflow>();
-        var updateWorkflow = _updateWorkflow ?? CreateDefaultUpdateWorkflow();
-        var userNotificationService = _userNotificationService ?? new Mock<IUserNotificationService>();
-        var applicationLifetime = _applicationLifetime ?? CreateDefaultApplicationLifetime();
-        var operationLifetime = _operationLifetime ?? new Mock<IApplicationOperationLifetime>();
-        var settingsLauncher = _settingsLauncher ?? new Mock<ISettingsLauncher>();
-        var externalLauncher = _externalLauncher ?? new Mock<IExternalLauncher>();
-        var processInspector = _processInspector ?? CreateDefaultProcessInspector();
+        var projectService = this.projectService ?? this.CreateDefaultProjectService();
+        var pluginCatalog = this.pluginCatalog ?? this.CreateDefaultPluginCatalog();
+        var agentDetectionService = this.agentDetectionService ?? new Mock<IAgentDetectionService>();
+        var agentVersionService = this.agentVersionService ?? new Mock<IAgentVersionService>();
+        var logoCacheService = this.logoCacheService ?? new Mock<ILogoCacheService>();
+        var preferencesStore = this.preferencesStore ?? this.CreateDefaultPreferencesStore();
+        var projectDialogService = this.projectDialogService ?? new Mock<IProjectDialogService>();
+        var agentCommandWorkflow = this.agentCommandWorkflow ?? new Mock<IAgentCommandWorkflow>();
+        var updateWorkflow = this.updateWorkflow ?? this.CreateDefaultUpdateWorkflow();
+        var userNotificationService = this.userNotificationService ?? new Mock<IUserNotificationService>();
+        var applicationLifetime = this.applicationLifetime ?? this.CreateDefaultApplicationLifetime();
+        var operationLifetime = this.operationLifetime ?? new Mock<IApplicationOperationLifetime>();
+        var settingsLauncher = this.settingsLauncher ?? new Mock<ISettingsLauncher>();
+        var externalLauncher = this.externalLauncher ?? new Mock<IExternalLauncher>();
+        var processInspector = this.processInspector ?? this.CreateDefaultProcessInspector();
 
         var projectPane = new ProjectPaneController(
             projectService.Object,
@@ -217,21 +217,21 @@ public class LaunchWindowViewModelBuilder
     /// </summary>
     public (LaunchWindowViewModel ViewModel, TestMocks Mocks) BuildWithMocks()
     {
-        var projectService = _projectService ?? CreateDefaultProjectService();
-        var pluginCatalog = _pluginCatalog ?? CreateDefaultPluginCatalog();
-        var agentDetectionService = _agentDetectionService ?? new Mock<IAgentDetectionService>();
-        var agentVersionService = _agentVersionService ?? new Mock<IAgentVersionService>();
-        var logoCacheService = _logoCacheService ?? new Mock<ILogoCacheService>();
-        var preferencesStore = _preferencesStore ?? CreateDefaultPreferencesStore();
-        var projectDialogService = _projectDialogService ?? new Mock<IProjectDialogService>();
-        var agentCommandWorkflow = _agentCommandWorkflow ?? new Mock<IAgentCommandWorkflow>();
-        var updateWorkflow = _updateWorkflow ?? CreateDefaultUpdateWorkflow();
-        var userNotificationService = _userNotificationService ?? new Mock<IUserNotificationService>();
-        var applicationLifetime = _applicationLifetime ?? CreateDefaultApplicationLifetime();
-        var operationLifetime = _operationLifetime ?? new Mock<IApplicationOperationLifetime>();
-        var settingsLauncher = _settingsLauncher ?? new Mock<ISettingsLauncher>();
-        var externalLauncher = _externalLauncher ?? new Mock<IExternalLauncher>();
-        var processInspector = _processInspector ?? CreateDefaultProcessInspector();
+        var projectService = this.projectService ?? this.CreateDefaultProjectService();
+        var pluginCatalog = this.pluginCatalog ?? this.CreateDefaultPluginCatalog();
+        var agentDetectionService = this.agentDetectionService ?? new Mock<IAgentDetectionService>();
+        var agentVersionService = this.agentVersionService ?? new Mock<IAgentVersionService>();
+        var logoCacheService = this.logoCacheService ?? new Mock<ILogoCacheService>();
+        var preferencesStore = this.preferencesStore ?? this.CreateDefaultPreferencesStore();
+        var projectDialogService = this.projectDialogService ?? new Mock<IProjectDialogService>();
+        var agentCommandWorkflow = this.agentCommandWorkflow ?? new Mock<IAgentCommandWorkflow>();
+        var updateWorkflow = this.updateWorkflow ?? this.CreateDefaultUpdateWorkflow();
+        var userNotificationService = this.userNotificationService ?? new Mock<IUserNotificationService>();
+        var applicationLifetime = this.applicationLifetime ?? this.CreateDefaultApplicationLifetime();
+        var operationLifetime = this.operationLifetime ?? new Mock<IApplicationOperationLifetime>();
+        var settingsLauncher = this.settingsLauncher ?? new Mock<ISettingsLauncher>();
+        var externalLauncher = this.externalLauncher ?? new Mock<IExternalLauncher>();
+        var processInspector = this.processInspector ?? this.CreateDefaultProcessInspector();
 
         var projectPane = new ProjectPaneController(
             projectService.Object,
@@ -307,29 +307,29 @@ public class LaunchWindowViewModelBuilder
     private Mock<IProjectService> CreateDefaultProjectService()
     {
         var mock = new Mock<IProjectService>();
-        mock.Setup(x => x.GetAllProjects()).Returns(_projects ?? Array.Empty<Project>());
-        mock.Setup(x => x.GetCurrentProject()).Returns(_currentProject);
+        mock.Setup(x => x.GetAllProjects()).Returns(this.projects ?? Array.Empty<Project>());
+        mock.Setup(x => x.GetCurrentProject()).Returns(this.currentProject);
         return mock;
     }
 
     private Mock<IPluginCatalog> CreateDefaultPluginCatalog()
     {
         var mock = new Mock<IPluginCatalog>();
-        mock.Setup(x => x.GetAllPlugins()).Returns(_plugins ?? Array.Empty<Plugin>());
+        mock.Setup(x => x.GetAllPlugins()).Returns(this.plugins ?? Array.Empty<Plugin>());
         return mock;
     }
 
     private Mock<IPreferencesStore> CreateDefaultPreferencesStore()
     {
         var mock = new Mock<IPreferencesStore>();
-        mock.Setup(x => x.Load()).Returns(_preferences ?? new AppPreferences());
+        mock.Setup(x => x.Load()).Returns(this.preferences ?? new AppPreferences());
         return mock;
     }
 
     private Mock<IUpdateWorkflow> CreateDefaultUpdateWorkflow()
     {
         var mock = new Mock<IUpdateWorkflow>();
-        mock.Setup(x => x.GetCurrentVersion()).Returns(_currentVersion ?? "1.0.0");
+        mock.Setup(x => x.GetCurrentVersion()).Returns(this.currentVersion ?? "1.0.0");
         return mock;
     }
 

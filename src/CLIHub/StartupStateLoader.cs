@@ -7,9 +7,9 @@ using CLIHub.Core.Configuration;
 /// </summary>
 public sealed class StartupStateLoader : IStartupStateLoader
 {
-    private readonly IPluginInitializationService _pluginInitialization;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly IStartupPreferencesApplier _startupPreferences;
+    private readonly IPluginInitializationService pluginInitialization;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly IStartupPreferencesApplier startupPreferences;
 
     /// <summary>
     ///   Creates the startup state loader.
@@ -22,18 +22,18 @@ public sealed class StartupStateLoader : IStartupStateLoader
         IPreferencesStore preferencesStore,
         IStartupPreferencesApplier startupPreferences)
     {
-        _pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
-        _preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _startupPreferences = startupPreferences ?? throw new ArgumentNullException(nameof(startupPreferences));
+        this.pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.startupPreferences = startupPreferences ?? throw new ArgumentNullException(nameof(startupPreferences));
     }
 
     /// <inheritdoc />
     public StartupState Load()
     {
-        _pluginInitialization.Initialize();
+        this.pluginInitialization.Initialize();
 
-        var preferences = _preferencesStore.Load();
-        _startupPreferences.Apply(preferences);
+        var preferences = this.preferencesStore.Load();
+        this.startupPreferences.Apply(preferences);
 
         return new StartupState(preferences);
     }

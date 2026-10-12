@@ -8,15 +8,15 @@ using CLIHub.Core.Projects;
 /// </summary>
 public sealed class TrayCommandHandlers
 {
-    private readonly IProjectService _projects;
-    private readonly IAgentCommandWorkflow _agentCommandWorkflow;
-    private readonly IUpdateWorkflow _updateWorkflow;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly IProjectDialogService _projectDialog;
-    private readonly IUserNotificationService _notifications;
-    private readonly ISettingsLauncher _settingsLauncher;
-    private readonly IReleaseNotesLauncher _releaseNotesLauncher;
-    private readonly IApplicationLifetime _applicationLifetime;
+    private readonly IProjectService projects;
+    private readonly IAgentCommandWorkflow agentCommandWorkflow;
+    private readonly IUpdateWorkflow updateWorkflow;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly IProjectDialogService projectDialog;
+    private readonly IUserNotificationService notifications;
+    private readonly ISettingsLauncher settingsLauncher;
+    private readonly IReleaseNotesLauncher releaseNotesLauncher;
+    private readonly IApplicationLifetime applicationLifetime;
 
     /// <summary>
     ///   Raised when the user requests the existing update download workflow.
@@ -46,15 +46,15 @@ public sealed class TrayCommandHandlers
         IReleaseNotesLauncher releaseNotesLauncher,
         IApplicationLifetime applicationLifetime)
     {
-        _projects = projects ?? throw new ArgumentNullException(nameof(projects));
-        _agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
-        _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _projectDialog = projectDialog ?? throw new ArgumentNullException(nameof(projectDialog));
-        _notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
-        _settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
-        _releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
-        _applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
+        this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
+        this.agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
+        this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.projectDialog = projectDialog ?? throw new ArgumentNullException(nameof(projectDialog));
+        this.notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
+        this.settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
+        this.releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
+        this.applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
     }
 
     /// <summary>
@@ -65,18 +65,18 @@ public sealed class TrayCommandHandlers
     /// <returns> Tray menu action delegates. </returns>
     public TrayMenuCommands CreateCommands(Action<string> selectProject, Action showLaunchWindow) => new(
         selectProject,
-        LaunchAgentAsync,
-        AddProject,
-        _settingsLauncher.ShowSettings,
-        _releaseNotesLauncher.ShowReleaseNotes,
-        CheckForUpdates,
+        this.LaunchAgentAsync,
+        this.AddProject,
+        this.settingsLauncher.ShowSettings,
+        this.releaseNotesLauncher.ShowReleaseNotes,
+        this.CheckForUpdates,
         () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
         showLaunchWindow,
-        _applicationLifetime.Shutdown);
+        this.applicationLifetime.Shutdown);
 
     private void AddProject()
     {
-        var folder = _projectDialog.SelectProjectFolder();
+        var folder = this.projectDialog.SelectProjectFolder();
         if (folder is null)
         {
             return;
@@ -84,39 +84,39 @@ public sealed class TrayCommandHandlers
 
         try
         {
-            var project = _projects.AddProject(folder);
-            _projects.SetCurrentProject(project.Id);
+            var project = this.projects.AddProject(folder);
+            this.projects.SetCurrentProject(project.Id);
         }
         catch (Exception ex)
         {
-            _notifications.ShowWarning($"Could not add project: {ex.Message}");
+            this.notifications.ShowWarning($"Could not add project: {ex.Message}");
         }
     }
 
     private async Task LaunchAgentAsync(Plugin plugin, Project project)
     {
-        var result = await _agentCommandWorkflow.ExecuteAsync(plugin, project, AgentCommandKind.Launch);
+        var result = await this.agentCommandWorkflow.ExecuteAsync(plugin, project, AgentCommandKind.Launch);
         if (!result.Success)
         {
-            _notifications.ShowWarning(result.Error ?? $"Failed to launch {plugin.Name}");
+            this.notifications.ShowWarning(result.Error ?? $"Failed to launch {plugin.Name}");
         }
     }
 
     private void CheckForUpdates()
     {
-        if (_updateWorkflow.IsCheckingForUpdates || _updateWorkflow.IsDownloading)
+        if (this.updateWorkflow.IsCheckingForUpdates || this.updateWorkflow.IsDownloading)
         {
             return;
         }
 
-        _ = _operationLifetime.RunAsync("Manual update check", CheckForUpdatesAsync);
+        _ = this.operationLifetime.RunAsync("Manual update check", this.CheckForUpdatesAsync);
     }
 
     private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await _updateWorkflow.CheckForUpdatesAsync(cancellationToken);
+            await this.updateWorkflow.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

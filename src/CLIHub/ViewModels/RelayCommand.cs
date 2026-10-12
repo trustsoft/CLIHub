@@ -7,8 +7,8 @@ using System.Windows.Input;
 /// </summary>
 public sealed class RelayCommand : ICommand
 {
-    private readonly Action _execute;
-    private readonly Func<bool>? _canExecute;
+    private readonly Action execute;
+    private readonly Func<bool>? canExecute;
 
     /// <summary>
     ///   Creates the command.
@@ -17,8 +17,8 @@ public sealed class RelayCommand : ICommand
     /// <param name="canExecute"> Optional availability predicate. </param>
     public RelayCommand(Action execute, Func<bool>? canExecute = null)
     {
-        _execute = execute;
-        _canExecute = canExecute;
+        this.execute = execute;
+        this.canExecute = canExecute;
     }
 
     /// <inheritdoc />
@@ -29,8 +29,8 @@ public sealed class RelayCommand : ICommand
     }
 
     /// <inheritdoc />
-    public bool CanExecute(object? parameter) => _canExecute?.Invoke() ?? true;
+    public bool CanExecute(object? parameter) => this.canExecute?.Invoke() ?? true;
 
     /// <inheritdoc />
-    public void Execute(object? parameter) => _execute();
+    public void Execute(object? parameter) => this.execute();
 }

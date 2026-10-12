@@ -15,11 +15,11 @@ using CLIHub.Core.Infrastructure.FileSystem;
 /// </summary>
 public sealed class LogoCacheService : ILogoCacheService
 {
-    private readonly ILogger<LogoCacheService> _logger;
-    private readonly ConcurrentDictionary<string, string?> _cache = new();
-    private readonly string _stateFilePath;
-    private bool _isDirty;
-    private bool _disposed;
+    private readonly ILogger<LogoCacheService> logger;
+    private readonly ConcurrentDictionary<string, string?> cache = new();
+    private readonly string stateFilePath;
+    private bool isDirty;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the service, loading previously saved cache state when the state file exists.
@@ -28,10 +28,10 @@ public sealed class LogoCacheService : ILogoCacheService
     /// <param name="stateFilePath"> Overrides the state file location; defaults to <c>%APPDATA%\CLIHub\cache\logos.json</c>. </param>
     public LogoCacheService(ILogger<LogoCacheService> logger, string? stateFilePath = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _stateFilePath = stateFilePath ?? AppPaths.LogosCacheFile;
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.stateFilePath = stateFilePath ?? AppPaths.LogosCacheFile;
 
-        Load();
+        this.Load();
     }
 
     /// <inheritdoc />
@@ -40,15 +40,15 @@ public sealed class LogoCacheService : ILogoCacheService
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(resolve);
 
-        if (_cache.TryGetValue(key, out var cached))
+        if (this.cache.TryGetValue(key, out var cached))
         {
             return cached;
         }
 
         var resolved = resolve();
-        if (_cache.TryAdd(key, resolved))
+        if (this.cache.TryAdd(key, resolved))
         {
-            _isDirty = true;
+            this.isDirty = true;
         }
 
         return resolved;
@@ -59,83 +59,83 @@ public sealed class LogoCacheService : ILogoCacheService
     {
         ArgumentNullException.ThrowIfNull(key);
 
-        if (_cache.TryRemove(key, out _))
+        if (this.cache.TryRemove(key, out _))
         {
-            _isDirty = true;
+            this.isDirty = true;
         }
     }
 
     /// <inheritdoc />
     public void InvalidateAll()
     {
-        if (_cache.IsEmpty)
+        if (this.cache.IsEmpty)
         {
             return;
         }
 
-        _cache.Clear();
-        _isDirty = true;
+        this.cache.Clear();
+        this.isDirty = true;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
+        this.disposed = true;
 
-        if (!_isDirty)
+        if (!this.isDirty)
         {
             return;
         }
 
         try
         {
-            Save();
+            this.Save();
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not save the logo cache state to {Path}", _stateFilePath);
+            this.logger.LogWarning(ex, "Could not save the logo cache state to {Path}", this.stateFilePath);
         }
     }
 
     private void Load()
     {
-        if (!File.Exists(_stateFilePath))
+        if (!File.Exists(this.stateFilePath))
         {
             return;
         }
 
         try
         {
-            var json = File.ReadAllText(_stateFilePath);
+            var json = File.ReadAllText(this.stateFilePath);
             var state = JsonSerializer.Deserialize<CacheState>(json, CoreJson.Options);
 
             if (state != null)
             {
                 foreach (var (key, value) in state.Logos)
                 {
-                    _cache[key] = value;
+                    this.cache[key] = value;
                 }
             }
 
-            _logger.LogDebug("Loaded {Count} logo cache entries from {Path}", _cache.Count, _stateFilePath);
+            this.logger.LogDebug("Loaded {Count} logo cache entries from {Path}", this.cache.Count, this.stateFilePath);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not read the logo cache state at {Path}; starting with an empty cache", _stateFilePath);
-            _cache.Clear();
-            _isDirty = true;
+            this.logger.LogWarning(ex, "Could not read the logo cache state at {Path}; starting with an empty cache", this.stateFilePath);
+            this.cache.Clear();
+            this.isDirty = true;
         }
     }
 
     private void Save()
     {
         var state = new CacheState();
-        foreach (var (key, value) in _cache)
+        foreach (var (key, value) in this.cache)
         {
             state.Logos[key] = value;
         }
@@ -144,17 +144,17 @@ public sealed class LogoCacheService : ILogoCacheService
 
         // Atomic write: write to a temp file, then rename, so an interrupted save cannot
         // corrupt the previous state.
-        var directory = Path.GetDirectoryName(_stateFilePath);
+        var directory = Path.GetDirectoryName(this.stateFilePath);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        var tempPath = _stateFilePath + ".tmp";
+        var tempPath = this.stateFilePath + ".tmp";
         File.WriteAllText(tempPath, json);
-        File.Move(tempPath, _stateFilePath, overwrite: true);
-        _isDirty = false;
-        _logger.LogDebug("Saved {Count} logo cache entries to {Path}", state.Logos.Count, _stateFilePath);
+        File.Move(tempPath, this.stateFilePath, overwrite: true);
+        this.isDirty = false;
+        this.logger.LogDebug("Saved {Count} logo cache entries to {Path}", state.Logos.Count, this.stateFilePath);
     }
 
     private sealed class CacheState

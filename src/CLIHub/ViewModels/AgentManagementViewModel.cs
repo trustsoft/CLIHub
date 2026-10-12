@@ -16,18 +16,18 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 {
     private static readonly AgentOption NoneOption = new(null, "None");
 
-    private readonly IPluginCatalog _catalog;
-    private readonly IAgentDetectionService _detection;
-    private readonly IAgentVersionService _version;
-    private readonly IAgentManagementService _management;
-    private readonly IExternalLauncher _launcher;
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly ILogger<AgentManagementViewModel> _logger;
+    private readonly IPluginCatalog catalog;
+    private readonly IAgentDetectionService detection;
+    private readonly IAgentVersionService version;
+    private readonly IAgentManagementService management;
+    private readonly IExternalLauncher launcher;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly ILogger<AgentManagementViewModel> logger;
 
-    private string _metrics = "0 supported · 0 installed";
-    private IReadOnlyList<AgentOption> _defaultAgentOptions = [NoneOption];
-    private AgentOption _selectedDefaultAgent = NoneOption;
-    private bool _disposed;
+    private string metrics = "0 supported · 0 installed";
+    private IReadOnlyList<AgentOption> defaultAgentOptions = [NoneOption];
+    private AgentOption selectedDefaultAgent = NoneOption;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the section.
@@ -48,17 +48,17 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         IApplicationOperationLifetime operationLifetime,
         ILogger<AgentManagementViewModel> logger)
     {
-        _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
-        _detection = detection ?? throw new ArgumentNullException(nameof(detection));
-        _version = version ?? throw new ArgumentNullException(nameof(version));
-        _management = management ?? throw new ArgumentNullException(nameof(management));
-        _launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+        this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
+        this.version = version ?? throw new ArgumentNullException(nameof(version));
+        this.management = management ?? throw new ArgumentNullException(nameof(management));
+        this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        TestCommand = new RelayCommand<AgentCardItem>(card => _ = RunAsync("Agent test", ct => TestAsync(card, ct)));
-        UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = RunAsync("Agent update", ct => UpdateAsync(card, ct)));
-        EditConfigCommand = new RelayCommand<AgentCardItem>(EditConfig);
+        this.TestCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent test", ct => this.TestAsync(card, ct)));
+        this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
+        this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
     }
 
     /// <inheritdoc />
@@ -67,26 +67,26 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public string Metrics
     {
-        get => _metrics;
-        private set => SetProperty(ref _metrics, value);
+        get => this.metrics;
+        private set => this.SetProperty(ref this.metrics, value);
     }
 
     /// <inheritdoc />
     public IReadOnlyList<AgentOption> DefaultAgentOptions
     {
-        get => _defaultAgentOptions;
-        private set => SetProperty(ref _defaultAgentOptions, value);
+        get => this.defaultAgentOptions;
+        private set => this.SetProperty(ref this.defaultAgentOptions, value);
     }
 
     /// <inheritdoc />
     public AgentOption SelectedDefaultAgent
     {
-        get => _selectedDefaultAgent;
-        set => SetProperty(ref _selectedDefaultAgent, value ?? NoneOption);
+        get => this.selectedDefaultAgent;
+        set => this.SetProperty(ref this.selectedDefaultAgent, value ?? NoneOption);
     }
 
     /// <inheritdoc />
-    public string? CurrentDefaultAgentId => SelectedDefaultAgent.Id;
+    public string? CurrentDefaultAgentId => this.SelectedDefaultAgent.Id;
 
     /// <inheritdoc />
     public RelayCommand<AgentCardItem> TestCommand { get; }
@@ -100,16 +100,16 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public void Load(string? defaultAgentId)
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        Cards.Clear();
+        this.Cards.Clear();
 
-        foreach (var plugin in _catalog.GetAllPlugins())
+        foreach (var plugin in this.catalog.GetAllPlugins())
         {
-            var isInstalled = _detection.IsInstalledInSystem(plugin);
+            var isInstalled = this.detection.IsInstalledInSystem(plugin);
             var canUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
             var card = new AgentCardItem(
                 plugin,
@@ -122,68 +122,68 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 UpdateNote = canUpdate ? null : "Update not supported"
             };
 
-            Cards.Add(card);
+            this.Cards.Add(card);
         }
 
-        RefreshMetrics();
-        RebuildDefaultAgentOptions(defaultAgentId);
-        PopulateVersions();
+        this.RefreshMetrics();
+        this.RebuildDefaultAgentOptions(defaultAgentId);
+        this.PopulateVersions();
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _disposed = true;
+        this.disposed = true;
     }
 
     private void RebuildDefaultAgentOptions(string? defaultAgentId)
     {
         var options = new List<AgentOption> { NoneOption };
-        options.AddRange(Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version)));
-        DefaultAgentOptions = options;
+        options.AddRange(this.Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version)));
+        this.DefaultAgentOptions = options;
 
-        SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
+        this.SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
     }
 
     private void RefreshMetrics()
     {
-        var installed = Cards.Count(card => card.IsInstalled);
-        Metrics = $"{Cards.Count} supported · {installed} installed";
+        var installed = this.Cards.Count(card => card.IsInstalled);
+        this.Metrics = $"{this.Cards.Count} supported · {installed} installed";
     }
 
     private void PopulateVersions() =>
-        _ = RunAsync("Agent version population", async cancellationToken =>
+        _ = this.RunAsync("Agent version population", async cancellationToken =>
         {
-            foreach (var card in Cards.ToList())
+            foreach (var card in this.Cards.ToList())
             {
-                var version = await _version.GetVersionAsync(card.Plugin, cancellationToken);
-                if (!_disposed)
+                var version = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
+                if (!this.disposed)
                 {
                     card.Version = version ?? "unknown";
                 }
             }
 
-            if (!_disposed)
+            if (!this.disposed)
             {
-                RebuildDefaultAgentOptions(SelectedDefaultAgent?.Id);
+                this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
         });
 
     private async Task TestAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
-        var result = await _management.ProbeAsync(card.Plugin, cancellationToken);
+        var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
         card.IsInstalled = result.IsInstalled;
         card.Version = result.Version ?? "unknown";
         card.Message = result.IsInstalled
             ? $"Installed · version {card.Version}"
             : "Not installed on the host";
-        RefreshMetrics();
+        this.RefreshMetrics();
     }
 
     private async Task UpdateAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
         card.Message = $"Updating {card.Name}…";
-        var result = await _management.UpdateAsync(card.Plugin, cancellationToken);
+        var result = await this.management.UpdateAsync(card.Plugin, cancellationToken);
         card.Message = result.Outcome switch
         {
             AgentUpdateOutcome.Started => "Update started.",
@@ -200,16 +200,16 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         try
         {
-            _launcher.Open(path);
+            this.launcher.Open(path);
             card.Message = $"Opened {path}";
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not open agent config {Path}", path);
+            this.logger.LogWarning(ex, "Could not open agent config {Path}", path);
             card.Message = $"Could not open {path}";
         }
     }
 
     private Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>
-        _operationLifetime.RunAsync(operationName, operation);
+        this.operationLifetime.RunAsync(operationName, operation);
 }

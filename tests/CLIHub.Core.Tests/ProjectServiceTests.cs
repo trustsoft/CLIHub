@@ -8,19 +8,19 @@ using CLIHub.Core.Projects;
 
 public class ProjectServiceTests : IDisposable
 {
-    private readonly List<string> _tempDirs = new();
+    private readonly List<string> tempDirs = new();
 
     private string CreateTempDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "clihub-tests-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
-        _tempDirs.Add(dir);
+        this.tempDirs.Add(dir);
         return dir;
     }
 
     public void Dispose()
     {
-        foreach (var dir in _tempDirs)
+        foreach (var dir in this.tempDirs)
         {
             try { Directory.Delete(dir, recursive: true); } catch { }
         }
@@ -30,7 +30,7 @@ public class ProjectServiceTests : IDisposable
     {
         var cache = new LogoCacheService(
             NullLogger<LogoCacheService>.Instance,
-            Path.Combine(CreateTempDir(), "logos.json"));
+            Path.Combine(this.CreateTempDir(), "logos.json"));
 
         return new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository(config)),
@@ -44,8 +44,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddProject_CreatesProject_WithFolderDerivedName()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
 
         var project = service.AddProject(folder);
 
@@ -57,8 +57,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddProject_DuplicatePath_ReturnsExisting()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
 
         var first = service.AddProject(folder);
         var second = service.AddProject(folder + Path.DirectorySeparatorChar);
@@ -70,7 +70,7 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddProject_MissingFolder_Throws()
     {
-        var service = CreateService();
+        var service = this.CreateService();
         var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
 
         Assert.Throws<DirectoryNotFoundException>(() => service.AddProject(missing));
@@ -79,8 +79,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void SetCurrentProject_UpdatesCurrentAndRaisesEvent()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
         var project = service.AddProject(folder);
 
         var raised = false;
@@ -101,7 +101,7 @@ public class ProjectServiceTests : IDisposable
             Projects = { new Project { Id = "real", Name = "Real", Path = "C:\\real" } }
         };
 
-        var service = CreateService(config);
+        var service = this.CreateService(config);
 
         Assert.Null(service.GetCurrentProject());
     }
@@ -119,7 +119,7 @@ public class ProjectServiceTests : IDisposable
             }
         };
 
-        var service = CreateService(config);
+        var service = this.CreateService(config);
 
         var recent = service.GetRecentProjects(2);
 
@@ -129,8 +129,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ToggleFavorite_TogglesFlag()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
         var project = service.AddProject(folder);
 
         service.ToggleFavorite(project.Id);
@@ -143,8 +143,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void RemoveProject_ClearsCurrent_AndKeepsFolderOnDisk()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
         var project = service.AddProject(folder);
         service.SetCurrentProject(project.Id);
 
@@ -158,11 +158,11 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ResolveLogo_ReturnsFirstExistingCandidate()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
 
-        var service = CreateService();
+        var service = this.CreateService();
 
         var logo = service.ResolveLogo(folder);
 
@@ -172,10 +172,10 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ResolveLogo_ReturnsLaterCandidate_WhenEarlierMissing()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
 
-        var service = CreateService();
+        var service = this.CreateService();
 
         var logo = service.ResolveLogo(folder);
 
@@ -185,8 +185,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ResolveLogo_NoMatch_ReturnsDefault()
     {
-        var folder = CreateTempDir();
-        var service = CreateService(defaultLogoPath: "default.png");
+        var folder = this.CreateTempDir();
+        var service = this.CreateService(defaultLogoPath: "default.png");
 
         var logo = service.ResolveLogo(folder);
 
@@ -196,9 +196,9 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void RemoveProject_RemovesLogoCacheEntry()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(CreateTempDir(), "logos.json"));
+        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.CreateTempDir(), "logos.json"));
         var service = new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository()),
             cache,
@@ -216,9 +216,9 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void GetAllProjects_LogoAlreadyCached_DoesNotRescan()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-        var service = CreateService();
+        var service = this.CreateService();
         var project = service.AddProject(folder);
         var cachedLogo = service.GetAllProjects().Single(p => p.Id == project.Id).LogoPath;
 
@@ -231,9 +231,9 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void GetAllProjects_AfterServiceRestart_ReuseCachedLogoWithoutRescan()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-        var cachePath = Path.Combine(CreateTempDir(), "logos.json");
+        var cachePath = Path.Combine(this.CreateTempDir(), "logos.json");
         string cachedLogo;
 
         var config = new FakeConfigurationRepository();
@@ -260,9 +260,9 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddProject_MarksManualSource()
     {
-        var service = CreateService();
+        var service = this.CreateService();
 
-        var project = service.AddProject(CreateTempDir());
+        var project = service.AddProject(this.CreateTempDir());
 
         Assert.Equal(ProjectSource.Manual, project.Source);
     }
@@ -270,9 +270,9 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddDiscoveredProject_MarksDiscoveredSource()
     {
-        var service = CreateService();
+        var service = this.CreateService();
 
-        var project = service.AddDiscoveredProject(CreateTempDir());
+        var project = service.AddDiscoveredProject(this.CreateTempDir());
 
         Assert.Equal(ProjectSource.Discovered, project.Source);
     }
@@ -280,8 +280,8 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void AddDiscoveredProject_ExistingManual_DoesNotReclassify()
     {
-        var folder = CreateTempDir();
-        var service = CreateService();
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
         var manual = service.AddProject(folder);
 
         var discovered = service.AddDiscoveredProject(folder);
@@ -293,13 +293,13 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ReconcileDiscoveredProjects_AddsDiscoveredAndNeverRemovesManual()
     {
-        var manualFolder = CreateTempDir();
-        var discoveredFolder = CreateTempDir();
+        var manualFolder = this.CreateTempDir();
+        var discoveredFolder = this.CreateTempDir();
         var config = new AppConfig
         {
             Projects = { new Project { Id = "m", Name = "m", Path = manualFolder, Source = ProjectSource.Manual } }
         };
-        var service = CreateService(config);
+        var service = this.CreateService(config);
 
         var changed = service.ReconcileDiscoveredProjects([discoveredFolder, manualFolder], ["m"]);
 
@@ -313,12 +313,12 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ReconcileDiscoveredProjects_RemovesListedDiscoveredProject()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         var config = new AppConfig
         {
             Projects = { new Project { Id = "d", Name = "d", Path = folder, Source = ProjectSource.Discovered } }
         };
-        var service = CreateService(config);
+        var service = this.CreateService(config);
 
         var changed = service.ReconcileDiscoveredProjects([], ["d"]);
 
@@ -329,12 +329,12 @@ public class ProjectServiceTests : IDisposable
     [Fact]
     public void ReconcileDiscoveredProjects_NoChanges_ReturnsFalse()
     {
-        var folder = CreateTempDir();
+        var folder = this.CreateTempDir();
         var config = new AppConfig
         {
             Projects = { new Project { Id = "m", Name = "m", Path = folder, Source = ProjectSource.Manual } }
         };
-        var service = CreateService(config);
+        var service = this.CreateService(config);
 
         var changed = service.ReconcileDiscoveredProjects([folder], []);
 

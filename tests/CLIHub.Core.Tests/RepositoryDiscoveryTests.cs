@@ -5,19 +5,19 @@ using CLIHub.Core.Scanning;
 
 public class RepositoryDiscoveryTests : IDisposable
 {
-    private readonly List<string> _tempDirs = new();
+    private readonly List<string> tempDirs = new();
 
     private string CreateTempDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "clihub-scan-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(dir);
-        _tempDirs.Add(dir);
+        this.tempDirs.Add(dir);
         return dir;
     }
 
     public void Dispose()
     {
-        foreach (var dir in _tempDirs)
+        foreach (var dir in this.tempDirs)
         {
             try { Directory.Delete(dir, recursive: true); } catch { }
         }
@@ -40,7 +40,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_GitDirectory_IsDiscovered()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         var repo = Path.Combine(root, "repo");
         Directory.CreateDirectory(Path.Combine(repo, ".git"));
 
@@ -53,7 +53,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_RespectsScanDepth()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         var repo = Path.Combine(root, "a", "b");
         Directory.CreateDirectory(Path.Combine(repo, ".git"));
 
@@ -64,7 +64,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_SkipsIgnoredPatterns()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "node_modules", "pkg", ".git"));
 
         var result = RepositoryDiscovery.Enumerate(Options(root), []);
@@ -75,7 +75,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_DoesNotDescendIntoGitDirectory()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         var repo = Path.Combine(root, "repo");
         Directory.CreateDirectory(Path.Combine(repo, ".git", "nested", ".git"));
 
@@ -87,7 +87,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_GitMode_IgnoresAgentOnlyFolder()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "agentonly", ".claude"));
 
         var result = RepositoryDiscovery.Enumerate(Options(root, mode: ProjectDiscoveryMode.Git), [AgentPlugin(".claude")]);
@@ -98,7 +98,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_AgentsMode_IgnoresPlainGitRepository()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "repo", ".git"));
 
         var result = RepositoryDiscovery.Enumerate(Options(root, mode: ProjectDiscoveryMode.Agents), [AgentPlugin(".claude")]);
@@ -109,7 +109,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_BothMode_DiscoveriesEitherCondition()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "gitrepo", ".git"));
         var agent = Path.Combine(root, "agentonly");
         Directory.CreateDirectory(Path.Combine(agent, ".claude"));
@@ -124,7 +124,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_OpenSpecFolder_IsNotAnAgentMarker()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "spec-only", "openspec"));
 
         var result = RepositoryDiscovery.Enumerate(
@@ -151,7 +151,7 @@ public class RepositoryDiscoveryTests : IDisposable
     [Fact]
     public void Enumerate_RootItselfIsRepository_IsDiscovered()
     {
-        var root = CreateTempDir();
+        var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, ".git"));
 
         var result = RepositoryDiscovery.Enumerate(Options(root), []);

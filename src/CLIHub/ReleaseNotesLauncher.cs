@@ -13,11 +13,11 @@ using CLIHub.Views;
 /// </summary>
 public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
 {
-    private readonly Func<WhatsNewWindow> _factory;
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly ILogger<ReleaseNotesLauncher> _logger;
-    private WhatsNewWindow? _window;
+    private readonly Func<WhatsNewWindow> factory;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly ILogger<ReleaseNotesLauncher> logger;
+    private WhatsNewWindow? window;
 
     /// <summary>
     ///   Creates the launcher with its dependencies.
@@ -32,10 +32,10 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
         IPreferencesStore preferencesStore,
         ILogger<ReleaseNotesLauncher> logger)
     {
-        _factory = factory;
-        _versionProvider = versionProvider;
-        _preferencesStore = preferencesStore;
-        _logger = logger;
+        this.factory = factory;
+        this.versionProvider = versionProvider;
+        this.preferencesStore = preferencesStore;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -44,15 +44,15 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     /// </summary>
     public void ShowReleaseNotes()
     {
-        if (_window is null)
+        if (this.window is null)
         {
-            _window = _factory();
-            _window.Closed += (_, _) => _window = null;
+            this.window = this.factory();
+            this.window.Closed += (_, _) => this.window = null;
         }
 
-        _window.ShowNotes();
-        _logger.LogInformation("Opened the What's New window");
-        MarkReleaseNotesSeen();
+        this.window.ShowNotes();
+        this.logger.LogInformation("Opened the What's New window");
+        this.MarkReleaseNotesSeen();
     }
 
     /// <summary>
@@ -62,8 +62,8 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     {
         try
         {
-            var version = _versionProvider.GetCurrentVersion();
-            var preferences = _preferencesStore.Load();
+            var version = this.versionProvider.GetCurrentVersion();
+            var preferences = this.preferencesStore.Load();
 
             if (string.Equals(
                     preferences.LastSeenReleaseNotesVersion,
@@ -73,13 +73,13 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
                 return;
             }
 
-            _preferencesStore.Update(preferences => preferences.LastSeenReleaseNotesVersion = version);
-            _logger.LogInformation("Release notes recorded as seen for version {Version}", version);
+            this.preferencesStore.Update(preferences => preferences.LastSeenReleaseNotesVersion = version);
+            this.logger.LogInformation("Release notes recorded as seen for version {Version}", version);
         }
         catch (Exception ex)
         {
             // Recording is bookkeeping: failing it must not disturb the application.
-            _logger.LogWarning(ex, "Could not record the release notes version");
+            this.logger.LogWarning(ex, "Could not record the release notes version");
         }
     }
 }

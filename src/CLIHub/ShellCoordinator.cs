@@ -8,22 +8,22 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class ShellCoordinator : IShellCoordinator
 {
-    private readonly IApplicationOperationLifetime _operationLifetime;
-    private readonly Func<IApplicationStartupUi> _startupUiFactory;
-    private readonly Func<IUpdateRequestSource> _updateRequestSourceFactory;
-    private readonly ISingleInstanceGuard _singleInstanceGuard;
-    private readonly IUpdateWorkflow _updateWorkflow;
-    private readonly ApplicationStartupContext _context;
+    private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly Func<IApplicationStartupUi> startupUiFactory;
+    private readonly Func<IUpdateRequestSource> updateRequestSourceFactory;
+    private readonly ISingleInstanceGuard singleInstanceGuard;
+    private readonly IUpdateWorkflow updateWorkflow;
+    private readonly ApplicationStartupContext context;
 
-    private IApplicationStartupUi? _startupUi;
-    private IUpdateRequestSource? _updateRequestSource;
-    private EventHandler? _updateStateChangedHandler;
-    private EventHandler? _startupUiUpdateDownloadRequestedHandler;
-    private EventHandler? _updateRequestedHandler;
-    private Action? _activationRequestedHandler;
-    private EventHandler<string>? _updateDownloadedHandler;
-    private EventHandler<string>? _updateDownloadFailedHandler;
-    private bool _disposed;
+    private IApplicationStartupUi? startupUi;
+    private IUpdateRequestSource? updateRequestSource;
+    private EventHandler? updateStateChangedHandler;
+    private EventHandler? startupUiUpdateDownloadRequestedHandler;
+    private EventHandler? updateRequestedHandler;
+    private Action? activationRequestedHandler;
+    private EventHandler<string>? updateDownloadedHandler;
+    private EventHandler<string>? updateDownloadFailedHandler;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the shell coordinator with lazy UI factories and event sources.
@@ -42,14 +42,14 @@ public sealed class ShellCoordinator : IShellCoordinator
         IUpdateWorkflow updateWorkflow,
         ApplicationStartupContext context)
     {
-        _operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        _startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
-        _updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
-        _singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
-        _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
-        _context = context ?? throw new ArgumentNullException(nameof(context));
+        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
+        this.updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
+        this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
+        this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        this.context = context ?? throw new ArgumentNullException(nameof(context));
 
-        InitializeShell();
+        this.InitializeShell();
     }
 
     /// <inheritdoc />
@@ -57,93 +57,93 @@ public sealed class ShellCoordinator : IShellCoordinator
     {
         get
         {
-            if (_disposed)
+            if (this.disposed)
             {
                 throw new ObjectDisposedException(nameof(ShellCoordinator));
             }
 
-            return _startupUi ?? throw new InvalidOperationException("Startup UI not initialized");
+            return this.startupUi ?? throw new InvalidOperationException("Startup UI not initialized");
         }
     }
 
     private void InitializeShell()
     {
-        var startupUi = _startupUiFactory();
-        var updateRequestSource = _updateRequestSourceFactory();
+        var startupUi = this.startupUiFactory();
+        var updateRequestSource = this.updateRequestSourceFactory();
 
-        EventHandler updateStateChanged = (_, _) => _context.Dispatch(startupUi.RefreshMenu);
+        EventHandler updateStateChanged = (_, _) => this.context.Dispatch(startupUi.RefreshMenu);
         EventHandler startupUiUpdateDownloadRequested = (_, _) =>
-            _ = _operationLifetime.RunAsync(
+            _ = this.operationLifetime.RunAsync(
                 "Update download",
-                cancellationToken => _updateWorkflow.DownloadAndApplyAsync(cancellationToken));
+                cancellationToken => this.updateWorkflow.DownloadAndApplyAsync(cancellationToken));
         EventHandler updateRequested = (_, _) =>
-            _ = _operationLifetime.RunAsync(
+            _ = this.operationLifetime.RunAsync(
                 "Update download",
-                cancellationToken => _updateWorkflow.DownloadAndApplyAsync(cancellationToken));
-        Action activationRequested = () => _context.Dispatch(startupUi.ShowLaunchWindow);
+                cancellationToken => this.updateWorkflow.DownloadAndApplyAsync(cancellationToken));
+        Action activationRequested = () => this.context.Dispatch(startupUi.ShowLaunchWindow);
         EventHandler<string> updateDownloaded = (_, version) =>
-            _context.Dispatch(() => startupUi.NotifyUpdateDownloaded(version));
+            this.context.Dispatch(() => startupUi.NotifyUpdateDownloaded(version));
         EventHandler<string> updateDownloadFailed = (_, version) =>
-            _context.Dispatch(() => startupUi.NotifyUpdateFailed(version));
+            this.context.Dispatch(() => startupUi.NotifyUpdateFailed(version));
 
-        _startupUi = startupUi;
-        _updateRequestSource = updateRequestSource;
-        _updateStateChangedHandler = updateStateChanged;
-        _startupUiUpdateDownloadRequestedHandler = startupUiUpdateDownloadRequested;
-        _updateRequestedHandler = updateRequested;
-        _activationRequestedHandler = activationRequested;
-        _updateDownloadedHandler = updateDownloaded;
-        _updateDownloadFailedHandler = updateDownloadFailed;
+        this.startupUi = startupUi;
+        this.updateRequestSource = updateRequestSource;
+        this.updateStateChangedHandler = updateStateChanged;
+        this.startupUiUpdateDownloadRequestedHandler = startupUiUpdateDownloadRequested;
+        this.updateRequestedHandler = updateRequested;
+        this.activationRequestedHandler = activationRequested;
+        this.updateDownloadedHandler = updateDownloaded;
+        this.updateDownloadFailedHandler = updateDownloadFailed;
 
-        _updateWorkflow.UpdateStateChanged += updateStateChanged;
+        this.updateWorkflow.UpdateStateChanged += updateStateChanged;
         startupUi.UpdateDownloadRequested += startupUiUpdateDownloadRequested;
         updateRequestSource.UpdateRequested += updateRequested;
-        _singleInstanceGuard.ActivationRequested += activationRequested;
-        _updateWorkflow.UpdateDownloaded += updateDownloaded;
-        _updateWorkflow.UpdateDownloadFailed += updateDownloadFailed;
+        this.singleInstanceGuard.ActivationRequested += activationRequested;
+        this.updateWorkflow.UpdateDownloaded += updateDownloaded;
+        this.updateWorkflow.UpdateDownloadFailed += updateDownloadFailed;
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
+        this.disposed = true;
 
-        if (_updateStateChangedHandler is not null)
+        if (this.updateStateChangedHandler is not null)
         {
-            _updateWorkflow.UpdateStateChanged -= _updateStateChangedHandler;
+            this.updateWorkflow.UpdateStateChanged -= this.updateStateChangedHandler;
         }
 
-        if (_startupUi is not null && _startupUiUpdateDownloadRequestedHandler is not null)
+        if (this.startupUi is not null && this.startupUiUpdateDownloadRequestedHandler is not null)
         {
-            _startupUi.UpdateDownloadRequested -= _startupUiUpdateDownloadRequestedHandler;
+            this.startupUi.UpdateDownloadRequested -= this.startupUiUpdateDownloadRequestedHandler;
         }
 
-        if (_updateRequestSource is not null && _updateRequestedHandler is not null)
+        if (this.updateRequestSource is not null && this.updateRequestedHandler is not null)
         {
-            _updateRequestSource.UpdateRequested -= _updateRequestedHandler;
+            this.updateRequestSource.UpdateRequested -= this.updateRequestedHandler;
         }
 
-        if (_activationRequestedHandler is not null)
+        if (this.activationRequestedHandler is not null)
         {
-            _singleInstanceGuard.ActivationRequested -= _activationRequestedHandler;
+            this.singleInstanceGuard.ActivationRequested -= this.activationRequestedHandler;
         }
 
-        if (_updateDownloadedHandler is not null)
+        if (this.updateDownloadedHandler is not null)
         {
-            _updateWorkflow.UpdateDownloaded -= _updateDownloadedHandler;
+            this.updateWorkflow.UpdateDownloaded -= this.updateDownloadedHandler;
         }
 
-        if (_updateDownloadFailedHandler is not null)
+        if (this.updateDownloadFailedHandler is not null)
         {
-            _updateWorkflow.UpdateDownloadFailed -= _updateDownloadFailedHandler;
+            this.updateWorkflow.UpdateDownloadFailed -= this.updateDownloadFailedHandler;
         }
 
-        if (_startupUi is IDisposable disposableStartupUi)
+        if (this.startupUi is IDisposable disposableStartupUi)
         {
             disposableStartupUi.Dispose();
         }

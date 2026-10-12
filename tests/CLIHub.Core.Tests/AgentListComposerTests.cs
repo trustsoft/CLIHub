@@ -7,18 +7,18 @@ using Moq;
 
 public class AgentListComposerTests
 {
-    private readonly Mock<IAgentDetectionService> _detection = new();
+    private readonly Mock<IAgentDetectionService> detection = new();
 
     [Fact]
     public void Compose_AgentNotInstalled_ExcludesAgent()
     {
         var plugin = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(plugin))
             .Returns(false);
 
-        var result = AgentListComposer.Compose([plugin], _detection.Object, null, onlyProjectAgents: false);
+        var result = AgentListComposer.Compose([plugin], this.detection.Object, null, onlyProjectAgents: false);
 
         Assert.Empty(result);
     }
@@ -28,14 +28,14 @@ public class AgentListComposerTests
     {
         var plugin = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(plugin))
             .Returns(false);
 
-        var result = AgentListComposer.Compose([plugin], _detection.Object, @"C:\proj", onlyProjectAgents: true);
+        var result = AgentListComposer.Compose([plugin], this.detection.Object, @"C:\proj", onlyProjectAgents: true);
 
         Assert.Empty(result);
-        _detection.Verify(d => d.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>()), Times.Never);
+        this.detection.Verify(d => d.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -43,16 +43,16 @@ public class AgentListComposerTests
     {
         var plugin = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(plugin))
             .Returns(true);
 
-        var result = AgentListComposer.Compose([plugin], _detection.Object, null, onlyProjectAgents: false);
+        var result = AgentListComposer.Compose([plugin], this.detection.Object, null, onlyProjectAgents: false);
 
         var entry = Assert.Single(result);
         Assert.Same(plugin, entry.Plugin);
         Assert.True(entry.IsAvailable);
-        _detection.Verify(d => d.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>()), Times.Never);
+        this.detection.Verify(d => d.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -60,14 +60,14 @@ public class AgentListComposerTests
     {
         var plugin = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(plugin))
             .Returns(true);
-        _detection
+        this.detection
             .Setup(d => d.IsAvailableInProject(plugin, @"C:\proj"))
             .Returns(false);
 
-        var result = AgentListComposer.Compose([plugin], _detection.Object, @"C:\proj", onlyProjectAgents: false);
+        var result = AgentListComposer.Compose([plugin], this.detection.Object, @"C:\proj", onlyProjectAgents: false);
 
         var entry = Assert.Single(result);
         Assert.Same(plugin, entry.Plugin);
@@ -79,14 +79,14 @@ public class AgentListComposerTests
     {
         var plugin = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(plugin))
             .Returns(true);
-        _detection
+        this.detection
             .Setup(d => d.IsAvailableInProject(plugin, @"C:\proj"))
             .Returns(true);
 
-        var result = AgentListComposer.Compose([plugin], _detection.Object, @"C:\proj", onlyProjectAgents: true);
+        var result = AgentListComposer.Compose([plugin], this.detection.Object, @"C:\proj", onlyProjectAgents: true);
 
         var entry = Assert.Single(result);
         Assert.Same(plugin, entry.Plugin);
@@ -99,17 +99,17 @@ public class AgentListComposerTests
         var installed = CreatePlugin("claude");
         var uninstalled = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(installed))
             .Returns(true);
-        _detection
+        this.detection
             .Setup(d => d.IsAvailableInProject(installed, @"C:\proj"))
             .Returns(false);
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(uninstalled))
             .Returns(false);
 
-        var result = AgentListComposer.Compose([installed, uninstalled], _detection.Object, @"C:\proj", onlyProjectAgents: true);
+        var result = AgentListComposer.Compose([installed, uninstalled], this.detection.Object, @"C:\proj", onlyProjectAgents: true);
 
         Assert.Empty(result);
     }
@@ -120,11 +120,11 @@ public class AgentListComposerTests
         var first = CreatePlugin("claude");
         var second = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(It.IsAny<Plugin>()))
             .Returns(false);
 
-        var result = AgentListComposer.Compose([first, second], _detection.Object, @"C:\proj", onlyProjectAgents: true);
+        var result = AgentListComposer.Compose([first, second], this.detection.Object, @"C:\proj", onlyProjectAgents: true);
 
         Assert.Empty(result);
     }
@@ -135,14 +135,14 @@ public class AgentListComposerTests
         var first = CreatePlugin("claude");
         var second = CreatePlugin("qwen");
 
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(first))
             .Returns(true);
-        _detection
+        this.detection
             .Setup(d => d.IsInstalledInSystem(second))
             .Returns(true);
 
-        var result = AgentListComposer.Compose([first, second], _detection.Object, null, onlyProjectAgents: false);
+        var result = AgentListComposer.Compose([first, second], this.detection.Object, null, onlyProjectAgents: false);
 
         Assert.Equal(2, result.Count);
         Assert.Same(first, result[0].Plugin);

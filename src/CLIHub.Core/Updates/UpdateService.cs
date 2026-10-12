@@ -22,20 +22,20 @@ public class UpdateService : IUpdateService
 
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
 
-    private readonly ILogger<UpdateService> _logger;
-    private readonly IPreferencesStore? _preferences;
-    private readonly UpdateManager? _injectedManager;
-    private readonly TimeSpan _checkTimeout;
-    private readonly object _managerGate = new();
-    private UpdateManager? _cachedManager;
-    private bool _cachedManagerPrerelease;
-    private bool _managerCached;
-    private readonly UpdateChecker _checker;
-    private readonly UpdateDownloader _downloader;
-    private readonly UpdateInstaller _installer;
-    private readonly object _downloadGate = new();
-    private bool _isDownloadInProgress;
-    private string? _lastKnownAvailableVersion;
+    private readonly ILogger<UpdateService> logger;
+    private readonly IPreferencesStore? preferences;
+    private readonly UpdateManager? injectedManager;
+    private readonly TimeSpan checkTimeout;
+    private readonly object managerGate = new();
+    private UpdateManager? cachedManager;
+    private bool cachedManagerPrerelease;
+    private bool managerCached;
+    private readonly UpdateChecker checker;
+    private readonly UpdateDownloader downloader;
+    private readonly UpdateInstaller installer;
+    private readonly object downloadGate = new();
+    private bool isDownloadInProgress;
+    private string? lastKnownAvailableVersion;
 
     /// <summary>
     ///   Creates the service using the default GitHub update source.
@@ -44,12 +44,12 @@ public class UpdateService : IUpdateService
     /// <param name="preferencesStore"> Preferences source used to decide pre-release checks. </param>
     public UpdateService(ILogger<UpdateService> logger, IPreferencesStore preferencesStore)
     {
-        _logger = logger;
-        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _checkTimeout = CheckTimeout;
-        _checker = new UpdateChecker(logger);
-        _downloader = new UpdateDownloader(logger);
-        _installer = new UpdateInstaller(logger);
+        this.logger = logger;
+        this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.checkTimeout = CheckTimeout;
+        this.checker = new UpdateChecker(logger);
+        this.downloader = new UpdateDownloader(logger);
+        this.installer = new UpdateInstaller(logger);
     }
 
     /// <summary>
@@ -58,12 +58,12 @@ public class UpdateService : IUpdateService
     /// </summary>
     private UpdateService(ILogger<UpdateService> logger, UpdateManager manager, TimeSpan? checkTimeout)
     {
-        _logger = logger;
-        _checkTimeout = checkTimeout ?? CheckTimeout;
-        _injectedManager = manager;
-        _checker = new UpdateChecker(logger);
-        _downloader = new UpdateDownloader(logger);
-        _installer = new UpdateInstaller(logger);
+        this.logger = logger;
+        this.checkTimeout = checkTimeout ?? CheckTimeout;
+        this.injectedManager = manager;
+        this.checker = new UpdateChecker(logger);
+        this.downloader = new UpdateDownloader(logger);
+        this.installer = new UpdateInstaller(logger);
     }
 
     /// <summary>
@@ -77,23 +77,23 @@ public class UpdateService : IUpdateService
         UpdateManager manager,
         TimeSpan? checkTimeout = null) => new(logger, manager, checkTimeout);
 
-    private UpdateManager? Manager => _injectedManager ?? GetDefaultManager();
+    private UpdateManager? Manager => this.injectedManager ?? this.GetDefaultManager();
 
     private UpdateManager? GetDefaultManager()
     {
-        var prerelease = _preferences?.Load().NotifyPrereleaseUpdates ?? false;
+        var prerelease = this.preferences?.Load().NotifyPrereleaseUpdates ?? false;
 
-        lock (_managerGate)
+        lock (this.managerGate)
         {
-            if (_managerCached && _cachedManagerPrerelease == prerelease)
+            if (this.managerCached && this.cachedManagerPrerelease == prerelease)
             {
-                return _cachedManager;
+                return this.cachedManager;
             }
 
-            _cachedManager = CreateDefaultManager(prerelease);
-            _cachedManagerPrerelease = prerelease;
-            _managerCached = true;
-            return _cachedManager;
+            this.cachedManager = this.CreateDefaultManager(prerelease);
+            this.cachedManagerPrerelease = prerelease;
+            this.managerCached = true;
+            return this.cachedManager;
         }
     }
 
@@ -114,7 +114,7 @@ public class UpdateService : IUpdateService
         {
             // Thrown when VelopackApp.Build().Run() has not initialized a locator
             // (for example, running under a test host).
-            _logger.LogDebug(ex, "Velopack is not initialized; update checks are disabled");
+            this.logger.LogDebug(ex, "Velopack is not initialized; update checks are disabled");
             return null;
         }
     }
@@ -122,7 +122,7 @@ public class UpdateService : IUpdateService
     /// <inheritdoc />
     public string GetCurrentVersion()
     {
-        if (Manager?.CurrentVersion is { } version)
+        if (this.Manager?.CurrentVersion is { } version)
         {
             return Normalize(version.ToString());
         }
@@ -137,7 +137,7 @@ public class UpdateService : IUpdateService
     /// <inheritdoc />
     public async Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
-        var (result, _) = await CheckForUpdateCoreAsync(cancellationToken);
+        var (result, _) = await this.CheckForUpdateCoreAsync(cancellationToken);
         return result;
     }
 
@@ -146,15 +146,15 @@ public class UpdateService : IUpdateService
     {
         get
         {
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                return _isDownloadInProgress;
+                return this.isDownloadInProgress;
             }
         }
     }
 
     /// <inheritdoc />
-    public string? LastKnownAvailableVersion => _lastKnownAvailableVersion;
+    public string? LastKnownAvailableVersion => this.lastKnownAvailableVersion;
 
     /// <inheritdoc />
     public event EventHandler? UpdateStateChanged;
@@ -162,20 +162,20 @@ public class UpdateService : IUpdateService
     /// <inheritdoc />
     public async Task<UpdateDownloadResult> DownloadUpdateAsync(CancellationToken cancellationToken = default)
     {
-        lock (_downloadGate)
+        lock (this.downloadGate)
         {
-            if (_isDownloadInProgress)
+            if (this.isDownloadInProgress)
             {
-                _logger.LogInformation("Update download requested while another download is running");
+                this.logger.LogInformation("Update download requested while another download is running");
                 return new UpdateDownloadResult(UpdateDownloadStatus.AlreadyDownloading, null);
             }
 
-            _isDownloadInProgress = true;
+            this.isDownloadInProgress = true;
         }
 
         try
         {
-            var (result, update) = await CheckForUpdateCoreAsync(cancellationToken);
+            var (result, update) = await this.CheckForUpdateCoreAsync(cancellationToken);
 
             if (result.Status != UpdateStatus.UpdateAvailable || update is null)
             {
@@ -186,40 +186,40 @@ public class UpdateService : IUpdateService
                     _ => UpdateDownloadStatus.Failed,
                 };
 
-                _logger.LogInformation("Update download not started: {Status}", status);
+                this.logger.LogInformation("Update download not started: {Status}", status);
                 return new UpdateDownloadResult(status, null);
             }
 
-            var downloadResult = await _downloader.DownloadAsync(Manager!, update, cancellationToken);
+            var downloadResult = await this.downloader.DownloadAsync(this.Manager!, update, cancellationToken);
 
             return downloadResult;
         }
         finally
         {
-            lock (_downloadGate)
+            lock (this.downloadGate)
             {
-                _isDownloadInProgress = false;
+                this.isDownloadInProgress = false;
             }
 
-            RaiseStateChanged();
+            this.RaiseStateChanged();
         }
     }
 
     /// <inheritdoc />
     public void ApplyDownloadedUpdateAndRestart()
     {
-        var manager = Manager;
-        var asset = _downloader.DownloadedAsset;
+        var manager = this.Manager;
+        var asset = this.downloader.DownloadedAsset;
 
         if (manager is null || asset is null)
         {
-            _logger.LogInformation("No downloaded update to apply; restart skipped");
+            this.logger.LogInformation("No downloaded update to apply; restart skipped");
             return;
         }
 
         try
         {
-            var result = _installer.ApplyAndRestart(manager, asset);
+            var result = this.installer.ApplyAndRestart(manager, asset);
             
             if (result.Status == UpdateInstallStatus.Failed)
             {
@@ -228,7 +228,7 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to apply the downloaded update");
+            this.logger.LogWarning(ex, "Failed to apply the downloaded update");
             throw;
         }
     }
@@ -236,27 +236,27 @@ public class UpdateService : IUpdateService
     private async Task<(UpdateCheckResult Result, UpdateInfo? Update)> CheckForUpdateCoreAsync(
         CancellationToken cancellationToken)
     {
-        var current = GetCurrentVersion();
-        var manager = Manager;
+        var current = this.GetCurrentVersion();
+        var manager = this.Manager;
 
         if (manager?.CurrentVersion == null)
         {
-            _logger.LogInformation("Update check skipped: the application is not a Velopack install");
-            SetAvailableVersion(null);
+            this.logger.LogInformation("Update check skipped: the application is not a Velopack install");
+            this.SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.NotInstalled, current, null), null);
         }
 
         try
         {
             var checkTask = manager.CheckForUpdatesAsync();
-            var timeoutTask = Task.Delay(_checkTimeout, cancellationToken);
+            var timeoutTask = Task.Delay(this.checkTimeout, cancellationToken);
             var completed = await Task.WhenAny(checkTask, timeoutTask);
 
             if (completed != checkTask)
             {
-                _ = ObserveLateUpdateCheckAsync(checkTask);
-                _logger.LogWarning("Update check timed out after {Seconds}s", _checkTimeout.TotalSeconds);
-                SetAvailableVersion(null);
+                _ = this.ObserveLateUpdateCheckAsync(checkTask);
+                this.logger.LogWarning("Update check timed out after {Seconds}s", this.checkTimeout.TotalSeconds);
+                this.SetAvailableVersion(null);
                 return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
             }
 
@@ -264,31 +264,31 @@ public class UpdateService : IUpdateService
             if (update?.TargetFullRelease?.Version is { } version)
             {
                 var available = Normalize(version.ToString());
-                _logger.LogInformation("Update available: {Version}", available);
-                SetAvailableVersion(available);
+                this.logger.LogInformation("Update available: {Version}", available);
+                this.SetAvailableVersion(available);
                 return (new UpdateCheckResult(UpdateStatus.UpdateAvailable, current, available), update);
             }
 
-            _logger.LogInformation("No update available");
-            SetAvailableVersion(null);
+            this.logger.LogInformation("No update available");
+            this.SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.UpToDate, current, null), null);
         }
         catch (NotInstalledException)
         {
-            _logger.LogInformation("Update check skipped: the application is not a Velopack install");
-            SetAvailableVersion(null);
+            this.logger.LogInformation("Update check skipped: the application is not a Velopack install");
+            this.SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.NotInstalled, current, null), null);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Update check cancelled");
-            SetAvailableVersion(null);
+            this.logger.LogWarning("Update check cancelled");
+            this.SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Update check failed");
-            SetAvailableVersion(null);
+            this.logger.LogWarning(ex, "Update check failed");
+            this.SetAvailableVersion(null);
             return (new UpdateCheckResult(UpdateStatus.Failed, current, null), null);
         }
     }
@@ -301,17 +301,17 @@ public class UpdateService : IUpdateService
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Late update check completed after timeout");
+            this.logger.LogDebug(ex, "Late update check completed after timeout");
         }
     }
 
     private void SetAvailableVersion(string? version)
     {
-        var changed = !string.Equals(Interlocked.Exchange(ref _lastKnownAvailableVersion, version), version, StringComparison.Ordinal);
+        var changed = !string.Equals(Interlocked.Exchange(ref this.lastKnownAvailableVersion, version), version, StringComparison.Ordinal);
 
         if (changed)
         {
-            RaiseStateChanged();
+            this.RaiseStateChanged();
         }
     }
 

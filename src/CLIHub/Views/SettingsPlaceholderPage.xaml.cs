@@ -10,5 +10,5 @@ public partial class SettingsPlaceholderPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsPlaceholderPage() => InitializeComponent();
+    public SettingsPlaceholderPage() => this.InitializeComponent();
 }

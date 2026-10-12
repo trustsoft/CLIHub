@@ -11,18 +11,18 @@ using Xunit;
 [SupportedOSPlatform("windows")]
 public sealed class WindowsAgentProcessInspectorTests
 {
-    private readonly WindowsAgentProcessInspector _inspector;
+    private readonly WindowsAgentProcessInspector inspector;
 
     public WindowsAgentProcessInspectorTests()
     {
-        _inspector = new WindowsAgentProcessInspector(NullLogger<WindowsAgentProcessInspector>.Instance);
+        this.inspector = new WindowsAgentProcessInspector(NullLogger<WindowsAgentProcessInspector>.Instance);
     }
 
     [Fact]
     public void GetRunningProcesses_ReturnsNonEmptyList()
     {
         // Act
-        var processes = _inspector.GetRunningProcesses();
+        var processes = this.inspector.GetRunningProcesses();
 
         // Assert
         Assert.NotNull(processes);
@@ -33,7 +33,7 @@ public sealed class WindowsAgentProcessInspectorTests
     public void GetRunningProcesses_FiltersOutSystemProcesses()
     {
         // Act
-        var processes = _inspector.GetRunningProcesses();
+        var processes = this.inspector.GetRunningProcesses();
 
         // Assert
         Assert.All(processes, p => Assert.True(p.ProcessId >= 100, "System processes (PID < 100) should be filtered out"));
@@ -43,7 +43,7 @@ public sealed class WindowsAgentProcessInspectorTests
     public void GetRunningProcesses_ReturnsValidExecutablePaths()
     {
         // Act
-        var processes = _inspector.GetRunningProcesses();
+        var processes = this.inspector.GetRunningProcesses();
 
         // Assert
         Assert.All(processes, p =>
@@ -57,7 +57,7 @@ public sealed class WindowsAgentProcessInspectorTests
     public void GetRunningProcesses_ReturnsValidStartTimes()
     {
         // Act
-        var processes = _inspector.GetRunningProcesses();
+        var processes = this.inspector.GetRunningProcesses();
 
         // Assert
         Assert.All(processes, p =>
@@ -71,7 +71,7 @@ public sealed class WindowsAgentProcessInspectorTests
     public void GetRunningProcesses_HandlesAccessDeniedGracefully()
     {
         // Act - should not throw even if some processes are inaccessible
-        var exception = Record.Exception(() => _inspector.GetRunningProcesses());
+        var exception = Record.Exception(() => this.inspector.GetRunningProcesses());
 
         // Assert
         Assert.Null(exception);

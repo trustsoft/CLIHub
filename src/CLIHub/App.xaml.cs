@@ -14,7 +14,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public partial class App : Application
 {
-    private IApplicationHost? _host;
+    private IApplicationHost? host;
 
     /// <summary>
     ///   Prepares the environment and delegates application startup to the host.
@@ -27,10 +27,10 @@ public partial class App : Application
         ApplyTheme();
         ApplyAccent();
 
-        _host = new ApplicationHost();
-        _host.Start(
-            action => Dispatcher.Invoke(action),
-            window => MainWindow = (Window)window);
+        this.host = new ApplicationHost();
+        this.host.Start(
+            action => this.Dispatcher.Invoke(action),
+            window => this.MainWindow = (Window)window);
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public partial class App : Application
     /// <param name="e"> Exit event arguments. </param>
     protected override void OnExit(ExitEventArgs e)
     {
-        _host?.Shutdown();
+        this.host?.Shutdown();
 
         base.OnExit(e);
     }

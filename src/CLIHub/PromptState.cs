@@ -6,36 +6,36 @@ namespace CLIHub;
 /// </summary>
 public sealed class PromptState
 {
-    private int _depth;
+    private int depth;
 
     /// <summary>
     ///   True while at least one prompt is open.
     /// </summary>
-    public bool IsPromptOpen => _depth > 0;
+    public bool IsPromptOpen => this.depth > 0;
 
     /// <summary>
     ///   Marks a prompt as open until the returned scope is disposed.
     /// </summary>
     public IDisposable Begin()
     {
-        _depth++;
+        this.depth++;
         return new Scope(this);
     }
 
-    private void End() => _depth = Math.Max(0, _depth - 1);
+    private void End() => this.depth = Math.Max(0, this.depth - 1);
 
     private sealed class Scope(PromptState owner) : IDisposable
     {
-        private bool _disposed;
+        private bool disposed;
 
         public void Dispose()
         {
-            if (_disposed)
+            if (this.disposed)
             {
                 return;
             }
 
-            _disposed = true;
+            this.disposed = true;
             owner.End();
         }
     }

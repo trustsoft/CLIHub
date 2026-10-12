@@ -11,15 +11,15 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     private const string MutexName = @"Local\CLIHub.SingleInstance";
     private const string PipeName = "CLIHub.SingleInstance";
 
-    private readonly Mutex _mutex;
-    private readonly bool _isFirstInstance;
-    private readonly CancellationTokenSource? _cts;
-    private readonly Task? _serverTask;
+    private readonly Mutex mutex;
+    private readonly bool isFirstInstance;
+    private readonly CancellationTokenSource? cts;
+    private readonly Task? serverTask;
 
     /// <summary>
     ///   True when this process acquired the mutex and is the primary instance.
     /// </summary>
-    public bool IsFirstInstance => _isFirstInstance;
+    public bool IsFirstInstance => this.isFirstInstance;
 
     /// <summary>
     ///   Raised on the first instance when another instance signals activation.
@@ -32,13 +32,13 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     /// </summary>
     public SingleInstanceGuard()
     {
-        _mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
-        _isFirstInstance = createdNew;
+        this.mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
+        this.isFirstInstance = createdNew;
 
-        if (_isFirstInstance)
+        if (this.isFirstInstance)
         {
-            _cts = new CancellationTokenSource();
-            _serverTask = Task.Run(() => ServerLoopAsync(_cts.Token));
+            this.cts = new CancellationTokenSource();
+            this.serverTask = Task.Run(() => this.ServerLoopAsync(this.cts.Token));
         }
     }
 
@@ -113,21 +113,21 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     {
         try
         {
-            _cts?.Cancel();
-            _serverTask?.Wait(TimeSpan.FromMilliseconds(500));
+            this.cts?.Cancel();
+            this.serverTask?.Wait(TimeSpan.FromMilliseconds(500));
         }
         catch
         {
             // best-effort shutdown
         }
 
-        _cts?.Dispose();
+        this.cts?.Dispose();
 
-        if (_isFirstInstance)
+        if (this.isFirstInstance)
         {
             try
             {
-                _mutex.ReleaseMutex();
+                this.mutex.ReleaseMutex();
             }
             catch
             {
@@ -135,6 +135,6 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
             }
         }
 
-        _mutex.Dispose();
+        this.mutex.Dispose();
     }
 }

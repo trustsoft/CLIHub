@@ -11,9 +11,9 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 {
-    private readonly IUpdateWorkflow _updateWorkflow;
-    private readonly IPreferencesStore _preferences;
-    private readonly ILogger<UpdateStartupCoordinator> _logger;
+    private readonly IUpdateWorkflow updateWorkflow;
+    private readonly IPreferencesStore preferences;
+    private readonly ILogger<UpdateStartupCoordinator> logger;
 
     /// <summary>
     ///   Creates the coordinator over the update service.
@@ -26,9 +26,9 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
         IPreferencesStore preferencesStore,
         ILogger<UpdateStartupCoordinator> logger)
     {
-        _updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
-        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -41,17 +41,17 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 
         if (!enabled)
         {
-            _logger.LogInformation("Startup update check disabled in preferences");
+            this.logger.LogInformation("Startup update check disabled in preferences");
             return;
         }
 
         try
         {
-            var result = await _updateWorkflow.CheckForUpdatesAsync(cancellationToken);
+            var result = await this.updateWorkflow.CheckForUpdatesAsync(cancellationToken);
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {
-                var preferences = _preferences.Load();
+                var preferences = this.preferences.Load();
                 var shouldNotify = VersionClassification.IsPrerelease(version)
                     ? preferences.NotifyPrereleaseUpdates
                     : preferences.NotifyStableUpdates;
@@ -64,11 +64,11 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Startup update check cancelled");
+            this.logger.LogInformation("Startup update check cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Update check failed");
+            this.logger.LogWarning(ex, "Update check failed");
         }
     }
 }

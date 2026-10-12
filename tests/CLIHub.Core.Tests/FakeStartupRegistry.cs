@@ -13,25 +13,25 @@ public sealed class FakeStartupRegistry : IStartupRegistry
 
     public string? GetValue(string name)
     {
-        ThrowIfRequested();
-        return Values.TryGetValue(name, out var value) ? value : null;
+        this.ThrowIfRequested();
+        return this.Values.TryGetValue(name, out var value) ? value : null;
     }
 
     public void SetValue(string name, string value)
     {
-        ThrowIfRequested();
-        Values[name] = value;
+        this.ThrowIfRequested();
+        this.Values[name] = value;
     }
 
     public void DeleteValue(string name)
     {
-        ThrowIfRequested();
-        Values.Remove(name);
+        this.ThrowIfRequested();
+        this.Values.Remove(name);
     }
 
     private void ThrowIfRequested()
     {
-        if (ThrowOnAccess)
+        if (this.ThrowOnAccess)
         {
             throw new InvalidOperationException("registry unavailable");
         }

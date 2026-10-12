@@ -92,25 +92,25 @@ public class ApplicationSessionTests
 
         public SessionFixture()
         {
-            StartupUi.Setup(x => x.RefreshMenu());
-            StartupUi.Setup(x => x.ShowLaunchWindow());
-            OperationLifetime
+            this.StartupUi.Setup(x => x.RefreshMenu());
+            this.StartupUi.Setup(x => x.ShowLaunchWindow());
+            this.OperationLifetime
                 .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
                 .Returns((string _, Func<CancellationToken, Task> operation) =>
                 {
                     operation(CancellationToken.None);
                     return Task.CompletedTask;
                 });
-            UpdateDownload
+            this.UpdateDownload
                 .Setup(x => x.DownloadAndApplyAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            Session = new ApplicationSession(
-                OperationLifetime.Object,
-                () => StartupUi.Object,
-                () => UpdateRequests.Object,
-                Guard.Object,
-                UpdateDownload.Object);
+            this.Session = new ApplicationSession(
+                this.OperationLifetime.Object,
+                () => this.StartupUi.Object,
+                () => this.UpdateRequests.Object,
+                this.Guard.Object,
+                this.UpdateDownload.Object);
         }
     }
 }

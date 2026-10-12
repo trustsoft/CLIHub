@@ -16,12 +16,12 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class UpdateControlViewModel : ObservableObject, IDisposable
 {
-    private readonly IUpdateWorkflow _workflow;
-    private readonly ILogger<UpdateControlViewModel> _logger;
-    private readonly IApplicationOperationLifetime _operationLifetime;
+    private readonly IUpdateWorkflow workflow;
+    private readonly ILogger<UpdateControlViewModel> logger;
+    private readonly IApplicationOperationLifetime operationLifetime;
 
-    private UpdateControlState _state = UpdateControlState.Idle;
-    private bool _disposed;
+    private UpdateControlState state = UpdateControlState.Idle;
+    private bool disposed;
 
     /// <summary>
     ///   Raised with a verbose outcome message that the host window shows in its status line.
@@ -39,26 +39,26 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         ILogger<UpdateControlViewModel> logger,
         IApplicationOperationLifetime operationLifetime)
     {
-        _workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
-        _logger = logger;
-        _operationLifetime = operationLifetime;
+        this.workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
+        this.logger = logger;
+        this.operationLifetime = operationLifetime;
 
-        CurrentVersion = workflow.GetCurrentVersion();
+        this.CurrentVersion = workflow.GetCurrentVersion();
 
-        UpdateControlCommand = new RelayCommand(
-            () => _ = _operationLifetime.RunAsync("Update control", RunUpdateControlAsync),
-            () => _state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
+        this.UpdateControlCommand = new RelayCommand(
+            () => _ = this.operationLifetime.RunAsync("Update control", this.RunUpdateControlAsync),
+            () => this.state is UpdateControlState.Idle or UpdateControlState.Available or UpdateControlState.ReadyToApply);
 
-        _workflow.UpdateStateChanged += OnUpdateStateChanged;
-        RefreshState();
+        this.workflow.UpdateStateChanged += this.OnUpdateStateChanged;
+        this.RefreshState();
     }
 
     private Task RunUpdateControlAsync(CancellationToken cancellationToken) =>
         AsyncOperationRunner.RunAsync(
             "Update control",
-            () => HandleUpdateControlAsync(cancellationToken),
-            _logger,
-            ReportOutcome,
+            () => this.HandleUpdateControlAsync(cancellationToken),
+            this.logger,
+            this.ReportOutcome,
             cancellationToken);
 
     /// <summary>
@@ -70,24 +70,24 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     ///   The label of the control for the current state: the running version when idle, the
     ///   progress state while busy, and the update action when one is available.
     /// </summary>
-    public string UpdateButtonText => _state switch
+    public string UpdateButtonText => this.state switch
     {
-        UpdateControlState.Available => $"Update to {_workflow.LastKnownAvailableVersion}",
+        UpdateControlState.Available => $"Update to {this.workflow.LastKnownAvailableVersion}",
         UpdateControlState.Checking => "Checking…",
-        UpdateControlState.Downloading => _workflow.LastKnownAvailableVersion is { } downloading
+        UpdateControlState.Downloading => this.workflow.LastKnownAvailableVersion is { } downloading
             ? $"Downloading {downloading}…"
             : "Downloading…",
-        UpdateControlState.ReadyToApply => _workflow.LastKnownAvailableVersion is { } ready
+        UpdateControlState.ReadyToApply => this.workflow.LastKnownAvailableVersion is { } ready
             ? $"Restart to update to {ready}"
             : "Restart to update",
-        _ => CurrentVersion,
+        _ => this.CurrentVersion,
     };
 
     /// <summary>
     ///   Whether the control currently offers an update action, which drives its accent styling.
     /// </summary>
     public bool IsUpdateActionAvailable =>
-        _state is UpdateControlState.Available or UpdateControlState.ReadyToApply;
+        this.state is UpdateControlState.Available or UpdateControlState.ReadyToApply;
 
     /// <summary>
     ///   Routes control clicks by state: checks for updates when idle, downloads the update when
@@ -97,43 +97,43 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
 
     private async Task HandleUpdateControlAsync(CancellationToken cancellationToken)
     {
-        switch (_state)
+        switch (this.state)
         {
             case UpdateControlState.Available:
-                await DownloadUpdateAsync(cancellationToken);
+                await this.DownloadUpdateAsync(cancellationToken);
                 break;
             case UpdateControlState.ReadyToApply:
-                ApplyDownloadedUpdate();
+                this.ApplyDownloadedUpdate();
                 break;
             default:
-                await CheckForUpdatesAsync(cancellationToken);
+                await this.CheckForUpdatesAsync(cancellationToken);
                 break;
         }
     }
 
     private async Task CheckForUpdatesAsync(CancellationToken cancellationToken)
     {
-        SetState(UpdateControlState.Checking);
-        ReportOutcome("Checking for updates...");
+        this.SetState(UpdateControlState.Checking);
+        this.ReportOutcome("Checking for updates...");
 
         UpdateCheckResult result;
         try
         {
-            result = await _workflow.CheckForUpdatesAsync(cancellationToken);
+            result = await this.workflow.CheckForUpdatesAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            SetState(UpdateControlState.Idle);
+            this.SetState(UpdateControlState.Idle);
             return;
         }
         catch (Exception)
         {
-            SetState(UpdateControlState.Idle);
-            ReportOutcome("Update check failed or timed out.");
+            this.SetState(UpdateControlState.Idle);
+            this.ReportOutcome("Update check failed or timed out.");
             return;
         }
 
-        ReportOutcome(result.Status switch
+        this.ReportOutcome(result.Status switch
         {
             UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
             UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
@@ -141,38 +141,38 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
             _ => "Update check failed or timed out."
         });
 
-        SetState(result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is not null
+        this.SetState(result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is not null
             ? UpdateControlState.Available
             : UpdateControlState.Idle);
     }
 
     private async Task DownloadUpdateAsync(CancellationToken cancellationToken)
     {
-        SetState(UpdateControlState.Downloading);
+        this.SetState(UpdateControlState.Downloading);
 
         UpdateDownloadResult result;
         try
         {
-            result = await _workflow.DownloadUpdateAsync(cancellationToken);
+            result = await this.workflow.DownloadUpdateAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            SetState(UpdateControlState.Idle);
+            this.SetState(UpdateControlState.Idle);
             return;
         }
         catch (Exception)
         {
-            ReportOutcome("Update download failed. The current version keeps running.");
-            RefreshState();
+            this.ReportOutcome("Update download failed. The current version keeps running.");
+            this.RefreshState();
             return;
         }
 
-        SetState(UpdateControlLogic.AfterDownload(
+        this.SetState(UpdateControlLogic.AfterDownload(
             result.Status,
-            _workflow.IsDownloading,
-            _workflow.LastKnownAvailableVersion is not null));
+            this.workflow.IsDownloading,
+            this.workflow.LastKnownAvailableVersion is not null));
 
-        ReportOutcome(result.Status switch
+        this.ReportOutcome(result.Status switch
         {
             UpdateDownloadStatus.Downloaded => $"Update {result.AvailableVersion} downloaded. Restart CLIHub to apply it.",
             UpdateDownloadStatus.Failed => "Update download failed. The current version keeps running.",
@@ -186,12 +186,12 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     {
         try
         {
-        _workflow.ApplyDownloadedUpdateAndRestart();
+            this.workflow.ApplyDownloadedUpdateAndRestart();
         }
         catch (Exception ex)
         {
-            ReportOutcome($"Could not apply the update: {ex.Message}");
-            SetState(UpdateControlState.Available);
+            this.ReportOutcome($"Could not apply the update: {ex.Message}");
+            this.SetState(UpdateControlState.Available);
         }
     }
 
@@ -199,11 +199,11 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     {
         if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
         {
-            _ = dispatcher.BeginInvoke(RefreshState);
+            _ = dispatcher.BeginInvoke(this.RefreshState);
             return;
         }
 
-        RefreshState();
+        this.RefreshState();
     }
 
     /// <summary>
@@ -211,41 +211,41 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _workflow.UpdateStateChanged -= OnUpdateStateChanged;
+        this.disposed = true;
+        this.workflow.UpdateStateChanged -= this.OnUpdateStateChanged;
     }
 
     private void RefreshState()
     {
-        if (_disposed || _state == UpdateControlState.ReadyToApply)
+        if (this.disposed || this.state == UpdateControlState.ReadyToApply)
         {
             return;
         }
 
-        SetState(_workflow.IsDownloading
+        this.SetState(this.workflow.IsDownloading
             ? UpdateControlState.Downloading
-            : _workflow.IsCheckingForUpdates
+            : this.workflow.IsCheckingForUpdates
                 ? UpdateControlState.Checking
-                : _workflow.LastKnownAvailableVersion is not null
+                : this.workflow.LastKnownAvailableVersion is not null
                     ? UpdateControlState.Available
                     : UpdateControlState.Idle);
     }
 
     private void SetState(UpdateControlState state)
     {
-        if (_state == state)
+        if (this.state == state)
         {
             return;
         }
 
-        _state = state;
-        OnPropertyChanged(nameof(UpdateButtonText));
-        OnPropertyChanged(nameof(IsUpdateActionAvailable));
+        this.state = state;
+        this.OnPropertyChanged(nameof(this.UpdateButtonText));
+        this.OnPropertyChanged(nameof(this.IsUpdateActionAvailable));
         CommandManager.InvalidateRequerySuggested();
     }
 

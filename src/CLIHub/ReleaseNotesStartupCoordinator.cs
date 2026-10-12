@@ -10,10 +10,10 @@ using CLIHub.Core.Updates;
 /// </summary>
 public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordinator
 {
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IReleaseNotesService _releaseNotes;
-    private readonly IReleaseNotesLauncher _launcher;
-    private readonly ILogger<ReleaseNotesStartupCoordinator> _logger;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IReleaseNotesService releaseNotes;
+    private readonly IReleaseNotesLauncher launcher;
+    private readonly ILogger<ReleaseNotesStartupCoordinator> logger;
 
     /// <summary>
     ///   Creates the coordinator with version, notes, and presentation boundaries.
@@ -28,10 +28,10 @@ public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordin
         IReleaseNotesLauncher launcher,
         ILogger<ReleaseNotesStartupCoordinator> logger)
     {
-        _versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
-        _releaseNotes = releaseNotes ?? throw new ArgumentNullException(nameof(releaseNotes));
-        _launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+        this.releaseNotes = releaseNotes ?? throw new ArgumentNullException(nameof(releaseNotes));
+        this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc />
@@ -41,24 +41,24 @@ public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordin
 
         try
         {
-            var currentVersion = _versionProvider.GetCurrentVersion();
+            var currentVersion = this.versionProvider.GetCurrentVersion();
             var action = ReleaseNotesPrompt.Decide(
                 preferences.LastSeenReleaseNotesVersion,
                 currentVersion,
-                _releaseNotes.GetNote(currentVersion) != null);
+                this.releaseNotes.GetNote(currentVersion) != null);
 
             if (action == ReleaseNotesPromptAction.Show)
             {
-                _launcher.ShowReleaseNotes();
+                this.launcher.ShowReleaseNotes();
             }
             else if (action == ReleaseNotesPromptAction.RecordOnly)
             {
-                _launcher.MarkReleaseNotesSeen();
+                this.launcher.MarkReleaseNotesSeen();
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "The release notes check failed");
+            this.logger.LogWarning(ex, "The release notes check failed");
         }
     }
 }

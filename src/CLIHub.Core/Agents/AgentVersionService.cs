@@ -27,12 +27,12 @@ public class AgentVersionService : IAgentVersionService
 
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 
-    private readonly ProcessLauncher _processLauncher;
-    private readonly IPreferencesStore _preferencesStore;
-    private readonly ILogger<AgentVersionService> _logger;
-    private readonly TimeProvider _timeProvider;
-    private readonly ConcurrentDictionary<string, CacheEntry> _cache = new();
-    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> _inFlight = new();
+    private readonly ProcessLauncher processLauncher;
+    private readonly IPreferencesStore preferencesStore;
+    private readonly ILogger<AgentVersionService> logger;
+    private readonly TimeProvider timeProvider;
+    private readonly ConcurrentDictionary<string, CacheEntry> cache = new();
+    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> inFlight = new();
 
     /// <summary>
     ///   Creates the service.
@@ -43,25 +43,25 @@ public class AgentVersionService : IAgentVersionService
         ILogger<AgentVersionService> logger,
         TimeProvider? timeProvider = null)
     {
-        _processLauncher = processLauncher;
-        _preferencesStore = preferencesStore;
-        _logger = logger;
-        _timeProvider = timeProvider ?? TimeProvider.System;
+        this.processLauncher = processLauncher;
+        this.preferencesStore = preferencesStore;
+        this.logger = logger;
+        this.timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     /// <inheritdoc />
     public async Task<string?> GetVersionAsync(Plugin plugin, CancellationToken cancellationToken = default)
     {
-        var now = _timeProvider.GetUtcNow();
-        if (_cache.TryGetValue(plugin.Id, out var cached) && now - cached.Timestamp < Ttl)
+        var now = this.timeProvider.GetUtcNow();
+        if (this.cache.TryGetValue(plugin.Id, out var cached) && now - cached.Timestamp < this.Ttl)
         {
             return cached.Value;
         }
 
-        var lazy = _inFlight.GetOrAdd(
+        var lazy = this.inFlight.GetOrAdd(
             plugin.Id,
             _ => new Lazy<Task<string?>>(
-                () => ProbeAndCacheAsync(plugin),
+                () => this.ProbeAndCacheAsync(plugin),
                 LazyThreadSafetyMode.ExecutionAndPublication));
 
         try
@@ -72,7 +72,7 @@ public class AgentVersionService : IAgentVersionService
         {
             if (lazy.IsValueCreated && lazy.Value.IsCompleted)
             {
-                _inFlight.TryRemove(plugin.Id, out _);
+                this.inFlight.TryRemove(plugin.Id, out _);
             }
         }
     }
@@ -82,13 +82,13 @@ public class AgentVersionService : IAgentVersionService
         var command = plugin.Commands?.Version;
         if (command == null || string.IsNullOrWhiteSpace(command.Executable))
         {
-            _cache[plugin.Id] = new CacheEntry(null, _timeProvider.GetUtcNow());
+            this.cache[plugin.Id] = new CacheEntry(null, this.timeProvider.GetUtcNow());
             return null;
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var result = await _processLauncher.CaptureOutputAsync(
-            command.Executable, command.Arguments, workingDirectory, CancellationToken.None, ProbeTimeout);
+        var result = await this.processLauncher.CaptureOutputAsync(
+            command.Executable, command.Arguments, workingDirectory, CancellationToken.None, this.ProbeTimeout);
 
         string? version = null;
         if (result.Started && result.ExitCode == 0)
@@ -97,21 +97,21 @@ public class AgentVersionService : IAgentVersionService
         }
         else
         {
-            _logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.StdErr);
+            this.logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.StdErr);
         }
 
-        _cache[plugin.Id] = new CacheEntry(version, _timeProvider.GetUtcNow());
+        this.cache[plugin.Id] = new CacheEntry(version, this.timeProvider.GetUtcNow());
         return version;
     }
 
     /// <inheritdoc />
-    public void Invalidate() => _cache.Clear();
+    public void Invalidate() => this.cache.Clear();
 
     private TimeSpan Ttl
     {
         get
         {
-            var minutes = _preferencesStore.Load().AgentProbeTtlMinutes;
+            var minutes = this.preferencesStore.Load().AgentProbeTtlMinutes;
             return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
         }
     }
@@ -120,7 +120,7 @@ public class AgentVersionService : IAgentVersionService
     {
         get
         {
-            var seconds = _preferencesStore.Load().AgentProbeTimeoutSeconds;
+            var seconds = this.preferencesStore.Load().AgentProbeTimeoutSeconds;
             return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : DefaultProbeTimeout;
         }
     }

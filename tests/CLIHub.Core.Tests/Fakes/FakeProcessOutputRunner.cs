@@ -22,7 +22,7 @@ public class FakeProcessOutputRunner : IProcessOutputRunner
         TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
-        Runs.Add((commandLine, runtime, timeout));
-        return Task.FromResult(Result);
+        this.Runs.Add((commandLine, runtime, timeout));
+        return Task.FromResult(this.Result);
     }
 }

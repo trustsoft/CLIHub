@@ -10,5 +10,5 @@ public partial class SettingsUpdatesPage : UserControl
     /// <summary>
     ///   Creates the page.
     /// </summary>
-    public SettingsUpdatesPage() => InitializeComponent();
+    public SettingsUpdatesPage() => this.InitializeComponent();
 }

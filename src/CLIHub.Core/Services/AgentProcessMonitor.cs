@@ -10,10 +10,10 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public sealed class AgentProcessMonitor
 {
-    private readonly IAgentProcessInspector _processInspector;
-    private readonly Infrastructure.Processes.AgentProcessMatcher _processMatcher;
-    private readonly IPluginCatalog _pluginCatalog;
-    private readonly ILogger<AgentProcessMonitor> _logger;
+    private readonly IAgentProcessInspector processInspector;
+    private readonly Infrastructure.Processes.AgentProcessMatcher processMatcher;
+    private readonly IPluginCatalog pluginCatalog;
+    private readonly ILogger<AgentProcessMonitor> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="AgentProcessMonitor"/> class.
@@ -28,10 +28,10 @@ public sealed class AgentProcessMonitor
         IPluginCatalog pluginCatalog,
         ILogger<AgentProcessMonitor> logger)
     {
-        _processInspector = processInspector;
-        _processMatcher = processMatcher;
-        _pluginCatalog = pluginCatalog;
-        _logger = logger;
+        this.processInspector = processInspector;
+        this.processMatcher = processMatcher;
+        this.pluginCatalog = pluginCatalog;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public sealed class AgentProcessMonitor
     /// <returns> True if at least one agent process is running. </returns>
     public bool HasRunningAgents()
     {
-        return GetRunningAgents().Count > 0;
+        return this.GetRunningAgents().Count > 0;
     }
 
     /// <summary>
@@ -53,14 +53,14 @@ public sealed class AgentProcessMonitor
 
         try
         {
-            var processes = _processInspector.GetRunningProcesses();
-            var plugins = _pluginCatalog.GetAllPlugins();
+            var processes = this.processInspector.GetRunningProcesses();
+            var plugins = this.pluginCatalog.GetAllPlugins();
 
             foreach (var process in processes)
             {
                 foreach (var plugin in plugins)
                 {
-                    if (_processMatcher.IsMatch(process, plugin))
+                    if (this.processMatcher.IsMatch(process, plugin))
                     {
                         runningAgents.Add(new RunningAgent(plugin, process));
                         break; // One match per process
@@ -70,7 +70,7 @@ public sealed class AgentProcessMonitor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check for running agents");
+            this.logger.LogError(ex, "Failed to check for running agents");
         }
 
         return runningAgents;

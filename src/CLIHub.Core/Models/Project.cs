@@ -9,9 +9,9 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public class Project : INotifyPropertyChanged
 {
-    private bool _isFavorite;
-    private DateTime _lastUsed;
-    private string? _logoPath;
+    private bool isFavorite;
+    private DateTime lastUsed;
+    private string? logoPath;
 
     /// <summary>
     ///   Unique identifier for the project.
@@ -39,16 +39,16 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public bool IsFavorite
     {
-        get => _isFavorite;
+        get => this.isFavorite;
         set
         {
-            if (_isFavorite == value)
+            if (this.isFavorite == value)
             {
                 return;
             }
 
-            _isFavorite = value;
-            OnPropertyChanged();
+            this.isFavorite = value;
+            this.OnPropertyChanged();
         }
     }
 
@@ -57,16 +57,16 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public DateTime LastUsed
     {
-        get => _lastUsed;
+        get => this.lastUsed;
         set
         {
-            if (_lastUsed == value)
+            if (this.lastUsed == value)
             {
                 return;
             }
 
-            _lastUsed = value;
-            OnPropertyChanged();
+            this.lastUsed = value;
+            this.OnPropertyChanged();
         }
     }
 
@@ -75,16 +75,16 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public string? LogoPath
     {
-        get => _logoPath;
+        get => this.logoPath;
         set
         {
-            if (_logoPath == value)
+            if (this.logoPath == value)
             {
                 return;
             }
 
-            _logoPath = value;
-            OnPropertyChanged();
+            this.logoPath = value;
+            this.OnPropertyChanged();
         }
     }
 

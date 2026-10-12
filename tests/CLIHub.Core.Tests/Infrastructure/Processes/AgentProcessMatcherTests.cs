@@ -7,11 +7,11 @@ using Xunit;
 
 public class AgentProcessMatcherTests
 {
-    private readonly AgentProcessMatcher _matcher;
+    private readonly AgentProcessMatcher matcher;
 
     public AgentProcessMatcherTests()
     {
-        _matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
+        this.matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public class AgentProcessMatcherTests
         var process = CreateProcess(@"C:\tools\testagent.exe", "testagent.exe");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.True(result);
@@ -36,7 +36,7 @@ public class AgentProcessMatcherTests
         var process = CreateProcess(@"C:\tools\testagent.exe", "testagent.exe");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.True(result);
@@ -52,7 +52,7 @@ public class AgentProcessMatcherTests
             @"node.exe C:\npm\opencode\index.js");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.True(result);
@@ -68,7 +68,7 @@ public class AgentProcessMatcherTests
             @"python.exe C:\scripts\cline\main.py");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.True(result);
@@ -84,7 +84,7 @@ public class AgentProcessMatcherTests
             @"node.exe C:\Users\test\.npm\opencode\bin\index.js");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.True(result);
@@ -98,7 +98,7 @@ public class AgentProcessMatcherTests
         var process = CreateProcess(@"C:\tools\other.exe", "other.exe");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.False(result);
@@ -114,7 +114,7 @@ public class AgentProcessMatcherTests
             @"node.exe C:\projects\myapp\server.js");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.False(result);
@@ -133,7 +133,7 @@ public class AgentProcessMatcherTests
         var process = CreateProcess(@"C:\tools\test.exe", "test.exe");
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.False(result);
@@ -147,7 +147,7 @@ public class AgentProcessMatcherTests
         var process = CreateProcess(@"C:\Program Files\nodejs\node.exe", string.Empty);
 
         // Act
-        var result = _matcher.IsMatch(process, plugin);
+        var result = this.matcher.IsMatch(process, plugin);
 
         // Assert
         Assert.False(result);

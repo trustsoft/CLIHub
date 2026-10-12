@@ -15,7 +15,7 @@ public class FakeInteractiveProcessRunner : IInteractiveProcessRunner
         RuntimeInfo runtime,
         CancellationToken cancellationToken = default)
     {
-        Launches.Add((commandLine, runtime));
-        return Task.FromResult(LaunchResult);
+        this.Launches.Add((commandLine, runtime));
+        return Task.FromResult(this.LaunchResult);
     }
 }

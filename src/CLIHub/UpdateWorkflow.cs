@@ -13,18 +13,18 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
 {
     private static readonly TimeSpan NotificationDelay = TimeSpan.FromSeconds(2);
 
-    private readonly IUpdateVersionProvider _versionProvider;
-    private readonly IUpdateChecker _checker;
-    private readonly IUpdateStateSource _stateSource;
-    private readonly IUpdateDownloader _downloader;
-    private readonly IUpdateInstaller _installer;
-    private readonly IPreferencesStore _preferences;
-    private readonly ILogger<UpdateWorkflow> _logger;
-    private readonly Func<TimeSpan, CancellationToken, Task> _delay;
-    private readonly object _checkLock = new();
-    private Task<UpdateCheckResult>? _activeCheck;
-    private int _downloadActive;
-    private bool _disposed;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IUpdateChecker checker;
+    private readonly IUpdateStateSource stateSource;
+    private readonly IUpdateDownloader downloader;
+    private readonly IUpdateInstaller installer;
+    private readonly IPreferencesStore preferences;
+    private readonly ILogger<UpdateWorkflow> logger;
+    private readonly Func<TimeSpan, CancellationToken, Task> delay;
+    private readonly object checkLock = new();
+    private Task<UpdateCheckResult>? activeCheck;
+    private int downloadActive;
+    private bool disposed;
 
     /// <summary>
     ///   Creates the workflow over the shared Core update service.
@@ -47,31 +47,31 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         ILogger<UpdateWorkflow> logger,
         Func<TimeSpan, CancellationToken, Task>? delay = null)
     {
-        _versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
-        _checker = checker ?? throw new ArgumentNullException(nameof(checker));
-        _stateSource = stateSource ?? throw new ArgumentNullException(nameof(stateSource));
-        _downloader = downloader ?? throw new ArgumentNullException(nameof(downloader));
-        _installer = installer ?? throw new ArgumentNullException(nameof(installer));
-        _preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _delay = delay ?? ((duration, cancellationToken) => Task.Delay(duration, cancellationToken));
-        _stateSource.UpdateStateChanged += OnSourceStateChanged;
+        this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+        this.checker = checker ?? throw new ArgumentNullException(nameof(checker));
+        this.stateSource = stateSource ?? throw new ArgumentNullException(nameof(stateSource));
+        this.downloader = downloader ?? throw new ArgumentNullException(nameof(downloader));
+        this.installer = installer ?? throw new ArgumentNullException(nameof(installer));
+        this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.delay = delay ?? ((duration, cancellationToken) => Task.Delay(duration, cancellationToken));
+        this.stateSource.UpdateStateChanged += this.OnSourceStateChanged;
     }
 
     /// <inheritdoc />
-    public bool IsDownloading => Volatile.Read(ref _downloadActive) != 0 || _stateSource.IsDownloading;
+    public bool IsDownloading => Volatile.Read(ref this.downloadActive) != 0 || this.stateSource.IsDownloading;
 
     /// <inheritdoc />
-    public string? LastKnownAvailableVersion => _stateSource.LastKnownAvailableVersion;
+    public string? LastKnownAvailableVersion => this.stateSource.LastKnownAvailableVersion;
 
     /// <inheritdoc />
     public bool IsCheckingForUpdates
     {
         get
         {
-            lock (_checkLock)
+            lock (this.checkLock)
             {
-                return _activeCheck is { IsCompleted: false };
+                return this.activeCheck is { IsCompleted: false };
             }
         }
     }
@@ -90,17 +90,17 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
+        if (this.disposed)
         {
             return;
         }
 
-        _disposed = true;
-        _stateSource.UpdateStateChanged -= OnSourceStateChanged;
+        this.disposed = true;
+        this.stateSource.UpdateStateChanged -= this.OnSourceStateChanged;
     }
 
     /// <inheritdoc />
-    public string GetCurrentVersion() => _versionProvider.GetCurrentVersion();
+    public string GetCurrentVersion() => this.versionProvider.GetCurrentVersion();
 
     /// <inheritdoc />
     public Task<UpdateCheckResult> CheckForUpdatesAsync(CancellationToken cancellationToken = default)
@@ -108,21 +108,21 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         cancellationToken.ThrowIfCancellationRequested();
         TaskCompletionSource<UpdateCheckResult>? completion = null;
         Task<UpdateCheckResult> check;
-        lock (_checkLock)
+        lock (this.checkLock)
         {
-            ObjectDisposedException.ThrowIf(_disposed, this);
-            if (_activeCheck is null || _activeCheck.IsCompleted)
+            ObjectDisposedException.ThrowIf(this.disposed, this);
+            if (this.activeCheck is null || this.activeCheck.IsCompleted)
             {
                 completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
-                _activeCheck = completion.Task;
+                this.activeCheck = completion.Task;
             }
 
-            check = _activeCheck;
+            check = this.activeCheck;
         }
 
         if (completion is not null)
         {
-            _ = CheckCoreAsync(completion, cancellationToken);
+            _ = this.CheckCoreAsync(completion, cancellationToken);
         }
 
         return completion is null && cancellationToken.CanBeCanceled
@@ -133,45 +133,45 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     /// <inheritdoc />
     public async Task<UpdateDownloadResult> DownloadUpdateAsync(CancellationToken cancellationToken = default)
     {
-        if (Interlocked.CompareExchange(ref _downloadActive, 1, 0) != 0)
+        if (Interlocked.CompareExchange(ref this.downloadActive, 1, 0) != 0)
         {
-            return new(UpdateDownloadStatus.AlreadyDownloading, LastKnownAvailableVersion);
+            return new(UpdateDownloadStatus.AlreadyDownloading, this.LastKnownAvailableVersion);
         }
 
         try
         {
-            OnSourceStateChanged(this, EventArgs.Empty);
-            return await _downloader.DownloadUpdateAsync(cancellationToken);
+            this.OnSourceStateChanged(this, EventArgs.Empty);
+            return await this.downloader.DownloadUpdateAsync(cancellationToken);
         }
         finally
         {
-            Interlocked.Exchange(ref _downloadActive, 0);
-            OnSourceStateChanged(this, EventArgs.Empty);
+            Interlocked.Exchange(ref this.downloadActive, 0);
+            this.OnSourceStateChanged(this, EventArgs.Empty);
         }
     }
 
     /// <inheritdoc />
-    public void ApplyDownloadedUpdateAndRestart() => _installer.ApplyDownloadedUpdateAndRestart();
+    public void ApplyDownloadedUpdateAndRestart() => this.installer.ApplyDownloadedUpdateAndRestart();
 
     /// <inheritdoc />
     public async Task DownloadAndApplyAsync(CancellationToken cancellationToken = default)
     {
-        if (Interlocked.CompareExchange(ref _downloadActive, 1, 0) != 0)
+        if (Interlocked.CompareExchange(ref this.downloadActive, 1, 0) != 0)
         {
             return;
         }
 
         try
         {
-            OnSourceStateChanged(this, EventArgs.Empty);
-            var result = await _downloader.DownloadUpdateAsync(cancellationToken);
+            this.OnSourceStateChanged(this, EventArgs.Empty);
+            var result = await this.downloader.DownloadUpdateAsync(cancellationToken);
             if (result.Status == UpdateDownloadStatus.Downloaded && result.AvailableVersion is { } version)
             {
                 UpdateDownloaded?.Invoke(this, version);
-                OnSourceStateChanged(this, EventArgs.Empty);
-                await _delay(NotificationDelay, cancellationToken);
+                this.OnSourceStateChanged(this, EventArgs.Empty);
+                await this.delay(NotificationDelay, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
-                ApplyDownloadedUpdateAndRestart();
+                this.ApplyDownloadedUpdateAndRestart();
                 return;
             }
 
@@ -180,20 +180,20 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
                 UpdateDownloadFailed?.Invoke(this, failedVersion);
             }
 
-            _logger.LogInformation("Update download not applied: {Status}", result.Status);
+            this.logger.LogInformation("Update download not applied: {Status}", result.Status);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Update download cancelled");
+            this.logger.LogInformation("Update download cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Applying the downloaded update failed");
+            this.logger.LogWarning(ex, "Applying the downloaded update failed");
         }
         finally
         {
-            Interlocked.Exchange(ref _downloadActive, 0);
-            OnSourceStateChanged(this, EventArgs.Empty);
+            Interlocked.Exchange(ref this.downloadActive, 0);
+            this.OnSourceStateChanged(this, EventArgs.Empty);
         }
     }
 
@@ -205,9 +205,9 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         Exception? failure = null;
         try
         {
-            OnSourceStateChanged(this, EventArgs.Empty);
-            result = await _checker.CheckForUpdatesAsync(cancellationToken);
-            MaybeStartAutoDownload(result);
+            this.OnSourceStateChanged(this, EventArgs.Empty);
+            result = await this.checker.CheckForUpdatesAsync(cancellationToken);
+            this.MaybeStartAutoDownload(result);
         }
         catch (Exception ex)
         {
@@ -215,14 +215,14 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         }
         finally
         {
-            lock (_checkLock)
+            lock (this.checkLock)
             {
-                _activeCheck = null;
+                this.activeCheck = null;
             }
 
             try
             {
-                OnSourceStateChanged(this, EventArgs.Empty);
+                this.OnSourceStateChanged(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -246,7 +246,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
 
     private void OnSourceStateChanged(object? sender, EventArgs e)
     {
-        if (!_disposed)
+        if (!this.disposed)
         {
             UpdateStateChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -259,23 +259,23 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
             return;
         }
 
-        if (!_preferences.Load().AutoDownloadUpdates)
+        if (!this.preferences.Load().AutoDownloadUpdates)
         {
             return;
         }
 
-        _ = AutoDownloadAsync();
+        _ = this.AutoDownloadAsync();
     }
 
     private async Task AutoDownloadAsync()
     {
         try
         {
-            await DownloadUpdateAsync(CancellationToken.None);
+            await this.DownloadUpdateAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Automatic update download failed");
+            this.logger.LogWarning(ex, "Automatic update download failed");
         }
     }
 }
