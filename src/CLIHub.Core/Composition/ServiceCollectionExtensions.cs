@@ -104,7 +104,7 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
         services.AddSingleton<IAgentProcessInspector, WindowsAgentProcessInspector>();
         services.AddSingleton<AgentProcessMatcher>();
-        services.AddSingleton<AgentProcessMonitor>();
+        services.AddSingleton<Services.AgentProcessMonitor>();
         return services;
     }
 

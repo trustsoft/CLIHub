@@ -67,7 +67,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         IApplicationLifetime applicationLifetime,
         IExternalLauncher externalLauncher,
         StatusMessageCoordinator statusCoordinator,
-        CLIHub.Core.Agents.AgentProcessMonitor processMonitor)
+        CLIHub.Core.Services.AgentProcessMonitor processMonitor)
     {
         this.projectPane = projectPane;
         this.agentPane = agentPane;

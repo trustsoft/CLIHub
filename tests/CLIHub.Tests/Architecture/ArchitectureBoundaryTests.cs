@@ -10,8 +10,7 @@ public sealed class ArchitectureBoundaryTests
         "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",
         "Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",
         "Lifetime" + Path.DirectorySeparatorChar + "WpfApplicationLifetime.cs",
-        "Startup" + Path.DirectorySeparatorChar + "WpfApplicationStartupUi.cs",
-        "Settings" + Path.DirectorySeparatorChar + "WpfAccentPreferenceTarget.cs"
+        "Startup" + Path.DirectorySeparatorChar + "WpfApplicationStartupUi.cs"
     ];
 
     [Fact]
@@ -91,8 +90,7 @@ public sealed class ArchitectureBoundaryTests
 
         foreach (var (file, declaration) in owners)
         {
-            var path = Directory.EnumerateFiles(viewModels, file, SearchOption.AllDirectories).Single();
-            var source = File.ReadAllText(path);
+            var source = File.ReadAllText(Path.Combine(viewModels, file));
             Assert.Contains(declaration, source, StringComparison.Ordinal);
         }
     }

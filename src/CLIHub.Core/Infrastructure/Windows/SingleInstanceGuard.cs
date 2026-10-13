@@ -12,6 +12,7 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     private const string PipeName = "CLIHub.SingleInstance";
 
     private readonly Mutex mutex;
+    private readonly string pipeName;
     private readonly bool isFirstInstance;
     private readonly CancellationTokenSource? cts;
     private readonly Task? serverTask;
@@ -28,11 +29,27 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     public event Action? ActivationRequested;
 
     /// <summary>
-    ///   Creates the guard and acquires the single-instance mutex.
+    ///   Creates the guard with the production mutex and pipe names and acquires the
+    ///   single-instance mutex.
     /// </summary>
     public SingleInstanceGuard()
+        : this(MutexName, PipeName)
     {
-        this.mutex = new Mutex(initiallyOwned: true, MutexName, out var createdNew);
+    }
+
+    /// <summary>
+    ///   Creates the guard with explicit mutex and pipe names and acquires the mutex.
+    ///   Tests use unique names so parallel test processes cannot observe each other's guards.
+    /// </summary>
+    /// <param name="mutexName"> The name of the single-instance mutex. </param>
+    /// <param name="pipeName"> The name of the activation pipe. </param>
+    public SingleInstanceGuard(string mutexName, string pipeName)
+    {
+        ArgumentNullException.ThrowIfNull(mutexName);
+        ArgumentNullException.ThrowIfNull(pipeName);
+
+        this.pipeName = pipeName;
+        this.mutex = new Mutex(initiallyOwned: true, mutexName, out var createdNew);
         this.isFirstInstance = createdNew;
 
         if (this.isFirstInstance)
@@ -52,7 +69,7 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
         {
             try
             {
-                using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
+                using var client = new NamedPipeClientStream(".", this.pipeName, PipeDirection.Out);
                 client.Connect(500);
                 using var writer = new StreamWriter(client) { AutoFlush = true };
                 writer.WriteLine("SHOW");
@@ -72,7 +89,7 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
             try
             {
                 using var server = new NamedPipeServerStream(
-                    PipeName,
+                    this.pipeName,
                     PipeDirection.In,
                     maxNumberOfServerInstances: 1,
                     PipeTransmissionMode.Byte,

@@ -1,9 +1,9 @@
 namespace CLIHub.ViewModels;
 
 using CLIHub;
-using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
+using CLIHub.Core.Services;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Settings;

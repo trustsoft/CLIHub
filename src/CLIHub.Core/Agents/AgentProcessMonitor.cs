@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Agents;
+namespace CLIHub.Core.Services;
 
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;

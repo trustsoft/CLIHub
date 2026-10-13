@@ -39,21 +39,15 @@ ports and update state; the application workflow owns cross-surface coordination
 
 ## Core Ownership
 
-- `Configuration/` owns the single `config.json` document, migrations (`Configuration/Migrations/`), snapshots,
-  and atomic persistence.
+- `Configuration/` owns the single `config.json` document, migrations, snapshots, and atomic persistence.
 - `Projects/` owns project state, selection, recency, favorites, paths, and project logos.
 - `Plugins/` owns descriptor discovery, validation, catalog reload, and built-in seeding.
 - `Scanning/` owns watched-root repository discovery, the background watcher, and the scan status surface.
-- `Agents/` owns commands, detection, versions, availability composition, command capability checks, and
-  running-agent process monitoring.
+- `Agents/` owns commands, detection, versions, availability composition, and command capability checks.
 - `Updates/` owns Core update/release-note contracts and Velopack integration.
 - `Infrastructure/` owns process runners, agent process inspection/matching, filesystem paths, logging
   persistence, Windows startup, and single-instance integration.
 - `Composition/` groups Core dependency-injection registration.
-
-Subsystem folders define the namespace. Subfolders used only for navigation — `Models/<area>/`,
-`ViewModels/<area>/`, and `Configuration/Migrations/` — keep the parent subsystem namespace so consumers
-keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
 
 ## Invariants
 

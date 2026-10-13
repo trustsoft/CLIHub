@@ -96,6 +96,7 @@ public class ApplicationBootstrapperTests
     {
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
         services.AddClIHubServices();
+        services.ReplaceGuardWithUniqueNames();
 
         using var provider = services.BuildServiceProvider();
 

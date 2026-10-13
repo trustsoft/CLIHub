@@ -8,31 +8,6 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## 0.9.6 — 2026-10-13
-
-### Added
-
-- Sidebar-navigated Settings window with grouped pages, page icons, and card layouts for settings and data pages (`preferences-ui`, `settings-theme`)
-- Application theme choice of light, dark, or system, a live accent color, and dynamic palette brush resolution (`application-theme`, `settings-theme`)
-- Launch-window popup position preference, and start-minimized replacing show-window-on-startup (`preferences-ui`)
-- Terminal runtime selection across PowerShell, PowerShell 7, Command Prompt, and Git Bash (`preferences-ui`)
-- Background update auto-download with stable and pre-release notification options (`update-checking`)
-- Log level, retention, and log-folder controls on the Logs page (`logging`, `preferences-ui`)
-- Watched-directory project scanning with a background watcher (`project-scanning`)
-- Agent management on the CLI Agents page (`agent-ui`)
-- SpacedPanel layout control and styled combo box shared via CLIHub.Controls (`spaced-panel-layout`)
-
-### Changed
-
-- Settings window chrome restyled with a target-style title bar, page-header divider, and unified spacing tokens (`settings-theme`)
-- Telemetry & Logs page renamed to Logs, and the hotkeys page renamed to Hotkeys & Quick Launcher (`preferences-ui`)
-- Removed the init agent command (`agent-commands`)
-- Core models, configuration migrations, and view models grouped into subsystem folders, with the shell and test layouts mirrored; no externally observable change
-
-### Fixed
-
-- Removed the invalid DynamicResource binding for the scroll thumb brush
-
 ## 0.9.5 — 2026-10-10
 
 ### Added

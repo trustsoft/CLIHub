@@ -3,28 +3,6 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
-## 0.9.6 — 2026-10-13
-
-### New
-
-- Settings has a new window with sidebar navigation, page icons, and card layouts
-- Choose a light, dark, or system theme and pick the accent color; changes apply live
-- Pick the terminal used to launch agents: PowerShell, PowerShell 7, Command Prompt, or Git Bash
-- Choose where the launch window appears on screen and start CLIHub minimized
-- Updates can download in the background, with separate notifications for stable and pre-release versions
-- The new Logs page controls log level and retention and opens the log folder
-- CLIHub can watch folders you choose and add new projects automatically
-- Manage your AI agents from the new CLI Agents page in Settings
-
-### Improved
-
-- Settings pages, drop-downs, and spacing follow one consistent card style
-- The Telemetry & Logs page is now called Logs, and the hotkeys page is now Hotkeys & Quick Launcher
-
-### Fixed
-
-- Themed scroll bars no longer fall back to an incorrect color in lists
-
 ## 0.9.5 — 2026-10-10
 
 ### New

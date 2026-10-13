@@ -1,9 +1,9 @@
-namespace CLIHub.Core.Tests.Agents;
+namespace CLIHub.Core.Tests.Services;
 
-using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;

@@ -34,6 +34,8 @@ public class ApplicationLifetimeRegistrationTests
         Assert.Equal(ServiceLifetime.Singleton, registration.Lifetime);
         Assert.Equal(typeof(SingleInstanceGuard), registration.ImplementationType);
 
+        services.ReplaceGuardWithUniqueNames();
+
         using var provider = services.BuildServiceProvider();
 
         var first = provider.GetRequiredService<SingleInstanceGuard>();
