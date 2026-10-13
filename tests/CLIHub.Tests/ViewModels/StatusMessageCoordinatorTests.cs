@@ -1,4 +1,4 @@
-namespace CLIHub.Tests.ViewModels;
+namespace CLIHub.ViewModels;
 
 using Moq;
 
@@ -10,6 +10,9 @@ using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
 using CLIHub.ViewModels;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
+using CLIHub.Launching;
 
 public class StatusMessageCoordinatorTests
 {

@@ -10,6 +10,8 @@ using CLIHub.Core;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
+using CLIHub.Startup;
+using CLIHub.Composition;
 
 public class HotkeyStartupRegistrarTests
 {

@@ -10,6 +10,8 @@ using CLIHub.Core;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
+using CLIHub.Startup;
+using CLIHub.Composition;
 
 public class StartupPreferencesApplierTests
 {

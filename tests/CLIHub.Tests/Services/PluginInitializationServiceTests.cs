@@ -7,6 +7,8 @@ using Moq;
 using CLIHub;
 using CLIHub.Core;
 using CLIHub.Core.Plugins;
+using CLIHub.Startup;
+using CLIHub.Composition;
 
 public class PluginInitializationServiceTests
 {

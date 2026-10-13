@@ -126,4 +126,3 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
         this.source.RemoveHook(this.WndProc);
     }
 }
-

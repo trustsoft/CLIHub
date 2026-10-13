@@ -4,6 +4,9 @@ using CLIHub;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Services;
+using CLIHub.Launching;
+using CLIHub.Lifetime;
+using CLIHub.Settings;
 
 /// <summary>
 ///   Coordinates window-level actions and agent commands for the launch window.

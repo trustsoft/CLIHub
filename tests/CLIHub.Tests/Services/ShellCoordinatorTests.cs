@@ -5,6 +5,9 @@ using Moq;
 using CLIHub;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Updates;
+using CLIHub.Startup;
+using CLIHub.Updates;
+using CLIHub.Lifetime;
 
 public class ShellCoordinatorTests
 {

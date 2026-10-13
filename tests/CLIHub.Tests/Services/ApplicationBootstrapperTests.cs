@@ -10,6 +10,9 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+using CLIHub.Startup;
+using CLIHub.Lifetime;
+using CLIHub.Composition;
 
 public class ApplicationBootstrapperTests
 {

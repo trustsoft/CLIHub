@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
+using CLIHub.Launching;
 
 /// <summary>
 ///   Owns project-pane collection synchronization, selection, and project mutations.

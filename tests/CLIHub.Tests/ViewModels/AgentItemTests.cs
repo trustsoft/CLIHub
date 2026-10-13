@@ -1,4 +1,4 @@
-namespace CLIHub.Tests.ViewModels;
+namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Models;
 using CLIHub.ViewModels;

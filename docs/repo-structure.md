@@ -39,10 +39,13 @@ Build output is redirected to the git-ignored `artifacts/` and `obj/` directorie
 - `CLIHub.Core` is organized by ownership: `Configuration/`, `Projects/`, `Plugins/`, `Agents/`, `Updates/`,
   `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`, `Logging/`, `Formatting/`, and
   embedded `SeedPlugins/`.
-- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, and the
-  application composition/startup files.
+- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, plus subsystem folders that
+  mirror ownership: `Tray/`, `Startup/`, `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
+  registration). Only the entry point (`Program.cs`, `App.xaml.cs`, `AssemblyInfo.cs`) stays at the project root.
 - Core contracts are colocated with their owning subsystem. Exact class locations should be checked in the
   source rather than inferred from this summary.
+- `CLIHub.Core.Tests` mirrors the Core subsystem layout: one folder per subsystem plus `Fakes/` for shared test
+  doubles, and each folder maps to a `CLIHub.Core.Tests.<Subsystem>` namespace.
 - ViewModel test builders are under `tests/CLIHub.Tests/Builders/`; test-specific usage is documented in
   [`tests/CLIHub.Tests/README.md`](../tests/CLIHub.Tests/README.md).
 

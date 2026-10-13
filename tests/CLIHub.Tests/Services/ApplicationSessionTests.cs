@@ -5,6 +5,9 @@ using Moq;
 using CLIHub;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Updates;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
+using CLIHub.Startup;
 
 public class ApplicationSessionTests
 {

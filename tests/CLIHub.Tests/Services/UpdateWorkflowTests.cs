@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+using CLIHub.Updates;
+using CLIHub.Composition;
 
 using Moq;
 

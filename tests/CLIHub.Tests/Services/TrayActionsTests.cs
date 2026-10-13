@@ -8,6 +8,11 @@ using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
+using CLIHub.Tray;
+using CLIHub.Lifetime;
+using CLIHub.Launching;
+using CLIHub.Updates;
+using CLIHub.Settings;
 
 public class TrayActionsTests
 {

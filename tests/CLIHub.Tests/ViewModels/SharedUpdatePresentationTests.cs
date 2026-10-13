@@ -11,6 +11,12 @@ using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
 using CLIHub.Tests.Services;
 using CLIHub.ViewModels;
+using CLIHub.Tray;
+using CLIHub.Updates;
+using CLIHub.Launching;
+using CLIHub.Lifetime;
+using CLIHub.Settings;
+using CLIHub.Startup;
 
 using Moq;
 

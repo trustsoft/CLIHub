@@ -3,6 +3,7 @@ namespace CLIHub.Tests.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub;
+using CLIHub.Lifetime;
 
 public class ApplicationOperationLifetimeTests
 {

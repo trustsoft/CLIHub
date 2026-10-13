@@ -1,4 +1,4 @@
-namespace CLIHub.Tests.ViewModels;
+namespace CLIHub.ViewModels;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -9,6 +9,10 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Updates;
 using CLIHub.ViewModels;
+using CLIHub.Launching;
+using CLIHub.Settings;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
 
 public class SettingsOperationLifetimeTests
 {

@@ -3,6 +3,7 @@ namespace CLIHub.Tests;
 using Microsoft.Extensions.Logging;
 
 using CLIHub;
+using CLIHub.Lifetime;
 
 public sealed class AsyncOperationRunnerTests
 {

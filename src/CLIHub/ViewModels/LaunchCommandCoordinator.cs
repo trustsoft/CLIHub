@@ -3,6 +3,8 @@ namespace CLIHub.ViewModels;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Models;
+using CLIHub.Launching;
+using CLIHub.Lifetime;
 
 /// <summary>
 ///   Validates and executes launch-window agent commands, then maps outcomes to presentation effects.

@@ -14,6 +14,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Interop;
 using CLIHub.ViewModels;
+using CLIHub.Startup;
 
 /// <summary>
 ///   Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on

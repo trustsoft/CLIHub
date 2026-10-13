@@ -14,6 +14,10 @@ using CLIHub.Core.Logging;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
+using CLIHub.Launching;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
+using CLIHub.Settings;
 
 /// <summary>
 ///   A selectable default runtime with a friendly label, a short segment label, and an icon.

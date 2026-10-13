@@ -10,6 +10,8 @@ using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
+using CLIHub.Settings;
+using CLIHub.Composition;
 
 public class PreferenceApplierTests
 {

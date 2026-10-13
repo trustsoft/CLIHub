@@ -14,6 +14,10 @@ using CLIHub.Core.Projects;
 using CLIHub.Core.Services;
 using CLIHub.Core.Updates;
 using CLIHub.ViewModels;
+using CLIHub.Launching;
+using CLIHub.Settings;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
 
 /// <summary>
 ///   Fluent builder for LaunchWindowViewModel test instances with sensible defaults.

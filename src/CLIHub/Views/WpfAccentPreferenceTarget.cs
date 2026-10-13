@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 
 using CLIHub.Core.Models;
+using CLIHub.Settings;
 
 /// <summary>
 ///   Applies the accent color by overriding the application-level accent brushes.

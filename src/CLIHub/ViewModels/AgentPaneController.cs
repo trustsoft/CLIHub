@@ -8,6 +8,7 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Lifetime;
 
 /// <summary>
 ///   Owns agent composition, filtering, selection identity, cache invalidation, and versions.

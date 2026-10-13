@@ -4,6 +4,7 @@ using Moq;
 
 using CLIHub;
 using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Lifetime;
 
 public sealed class InstanceCoordinatorTests
 {

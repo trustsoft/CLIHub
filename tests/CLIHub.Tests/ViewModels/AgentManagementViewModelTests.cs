@@ -9,6 +9,8 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.ViewModels;
+using CLIHub.Lifetime;
+using CLIHub.Launching;
 
 public class AgentManagementViewModelTests
 {

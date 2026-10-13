@@ -45,14 +45,14 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 The implementation is in:
 - `src/CLIHub/Program.cs` — Velopack entry point
 - `src/CLIHub/App.xaml.cs` — WPF lifecycle delegation to `ApplicationHost`
-- `src/CLIHub/ApplicationHost.cs` — environment setup and DI composition
-- `src/CLIHub/ApplicationBootstrapper.cs` — startup orchestration
-- `src/CLIHub/InstanceCoordinator.cs` — single-instance coordination
-- `src/CLIHub/StartupStateLoader.cs` — plugin and preferences initialization
-- `src/CLIHub/OptionalStartupCoordinator.cs` — release notes and update check
-- `src/CLIHub/ApplicationSession.cs` — session lifecycle and coordinator ownership
-- `src/CLIHub/ShellCoordinator.cs` — shell creation and event wiring
-- `src/CLIHub/ServiceRegistration.cs` — WPF service registration
+- `src/CLIHub/Startup/ApplicationHost.cs` — environment setup and DI composition
+- `src/CLIHub/Startup/ApplicationBootstrapper.cs` — startup orchestration
+- `src/CLIHub/Lifetime/InstanceCoordinator.cs` — single-instance coordination
+- `src/CLIHub/Startup/StartupStateLoader.cs` — plugin and preferences initialization
+- `src/CLIHub/Startup/OptionalStartupCoordinator.cs` — release notes and update check
+- `src/CLIHub/Lifetime/ApplicationSession.cs` — session lifecycle and coordinator ownership
+- `src/CLIHub/Startup/ShellCoordinator.cs` — shell creation and event wiring
+- `src/CLIHub/Composition/ServiceRegistration.cs` — WPF service registration
 
 Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
 
@@ -83,9 +83,9 @@ The failure behavior above describes the current implementation, not a recommend
 
 The order is implemented in:
 - `src/CLIHub/App.xaml.cs` — WPF lifecycle delegation to `ApplicationHost`
-- `src/CLIHub/ApplicationHost.cs` — shutdown sequence orchestration
-- `src/CLIHub/ApplicationSession.cs` — coordinator disposal
-- `src/CLIHub/ShellCoordinator.cs` — subscription removal
+- `src/CLIHub/Startup/ApplicationHost.cs` — shutdown sequence orchestration
+- `src/CLIHub/Lifetime/ApplicationSession.cs` — coordinator disposal
+- `src/CLIHub/Startup/ShellCoordinator.cs` — subscription removal
 
 Persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 

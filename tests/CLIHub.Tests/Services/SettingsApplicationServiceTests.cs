@@ -9,6 +9,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Models;
+using CLIHub.Settings;
 
 public class SettingsApplicationServiceTests
 {

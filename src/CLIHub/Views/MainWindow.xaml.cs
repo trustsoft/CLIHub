@@ -13,7 +13,9 @@ using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
 using CLIHub.Core.Models;
+using CLIHub.Lifetime;
 using CLIHub.ViewModels;
+using CLIHub.Updates;
 
 /// <summary>
 ///   Interaction logic for MainWindow.xaml

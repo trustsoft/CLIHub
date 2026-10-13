@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Lifetime;
+using CLIHub.Launching;
 
 /// <summary>
 ///   Owns the CLI Agents management surface: one card per agent, the supported/installed metrics,

@@ -6,6 +6,8 @@ using System.Windows;
 using CLIHub;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+using CLIHub.Lifetime;
+using CLIHub.Updates;
 
 /// <summary>
 ///   View model for the What's New window: the release notes in display order, with empty groups

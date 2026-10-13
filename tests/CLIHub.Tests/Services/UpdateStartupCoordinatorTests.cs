@@ -10,6 +10,9 @@ using CLIHub.Core;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+using CLIHub.Startup;
+using CLIHub.Updates;
+using CLIHub.Composition;
 
 public class UpdateStartupCoordinatorTests
 {

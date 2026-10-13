@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using CLIHub;
 using CLIHub.Core;
 using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Lifetime;
+using CLIHub.Composition;
 
 public class ApplicationLifetimeRegistrationTests
 {

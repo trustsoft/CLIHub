@@ -6,11 +6,11 @@ public sealed class ArchitectureBoundaryTests
     [
         "App.xaml.cs",
         "AssemblyInfo.cs",
-        "ProjectDialogService.cs",
-        "TrayIconController.cs",
-        "UserNotificationService.cs",
-        "WpfApplicationLifetime.cs",
-        "WpfApplicationStartupUi.cs"
+        "Launching" + Path.DirectorySeparatorChar + "ProjectDialogService.cs",
+        "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",
+        "Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",
+        "Lifetime" + Path.DirectorySeparatorChar + "WpfApplicationLifetime.cs",
+        "Startup" + Path.DirectorySeparatorChar + "WpfApplicationStartupUi.cs"
     ];
 
     [Fact]
@@ -47,7 +47,7 @@ public sealed class ArchitectureBoundaryTests
         var root = FindRepositoryRoot();
         var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            Path.Combine("src", "CLIHub", "ServiceRegistration.cs"),
+            Path.Combine("src", "CLIHub", "Composition", "ServiceRegistration.cs"),
             Path.Combine("src", "CLIHub.Core", "Composition", "ServiceCollectionExtensions.cs")
         };
         var unexpected = EnumerateFiles(Path.Combine(root, "src"))
@@ -65,7 +65,7 @@ public sealed class ArchitectureBoundaryTests
     public void ApplicationSessionAndTrayWorkflows_AreRegisteredAndLegacyWindowIsNot()
     {
         var root = FindRepositoryRoot();
-        var registration = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "ServiceRegistration.cs"));
+        var registration = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "Composition", "ServiceRegistration.cs"));
         var legacyWindow = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "Views", "MainWindow.xaml.cs"));
 
         Assert.Contains("IApplicationSession, ApplicationSession", registration, StringComparison.Ordinal);
@@ -139,7 +139,7 @@ public sealed class ArchitectureBoundaryTests
             || relative.StartsWith("Interop" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("Hotkeys" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
             || WpfAllowedApplicationFiles.Contains(relative, StringComparer.OrdinalIgnoreCase)
-            || string.Equals(relative, "TrayMenuBuilder.cs", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(relative, "Tray" + Path.DirectorySeparatorChar + "TrayMenuBuilder.cs", StringComparison.OrdinalIgnoreCase)
             || relative.StartsWith("ViewModels" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
 
