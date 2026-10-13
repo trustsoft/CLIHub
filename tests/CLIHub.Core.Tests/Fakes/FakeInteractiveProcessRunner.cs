@@ -1,4 +1,4 @@
-namespace CLIHub.Tests.Fakes;
+namespace CLIHub.Core.Tests.Fakes;
 
 using CLIHub.Core.Infrastructure.Processes;
 
