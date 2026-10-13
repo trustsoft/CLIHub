@@ -8,7 +8,6 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using CLIHub.Core.Services;
 
 public class AgentManagementServiceTests
 {
