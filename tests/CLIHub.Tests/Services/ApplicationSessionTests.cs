@@ -3,7 +3,7 @@ namespace CLIHub.Tests.Services;
 using Moq;
 
 using CLIHub;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Updates;
 using CLIHub.Lifetime;
 using CLIHub.Updates;

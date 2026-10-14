@@ -49,7 +49,8 @@ public sealed class ArchitectureBoundaryTests
         var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             Path.Combine("src", "CLIHub", "Composition", "ServiceRegistration.cs"),
-            Path.Combine("src", "CLIHub.Core", "Composition", "ServiceCollectionExtensions.cs")
+            Path.Combine("src", "CLIHub.Core", "Composition", "ServiceCollectionExtensions.cs"),
+            Path.Combine("src", "CLIHub.Core.Windows", "WindowsServiceCollectionExtensions.cs")
         };
         var unexpected = EnumerateFiles(Path.Combine(root, "src"))
             .Where(path => File.ReadAllText(path).Contains("AddSingleton", StringComparison.Ordinal)
@@ -123,11 +124,23 @@ public sealed class ArchitectureBoundaryTests
     }
 
     [Fact]
+    public void WindowsProject_ReferencesCoreOnly()
+    {
+        var root = FindRepositoryRoot();
+        var windowsProject = File.ReadAllText(Path.Combine(root, "src", "CLIHub.Core.Windows", "CLIHub.Core.Windows.csproj"));
+
+        Assert.Contains("..\\CLIHub.Core\\CLIHub.Core.csproj", windowsProject, StringComparison.Ordinal);
+        Assert.DoesNotContain("CLIHub.csproj", windowsProject, StringComparison.Ordinal);
+        Assert.Contains("net10.0-windows", windowsProject, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void CiWorkflow_RunsBothTestProjects()
     {
         var workflow = File.ReadAllText(Path.Combine(FindRepositoryRoot(), ".github", "workflows", "ci.yml"));
 
         Assert.Contains("CLIHub.Core.Tests.csproj", workflow, StringComparison.Ordinal);
+        Assert.Contains("CLIHub.Core.Windows.Tests.csproj", workflow, StringComparison.Ordinal);
         Assert.Contains("CLIHub.Tests.csproj", workflow, StringComparison.Ordinal);
     }
 

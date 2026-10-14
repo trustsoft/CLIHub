@@ -16,7 +16,6 @@ public sealed class ProcessLauncher
     private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);
 
     private readonly ILogger<ProcessLauncher> logger;
-    private readonly RuntimeSelector runtimeSelector;
     private readonly IInteractiveProcessRunner interactiveRunner;
     private readonly IProcessOutputRunner outputRunner;
     
@@ -27,12 +26,10 @@ public sealed class ProcessLauncher
     /// </summary>
     public ProcessLauncher(
         ILogger<ProcessLauncher> logger,
-        RuntimeSelector runtimeSelector,
         IInteractiveProcessRunner interactiveRunner,
         IProcessOutputRunner outputRunner)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.runtimeSelector = runtimeSelector ?? throw new ArgumentNullException(nameof(runtimeSelector));
         this.interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
         this.outputRunner = outputRunner ?? throw new ArgumentNullException(nameof(outputRunner));
     }

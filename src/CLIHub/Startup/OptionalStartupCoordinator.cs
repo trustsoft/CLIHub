@@ -2,7 +2,7 @@ namespace CLIHub.Startup;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 
 /// <summary>

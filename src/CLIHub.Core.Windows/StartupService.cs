@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Infrastructure.Windows;
+namespace CLIHub.Core.Windows;
 
 using Microsoft.Extensions.Logging;
 

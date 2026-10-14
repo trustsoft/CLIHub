@@ -1,6 +1,6 @@
 namespace CLIHub.Tests.Services;
 
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

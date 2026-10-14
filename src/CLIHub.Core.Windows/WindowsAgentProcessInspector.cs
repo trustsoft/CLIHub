@@ -1,8 +1,9 @@
-namespace CLIHub.Core.Infrastructure.Processes;
+namespace CLIHub.Core.Windows;
 
 using System.Diagnostics;
 using System.Management;
-using System.Runtime.Versioning;
+
+using CLIHub.Core.Infrastructure.Processes;
 
 using CLIHub.Core.Models;
 
@@ -11,7 +12,6 @@ using Microsoft.Extensions.Logging;
 /// <summary>
 ///   Windows-specific implementation using System.Diagnostics.Process API.
 /// </summary>
-[SupportedOSPlatform("windows")]
 public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
 {
     private readonly ILogger<WindowsAgentProcessInspector> logger;

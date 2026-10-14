@@ -7,7 +7,6 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
-using CLIHub.Core.Infrastructure.Windows;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Scanning;
@@ -22,6 +21,8 @@ public static class ServiceCollectionExtensions
     ///   Adds configuration, project, plugin, and process-launch services as singletons.
     ///   Logging is registered so services can resolve <c>ILogger&lt;T&gt;</c>; the host may
     ///   add providers (for example Serilog) to the same logging pipeline.
+    ///   Windows platform adapters are registered separately via
+    ///   <c>CLIHub.Core.Windows.WindowsServiceCollectionExtensions.AddWindowsInfrastructure</c>.
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
     /// <param name="defaultLogoPath"> The path to the fallback project logo, or null. </param>
@@ -37,7 +38,6 @@ public static class ServiceCollectionExtensions
         services.AddAgentServices();
         services.AddScanningServices();
         services.AddUpdateServices();
-        services.AddWindowsInfrastructureServices();
 
         return services;
     }
@@ -102,7 +102,6 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ProcessLauncher>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
-        services.AddSingleton<IAgentProcessInspector, WindowsAgentProcessInspector>();
         services.AddSingleton<AgentProcessMatcher>();
         services.AddSingleton<AgentProcessMonitor>();
         return services;
@@ -117,18 +116,6 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUpdateDownloader>(sp => sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IUpdateInstaller>(sp => sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IReleaseNotesService, ReleaseNotesService>();
-        return services;
-    }
-
-    private static IServiceCollection AddWindowsInfrastructureServices(this IServiceCollection services)
-    {
-        services.AddSingleton<RuntimeSelector>();
-        services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
-        services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
-        services.AddSingleton<ProcessLauncher>();
-        services.AddSingleton<IStartupService>(sp => new StartupService(
-            new CurrentUserRegistryStartup(),
-            sp.GetRequiredService<ILogger<StartupService>>()));
         return services;
     }
 }

@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Startup;

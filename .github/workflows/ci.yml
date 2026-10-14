@@ -24,4 +24,5 @@ jobs:
         shell: pwsh
         run: |
           dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj -c Release --no-build
+          dotnet test tests/CLIHub.Core.Windows.Tests/CLIHub.Core.Windows.Tests.csproj -c Release --no-build
           dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj -c Release --no-build

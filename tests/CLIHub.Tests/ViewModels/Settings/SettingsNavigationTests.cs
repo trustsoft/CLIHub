@@ -6,7 +6,7 @@ using Moq;
 
 using CLIHub;
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.ViewModels;

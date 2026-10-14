@@ -22,7 +22,6 @@ public class AgentCommandServiceTests : IDisposable
 
         this.launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
-            new RuntimeSelector(),
             this.interactiveRunner,
             this.outputRunner);
 

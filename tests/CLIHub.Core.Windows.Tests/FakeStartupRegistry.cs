@@ -1,6 +1,6 @@
-namespace CLIHub.Core.Tests.Fakes;
+namespace CLIHub.Core.Windows.Tests;
 
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 
 /// <summary>
 ///   In-memory <see cref="IStartupRegistry"/> for tests.

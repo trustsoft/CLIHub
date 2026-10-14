@@ -1,6 +1,6 @@
 namespace CLIHub.Lifetime;
 
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 
 /// <summary>
 ///   Coordinates single-instance detection and activation signaling.

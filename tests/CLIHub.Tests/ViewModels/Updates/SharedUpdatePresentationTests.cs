@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub;
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;

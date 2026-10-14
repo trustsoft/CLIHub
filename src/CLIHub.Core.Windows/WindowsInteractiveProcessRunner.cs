@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Infrastructure.Processes;
+namespace CLIHub.Core.Windows;
 
 using System;
 using System.Diagnostics;
@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
+
+using CLIHub.Core.Infrastructure.Processes;
 
 /// <summary>
 ///   Windows implementation of interactive process launching.

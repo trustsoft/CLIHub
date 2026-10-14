@@ -3,7 +3,7 @@ namespace CLIHub.Tests;
 using Moq;
 
 using CLIHub;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 
 public sealed class InstanceCoordinatorTests

@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Tests.Infrastructure.Processes;
+namespace CLIHub.Core.Windows.Tests;
 
 using CLIHub.Core.Infrastructure.Processes;
 using Xunit;

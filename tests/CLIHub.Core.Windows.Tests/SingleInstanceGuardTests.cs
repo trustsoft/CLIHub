@@ -1,9 +1,9 @@
-namespace CLIHub.Core.Tests.Infrastructure.Windows;
+namespace CLIHub.Core.Windows.Tests;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 
 public class SingleInstanceGuardTests
 {

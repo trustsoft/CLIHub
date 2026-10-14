@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Logging;
 using CLIHub.Composition;
 using CLIHub.Lifetime;

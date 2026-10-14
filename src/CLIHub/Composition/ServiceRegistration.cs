@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
-using CLIHub.Core.Infrastructure.Windows;
+using CLIHub.Core.Windows;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Hotkeys;
@@ -35,11 +35,10 @@ public static class ServiceRegistration
     {
         services.AddClIHubCoreServices(
             Path.Combine(AppContext.BaseDirectory, "default-project.png"));
+        services.AddWindowsInfrastructure();
 
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
-        services.AddSingleton<SingleInstanceGuard>();
-        services.AddSingleton<ISingleInstanceGuard>(sp => sp.GetRequiredService<SingleInstanceGuard>());
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
         services.AddSingleton<IApplicationOperationLifetime, ApplicationOperationLifetime>();
         services.AddSingleton<IInstanceCoordinator, InstanceCoordinator>();

@@ -6,7 +6,6 @@ using CLIHub.Core;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
@@ -28,12 +27,7 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IPluginCatalog>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorValidator>());
-        Assert.NotNull(provider.GetRequiredService<IAgentCommandService>());
         Assert.NotNull(provider.GetRequiredService<IAgentDetectionService>());
-        Assert.NotNull(provider.GetRequiredService<IAgentVersionService>());
-        Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
-        Assert.NotNull(provider.GetRequiredService<IProcessOutputRunner>());
-        Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
         Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
     }
 

@@ -1,9 +1,8 @@
-namespace CLIHub.Core.Tests.Infrastructure.Windows;
+namespace CLIHub.Core.Windows.Tests;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using CLIHub.Core.Infrastructure.Windows;
-using CLIHub.Core.Tests.Fakes;
+using CLIHub.Core.Windows;
 
 public class StartupServiceTests
 {

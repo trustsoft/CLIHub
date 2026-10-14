@@ -1,4 +1,4 @@
-namespace CLIHub.Core.Infrastructure.Windows;
+namespace CLIHub.Core.Windows;
 
 /// <summary>
 ///   Manages the per-user Windows Run registration that starts the application with Windows.

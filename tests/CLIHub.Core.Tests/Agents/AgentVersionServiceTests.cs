@@ -19,7 +19,6 @@ public class AgentVersionServiceTests
     {
         this.launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
-            new RuntimeSelector(),
             new FakeInteractiveProcessRunner(),
             this.outputRunner);
     }

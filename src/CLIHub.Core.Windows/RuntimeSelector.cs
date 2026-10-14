@@ -1,7 +1,9 @@
-namespace CLIHub.Core.Infrastructure.Processes;
+namespace CLIHub.Core.Windows;
 
 using System;
 using System.IO;
+
+using CLIHub.Core.Infrastructure.Processes;
 
 /// <summary>
 ///   Detects and selects the appropriate command-line runtime on Windows.

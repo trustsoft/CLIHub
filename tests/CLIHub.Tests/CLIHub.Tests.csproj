@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\CLIHub.Core\CLIHub.Core.csproj" />
+    <ProjectReference Include="..\..\src\CLIHub.Core.Windows\CLIHub.Core.Windows.csproj" />
     <ProjectReference Include="..\..\src\CLIHub\CLIHub.csproj" />
   </ItemGroup>
 
