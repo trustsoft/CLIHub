@@ -95,8 +95,8 @@ internal sealed class UpdateInstaller
     }
 
     /// <summary>
-    ///   Strips build metadata (for example, the "+commit" suffix) so the version
-    ///   displays as a plain semantic version.
+    ///   Strips build metadata (for example, the "+commit" suffix)
+    ///   so the version displays as a plain semantic version.
     /// </summary>
     private static string Normalize(string version)
     {

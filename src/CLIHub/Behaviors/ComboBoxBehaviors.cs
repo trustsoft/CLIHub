@@ -11,7 +11,7 @@ using System.Windows.Documents;
 public static class ComboBoxBehaviors
 {
     /// <summary>
-    ///   Identifies the <c>AutoWidthToItems</c> attached property. When true, the combo box sizes
+    ///   Identifies the <c> AutoWidthToItems </c> attached property. When true, the combo box sizes
     ///   itself to the widest item so the closed control and its drop-down share the same width.
     /// </summary>
     public static readonly DependencyProperty AutoWidthToItemsProperty = DependencyProperty.RegisterAttached(

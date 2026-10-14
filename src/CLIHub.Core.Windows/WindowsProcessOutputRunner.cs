@@ -17,7 +17,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
     private readonly ILogger<WindowsProcessOutputRunner> logger;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="WindowsProcessOutputRunner"/> class.
+    ///   Initializes a new instance of the <see cref="WindowsProcessOutputRunner" /> class.
     /// </summary>
     /// <param name="logger"> Logger for process operations. </param>
     public WindowsProcessOutputRunner(ILogger<WindowsProcessOutputRunner> logger)

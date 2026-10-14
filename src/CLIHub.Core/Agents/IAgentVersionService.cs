@@ -9,7 +9,7 @@ public interface IAgentVersionService
 {
     /// <summary>
     ///   Returns the agent's version, or null when it has no version command or the
-    ///   command fails. Results are cached per agent until <see cref="Invalidate"/>.
+    ///   command fails. Results are cached per agent until <see cref="Invalidate" />.
     /// </summary>
     Task<string?> GetVersionAsync(Plugin plugin, CancellationToken cancellationToken = default);
 

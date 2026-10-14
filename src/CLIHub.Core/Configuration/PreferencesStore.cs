@@ -3,7 +3,7 @@ namespace CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Adapts the configuration repository to the preferences boundary.
+///   Adapts the configuration repository to the preferences' boundary.
 /// </summary>
 public sealed class PreferencesStore : IPreferencesStore
 {

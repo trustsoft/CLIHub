@@ -11,8 +11,8 @@ public static class AgentListComposer
     /// <summary>
     ///   Returns the agents that should be listed, each with its project-level availability
     ///   (used for dimming). The host-installation gate runs before project detection, so
-    ///   uninstalled agents are hidden whether or not the project filter is enabled and
-    ///   whether or not a project is selected.
+    ///   uninstalled agents are hidden whether the project filter is enabled and
+    ///   whether a project is selected.
     /// </summary>
     public static IReadOnlyList<AgentListEntry> Compose(
         IEnumerable<Plugin> plugins,

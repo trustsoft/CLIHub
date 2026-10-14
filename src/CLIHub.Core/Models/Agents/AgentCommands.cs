@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Models;
 
 /// <summary>
-///   The named command set an agent plugin exposes. Each command is optional except
-///   <see cref="Launch"/>, which the loader requires.
+///   The named command set an agent plugin exposes.
+///   Each command is optional except <see cref="Launch" />, which the loader requires.
 /// </summary>
 public class AgentCommands
 {

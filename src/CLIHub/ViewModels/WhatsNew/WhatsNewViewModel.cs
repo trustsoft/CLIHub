@@ -12,7 +12,7 @@ using CLIHub.Updates;
 /// <summary>
 ///   View model for the What's New window: the release notes in display order, with empty groups
 ///   dropped so the window only shows what a version actually changed, plus the download-and-restart
-///   action for an available update. The action is wired by <see cref="ApplicationSession"/>, so the tray menu
+///   action for an available update. The action is wired by <see cref="ApplicationSession" />, so the tray menu
 ///   and this window share one flow and one state.
 /// </summary>
 public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRequestSource

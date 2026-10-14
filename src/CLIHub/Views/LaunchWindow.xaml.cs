@@ -126,7 +126,7 @@ public partial class LaunchWindow : Window, IStartupWindow
 
     /// <summary>
     ///   Closes the actions menu on Escape while the keyboard focus is inside the popup. A popup is
-    ///   a separate window, so its key events do not reach the window's <c>OnKeyDown</c>.
+    ///   a separate window, so its key events do not reach the window's <c> OnKeyDown </c>.
     /// </summary>
     private void OnActionsMenuPreviewKeyDown(object sender, KeyEventArgs e)
     {

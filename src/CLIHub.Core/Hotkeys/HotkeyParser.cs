@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Hotkeys;
 
 /// <summary>
-///   Parses human-readable hotkey strings such as <c>Ctrl+Shift+A</c> into a
-///   <see cref="HotkeyDefinition"/>. Pure logic; no Win32 or WPF dependency.
+///   Parses human-readable hotkey strings such as <c> Ctrl+Shift+A </c> into a
+///   <see cref="HotkeyDefinition" />. Pure logic; no Win32 or WPF dependency.
 /// </summary>
 public static class HotkeyParser
 {
@@ -100,13 +100,13 @@ public static class HotkeyParser
     }
 
     /// <summary>
-    ///   Returns the parsed definition, or <paramref name="fallback"/> when the value is invalid.
+    ///   Returns the parsed definition, or <paramref name="fallback" /> when the value is invalid.
     /// </summary>
     public static HotkeyDefinition ParseOrDefault(string? value, HotkeyDefinition fallback) =>
         TryParse(value, out var definition) && definition != null ? definition : fallback;
 
     /// <summary>
-    ///   Formats a definition back into the canonical string form (for example <c>Ctrl+Shift+A</c>).
+    ///   Formats a definition back into the canonical string form (for example <c> Ctrl+Shift+A </c>).
     /// </summary>
     public static string Format(HotkeyDefinition definition)
     {

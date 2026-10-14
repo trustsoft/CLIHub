@@ -6,8 +6,7 @@ namespace CLIHub.Core.Updates;
 public static class VersionClassification
 {
     /// <summary>
-    ///   Returns true when the semantic version carries a pre-release identifier
-    ///   (for example <c>1.2.0-beta.1</c>).
+    ///   Returns true when the semantic version carries a pre-release identifier (for example <c> 1.2.0-beta.1 </c>).
     /// </summary>
     /// <param name="version"> The version text, possibly with build metadata. </param>
     /// <returns> True when the version is a pre-release. </returns>

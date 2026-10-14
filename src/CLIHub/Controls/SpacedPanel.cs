@@ -9,7 +9,7 @@ using System.Windows.Controls;
 public sealed class SpacedPanel : Panel
 {
     /// <summary>
-    ///   Identifies the <see cref="Orientation"/> dependency property.
+    ///   Identifies the <see cref="Orientation" /> dependency property.
     /// </summary>
     public static readonly DependencyProperty OrientationProperty = DependencyProperty.Register(
         nameof(Orientation),
@@ -20,7 +20,7 @@ public sealed class SpacedPanel : Panel
             FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
 
     /// <summary>
-    ///   Identifies the <see cref="Spacing"/> dependency property.
+    ///   Identifies the <see cref="Spacing" /> dependency property.
     /// </summary>
     public static readonly DependencyProperty SpacingProperty = DependencyProperty.Register(
         nameof(Spacing),

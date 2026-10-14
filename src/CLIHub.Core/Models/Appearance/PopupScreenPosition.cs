@@ -27,17 +27,17 @@ public enum PopupScreenPosition
 }
 
 /// <summary>
-///   Maps <see cref="PopupScreenPosition"/> to and from its stored token.
+///   Maps <see cref="PopupScreenPosition" /> to and from its stored token.
 /// </summary>
 public static class PopupScreenPositions
 {
     /// <summary>
-    ///   The token for the active-monitor centre position.
+    ///   The token for the active-monitor center position.
     /// </summary>
     public const string CenterToken = "center";
 
     /// <summary>
-    ///   The token for the active-monitor top-centre position.
+    ///   The token for the active-monitor top-center position.
     /// </summary>
     public const string TopCenterToken = "topCenter";
 
@@ -93,7 +93,7 @@ public static class PopupScreenPositions
     }
 
     /// <summary>
-    ///   Parses a stored token, falling back to <see cref="PopupScreenPosition.Center"/>.
+    ///   Parses a stored token, falling back to <see cref="PopupScreenPosition.Center" />.
     /// </summary>
     /// <param name="value"> The stored token. </param>
     /// <returns> The parsed or default position. </returns>

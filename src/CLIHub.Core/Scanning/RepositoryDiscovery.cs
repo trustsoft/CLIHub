@@ -4,8 +4,8 @@ using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
 
 /// <summary>
-///   Walks watched roots and decides which directories are repositories. Directory-only: this
-///   never starts a process and never executes plugin code.
+///   Walks watched roots and decides which directories are repositories.
+///   Directory-only: this never starts a process and never executes plugin code.
 /// </summary>
 public static class RepositoryDiscovery
 {

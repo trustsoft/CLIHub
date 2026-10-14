@@ -26,7 +26,7 @@ public sealed class PluginCatalog : IPluginCatalog
     /// </summary>
     /// <param name="logger"> The logger. </param>
     /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
-    /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c>%APPDATA%\CLIHub\plugins</c>. </param>
+    /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>. </param>
     /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
     public PluginCatalog(

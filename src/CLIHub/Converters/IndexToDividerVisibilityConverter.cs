@@ -17,7 +17,7 @@ public sealed class IndexToDividerVisibilityConverter : IValueConverter
     /// <param name="targetType"> The target type of the binding. </param>
     /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
-    /// <returns> <see cref="Visibility.Visible"/> for indexes above zero; otherwise collapsed. </returns>
+    /// <returns> <see cref="Visibility.Visible" /> for indexes above zero; otherwise collapsed. </returns>
     public object Convert(object? value, Type targetType, object parameter, CultureInfo culture) =>
         value is int index && index > 0 ? Visibility.Visible : Visibility.Collapsed;
 

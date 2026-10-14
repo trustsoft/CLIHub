@@ -17,17 +17,17 @@ public enum PathDisplayStyle
 }
 
 /// <summary>
-///   Parses and formats the <see cref="PathDisplayStyle"/> value stored in configuration.
+///   Parses and formats the <see cref="PathDisplayStyle" /> value stored in configuration.
 /// </summary>
 public static class PathDisplayStyles
 {
     /// <summary>
-    ///   Configuration token for <see cref="PathDisplayStyle.LeftTrim"/>.
+    ///   Configuration token for <see cref="PathDisplayStyle.LeftTrim" />.
     /// </summary>
     public const string LeftTrimToken = "leftTrim";
 
     /// <summary>
-    ///   Configuration token for <see cref="PathDisplayStyle.MiddleEllipsis"/>.
+    ///   Configuration token for <see cref="PathDisplayStyle.MiddleEllipsis" />.
     /// </summary>
     public const string MiddleEllipsisToken = "middleEllipsis";
 
@@ -37,7 +37,7 @@ public static class PathDisplayStyles
     public const PathDisplayStyle Default = PathDisplayStyle.LeftTrim;
 
     /// <summary>
-    ///   Returns the style for a stored token, falling back to <see cref="Default"/> for missing,
+    ///   Returns the style for a stored token, falling back to <see cref="Default" /> for missing,
     ///   empty or unrecognized values.
     /// </summary>
     public static PathDisplayStyle Parse(string? value) => value?.Trim() switch

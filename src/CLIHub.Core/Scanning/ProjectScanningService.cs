@@ -9,7 +9,7 @@ using CLIHub.Core.Projects;
 
 /// <summary>
 ///   Discovers repositories under the watched roots, reconciles the discovered-project subset, and
-///   reports status. Scanning runs off the owner thread; project mutations are marshalled back to
+///   reports status. Scanning runs off the owner thread; project mutations are marshaled back to
 ///   the owner thread so bound collections update safely.
 /// </summary>
 public sealed class ProjectScanningService : IProjectScanner

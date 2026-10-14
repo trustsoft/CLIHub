@@ -4,7 +4,7 @@ namespace CLIHub.Core.Models;
 ///   A named accent color preset.
 /// </summary>
 /// <param name="Name"> Display name. </param>
-/// <param name="Hex"> The preset color as <c>#RRGGBB</c>. </param>
+/// <param name="Hex"> The preset color as <c> #RRGGBB </c>. </param>
 public sealed record AccentOption(string Name, string Hex);
 
 /// <summary>
@@ -30,8 +30,8 @@ public static class AccentPalette
     };
 
     /// <summary>
-    ///   Normalizes a color value to <c>#RRGGBB</c> (uppercase). Accepts an optional leading
-    ///   <c>#</c> and an optional leading alpha pair. Returns false for invalid input.
+    ///   Normalizes a color value to <c> #RRGGBB </c> (uppercase). Accepts an optional leading
+    ///   <c> # </c> and an optional leading alpha pair. Returns false for invalid input.
     /// </summary>
     /// <param name="value"> The raw color value. </param>
     /// <param name="normalized"> The normalized value when valid. </param>
@@ -75,14 +75,14 @@ public static class AccentPalette
     /// <summary>
     ///   Returns the low-alpha selection tint for an accent value.
     /// </summary>
-    /// <param name="accentHex"> The normalized <c>#RRGGBB</c> accent. </param>
-    /// <returns> The <c>#AARRGGBB</c> selection tint. </returns>
+    /// <param name="accentHex"> The normalized <c> #RRGGBB </c> accent. </param>
+    /// <returns> The <c> #AARRGGBB </c> selection tint. </returns>
     public static string SelectionTint(string accentHex) => "#1F" + Normalize(accentHex).TrimStart('#');
 
     /// <summary>
-    ///   Returns the fully opaque <c>#AARRGGBB</c> form of an accent value.
+    ///   Returns the fully opaque <c> #AARRGGBB </c> form of an accent value.
     /// </summary>
-    /// <param name="accentHex"> The normalized <c>#RRGGBB</c> accent. </param>
+    /// <param name="accentHex"> The normalized <c> #RRGGBB </c> accent. </param>
     /// <returns> The opaque color. </returns>
     public static string Opaque(string accentHex) => "#FF" + Normalize(accentHex).TrimStart('#');
 }

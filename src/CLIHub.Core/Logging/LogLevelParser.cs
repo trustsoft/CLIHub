@@ -3,7 +3,7 @@ namespace CLIHub.Core.Logging;
 using Serilog.Events;
 
 /// <summary>
-///   Maps configured level names to <see cref="LogEventLevel"/>.
+///   Maps configured level names to <see cref="LogEventLevel" />.
 /// </summary>
 public static class LogLevelParser
 {

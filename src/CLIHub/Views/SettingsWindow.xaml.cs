@@ -71,7 +71,8 @@ public partial class SettingsWindow : Window
     ///   Constrains a maximized window to the monitor work area, so the taskbar never hides the footer.
     ///   Because handling this message bypasses WPF's own handler, the minimum tracking size is set
     ///   here too, so the window cannot be resized below
-    ///   <see cref="System.Windows.FrameworkElement.MinWidth"/>/<see cref="System.Windows.FrameworkElement.MinHeight"/>.
+    ///   <see cref="System.Windows.FrameworkElement.MinWidth" />/
+    ///   <see cref="System.Windows.FrameworkElement.MinHeight" />.
     /// </summary>
     private IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

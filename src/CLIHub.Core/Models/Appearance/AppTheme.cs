@@ -22,7 +22,7 @@ public enum AppTheme
 }
 
 /// <summary>
-///   Maps <see cref="AppTheme"/> to and from its stored token.
+///   Maps <see cref="AppTheme" /> to and from its stored token.
 /// </summary>
 public static class AppThemes
 {
@@ -73,7 +73,7 @@ public static class AppThemes
     }
 
     /// <summary>
-    ///   Parses a stored token, falling back to <see cref="AppTheme.Dark"/>.
+    ///   Parses a stored token, falling back to <see cref="AppTheme.Dark" />.
     /// </summary>
     /// <param name="value"> The stored token. </param>
     /// <returns> The parsed or default theme. </returns>

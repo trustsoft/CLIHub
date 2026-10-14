@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Scanning;
 
 /// <summary>
-///   Discovers repositories under the watched roots, keeps the project list in sync, and exposes
-///   the scanner status.
+///   Discovers repositories under the watched roots,
+///   keeps the project list in sync, and exposes the scanner status.
 /// </summary>
 public interface IProjectScanner : IDisposable
 {
@@ -27,8 +27,8 @@ public interface IProjectScanner : IDisposable
     void Stop();
 
     /// <summary>
-    ///   Re-reads the scanning preferences, reconfigures the watcher, and triggers a scan. Used
-    ///   after the user saves new scanning settings.
+    ///   Re-reads the scanning preferences, reconfigures the watcher,
+    ///   and triggers a scan. Used after the user saves new scanning settings.
     /// </summary>
     void Reload();
 }

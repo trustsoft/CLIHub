@@ -17,22 +17,22 @@ public enum ProjectSource
 }
 
 /// <summary>
-///   Parses and formats the <see cref="ProjectSource"/> value stored in configuration.
+///   Parses and formats the <see cref="ProjectSource" /> value stored in configuration.
 /// </summary>
 public static class ProjectSources
 {
     /// <summary>
-    ///   Configuration token for <see cref="ProjectSource.Manual"/>.
+    ///   Configuration token for <see cref="ProjectSource.Manual" />.
     /// </summary>
     public const string ManualToken = "manual";
 
     /// <summary>
-    ///   Configuration token for <see cref="ProjectSource.Discovered"/>.
+    ///   Configuration token for <see cref="ProjectSource.Discovered" />.
     /// </summary>
     public const string DiscoveredToken = "discovered";
 
     /// <summary>
-    ///   Returns the source for a stored token, falling back to <see cref="ProjectSource.Manual"/>
+    ///   Returns the source for a stored token, falling back to <see cref="ProjectSource.Manual" />
     ///   for missing or unrecognized values.
     /// </summary>
     /// <param name="value"> The stored token. </param>

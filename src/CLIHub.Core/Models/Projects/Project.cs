@@ -30,7 +30,7 @@ public class Project : INotifyPropertyChanged
 
     /// <summary>
     ///   How the project entered the list: registered manually by the user, or discovered by
-    ///   repository scanning. Defaults to <see cref="ProjectSource.Manual"/>.
+    ///   repository scanning. Defaults to <see cref="ProjectSource.Manual" />.
     /// </summary>
     public ProjectSource Source { get; set; } = ProjectSource.Manual;
 

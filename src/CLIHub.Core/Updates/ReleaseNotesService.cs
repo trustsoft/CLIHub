@@ -6,12 +6,12 @@ using CLIHub.Core.Models;
 
 /// <summary>
 ///   Reads the user-facing release notes embedded in this assembly and parses them into
-///   <see cref="ReleaseNote"/> records, ordered from the newest version to the oldest.
+///   <see cref="ReleaseNote" /> records, ordered from the newest version to the oldest.
 /// </summary>
 /// <remarks>
 ///   The parser understands one shape only: a version section heading
-///   (<c>## &lt;version&gt; — &lt;date&gt;</c>, with an em dash, an en dash, or a hyphen as the separator)
-///   followed by the groups <c>### New</c>, <c>### Improved</c>, and <c>### Fixed</c> whose entries are
+///   (<c> ## &lt;version&gt; — &lt;date&gt; </c>, with an em dash, an en dash, or a hyphen as the separator)
+///   followed by the groups <c> ### New </c>, <c> ### Improved </c>, and <c> ### Fixed </c> whose entries are
 ///   list items. Titles, preambles, prose outside those groups, and prose under an unknown group are
 ///   ignored. Entry text is kept as written.
 /// </remarks>
@@ -296,8 +296,8 @@ public class ReleaseNotesService : IReleaseNotesService
         public string Date { get; }
 
         /// <summary>
-        ///   Returns the list that a group heading collects into, or null for a group the
-        ///   application does not show.
+        ///   Returns the list that a group heading collects into,
+        ///   or null for a group the application does not show.
         /// </summary>
         public List<string>? GroupFor(string name)
         {

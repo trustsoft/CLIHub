@@ -38,6 +38,6 @@ public interface IPreferenceApplier
     /// <summary>
     ///   Applies the application accent color.
     /// </summary>
-    /// <param name="accentHex"> The accent as <c>#RRGGBB</c>. </param>
+    /// <param name="accentHex"> The accent as <c> #RRGGBB </c>. </param>
     void ApplyAccent(string accentHex);
 }

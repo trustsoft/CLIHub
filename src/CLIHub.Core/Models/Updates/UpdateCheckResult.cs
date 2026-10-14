@@ -31,5 +31,5 @@ public enum UpdateStatus
 /// </summary>
 /// <param name="Status"> The check outcome. </param>
 /// <param name="CurrentVersion"> The current application version. </param>
-/// <param name="AvailableVersion"> The available version, when <see cref="UpdateStatus.UpdateAvailable"/>. </param>
+/// <param name="AvailableVersion"> The available version, when <see cref="UpdateStatus.UpdateAvailable" />. </param>
 public sealed record UpdateCheckResult(UpdateStatus Status, string CurrentVersion, string? AvailableVersion);

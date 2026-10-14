@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Tests.Fakes;
 
 /// <summary>
-///   Controllable <see cref="TimeProvider"/> for testing time-based caching.
+///   Controllable <see cref="TimeProvider" /> for testing time-based caching.
 /// </summary>
 public sealed class FakeTimeProvider : TimeProvider
 {

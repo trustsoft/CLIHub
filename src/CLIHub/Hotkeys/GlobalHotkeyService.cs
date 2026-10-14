@@ -30,7 +30,7 @@ public sealed class GlobalHotkeyService : IGlobalHotkeyService, IDisposable
     /// <summary>
     ///   Hooks the window's message loop so hotkey messages can be observed.
     /// </summary>
-    /// <param name="window"> The window that receives <c>WM_HOTKEY</c>. </param>
+    /// <param name="window"> The window that receives <c> WM_HOTKEY </c>. </param>
     /// <param name="onPressed"> Callback invoked when the hotkey is pressed. </param>
     /// <param name="logger"> Logger. </param>
     public GlobalHotkeyService(Window window, Action onPressed, ILogger<GlobalHotkeyService> logger)

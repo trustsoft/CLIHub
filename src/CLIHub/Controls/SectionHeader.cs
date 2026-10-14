@@ -9,13 +9,13 @@ using System.Windows.Controls;
 public sealed class SectionHeader : ContentControl
 {
     /// <summary>
-    ///   Identifies the <see cref="Text"/> property.
+    ///   Identifies the <see cref="Text" /> property.
     /// </summary>
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
         nameof(Text), typeof(string), typeof(SectionHeader), new PropertyMetadata(string.Empty));
 
     /// <summary>
-    ///   Identifies the <see cref="ShowMarker"/> property.
+    ///   Identifies the <see cref="ShowMarker" /> property.
     /// </summary>
     public static readonly DependencyProperty ShowMarkerProperty = DependencyProperty.Register(
         nameof(ShowMarker), typeof(bool), typeof(SectionHeader), new PropertyMetadata(true));

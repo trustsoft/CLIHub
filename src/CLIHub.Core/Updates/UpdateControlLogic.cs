@@ -4,7 +4,7 @@ using CLIHub.Core.Models;
 
 /// <summary>
 ///   Pure state transitions for the launch window's footer update control, derived from the
-///   facts shared by <c>IUpdateService</c>. Side-effect-free so tests cover every transition.
+///   facts shared by <c> IUpdateService </c>. Side-effect-free so tests cover every transition.
 /// </summary>
 public static class UpdateControlLogic
 {

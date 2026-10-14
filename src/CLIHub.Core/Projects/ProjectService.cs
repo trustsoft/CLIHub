@@ -85,8 +85,8 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    ///   Resolves the project logo through the logo cache keyed by the project ID, falling back
-    ///   to <see cref="DefaultLogoPath"/> when no logo is found.
+    ///   Resolves the project logo through the logo cache keyed by the project ID,
+    ///   falling back to <see cref="DefaultLogoPath" /> when no logo is found.
     /// </summary>
     private string? ResolveProjectLogo(Project project) =>
         this.logoResolver.Resolve(project, this.DefaultLogoPath);
@@ -284,7 +284,7 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath"/>.
+    ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath" />.
     /// </summary>
     internal string? ResolveLogo(string projectPath) => this.logoResolver.ResolvePath(projectPath, this.DefaultLogoPath);
 

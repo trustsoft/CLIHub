@@ -8,7 +8,7 @@ using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
 
 /// <summary>
-///   Default <see cref="IPreferenceApplier"/>; forwards changes to the launcher and hotkey service.
+///   Default <see cref="IPreferenceApplier" />; forwards changes to the launcher and hotkey service.
 /// </summary>
 public sealed class PreferenceApplier : IPreferenceApplier
 {

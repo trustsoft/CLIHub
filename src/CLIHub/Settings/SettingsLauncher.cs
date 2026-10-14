@@ -3,7 +3,7 @@ namespace CLIHub.Settings;
 using CLIHub.Views;
 
 /// <summary>
-///   Owns the application's single <see cref="SettingsWindow"/> instance so that every entry
+///   Owns the application's single <see cref="SettingsWindow" /> instance so that every entry
 ///   point (tray menu, launch window) activates the same window instead of creating another.
 /// </summary>
 public sealed class SettingsLauncher : ISettingsLauncher
@@ -14,7 +14,7 @@ public sealed class SettingsLauncher : ISettingsLauncher
     /// <summary>
     ///   Creates the launcher with the DI-provided window factory.
     /// </summary>
-    /// <param name="factory"> Factory that creates the <see cref="SettingsWindow"/> on demand. </param>
+    /// <param name="factory"> Factory that creates the <see cref="SettingsWindow" /> on demand. </param>
     public SettingsLauncher(Func<SettingsWindow> factory)
     {
         this.factory = factory;

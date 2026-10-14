@@ -41,43 +41,43 @@ public enum SettingBadgeTone
 public sealed class SettingCard : ContentControl
 {
     /// <summary>
-    ///   Identifies the <see cref="Title"/> property.
+    ///   Identifies the <see cref="Title" /> property.
     /// </summary>
     public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(
         nameof(Title), typeof(string), typeof(SettingCard), new PropertyMetadata(string.Empty));
 
     /// <summary>
-    ///   Identifies the <see cref="Hint"/> property.
+    ///   Identifies the <see cref="Hint" /> property.
     /// </summary>
     public static readonly DependencyProperty HintProperty = DependencyProperty.Register(
         nameof(Hint), typeof(string), typeof(SettingCard), new PropertyMetadata(string.Empty));
 
     /// <summary>
-    ///   Identifies the <see cref="Icon"/> property.
+    ///   Identifies the <see cref="Icon" /> property.
     /// </summary>
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
         nameof(Icon), typeof(string), typeof(SettingCard), new PropertyMetadata(string.Empty));
 
     /// <summary>
-    ///   Identifies the <see cref="Badge"/> property.
+    ///   Identifies the <see cref="Badge" /> property.
     /// </summary>
     public static readonly DependencyProperty BadgeProperty = DependencyProperty.Register(
         nameof(Badge), typeof(string), typeof(SettingCard), new PropertyMetadata(string.Empty));
 
     /// <summary>
-    ///   Identifies the <see cref="BadgeTone"/> property.
+    ///   Identifies the <see cref="BadgeTone" /> property.
     /// </summary>
     public static readonly DependencyProperty BadgeToneProperty = DependencyProperty.Register(
         nameof(BadgeTone), typeof(SettingBadgeTone), typeof(SettingCard), new PropertyMetadata(SettingBadgeTone.Neutral));
 
     /// <summary>
-    ///   Identifies the <see cref="Placement"/> property.
+    ///   Identifies the <see cref="Placement" /> property.
     /// </summary>
     public static readonly DependencyProperty PlacementProperty = DependencyProperty.Register(
         nameof(Placement), typeof(SettingCardPlacement), typeof(SettingCard), new PropertyMetadata(SettingCardPlacement.Right));
 
     /// <summary>
-    ///   Identifies the <see cref="Grouped"/> property.
+    ///   Identifies the <see cref="Grouped" /> property.
     /// </summary>
     public static readonly DependencyProperty GroupedProperty = DependencyProperty.Register(
         nameof(Grouped), typeof(bool), typeof(SettingCard), new PropertyMetadata(false));
@@ -137,7 +137,7 @@ public sealed class SettingCard : ContentControl
     }
 
     /// <summary>
-    ///   When true, the card draws no surface and is a row inside a <see cref="SettingsGroup"/>.
+    ///   When true, the card draws no surface and is a row inside a <see cref="SettingsGroup" />.
     /// </summary>
     public bool Grouped
     {

@@ -3,7 +3,7 @@ namespace CLIHub.ViewModels;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   A selectable default-agent option; a null <see cref="Id"/> means "None".
+///   A selectable default-agent option; a null <see cref="Id" /> means "None".
 /// </summary>
 /// <param name="Id"> The agent plugin id, or null for no default. </param>
 /// <param name="Name"> The display name. </param>

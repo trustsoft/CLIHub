@@ -13,7 +13,7 @@ public interface IScanTimer : IDisposable
     /// <summary>
     ///   Schedules the timer, resetting any pending delay.
     /// </summary>
-    /// <param name="delay"> The delay before <see cref="Elapsed"/> is raised. </param>
+    /// <param name="delay"> The delay before <see cref="Elapsed" /> is raised. </param>
     void Arm(TimeSpan delay);
 
     /// <summary>
@@ -35,7 +35,7 @@ public interface IScanTimerFactory
 }
 
 /// <summary>
-///   Default <see cref="IScanTimerFactory"/> backed by <see cref="System.Threading.Timer"/>.
+///   Default <see cref="IScanTimerFactory" /> backed by <see cref="System.Threading.Timer" />.
 /// </summary>
 public sealed class SystemScanTimerFactory : IScanTimerFactory
 {

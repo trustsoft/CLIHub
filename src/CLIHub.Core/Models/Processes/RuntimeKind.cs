@@ -27,7 +27,7 @@ public enum RuntimeKind
 }
 
 /// <summary>
-///   Maps <see cref="RuntimeKind"/> to and from its stored token and resolves legacy
+///   Maps <see cref="RuntimeKind" /> to and from its stored token and resolves legacy
 ///   terminal-executable values.
 /// </summary>
 public static class RuntimeKinds
@@ -99,7 +99,7 @@ public static class RuntimeKinds
     }
 
     /// <summary>
-    ///   Parses a runtime token, falling back to <see cref="RuntimeKind.PowerShell"/>.
+    ///   Parses a runtime token, falling back to <see cref="RuntimeKind.PowerShell" />.
     /// </summary>
     public static RuntimeKind Parse(string? value) =>
         TryParse(value, out var kind) ? kind : RuntimeKind.PowerShell;

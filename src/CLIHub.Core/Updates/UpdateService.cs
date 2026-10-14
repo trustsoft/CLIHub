@@ -53,8 +53,7 @@ public class UpdateService : IUpdateService
     }
 
     /// <summary>
-    ///   Test seam: uses a caller-provided manager (for example one built with a
-    ///   <c>TestVelopackLocator</c>).
+    ///   Test seam: uses a caller-provided manager (for example one built with a <c> TestVelopackLocator </c>).
     /// </summary>
     private UpdateService(ILogger<UpdateService> logger, UpdateManager manager, TimeSpan? checkTimeout)
     {
@@ -318,8 +317,8 @@ public class UpdateService : IUpdateService
     private void RaiseStateChanged() => UpdateStateChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    ///   Strips build metadata (for example, the "+commit" suffix) so the version
-    ///   displays as a plain semantic version.
+    ///   Strips build metadata (for example, the "+commit" suffix)
+    ///   so the version displays as a plain semantic version.
     /// </summary>
     private static string Normalize(string version)
     {

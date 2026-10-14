@@ -12,9 +12,8 @@ using CLIHub.Core.Infrastructure.Processes;
 public static class WindowsServiceCollectionExtensions
 {
     /// <summary>
-    ///   Adds the Windows platform adapters as singletons. Combine with
-    ///   <c>AddClIHubCoreServices</c>, which registers the platform-neutral services
-    ///   and the process ports these adapters implement.
+    ///   Adds the Windows platform adapters as singletons. Combine with <c> AddClIHubCoreServices </c>,
+    ///   which registers the platform-neutral services and the process ports these adapters implement.
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
     /// <returns> The configured service collection. </returns>

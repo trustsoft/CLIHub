@@ -25,7 +25,7 @@ public sealed class PathDisplayConverter : IMultiValueConverter
     ///   Shortens the path text to the available column width using the configured display style.
     /// </summary>
     /// <param name="values">
-    ///   Path text, available column width, display style, and the measuring <see cref="TextBlock"/>.
+    ///   Path text, available column width, display style, and the measuring <see cref="TextBlock" />.
     /// </param>
     /// <param name="targetType"> The target type of the binding. </param>
     /// <param name="parameter"> Unused. </param>

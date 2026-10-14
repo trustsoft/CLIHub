@@ -15,7 +15,7 @@ public static class PathLeftTrimFormatter
     private static readonly char[] BreakCharacters = ['\\', '/'];
 
     /// <summary>
-    ///   Returns <paramref name="text"/> shortened to at most <paramref name="maxLength"/>
+    ///   Returns <paramref name="text" /> shortened to at most <paramref name="maxLength" />
     ///   characters, or the text unchanged when it already fits.
     /// </summary>
     public static string Format(string? text, int maxLength)

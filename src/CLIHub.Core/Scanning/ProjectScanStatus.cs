@@ -34,7 +34,7 @@ public enum ProjectScanState
 /// <param name="IsScanning"> Whether a scan is currently running. </param>
 /// <param name="LastScanUtc"> When the last scan completed, or null if none has run. </param>
 /// <param name="DiscoveredCount"> The number of repositories discovered by the last scan. </param>
-/// <param name="Error"> The last error message, if the state is <see cref="ProjectScanState.Error"/>. </param>
+/// <param name="Error"> The last error message, if the state is <see cref="ProjectScanState.Error" />. </param>
 public sealed record ProjectScanStatus(
     ProjectScanState State,
     bool IsWatching,

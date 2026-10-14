@@ -17,7 +17,7 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
     private readonly ILogger<WindowsInteractiveProcessRunner> logger;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="WindowsInteractiveProcessRunner"/> class.
+    ///   Initializes a new instance of the <see cref="WindowsInteractiveProcessRunner" /> class.
     /// </summary>
     /// <param name="logger"> Logger for process operations. </param>
     public WindowsInteractiveProcessRunner(ILogger<WindowsInteractiveProcessRunner> logger)

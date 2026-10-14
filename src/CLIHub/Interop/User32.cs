@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 internal static partial class User32
 {
     /// <summary>
-    ///   Posted when the user presses a hot key registered by <see cref="RegisterHotKey"/>.
+    ///   Posted when the user presses a hot key registered by <see cref="RegisterHotKey" />.
     /// </summary>
     internal const int WM_HOTKEY = 0x0312;
 
@@ -61,7 +61,7 @@ internal static partial class User32
     internal static partial uint GetDpiForWindow(IntPtr hwnd);
 
     /// <summary>
-    ///   Fills <paramref name="info"/> with the monitor's bounds and work area (physical pixels).
+    ///   Fills <paramref name="info" /> with the monitor's bounds and work area (physical pixels).
     /// </summary>
     [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
@@ -107,7 +107,7 @@ internal static partial class User32
     }
 
     /// <summary>
-    ///   Receives the sizing information for <see cref="WM_GETMINMAXINFO"/>.
+    ///   Receives the sizing information for <see cref="WM_GETMINMAXINFO" />.
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     internal struct MINMAXINFO

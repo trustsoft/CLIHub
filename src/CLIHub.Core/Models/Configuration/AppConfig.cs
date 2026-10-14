@@ -37,7 +37,7 @@ public class AppPreferences
     public string Hotkey { get; set; } = "Ctrl+Shift+A";
 
     /// <summary>
-    ///   Legacy path to the terminal executable. Superseded by <see cref="DefaultRuntime"/>;
+    ///   Legacy path to the terminal executable. Superseded by <see cref="DefaultRuntime" />;
     ///   kept for backward compatibility and read once to migrate existing configurations.
     /// </summary>
     public string TerminalExecutable { get; set; } = "wt.exe";
@@ -96,20 +96,20 @@ public class AppPreferences
     public bool NotifyStableUpdates { get; set; } = true;
 
     /// <summary>
-    ///   When true (default is false), update checks include pre-release versions and the user is
-    ///   notified when a pre-release update is available.
+    ///   When true (default is false), update checks include pre-release
+    ///   versions and the user is notified when a pre-release update is available.
     /// </summary>
     public bool NotifyPrereleaseUpdates { get; set; }
 
     /// <summary>
-    ///   Legacy startup-visibility preference. Superseded by <see cref="StartMinimized"/> and kept
-    ///   only so the schema 1→2 migration can read existing configurations.
+    ///   Legacy startup-visibility preference. Superseded by <see cref="StartMinimized" />
+    ///   and kept only so the schema 1→2 migration can read existing configurations.
     /// </summary>
     public bool ShowWindowOnStartup { get; set; } = true;
 
     /// <summary>
-    ///   When true (default), CLIHub starts minimized in the system tray; when false, the main
-    ///   window is shown at startup. Applies to manual and Windows starts.
+    ///   When true (default), CLIHub starts minimized in the system tray; when false,
+    ///   the main window is shown at startup. Applies to manual and Windows starts.
     /// </summary>
     public bool StartMinimized { get; set; } = true;
 
@@ -120,7 +120,7 @@ public class AppPreferences
     public bool PinLaunchWindow { get; set; }
 
     /// <summary>
-    ///   Where the launch window is placed when shown. Defaults to the active monitor centre.
+    ///   Where the launch window is placed when shown. Defaults to the active monitor center.
     /// </summary>
     public PopupScreenPosition PopupScreenPosition { get; set; } = PopupScreenPosition.Center;
 
@@ -130,13 +130,13 @@ public class AppPreferences
     public AppTheme AppTheme { get; set; } = AppTheme.Dark;
 
     /// <summary>
-    ///   The application accent color as <c>#RRGGBB</c>. Defaults to Sky.
+    ///   The application accent color as <c> #RRGGBB </c>. Defaults to Sky.
     /// </summary>
     public string AccentColor { get; set; } = AccentPalette.DefaultHex;
 
     /// <summary>
-    ///   How long project paths are shortened in the launch window: "leftTrim" (default) keeps
-    ///   the end of the path, "middleEllipsis" keeps both ends.
+    ///   How long project paths are shortened in the launch window:
+    ///   "leftTrim" (default) keeps the end of the path, "middleEllipsis" keeps both ends.
     /// </summary>
     public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
 
@@ -158,14 +158,13 @@ public class AppPreferences
     public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
 
     /// <summary>
-    ///   Directory-name patterns skipped during scanning. Null means the built-in defaults are used;
-    ///   an empty list means no patterns are ignored.
+    ///   Directory-name patterns skipped during scanning.
+    ///   Null means the built-in defaults are used; an empty list means no patterns are ignored.
     /// </summary>
     public List<string>? IgnoredPatterns { get; set; }
 
     /// <summary>
-    ///   Which directories count as repositories during discovery. Defaults to
-    ///   <see cref="ProjectDiscoveryMode.Both"/>.
+    ///   Which directories count as repositories during discovery. Defaults to <see cref="ProjectDiscoveryMode.Both" />.
     /// </summary>
     public ProjectDiscoveryMode DiscoveryMode { get; set; } = ProjectDiscoveryModes.Default;
 

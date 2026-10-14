@@ -17,7 +17,7 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
     private readonly ILogger<WindowsAgentProcessInspector> logger;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="WindowsAgentProcessInspector"/> class.
+    ///   Initializes a new instance of the <see cref="WindowsAgentProcessInspector" /> class.
     /// </summary>
     /// <param name="logger"> Logger for diagnostics. </param>
     public WindowsAgentProcessInspector(ILogger<WindowsAgentProcessInspector> logger)

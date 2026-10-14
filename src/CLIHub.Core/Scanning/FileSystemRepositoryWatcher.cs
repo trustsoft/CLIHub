@@ -3,7 +3,7 @@ namespace CLIHub.Core.Scanning;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-///   Default <see cref="IRepositoryWatcherFactory"/> backed by <see cref="FileSystemWatcher"/>.
+///   Default <see cref="IRepositoryWatcherFactory" /> backed by <see cref="FileSystemWatcher" />.
 /// </summary>
 public sealed class FileSystemRepositoryWatcherFactory : IRepositoryWatcherFactory
 {
@@ -22,7 +22,7 @@ public sealed class FileSystemRepositoryWatcherFactory : IRepositoryWatcherFacto
 }
 
 /// <summary>
-///   Watches each root with a recursive <see cref="FileSystemWatcher"/>.
+///   Watches each root with a recursive <see cref="FileSystemWatcher" />.
 /// </summary>
 public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
 {

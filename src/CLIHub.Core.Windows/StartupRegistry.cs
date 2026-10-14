@@ -13,8 +13,7 @@ internal interface IStartupRegistry
 }
 
 /// <summary>
-///   Default <see cref="IStartupRegistry"/> backed by
-///   <c>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</c>.
+///   Default <see cref="IStartupRegistry" /> backed by <c> HKCU\Software\Microsoft\Windows\CurrentVersion\Run </c>.
 /// </summary>
 internal sealed class CurrentUserRegistryStartup : IStartupRegistry
 {

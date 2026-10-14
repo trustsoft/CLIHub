@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 /// <summary>
-///   Minimal <see cref="INotifyPropertyChanged"/> base for view models.
+///   Minimal <see cref="INotifyPropertyChanged" /> base for view models.
 /// </summary>
 public abstract class ObservableObject : INotifyPropertyChanged
 {
@@ -12,14 +12,14 @@ public abstract class ObservableObject : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>
-    ///   Raises <see cref="PropertyChanged"/> for the given property.
+    ///   Raises <see cref="PropertyChanged" /> for the given property.
     /// </summary>
     /// <param name="propertyName"> The property name; defaults to the caller. </param>
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
-    ///   Updates the backing field and raises <see cref="PropertyChanged"/> when the value changed.
+    ///   Updates the backing field and raises <see cref="PropertyChanged" /> when the value changed.
     /// </summary>
     /// <typeparam name="T"> The property type. </typeparam>
     /// <param name="field"> The backing field, passed by reference. </param>

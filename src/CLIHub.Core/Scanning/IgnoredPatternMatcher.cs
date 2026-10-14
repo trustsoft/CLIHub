@@ -2,7 +2,7 @@ namespace CLIHub.Core.Scanning;
 
 /// <summary>
 ///   Matches directory names against ignored-name patterns. Patterns are case-insensitive and
-///   support a single wildcard character (<c>*</c>); all other characters match literally.
+///   support a single wildcard character (<c> * </c>); all other characters match literally.
 /// </summary>
 internal static class IgnoredPatternMatcher
 {

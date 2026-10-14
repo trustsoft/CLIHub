@@ -15,7 +15,7 @@ public static class MiddleEllipsisFormatter
     private static readonly char[] BreakCharacters = ['\\', '/'];
 
     /// <summary>
-    ///   Returns <paramref name="text"/> shortened to at most <paramref name="maxLength"/>
+    ///   Returns <paramref name="text" /> shortened to at most <paramref name="maxLength" />
     ///   characters, or the text unchanged when it already fits.
     /// </summary>
     public static string Format(string? text, int maxLength)
@@ -65,8 +65,8 @@ public static class MiddleEllipsisFormatter
     }
 
     /// <summary>
-    ///   Drops everything up to and including the first break character of the tail, so the
-    ///   shortened text resumes at a segment boundary.
+    ///   Drops everything up to and including the first break character of the tail,
+    ///   so the shortened text resumes at a segment boundary.
     /// </summary>
     private static string ShortenTail(ReadOnlySpan<char> tail)
     {

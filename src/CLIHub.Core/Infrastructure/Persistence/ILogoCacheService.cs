@@ -9,9 +9,9 @@ using System;
 public interface ILogoCacheService : IDisposable
 {
     /// <summary>
-    ///   Returns the cached logo path for the key without touching the file system. On a miss,
-    ///   invokes the resolver, stores its outcome (including a null "not found" result) in the
-    ///   cache, and returns it.
+    ///   Returns the cached logo path for the key without touching the file system.
+    ///   On a miss, invokes the resolver, stores its outcome (including a null "not found" result)
+    ///   in the cache, and returns it.
     /// </summary>
     /// <param name="key"> The unique cache key, for example "project:&lt;id&gt;" or "plugin:&lt;id&gt;". </param>
     /// <param name="resolve"> The resolver invoked when the key is not cached. </param>
@@ -19,8 +19,8 @@ public interface ILogoCacheService : IDisposable
     string? GetOrResolve(string key, Func<string?> resolve);
 
     /// <summary>
-    ///   Removes the cache entry for the key, so the next lookup re-resolves. Has no effect
-    ///   when the key is not cached.
+    ///   Removes the cache entry for the key, so the next lookup re-resolves.
+    ///   Has no effect when the key is not cached.
     /// </summary>
     /// <param name="key"> The unique cache key to remove. </param>
     void Remove(string key);

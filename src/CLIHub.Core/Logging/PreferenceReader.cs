@@ -9,8 +9,8 @@ using System.Text.Json;
 public static class PreferenceReader
 {
     /// <summary>
-    ///   Reads <c>preferences.logLevel</c> from the given config file. Returns null when the
-    ///   file, the property, or a usable value is absent.
+    ///   Reads <c> preferences.logLevel </c> from the given config file.
+    ///   Returns null when the file, the property, or a usable value is absent.
     /// </summary>
     public static string? ReadLogLevel(string configFilePath)
     {
@@ -37,29 +37,29 @@ public static class PreferenceReader
     }
 
     /// <summary>
-    ///   Reads <c>preferences.logRetentionDays</c> from the given config file. Returns null when
-    ///   the file, the property, or a usable value is absent.
+    ///   Reads <c> preferences.logRetentionDays </c> from the given config file.
+    ///   Returns null when the file, the property, or a usable value is absent.
     /// </summary>
     public static int? ReadLogRetentionDays(string configFilePath) =>
         ReadInt(configFilePath, "logRetentionDays");
 
     /// <summary>
-    ///   Reads <c>preferences.logFileSizeLimitMb</c> from the given config file. Returns null when
-    ///   the file, the property, or a usable value is absent.
+    ///   Reads <c> preferences.logFileSizeLimitMb </c> from the given config file.
+    ///   Returns null when the file, the property, or a usable value is absent.
     /// </summary>
     public static int? ReadLogFileSizeLimitMb(string configFilePath) =>
         ReadInt(configFilePath, "logFileSizeLimitMb");
 
     /// <summary>
-    ///   Reads <c>preferences.appTheme</c> from the given config file. Returns null when the file,
-    ///   the property, or a usable value is absent.
+    ///   Reads <c> preferences.appTheme </c> from the given config file.
+    ///   Returns null when the file, the property, or a usable value is absent.
     /// </summary>
     public static string? ReadAppTheme(string configFilePath) =>
         ReadString(configFilePath, "appTheme");
 
     /// <summary>
-    ///   Reads <c>preferences.accentColor</c> from the given config file. Returns null when the
-    ///   file, the property, or a usable value is absent.
+    ///   Reads <c> preferences.accentColor </c> from the given config file.
+    ///   Returns null when the file, the property, or a usable value is absent.
     /// </summary>
     public static string? ReadAccentColor(string configFilePath) =>
         ReadString(configFilePath, "accentColor");

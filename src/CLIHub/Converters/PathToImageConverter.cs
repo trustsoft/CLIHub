@@ -6,7 +6,7 @@ using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
 /// <summary>
-///   Converts a file path to an <see cref="BitmapImage"/>, or null when the path is empty/missing.
+///   Converts a file path to an <see cref="BitmapImage" />, or null when the path is empty/missing.
 /// </summary>
 public class PathToImageConverter : IValueConverter
 {
@@ -17,7 +17,7 @@ public class PathToImageConverter : IValueConverter
     /// <param name="targetType"> The target type of the binding. </param>
     /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
-    /// <returns> The loaded <see cref="BitmapImage"/>, or null when the path is empty or missing. </returns>
+    /// <returns> The loaded <see cref="BitmapImage" />, or null when the path is empty or missing. </returns>
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not string path || string.IsNullOrWhiteSpace(path) || !File.Exists(path))

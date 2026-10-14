@@ -12,8 +12,8 @@ public interface IConfigurationRepository : IDisposable
     ConfigurationSnapshot Read();
 
     /// <summary>
-    ///   Applies a synchronous update to the latest snapshot and schedules it for persistence after
-    ///   the callback completes successfully.
+    ///   Applies a synchronous update to the latest snapshot and schedules it
+    ///   for persistence after the callback completes successfully.
     /// </summary>
     /// <param name="update"> The update applied to a detached snapshot. </param>
     void Update(Action<ConfigurationSnapshot> update);

@@ -13,7 +13,7 @@ public static class AgentConfigurationPath
     public const string DescriptorFileName = "plugin.json";
 
     /// <summary>
-    ///   Returns the path to the agent's <c>plugin.json</c>, or null when the plugin directory is unknown.
+    ///   Returns the path to the agent's <c> plugin.json </c>, or null when the plugin directory is unknown.
     /// </summary>
     /// <param name="plugin"> The agent plugin. </param>
     /// <returns> The descriptor path, or null. </returns>

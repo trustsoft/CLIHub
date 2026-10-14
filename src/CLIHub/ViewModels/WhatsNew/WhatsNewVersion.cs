@@ -11,6 +11,6 @@ public sealed record WhatsNewVersion(string Version, string Date, IReadOnlyList<
 /// <summary>
 ///   One non-empty group of entries for a version.
 /// </summary>
-/// <param name="Label"> The group heading, for example <c>New</c>. </param>
+/// <param name="Label"> The group heading, for example <c> New </c>. </param>
 /// <param name="Entries"> The entries, in document order. </param>
 public sealed record WhatsNewGroup(string Label, IReadOnlyList<string> Entries);

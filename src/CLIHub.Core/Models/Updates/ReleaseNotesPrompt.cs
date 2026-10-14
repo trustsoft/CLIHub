@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Models;
 
 /// <summary>
-///   What the application should do about the <c>What's New</c> window at startup.
+///   What the application should do about the <c> What's New </c> window at startup.
 /// </summary>
 public enum ReleaseNotesPromptAction
 {
@@ -22,17 +22,17 @@ public enum ReleaseNotesPromptAction
 }
 
 /// <summary>
-///   Decides whether the release notes should be shown on this start, from the recorded version,
-///   the running version, and whether notes exist for the running version.
+///   Decides whether the release notes should be shown on this start,
+///   from the recorded version, the running version, and whether notes exist for the running version.
 /// </summary>
 public static class ReleaseNotesPrompt
 {
     /// <summary>
     ///   Returns what to do at startup:
-    ///   <see cref="ReleaseNotesPromptAction.Show"/> when the version changed and it has notes,
-    ///   <see cref="ReleaseNotesPromptAction.RecordOnly"/> when the version changed but has no notes —
+    ///   <see cref="ReleaseNotesPromptAction.Show" /> when the version changed and it has notes,
+    ///   <see cref="ReleaseNotesPromptAction.RecordOnly" /> when the version changed but has no notes —
     ///   or when nothing has been recorded yet, so a first run remembers the shipped version without
-    ///   announcing it — and <see cref="ReleaseNotesPromptAction.Skip"/> when nothing is to be done.
+    ///   announcing it — and <see cref="ReleaseNotesPromptAction.Skip" /> when nothing is to be done.
     /// </summary>
     /// <param name="recordedVersion"> The last version whose notes were shown, or null on a first run. </param>
     /// <param name="currentVersion"> The running application version. </param>

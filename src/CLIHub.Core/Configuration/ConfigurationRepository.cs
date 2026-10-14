@@ -33,7 +33,9 @@ public sealed class ConfigurationRepository : IConfigurationRepository
     ///   Creates the service.
     /// </summary>
     /// <param name="logger"> The logger. </param>
-    /// <param name="configFilePath"> Overrides the config file location; defaults to <c>%APPDATA%\CLIHub\config.json</c>. </param>
+    /// <param name="configFilePath">
+    ///   Overrides the config file location; defaults to <c> %APPDATA%\CLIHub\config.json </c>.
+    /// </param>
     /// <param name="migrationRunner"> Optional schema migration runner. </param>
     public ConfigurationRepository(
         ILogger<ConfigurationRepository> logger,

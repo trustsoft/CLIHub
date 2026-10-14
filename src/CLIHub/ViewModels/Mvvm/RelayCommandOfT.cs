@@ -3,7 +3,7 @@ namespace CLIHub.ViewModels;
 using System.Windows.Input;
 
 /// <summary>
-///   A basic <see cref="ICommand"/> that invokes a delegate with a typed parameter.
+///   A basic <see cref="ICommand" /> that invokes a delegate with a typed parameter.
 /// </summary>
 /// <typeparam name="T"> The type of the command parameter. </typeparam>
 public sealed class RelayCommand<T> : ICommand

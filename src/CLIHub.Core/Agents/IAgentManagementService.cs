@@ -31,7 +31,10 @@ public enum AgentUpdateOutcome
 ///   Result of an agent update request.
 /// </summary>
 /// <param name="Outcome"> The outcome. </param>
-/// <param name="Message"> A user-facing message when the outcome is not <see cref="AgentUpdateOutcome.Started"/>. </param>
+/// <param name="Message">
+///   A user-facing message when the outcome is not
+///   <see cref="AgentUpdateOutcome.Started" />.
+/// </param>
 public sealed record AgentUpdateResult(AgentUpdateOutcome Outcome, string? Message)
 {
     /// <summary>

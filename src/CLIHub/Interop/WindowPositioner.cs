@@ -21,7 +21,7 @@ internal static class WindowPositioner
     private const int CursorOffset = 12;
 
     /// <summary>
-    ///   Places the window according to <paramref name="position"/>. The move itself is done in
+    ///   Places the window according to <paramref name="position" />. The move itself is done in
     ///   native screen coordinates: the window and the monitor work area are both measured by the
     ///   operating system, so the result stays correct when the monitors use different scale factors.
     /// </summary>

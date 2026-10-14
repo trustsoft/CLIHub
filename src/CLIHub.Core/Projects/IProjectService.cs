@@ -23,7 +23,7 @@ public interface IProjectService
     IReadOnlyList<Project> GetAllProjects();
 
     /// <summary>
-    ///   Returns projects ordered by last-used descending, up to <paramref name="limit"/>.
+    ///   Returns projects ordered by last-used descending, up to <paramref name="limit" />.
     /// </summary>
     IReadOnlyList<Project> GetRecentProjects(int limit);
 
@@ -33,16 +33,16 @@ public interface IProjectService
     Project? GetCurrentProject();
 
     /// <summary>
-    ///   Registers a project folder as a manual project. Returns the existing project if the folder
-    ///   is already registered (without changing its source).
+    ///   Registers a project folder as a manual project. Returns the existing project
+    ///   if the folder is already registered (without changing its source).
     /// </summary>
     /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
     /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>
     Project AddProject(string folderPath);
 
     /// <summary>
-    ///   Registers a discovered project folder. Returns the existing project if the folder is already
-    ///   registered (without reclassifying a manual project).
+    ///   Registers a discovered project folder. Returns the existing project
+    ///   if the folder is already registered (without reclassifying a manual project).
     /// </summary>
     /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
     /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>

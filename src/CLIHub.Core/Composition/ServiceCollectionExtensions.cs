@@ -19,10 +19,10 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     ///   Adds configuration, project, plugin, and process-launch services as singletons.
-    ///   Logging is registered so services can resolve <c>ILogger&lt;T&gt;</c>; the host may
+    ///   Logging is registered so services can resolve <c> ILogger&lt;T&gt; </c>; the host may
     ///   add providers (for example Serilog) to the same logging pipeline.
     ///   Windows platform adapters are registered separately via
-    ///   <c>CLIHub.Core.Windows.WindowsServiceCollectionExtensions.AddWindowsInfrastructure</c>.
+    ///   <c> CLIHub.Core.Windows.WindowsServiceCollectionExtensions.AddWindowsInfrastructure </c>.
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
     /// <param name="defaultLogoPath"> The path to the fallback project logo, or null. </param>

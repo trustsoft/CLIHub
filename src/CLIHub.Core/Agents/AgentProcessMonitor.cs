@@ -16,7 +16,7 @@ public sealed class AgentProcessMonitor
     private readonly ILogger<AgentProcessMonitor> logger;
 
     /// <summary>
-    ///   Initializes a new instance of the <see cref="AgentProcessMonitor"/> class.
+    ///   Initializes a new instance of the <see cref="AgentProcessMonitor" /> class.
     /// </summary>
     /// <param name="processInspector"> The process inspector. </param>
     /// <param name="processMatcher"> The process matcher. </param>

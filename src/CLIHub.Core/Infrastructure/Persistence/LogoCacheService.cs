@@ -10,8 +10,8 @@ using CLIHub.Core.Infrastructure.FileSystem;
 
 /// <summary>
 ///   Persistent logo cache: resolves logos by a namespaced key, stores outcomes (including
-///   negative results) in memory, loads previous state from a JSON file at startup, and saves
-///   the state back atomically when disposed at application shutdown.
+///   negative results) in memory, loads previous state from a JSON file at startup,
+///   and saves the state back atomically when disposed at application shutdown.
 /// </summary>
 public sealed class LogoCacheService : ILogoCacheService
 {
@@ -25,7 +25,9 @@ public sealed class LogoCacheService : ILogoCacheService
     ///   Creates the service, loading previously saved cache state when the state file exists.
     /// </summary>
     /// <param name="logger"> The logger. </param>
-    /// <param name="stateFilePath"> Overrides the state file location; defaults to <c>%APPDATA%\CLIHub\cache\logos.json</c>. </param>
+    /// <param name="stateFilePath">
+    ///   Overrides the state file location; defaults to <c> %APPDATA%\CLIHub\cache\logos.json </c>.
+    /// </param>
     public LogoCacheService(ILogger<LogoCacheService> logger, string? stateFilePath = null)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -160,8 +162,8 @@ public sealed class LogoCacheService : ILogoCacheService
     private sealed class CacheState
     {
         /// <summary>
-        ///   Cached logo paths keyed by "project:&lt;id&gt;" or "plugin:&lt;id&gt;"; a null value
-        ///   means the lookup was performed and no logo was found.
+        ///   Cached logo paths keyed by "project:&lt;id&gt;" or "plugin:&lt;id&gt;";
+        ///   a null value means the lookup was performed and no logo was found.
         /// </summary>
         public Dictionary<string, string?> Logos { get; set; } = new();
     }

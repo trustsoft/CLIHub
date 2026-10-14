@@ -6,8 +6,7 @@ namespace CLIHub.Core.Models;
 public class PluginCommand
 {
     /// <summary>
-    ///   Optional display label. Command identity comes from its position in
-    ///   <see cref="AgentCommands"/>.
+    ///   Optional display label. Command identity comes from its position in <see cref="AgentCommands" />.
     /// </summary>
     public string? Name { get; set; }
 

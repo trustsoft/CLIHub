@@ -18,7 +18,7 @@ public interface IProcessOutputRunner
     /// <param name="cancellationToken"> Optional cancellation token. </param>
     /// <returns> A ProcessResult containing output, error, exit code, and timeout flag. </returns>
     /// <exception cref="System.InvalidOperationException"> Thrown if the process fails to start. </exception>
-    /// <exception cref="System.OperationCanceledException"> Thrown if the operation is cancelled. </exception>
+    /// <exception cref="System.OperationCanceledException"> Thrown if the operation is canceled. </exception>
     Task<ProcessResult> RunAsync(
         string commandLine,
         RuntimeInfo runtime,

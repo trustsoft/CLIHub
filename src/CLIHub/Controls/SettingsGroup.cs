@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 /// <summary>
-///   Hosts several grouped <see cref="SettingCard"/> rows on one shared bordered surface, with
+///   Hosts several grouped <see cref="SettingCard" /> rows on one shared bordered surface, with
 ///   hairline separators between rows (none on the first).
 /// </summary>
 public sealed class SettingsGroup : ItemsControl

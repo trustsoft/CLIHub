@@ -489,7 +489,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public IReadOnlyList<AccentOption> AccentOptions => AccentPalette.Presets;
 
     /// <summary>
-    ///   The accent color text as <c>#RRGGBB</c>.
+    ///   The accent color text as <c> #RRGGBB </c>.
     /// </summary>
     public string AccentText
     {
@@ -642,7 +642,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public RelayCommand CancelCommand { get; }
 
     /// <summary>
-    ///   Runs an update check and reports the outcome in <see cref="UpdateMessage"/>.
+    ///   Runs an update check and reports the outcome in <see cref="UpdateMessage" />.
     /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
 
@@ -857,7 +857,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Checks for updates and reports the outcome in <see cref="UpdateMessage"/>.
+    ///   Checks for updates and reports the outcome in <see cref="UpdateMessage" />.
     /// </summary>
     /// <returns> A task that completes when the check finishes. </returns>
     public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)

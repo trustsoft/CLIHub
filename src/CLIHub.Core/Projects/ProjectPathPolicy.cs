@@ -24,12 +24,12 @@ internal static class ProjectPathPolicy
         string.Equals(Normalize(left), Normalize(right), StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    ///   Returns whether a path is the root itself or a directory beneath it, using normalized,
-    ///   case-insensitive Windows semantics.
+    ///   Returns whether a path is the root itself or
+    ///   a directory beneath it, using normalized, case-insensitive Windows semantics.
     /// </summary>
     /// <param name="path"> The candidate path. </param>
     /// <param name="root"> The root directory. </param>
-    /// <returns> True when <paramref name="path"/> is at or below <paramref name="root"/>. </returns>
+    /// <returns> True when <paramref name="path" /> is at or below <paramref name="root" />. </returns>
     internal static bool IsUnder(string path, string root)
     {
         var normalizedPath = Normalize(path);

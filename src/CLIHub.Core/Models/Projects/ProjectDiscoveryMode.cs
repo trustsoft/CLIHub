@@ -6,12 +6,12 @@ namespace CLIHub.Core.Models;
 public enum ProjectDiscoveryMode
 {
     /// <summary>
-    ///   Only directories that contain a <c>.git</c> entry.
+    ///   Only directories that contain a <c> .git </c> entry.
     /// </summary>
     Git,
 
     /// <summary>
-    ///   Only directories that contain a plugin project indicator (for example <c>.claude</c>).
+    ///   Only directories that contain a plugin project indicator (for example <c> .claude </c>).
     /// </summary>
     Agents,
 
@@ -22,22 +22,22 @@ public enum ProjectDiscoveryMode
 }
 
 /// <summary>
-///   Parses and formats the <see cref="ProjectDiscoveryMode"/> value stored in configuration.
+///   Parses and formats the <see cref="ProjectDiscoveryMode" /> value stored in configuration.
 /// </summary>
 public static class ProjectDiscoveryModes
 {
     /// <summary>
-    ///   Configuration token for <see cref="ProjectDiscoveryMode.Git"/>.
+    ///   Configuration token for <see cref="ProjectDiscoveryMode.Git" />.
     /// </summary>
     public const string GitToken = "git";
 
     /// <summary>
-    ///   Configuration token for <see cref="ProjectDiscoveryMode.Agents"/>.
+    ///   Configuration token for <see cref="ProjectDiscoveryMode.Agents" />.
     /// </summary>
     public const string AgentsToken = "agents";
 
     /// <summary>
-    ///   Configuration token for <see cref="ProjectDiscoveryMode.Both"/>.
+    ///   Configuration token for <see cref="ProjectDiscoveryMode.Both" />.
     /// </summary>
     public const string BothToken = "both";
 
@@ -47,7 +47,7 @@ public static class ProjectDiscoveryModes
     public const ProjectDiscoveryMode Default = ProjectDiscoveryMode.Both;
 
     /// <summary>
-    ///   Returns the mode for a stored token, falling back to <see cref="Default"/> for missing
+    ///   Returns the mode for a stored token, falling back to <see cref="Default" /> for missing
     ///   or unrecognized values.
     /// </summary>
     /// <param name="value"> The stored token. </param>
