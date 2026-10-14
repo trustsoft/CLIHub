@@ -128,7 +128,7 @@ public class AgentProcessMatcherTests
         {
             Id = "test-agent",
             Name = "Test Agent",
-            Commands = null
+            Commands = new AgentCommands()
         };
         var process = CreateProcess(@"C:\tools\test.exe", "test.exe");
 

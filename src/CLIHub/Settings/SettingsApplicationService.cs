@@ -32,6 +32,7 @@ using CLIHub.Core.Scanning;
 /// <param name="ScanDepthText"> Repository scan depth as text. </param>
 /// <param name="IgnoredPatterns"> Ignored directory-name patterns. </param>
 /// <param name="DiscoveryMode"> Which directories count as repositories. </param>
+/// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -80,6 +81,7 @@ public sealed record SettingsInput(
 /// <param name="ScanDepth"> Repository scan depth, within the allowed range. </param>
 /// <param name="IgnoredPatterns"> Ignored directory-name patterns (normalized). </param>
 /// <param name="DiscoveryMode"> Which directories count as repositories. </param>
+/// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,

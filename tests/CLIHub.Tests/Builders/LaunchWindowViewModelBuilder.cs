@@ -145,6 +145,87 @@ public class LaunchWindowViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom agent version service mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithAgentVersionService(Mock<IAgentVersionService> agentVersionService)
+    {
+        this.agentVersionService = agentVersionService;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom logo cache service mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithLogoCacheService(Mock<ILogoCacheService> logoCacheService)
+    {
+        this.logoCacheService = logoCacheService;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom preferences store mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithPreferencesStore(Mock<IPreferencesStore> preferencesStore)
+    {
+        this.preferencesStore = preferencesStore;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom agent command workflow mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithAgentCommandWorkflow(Mock<IAgentCommandWorkflow> agentCommandWorkflow)
+    {
+        this.agentCommandWorkflow = agentCommandWorkflow;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom application operation lifetime mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithOperationLifetime(Mock<IApplicationOperationLifetime> operationLifetime)
+    {
+        this.operationLifetime = operationLifetime;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom settings launcher mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithSettingsLauncher(Mock<ISettingsLauncher> settingsLauncher)
+    {
+        this.settingsLauncher = settingsLauncher;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom external launcher mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithExternalLauncher(Mock<IExternalLauncher> externalLauncher)
+    {
+        this.externalLauncher = externalLauncher;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom agent process inspector mock.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithProcessInspector(Mock<IAgentProcessInspector> processInspector)
+    {
+        this.processInspector = processInspector;
+        return this;
+    }
+
+    /// <summary>
+    ///   Configures the version reported by the default update workflow.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithCurrentVersion(string currentVersion)
+    {
+        this.currentVersion = currentVersion;
+        return this;
+    }
+
+    /// <summary>
     ///   Builds a LaunchWindowViewModel instance with all dependencies configured.
     /// </summary>
     public LaunchWindowViewModel Build()
