@@ -7,20 +7,23 @@ This is the current architecture index. Detailed behavior belongs in the focused
 
 | Project | Target | Responsibility |
 |---|---|---|
-| `CLIHub.Core` | `net10.0` | Domain models, configuration, projects, plugins, agent workflows, updates, and Windows infrastructure. |
+| `CLIHub.Core` | `net10.0` | Domain models, configuration, projects, plugins, agent workflows, updates, process-launch orchestration, and infrastructure ports. |
+| `CLIHub.Core.Windows` | `net10.0-windows` | Windows platform adapters: registry startup, single-instance guard, theme detection, process runners, and agent process inspection. |
 | `CLIHub` | `net10.0-windows` | WPF UI, tray host, startup/shutdown, hotkey, and application composition. |
 | `CLIHub.Core.Tests` | `net10.0` | Core-only xUnit tests. |
+| `CLIHub.Core.Windows.Tests` | `net10.0-windows` | Windows adapter tests, including real-process capture integration. |
 | `CLIHub.Tests` | `net10.0-windows` | Application, ViewModel, composition, and WPF tests. |
 
 Dependency flow:
 
 ```text
-CLIHub.Core.Tests -> CLIHub.Core <- CLIHub <- CLIHub.Tests
+CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows -> CLIHub <- CLIHub.Tests
 ```
 
-`CLIHub.Core` has no WPF dependency. It is UI-independent but Windows-aware: registry startup, named
-mutex/pipe activation, process execution, and agent process inspection live behind Core infrastructure
-boundaries.
+`CLIHub.Core` has no WPF dependency and no Windows API dependency: platform integration lives behind
+ports, and the adapters are in `CLIHub.Core.Windows` (see [ADR-0006](adr/0006-windows-platform-library.md)).
+Windows shell conventions that need no Windows APIs — `ProcessLauncher` and command-line building —
+remain in Core.
 
 ## Runtime Composition
 
@@ -47,9 +50,10 @@ ports and update state; the application workflow owns cross-surface coordination
 - `Agents/` owns commands, detection, versions, availability composition, command capability checks, and
   running-agent process monitoring.
 - `Updates/` owns Core update/release-note contracts and Velopack integration.
-- `Infrastructure/` owns process runners, agent process inspection/matching, filesystem paths, logging
-  persistence, Windows startup, and single-instance integration.
-- `Composition/` groups Core dependency-injection registration.
+- `Infrastructure/` owns process-launch orchestration, agent process matching, filesystem paths, logging
+  persistence, and the infrastructure ports implemented by `CLIHub.Core.Windows`.
+- `Composition/` groups Core dependency-injection registration; `CLIHub.Core.Windows` registers its own
+  adapters via `AddWindowsInfrastructure`, and the application composition root calls both.
 
 Subsystem folders define the namespace. Subfolders used only for navigation — `Models/<area>/`,
 `ViewModels/<area>/`, and `Configuration/Migrations/` — keep the parent subsystem namespace so consumers

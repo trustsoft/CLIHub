@@ -16,19 +16,22 @@ The application does not embed agents, execute plugin code, act as an IDE, or su
 
 | Project | Target | Responsibility |
 |---|---|---|
-| `src/CLIHub.Core` | `net10.0` | UI-independent domain services, models, persistence, plugins, agent workflows, process and Windows infrastructure. |
+| `src/CLIHub.Core` | `net10.0` | UI-independent domain services, models, persistence, plugins, agent workflows, and infrastructure ports. |
+| `src/CLIHub.Core.Windows` | `net10.0-windows` | Windows platform adapters: registry startup, single-instance guard, theme detection, process runners, agent process inspection. |
 | `src/CLIHub` | `net10.0-windows` | WPF composition root, windows, tray host, hotkey, startup/shutdown, and UI workflows. |
 | `tests/CLIHub.Core.Tests` | `net10.0` | Core-only xUnit tests. |
+| `tests/CLIHub.Core.Windows.Tests` | `net10.0-windows` | Windows adapter tests. |
 | `tests/CLIHub.Tests` | `net10.0-windows` | Application, ViewModel, composition, and WPF-dependent tests. |
 
 Dependency direction:
 
 ```text
-CLIHub.Core.Tests -> CLIHub.Core <- CLIHub <- CLIHub.Tests
+CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows -> CLIHub <- CLIHub.Tests
 ```
 
-`CLIHub.Core` must not reference the WPF application. Core is UI-independent but intentionally Windows-aware
-for registry startup, named mutex/pipe activation, process execution, and process inspection.
+`CLIHub.Core` must not reference the WPF application or Windows-only APIs. Windows integration is isolated
+in `CLIHub.Core.Windows` (registry startup, named mutex/pipe activation, process execution adapters, and
+process inspection) behind ports declared in Core.
 
 ## Runtime Facts
 

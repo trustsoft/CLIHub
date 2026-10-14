@@ -27,3 +27,4 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 | 0003  | [Startup orchestration](0003-startup-orchestration.md)                 | Accepted |
 | 0004  | [Plugin catalog and precedence](0004-plugin-catalog-and-precedence.md) | Accepted |
 | 0005  | [UI dialog boundaries](0005-ui-dialog-boundaries.md)                   | Accepted |
+| 0006  | [Windows platform library](0006-windows-platform-library.md)           | Accepted |
