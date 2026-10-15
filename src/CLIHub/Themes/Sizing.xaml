@@ -72,4 +72,14 @@
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
 
+    <!-- Toggle switch (CheckBox rendered as a switch): pill track with a sliding thumb.
+         ThumbMargin is the unchecked rest position; ThumbMarginChecked mirrors it at the
+         right edge: Width - Thumb - inset. -->
+    <sys:Double x:Key="Sizing.Toggle.Width">36</sys:Double>
+    <sys:Double x:Key="Sizing.Toggle.Height">20</sys:Double>
+    <sys:Double x:Key="Sizing.Toggle.Thumb">14</sys:Double>
+    <Thickness x:Key="Sizing.Toggle.ThumbMargin">3,0,0,0</Thickness>
+    <Thickness x:Key="Sizing.Toggle.ThumbMarginChecked">19,0,0,0</Thickness>
+    <CornerRadius x:Key="Sizing.Toggle.CornerRadius">10</CornerRadius>
+
 </ResourceDictionary>

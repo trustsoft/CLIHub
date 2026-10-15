@@ -22,14 +22,14 @@
                            Icon="{x:Static themes:IconGlyphs.Power}">
             <CheckBox HorizontalAlignment="Right"
                       IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
-                      Style="{StaticResource SettingsCheck}"/>
+                      Style="{StaticResource ToggleCheckBox}"/>
         </controls:SettingCard>
         <controls:SettingCard Title="Start minimized to tray"
                            Hint="Start CLIHub minimized in the system tray instead of showing the window."
                            Icon="{x:Static themes:IconGlyphs.ChevronDown}">
             <CheckBox HorizontalAlignment="Right"
                       IsChecked="{Binding StartMinimized, Mode=TwoWay}"
-                      Style="{StaticResource SettingsCheck}"/>
+                      Style="{StaticResource ToggleCheckBox}"/>
         </controls:SettingCard>
     </StackPanel>
 </UserControl>

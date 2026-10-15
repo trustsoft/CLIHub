@@ -28,7 +28,7 @@
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding CheckForUpdatesOnStartup, Mode=TwoWay}"
-                          Style="{StaticResource SettingsCheck}"/>
+                          Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
             <controls:SettingCard Title="Automatically download updates"
                                Hint="Download an available update in the background."
@@ -36,7 +36,7 @@
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding AutoDownloadUpdates, Mode=TwoWay}"
-                          Style="{StaticResource SettingsCheck}"/>
+                          Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
             <controls:SettingCard Title="Notify about stable releases"
                                Hint="Show a notification when a stable update is available."
@@ -44,7 +44,7 @@
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding NotifyStableUpdates, Mode=TwoWay}"
-                          Style="{StaticResource SettingsCheck}"/>
+                          Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
             <controls:SettingCard Title="Notify about pre-release versions"
                                Hint="Include pre-release versions and notify when one is available."
@@ -52,7 +52,7 @@
                                Grouped="True">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding NotifyPrereleaseUpdates, Mode=TwoWay}"
-                          Style="{StaticResource SettingsCheck}"/>
+                          Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
         </controls:SettingsGroup>
 

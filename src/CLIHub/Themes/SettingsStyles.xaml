@@ -168,6 +168,63 @@
         </Setter>
     </Style>
 
+    <!-- Checkbox as a toggle switch: pill track, sliding thumb, accent fill when checked.
+         The thumb rests at Sizing.Toggle.ThumbMargin and moves to ThumbMarginChecked when on. -->
+    <Style x:Key="ToggleCheckBox" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <StackPanel Background="Transparent" Orientation="Horizontal">
+                        <Grid Width="{StaticResource Sizing.Toggle.Width}"
+                              Height="{StaticResource Sizing.Toggle.Height}"
+                              VerticalAlignment="Center">
+                            <Border x:Name="Track"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource Sizing.Toggle.CornerRadius}"/>
+                            <Ellipse x:Name="Thumb"
+                                     Width="{StaticResource Sizing.Toggle.Thumb}"
+                                     Height="{StaticResource Sizing.Toggle.Thumb}"
+                                     Margin="{StaticResource Sizing.Toggle.ThumbMargin}"
+                                     HorizontalAlignment="Left"
+                                     VerticalAlignment="Center"
+                                     Fill="{DynamicResource TextMutedBrush}"/>
+                        </Grid>
+                        <ContentPresenter Margin="9,0,0,0"
+                                          VerticalAlignment="Center"
+                                          RecognizesAccessKey="True"/>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Thumb" Property="Margin" Value="{StaticResource Sizing.Toggle.ThumbMarginChecked}"/>
+                            <Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource ChromeBgBrush}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="False"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                            <Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource DisabledTextBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Segmented selector: bordered group, accent-tinted selected segment -->
     <Style x:Key="SegmentItem" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
