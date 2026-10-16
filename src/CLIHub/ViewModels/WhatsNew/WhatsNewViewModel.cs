@@ -1,9 +1,7 @@
 namespace CLIHub.ViewModels;
 
-using System.ComponentModel;
 using System.Windows;
 
-using CLIHub;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Lifetime;

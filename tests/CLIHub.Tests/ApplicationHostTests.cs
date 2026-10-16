@@ -1,6 +1,5 @@
 namespace CLIHub.Tests;
 
-using CLIHub;
 using CLIHub.Startup;
 
 public sealed class ApplicationHostTests

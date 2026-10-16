@@ -2,7 +2,6 @@ namespace CLIHub.Tests.Services;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Launching;

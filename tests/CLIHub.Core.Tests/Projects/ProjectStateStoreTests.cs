@@ -1,7 +1,6 @@
 namespace CLIHub.Core.Tests.Projects;
 
 using CLIHub.Core.Models;
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Tests.Fakes;
 

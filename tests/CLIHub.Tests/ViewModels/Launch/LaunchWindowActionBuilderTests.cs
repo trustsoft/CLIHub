@@ -4,8 +4,6 @@ using System.Windows.Input;
 
 using Moq;
 
-using CLIHub.ViewModels;
-
 public class LaunchWindowActionBuilderTests
 {
     [Fact]

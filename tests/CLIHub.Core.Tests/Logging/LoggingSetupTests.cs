@@ -2,7 +2,6 @@ namespace CLIHub.Core.Tests.Logging;
 
 using CLIHub.Core.Logging;
 
-using Serilog;
 using Serilog.Events;
 
 public class LoggingSetupTests : IDisposable

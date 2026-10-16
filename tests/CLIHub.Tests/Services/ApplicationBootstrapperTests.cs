@@ -5,11 +5,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
-using CLIHub.Core.Updates;
 using CLIHub.Startup;
 using CLIHub.Lifetime;
 using CLIHub.Composition;
@@ -94,7 +91,7 @@ public class ApplicationBootstrapperTests
     [Fact]
     public void AddClIHubServices_RegistersBootstrapperAndGuardPort()
     {
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+        var services = new ServiceCollection();
         services.AddClIHubServices();
         services.ReplaceGuardWithUniqueNames();
 
@@ -120,7 +117,7 @@ public class ApplicationBootstrapperTests
         public Mock<IHotkeyStartupRegistrar> Hotkey { get; } = new(MockBehavior.Strict);
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
         public Mock<IOptionalStartupCoordinator> OptionalStartup { get; } = new(MockBehavior.Strict);
-        public Mock<CLIHub.Core.Scanning.IProjectScanner> ProjectScanner { get; } = new();
+        public Mock<Core.Scanning.IProjectScanner> ProjectScanner { get; } = new();
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
         public Mock<IStartupWindow> Window { get; } = new(MockBehavior.Strict);
 

@@ -6,7 +6,6 @@ using System.IO;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
-using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Lifetime;
 

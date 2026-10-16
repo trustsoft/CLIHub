@@ -1,7 +1,6 @@
 namespace CLIHub.Core.Windows;
 
 using System.Diagnostics;
-using System.Management;
 
 using CLIHub.Core.Infrastructure.Processes;
 

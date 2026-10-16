@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
-using CLIHub.ViewModels;
 
 public class AgentListSynchronizerTests
 {

@@ -2,8 +2,6 @@ namespace CLIHub.Core.Windows.Tests;
 
 using System.Runtime.Versioning;
 
-using CLIHub.Core.Infrastructure.Processes;
-
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Xunit;

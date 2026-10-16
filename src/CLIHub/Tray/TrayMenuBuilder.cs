@@ -1,9 +1,6 @@
 namespace CLIHub.Tray;
 
-using System.Windows;
 using System.Windows.Controls;
-
-using CLIHub.Core.Models;
 
 /// <summary>
 ///   Projects prepared tray state and commands into a WPF context menu.

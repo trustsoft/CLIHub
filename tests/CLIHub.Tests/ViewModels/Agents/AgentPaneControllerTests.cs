@@ -2,12 +2,10 @@ namespace CLIHub.ViewModels;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using CLIHub.ViewModels;
 using CLIHub.Lifetime;
 
 public class AgentPaneControllerTests

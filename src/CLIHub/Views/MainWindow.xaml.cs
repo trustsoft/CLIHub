@@ -6,7 +6,6 @@ using System.Windows;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Plugins;

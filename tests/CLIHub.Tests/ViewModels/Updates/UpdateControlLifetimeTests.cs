@@ -4,9 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
-using CLIHub.Core.Updates;
-using CLIHub.ViewModels;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
 

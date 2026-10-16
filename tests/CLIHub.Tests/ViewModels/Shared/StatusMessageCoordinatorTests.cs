@@ -2,14 +2,11 @@ namespace CLIHub.ViewModels;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
-using CLIHub.Core.Updates;
-using CLIHub.ViewModels;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
 using CLIHub.Launching;

@@ -1,7 +1,6 @@
 namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Models;
-using CLIHub.ViewModels;
 
 /// <summary>
 ///   Tests for AgentItem capability detection.

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Windows;

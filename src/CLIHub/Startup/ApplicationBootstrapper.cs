@@ -2,8 +2,6 @@ namespace CLIHub.Startup;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Configuration;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Scanning;
 using CLIHub.Lifetime;
 

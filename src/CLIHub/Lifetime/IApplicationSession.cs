@@ -1,6 +1,7 @@
 namespace CLIHub.Lifetime;
 
 using CLIHub.Startup;
+
 /// <summary>
 ///   Owns application-level event subscriptions for the running first-instance session.
 /// </summary>

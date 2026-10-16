@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;

@@ -5,7 +5,6 @@ using System.Windows.Input;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Lifetime;

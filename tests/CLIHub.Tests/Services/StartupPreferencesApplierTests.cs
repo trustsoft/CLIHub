@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
-using CLIHub.Core;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;

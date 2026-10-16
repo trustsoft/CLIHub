@@ -5,7 +5,6 @@ using System.Windows;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub;
 using CLIHub.Themes;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;

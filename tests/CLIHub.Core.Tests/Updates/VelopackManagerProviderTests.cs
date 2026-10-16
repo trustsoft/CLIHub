@@ -2,8 +2,6 @@ namespace CLIHub.Core.Tests.Updates;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using Moq;
-
 using CLIHub.Core.Updates;
 
 using Velopack;

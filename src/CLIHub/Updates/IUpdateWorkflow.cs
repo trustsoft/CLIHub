@@ -1,6 +1,5 @@
 namespace CLIHub.Updates;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 
 /// <summary>

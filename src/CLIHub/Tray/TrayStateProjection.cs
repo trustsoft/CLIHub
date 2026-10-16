@@ -1,6 +1,5 @@
 namespace CLIHub.Tray;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Updates;

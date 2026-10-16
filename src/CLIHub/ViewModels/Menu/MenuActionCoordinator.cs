@@ -3,8 +3,6 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.Windows.Input;
 
-using CLIHub.Core.Models;
-
 /// <summary>
 ///   Coordinates menu action construction and filter synchronization for the launch window.
 /// </summary>

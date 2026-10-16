@@ -1,9 +1,10 @@
 namespace CLIHub.Core.Agents;
 
+using Microsoft.Extensions.Logging;
+
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Monitors running agent processes for update safety checks.
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 public sealed class AgentProcessMonitor
 {
     private readonly IAgentProcessInspector processInspector;
-    private readonly Infrastructure.Processes.AgentProcessMatcher processMatcher;
+    private readonly AgentProcessMatcher processMatcher;
     private readonly IPluginCatalog pluginCatalog;
     private readonly ILogger<AgentProcessMonitor> logger;
 

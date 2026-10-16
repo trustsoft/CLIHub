@@ -1,7 +1,6 @@
 namespace CLIHub.Startup;
 
 using CLIHub.Core.Windows;
-using CLIHub.Core.Updates;
 using CLIHub.Updates;
 using CLIHub.Lifetime;
 

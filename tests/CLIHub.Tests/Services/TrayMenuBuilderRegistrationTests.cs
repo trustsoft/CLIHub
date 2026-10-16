@@ -2,7 +2,6 @@ namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using CLIHub;
 using CLIHub.Tray;
 using CLIHub.Composition;
 

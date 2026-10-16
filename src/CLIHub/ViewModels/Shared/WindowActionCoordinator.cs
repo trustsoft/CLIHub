@@ -1,6 +1,5 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;

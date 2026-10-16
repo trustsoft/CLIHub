@@ -3,8 +3,6 @@ namespace CLIHub.Tests;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 
-using CLIHub;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Startup;
 using CLIHub.Lifetime;

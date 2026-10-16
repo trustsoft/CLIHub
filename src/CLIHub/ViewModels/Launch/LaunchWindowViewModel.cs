@@ -3,11 +3,9 @@ namespace CLIHub.ViewModels;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
-using CLIHub;
+using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
-using CLIHub.Core.Formatting;
 using CLIHub.Helpers;
 using CLIHub.Launching;
 using CLIHub.Lifetime;

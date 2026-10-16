@@ -12,7 +12,7 @@ public class AgentProcessMonitorTests
 {
     private readonly Mock<IAgentProcessInspector> mockInspector;
     private readonly Mock<IPluginCatalog> mockCatalog;
-    private readonly CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher matcher;
+    private readonly AgentProcessMatcher matcher;
     private readonly AgentProcessMonitor monitor;
 
     public AgentProcessMonitorTests()

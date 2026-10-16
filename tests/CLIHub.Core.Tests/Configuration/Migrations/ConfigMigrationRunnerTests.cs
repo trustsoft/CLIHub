@@ -3,7 +3,6 @@ namespace CLIHub.Core.Tests.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Models;
 
 public class ConfigMigrationRunnerTests
 {

@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub;
-using CLIHub.Core;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;

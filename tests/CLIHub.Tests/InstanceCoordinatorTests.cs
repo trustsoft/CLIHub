@@ -2,7 +2,6 @@ namespace CLIHub.Tests;
 
 using Moq;
 
-using CLIHub;
 using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 

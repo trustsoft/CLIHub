@@ -1,7 +1,5 @@
 namespace CLIHub.Core.Plugins;
 
-using CLIHub.Core.Models;
-
 /// <summary>
 ///   Reads and deserializes a plugin descriptor from a plugin directory.
 /// </summary>

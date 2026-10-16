@@ -3,7 +3,6 @@ namespace CLIHub.ViewModels;
 using System.Collections.ObjectModel;
 
 using CLIHub.Core.Agents;
-using CLIHub.Core.Models;
 
 /// <summary>
 ///   Applies composed agent entries to the launch-window rows while preserving stable row identity.

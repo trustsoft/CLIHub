@@ -4,8 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
-using CLIHub;
-using CLIHub.Core;
 using CLIHub.Core.Plugins;
 using CLIHub.Startup;
 using CLIHub.Composition;

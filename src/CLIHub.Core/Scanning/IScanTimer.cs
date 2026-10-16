@@ -45,7 +45,7 @@ public sealed class SystemScanTimerFactory : IScanTimerFactory
 
 internal sealed class SystemScanTimer : IScanTimer
 {
-    private readonly System.Threading.Timer timer;
+    private readonly Timer timer;
 
     public SystemScanTimer() =>
         this.timer = new System.Threading.Timer(

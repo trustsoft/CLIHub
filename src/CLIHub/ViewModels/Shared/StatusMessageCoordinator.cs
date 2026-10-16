@@ -1,7 +1,5 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub;
-
 /// <summary>
 ///   Coordinates status messages from multiple sources: controller events,
 ///   command outcomes, preference changes, and error conditions.
