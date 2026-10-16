@@ -27,9 +27,9 @@ public sealed class ApplicationHost : IApplicationHost
 
         Log.Information("CLIHub starting");
 
-        var services = new ServiceCollection();
-        services.AddClIHubServices();
-        this.services = services.BuildServiceProvider();
+        var collection = new ServiceCollection();
+        collection.AddClIHubServices();
+        this.services = collection.BuildServiceProvider();
 
         this.services.GetRequiredService<IApplicationBootstrapper>().Start(
             new ApplicationStartupContext(dispatch, setMainWindow));

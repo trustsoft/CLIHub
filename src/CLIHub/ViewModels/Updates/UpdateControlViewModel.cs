@@ -237,14 +237,14 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
                     : UpdateControlState.Idle);
     }
 
-    private void SetState(UpdateControlState state)
+    private void SetState(UpdateControlState updateState)
     {
-        if (this.state == state)
+        if (this.state == updateState)
         {
             return;
         }
 
-        this.state = state;
+        this.state = updateState;
         this.OnPropertyChanged(nameof(this.UpdateButtonText));
         this.OnPropertyChanged(nameof(this.IsUpdateActionAvailable));
         CommandManager.InvalidateRequerySuggested();

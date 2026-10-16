@@ -45,10 +45,10 @@ public sealed class PreferenceApplier : IPreferenceApplier
     }
 
     /// <inheritdoc />
-    public void ApplyRuntime(RuntimeKind runtime)
+    public void ApplyRuntime(RuntimeKind runtimeKind)
     {
-        this.runtime.SetRuntime(runtime);
-        this.logger.LogInformation("Default runtime set to {Runtime}", runtime);
+        this.runtime.SetRuntime(runtimeKind);
+        this.logger.LogInformation("Default runtime set to {Runtime}", runtimeKind);
     }
 
     /// <inheritdoc />

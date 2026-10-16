@@ -37,7 +37,7 @@ public sealed class ProcessLauncher
     /// <summary>
     ///   Sets the runtime used to launch interactive agent commands.
     /// </summary>
-    public void SetRuntime(RuntimeKind runtime) => this.runtime = runtime;
+    public void SetRuntime(RuntimeKind runtimeKind) => this.runtime = runtimeKind;
 
     /// <summary>
     ///   Gets the configured runtime.
