@@ -37,10 +37,9 @@ public static class ReleaseNotesPrompt
     /// <param name="recordedVersion"> The last version whose notes were shown, or null on a first run. </param>
     /// <param name="currentVersion"> The running application version. </param>
     /// <param name="hasNotesForCurrentVersion"> Whether the running version has release notes. </param>
-    public static ReleaseNotesPromptAction Decide(
-        string? recordedVersion,
-        string currentVersion,
-        bool hasNotesForCurrentVersion)
+    public static ReleaseNotesPromptAction Decide(string? recordedVersion,
+                                                  string currentVersion,
+                                                  bool hasNotesForCurrentVersion)
     {
         if (string.IsNullOrWhiteSpace(currentVersion))
         {

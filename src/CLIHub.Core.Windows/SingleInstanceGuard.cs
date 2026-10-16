@@ -32,8 +32,7 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     ///   Creates the guard with the production mutex and pipe names and acquires the
     ///   single-instance mutex.
     /// </summary>
-    public SingleInstanceGuard()
-        : this(MutexName, PipeName)
+    public SingleInstanceGuard() : this(MutexName, PipeName)
     {
     }
 
@@ -102,7 +101,7 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
 
                 if (string.Equals(message, "SHOW", StringComparison.OrdinalIgnoreCase))
                 {
-                    ActivationRequested?.Invoke();
+                    this.ActivationRequested?.Invoke();
                 }
             }
             catch (OperationCanceledException)

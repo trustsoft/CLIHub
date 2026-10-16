@@ -23,11 +23,10 @@ public sealed class AgentProcessMonitor
     /// <param name="processMatcher"> The process matcher. </param>
     /// <param name="pluginCatalog"> The plugin catalog. </param>
     /// <param name="logger"> The logger instance. </param>
-    public AgentProcessMonitor(
-        IAgentProcessInspector processInspector,
-        Infrastructure.Processes.AgentProcessMatcher processMatcher,
-        IPluginCatalog pluginCatalog,
-        ILogger<AgentProcessMonitor> logger)
+    public AgentProcessMonitor(IAgentProcessInspector processInspector,
+                               AgentProcessMatcher processMatcher,
+                               IPluginCatalog pluginCatalog,
+                               ILogger<AgentProcessMonitor> logger)
     {
         this.processInspector = processInspector;
         this.processMatcher = processMatcher;

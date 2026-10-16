@@ -21,11 +21,10 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
     /// <param name="releaseNotesStartup"> Release-notes startup workflow. </param>
     /// <param name="updateStartup"> Startup update-check workflow. </param>
     /// <param name="logger"> Logger for optional operation failures. </param>
-    public OptionalStartupCoordinator(
-        IApplicationOperationLifetime operationLifetime,
-        IReleaseNotesStartupCoordinator releaseNotesStartup,
-        IUpdateStartupCoordinator updateStartup,
-        ILogger<OptionalStartupCoordinator> logger)
+    public OptionalStartupCoordinator(IApplicationOperationLifetime operationLifetime,
+                                      IReleaseNotesStartupCoordinator releaseNotesStartup,
+                                      IUpdateStartupCoordinator updateStartup,
+                                      ILogger<OptionalStartupCoordinator> logger)
     {
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.releaseNotesStartup = releaseNotesStartup ?? throw new ArgumentNullException(nameof(releaseNotesStartup));
@@ -34,10 +33,9 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
     }
 
     /// <inheritdoc />
-    public void RunOptionalStartup(
-        StartupState startupState,
-        IApplicationStartupUi startupUi,
-        ApplicationStartupContext context)
+    public void RunOptionalStartup(StartupState startupState,
+                                   IApplicationStartupUi startupUi,
+                                   ApplicationStartupContext context)
     {
         ArgumentNullException.ThrowIfNull(startupState);
         ArgumentNullException.ThrowIfNull(startupUi);
@@ -55,11 +53,10 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
                     cancellationToken)));
     }
 
-    private async Task RunStartupUpdateCheckAsync(
-        bool enabled,
-        IApplicationStartupUi startupUi,
-        ApplicationStartupContext context,
-        CancellationToken cancellationToken)
+    private async Task RunStartupUpdateCheckAsync(bool enabled,
+                                                  IApplicationStartupUi startupUi,
+                                                  ApplicationStartupContext context,
+                                                  CancellationToken cancellationToken)
     {
         try
         {

@@ -14,17 +14,17 @@ public static class ComboBoxBehaviors
     ///   Identifies the <c> AutoWidthToItems </c> attached property. When true, the combo box sizes
     ///   itself to the widest item so the closed control and its drop-down share the same width.
     /// </summary>
-    public static readonly DependencyProperty AutoWidthToItemsProperty = DependencyProperty.RegisterAttached(
-        "AutoWidthToItems",
-        typeof(bool),
-        typeof(ComboBoxBehaviors),
-        new PropertyMetadata(false, OnAutoWidthToItemsChanged));
+    public static readonly DependencyProperty AutoWidthToItemsProperty =
+            DependencyProperty.RegisterAttached("AutoWidthToItems",
+                                                typeof(bool),
+                                                typeof(ComboBoxBehaviors),
+                                                new PropertyMetadata(false, OnAutoWidthToItemsChanged));
 
-    private static readonly DependencyProperty ObserverProperty = DependencyProperty.RegisterAttached(
-        "Observer",
-        typeof(AutoWidthObserver),
-        typeof(ComboBoxBehaviors),
-        new PropertyMetadata(null));
+    private static readonly DependencyProperty ObserverProperty =
+            DependencyProperty.RegisterAttached("Observer",
+                                                typeof(AutoWidthObserver),
+                                                typeof(ComboBoxBehaviors),
+                                                new PropertyMetadata(null));
 
     /// <summary>
     ///   Sets whether the combo box sizes itself to its widest item.

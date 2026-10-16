@@ -35,13 +35,12 @@ public sealed class ShellCoordinator : IShellCoordinator
     /// <param name="singleInstanceGuard"> Single-instance activation source. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="context"> WPF lifecycle callbacks for dispatcher and window registration. </param>
-    public ShellCoordinator(
-        IApplicationOperationLifetime operationLifetime,
-        Func<IApplicationStartupUi> startupUiFactory,
-        Func<IUpdateRequestSource> updateRequestSourceFactory,
-        ISingleInstanceGuard singleInstanceGuard,
-        IUpdateWorkflow updateWorkflow,
-        ApplicationStartupContext context)
+    public ShellCoordinator(IApplicationOperationLifetime operationLifetime,
+                            Func<IApplicationStartupUi> startupUiFactory,
+                            Func<IUpdateRequestSource> updateRequestSourceFactory,
+                            ISingleInstanceGuard singleInstanceGuard,
+                            IUpdateWorkflow updateWorkflow,
+                            ApplicationStartupContext context)
     {
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));

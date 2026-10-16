@@ -74,10 +74,11 @@ public sealed class ApplicationHost : IApplicationHost
         var level = LogLevelParser.Parse(PreferenceReader.ReadLogLevel(configPath));
         var retentionDays = PreferenceReader.ReadLogRetentionDays(configPath) ?? 7;
         var sizeLimitMb = PreferenceReader.ReadLogFileSizeLimitMb(configPath) ?? 0;
-        var sizeLimitBytes = sizeLimitMb > 0 ? sizeLimitMb * 1024L * 1024L : (long?)null;
+        var sizeLimitBytes = sizeLimitMb > 0
+                                 ? sizeLimitMb * 1024L * 1024L
+                                 : (long?)null;
 
-        Log.Logger = LoggingSetup.CreateLogger(
-            AppPaths.LogsDirectory,
+        Log.Logger = LoggingSetup.CreateLogger(AppPaths.LogsDirectory,
             level,
             retentionDays,
             sizeLimitBytes);

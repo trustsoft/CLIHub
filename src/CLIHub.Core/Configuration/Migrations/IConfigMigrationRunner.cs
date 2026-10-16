@@ -17,8 +17,7 @@ public interface IConfigMigrationRunner
     /// <param name="snapshot"> The detached snapshot to migrate. </param>
     /// <param name="targetVersion"> The schema version required by the application. </param>
     /// <returns> The migrated snapshot and its resulting schema version. </returns>
-    ConfigurationMigrationResult Migrate(
-        int sourceVersion,
-        ConfigurationSnapshot snapshot,
-        int targetVersion);
+    ConfigurationMigrationResult Migrate(int sourceVersion,
+                                         ConfigurationSnapshot snapshot,
+                                         int targetVersion);
 }

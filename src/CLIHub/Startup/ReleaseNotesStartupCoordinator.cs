@@ -23,11 +23,10 @@ public sealed class ReleaseNotesStartupCoordinator : IReleaseNotesStartupCoordin
     /// <param name="releaseNotes"> Provides release notes for the running version. </param>
     /// <param name="launcher"> Shows the notes or records them as seen. </param>
     /// <param name="logger"> Logger for non-fatal startup failures. </param>
-    public ReleaseNotesStartupCoordinator(
-        IUpdateVersionProvider versionProvider,
-        IReleaseNotesService releaseNotes,
-        IReleaseNotesLauncher launcher,
-        ILogger<ReleaseNotesStartupCoordinator> logger)
+    public ReleaseNotesStartupCoordinator(IUpdateVersionProvider versionProvider,
+                                          IReleaseNotesService releaseNotes,
+                                          IReleaseNotesLauncher launcher,
+                                          ILogger<ReleaseNotesStartupCoordinator> logger)
     {
         this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
         this.releaseNotes = releaseNotes ?? throw new ArgumentNullException(nameof(releaseNotes));

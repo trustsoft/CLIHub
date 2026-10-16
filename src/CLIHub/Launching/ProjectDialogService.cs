@@ -26,18 +26,18 @@ public sealed class ProjectDialogService : IProjectDialogService
     }
 
     /// <inheritdoc />
-    public bool ConfirmProjectRemoval(string projectName) =>
-        Show(
-            $"Remove \"{projectName}\" from CLIHub?\n\nThe folder and its files are not deleted.",
-            "CLIHub",
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question) == MessageBoxResult.Yes;
+    public bool ConfirmProjectRemoval(string projectName)
+    {
+        return Show($"Remove \"{projectName}\" from CLIHub?\n\nThe folder and its files are not deleted.",
+                   "CLIHub",
+                   MessageBoxButton.YesNo,
+                   MessageBoxImage.Question) == MessageBoxResult.Yes;
+    }
 
-    private static MessageBoxResult Show(
-        string message,
-        string title,
-        MessageBoxButton buttons,
-        MessageBoxImage image)
+    private static MessageBoxResult Show(string message,
+                                         string title,
+                                         MessageBoxButton buttons,
+                                         MessageBoxImage image)
     {
         var owner = Application.Current?.MainWindow;
 

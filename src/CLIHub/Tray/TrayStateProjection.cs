@@ -25,10 +25,9 @@ public sealed class TrayStateProjection : IDisposable
     /// <param name="projects"> Project state source. </param>
     /// <param name="pluginCatalog"> Current plugin catalog. </param>
     /// <param name="updates"> Shared application update workflow. </param>
-    public TrayStateProjection(
-        IProjectService projects,
-        IPluginCatalog pluginCatalog,
-        IUpdateWorkflow updates)
+    public TrayStateProjection(IProjectService projects,
+                               IPluginCatalog pluginCatalog,
+                               IUpdateWorkflow updates)
     {
         this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
         this.pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));

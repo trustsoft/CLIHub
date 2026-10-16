@@ -17,10 +17,9 @@ public sealed class StartupStateLoader : IStartupStateLoader
     /// <param name="pluginInitialization"> Plugin initialization workflow. </param>
     /// <param name="preferencesStore"> Preferences persistence boundary. </param>
     /// <param name="startupPreferences"> Startup preference applier. </param>
-    public StartupStateLoader(
-        IPluginInitializationService pluginInitialization,
-        IPreferencesStore preferencesStore,
-        IStartupPreferencesApplier startupPreferences)
+    public StartupStateLoader(IPluginInitializationService pluginInitialization,
+                              IPreferencesStore preferencesStore,
+                              IStartupPreferencesApplier startupPreferences)
     {
         this.pluginInitialization = pluginInitialization ?? throw new ArgumentNullException(nameof(pluginInitialization));
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));

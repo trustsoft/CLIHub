@@ -33,8 +33,7 @@ public static class ServiceRegistration
     /// <returns> The configured service collection. </returns>
     public static IServiceCollection AddClIHubServices(this IServiceCollection services)
     {
-        services.AddClIHubCoreServices(
-            Path.Combine(AppContext.BaseDirectory, "default-project.png"));
+        services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-project.png"));
         services.AddWindowsInfrastructure();
 
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));

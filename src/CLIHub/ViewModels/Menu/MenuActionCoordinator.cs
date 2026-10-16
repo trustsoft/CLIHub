@@ -50,17 +50,16 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
     /// <param name="showVersion"> Command for showing agent version. </param>
     /// <param name="actionBuilder"> Builder for constructing the action menu structures. </param>
     /// <param name="initialFilterState"> Initial value for the "Show only project agents" filter. </param>
-    public MenuActionCoordinator(
-        ICommand addProject,
-        ICommand removeProject,
-        ICommand toggleFavorite,
-        ICommand refresh,
-        ICommand launch,
-        ICommand resume,
-        ICommand update,
-        ICommand showVersion,
-        LaunchWindowActionBuilder actionBuilder,
-        bool initialFilterState)
+    public MenuActionCoordinator(ICommand addProject,
+                                 ICommand removeProject,
+                                 ICommand toggleFavorite,
+                                 ICommand refresh,
+                                 ICommand launch,
+                                 ICommand resume,
+                                 ICommand update,
+                                 ICommand showVersion,
+                                 LaunchWindowActionBuilder actionBuilder,
+                                 bool initialFilterState)
     {
         ArgumentNullException.ThrowIfNull(addProject);
         ArgumentNullException.ThrowIfNull(removeProject);
@@ -72,16 +71,15 @@ public sealed class MenuActionCoordinator : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(showVersion);
         ArgumentNullException.ThrowIfNull(actionBuilder);
 
-        var actions = actionBuilder.Build(
-            addProject,
-            removeProject,
-            toggleFavorite,
-            refresh,
-            launch,
-            resume,
-            update,
-            showVersion,
-            initialFilterState);
+        var actions = actionBuilder.Build(addProject,
+                                          removeProject,
+                                          toggleFavorite,
+                                          refresh,
+                                          launch,
+                                          resume,
+                                          update,
+                                          showVersion,
+                                          initialFilterState);
 
         this.ProjectsActions = actions.Projects;
         this.AgentsActions = actions.Agents;

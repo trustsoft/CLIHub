@@ -16,11 +16,10 @@ public static class LoggingSetup
     /// <param name="minimumLevel"> Minimum level to record. </param>
     /// <param name="retainedFileCountLimit"> Number of daily files to retain. </param>
     /// <param name="fileSizeLimitBytes"> Per-file size limit in bytes, or null for unlimited. </param>
-    public static Logger CreateLogger(
-        string logsDirectory,
-        LogEventLevel minimumLevel,
-        int retainedFileCountLimit = 7,
-        long? fileSizeLimitBytes = null)
+    public static Logger CreateLogger(string logsDirectory,
+                                      LogEventLevel minimumLevel,
+                                      int retainedFileCountLimit = 7,
+                                      long? fileSizeLimitBytes = null)
     {
         Directory.CreateDirectory(logsDirectory);
 

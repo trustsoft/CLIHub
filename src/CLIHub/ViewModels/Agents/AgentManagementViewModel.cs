@@ -38,14 +38,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="launcher"> Opens the agent's configuration file. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked actions. </param>
     /// <param name="logger"> Logger. </param>
-    public AgentManagementViewModel(
-        IPluginCatalog catalog,
-        IAgentDetectionService detection,
-        IAgentVersionService version,
-        IAgentManagementService management,
-        IExternalLauncher launcher,
-        IApplicationOperationLifetime operationLifetime,
-        ILogger<AgentManagementViewModel> logger)
+    public AgentManagementViewModel(IPluginCatalog catalog,
+                                    IAgentDetectionService detection,
+                                    IAgentVersionService version,
+                                    IAgentManagementService management,
+                                    IExternalLauncher launcher,
+                                    IApplicationOperationLifetime operationLifetime,
+                                    ILogger<AgentManagementViewModel> logger)
     {
         this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
@@ -155,10 +154,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         {
             foreach (var card in this.Cards.ToList())
             {
-                var version = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
+                var ver = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
                 if (!this.disposed)
                 {
-                    card.Version = version ?? "unknown";
+                    card.Version = ver ?? "unknown";
                 }
             }
 

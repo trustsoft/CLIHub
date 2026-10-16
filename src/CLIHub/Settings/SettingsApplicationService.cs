@@ -144,12 +144,11 @@ public sealed class SettingsApplicationService
     /// <param name="applier"> Runtime system preference boundary. </param>
     /// <param name="projectScanner"> Repository scanner reconfigured after scanning settings change. </param>
     /// <param name="logger"> Logger for application and rollback failures. </param>
-    public SettingsApplicationService(
-        IPreferencesStore preferencesStore,
-        IStartupService startupService,
-        IPreferenceApplier applier,
-        IProjectScanner projectScanner,
-        ILogger<SettingsApplicationService> logger)
+    public SettingsApplicationService(IPreferencesStore preferencesStore,
+                                      IStartupService startupService,
+                                      IPreferenceApplier applier,
+                                      IProjectScanner projectScanner,
+                                      ILogger<SettingsApplicationService> logger)
     {
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));

@@ -46,15 +46,14 @@ public sealed class ProjectScanningService : IProjectScanner
     /// <param name="logger"> Logger. </param>
     /// <param name="timeProvider"> Optional time source for scan timestamps. </param>
     /// <param name="synchronizationContext"> Optional owner context for tests; otherwise captured at start. </param>
-    public ProjectScanningService(
-        IPreferencesStore preferences,
-        IProjectService projects,
-        IPluginCatalog plugins,
-        IRepositoryWatcherFactory watcherFactory,
-        IScanTimerFactory timerFactory,
-        ILogger<ProjectScanningService> logger,
-        TimeProvider? timeProvider = null,
-        SynchronizationContext? synchronizationContext = null)
+    public ProjectScanningService(IPreferencesStore preferences,
+                                  IProjectService projects,
+                                  IPluginCatalog plugins,
+                                  IRepositoryWatcherFactory watcherFactory,
+                                  IScanTimerFactory timerFactory,
+                                  ILogger<ProjectScanningService> logger,
+                                  TimeProvider? timeProvider = null,
+                                  SynchronizationContext? synchronizationContext = null)
     {
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
@@ -306,10 +305,9 @@ public sealed class ProjectScanningService : IProjectScanner
         });
     }
 
-    private IReadOnlyList<string> ComputeRemovals(
-        IReadOnlyList<string> discoveredPaths,
-        IReadOnlyList<string> watchedRoots,
-        IReadOnlyList<string> scannedRoots)
+    private IReadOnlyList<string> ComputeRemovals(IReadOnlyList<string> discoveredPaths,
+                                                  IReadOnlyList<string> watchedRoots,
+                                                  IReadOnlyList<string> scannedRoots)
     {
         var existing = this.projects.GetAllProjects();
         var discovered = new HashSet<string>(discoveredPaths.Select(ProjectPathPolicy.Normalize), StringComparer.OrdinalIgnoreCase);

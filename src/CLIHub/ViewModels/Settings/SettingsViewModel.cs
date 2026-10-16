@@ -199,16 +199,15 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
     /// <param name="projectScanner"> Scanner whose status is shown on the Projects &amp; Paths page. </param>
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
-    public SettingsViewModel(
-        SettingsApplicationService settingsApplication,
-        IUpdateVersionProvider versionProvider,
-        IUpdateWorkflow updateWorkflow,
-        IApplicationOperationLifetime operationLifetime,
-        IExternalLauncher externalLauncher,
-        IProjectDialogService dialogs,
-        IProjectScanner projectScanner,
-        IAgentManagementSection agentsState,
-        ILogger<SettingsViewModel> logger)
+    public SettingsViewModel(SettingsApplicationService settingsApplication,
+                             IUpdateVersionProvider versionProvider,
+                             IUpdateWorkflow updateWorkflow,
+                             IApplicationOperationLifetime operationLifetime,
+                             IExternalLauncher externalLauncher,
+                             IProjectDialogService dialogs,
+                             IProjectScanner projectScanner,
+                             IAgentManagementSection agentsState,
+                             ILogger<SettingsViewModel> logger)
     {
         this.settingsApplication = settingsApplication;
         this.versionProvider = versionProvider;

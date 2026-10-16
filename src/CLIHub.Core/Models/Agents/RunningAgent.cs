@@ -5,6 +5,4 @@ namespace CLIHub.Core.Models;
 /// </summary>
 /// <param name="Plugin"> The plugin that this process belongs to. </param>
 /// <param name="Process"> The running process instance. </param>
-public record RunningAgent(
-    Plugin Plugin,
-    AgentProcessInstance Process);
+public record RunningAgent(Plugin Plugin, AgentProcessInstance Process);

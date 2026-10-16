@@ -88,9 +88,8 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
         }
     }
 
-    private async Task RunObservedAsync(
-        string operationName,
-        Func<CancellationToken, Task> operation)
+    private async Task RunObservedAsync(string operationName,
+                                        Func<CancellationToken, Task> operation)
     {
         try
         {

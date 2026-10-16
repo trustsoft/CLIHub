@@ -5,12 +5,11 @@ using CLIHub.Core.Updates;
 /// <summary>
 ///   Coordinates update checks, downloads, state, and entry-point apply policies.
 /// </summary>
-public interface IUpdateWorkflow :
-    IUpdateVersionProvider,
-    IUpdateChecker,
-    IUpdateStateSource,
-    IUpdateDownloader,
-    IUpdateInstaller
+public interface IUpdateWorkflow : IUpdateVersionProvider,
+                                   IUpdateChecker,
+                                   IUpdateStateSource,
+                                   IUpdateDownloader,
+                                   IUpdateInstaller
 {
     /// <summary>
     ///   Gets a value indicating whether a shared update check is currently running.

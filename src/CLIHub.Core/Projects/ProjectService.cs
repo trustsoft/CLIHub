@@ -24,10 +24,9 @@ public class ProjectService : IProjectService
     /// <summary>
     ///   Creates the service with the default project logo path.
     /// </summary>
-    public ProjectService(
-        IProjectStateStore projectStateStore,
-        ILogoCacheService logoCache,
-        ILogger<ProjectService> logger)
+    public ProjectService(IProjectStateStore projectStateStore,
+                          ILogoCacheService logoCache,
+                          ILogger<ProjectService> logger)
     {
         this.projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
         this.logoResolver = new ProjectLogoResolver(logoCache);
@@ -147,9 +146,8 @@ public class ProjectService : IProjectService
     }
 
     /// <inheritdoc />
-    public bool ReconcileDiscoveredProjects(
-        IReadOnlyCollection<string> discoveredPaths,
-        IReadOnlyCollection<string> removedProjectIds)
+    public bool ReconcileDiscoveredProjects(IReadOnlyCollection<string> discoveredPaths,
+                                            IReadOnlyCollection<string> removedProjectIds)
     {
         ArgumentNullException.ThrowIfNull(discoveredPaths);
         ArgumentNullException.ThrowIfNull(removedProjectIds);

@@ -17,8 +17,7 @@ public interface IInteractiveProcessRunner
     /// <returns> The exit code of the launched process. </returns>
     /// <exception cref="System.InvalidOperationException"> Thrown if the process fails to start. </exception>
     /// <exception cref="System.OperationCanceledException"> Thrown if the operation is canceled. </exception>
-    Task<int> LaunchAsync(
-        string commandLine,
-        RuntimeInfo runtime,
-        CancellationToken cancellationToken = default);
+    Task<int> LaunchAsync(string commandLine,
+                          RuntimeInfo runtime,
+                          CancellationToken cancellationToken = default);
 }

@@ -24,10 +24,9 @@ public sealed class ProcessLauncher
     /// <summary>
     ///   Creates the launcher.
     /// </summary>
-    public ProcessLauncher(
-        ILogger<ProcessLauncher> logger,
-        IInteractiveProcessRunner interactiveRunner,
-        IProcessOutputRunner outputRunner)
+    public ProcessLauncher(ILogger<ProcessLauncher> logger,
+                           IInteractiveProcessRunner interactiveRunner,
+                           IProcessOutputRunner outputRunner)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
@@ -133,12 +132,11 @@ public sealed class ProcessLauncher
     /// <param name="workingDirectory"> Working directory for the process. </param>
     /// <param name="cancellationToken"> Cancellation token. </param>
     /// <param name="timeout"> Optional maximum run time. </param>
-    public async Task<ProcessCaptureResult> CaptureOutputAsync(
-        string executable,
-        string? arguments,
-        string workingDirectory,
-        CancellationToken cancellationToken = default,
-        TimeSpan? timeout = null)
+    public async Task<ProcessCaptureResult> CaptureOutputAsync(string executable,
+                                                               string? arguments,
+                                                               string workingDirectory,
+                                                               CancellationToken cancellationToken = default,
+                                                               TimeSpan? timeout = null)
     {
         if (string.IsNullOrWhiteSpace(executable))
         {
@@ -196,10 +194,9 @@ public sealed class ProcessLauncher
     /// <summary>
     ///   Builds the process file name and arguments for the given runtime.
     /// </summary>
-    internal static (string FileName, string Arguments) BuildStartInfo(
-        RuntimeKind runtime,
-        PluginCommand command,
-        string workingDirectory)
+    internal static (string FileName, string Arguments) BuildStartInfo(RuntimeKind runtime,
+                                                                       PluginCommand command,
+                                                                       string workingDirectory)
     {
         return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory);
     }

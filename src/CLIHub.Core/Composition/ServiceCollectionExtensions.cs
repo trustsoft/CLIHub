@@ -26,9 +26,8 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
     /// <param name="defaultLogoPath"> The path to the fallback project logo, or null. </param>
-    public static IServiceCollection AddClIHubCoreServices(
-        this IServiceCollection services,
-        string? defaultLogoPath = null)
+    public static IServiceCollection AddClIHubCoreServices(this IServiceCollection services,
+                                                           string? defaultLogoPath = null)
     {
         services.AddLogging();
 
@@ -66,9 +65,8 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddProjectServices(
-        this IServiceCollection services,
-        string? defaultLogoPath)
+    private static IServiceCollection AddProjectServices(this IServiceCollection services,
+                                                         string? defaultLogoPath)
     {
         services.AddSingleton<IProjectStateStore, ProjectStateStore>();
         services.AddSingleton<ILogoCacheService, LogoCacheService>();

@@ -28,10 +28,9 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     /// <param name="actions"> Application actions and menu state provider. </param>
     /// <param name="menuBuilder"> Builder for the tray context menu. </param>
     /// <param name="launchWindow"> The launch window the tray toggles. </param>
-    public TrayIconController(
-        ITrayActions actions,
-        TrayMenuBuilder menuBuilder,
-        LaunchWindow launchWindow)
+    public TrayIconController(ITrayActions actions,
+                              TrayMenuBuilder menuBuilder,
+                              LaunchWindow launchWindow)
     {
         this.actions = actions ?? throw new ArgumentNullException(nameof(actions));
         this.menuBuilder = menuBuilder ?? throw new ArgumentNullException(nameof(menuBuilder));
@@ -129,7 +128,7 @@ public sealed class TrayIconController : ITrayHost, IDisposable
     {
         var commands = this.actions.Commands with
         {
-            RequestUpdateDownload = () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
+            RequestUpdateDownload = () => this.UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
             ShowLaunchWindow = this.ShowLaunchWindow,
             Exit = () => Application.Current?.Shutdown()
         };

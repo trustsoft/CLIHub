@@ -27,12 +27,11 @@ public sealed class ApplicationSession : IApplicationSession
     /// <param name="updateRequestSourceFactory"> Lazy presentation update-request source factory. </param>
     /// <param name="singleInstanceGuard"> Single-instance activation source. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
-    public ApplicationSession(
-        IApplicationOperationLifetime operationLifetime,
-        Func<IApplicationStartupUi> startupUiFactory,
-        Func<IUpdateRequestSource> updateRequestSourceFactory,
-        ISingleInstanceGuard singleInstanceGuard,
-        IUpdateWorkflow updateWorkflow)
+    public ApplicationSession(IApplicationOperationLifetime operationLifetime,
+                              Func<IApplicationStartupUi> startupUiFactory,
+                              Func<IUpdateRequestSource> updateRequestSourceFactory,
+                              ISingleInstanceGuard singleInstanceGuard,
+                              IUpdateWorkflow updateWorkflow)
     {
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));

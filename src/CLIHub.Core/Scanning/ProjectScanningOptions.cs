@@ -9,11 +9,10 @@ using CLIHub.Core.Models;
 /// <param name="ScanDepth"> Levels below each root that are inspected. </param>
 /// <param name="IgnoredPatterns"> Directory-name patterns skipped during the walk. </param>
 /// <param name="DiscoveryMode"> Which directories count as repositories. </param>
-public sealed record ProjectScanningOptions(
-    IReadOnlyList<string> WatchedDirectories,
-    int ScanDepth,
-    IReadOnlyList<string> IgnoredPatterns,
-    ProjectDiscoveryMode DiscoveryMode)
+public sealed record ProjectScanningOptions(IReadOnlyList<string> WatchedDirectories,
+                                            int ScanDepth,
+                                            IReadOnlyList<string> IgnoredPatterns,
+                                            ProjectDiscoveryMode DiscoveryMode)
 {
     /// <summary>
     ///   Creates effective options from stored preferences, applying the scanning defaults.

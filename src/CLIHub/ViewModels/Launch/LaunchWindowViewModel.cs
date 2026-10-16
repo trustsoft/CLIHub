@@ -52,19 +52,18 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
     /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
     /// <param name="processMonitor"> Agent process monitor for update safety checks. </param>
-    public LaunchWindowViewModel(
-        ProjectPaneController projectPane,
-        AgentPaneController agentPane,
-        LaunchCommandCoordinator launchCommandCoordinator,
-        IPreferencesStore preferencesStore,
-        LaunchWindowActionBuilder actionBuilder,
-        UpdateControlViewModel updateControl,
-        ISettingsLauncher settingsLauncher,
-        IUserNotificationService notifications,
-        IApplicationLifetime applicationLifetime,
-        IExternalLauncher externalLauncher,
-        StatusMessageCoordinator statusCoordinator,
-        CLIHub.Core.Agents.AgentProcessMonitor processMonitor)
+    public LaunchWindowViewModel(ProjectPaneController projectPane,
+                                 AgentPaneController agentPane,
+                                 LaunchCommandCoordinator launchCommandCoordinator,
+                                 IPreferencesStore preferencesStore,
+                                 LaunchWindowActionBuilder actionBuilder,
+                                 UpdateControlViewModel updateControl,
+                                 ISettingsLauncher settingsLauncher,
+                                 IUserNotificationService notifications,
+                                 IApplicationLifetime applicationLifetime,
+                                 IExternalLauncher externalLauncher,
+                                 StatusMessageCoordinator statusCoordinator,
+                                 AgentProcessMonitor processMonitor)
     {
         this.projectPane = projectPane;
         this.agentPane = agentPane;
@@ -197,7 +196,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         get;
         set
         {
-            if (!this.SetProperty(ref this.showOnlyProjectAgents, value) || this.suppressFilterChange)
+            if (!this.SetProperty(ref field, value) || this.suppressFilterChange)
             {
                 return;
             }

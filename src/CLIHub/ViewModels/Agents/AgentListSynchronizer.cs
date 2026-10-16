@@ -17,11 +17,10 @@ public static class AgentListSynchronizer
     /// <param name="defaultLogoPath"> The logo path used when a plugin has no logo. </param>
     /// <param name="selectedPluginId"> The plugin ID selected before synchronization. </param>
     /// <returns> The row matching the previous selection, or null when it disappeared. </returns>
-    public static AgentItem? Synchronize(
-        ObservableCollection<AgentItem> rows,
-        IReadOnlyList<AgentListEntry> entries,
-        string defaultLogoPath,
-        string? selectedPluginId)
+    public static AgentItem? Synchronize(ObservableCollection<AgentItem> rows,
+                                         IReadOnlyList<AgentListEntry> entries,
+                                         string defaultLogoPath,
+                                         string? selectedPluginId)
     {
         var targetIds = entries.Select(entry => entry.Plugin.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
 

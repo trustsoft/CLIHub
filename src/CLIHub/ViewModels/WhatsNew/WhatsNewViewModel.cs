@@ -35,10 +35,9 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// <param name="releaseNotes"> Release notes service. </param>
     /// <param name="updates"> Shared application update workflow. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
-    public WhatsNewViewModel(
-        IReleaseNotesService releaseNotes,
-        IUpdateWorkflow updates,
-        IApplicationOperationLifetime operationLifetime)
+    public WhatsNewViewModel(IReleaseNotesService releaseNotes,
+                             IUpdateWorkflow updates,
+                             IApplicationOperationLifetime operationLifetime)
     {
         this.updates = updates;
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
@@ -116,7 +115,7 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     {
         if (!this.IsDownloading && this.IsUpdateAvailable)
         {
-            UpdateRequested?.Invoke(this, EventArgs.Empty);
+            this.UpdateRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 

@@ -96,7 +96,7 @@ public class SettingsNavigationTests
                 this.Preferences.Object,
                 this.Startup.Object,
                 this.Applier.Object,
-                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
+                new Mock<Core.Scanning.IProjectScanner>().Object,
                 NullLogger<SettingsApplicationService>.Instance);
             this.ViewModel = new SettingsViewModel(
                 application,
@@ -105,7 +105,7 @@ public class SettingsNavigationTests
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
                 new Mock<IProjectDialogService>().Object,
-                new Mock<CLIHub.Core.Scanning.IProjectScanner>().Object,
+                new Mock<Core.Scanning.IProjectScanner>().Object,
                 Mock.Of<IAgentManagementSection>(),
                 NullLogger<SettingsViewModel>.Instance);
         }

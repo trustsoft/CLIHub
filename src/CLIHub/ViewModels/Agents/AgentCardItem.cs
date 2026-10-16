@@ -177,7 +177,7 @@ public sealed class AgentCardItem : ObservableObject
         get;
         set
         {
-            if (this.SetProperty(ref this.message, value))
+            if (this.SetProperty(ref field, value))
             {
                 this.OnPropertyChanged(nameof(this.HasMessage));
             }

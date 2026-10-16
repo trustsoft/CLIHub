@@ -48,8 +48,8 @@ internal sealed class SystemScanTimer : IScanTimer
     private readonly Timer timer;
 
     public SystemScanTimer() =>
-        this.timer = new System.Threading.Timer(
-            _ => Elapsed?.Invoke(this, EventArgs.Empty),
+        this.timer = new Timer(
+            _ => this.Elapsed?.Invoke(this, EventArgs.Empty),
             null,
             Timeout.InfiniteTimeSpan,
             Timeout.InfiniteTimeSpan);

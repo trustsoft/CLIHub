@@ -16,12 +16,11 @@ public static class AsyncOperationRunner
     /// <param name="logger"> Logger receiving the exception and operation context. </param>
     /// <param name="reportStatus"> Optional callback for a concise user-facing failure message. </param>
     /// <param name="cancellationToken"> Token used to distinguish expected cancellation. </param>
-    public static async Task RunAsync(
-        string operationName,
-        Func<Task> operation,
-        ILogger logger,
-        Action<string>? reportStatus = null,
-        CancellationToken cancellationToken = default)
+    public static async Task RunAsync(string operationName,
+                                      Func<Task> operation,
+                                      ILogger logger,
+                                      Action<string>? reportStatus = null,
+                                      CancellationToken cancellationToken = default)
     {
         try
         {

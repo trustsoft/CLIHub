@@ -22,10 +22,9 @@ public sealed class ProjectPaneController : IDisposable
     /// <param name="projectService"> Project persistence and selection service. </param>
     /// <param name="dialogs"> Project folder and removal confirmation dialogs. </param>
     /// <param name="promptState"> Modal prompt tracker used while dialogs are open. </param>
-    public ProjectPaneController(
-        IProjectService projectService,
-        IProjectDialogService dialogs,
-        PromptState promptState)
+    public ProjectPaneController(IProjectService projectService,
+                                 IProjectDialogService dialogs,
+                                 PromptState promptState)
     {
         this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));

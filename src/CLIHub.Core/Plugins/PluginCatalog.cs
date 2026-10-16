@@ -29,12 +29,11 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>. </param>
     /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
-    public PluginCatalog(
-        ILogger<PluginCatalog> logger,
-        ILogoCacheService logoCache,
-        string? pluginsPath = null,
-        IPluginDescriptorReader? descriptorReader = null,
-        IPluginDescriptorValidator? descriptorValidator = null)
+    public PluginCatalog(ILogger<PluginCatalog> logger,
+                         ILogoCacheService logoCache,
+                         string? pluginsPath = null,
+                         IPluginDescriptorReader? descriptorReader = null,
+                         IPluginDescriptorValidator? descriptorValidator = null)
     {
         this.logger = logger;
         this.logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
@@ -147,10 +146,9 @@ public sealed class PluginCatalog : IPluginCatalog
         return File.Exists(logoPath) ? logoPath : null;
     }
 
-    private static string? FindLoadedPluginDirectory(
-        IReadOnlyList<Plugin> plugins,
-        string pluginId,
-        string currentPluginDirectory)
+    private static string? FindLoadedPluginDirectory(IReadOnlyList<Plugin> plugins,
+                                                     string pluginId,
+                                                     string currentPluginDirectory)
     {
         return plugins
             .Where(plugin => plugin.Id == pluginId && plugin.PluginDirectory != currentPluginDirectory)

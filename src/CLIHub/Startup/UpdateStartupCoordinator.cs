@@ -22,10 +22,9 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="preferencesStore"> Preferences source for notification gating. </param>
     /// <param name="logger"> Logger for disabled checks and unexpected failures. </param>
-    public UpdateStartupCoordinator(
-        IUpdateWorkflow updateWorkflow,
-        IPreferencesStore preferencesStore,
-        ILogger<UpdateStartupCoordinator> logger)
+    public UpdateStartupCoordinator(IUpdateWorkflow updateWorkflow,
+                                    IPreferencesStore preferencesStore,
+                                    ILogger<UpdateStartupCoordinator> logger)
     {
         this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
         this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
@@ -33,10 +32,9 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
     }
 
     /// <inheritdoc />
-    public async Task CheckAsync(
-        bool enabled,
-        Action<string> notifyUpdateAvailable,
-        CancellationToken cancellationToken = default)
+    public async Task CheckAsync(bool enabled,
+                                 Action<string> notifyUpdateAvailable,
+                                 CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(notifyUpdateAvailable);
 
@@ -52,10 +50,10 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
 
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {
-                var preferences = this.preferences.Load();
+                var appPrefs = this.preferences.Load();
                 var shouldNotify = VersionClassification.IsPrerelease(version)
-                    ? preferences.NotifyPrereleaseUpdates
-                    : preferences.NotifyStableUpdates;
+                    ? appPrefs.NotifyPrereleaseUpdates
+                    : appPrefs.NotifyStableUpdates;
 
                 if (shouldNotify)
                 {

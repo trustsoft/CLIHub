@@ -26,11 +26,10 @@ public sealed class LaunchCommandCoordinator
     /// <param name="operationLifetime"> Lifetime tracking asynchronous command operations. </param>
     /// <param name="notifications"> User notifications for command results. </param>
     /// <param name="logger"> Logger for unexpected command failures. </param>
-    public LaunchCommandCoordinator(
-        IAgentCommandWorkflow agentCommandWorkflow,
-        IApplicationOperationLifetime operationLifetime,
-        IUserNotificationService notifications,
-        ILogger<LaunchCommandCoordinator> logger)
+    public LaunchCommandCoordinator(IAgentCommandWorkflow agentCommandWorkflow,
+                                    IApplicationOperationLifetime operationLifetime,
+                                    IUserNotificationService notifications,
+                                    ILogger<LaunchCommandCoordinator> logger)
     {
         this.agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
@@ -47,12 +46,11 @@ public sealed class LaunchCommandCoordinator
     /// <param name="reportStatus"> Callback receiving binding-facing status text. </param>
     /// <param name="refreshAgents"> Callback refreshing the agent pane after execution. </param>
     /// <returns> A task that completes when the tracked command operation is observed. </returns>
-    public Task RunAsync(
-        AgentItem? item,
-        Project? project,
-        AgentCommandKind kind,
-        Action<string> reportStatus,
-        Action refreshAgents)
+    public Task RunAsync(AgentItem? item,
+                         Project? project,
+                         AgentCommandKind kind,
+                         Action<string> reportStatus,
+                         Action refreshAgents)
     {
         ArgumentNullException.ThrowIfNull(reportStatus);
         ArgumentNullException.ThrowIfNull(refreshAgents);
@@ -68,13 +66,12 @@ public sealed class LaunchCommandCoordinator
                 cancellationToken));
     }
 
-    private async Task ExecuteAsync(
-        AgentItem? item,
-        Project? project,
-        AgentCommandKind kind,
-        Action<string> reportStatus,
-        Action refreshAgents,
-        CancellationToken cancellationToken)
+    private async Task ExecuteAsync(AgentItem? item,
+                                    Project? project,
+                                    AgentCommandKind kind,
+                                    Action<string> reportStatus,
+                                    Action refreshAgents,
+                                    CancellationToken cancellationToken)
     {
         if (item is null)
         {

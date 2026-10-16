@@ -6,7 +6,6 @@ namespace CLIHub.ViewModels;
 /// <param name="Projects"> Actions displayed in the Projects pane. </param>
 /// <param name="Agents"> Actions displayed in the Agents pane. </param>
 /// <param name="FilterAction"> The checkable project-availability filter action. </param>
-public sealed record LaunchWindowActions(
-    IReadOnlyList<MenuAction> Projects,
-    IReadOnlyList<MenuAction> Agents,
-    MenuAction FilterAction);
+public sealed record LaunchWindowActions(IReadOnlyList<MenuAction> Projects,
+                                         IReadOnlyList<MenuAction> Agents,
+                                         MenuAction FilterAction);

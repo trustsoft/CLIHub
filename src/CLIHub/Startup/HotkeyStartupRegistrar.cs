@@ -19,9 +19,8 @@ public sealed class HotkeyStartupRegistrar : IHotkeyStartupRegistrar
     /// </summary>
     /// <param name="hotkeyService"> Global hotkey registration service. </param>
     /// <param name="logger"> Logger for invalid configured hotkeys. </param>
-    public HotkeyStartupRegistrar(
-        IGlobalHotkeyService hotkeyService,
-        ILogger<HotkeyStartupRegistrar> logger)
+    public HotkeyStartupRegistrar(IGlobalHotkeyService hotkeyService,
+                                  ILogger<HotkeyStartupRegistrar> logger)
     {
         this.hotkeyService = hotkeyService ?? throw new ArgumentNullException(nameof(hotkeyService));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));

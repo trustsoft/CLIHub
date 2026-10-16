@@ -101,7 +101,7 @@ public sealed class AgentItem : INotifyPropertyChanged
             field = value;
             this.OnPropertyChanged();
         }
-    }
+    } = "…";
 
     /// <summary>
     ///   Updates the row with the current values for its stable plugin identity.

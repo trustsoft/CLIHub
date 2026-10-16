@@ -35,16 +35,15 @@ public sealed class WindowActionCoordinator
     /// <param name="getSelectedAgent"> Function providing the currently selected agent. </param>
     /// <param name="getCurrentProject"> Function providing the current project. </param>
     /// <param name="refreshAgents"> Callback to refresh the agent pane after command execution. </param>
-    public WindowActionCoordinator(
-        LaunchCommandCoordinator launchCoordinator,
-        StatusMessageCoordinator statusCoordinator,
-        AgentProcessMonitor processMonitor,
-        ISettingsLauncher settingsLauncher,
-        IApplicationLifetime applicationLifetime,
-        IExternalLauncher externalLauncher,
-        Func<AgentItem?> getSelectedAgent,
-        Func<Project?> getCurrentProject,
-        Action refreshAgents)
+    public WindowActionCoordinator(LaunchCommandCoordinator launchCoordinator,
+                                   StatusMessageCoordinator statusCoordinator,
+                                   AgentProcessMonitor processMonitor,
+                                   ISettingsLauncher settingsLauncher,
+                                   IApplicationLifetime applicationLifetime,
+                                   IExternalLauncher externalLauncher,
+                                   Func<AgentItem?> getSelectedAgent,
+                                   Func<Project?> getCurrentProject,
+                                   Action refreshAgents)
     {
         this.launchCoordinator = launchCoordinator ?? throw new ArgumentNullException(nameof(launchCoordinator));
         this.statusCoordinator = statusCoordinator ?? throw new ArgumentNullException(nameof(statusCoordinator));

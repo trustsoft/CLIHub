@@ -8,9 +8,8 @@ namespace CLIHub.Core.Models;
 /// <param name="New"> The "New" entries, in document order. </param>
 /// <param name="Improved"> The "Improved" entries, in document order. </param>
 /// <param name="Fixed"> The "Fixed" entries, in document order. </param>
-public sealed record ReleaseNote(
-    string Version,
-    string Date,
-    IReadOnlyList<string> New,
-    IReadOnlyList<string> Improved,
-    IReadOnlyList<string> Fixed);
+public sealed record ReleaseNote(string Version,
+                                 string Date,
+                                 IReadOnlyList<string> New,
+                                 IReadOnlyList<string> Improved,
+                                 IReadOnlyList<string> Fixed);

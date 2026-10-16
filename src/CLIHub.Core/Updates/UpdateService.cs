@@ -231,8 +231,7 @@ public class UpdateService : IUpdateService
         }
     }
 
-    private async Task<(UpdateCheckResult Result, UpdateInfo? Update)> CheckForUpdateCoreAsync(
-        CancellationToken cancellationToken)
+    private async Task<(UpdateCheckResult Result, UpdateInfo? Update)> CheckForUpdateCoreAsync(CancellationToken cancellationToken)
     {
         var current = this.GetCurrentVersion();
         var manager = this.Manager;

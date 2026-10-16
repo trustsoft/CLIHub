@@ -37,11 +37,10 @@ public class AgentVersionService : IAgentVersionService
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentVersionService(
-        ProcessLauncher processLauncher,
-        IPreferencesStore preferencesStore,
-        ILogger<AgentVersionService> logger,
-        TimeProvider? timeProvider = null)
+    public AgentVersionService(ProcessLauncher processLauncher,
+                               IPreferencesStore preferencesStore,
+                               ILogger<AgentVersionService> logger,
+                               TimeProvider? timeProvider = null)
     {
         this.processLauncher = processLauncher;
         this.preferencesStore = preferencesStore;

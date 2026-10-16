@@ -18,10 +18,9 @@ public static class RepositoryDiscovery
     /// <param name="plugins"> The loaded plugins whose project indicators participate in discovery. </param>
     /// <param name="onRootError"> Optional callback invoked when a root cannot be scanned. </param>
     /// <returns> The discovery result for this pass. </returns>
-    public static DiscoveryResult Enumerate(
-        ProjectScanningOptions options,
-        IReadOnlyList<Plugin> plugins,
-        Action<string, Exception>? onRootError = null)
+    public static DiscoveryResult Enumerate(ProjectScanningOptions options,
+                                            IReadOnlyList<Plugin> plugins,
+                                            Action<string, Exception>? onRootError = null)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -68,13 +67,12 @@ public static class RepositoryDiscovery
         return new DiscoveryResult(discovered, scannedRoots);
     }
 
-    private static void Walk(
-        string directory,
-        int depth,
-        ProjectScanningOptions options,
-        IReadOnlyList<string> indicators,
-        List<string> discovered,
-        HashSet<string> seen)
+    private static void Walk(string directory,
+                             int depth,
+                             ProjectScanningOptions options,
+                             IReadOnlyList<string> indicators,
+                             List<string> discovered,
+                             HashSet<string> seen)
     {
         if (IsRepository(directory, options.DiscoveryMode, indicators))
         {

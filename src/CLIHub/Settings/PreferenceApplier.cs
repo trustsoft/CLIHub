@@ -28,13 +28,12 @@ public sealed class PreferenceApplier : IPreferenceApplier
     /// <param name="displayStyle"> Display-style target receiving path changes. </param>
     /// <param name="accent"> Accent target receiving the accent change. </param>
     /// <param name="logger"> Logger. </param>
-    public PreferenceApplier(
-        IRuntimePreferenceTarget runtime,
-        IGlobalHotkeyService hotkey,
-        IStartupService startupService,
-        IPathDisplayStyleTarget displayStyle,
-        IAccentPreferenceTarget accent,
-        ILogger<PreferenceApplier> logger)
+    public PreferenceApplier(IRuntimePreferenceTarget runtime,
+                             IGlobalHotkeyService hotkey,
+                             IStartupService startupService,
+                             IPathDisplayStyleTarget displayStyle,
+                             IAccentPreferenceTarget accent,
+                             ILogger<PreferenceApplier> logger)
     {
         this.runtime = runtime;
         this.hotkey = hotkey;

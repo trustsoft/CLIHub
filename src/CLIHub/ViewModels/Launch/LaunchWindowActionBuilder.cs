@@ -22,16 +22,15 @@ public sealed class LaunchWindowActionBuilder
     /// <param name="showVersion"> Shows the selected agent's version. </param>
     /// <param name="showOnlyProjectAgents"> Initial state of the project-availability filter. </param>
     /// <returns> The pane menu entries and filter action. </returns>
-    public LaunchWindowActions Build(
-        ICommand addProject,
-        ICommand removeProject,
-        ICommand toggleFavorite,
-        ICommand refresh,
-        ICommand launch,
-        ICommand resume,
-        ICommand update,
-        ICommand showVersion,
-        bool showOnlyProjectAgents)
+    public LaunchWindowActions Build(ICommand addProject,
+                                     ICommand removeProject,
+                                     ICommand toggleFavorite,
+                                     ICommand refresh,
+                                     ICommand launch,
+                                     ICommand resume,
+                                     ICommand update,
+                                     ICommand showVersion,
+                                     bool showOnlyProjectAgents)
     {
         ArgumentNullException.ThrowIfNull(addProject);
         ArgumentNullException.ThrowIfNull(removeProject);

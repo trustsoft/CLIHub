@@ -15,9 +15,8 @@ public sealed class InstanceCoordinator : IInstanceCoordinator
     /// </summary>
     /// <param name="singleInstanceGuard"> Single-instance boundary. </param>
     /// <param name="applicationLifetime"> Application shutdown boundary. </param>
-    public InstanceCoordinator(
-        ISingleInstanceGuard singleInstanceGuard,
-        IApplicationLifetime applicationLifetime)
+    public InstanceCoordinator(ISingleInstanceGuard singleInstanceGuard,
+                               IApplicationLifetime applicationLifetime)
     {
         this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
         this.applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));

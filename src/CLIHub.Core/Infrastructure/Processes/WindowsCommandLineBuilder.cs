@@ -16,10 +16,9 @@ internal static class WindowsCommandLineBuilder
     /// <param name="command"> The plugin command. </param>
     /// <param name="workingDirectory"> The command working directory. </param>
     /// <returns> The process executable and argument string. </returns>
-    internal static (string FileName, string Arguments) BuildInteractive(
-        RuntimeKind runtime,
-        PluginCommand command,
-        string workingDirectory)
+    internal static (string FileName, string Arguments) BuildInteractive(RuntimeKind runtime,
+                                                                         PluginCommand command,
+                                                                         string workingDirectory)
     {
         var commandLine = BuildCommandLine(command);
 
@@ -38,9 +37,8 @@ internal static class WindowsCommandLineBuilder
     /// <param name="executable"> The executable or PATH-resolved shim. </param>
     /// <param name="arguments"> The raw plugin argument tail. </param>
     /// <returns> The command interpreter executable and arguments. </returns>
-    internal static (string FileName, string Arguments) BuildCapturedCommand(
-        string executable,
-        string? arguments)
+    internal static (string FileName, string Arguments) BuildCapturedCommand(string executable,
+                                                                             string? arguments)
     {
         var commandLine = BuildCommandLine(executable, arguments);
         return (Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe", $"/d /s /c {QuoteCmdCommand(commandLine)}");

@@ -18,10 +18,9 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     /// <param name="projectPane"> Project pane controller for project change events. </param>
     /// <param name="agentPane"> Agent pane controller (currently unused, reserved for future events). </param>
     /// <param name="updateControl"> Update control for outcome reporting. </param>
-    public StatusMessageCoordinator(
-        ProjectPaneController projectPane,
-        AgentPaneController agentPane,
-        UpdateControlViewModel updateControl)
+    public StatusMessageCoordinator(ProjectPaneController projectPane,
+                                    AgentPaneController agentPane,
+                                    UpdateControlViewModel updateControl)
     {
         this.projectPane = projectPane ?? throw new ArgumentNullException(nameof(projectPane));
         this.agentPane = agentPane ?? throw new ArgumentNullException(nameof(agentPane));

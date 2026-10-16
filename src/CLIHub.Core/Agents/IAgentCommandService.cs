@@ -11,9 +11,8 @@ public interface IAgentCommandService
     ///   Executes the given command kind for the plugin in the project folder.
     ///   Interactive commands open in a terminal; the version command captures output.
     /// </summary>
-    Task<AgentCommandResult> ExecuteAsync(
-        Plugin plugin,
-        AgentCommandKind kind,
-        string projectPath,
-        CancellationToken cancellationToken = default);
+    Task<AgentCommandResult> ExecuteAsync(Plugin plugin,
+                                          AgentCommandKind kind,
+                                          string projectPath,
+                                          CancellationToken cancellationToken = default);
 }

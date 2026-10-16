@@ -12,8 +12,7 @@ public interface IUpdateStartupCoordinator
     /// <param name="notifyUpdateAvailable"> Callback used to notify the UI of an available version. </param>
     /// <param name="cancellationToken"> Token used to cancel the startup check. </param>
     /// <returns> A task that completes when the startup check finishes. </returns>
-    Task CheckAsync(
-        bool enabled,
-        Action<string> notifyUpdateAvailable,
-        CancellationToken cancellationToken = default);
+    Task CheckAsync(bool enabled,
+                    Action<string> notifyUpdateAvailable,
+                    CancellationToken cancellationToken = default);
 }

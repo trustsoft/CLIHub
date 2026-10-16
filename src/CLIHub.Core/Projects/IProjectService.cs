@@ -56,9 +56,8 @@ public interface IProjectService
     /// <param name="discoveredPaths"> Folder paths discovered by scanning. </param>
     /// <param name="removedProjectIds"> IDs of discovered projects to remove. </param>
     /// <returns> True when the project set changed. </returns>
-    bool ReconcileDiscoveredProjects(
-        IReadOnlyCollection<string> discoveredPaths,
-        IReadOnlyCollection<string> removedProjectIds);
+    bool ReconcileDiscoveredProjects(IReadOnlyCollection<string> discoveredPaths,
+                                     IReadOnlyCollection<string> removedProjectIds);
 
     /// <summary>
     ///   Removes a project from configuration. Does not delete files on disk.

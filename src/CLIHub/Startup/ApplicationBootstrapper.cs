@@ -28,14 +28,13 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="optionalStartup"> Optional startup operations coordinator. </param>
     /// <param name="projectScanner"> Background repository scanner. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
-    public ApplicationBootstrapper(
-        IInstanceCoordinator instanceCoordinator,
-        IStartupStateLoader startupStateLoader,
-        IApplicationSession session,
-        Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
-        IOptionalStartupCoordinator optionalStartup,
-        IProjectScanner projectScanner,
-        ILogger<ApplicationBootstrapper> logger)
+    public ApplicationBootstrapper(IInstanceCoordinator instanceCoordinator,
+                                   IStartupStateLoader startupStateLoader,
+                                   IApplicationSession session,
+                                   Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
+                                   IOptionalStartupCoordinator optionalStartup,
+                                   IProjectScanner projectScanner,
+                                   ILogger<ApplicationBootstrapper> logger)
     {
         this.instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
         this.startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));

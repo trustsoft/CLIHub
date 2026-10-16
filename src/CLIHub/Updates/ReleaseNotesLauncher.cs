@@ -26,11 +26,10 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
     /// <param name="versionProvider"> Provides the running version. </param>
     /// <param name="preferencesStore"> Preferences used to store the seen-versions record. </param>
     /// <param name="logger"> Logger. </param>
-    public ReleaseNotesLauncher(
-        Func<WhatsNewWindow> factory,
-        IUpdateVersionProvider versionProvider,
-        IPreferencesStore preferencesStore,
-        ILogger<ReleaseNotesLauncher> logger)
+    public ReleaseNotesLauncher(Func<WhatsNewWindow> factory,
+                                IUpdateVersionProvider versionProvider,
+                                IPreferencesStore preferencesStore,
+                                ILogger<ReleaseNotesLauncher> logger)
     {
         this.factory = factory;
         this.versionProvider = versionProvider;
@@ -72,7 +71,7 @@ public sealed class ReleaseNotesLauncher : IReleaseNotesLauncher
                 return;
             }
 
-            this.preferencesStore.Update(preferences => preferences.LastSeenReleaseNotesVersion = version);
+            this.preferencesStore.Update(prefs => prefs.LastSeenReleaseNotesVersion = version);
             this.logger.LogInformation("Release notes recorded as seen for version {Version}", version);
         }
         catch (Exception ex)

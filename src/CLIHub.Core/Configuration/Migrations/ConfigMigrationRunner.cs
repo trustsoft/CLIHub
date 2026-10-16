@@ -32,10 +32,9 @@ public sealed class ConfigMigrationRunner : IConfigMigrationRunner
     }
 
     /// <inheritdoc />
-    public ConfigurationMigrationResult Migrate(
-        int sourceVersion,
-        ConfigurationSnapshot snapshot,
-        int targetVersion)
+    public ConfigurationMigrationResult Migrate(int sourceVersion,
+                                                ConfigurationSnapshot snapshot,
+                                                int targetVersion)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 

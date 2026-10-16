@@ -16,20 +16,17 @@ public class AgentCommandService : IAgentCommandService
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentCommandService(
-        ProcessLauncher processLauncher,
-        ILogger<AgentCommandService> logger)
+    public AgentCommandService(ProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
     {
         this.processLauncher = processLauncher;
         this.logger = logger;
     }
 
     /// <inheritdoc />
-    public async Task<AgentCommandResult> ExecuteAsync(
-        Plugin plugin,
-        AgentCommandKind kind,
-        string projectPath,
-        CancellationToken cancellationToken = default)
+    public async Task<AgentCommandResult> ExecuteAsync(Plugin plugin,
+                                                       AgentCommandKind kind,
+                                                       string projectPath,
+                                                       CancellationToken cancellationToken = default)
     {
         var command = plugin.Commands?.Get(kind);
         if (command == null)
@@ -56,11 +53,10 @@ public class AgentCommandService : IAgentCommandService
             : new AgentCommandResult(false, null, $"Failed to launch {plugin.Name}");
     }
 
-    private async Task<AgentCommandResult> RunVersionAsync(
-        Plugin plugin,
-        PluginCommand command,
-        string projectPath,
-        CancellationToken cancellationToken)
+    private async Task<AgentCommandResult> RunVersionAsync(Plugin plugin,
+                                                           PluginCommand command,
+                                                           string projectPath,
+                                                           CancellationToken cancellationToken)
     {
         var result = await this.processLauncher.CaptureOutputAsync(
             command.Executable, command.Arguments, projectPath, cancellationToken);

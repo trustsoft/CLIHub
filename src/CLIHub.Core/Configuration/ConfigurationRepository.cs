@@ -37,10 +37,9 @@ public sealed class ConfigurationRepository : IConfigurationRepository
     ///   Overrides the config file location; defaults to <c> %APPDATA%\CLIHub\config.json </c>.
     /// </param>
     /// <param name="migrationRunner"> Optional schema migration runner. </param>
-    public ConfigurationRepository(
-        ILogger<ConfigurationRepository> logger,
-        string? configFilePath = null,
-        IConfigMigrationRunner? migrationRunner = null)
+    public ConfigurationRepository(ILogger<ConfigurationRepository> logger,
+                                   string? configFilePath = null,
+                                   IConfigMigrationRunner? migrationRunner = null)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.migrationRunner = migrationRunner ?? new ConfigMigrationRunner();

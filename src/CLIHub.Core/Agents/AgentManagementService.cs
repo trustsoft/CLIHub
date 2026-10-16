@@ -24,12 +24,11 @@ public sealed class AgentManagementService : IAgentManagementService
     /// <param name="commands"> Agent command execution. </param>
     /// <param name="processMonitor"> Running-agent monitor used to block updates. </param>
     /// <param name="logger"> Logger. </param>
-    public AgentManagementService(
-        IAgentDetectionService detection,
-        IAgentVersionService version,
-        IAgentCommandService commands,
-        AgentProcessMonitor processMonitor,
-        ILogger<AgentManagementService> logger)
+    public AgentManagementService(IAgentDetectionService detection,
+                                  IAgentVersionService version,
+                                  IAgentCommandService commands,
+                                  AgentProcessMonitor processMonitor,
+                                  ILogger<AgentManagementService> logger)
     {
         this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
         this.version = version ?? throw new ArgumentNullException(nameof(version));
@@ -39,7 +38,8 @@ public sealed class AgentManagementService : IAgentManagementService
     }
 
     /// <inheritdoc />
-    public async Task<AgentProbeResult> ProbeAsync(Plugin plugin, CancellationToken cancellationToken = default)
+    public async Task<AgentProbeResult> ProbeAsync(Plugin plugin,
+                                                   CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
@@ -54,7 +54,8 @@ public sealed class AgentManagementService : IAgentManagementService
     }
 
     /// <inheritdoc />
-    public async Task<AgentUpdateResult> UpdateAsync(Plugin plugin, CancellationToken cancellationToken = default)
+    public async Task<AgentUpdateResult> UpdateAsync(Plugin plugin,
+                                                     CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plugin);
 

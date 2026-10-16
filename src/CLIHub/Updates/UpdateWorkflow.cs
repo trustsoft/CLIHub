@@ -37,15 +37,14 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     /// <param name="preferencesStore"> Preferences source for background auto-download. </param>
     /// <param name="logger"> Logger for failures and automatic-restart outcomes. </param>
     /// <param name="delay"> Optional cancellation-aware notification delay. </param>
-    public UpdateWorkflow(
-        IUpdateVersionProvider versionProvider,
-        IUpdateChecker checker,
-        IUpdateStateSource stateSource,
-        IUpdateDownloader downloader,
-        IUpdateInstaller installer,
-        IPreferencesStore preferencesStore,
-        ILogger<UpdateWorkflow> logger,
-        Func<TimeSpan, CancellationToken, Task>? delay = null)
+    public UpdateWorkflow(IUpdateVersionProvider versionProvider,
+                          IUpdateChecker checker,
+                          IUpdateStateSource stateSource,
+                          IUpdateDownloader downloader,
+                          IUpdateInstaller installer,
+                          IPreferencesStore preferencesStore,
+                          ILogger<UpdateWorkflow> logger,
+                          Func<TimeSpan, CancellationToken, Task>? delay = null)
     {
         this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
         this.checker = checker ?? throw new ArgumentNullException(nameof(checker));
@@ -167,7 +166,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
             var result = await this.downloader.DownloadUpdateAsync(cancellationToken);
             if (result.Status == UpdateDownloadStatus.Downloaded && result.AvailableVersion is { } version)
             {
-                UpdateDownloaded?.Invoke(this, version);
+                this.UpdateDownloaded?.Invoke(this, version);
                 this.OnSourceStateChanged(this, EventArgs.Empty);
                 await this.delay(NotificationDelay, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
@@ -177,7 +176,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
 
             if (result.Status == UpdateDownloadStatus.Failed && result.AvailableVersion is { } failedVersion)
             {
-                UpdateDownloadFailed?.Invoke(this, failedVersion);
+                this.UpdateDownloadFailed?.Invoke(this, failedVersion);
             }
 
             this.logger.LogInformation("Update download not applied: {Status}", result.Status);
@@ -197,9 +196,8 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
         }
     }
 
-    private async Task CheckCoreAsync(
-        TaskCompletionSource<UpdateCheckResult> completion,
-        CancellationToken cancellationToken)
+    private async Task CheckCoreAsync(TaskCompletionSource<UpdateCheckResult> completion,
+                                      CancellationToken cancellationToken)
     {
         UpdateCheckResult? result = null;
         Exception? failure = null;
@@ -248,7 +246,7 @@ public sealed class UpdateWorkflow : IUpdateWorkflow, IDisposable
     {
         if (!this.disposed)
         {
-            UpdateStateChanged?.Invoke(this, EventArgs.Empty);
+            this.UpdateStateChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

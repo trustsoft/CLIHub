@@ -38,10 +38,10 @@ public static class ProjectSources
     /// <param name="value"> The stored token. </param>
     /// <returns> The parsed source. </returns>
     public static ProjectSource Parse(string? value) => value?.Trim().ToLowerInvariant() switch
-    {
-        DiscoveredToken => ProjectSource.Discovered,
-        _ => ProjectSource.Manual
-    };
+                                                        {
+                                                            DiscoveredToken => ProjectSource.Discovered,
+                                                            _ => ProjectSource.Manual
+                                                        };
 
     /// <summary>
     ///   Returns the configuration token for a source.

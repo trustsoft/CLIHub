@@ -39,16 +39,15 @@ public sealed class TrayCommandHandlers
     /// <param name="settingsLauncher"> Settings launcher. </param>
     /// <param name="releaseNotesLauncher"> What's New launcher. </param>
     /// <param name="applicationLifetime"> Application shutdown port. </param>
-    public TrayCommandHandlers(
-        IProjectService projects,
-        IAgentCommandWorkflow agentCommandWorkflow,
-        IUpdateWorkflow updateWorkflow,
-        IApplicationOperationLifetime operationLifetime,
-        IProjectDialogService projectDialog,
-        IUserNotificationService notifications,
-        ISettingsLauncher settingsLauncher,
-        IReleaseNotesLauncher releaseNotesLauncher,
-        IApplicationLifetime applicationLifetime)
+    public TrayCommandHandlers(IProjectService projects,
+                               IAgentCommandWorkflow agentCommandWorkflow,
+                               IUpdateWorkflow updateWorkflow,
+                               IApplicationOperationLifetime operationLifetime,
+                               IProjectDialogService projectDialog,
+                               IUserNotificationService notifications,
+                               ISettingsLauncher settingsLauncher,
+                               IReleaseNotesLauncher releaseNotesLauncher,
+                               IApplicationLifetime applicationLifetime)
     {
         this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
         this.agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));

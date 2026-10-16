@@ -36,12 +36,11 @@ public sealed class AgentPaneController : IDisposable
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="logoCacheService"> Logo cache used while composing rows. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked version work. </param>
-    public AgentPaneController(
-        IPluginCatalog pluginCatalog,
-        IAgentDetectionService agentDetectionService,
-        IAgentVersionService agentVersionService,
-        ILogoCacheService logoCacheService,
-        IApplicationOperationLifetime operationLifetime)
+    public AgentPaneController(IPluginCatalog pluginCatalog,
+                               IAgentDetectionService agentDetectionService,
+                               IAgentVersionService agentVersionService,
+                               ILogoCacheService logoCacheService,
+                               IApplicationOperationLifetime operationLifetime)
     {
         this.pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
         this.agentDetectionService = agentDetectionService ?? throw new ArgumentNullException(nameof(agentDetectionService));

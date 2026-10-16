@@ -19,8 +19,8 @@ public class AgentProcessMonitorTests
     {
         this.mockInspector = new Mock<IAgentProcessInspector>();
         this.mockCatalog = new Mock<IPluginCatalog>();
-        this.matcher = new CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher(
-            NullLogger<CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher>.Instance);
+        this.matcher = new AgentProcessMatcher(
+            NullLogger<AgentProcessMatcher>.Instance);
         this.monitor = new AgentProcessMonitor(
             this.mockInspector.Object,
             this.matcher,

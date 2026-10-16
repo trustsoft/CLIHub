@@ -35,10 +35,9 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     /// <param name="workflow"> Shared application update workflow. </param>
     /// <param name="logger"> Logger for unexpected update control failures. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update work. </param>
-    public UpdateControlViewModel(
-        IUpdateWorkflow workflow,
-        ILogger<UpdateControlViewModel> logger,
-        IApplicationOperationLifetime operationLifetime)
+    public UpdateControlViewModel(IUpdateWorkflow workflow,
+                                  ILogger<UpdateControlViewModel> logger,
+                                  IApplicationOperationLifetime operationLifetime)
     {
         this.workflow = workflow ?? throw new ArgumentNullException(nameof(workflow));
         this.logger = logger;
