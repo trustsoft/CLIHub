@@ -33,7 +33,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
     private Project? selectedProject;
     private AgentItem? selectedAgent;
-    private bool showOnlyProjectAgents;
     private bool isPinned;
     private PathDisplayStyle displayStyle = PathDisplayStyles.Default;
     private bool suppressSelectionChange;
@@ -197,7 +196,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     public bool ShowOnlyProjectAgents
     {
-        get => this.showOnlyProjectAgents;
+        get;
         set
         {
             if (!this.SetProperty(ref this.showOnlyProjectAgents, value) || this.suppressFilterChange)

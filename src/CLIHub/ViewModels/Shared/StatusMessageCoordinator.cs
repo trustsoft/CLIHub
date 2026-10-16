@@ -11,7 +11,6 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     private readonly ProjectPaneController projectPane;
     private readonly AgentPaneController agentPane;
     private readonly UpdateControlViewModel updateControl;
-    private string currentMessage = "CLIHub ready";
     private bool disposed;
 
     /// <summary>
@@ -39,9 +38,9 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     /// </summary>
     public string CurrentMessage
     {
-        get => this.currentMessage;
-        private set => this.SetProperty(ref this.currentMessage, value);
-    }
+        get;
+        private set => this.SetProperty(ref field, value);
+    } = "CLIHub ready";
 
     /// <summary>
     ///   Reports a project selection status.

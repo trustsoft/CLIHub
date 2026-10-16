@@ -9,10 +9,6 @@ using System.Runtime.CompilerServices;
 /// </summary>
 public class Project : INotifyPropertyChanged
 {
-    private bool isFavorite;
-    private DateTime lastUsed;
-    private string? logoPath;
-
     /// <summary>
     ///   Unique identifier for the project.
     /// </summary>
@@ -39,15 +35,15 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public bool IsFavorite
     {
-        get => this.isFavorite;
+        get;
         set
         {
-            if (this.isFavorite == value)
+            if (field == value)
             {
                 return;
             }
 
-            this.isFavorite = value;
+            field = value;
             this.OnPropertyChanged();
         }
     }
@@ -57,15 +53,15 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public DateTime LastUsed
     {
-        get => this.lastUsed;
+        get;
         set
         {
-            if (this.lastUsed == value)
+            if (field == value)
             {
                 return;
             }
 
-            this.lastUsed = value;
+            field = value;
             this.OnPropertyChanged();
         }
     }
@@ -75,15 +71,15 @@ public class Project : INotifyPropertyChanged
     /// </summary>
     public string? LogoPath
     {
-        get => this.logoPath;
+        get;
         set
         {
-            if (this.logoPath == value)
+            if (field == value)
             {
                 return;
             }
 
-            this.logoPath = value;
+            field = value;
             this.OnPropertyChanged();
         }
     }

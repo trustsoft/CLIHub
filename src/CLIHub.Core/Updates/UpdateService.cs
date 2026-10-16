@@ -24,7 +24,6 @@ public class UpdateService : IUpdateService
 
     private readonly ILogger<UpdateService> logger;
     private readonly IPreferencesStore? preferences;
-    private readonly UpdateManager? injectedManager;
     private readonly TimeSpan checkTimeout;
     private readonly object managerGate = new();
     private UpdateManager? cachedManager;
@@ -59,7 +58,7 @@ public class UpdateService : IUpdateService
     {
         this.logger = logger;
         this.checkTimeout = checkTimeout ?? CheckTimeout;
-        this.injectedManager = manager;
+        this.Manager = manager;
         this.checker = new UpdateChecker(logger);
         this.downloader = new UpdateDownloader(logger);
         this.installer = new UpdateInstaller(logger);
@@ -76,7 +75,7 @@ public class UpdateService : IUpdateService
         UpdateManager manager,
         TimeSpan? checkTimeout = null) => new(logger, manager, checkTimeout);
 
-    private UpdateManager? Manager => this.injectedManager ?? this.GetDefaultManager();
+    private UpdateManager? Manager => field ?? this.GetDefaultManager();
 
     private UpdateManager? GetDefaultManager()
     {

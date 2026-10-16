@@ -12,10 +12,8 @@ public sealed class AgentItem : INotifyPropertyChanged
 {
     private Plugin plugin = null!;
     private string name = string.Empty;
-    private string status = string.Empty;
     private string? logoPath;
     private bool isAvailable = true;
-    private string version = "…";
 
     /// <summary>
     ///   The agent plugin this row represents.
@@ -40,9 +38,9 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public string Status
     {
-        get => this.status;
-        init => this.status = value;
-    }
+        get;
+        init => field = value;
+    } = string.Empty;
 
     /// <summary>
     ///   Optional path to the agent's logo image.
@@ -92,15 +90,15 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// </summary>
     public string Version
     {
-        get => this.version;
+        get;
         set
         {
-            if (this.version == value)
+            if (field == value)
             {
                 return;
             }
 
-            this.version = value;
+            field = value;
             this.OnPropertyChanged();
         }
     }

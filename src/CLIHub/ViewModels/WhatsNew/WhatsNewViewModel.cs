@@ -24,8 +24,6 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
 
     private readonly IUpdateWorkflow updates;
     private readonly IApplicationOperationLifetime operationLifetime;
-    private bool isUpdateAvailable;
-    private bool isDownloading;
     private bool disposed;
 
     /// <summary>
@@ -68,8 +66,8 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public bool IsUpdateAvailable
     {
-        get => this.isUpdateAvailable;
-        private set => this.SetProperty(ref this.isUpdateAvailable, value);
+        get;
+        private set => this.SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -77,8 +75,8 @@ public sealed class WhatsNewViewModel : ObservableObject, IDisposable, IUpdateRe
     /// </summary>
     public bool IsDownloading
     {
-        get => this.isDownloading;
-        private set => this.SetProperty(ref this.isDownloading, value);
+        get;
+        private set => this.SetProperty(ref field, value);
     }
 
     /// <summary>

@@ -26,9 +26,6 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly ILogger<AgentManagementViewModel> logger;
 
-    private string metrics = "0 supported · 0 installed";
-    private IReadOnlyList<AgentOption> defaultAgentOptions = [NoneOption];
-    private AgentOption selectedDefaultAgent = NoneOption;
     private bool disposed;
 
     /// <summary>
@@ -69,23 +66,23 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public string Metrics
     {
-        get => this.metrics;
-        private set => this.SetProperty(ref this.metrics, value);
-    }
+        get;
+        private set => this.SetProperty(ref field, value);
+    } = "0 supported · 0 installed";
 
     /// <inheritdoc />
     public IReadOnlyList<AgentOption> DefaultAgentOptions
     {
-        get => this.defaultAgentOptions;
-        private set => this.SetProperty(ref this.defaultAgentOptions, value);
-    }
+        get;
+        private set => this.SetProperty(ref field, value);
+    } = [NoneOption];
 
     /// <inheritdoc />
     public AgentOption SelectedDefaultAgent
     {
-        get => this.selectedDefaultAgent;
-        set => this.SetProperty(ref this.selectedDefaultAgent, value ?? NoneOption);
-    }
+        get;
+        set => this.SetProperty(ref field, value ?? NoneOption);
+    } = NoneOption;
 
     /// <inheritdoc />
     public string? CurrentDefaultAgentId => this.SelectedDefaultAgent.Id;

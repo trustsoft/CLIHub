@@ -8,8 +8,6 @@ using System.Windows.Input;
 /// </summary>
 public sealed class MenuAction : ObservableObject
 {
-    private bool isChecked;
-
     /// <summary>
     ///   The entry's label; empty for a separator.
     /// </summary>
@@ -40,8 +38,8 @@ public sealed class MenuAction : ObservableObject
     /// </summary>
     public bool IsChecked
     {
-        get => this.isChecked;
-        set => this.SetProperty(ref this.isChecked, value);
+        get;
+        set => this.SetProperty(ref field, value);
     }
 
     /// <summary>

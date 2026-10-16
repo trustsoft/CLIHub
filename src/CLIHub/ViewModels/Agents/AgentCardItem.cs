@@ -24,9 +24,6 @@ public sealed class AgentCardItem : ObservableObject
 {
     private bool isInstalled;
     private string version;
-    private bool canUpdate;
-    private string? updateNote;
-    private string? message;
 
     /// <summary>
     ///   Creates a card from the agent's plugin descriptor and current state.
@@ -154,8 +151,8 @@ public sealed class AgentCardItem : ObservableObject
     /// </summary>
     public bool CanUpdate
     {
-        get => this.canUpdate;
-        set => this.SetProperty(ref this.canUpdate, value);
+        get;
+        set => this.SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -163,8 +160,8 @@ public sealed class AgentCardItem : ObservableObject
     /// </summary>
     public string? UpdateNote
     {
-        get => this.updateNote;
-        set => this.SetProperty(ref this.updateNote, value);
+        get;
+        set => this.SetProperty(ref field, value);
     }
 
     /// <summary>
@@ -177,7 +174,7 @@ public sealed class AgentCardItem : ObservableObject
     /// </summary>
     public string? Message
     {
-        get => this.message;
+        get;
         set
         {
             if (this.SetProperty(ref this.message, value))
