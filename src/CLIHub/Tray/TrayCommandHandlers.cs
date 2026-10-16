@@ -74,7 +74,7 @@ public sealed class TrayCommandHandlers
         this.settingsLauncher.ShowSettings,
         this.releaseNotesLauncher.ShowReleaseNotes,
         this.CheckForUpdates,
-        () => UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
+        () => this.UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
         showLaunchWindow,
         this.applicationLifetime.Shutdown);
 

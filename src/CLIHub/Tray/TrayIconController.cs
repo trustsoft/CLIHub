@@ -157,7 +157,6 @@ public sealed class TrayIconController : ITrayHost, IDisposable
         this.RefreshMenu();
     }
 
-    private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
-        UpdateDownloadRequested?.Invoke(this, e);
+    private void OnUpdateDownloadRequested(object? sender, EventArgs e) => this.UpdateDownloadRequested?.Invoke(this, e);
 }
 

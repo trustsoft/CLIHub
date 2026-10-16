@@ -45,8 +45,7 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
     /// <inheritdoc />
     public void NotifyUpdateFailed(string version) => this.tray.NotifyUpdateFailed(version);
 
-    private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
-        UpdateDownloadRequested?.Invoke(this, e);
+    private void OnUpdateDownloadRequested(object? sender, EventArgs e) => this.UpdateDownloadRequested?.Invoke(this, e);
 
     /// <inheritdoc />
     public void Dispose()

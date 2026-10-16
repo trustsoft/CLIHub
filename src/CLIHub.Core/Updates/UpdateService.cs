@@ -313,7 +313,7 @@ public class UpdateService : IUpdateService
         }
     }
 
-    private void RaiseStateChanged() => UpdateStateChanged?.Invoke(this, EventArgs.Empty);
+    private void RaiseStateChanged() => this.UpdateStateChanged?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     ///   Strips build metadata (for example, the "+commit" suffix)

@@ -50,8 +50,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
         this.handlers.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
     }
 
-    private void OnStateChanged(object? sender, EventArgs e) => StateChanged?.Invoke(this, e);
+    private void OnStateChanged(object? sender, EventArgs e) => this.StateChanged?.Invoke(this, e);
 
-    private void OnUpdateDownloadRequested(object? sender, EventArgs e) =>
-        UpdateDownloadRequested?.Invoke(this, e);
+    private void OnUpdateDownloadRequested(object? sender, EventArgs e) => this.UpdateDownloadRequested?.Invoke(this, e);
 }

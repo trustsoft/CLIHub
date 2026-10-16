@@ -348,7 +348,7 @@ public sealed class ProjectScanningService : IProjectScanner
     private void Publish(ProjectScanStatus status) => this.Post(() =>
     {
         this.status = status;
-        StatusChanged?.Invoke(this, status);
+        this.StatusChanged?.Invoke(this, status);
     });
 
     private void Post(Action action)

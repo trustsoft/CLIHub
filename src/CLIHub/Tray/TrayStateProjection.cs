@@ -75,5 +75,5 @@ public sealed class TrayStateProjection : IDisposable
         this.updates.UpdateStateChanged -= this.OnSourceStateChanged;
     }
 
-    private void OnSourceStateChanged(object? sender, EventArgs e) => StateChanged?.Invoke(this, EventArgs.Empty);
+    private void OnSourceStateChanged(object? sender, EventArgs e) => this.StateChanged?.Invoke(this, EventArgs.Empty);
 }

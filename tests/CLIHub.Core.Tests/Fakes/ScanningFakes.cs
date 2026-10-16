@@ -16,9 +16,9 @@ internal sealed class FakeRepositoryWatcher : IRepositoryWatcher
 
     public void Dispose() => this.Disposed = true;
 
-    public void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
+    public void RaiseChanged() => this.Changed?.Invoke(this, EventArgs.Empty);
 
-    public void RaiseOverflow() => Overflow?.Invoke(this, EventArgs.Empty);
+    public void RaiseOverflow() => this.Overflow?.Invoke(this, EventArgs.Empty);
 }
 
 internal sealed class FakeRepositoryWatcherFactory : IRepositoryWatcherFactory
@@ -48,7 +48,7 @@ internal sealed class FakeScanTimer : IScanTimer
 
     public void Dispose() => this.Disposed = true;
 
-    public void Fire() => Elapsed?.Invoke(this, EventArgs.Empty);
+    public void Fire() => this.Elapsed?.Invoke(this, EventArgs.Empty);
 }
 
 internal sealed class FakeScanTimerFactory : IScanTimerFactory

@@ -184,7 +184,7 @@ public sealed class ProjectPaneController : IDisposable
     private void OnProjectsChanged(object? sender, EventArgs e)
     {
         this.Refresh();
-        ProjectsChanged?.Invoke(this, e);
+        this.ProjectsChanged?.Invoke(this, e);
     }
 
     /// <summary>

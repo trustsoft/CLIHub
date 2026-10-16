@@ -27,7 +27,7 @@ public partial class SettingsWindow : Window
         this.viewModel = viewModel;
         this.DataContext = viewModel;
         viewModel.RequestClose += (_, _) => this.Close();
-        Closed += (_, _) => this.viewModel.Dispose();
+        this.Closed += (_, _) => this.viewModel.Dispose();
     }
 
     /// <summary>

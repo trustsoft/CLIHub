@@ -53,7 +53,7 @@ public sealed class PluginCatalog : IPluginCatalog
     public void ReloadPlugins()
     {
         this.plugins = this.LoadPluginsCore();
-        PluginsChanged?.Invoke(this, EventArgs.Empty);
+        this.PluginsChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private IReadOnlyList<Plugin> LoadPluginsCore()

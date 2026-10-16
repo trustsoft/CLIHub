@@ -15,8 +15,7 @@ public abstract class ObservableObject : INotifyPropertyChanged
     ///   Raises <see cref="PropertyChanged" /> for the given property.
     /// </summary>
     /// <param name="propertyName"> The property name; defaults to the caller. </param>
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
     ///   Updates the backing field and raises <see cref="PropertyChanged" /> when the value changed.

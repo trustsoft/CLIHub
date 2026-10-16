@@ -306,7 +306,7 @@ public class ProjectService : IProjectService
     private void Persist()
     {
         this.projectStateStore.Update(state => this.projectState.CopyTo(state));
-        ProjectsChanged?.Invoke(this, EventArgs.Empty);
+        this.ProjectsChanged?.Invoke(this, EventArgs.Empty);
     }
 
 }

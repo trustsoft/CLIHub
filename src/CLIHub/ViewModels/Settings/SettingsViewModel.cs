@@ -755,7 +755,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   Closes the window without saving.
     /// </summary>
-    public void Cancel() => RequestClose?.Invoke(this, EventArgs.Empty);
+    public void Cancel() => this.RequestClose?.Invoke(this, EventArgs.Empty);
 
     private void AddWatchedDirectory()
     {
@@ -922,6 +922,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        RequestClose?.Invoke(this, EventArgs.Empty);
+        this.RequestClose?.Invoke(this, EventArgs.Empty);
     }
 }

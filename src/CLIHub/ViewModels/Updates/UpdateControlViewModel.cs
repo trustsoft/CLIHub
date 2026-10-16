@@ -250,5 +250,6 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         CommandManager.InvalidateRequerySuggested();
     }
 
-    private void ReportOutcome(string message) => OutcomeReported?.Invoke(this, message);
+    private void ReportOutcome(string message) =>
+        this.OutcomeReported?.Invoke(this, message);
 }

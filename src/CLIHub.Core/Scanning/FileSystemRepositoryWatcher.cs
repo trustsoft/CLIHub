@@ -116,9 +116,9 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
         this.watchers.Clear();
     }
 
-    private void OnChanged(object sender, FileSystemEventArgs e) => Changed?.Invoke(this, EventArgs.Empty);
+    private void OnChanged(object sender, FileSystemEventArgs e) => this.Changed?.Invoke(this, EventArgs.Empty);
 
-    private void OnRenamed(object sender, RenamedEventArgs e) => Changed?.Invoke(this, EventArgs.Empty);
+    private void OnRenamed(object sender, RenamedEventArgs e) => this.Changed?.Invoke(this, EventArgs.Empty);
 
-    private void OnError(object sender, ErrorEventArgs e) => Overflow?.Invoke(this, EventArgs.Empty);
+    private void OnError(object sender, ErrorEventArgs e) => this.Overflow?.Invoke(this, EventArgs.Empty);
 }
