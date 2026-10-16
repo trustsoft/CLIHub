@@ -53,8 +53,8 @@ public static class RuntimeKinds
     public const string GitBashToken = "bash";
 
     /// <summary>
-    ///   Parses a runtime token (or a recognized executable/alias). Returns false for
-    ///   null, empty, or unknown values.
+    ///   Parses a runtime token (or a recognized executable/alias).
+    ///   Returns false for null, empty, or unknown values.
     /// </summary>
     public static bool TryParse(string? value, out RuntimeKind kind)
     {

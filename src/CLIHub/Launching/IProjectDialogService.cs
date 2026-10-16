@@ -6,13 +6,13 @@ namespace CLIHub.Launching;
 public interface IProjectDialogService
 {
     /// <summary>
-    ///   Opens a folder picker and returns the selected path, or null when cancelled.
+    ///   Opens a folder picker and returns the selected path, or null when canceled.
     /// </summary>
     /// <returns> The selected project folder path, or null. </returns>
     string? SelectProjectFolder();
 
     /// <summary>
-    ///   Opens a folder picker with a custom title and returns the selected path, or null when cancelled.
+    ///   Opens a folder picker with a custom title and returns the selected path, or null when canceled.
     /// </summary>
     /// <param name="title"> The folder picker dialog title. </param>
     /// <returns> The selected folder path, or null. </returns>

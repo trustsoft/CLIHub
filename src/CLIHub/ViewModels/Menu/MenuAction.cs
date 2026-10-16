@@ -3,8 +3,8 @@ namespace CLIHub.ViewModels;
 using System.Windows.Input;
 
 /// <summary>
-///   One entry in a pane's data-driven actions menu: either a separator or an action with an icon,
-///   a label, and an optional command.
+///   One entry in a pane's data-driven actions menu: either a separator
+///   or an action with an icon, a label, and an optional command.
 /// </summary>
 public sealed class MenuAction : ObservableObject
 {

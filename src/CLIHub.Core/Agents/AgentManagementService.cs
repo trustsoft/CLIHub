@@ -5,8 +5,8 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   On-demand agent operations for the management surface, composing detection, version, command,
-///   and running-agent services.
+///   On-demand agent operations for the management surface,
+///   composing detection, version, command, and running-agent services.
 /// </summary>
 public sealed class AgentManagementService : IAgentManagementService
 {

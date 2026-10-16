@@ -47,8 +47,8 @@ public static class ProjectDiscoveryModes
     public const ProjectDiscoveryMode Default = ProjectDiscoveryMode.Both;
 
     /// <summary>
-    ///   Returns the mode for a stored token, falling back to <see cref="Default" /> for missing
-    ///   or unrecognized values.
+    ///   Returns the mode for a stored token, falling back to <see cref="Default" />
+    ///   for missing or unrecognized values.
     /// </summary>
     /// <param name="value"> The stored token. </param>
     /// <returns> The parsed mode. </returns>

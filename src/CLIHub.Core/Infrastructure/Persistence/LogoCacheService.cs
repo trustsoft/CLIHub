@@ -144,8 +144,8 @@ public sealed class LogoCacheService : ILogoCacheService
 
         var json = JsonSerializer.Serialize(state, CoreJson.Options);
 
-        // Atomic write: write to a temp file, then rename, so an interrupted save cannot
-        // corrupt the previous state.
+        // Atomic write: write to a temp file, then rename,
+        // so an interrupted save cannot corrupt the previous state.
         var directory = Path.GetDirectoryName(this.stateFilePath);
         if (!string.IsNullOrEmpty(directory))
         {

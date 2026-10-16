@@ -82,8 +82,8 @@ public sealed record SettingsPage(string Key, string Title, string Group, bool I
 public sealed record SettingsGroup(string Title, IReadOnlyList<SettingsPage> Pages);
 
 /// <summary>
-///   View model for the Settings window: loads preferences, validates input, and applies
-///   changes on save.
+///   View model for the Settings window: loads preferences,
+///   validates input, and applies changes on save.
 /// </summary>
 public sealed class SettingsViewModel : ObservableObject, IDisposable
 {

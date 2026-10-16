@@ -14,16 +14,24 @@ public sealed record AgentProbeResult(bool IsInstalled, string? Version);
 /// </summary>
 public enum AgentUpdateOutcome
 {
-    /// <summary> The update command was launched. </summary>
+    /// <summary>
+    ///   The update command was launched.
+    /// </summary>
     Started,
 
-    /// <summary> The agent does not declare an update command. </summary>
+    /// <summary>
+    ///   The agent does not declare an update command.
+    /// </summary>
     Unsupported,
 
-    /// <summary> A matching agent process is running. </summary>
+    /// <summary>
+    ///   A matching agent process is running.
+    /// </summary>
     Blocked,
 
-    /// <summary> The update command could not be started. </summary>
+    /// <summary>
+    ///   The update command could not be started.
+    /// </summary>
     Failed
 }
 
@@ -32,8 +40,7 @@ public enum AgentUpdateOutcome
 /// </summary>
 /// <param name="Outcome"> The outcome. </param>
 /// <param name="Message">
-///   A user-facing message when the outcome is not
-///   <see cref="AgentUpdateOutcome.Started" />.
+///   A user-facing message when the outcome is not <see cref="AgentUpdateOutcome.Started" />.
 /// </param>
 public sealed record AgentUpdateResult(AgentUpdateOutcome Outcome, string? Message)
 {
@@ -57,8 +64,8 @@ public interface IAgentManagementService
     Task<AgentProbeResult> ProbeAsync(Plugin plugin, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///   Runs an agent's update command interactively in the user profile directory, unless the
-    ///   agent does not support updates or a matching agent process is running.
+    ///   Runs an agent's update command interactively in the user profile directory,
+    ///   unless the agent does not support updates or a matching agent process is running.
     /// </summary>
     /// <param name="plugin"> The agent to update. </param>
     /// <param name="cancellationToken"> Cancellation token. </param>

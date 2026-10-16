@@ -4,8 +4,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 /// <summary>
-///   Represents a project directory tracked by CLIHub. Mutable display properties raise
-///   property-change notifications so bound views update in place.
+///   Represents a project directory tracked by CLIHub. Mutable display properties
+///   raise property-change notifications so bound views update in place.
 /// </summary>
 public class Project : INotifyPropertyChanged
 {
@@ -25,8 +25,8 @@ public class Project : INotifyPropertyChanged
     public required string Path { get; set; }
 
     /// <summary>
-    ///   How the project entered the list: registered manually by the user, or discovered by
-    ///   repository scanning. Defaults to <see cref="ProjectSource.Manual" />.
+    ///   How the project entered the list: registered manually by the user,
+    ///   or discovered by repository scanning. Defaults to <see cref="ProjectSource.Manual" />.
     /// </summary>
     public ProjectSource Source { get; set; } = ProjectSource.Manual;
 

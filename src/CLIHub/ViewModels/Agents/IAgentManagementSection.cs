@@ -3,8 +3,8 @@ namespace CLIHub.ViewModels;
 using System.Collections.ObjectModel;
 
 /// <summary>
-///   The agent-management section of the Settings window: cards, metrics, the default-agent
-///   selection, and the per-card actions.
+///   The agent-management section of the Settings window: cards,
+///   metrics, the default-agent selection, and the per-card actions.
 /// </summary>
 public interface IAgentManagementSection : IDisposable
 {

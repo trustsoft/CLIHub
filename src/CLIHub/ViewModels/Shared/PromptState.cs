@@ -1,8 +1,8 @@
 namespace CLIHub.ViewModels;
 
 /// <summary>
-///   Tracks whether a modal prompt opened from the launch window is active, so that the window
-///   does not hide itself when it loses focus to that prompt.
+///   Tracks whether a modal prompt opened from the launch window is active,
+///   so that the window does not hide itself when it loses focus to that prompt.
 /// </summary>
 public sealed class PromptState
 {

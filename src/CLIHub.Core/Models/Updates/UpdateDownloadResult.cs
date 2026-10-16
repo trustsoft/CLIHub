@@ -38,7 +38,6 @@ public enum UpdateDownloadStatus
 /// <param name="AvailableVersion">
 ///   The version the outcome refers to: the downloaded version when
 ///   <see cref="UpdateDownloadStatus.Downloaded" />, the version whose download failed when
-///   <see cref="UpdateDownloadStatus.Failed" /> after a
-///   successful check, otherwise null.
+///   <see cref="UpdateDownloadStatus.Failed" /> after a successful check, otherwise null.
 /// </param>
 public sealed record UpdateDownloadResult(UpdateDownloadStatus Status, string? AvailableVersion);
