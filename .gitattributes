@@ -1,5 +1,6 @@
-# Normalize line endings: store LF in the repository and check out LF.
-* text=auto eol=lf
+# Normalize line endings: store LF in the repository and check out CRLF, matching the
+# end_of_line = crlf setting in .editorconfig for the Windows working tree.
+* text=auto eol=crlf
 
 # Binary assets are never converted.
 *.png binary
