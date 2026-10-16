@@ -12,14 +12,15 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 
 1. **ApplicationHost** (WPF lifecycle boundary):
    - Calls the WPF base implementation.
+   - Acquires the single-instance guard as the first startup action, before any environment setup. If another instance owns the mutex, the host signals activation to the running instance, requests WPF shutdown, and returns; no data directories, logging, or services are initialized for the duplicate process, and no tray icon or window is created.
    - Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
    - Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
-   - Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services.
+   - Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services; the pre-acquired guard is registered into the composition so the provider owns guard disposal.
    - Delegates to `ApplicationBootstrapper.Start`.
 
-2. **InstanceCoordinator** (single-instance detection):
-   - Resolves the single-instance guard from the service provider.
-   - If another instance owns the mutex, sends it a best-effort activation signal, shuts down this process, and returns `InstanceStatus.SecondInstance`.
+2. **InstanceCoordinator** (single-instance confirmation):
+   - Resolves the single-instance guard from the service provider. The guard was already acquired during host startup, so this stage confirms first-instance status.
+   - If the resolved guard reports another first instance, sends it a best-effort activation signal, shuts down this process, and returns `InstanceStatus.SecondInstance`. This is a defensive path; normal duplicates already exited during host startup.
    - If this is the first instance, returns `InstanceStatus.FirstInstance` and startup continues.
    - The provider owns guard disposal.
 
@@ -60,8 +61,9 @@ Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollection
 
 | Operation | Coordinator | Current behavior on failure |
 |---|---|---|
+| Acquiring the single-instance guard at host startup | ApplicationHost | A duplicate launch signals activation best-effort and exits silently; logging is not configured before guard acquisition, so the duplicate produces no log entries and no AppData artifacts. An exception after acquisition but before service-provider construction disposes the guard and propagates. |
 | Velopack bootstrap, directory creation, logger setup, service-provider creation/resolution | ApplicationHost | No application-level recovery boundary is present; an unhandled failure can prevent normal startup. |
-| Signaling the first instance from a second process | InstanceCoordinator | Connection attempts are best-effort; failures are swallowed and the second process proceeds to shut down. |
+| Signaling the first instance defensively during bootstrapper startup | InstanceCoordinator | Connection attempts are best-effort; failures are swallowed and the second process proceeds to shut down. |
 | Plugin seeding | StartupStateLoader | The seeder logs a warning and returns; startup continues to plugin loading. |
 | Loading an individual plugin descriptor | StartupStateLoader | The manager logs a warning and skips the descriptor that failed to load. |
 | Applying the Windows Run registration during startup | StartupStateLoader | The startup service reports failure without throwing; startup continues. |

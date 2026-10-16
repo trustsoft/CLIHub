@@ -32,9 +32,21 @@ public static class ServiceRegistration
     /// <param name="services"> The service collection to configure. </param>
     /// <returns> The configured service collection. </returns>
     public static IServiceCollection AddClIHubServices(this IServiceCollection services)
+        => services.AddClIHubServices(guard: null);
+
+    /// <summary>
+    ///   Registers the WPF application's services (windows, view models, tray, hotkey).
+    /// </summary>
+    /// <param name="services"> The service collection to configure. </param>
+    /// <param name="guard">
+    ///   An already-acquired single-instance guard. When provided, it is registered so the provider
+    ///   owns disposal; when omitted, a lazily constructed production guard is registered instead.
+    /// </param>
+    /// <returns> The configured service collection. </returns>
+    public static IServiceCollection AddClIHubServices(this IServiceCollection services, SingleInstanceGuard? guard)
     {
         services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-project.png"));
-        services.AddWindowsInfrastructure();
+        services.AddWindowsInfrastructure(guard);
 
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 

@@ -41,4 +41,40 @@ public class ApplicationLifetimeRegistrationTests
 
         Assert.Same(first, second);
     }
+
+    [Fact]
+    public void AddClIHubServices_PreAcquiredGuard_DisposedByProvider()
+    {
+        var guard = new SingleInstanceGuard(
+            $@"Local\CLIHub.Tests.{Guid.NewGuid():N}",
+            $"CLIHub.Tests.{Guid.NewGuid():N}");
+        var services = new ServiceCollection();
+        services.AddClIHubServices(guard);
+
+        using (var provider = services.BuildServiceProvider())
+        {
+            Assert.Same(guard, provider.GetRequiredService<ISingleInstanceGuard>());
+            Assert.False(guard.IsDisposed);
+        }
+
+        Assert.True(guard.IsDisposed);
+    }
+
+    [Fact]
+    public void AddClIHubServices_PreAcquiredGuard_SameInstanceAcrossResolutions()
+    {
+        var guard = new SingleInstanceGuard(
+            $@"Local\CLIHub.Tests.{Guid.NewGuid():N}",
+            $"CLIHub.Tests.{Guid.NewGuid():N}");
+
+        var services = new ServiceCollection();
+        services.AddClIHubServices(guard);
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Same(guard, provider.GetRequiredService<SingleInstanceGuard>());
+        Assert.Same(
+            provider.GetRequiredService<ISingleInstanceGuard>(),
+            provider.GetRequiredService<ISingleInstanceGuard>());
+    }
 }

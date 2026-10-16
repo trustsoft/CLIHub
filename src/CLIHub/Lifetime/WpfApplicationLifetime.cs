@@ -8,5 +8,5 @@ using System.Windows;
 public sealed class WpfApplicationLifetime : IApplicationLifetime
 {
     /// <inheritdoc />
-    public void Shutdown() => Application.Current.Shutdown();
+    public void Shutdown() => Application.Current?.Shutdown();
 }

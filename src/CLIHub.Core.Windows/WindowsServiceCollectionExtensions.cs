@@ -18,7 +18,22 @@ public static class WindowsServiceCollectionExtensions
     /// <param name="services"> The service collection to configure. </param>
     /// <returns> The configured service collection. </returns>
     public static IServiceCollection AddWindowsInfrastructure(this IServiceCollection services)
+        => services.AddWindowsInfrastructure(guard: null);
+
+    /// <summary>
+    ///   Adds the Windows platform adapters as singletons. Combine with <c> AddClIHubCoreServices </c>,
+    ///   which registers the platform-neutral services and the process ports these adapters implement.
+    /// </summary>
+    /// <param name="services"> The service collection to configure. </param>
+    /// <param name="guard">
+    ///   An already-acquired single-instance guard. When provided, it is registered so the provider
+    ///   owns disposal; when omitted, a lazily constructed production guard is registered instead.
+    /// </param>
+    /// <returns> The configured service collection. </returns>
+    public static IServiceCollection AddWindowsInfrastructure(this IServiceCollection services, SingleInstanceGuard? guard)
     {
+        ArgumentNullException.ThrowIfNull(services);
+
         services.AddSingleton<RuntimeSelector>();
         services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
         services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
@@ -27,7 +42,16 @@ public static class WindowsServiceCollectionExtensions
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));
-        services.AddSingleton<SingleInstanceGuard>();
+
+        if (guard is null)
+        {
+            services.AddSingleton<SingleInstanceGuard>();
+        }
+        else
+        {
+            services.AddSingleton(guard);
+        }
+
         services.AddSingleton<ISingleInstanceGuard>(sp => sp.GetRequiredService<SingleInstanceGuard>());
         return services;
     }

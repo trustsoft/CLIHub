@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="CLIHub.Core.Windows.Tests" />
+    <InternalsVisibleTo Include="CLIHub.Tests" />
   </ItemGroup>
 
 </Project>

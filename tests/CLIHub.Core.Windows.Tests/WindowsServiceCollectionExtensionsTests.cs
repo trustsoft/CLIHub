@@ -40,4 +40,27 @@ public class WindowsServiceCollectionExtensionsTests
         Assert.Equal(ServiceLifetime.Singleton, portDescriptor.Lifetime);
         Assert.Equal(typeof(SingleInstanceGuard), guardDescriptor.ImplementationType);
     }
+
+    [Fact]
+    public void AddWindowsInfrastructure_PreAcquiredGuard_RegistersInstanceAndResolvesSameGuard()
+    {
+        var guard = new SingleInstanceGuard(
+            $@"Local\CLIHub.Tests.{Guid.NewGuid():N}",
+            $"CLIHub.Tests.{Guid.NewGuid():N}");
+
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+        services.AddWindowsInfrastructure(guard);
+
+        var guardDescriptor = services.Single(d => d.ServiceType == typeof(SingleInstanceGuard));
+        var portDescriptor = services.Single(d => d.ServiceType == typeof(ISingleInstanceGuard));
+
+        Assert.Equal(ServiceLifetime.Singleton, guardDescriptor.Lifetime);
+        Assert.Equal(ServiceLifetime.Singleton, portDescriptor.Lifetime);
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Same(guard, provider.GetRequiredService<SingleInstanceGuard>());
+        Assert.Same(guard, provider.GetRequiredService<ISingleInstanceGuard>());
+    }
 }

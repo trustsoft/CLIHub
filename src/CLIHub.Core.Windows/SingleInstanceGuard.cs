@@ -23,6 +23,11 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     public bool IsFirstInstance => this.isFirstInstance;
 
     /// <summary>
+    ///   True when the guard has been disposed. Visible to test assemblies for lifecycle assertions.
+    /// </summary>
+    internal bool IsDisposed { get; private set; }
+
+    /// <summary>
     ///   Raised on the first instance when another instance signals activation.
     ///   Handlers are invoked on a background thread.
     /// </summary>
@@ -127,6 +132,8 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
     /// </summary>
     public void Dispose()
     {
+        this.IsDisposed = true;
+
         try
         {
             this.cts?.Cancel();

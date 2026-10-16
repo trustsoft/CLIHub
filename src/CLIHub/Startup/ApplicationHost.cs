@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Logging;
 using CLIHub.Composition;
+using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 
 using Serilog;
@@ -14,30 +15,80 @@ using Serilog;
 /// </summary>
 public sealed class ApplicationHost : IApplicationHost
 {
+    private readonly Func<SingleInstanceGuard> guardFactory;
     private ServiceProvider? services;
+    private SingleInstanceGuard? guard;
+
+    /// <summary>
+    ///   Creates the application host.
+    /// </summary>
+    public ApplicationHost() : this(() => new SingleInstanceGuard())
+    {
+    }
+
+    /// <summary>
+    ///   Creates the application host with a single-instance guard factory for testing.
+    /// </summary>
+    /// <param name="guardFactory"> Factory that acquires the single-instance guard. </param>
+    internal ApplicationHost(Func<SingleInstanceGuard> guardFactory)
+    {
+        this.guardFactory = guardFactory ?? throw new ArgumentNullException(nameof(guardFactory));
+    }
+
+    /// <summary>
+    ///   True when the service provider has been built; visible to test assemblies for lifecycle assertions.
+    /// </summary>
+    internal bool HasBuiltServiceProvider => this.services is not null;
 
     /// <inheritdoc />
     public void Start(Action<Action> dispatch, Action<object> setMainWindow)
     {
-        ArgumentNullException.ThrowIfNull(dispatch);
-        ArgumentNullException.ThrowIfNull(setMainWindow);
+        this.guard = this.guardFactory();
 
-        DirectoryInitializer.EnsureAppDataLayout();
-        ConfigureLogging();
+        if (!this.guard.IsFirstInstance)
+        {
+            this.guard.SignalActivation();
+            new WpfApplicationLifetime().Shutdown();
+            return;
+        }
 
-        Log.Information("CLIHub starting");
+        try
+        {
+            ArgumentNullException.ThrowIfNull(dispatch);
+            ArgumentNullException.ThrowIfNull(setMainWindow);
 
-        var collection = new ServiceCollection();
-        collection.AddClIHubServices();
-        this.services = collection.BuildServiceProvider();
+            DirectoryInitializer.EnsureAppDataLayout();
+            ConfigureLogging();
 
-        this.services.GetRequiredService<IApplicationBootstrapper>().Start(
-            new ApplicationStartupContext(dispatch, setMainWindow));
+            Log.Information("CLIHub starting");
+
+            var collection = new ServiceCollection();
+            collection.AddClIHubServices(this.guard);
+            this.services = collection.BuildServiceProvider();
+            this.guard = null;
+
+            this.services.GetRequiredService<IApplicationBootstrapper>().Start(
+                new ApplicationStartupContext(dispatch, setMainWindow));
+        }
+        catch (Exception)
+        {
+            this.guard?.Dispose();
+            this.guard = null;
+            throw;
+        }
     }
 
     /// <inheritdoc />
     public void Shutdown()
     {
+        if (this.services is null)
+        {
+            // The provider was never built (second instance or failed startup), so the host still owns the guard.
+            this.guard?.Dispose();
+            this.guard = null;
+            return;
+        }
+
         Log.Information("CLIHub shutting down");
 
         try

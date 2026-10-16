@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="CLIHub.Tests" />
     <ProjectReference Include="..\CLIHub.Core\CLIHub.Core.csproj" />
     <ProjectReference Include="..\CLIHub.Core.Windows\CLIHub.Core.Windows.csproj" />
   </ItemGroup>
