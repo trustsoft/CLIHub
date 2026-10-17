@@ -46,12 +46,16 @@
                           IsChecked="{Binding NotifyStableUpdates, Mode=TwoWay}"
                           Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
+            <!-- Pre-release builds are not published yet (stable-only releases), so the option
+                 cannot change the update check or its notification; re-enable with a beta channel. -->
             <controls:SettingCard Title="Notify about pre-release versions"
-                               Hint="Include pre-release versions and notify when one is available."
+                               Hint="Not available yet: CLIHub publishes stable releases only."
                                Icon="{x:Static themes:IconGlyphs.Info}"
-                               Grouped="True">
+                               Grouped="True"
+                               Opacity="0.6">
                 <CheckBox HorizontalAlignment="Right"
                           IsChecked="{Binding NotifyPrereleaseUpdates, Mode=TwoWay}"
+                          IsEnabled="False"
                           Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
         </controls:SettingsGroup>
