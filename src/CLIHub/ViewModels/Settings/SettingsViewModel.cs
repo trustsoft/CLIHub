@@ -1,6 +1,8 @@
 namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.IO;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
@@ -268,8 +270,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
     private DiscoveryModeOption selectedDiscoveryMode = DiscoveryModeOptions[2];
     private string newIgnoredPatternText = string.Empty;
-    private string? selectedWatchedDirectory;
-    private string? selectedIgnoredPattern;
+    private string newWatchedDirectoryText = string.Empty;
+    private string? watchedDirectoryError;
     private string watcherStatusText = "No watched directories configured.";
     private bool disposed;
 
@@ -321,11 +323,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.ShowReleaseNotesCommand = new RelayCommand(this.releaseNotesLauncher.ShowReleaseNotes);
         this.CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(this.LogFilePath));
         this.OpenLogFolderCommand = new RelayCommand(() => this.externalLauncher.Open(AppPaths.LogsDirectory));
+        this.BrowseWatchedDirectoryCommand = new RelayCommand(this.BrowseWatchedDirectory);
         this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
-        this.RemoveWatchedDirectoryCommand = new RelayCommand(this.RemoveWatchedDirectory);
+        this.RemoveWatchedDirectoryCommand = new RelayCommand<string>(this.RemoveWatchedDirectory);
         this.AddIgnoredPatternCommand = new RelayCommand(this.AddIgnoredPattern);
-        this.RemoveIgnoredPatternCommand = new RelayCommand(this.RemoveIgnoredPattern);
+        this.RemoveIgnoredPatternCommand = new RelayCommand<string>(this.RemoveIgnoredPattern);
 
+        this.WatchedDirectories.CollectionChanged += this.OnWatchedDirectoriesChanged;
         this.projectScanner.StatusChanged += this.OnScannerStatusChanged;
         this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
     }
@@ -658,27 +662,54 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public ObservableCollection<string> WatchedDirectories { get; } = new();
 
     /// <summary>
-    ///   The watched directory selected for removal.
+    ///   The absolute directory path pending registration.
     /// </summary>
-    public string? SelectedWatchedDirectory
+    public string NewWatchedDirectoryText
     {
-        get => this.selectedWatchedDirectory;
-        set => this.SetProperty(ref this.selectedWatchedDirectory, value);
+        get => this.newWatchedDirectoryText;
+        set
+        {
+            if (this.SetProperty(ref this.newWatchedDirectoryText, value))
+            {
+                this.WatchedDirectoryError = null;
+            }
+        }
     }
+
+    /// <summary>
+    ///   The validation error shown under the watched-directory entry, or null.
+    /// </summary>
+    public string? WatchedDirectoryError
+    {
+        get => this.watchedDirectoryError;
+        private set
+        {
+            if (this.SetProperty(ref this.watchedDirectoryError, value))
+            {
+                this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   True when <see cref="WatchedDirectoryError" /> has a message.
+    /// </summary>
+    public bool HasWatchedDirectoryError => !string.IsNullOrEmpty(this.watchedDirectoryError);
+
+    /// <summary>
+    ///   The watched-root count shown next to the section header.
+    /// </summary>
+    public string WatchedRootsSummary => this.WatchedDirectories.Count switch
+    {
+        0 => "No roots monitored",
+        1 => "1 root monitored",
+        var count => $"{count} roots monitored"
+    };
 
     /// <summary>
     ///   The ignored directory-name patterns edited on the Projects &amp; Paths page.
     /// </summary>
     public ObservableCollection<string> IgnoredPatterns { get; } = new();
-
-    /// <summary>
-    ///   The ignored pattern selected for removal.
-    /// </summary>
-    public string? SelectedIgnoredPattern
-    {
-        get => this.selectedIgnoredPattern;
-        set => this.SetProperty(ref this.selectedIgnoredPattern, value);
-    }
 
     /// <summary>
     ///   The ignored pattern pending to be added.
@@ -695,7 +726,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string ScanDepthText
     {
         get => this.scanDepthText;
-        set => this.SetProperty(ref this.scanDepthText, value);
+        set
+        {
+            if (this.SetProperty(ref this.scanDepthText, value))
+            {
+                this.OnPropertyChanged(nameof(this.ScanSummary));
+            }
+        }
     }
 
     /// <summary>
@@ -709,8 +746,19 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public DiscoveryModeOption SelectedDiscoveryMode
     {
         get => this.selectedDiscoveryMode;
-        set => this.SetProperty(ref this.selectedDiscoveryMode, value);
+        set
+        {
+            if (this.SetProperty(ref this.selectedDiscoveryMode, value))
+            {
+                this.OnPropertyChanged(nameof(this.ScanSummary));
+            }
+        }
     }
+
+    /// <summary>
+    ///   The discovery mode and scan depth shown under each watched root.
+    /// </summary>
+    public string ScanSummary => $"{this.SelectedDiscoveryMode.Name} · recursive depth {this.ScanDepthText}";
 
     /// <summary>
     ///   A read-only description of the background repository scanner status.
@@ -722,14 +770,19 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Adds the folder selected by the user to the watched-directories list.
+    ///   Opens the folder picker and fills the watched-directory entry.
+    /// </summary>
+    public RelayCommand BrowseWatchedDirectoryCommand { get; }
+
+    /// <summary>
+    ///   Registers the entered absolute folder path as a watched root.
     /// </summary>
     public RelayCommand AddWatchedDirectoryCommand { get; }
 
     /// <summary>
-    ///   Removes the selected watched directory.
+    ///   Removes the watched root passed as the command parameter.
     /// </summary>
-    public RelayCommand RemoveWatchedDirectoryCommand { get; }
+    public RelayCommand<string> RemoveWatchedDirectoryCommand { get; }
 
     /// <summary>
     ///   Adds the entered ignored pattern.
@@ -737,9 +790,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public RelayCommand AddIgnoredPatternCommand { get; }
 
     /// <summary>
-    ///   Removes the selected ignored pattern.
+    ///   Removes the ignored pattern passed as the command parameter.
     /// </summary>
-    public RelayCommand RemoveIgnoredPatternCommand { get; }
+    public RelayCommand<string> RemoveIgnoredPatternCommand { get; }
 
     /// <summary>
     ///   The status line of the update check.
@@ -891,8 +944,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
             ?? DiscoveryModeOptions[2];
         this.newIgnoredPatternText = string.Empty;
-        this.selectedWatchedDirectory = null;
-        this.selectedIgnoredPattern = null;
+        this.newWatchedDirectoryText = string.Empty;
+        this.watchedDirectoryError = null;
         this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
 
         this.AgentsState.Load(draft.DefaultAgentId);
@@ -924,8 +977,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.ScanDepthText));
         this.OnPropertyChanged(nameof(this.SelectedDiscoveryMode));
         this.OnPropertyChanged(nameof(this.NewIgnoredPatternText));
-        this.OnPropertyChanged(nameof(this.SelectedWatchedDirectory));
-        this.OnPropertyChanged(nameof(this.SelectedIgnoredPattern));
+        this.OnPropertyChanged(nameof(this.NewWatchedDirectoryText));
+        this.OnPropertyChanged(nameof(this.WatchedDirectoryError));
+        this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
+        this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
+        this.OnPropertyChanged(nameof(this.ScanSummary));
         this.OnPropertyChanged(nameof(this.WatcherStatusText));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
@@ -967,29 +1023,55 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             string.Equals(AccentPalette.Normalize(choice.Hex), normalized, StringComparison.Ordinal));
     }
 
-    private void AddWatchedDirectory()
+    private void BrowseWatchedDirectory()
     {
         var folder = this.dialogs.SelectFolder("Add Watched Directory");
-        if (string.IsNullOrWhiteSpace(folder))
+        if (!string.IsNullOrWhiteSpace(folder))
         {
+            this.NewWatchedDirectoryText = folder;
+        }
+    }
+
+    private void AddWatchedDirectory()
+    {
+        var text = this.NewWatchedDirectoryText.Trim();
+        if (text.Length == 0)
+        {
+            this.WatchedDirectoryError = "Enter a folder path or browse for one.";
             return;
         }
 
-        if (!this.WatchedDirectories.Any(existing => string.Equals(existing, folder, StringComparison.OrdinalIgnoreCase)))
+        if (!Path.IsPathFullyQualified(text) || !Directory.Exists(text))
         {
-            this.WatchedDirectories.Add(folder);
+            this.WatchedDirectoryError = "Enter an existing absolute folder path.";
+            return;
         }
 
+        string path;
+        try
+        {
+            path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(text));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            this.WatchedDirectoryError = "Enter a valid absolute folder path.";
+            return;
+        }
+
+        if (!this.WatchedDirectories.Any(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
+        {
+            this.WatchedDirectories.Add(path);
+        }
+
+        this.NewWatchedDirectoryText = string.Empty;
+        this.WatchedDirectoryError = null;
         this.ValidationError = null;
     }
 
-    private void RemoveWatchedDirectory()
-    {
-        if (this.SelectedWatchedDirectory is { } selected)
-        {
-            this.WatchedDirectories.Remove(selected);
-        }
-    }
+    private void RemoveWatchedDirectory(string directory) => this.WatchedDirectories.Remove(directory);
+
+    private void OnWatchedDirectoriesChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
 
     private void AddIgnoredPattern()
     {
@@ -1007,13 +1089,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.NewIgnoredPatternText = string.Empty;
     }
 
-    private void RemoveIgnoredPattern()
-    {
-        if (this.SelectedIgnoredPattern is { } selected)
-        {
-            this.IgnoredPatterns.Remove(selected);
-        }
-    }
+    private void RemoveIgnoredPattern(string pattern) => this.IgnoredPatterns.Remove(pattern);
 
     private void OnScannerStatusChanged(object? sender, ProjectScanStatus status)
     {

@@ -8,34 +8,135 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <controls:SectionHeader Text="REPOSITORIES"/>
-        <controls:SettingCard Title="Watched directories"
-                           Hint="Root folders CLIHub scans for repositories. Nothing is watched while this list is empty."
-                           Icon="{x:Static themes:IconGlyphs.FolderOpen}"
-                           Placement="Stacked">
-            <StackPanel>
-                <ListBox MinHeight="84"
-                         ItemsSource="{Binding WatchedDirectories}"
-                         SelectedItem="{Binding SelectedWatchedDirectory, Mode=TwoWay}"
-                         Style="{StaticResource SettingsList}"/>
-                <controls:SpacedPanel Margin="0,8,0,0"
-                                      Orientation="Horizontal"
-                                      Spacing="{StaticResource Sizing.Spacing}">
-                    <Button Command="{Binding AddWatchedDirectoryCommand}"
-                            Content="Add folder…"
-                            Style="{StaticResource NeutralButton}"/>
-                    <Button Command="{Binding RemoveWatchedDirectoryCommand}"
-                            Content="Remove"
-                            Style="{StaticResource NeutralButton}"/>
-                </controls:SpacedPanel>
-            </StackPanel>
-        </controls:SettingCard>
+        <Grid>
+            <controls:SectionHeader Text="WATCHED REPOSITORY DIRECTORIES"/>
+            <TextBlock Margin="0,18,0,8"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       Style="{StaticResource HintText}"
+                       Text="{Binding WatchedRootsSummary}"
+                       TextWrapping="NoWrap"/>
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding WatchedDirectories}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,8"
+                            Padding="12"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Width="36"
+                                    Height="36"
+                                    VerticalAlignment="Center"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
+                            </Border>
+
+                            <StackPanel Grid.Column="1"
+                                        Margin="12,0,12,0"
+                                        VerticalAlignment="Center">
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding}"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding DataContext.ScanSummary, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                           TextWrapping="NoWrap"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.Name="Remove watched root"
+                                    Command="{Binding DataContext.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource ChipRemoveButton}"
+                                    ToolTip="Remove watched root">
+                                <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="12"
+                                           Text="{x:Static themes:IconGlyphs.Delete}"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid MinHeight="44" Margin="0,4,0,0">
+            <Rectangle RadiusX="8"
+                       RadiusY="8"
+                       Stroke="{DynamicResource FieldStrokeBrush}"
+                       StrokeDashArray="3 3"
+                       StrokeThickness="1"/>
+            <Grid Margin="8,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           VerticalAlignment="Center"
+                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextMutedBrush}"
+                           Text="{x:Static themes:IconGlyphs.Add}"/>
+
+                <TextBox Grid.Column="1"
+                         Margin="10,0"
+                         VerticalAlignment="Center"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Style="{StaticResource SettingsInput}"
+                         Tag="Enter absolute directory path (e.g., C:\repos)…"
+                         Text="{Binding NewWatchedDirectoryText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Button Grid.Column="2"
+                        VerticalAlignment="Center"
+                        Command="{Binding BrowseWatchedDirectoryCommand}"
+                        Content="Browse…"
+                        Style="{StaticResource NeutralButton}"/>
+
+                <Button Grid.Column="3"
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Command="{Binding AddWatchedDirectoryCommand}"
+                        Content="Register"
+                        Style="{StaticResource AccentButton}"/>
+            </Grid>
+        </Grid>
+
+        <TextBlock Margin="0,6,0,0"
+                   Style="{StaticResource ErrorText}"
+                   Text="{Binding WatchedDirectoryError}"
+                   Visibility="{Binding HasWatchedDirectoryError, Converter={StaticResource BoolToVisibility}}"/>
+
+        <controls:SectionHeader Text="DISCOVERY &amp; SCANNING RULES"/>
 
         <controls:SettingCard Title="Repository scan depth"
-                           Hint="How many directory levels below each watched root are scanned (1-8)."
+                           Hint="Maximum folder hierarchy depth used when looking for .git boundaries and root indicators (1–8)."
                            Icon="{x:Static themes:IconGlyphs.Zoom}">
-            <controls:NumericField HorizontalAlignment="Left"
-                                   Width="120"
+            <controls:NumericField Width="120"
                                    Maximum="8"
                                    Minimum="1"
                                    Step="1"
@@ -59,34 +160,71 @@
         </controls:SettingCard>
 
         <controls:SettingCard Title="Ignored directory patterns"
-                           Hint="Folder names skipped while scanning. '*' matches any characters; matching is case-insensitive."
+                           Hint="Folders skipped while scanning. Globs are matched case-insensitively; '*' matches any characters."
                            Icon="{x:Static themes:IconGlyphs.Blocked}"
                            Placement="Stacked">
             <StackPanel>
-                <ListBox MinHeight="64"
-                         ItemsSource="{Binding IgnoredPatterns}"
-                         SelectedItem="{Binding SelectedIgnoredPattern, Mode=TwoWay}"
-                         Style="{StaticResource SettingsList}"/>
-                <Grid Margin="0,8,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             Style="{StaticResource SettingsInput}"
-                             Tag="Folder name or pattern"
-                             Text="{Binding NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Grid.Column="1"
-                            Margin="8,0,0,0"
-                            Command="{Binding AddIgnoredPatternCommand}"
-                            Content="Add"
-                            Style="{StaticResource NeutralButton}"/>
-                    <Button Grid.Column="2"
-                            Margin="8,0,0,0"
-                            Command="{Binding RemoveIgnoredPatternCommand}"
-                            Content="Remove"
-                            Style="{StaticResource NeutralButton}"/>
+                <ItemsControl ItemsSource="{Binding IgnoredPatterns}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="0,0,8,8"
+                                    Padding="8,4,4,4"
+                                    Background="{DynamicResource ChipBgBrush}"
+                                    BorderBrush="{DynamicResource FieldStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="{StaticResource Sizing.FontSize.Body}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{Binding}"/>
+                                    <Button Margin="4,0,0,0"
+                                            AutomationProperties.Name="Remove pattern"
+                                            Command="{Binding DataContext.RemoveIgnoredPatternCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Remove pattern">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="8"
+                                                   Text="{x:Static themes:IconGlyphs.Close}"/>
+                                    </Button>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Grid MinHeight="40" HorizontalAlignment="Left">
+                    <Rectangle RadiusX="6"
+                               RadiusY="6"
+                               Stroke="{DynamicResource FieldStrokeBrush}"
+                               StrokeDashArray="3 3"
+                               StrokeThickness="1"/>
+                    <StackPanel Margin="8,0" Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}"
+                                   Text="{x:Static themes:IconGlyphs.Add}"/>
+                        <TextBox Width="160"
+                                 Margin="8,0"
+                                 VerticalAlignment="Center"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Style="{StaticResource SettingsInput}"
+                                 Tag="Add pattern"
+                                 Text="{Binding NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button VerticalAlignment="Center"
+                                Padding="12,5"
+                                Command="{Binding AddIgnoredPatternCommand}"
+                                Content="Add"
+                                Style="{StaticResource NeutralButton}"/>
+                    </StackPanel>
                 </Grid>
             </StackPanel>
         </controls:SettingCard>

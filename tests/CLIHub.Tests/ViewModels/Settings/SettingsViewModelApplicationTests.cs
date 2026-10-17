@@ -1,5 +1,7 @@
 namespace CLIHub.ViewModels;
 
+using System.IO;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -139,6 +141,75 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
 
         Assert.Equal("#123456", fixture.ViewModel.AccentText);
+    }
+
+    [Fact]
+    public void AddWatchedDirectory_ExistingAbsolutePath_AddsRootAndClearsInput()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.ViewModel.NewWatchedDirectoryText = path;
+
+        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+
+        Assert.Contains(path, fixture.ViewModel.WatchedDirectories);
+        Assert.Equal(string.Empty, fixture.ViewModel.NewWatchedDirectoryText);
+        Assert.False(fixture.ViewModel.HasWatchedDirectoryError);
+        Assert.Equal("1 root monitored", fixture.ViewModel.WatchedRootsSummary);
+    }
+
+    [Fact]
+    public void AddWatchedDirectory_MissingFolder_ReportsError()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing");
+        fixture.ViewModel.NewWatchedDirectoryText = path;
+
+        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+
+        Assert.Empty(fixture.ViewModel.WatchedDirectories);
+        Assert.True(fixture.ViewModel.HasWatchedDirectoryError);
+    }
+
+    [Fact]
+    public void RemoveWatchedDirectoryCommand_RemovesRoot()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.ViewModel.NewWatchedDirectoryText = path;
+        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+
+        fixture.ViewModel.RemoveWatchedDirectoryCommand.Execute(path);
+
+        Assert.Empty(fixture.ViewModel.WatchedDirectories);
+        Assert.Equal("No roots monitored", fixture.ViewModel.WatchedRootsSummary);
+    }
+
+    [Fact]
+    public void RemoveIgnoredPatternCommand_RemovesPattern()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.ViewModel.NewIgnoredPatternText = "custom-ignored-dir";
+        fixture.ViewModel.AddIgnoredPatternCommand.Execute(null);
+
+        fixture.ViewModel.RemoveIgnoredPatternCommand.Execute("custom-ignored-dir");
+
+        Assert.DoesNotContain("custom-ignored-dir", fixture.ViewModel.IgnoredPatterns);
+    }
+
+    [Fact]
+    public void ScanSummary_ReflectsDepthAndDiscoveryMode()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.ScanDepthText = "3";
+
+        Assert.Equal("Both · recursive depth 3", fixture.ViewModel.ScanSummary);
     }
 
     [Fact]
