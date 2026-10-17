@@ -12,7 +12,7 @@ entry is selected, including after the Settings window is closed and reopened.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Appearance"
-- **THEN** the accent selector offers Sky, Blue, Teal, Emerald, Purple, Amber, Lime, and Tangerine as
+- **THEN** the accent selector offers Sky, Blue, Teal, Emerald, Purple, Amber, Indigo, and Tangerine as
   preview cards with their hex values
 - **AND** the stored value is selected and marked with the accent ring and check
 - **AND** the card header shows the active accent name

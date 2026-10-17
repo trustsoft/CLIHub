@@ -47,7 +47,9 @@ Changing the theme preference SHALL take effect on the next application start.
 
 ### Requirement: Accent color preference
 
-The system SHALL offer an application accent color preference with the presets Sky (`#4CC2FF`), Windows Blue (`#3B82F6`), Emerald (`#10B981`), Purple (`#8B5CF6`), and Amber (`#F59E0B`), and SHALL accept a custom `#RRGGBB` value, defaulting to Sky.
+The system SHALL offer an application accent color preference with the presets Sky (`#4CC2FF`), Blue
+(`#3B82F6`), Teal (`#0D9488`), Emerald (`#10B981`), Purple (`#8B5CF6`), Amber (`#F59E0B`), Indigo
+(`#818CF8`), and Tangerine (`#EA580C`), and SHALL accept a custom `#RRGGBB` value, defaulting to Sky.
 
 #### Scenario: Default accent
 - **WHEN** no accent has been stored
