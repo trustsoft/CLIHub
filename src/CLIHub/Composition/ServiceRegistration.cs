@@ -104,6 +104,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<SettingsApplicationService>(),
             sp.GetRequiredService<IUpdateVersionProvider>(),
             sp.GetRequiredService<IUpdateWorkflow>(),
+            sp.GetRequiredService<IReleaseNotesLauncher>(),
             sp.GetRequiredService<IApplicationOperationLifetime>(),
             sp.GetRequiredService<IExternalLauncher>(),
             sp.GetRequiredService<IProjectDialogService>(),

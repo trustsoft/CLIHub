@@ -5,6 +5,7 @@ using System.Windows;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Controls;
 using CLIHub.Themes;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
@@ -160,7 +161,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(
             "updates",
             "Updates",
-            "Update checks, downloads, and notifications.",
+            "Check for new CLIHub builds, configure update preferences, and view release notes.",
             "System",
             true,
             IconGlyphs.Update)
@@ -205,6 +206,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private readonly SettingsApplicationService settingsApplication;
     private readonly IUpdateVersionProvider versionProvider;
     private readonly IUpdateWorkflow updateWorkflow;
+    private readonly IReleaseNotesLauncher releaseNotesLauncher;
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly IProjectDialogService dialogs;
     private readonly IProjectScanner projectScanner;
@@ -223,6 +225,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private bool notifyStableUpdates = true;
     private bool notifyPrereleaseUpdates;
     private string updateMessage = string.Empty;
+    private string updateStatusTitle = string.Empty;
+    private string updateStatusDetail = string.Empty;
+    private string updateStatusBadge = string.Empty;
+    private string updateStatusGlyph = IconGlyphs.Info;
+    private SettingBadgeTone updateStatusBadgeTone = SettingBadgeTone.Neutral;
     private string? validationError;
     private SettingsPage selectedPage = AllPages[0];
     private readonly IExternalLauncher externalLauncher;
@@ -246,6 +253,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="settingsApplication"> Typed Settings draft and application service. </param>
     /// <param name="versionProvider"> Provides the current application version. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
+    /// <param name="releaseNotesLauncher"> Opens the application release notes. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked update checks. </param>
     /// <param name="externalLauncher"> Operating-system path launcher for opening the log folder. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
@@ -255,6 +263,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public SettingsViewModel(SettingsApplicationService settingsApplication,
                              IUpdateVersionProvider versionProvider,
                              IUpdateWorkflow updateWorkflow,
+                             IReleaseNotesLauncher releaseNotesLauncher,
                              IApplicationOperationLifetime operationLifetime,
                              IExternalLauncher externalLauncher,
                              IProjectDialogService dialogs,
@@ -265,6 +274,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.settingsApplication = settingsApplication;
         this.versionProvider = versionProvider;
         this.updateWorkflow = updateWorkflow;
+        this.releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
         this.operationLifetime = operationLifetime;
         this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
@@ -273,11 +283,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.logger = logger;
 
         this.Version = this.versionProvider.GetCurrentVersion();
+        this.ResetUpdateStatus();
 
         this.SaveCommand = new RelayCommand(this.Save);
         this.CancelCommand = new RelayCommand(this.Cancel);
         this.CheckForUpdatesCommand = new RelayCommand(() =>
             _ = this.operationLifetime.RunAsync("Settings update check", this.RunUpdateCheckAsync));
+        this.ShowReleaseNotesCommand = new RelayCommand(this.releaseNotesLauncher.ShowReleaseNotes);
         this.CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(this.LogFilePath));
         this.OpenLogFolderCommand = new RelayCommand(() => this.externalLauncher.Open(AppPaths.LogsDirectory));
         this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
@@ -669,6 +681,51 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
+    ///   The heading of the update status card.
+    /// </summary>
+    public string UpdateStatusTitle
+    {
+        get => this.updateStatusTitle;
+        private set => this.SetProperty(ref this.updateStatusTitle, value);
+    }
+
+    /// <summary>
+    ///   The version and last-check detail shown under the update status card heading.
+    /// </summary>
+    public string UpdateStatusDetail
+    {
+        get => this.updateStatusDetail;
+        private set => this.SetProperty(ref this.updateStatusDetail, value);
+    }
+
+    /// <summary>
+    ///   The status badge text; empty hides the badge.
+    /// </summary>
+    public string UpdateStatusBadge
+    {
+        get => this.updateStatusBadge;
+        private set => this.SetProperty(ref this.updateStatusBadge, value);
+    }
+
+    /// <summary>
+    ///   The tone of the update status badge.
+    /// </summary>
+    public SettingBadgeTone UpdateStatusBadgeTone
+    {
+        get => this.updateStatusBadgeTone;
+        private set => this.SetProperty(ref this.updateStatusBadgeTone, value);
+    }
+
+    /// <summary>
+    ///   The glyph shown in the update status card's leading icon block.
+    /// </summary>
+    public string UpdateStatusGlyph
+    {
+        get => this.updateStatusGlyph;
+        private set => this.SetProperty(ref this.updateStatusGlyph, value);
+    }
+
+    /// <summary>
     ///   The current validation error, or null when the form is valid.
     /// </summary>
     public string? ValidationError
@@ -697,12 +754,21 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
 
+    /// <summary>
+    ///   Opens the application release notes.
+    /// </summary>
+    public RelayCommand ShowReleaseNotesCommand { get; }
+
     private Task RunUpdateCheckAsync(CancellationToken cancellationToken) =>
         AsyncOperationRunner.RunAsync(
             "Settings update check",
             () => this.CheckForUpdatesAsync(cancellationToken),
             this.logger,
-            message => this.UpdateMessage = message,
+            message =>
+            {
+                this.UpdateMessage = message;
+                this.SetUpdateStatus("Update check failed", message, "Failed", SettingBadgeTone.Neutral);
+            },
             cancellationToken);
 
     /// <summary>
@@ -756,7 +822,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.AgentsState.Load(draft.DefaultAgentId);
 
-        this.updateMessage = string.Empty;
+        this.ResetUpdateStatus();
         this.validationError = null;
         this.selectedPage = AllPages[0];
 
@@ -913,6 +979,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <returns> A task that completes when the check finishes. </returns>
     public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
+        this.SetUpdateStatus(
+            "Checking for updates",
+            "Looking for a newer CLIHub version.",
+            "Checking",
+            SettingBadgeTone.Accent);
         this.UpdateMessage = "Checking for updates...";
 
         UpdateCheckResult result;
@@ -922,9 +993,42 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            this.SetUpdateStatus(
+                "Update check cancelled",
+                "The check did not complete.",
+                "Cancelled",
+                SettingBadgeTone.Neutral);
             this.UpdateMessage = "Update check cancelled.";
             return;
         }
+
+        this.ApplyUpdateResult(result);
+    }
+
+    private void ResetUpdateStatus()
+    {
+        if (this.updateWorkflow.LastKnownAvailableVersion is { Length: > 0 } available)
+        {
+            this.SetUpdateStatus(
+                "Update available",
+                $"Version {this.Version} → {available}",
+                "Update available",
+                SettingBadgeTone.Accent);
+            this.UpdateMessage = $"Update available: {available} (current v{this.Version})";
+            return;
+        }
+
+        this.SetUpdateStatus(
+            "Check for updates",
+            $"Current version: {this.Version}",
+            "Not checked",
+            SettingBadgeTone.Neutral);
+        this.UpdateMessage = string.Empty;
+    }
+
+    private void ApplyUpdateResult(UpdateCheckResult result)
+    {
+        var lastChecked = DateTimeOffset.Now.ToString("t");
 
         this.UpdateMessage = result.Status switch
         {
@@ -932,6 +1036,52 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
             UpdateStatus.NotInstalled => "Updates apply to installed builds only.",
             _ => "Update check failed or timed out."
+        };
+
+        switch (result.Status)
+        {
+            case UpdateStatus.UpdateAvailable:
+                this.SetUpdateStatus(
+                    "Update available",
+                    $"Version {result.CurrentVersion} → {result.AvailableVersion} · Last checked {lastChecked}",
+                    "Update available",
+                    SettingBadgeTone.Accent);
+                break;
+            case UpdateStatus.UpToDate:
+                this.SetUpdateStatus(
+                    "CLIHub is up to date",
+                    $"Version {result.CurrentVersion} · Last checked {lastChecked}",
+                    "Up to date",
+                    SettingBadgeTone.Success);
+                break;
+            case UpdateStatus.NotInstalled:
+                this.SetUpdateStatus(
+                    "Updates unavailable",
+                    "Updates apply to installed builds only.",
+                    "Not installed",
+                    SettingBadgeTone.Neutral);
+                break;
+            default:
+                this.SetUpdateStatus(
+                    "Update check failed",
+                    "Could not check for updates. Try again.",
+                    "Failed",
+                    SettingBadgeTone.Neutral);
+                break;
+        }
+    }
+
+    private void SetUpdateStatus(string title, string detail, string badge, SettingBadgeTone tone)
+    {
+        this.UpdateStatusTitle = title;
+        this.UpdateStatusDetail = detail;
+        this.UpdateStatusBadge = badge;
+        this.UpdateStatusBadgeTone = tone;
+        this.UpdateStatusGlyph = tone switch
+        {
+            SettingBadgeTone.Success => IconGlyphs.Checkmark,
+            SettingBadgeTone.Accent => IconGlyphs.Refresh,
+            _ => IconGlyphs.Info
         };
     }
 

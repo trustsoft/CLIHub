@@ -129,6 +129,7 @@ public class SharedUpdatePresentationTests
             application,
             workflow,
             workflow,
+            Mock.Of<IReleaseNotesLauncher>(),
             Mock.Of<IApplicationOperationLifetime>(),
             Mock.Of<IExternalLauncher>(),
             Mock.Of<IProjectDialogService>(),

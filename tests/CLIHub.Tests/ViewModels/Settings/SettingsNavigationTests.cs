@@ -110,6 +110,7 @@ public class SettingsNavigationTests
                 application,
                 this.Updates.Object,
                 this.Updates.Object,
+                Mock.Of<IReleaseNotesLauncher>(),
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
                 new Mock<IProjectDialogService>().Object,

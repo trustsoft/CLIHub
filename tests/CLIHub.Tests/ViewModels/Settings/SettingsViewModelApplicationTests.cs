@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
+using CLIHub.Controls;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
@@ -43,6 +44,75 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void ShowReleaseNotesCommand_Execute_OpensReleaseNotes()
+    {
+        var fixture = new Fixture();
+
+        fixture.ViewModel.ShowReleaseNotesCommand.Execute(null);
+
+        fixture.ReleaseNotes.Verify(x => x.ShowReleaseNotes(), Times.Once);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_UpToDate_SetsCurrentStatus()
+    {
+        var fixture = new Fixture();
+        fixture.Updates
+            .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
+
+        await fixture.ViewModel.CheckForUpdatesAsync();
+
+        Assert.Equal("CLIHub is up to date", fixture.ViewModel.UpdateStatusTitle);
+        Assert.Equal("Up to date", fixture.ViewModel.UpdateStatusBadge);
+        Assert.Equal(SettingBadgeTone.Success, fixture.ViewModel.UpdateStatusBadgeTone);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_UpdateAvailable_IncludesAvailableVersion()
+    {
+        var fixture = new Fixture();
+        fixture.Updates
+            .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0"));
+
+        await fixture.ViewModel.CheckForUpdatesAsync();
+
+        Assert.Equal("Update available", fixture.ViewModel.UpdateStatusTitle);
+        Assert.Equal("Update available", fixture.ViewModel.UpdateStatusBadge);
+        Assert.Equal(SettingBadgeTone.Accent, fixture.ViewModel.UpdateStatusBadgeTone);
+        Assert.Contains("1.1.0", fixture.ViewModel.UpdateStatusDetail);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_NotInstalled_SetsUnavailableStatus()
+    {
+        var fixture = new Fixture();
+        fixture.Updates
+            .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.NotInstalled, "1.0.0", null));
+
+        await fixture.ViewModel.CheckForUpdatesAsync();
+
+        Assert.Equal("Updates unavailable", fixture.ViewModel.UpdateStatusTitle);
+        Assert.Equal("Not installed", fixture.ViewModel.UpdateStatusBadge);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_Failed_SetsFailureStatus()
+    {
+        var fixture = new Fixture();
+        fixture.Updates
+            .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCheckResult(UpdateStatus.Failed, "1.0.0", null));
+
+        await fixture.ViewModel.CheckForUpdatesAsync();
+
+        Assert.Equal("Update check failed", fixture.ViewModel.UpdateStatusTitle);
+        Assert.Equal("Failed", fixture.ViewModel.UpdateStatusBadge);
+    }
+
+    [Fact]
     public void Save_InvalidDraft_DoesNotPersistOrClose()
     {
         var fixture = new Fixture();
@@ -64,6 +134,7 @@ public class SettingsViewModelApplicationTests
         public Mock<IStartupService> Startup { get; } = new(MockBehavior.Strict);
         public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateWorkflow> Updates { get; } = new();
+        public Mock<IReleaseNotesLauncher> ReleaseNotes { get; } = new();
         public SettingsViewModel ViewModel { get; }
 
         public Fixture()
@@ -96,6 +167,7 @@ public class SettingsViewModelApplicationTests
                 application,
                 this.Updates.Object,
                 this.Updates.Object,
+                this.ReleaseNotes.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
                 new Mock<IProjectDialogService>().Object,

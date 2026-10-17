@@ -39,6 +39,7 @@ public class SettingsOperationLifetimeTests
                 NullLogger<SettingsApplicationService>.Instance),
             updates.Object,
             updates.Object,
+            Mock.Of<IReleaseNotesLauncher>(),
             lifetime.Object,
             new Mock<IExternalLauncher>().Object,
             new Mock<IProjectDialogService>().Object,

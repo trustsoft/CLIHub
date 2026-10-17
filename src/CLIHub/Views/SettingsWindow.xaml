@@ -31,6 +31,67 @@
         <ResourceDictionary>
             <conv:UpperCaseTextConverter x:Key="UpperCase"/>
 
+            <!-- Page-specific metadata shown next to the Updates title. -->
+            <DataTemplate x:Key="UpdatesHeaderTitleExtra">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Style="{StaticResource HeaderChip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource HeaderChipLabel}" Text="Version: "/>
+                            <TextBlock Style="{StaticResource HeaderChipValue}"
+                                       Text="{Binding Version, StringFormat=v{0}}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Margin="8,0,0,0" Style="{StaticResource HeaderChip}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource HeaderChipLabel}" Text="Channel: "/>
+                            <TextBlock Style="{StaticResource HeaderChipValue}" Text="Stable"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </DataTemplate>
+
+            <!-- Page-specific actions and status rendered in the fixed page header. -->
+            <DataTemplate x:Key="UpdatesHeaderAction">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                        <Border Style="{StaticResource StatusChip}" ToolTip="{Binding UpdateStatusDetail}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource StatusChipGlyph}" Text="{Binding UpdateStatusGlyph}"/>
+                                <TextBlock Margin="4,0,0,0"
+                                           Style="{StaticResource StatusChipText}"
+                                           Text="{Binding UpdateStatusBadge}"/>
+                            </StackPanel>
+                        </Border>
+                        <Button AutomationProperties.Name="Check for updates"
+                                Command="{Binding CheckForUpdatesCommand}"
+                                Margin="8,0,0,0"
+                                Padding="9,7"
+                                Style="{StaticResource AccentButton}"
+                                ToolTip="Check for updates">
+                            <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                       FontSize="14"
+                                       Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                        </Button>
+                    </StackPanel>
+
+                    <Button Grid.Row="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,4,0,0"
+                            Command="{Binding ShowReleaseNotesCommand}"
+                            Content="View release notes  →"
+                            Style="{StaticResource LinkButton}"
+                            ToolTip="Open What's New"/>
+                </Grid>
+            </DataTemplate>
+
             <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
             <CollectionViewSource x:Key="NavPages" Source="{Binding Pages}">
                 <CollectionViewSource.GroupDescriptions>
@@ -157,23 +218,72 @@
                     </Grid.RowDefinitions>
 
                     <!-- Page header: stays visible while only the content below it scrolls -->
-                    <StackPanel Grid.Row="0" Margin="24,16,24,0">
-                        <TextBlock Style="{StaticResource PageHeader}" Text="{Binding SelectedPage.Title}"/>
-                        <TextBlock Margin="0,6,0,0" Text="{Binding SelectedPage.Description}">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SelectedPage.Description}" Value="">
+                    <Grid Grid.Row="0" Margin="24,16,24,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <WrapPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource PageHeader}" Text="{Binding SelectedPage.Title}"/>
+                                <ContentControl Margin="10,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Content="{Binding}">
+                                    <ContentControl.Style>
+                                        <Style TargetType="ContentControl">
                                             <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPage.Key}" Value="updates">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Setter Property="ContentTemplate" Value="{StaticResource UpdatesHeaderTitleExtra}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </ContentControl.Style>
+                                </ContentControl>
+                            </WrapPanel>
+                            <TextBlock Margin="0,6,0,0" Text="{Binding SelectedPage.Description}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Description}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <ContentControl Grid.Row="0"
+                                        Grid.Column="1"
+                                        Margin="16,0,0,0"
+                                        VerticalAlignment="Stretch"
+                                        Content="{Binding}">
+                            <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedPage.Key}" Value="updates">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="ContentTemplate" Value="{StaticResource UpdatesHeaderAction}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                        <Rectangle Height="1"
+                            </ContentControl.Style>
+                        </ContentControl>
+
+                        <Rectangle Grid.Row="1"
+                                   Grid.ColumnSpan="2"
+                                   Height="1"
                                    Margin="0,14,0,0"
                                    Fill="{DynamicResource HairlineBrush}"/>
-                    </StackPanel>
+                    </Grid>
 
                     <ScrollViewer Grid.Row="1"
                                   Padding="24,0,24,24"

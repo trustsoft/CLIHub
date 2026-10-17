@@ -7,12 +7,7 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
-            <TextBlock Style="{StaticResource HintText}" Text="Current version: "/>
-            <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Version}"/>
-        </StackPanel>
-
-        <controls:SectionHeader Text="AUTOMATIC"/>
+        <controls:SectionHeader Text="UPDATE PREFERENCES"/>
         <controls:SettingsGroup>
             <controls:SettingCard Title="Check for updates on startup"
                                Hint="Look for a new version when CLIHub starts."
@@ -51,33 +46,5 @@
                           Style="{StaticResource ToggleCheckBox}"/>
             </controls:SettingCard>
         </controls:SettingsGroup>
-
-        <controls:SectionHeader Text="MANUAL"/>
-        <controls:SettingCard Title="Update status"
-                           Hint="Run a check now and see the result."
-                           Icon="{x:Static themes:IconGlyphs.Update}"
-                           VerticalContentAlignment="Top">
-            <controls:SpacedPanel Orientation="Vertical"
-                                  Spacing="{StaticResource Sizing.Spacing}">
-                <Button HorizontalAlignment="Right"
-                        Command="{Binding CheckForUpdatesCommand}"
-                        Content="Check for updates"
-                        Style="{StaticResource NeutralButton}"/>
-                <TextBlock MaxWidth="240" Text="{Binding UpdateMessage}">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatusLine}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding UpdateMessage}" Value="{x:Null}">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding UpdateMessage}" Value="">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-            </controls:SpacedPanel>
-        </controls:SettingCard>
     </StackPanel>
 </UserControl>
