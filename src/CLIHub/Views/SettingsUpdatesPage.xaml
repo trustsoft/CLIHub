@@ -60,13 +60,14 @@
         <controls:SettingCard Title="Update status"
                            Hint="Run a check now and see the result."
                            Icon="{x:Static themes:IconGlyphs.Update}"
-                           Placement="Stacked">
-            <StackPanel>
-                <Button HorizontalAlignment="Left"
+                           VerticalContentAlignment="Top">
+            <controls:SpacedPanel Orientation="Vertical"
+                                  Spacing="{StaticResource Sizing.Spacing}">
+                <Button HorizontalAlignment="Right"
                         Command="{Binding CheckForUpdatesCommand}"
                         Content="Check for updates"
                         Style="{StaticResource NeutralButton}"/>
-                <TextBlock Margin="0,8,0,0" Text="{Binding UpdateMessage}">
+                <TextBlock MaxWidth="240" Text="{Binding UpdateMessage}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock" BasedOn="{StaticResource StatusLine}">
                             <Style.Triggers>
@@ -80,7 +81,7 @@
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
-            </StackPanel>
+            </controls:SpacedPanel>
         </controls:SettingCard>
     </StackPanel>
 </UserControl>
