@@ -59,15 +59,32 @@
     mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.18));
   }
 
+  .ghost {
+    position: absolute;
+    right: -70px;
+    top: -140px;
+    width: 700px;
+    height: auto;
+    opacity: 0.13;
+    transform: rotate(-7deg);
+    transform-origin: center;
+    filter: grayscale(0.7) blur(1px) brightness(1.05);
+    -webkit-mask-image: radial-gradient(ellipse 70% 78% at 52% 42%, #000 20%, rgba(0, 0, 0, 0.5) 48%, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 78% at 52% 42%, #000 20%, rgba(0, 0, 0, 0.5) 48%, transparent 78%);
+    pointer-events: none;
+  }
+
   .edge {
     position: absolute;
     inset: 0;
     border: 1px solid rgba(255, 255, 255, 0.08);
     pointer-events: none;
+    z-index: 2;
   }
 
   .content {
     position: relative;
+    z-index: 1;
     height: 100%;
     display: flex;
     align-items: center;
@@ -208,6 +225,7 @@
   <div class="glow-a"></div>
   <div class="glow-b"></div>
   <div class="grid"></div>
+  <img class="ghost" src="../launch-window.png" alt="">
   <div class="edge"></div>
 
   <div class="content">

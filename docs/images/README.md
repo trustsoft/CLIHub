@@ -1,16 +1,16 @@
 # README Images
 
 Assets used by the repository [README](../../README.md). The source HTML lives next to the rendered
-PNGs so the banners can be edited and regenerated without design tools.
+PNGs so the banner can be edited and regenerated without design tools.
 
 | Image | Source | Purpose |
 |---|---|---|
-| `banner.png` | `src/banner.html` | Repository banner: identity, tagline, and the default global hotkey. |
+| `banner.png` | `src/banner.html` + `launch-window.png` | Repository banner: identity, tagline, the default global hotkey, and the launch window as a translucent background. |
 | `workflow.png` | `src/workflow.html` | Three-step product summary: project, agent, terminal. |
 | `launch-window.png` | App capture | The launch window with the Projects and Agents panes. |
 | `settings.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
 
-## Regenerate the banners
+## Regenerate the banner and workflow
 
 The HTML pages are 1280×360 and 1200×272 CSS pixels; render them at 1.5× for a crisp result on
 high-density displays:
