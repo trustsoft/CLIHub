@@ -8,7 +8,7 @@ Registers and handles global keyboard shortcuts for quick application access, en
 
 ### Requirement: Global hotkey registration
 
-The system SHALL register a global keyboard shortcut (Ctrl+Shift+A by default) using the Windows hotkey API.
+The system SHALL register a global keyboard shortcut (Ctrl+Shift+Space by default) using the Windows hotkey API.
 
 #### Scenario: Hotkey registration at startup
 - **WHEN** the application starts
@@ -40,7 +40,7 @@ The system SHALL allow users to configure the hotkey combination in preferences 
 
 #### Scenario: Default hotkey
 - **WHEN** no custom hotkey is configured
-- **THEN** `Ctrl+Shift+A` is used as the default
+- **THEN** `Ctrl+Shift+Space` is used as the default
 
 #### Scenario: Custom hotkey setting
 - **WHEN** a user sets a custom hotkey in preferences and restarts
@@ -60,7 +60,7 @@ The system SHALL validate that a hotkey combination includes at least one modifi
 
 #### Scenario: Invalid hotkey falls back to default
 - **WHEN** a hotkey without modifiers (or an unparsable value) is configured
-- **THEN** the value is rejected, a warning is logged, and the default `Ctrl+Shift+A` is used
+- **THEN** the value is rejected, a warning is logged, and the default `Ctrl+Shift+Space` is used
 
 ### Requirement: Hotkey unregistration
 
