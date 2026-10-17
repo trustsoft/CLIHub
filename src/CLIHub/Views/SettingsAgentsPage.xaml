@@ -160,20 +160,24 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="TTL, minutes"/>
-                    <TextBox Margin="0,6,0,0"
-                             Style="{StaticResource SettingsInput}"
-                             Tag="{Binding ProbeTtlWatermark}"
-                             Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="TTL"/>
+                    <controls:NumericField Margin="0,6,0,0"
+                                           MinWidth="110"
+                                           Minimum="1"
+                                           Placeholder="{Binding ProbeTtlWatermark}"
+                                           Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
+                                           Unit="min"
+                                           Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1">
-                    <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout, seconds"/>
-                    <TextBox Margin="0,6,0,0"
-                             Style="{StaticResource SettingsInput}"
-                             Tag="{Binding ProbeTimeoutWatermark}"
-                             Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
+                    <TextBlock x:Name="ProbeTimeoutLabel" Style="{StaticResource FieldLabel}" Text="Timeout"/>
+                    <controls:NumericField Margin="0,6,0,0"
+                                           MinWidth="110"
+                                           Minimum="1"
+                                           Placeholder="{Binding ProbeTimeoutWatermark}"
+                                           Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
+                                           Unit="sec"
+                                           Width="{Binding ElementName=ProbeTimeoutLabel, Path=ActualWidth}"/>
                 </StackPanel>
             </Grid>
         </controls:SettingCard>

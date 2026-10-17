@@ -29,6 +29,14 @@ Keep `Grid` for pane layouts, list rows, star-sized columns, and any composition
 width relationships. Do not use `SpacedPanel` as an item panel for virtualized lists; it is a small
 one-dimensional layout helper rather than a replacement for WPF's virtualizing panels.
 
+## Settings Numeric Fields
+
+Use `CLIHub.Controls.NumericField` for single-number settings instead of a plain `TextBox` with
+`SettingsInput`. It renders the shared input surface with decrement/increment chips, clamps the value to
+`Minimum` and `Maximum`, supports an optional `Unit` suffix and a `Placeholder` that doubles as the
+starting value for an empty field, and accepts the Up/Down keys. `Text` stays a string so the settings
+view model keeps its existing text validation.
+
 The dark and light palettes (`LaunchTheme.xaml`, `LightTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and `App.xaml` merges the light palette on top of the dark base at startup when the effective theme is light.
 
 To add another palette (chosen at startup):

@@ -42,10 +42,12 @@
         <controls:SettingCard Title="Repository scan depth"
                            Hint="How many directory levels below each watched root are scanned (1-8)."
                            Icon="{x:Static themes:IconGlyphs.Zoom}">
-            <TextBox HorizontalAlignment="Left"
-                     Width="120"
-                     Style="{StaticResource SettingsInput}"
-                     Text="{Binding ScanDepthText, UpdateSourceTrigger=PropertyChanged}"/>
+            <controls:NumericField HorizontalAlignment="Left"
+                                   Width="120"
+                                   Maximum="8"
+                                   Minimum="1"
+                                   Step="1"
+                                   Text="{Binding ScanDepthText, UpdateSourceTrigger=PropertyChanged}"/>
         </controls:SettingCard>
 
         <controls:SettingCard Title="Repository discovery"

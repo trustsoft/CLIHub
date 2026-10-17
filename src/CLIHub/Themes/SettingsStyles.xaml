@@ -90,6 +90,139 @@
         </Setter>
     </Style>
 
+    <!-- Step chip of a numeric field: compact square button with a glyph -->
+    <Style x:Key="NumericStepButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="22"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Icon}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RepeatButton">
+                    <Border x:Name="Bd"
+                            Background="{DynamicResource ThumbBgBrush}"
+                            CornerRadius="4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Numeric field: decrement/increment chips around an editable centred number with an
+         optional unit suffix; the accent border marks keyboard focus like SettingsInput. -->
+    <Style TargetType="{x:Type controls:NumericField}">
+        <Setter Property="Background" Value="{DynamicResource PopoverBgBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource FieldStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:NumericField}">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <RepeatButton x:Name="PART_DecreaseButton"
+                                          Grid.Column="0"
+                                          Margin="4,3,0,3"
+                                          Content="{x:Static themes:IconGlyphs.Remove}"
+                                          Delay="400"
+                                          Interval="80"
+                                          Style="{StaticResource NumericStepButton}"
+                                          ToolTip="Decrease"/>
+
+                            <Grid Grid.Column="1" Margin="4,0">
+                                <StackPanel HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal">
+                                    <Grid>
+                                        <TextBox x:Name="PART_TextBox"
+                                                 MinWidth="24"
+                                                 MinHeight="22"
+                                                 Padding="0"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 CaretBrush="{DynamicResource AccentBrush}"
+                                                 Foreground="{TemplateBinding Foreground}"
+                                                 SelectionBrush="{DynamicResource AccentBrush}"
+                                                 Text="{Binding Text, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 TextAlignment="Center"/>
+                                        <TextBlock x:Name="PlaceholderText"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   IsHitTestVisible="False"
+                                                   Text="{TemplateBinding Placeholder}"
+                                                   Visibility="Collapsed"/>
+                                    </Grid>
+                                    <TextBlock x:Name="UnitText"
+                                               Margin="4,0,0,0"
+                                               VerticalAlignment="Center"
+                                               FontSize="{StaticResource Sizing.FontSize.Section}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
+                                               Text="{TemplateBinding Unit}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <RepeatButton x:Name="PART_IncreaseButton"
+                                          Grid.Column="2"
+                                          Margin="0,3,4,3"
+                                          Content="{x:Static themes:IconGlyphs.Add}"
+                                          Delay="400"
+                                          Interval="80"
+                                          Style="{StaticResource NumericStepButton}"
+                                          ToolTip="Increase"/>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Text" Value=""/>
+                                <Condition Property="IsKeyboardFocusWithin" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible"/>
+                        </MultiTrigger>
+                        <Trigger Property="Unit" Value="">
+                            <Setter TargetName="UnitText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Hotkey capture field: a focusable chip host, not a text box -->
     <Style x:Key="HotkeyField" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource PopoverBgBrush}"/>

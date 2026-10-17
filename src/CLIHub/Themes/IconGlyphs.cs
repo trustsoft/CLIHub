@@ -7,6 +7,7 @@ namespace CLIHub.Themes;
 internal static class IconGlyphs
 {
     public const string Add = "\uE710";
+    public const string Remove = "\uE738";
     public const string Delete = "\uE74D";
     public const string FavoriteStar = "\uE734";
     public const string Refresh = "\uE72C";

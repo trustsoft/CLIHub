@@ -43,18 +43,22 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Retention, days"/>
-                    <TextBox Margin="0,6,0,0"
-                             Style="{StaticResource SettingsInput}"
-                             Text="{Binding LogRetentionDaysText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Retention"/>
+                    <controls:NumericField Margin="0,6,0,0"
+                                           MinWidth="120"
+                                           Minimum="1"
+                                           Text="{Binding LogRetentionDaysText, UpdateSourceTrigger=PropertyChanged}"
+                                           Unit="days"
+                                           Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
                 </StackPanel>
                 <StackPanel Grid.Column="1">
-                    <TextBlock x:Name="LogSizeLabel" Style="{StaticResource FieldLabel}" Text="Size limit, MB (0 = none)"/>
-                    <TextBox Margin="0,6,0,0"
-                             Style="{StaticResource SettingsInput}"
-                             Text="{Binding LogFileSizeLimitText, UpdateSourceTrigger=PropertyChanged}"
-                             Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
+                    <TextBlock x:Name="LogSizeLabel" Style="{StaticResource FieldLabel}" Text="Size limit"/>
+                    <controls:NumericField Margin="0,6,0,0"
+                                           MinWidth="120"
+                                           Minimum="0"
+                                           Text="{Binding LogFileSizeLimitText, UpdateSourceTrigger=PropertyChanged}"
+                                           Unit="MB"
+                                           Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
                 </StackPanel>
             </Grid>
         </controls:SettingCard>
