@@ -158,6 +158,21 @@ public sealed class NumericField : Control
     }
 
     /// <inheritdoc />
+    protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+    {
+        base.OnPreviewMouseWheel(e);
+
+        if (e.Handled || e.Delta == 0)
+        {
+            return;
+        }
+
+        var notches = Math.Max(1, Math.Abs(e.Delta / Mouse.MouseWheelDeltaForOneLine));
+        this.StepBy(e.Delta > 0 ? this.Step * notches : -this.Step * notches);
+        e.Handled = true;
+    }
+
+    /// <inheritdoc />
     public override void OnApplyTemplate()
     {
         if (this.decreaseButton is not null)
