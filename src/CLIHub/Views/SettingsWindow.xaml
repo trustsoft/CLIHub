@@ -92,6 +92,30 @@
                 </Grid>
             </DataTemplate>
 
+            <!-- Projects & Paths actions: add a root or rescan the saved configuration. -->
+            <DataTemplate x:Key="ProjectsHeaderAction">
+                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                    <Button Command="{Binding AddWatchedDirectoryFromPickerCommand}"
+                            Content="Add Directory"
+                            Style="{StaticResource NeutralButton}"
+                            ToolTip="Add a watched root directory"/>
+                    <Button Margin="8,0,0,0"
+                            Padding="12,7"
+                            AutomationProperties.Name="Scan Now"
+                            Command="{Binding ScanNowCommand}"
+                            Style="{StaticResource AccentButton}"
+                            ToolTip="Rescan the saved watched roots">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                       FontSize="13"
+                                       Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Scan Now"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </DataTemplate>
+
             <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
             <CollectionViewSource x:Key="NavPages" Source="{Binding Pages}">
                 <CollectionViewSource.GroupDescriptions>
@@ -272,6 +296,10 @@
                                         <DataTrigger Binding="{Binding SelectedPage.Key}" Value="updates">
                                             <Setter Property="Visibility" Value="Visible"/>
                                             <Setter Property="ContentTemplate" Value="{StaticResource UpdatesHeaderAction}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="ContentTemplate" Value="{StaticResource ProjectsHeaderAction}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

@@ -33,12 +33,35 @@ public sealed class SpacedPanel : Panel
             coerceValueCallback: CoerceSpacing));
 
     /// <summary>
+    ///   Identifies the <see cref="StretchChildren" /> dependency property.
+    /// </summary>
+    public static readonly DependencyProperty StretchChildrenProperty = DependencyProperty.Register(
+        nameof(StretchChildren),
+        typeof(bool),
+        typeof(SpacedPanel),
+        new FrameworkPropertyMetadata(
+            false,
+            FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+
+    /// <summary>
     ///   Gets or sets the direction in which visible children are arranged.
     /// </summary>
     public Orientation Orientation
     {
         get => (Orientation)this.GetValue(OrientationProperty);
         set => this.SetValue(OrientationProperty, value);
+    }
+
+    /// <summary>
+    ///   Gets or sets a value indicating whether visible children share the available main-axis
+    ///   length equally. In a horizontal layout they share the width; in a vertical layout they
+    ///   share the height. Spacing stays between children, so the last child ends at the panel's
+    ///   trailing edge. Ignored when the available main-axis length is infinite.
+    /// </summary>
+    public bool StretchChildren
+    {
+        get => (bool)this.GetValue(StretchChildrenProperty);
+        set => this.SetValue(StretchChildrenProperty, value);
     }
 
     /// <summary>
@@ -55,12 +78,39 @@ public sealed class SpacedPanel : Panel
     protected override Size MeasureOverride(Size availableSize)
     {
         var isVertical = this.Orientation == Orientation.Vertical;
+        var visibleChildCount = this.CountVisibleChildren();
+        var mainAxisLength = isVertical ? availableSize.Height : availableSize.Width;
+
+        if (this.StretchChildren && visibleChildCount > 0 && double.IsFinite(mainAxisLength))
+        {
+            var childLength = this.GetStretchedChildLength(mainAxisLength, visibleChildCount);
+            var stretchedCrossLength = 0d;
+
+            foreach (UIElement child in this.InternalChildren)
+            {
+                if (child.Visibility == Visibility.Collapsed)
+                {
+                    continue;
+                }
+
+                child.Measure(isVertical
+                    ? new Size(availableSize.Width, childLength)
+                    : new Size(childLength, availableSize.Height));
+                stretchedCrossLength = Math.Max(
+                    stretchedCrossLength,
+                    isVertical ? child.DesiredSize.Width : child.DesiredSize.Height);
+            }
+
+            return isVertical
+                ? new Size(stretchedCrossLength, availableSize.Height)
+                : new Size(availableSize.Width, stretchedCrossLength);
+        }
+
         var childConstraint = isVertical
             ? new Size(availableSize.Width, double.PositiveInfinity)
             : new Size(double.PositiveInfinity, availableSize.Height);
         var totalLength = 0d;
         var crossLength = 0d;
-        var visibleChildCount = 0;
 
         foreach (UIElement child in this.InternalChildren)
         {
@@ -82,8 +132,6 @@ public sealed class SpacedPanel : Panel
                 totalLength += desiredSize.Width;
                 crossLength = Math.Max(crossLength, desiredSize.Height);
             }
-
-            visibleChildCount++;
         }
 
         if (visibleChildCount > 1)
@@ -100,6 +148,41 @@ public sealed class SpacedPanel : Panel
     protected override Size ArrangeOverride(Size finalSize)
     {
         var isVertical = this.Orientation == Orientation.Vertical;
+
+        if (this.StretchChildren)
+        {
+            var visibleChildCount = this.CountVisibleChildren();
+            if (visibleChildCount > 0)
+            {
+                var childLength = this.GetStretchedChildLength(
+                    isVertical ? finalSize.Height : finalSize.Width,
+                    visibleChildCount);
+                var stretchedLength = 0d;
+                var hasArrangedStretchedChild = false;
+
+                foreach (UIElement child in this.InternalChildren)
+                {
+                    if (child.Visibility == Visibility.Collapsed)
+                    {
+                        continue;
+                    }
+
+                    if (hasArrangedStretchedChild)
+                    {
+                        stretchedLength += this.Spacing;
+                    }
+
+                    child.Arrange(isVertical
+                        ? new Rect(0, stretchedLength, finalSize.Width, childLength)
+                        : new Rect(stretchedLength, 0, childLength, finalSize.Height));
+                    stretchedLength += childLength;
+                    hasArrangedStretchedChild = true;
+                }
+
+                return finalSize;
+            }
+        }
+
         var currentLength = 0d;
         var hasArrangedChild = false;
 
@@ -126,6 +209,27 @@ public sealed class SpacedPanel : Panel
         }
 
         return finalSize;
+    }
+
+    private int CountVisibleChildren()
+    {
+        var count = 0;
+
+        foreach (UIElement child in this.InternalChildren)
+        {
+            if (child.Visibility != Visibility.Collapsed)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private double GetStretchedChildLength(double availableLength, int visibleChildCount)
+    {
+        var totalSpacing = visibleChildCount > 1 ? (visibleChildCount - 1) * this.Spacing : 0d;
+        return Math.Max(0d, (availableLength - totalSpacing) / visibleChildCount);
     }
 
     private static object CoerceSpacing(DependencyObject d, object baseValue)

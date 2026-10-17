@@ -213,6 +213,82 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void SelectedScanDepth_SetOption_UpdatesTextAndSummary()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var option = fixture.ViewModel.ScanDepthOptions.First(item => item.Value == 4);
+
+        fixture.ViewModel.SelectedScanDepth = option;
+
+        Assert.Equal("4", fixture.ViewModel.ScanDepthText);
+        Assert.Equal("Both · recursive depth 4", fixture.ViewModel.ScanSummary);
+    }
+
+    [Fact]
+    public void ScanDepthOptions_UsePlainLevelLabels()
+    {
+        var fixture = new Fixture();
+
+        Assert.Equal(
+            new[]
+            {
+                "1 level",
+                "2 levels (default)",
+                "3 levels",
+                "4 levels",
+                "5 levels",
+                "6 levels",
+                "7 levels",
+                "8 levels"
+            },
+            fixture.ViewModel.ScanDepthOptions.Select(option => option.Name));
+    }
+
+    [Fact]
+    public void Load_ScannerStatus_PopulatesSummary()
+    {
+        var fixture = new Fixture();
+        fixture.Scanner.SetupGet(scanner => scanner.Status).Returns(
+            new Core.Scanning.ProjectScanStatus(
+                Core.Scanning.ProjectScanState.Idle,
+                true,
+                false,
+                DateTimeOffset.UtcNow,
+                7,
+                null));
+
+        fixture.ViewModel.Load();
+
+        Assert.Equal(7, fixture.ViewModel.DiscoveredProjectCount);
+        Assert.Equal("Watching", fixture.ViewModel.WatcherStateLabel);
+        Assert.StartsWith("Last scan", fixture.ViewModel.WatcherDetailText);
+    }
+
+    [Fact]
+    public void ScanNowCommand_Execute_ReloadsScanner()
+    {
+        var fixture = new Fixture();
+
+        fixture.ViewModel.ScanNowCommand.Execute(null);
+
+        fixture.Scanner.Verify(scanner => scanner.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void AddWatchedDirectoryFromPicker_SelectedFolder_AddsRoot()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.Dialogs.Setup(dialogs => dialogs.SelectFolder(It.IsAny<string>())).Returns(path);
+
+        fixture.ViewModel.AddWatchedDirectoryFromPickerCommand.Execute(null);
+
+        Assert.Contains(path, fixture.ViewModel.WatchedDirectories);
+    }
+
+    [Fact]
     public void Save_ValidDraft_PersistsAndRequestsClose()
     {
         var fixture = new Fixture();
@@ -319,6 +395,8 @@ public class SettingsViewModelApplicationTests
         public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateWorkflow> Updates { get; } = new();
         public Mock<IReleaseNotesLauncher> ReleaseNotes { get; } = new();
+        public Mock<Core.Scanning.IProjectScanner> Scanner { get; } = new();
+        public Mock<IProjectDialogService> Dialogs { get; } = new();
         public AccentSelectionMemory AccentMemory { get; }
         public SettingsViewModel ViewModel { get; }
 
@@ -348,7 +426,7 @@ public class SettingsViewModelApplicationTests
                 this.Preferences.Object,
                 this.Startup.Object,
                 this.Applier.Object,
-                new Mock<Core.Scanning.IProjectScanner>().Object,
+                this.Scanner.Object,
                 NullLogger<SettingsApplicationService>.Instance);
             this.ViewModel = new SettingsViewModel(
                 application,
@@ -357,8 +435,8 @@ public class SettingsViewModelApplicationTests
                 this.ReleaseNotes.Object,
                 new Mock<IApplicationOperationLifetime>().Object,
                 new Mock<IExternalLauncher>().Object,
-                new Mock<IProjectDialogService>().Object,
-                new Mock<Core.Scanning.IProjectScanner>().Object,
+                this.Dialogs.Object,
+                this.Scanner.Object,
                 Mock.Of<IAgentManagementSection>(),
                 this.AccentMemory,
                 NullLogger<SettingsViewModel>.Instance);

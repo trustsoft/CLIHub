@@ -47,6 +47,48 @@ public sealed class SpacedPanelTests
     }
 
     [Fact]
+    public void MeasureAndArrange_HorizontalStretchChildren_FillsWidthWithEqualColumns()
+    {
+        RunOnSta(() =>
+        {
+            var first = new ProbeElement(new Size(10, 20));
+            var second = new ProbeElement(new Size(20, 15));
+            var third = new ProbeElement(new Size(30, 25));
+            var panel = CreatePanel(new[] { first, second, third }, Orientation.Horizontal, spacing: 8);
+            panel.StretchChildren = true;
+
+            panel.Measure(new Size(328, 100));
+            panel.Arrange(new Rect(0, 0, 328, 100));
+
+            Assert.Equal(new Size(328, 25), panel.DesiredSize);
+            Assert.Equal(new Rect(0, 0, 104, 100), GetLayoutRect(first, panel));
+            Assert.Equal(new Rect(112, 0, 104, 100), GetLayoutRect(second, panel));
+            Assert.Equal(new Rect(224, 0, 104, 100), GetLayoutRect(third, panel));
+        });
+    }
+
+    [Fact]
+    public void MeasureAndArrange_VerticalStretchChildren_FillsHeightWithEqualRows()
+    {
+        RunOnSta(() =>
+        {
+            var first = new ProbeElement(new Size(10, 10));
+            var second = new ProbeElement(new Size(20, 20));
+            var third = new ProbeElement(new Size(30, 30));
+            var panel = CreatePanel(new[] { first, second, third }, Orientation.Vertical, spacing: 8);
+            panel.StretchChildren = true;
+
+            panel.Measure(new Size(100, 328));
+            panel.Arrange(new Rect(0, 0, 100, 328));
+
+            Assert.Equal(new Size(30, 328), panel.DesiredSize);
+            Assert.Equal(new Rect(0, 0, 100, 104), GetLayoutRect(first, panel));
+            Assert.Equal(new Rect(0, 112, 100, 104), GetLayoutRect(second, panel));
+            Assert.Equal(new Rect(0, 224, 100, 104), GetLayoutRect(third, panel));
+        });
+    }
+
+    [Fact]
     public void MeasureAndArrange_CollapsedChild_IsExcludedFromSizeAndSpacing()
     {
         RunOnSta(() =>

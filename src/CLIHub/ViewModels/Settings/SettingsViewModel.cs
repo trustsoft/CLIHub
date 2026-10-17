@@ -37,6 +37,13 @@ public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Icon);
 public sealed record PathDisplayOption(PathDisplayStyle Style, string Name);
 
 /// <summary>
+///   A selectable repository scan depth.
+/// </summary>
+/// <param name="Value"> The depth in directory levels. </param>
+/// <param name="Name"> Display name. </param>
+public sealed record ScanDepthOption(int Value, string Name);
+
+/// <summary>
 ///   A selectable log level.
 /// </summary>
 /// <param name="Value"> The stored level name. </param>
@@ -224,6 +231,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(ProjectDiscoveryMode.Both, "Both")
     };
 
+    private static readonly ScanDepthOption[] ScanDepthChoices = Enumerable
+        .Range(
+            ProjectScanningDefaults.MinScanDepth,
+            ProjectScanningDefaults.MaxScanDepth - ProjectScanningDefaults.MinScanDepth + 1)
+        .Select(depth => new ScanDepthOption(
+            depth,
+            depth == ProjectScanningDefaults.DefaultScanDepth
+                ? $"{depth} levels (default)"
+                : depth == 1 ? "1 level" : $"{depth} levels"))
+        .ToArray();
+
     private static readonly SettingsGroup[] PagesByGroup = AllPages
         .GroupBy(page => page.Group)
         .Select(group => new SettingsGroup(group.Key, group.ToArray()))
@@ -272,7 +290,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string newIgnoredPatternText = string.Empty;
     private string newWatchedDirectoryText = string.Empty;
     private string? watchedDirectoryError;
-    private string watcherStatusText = "No watched directories configured.";
+    private int discoveredProjectCount;
+    private int agentsInstalledCount;
+    private int agentsSupportedCount;
+    private string watcherStateLabel = "Off";
+    private string watcherDetailText = "No watched roots configured";
     private bool disposed;
 
     /// <summary>
@@ -324,17 +346,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(this.LogFilePath));
         this.OpenLogFolderCommand = new RelayCommand(() => this.externalLauncher.Open(AppPaths.LogsDirectory));
         this.BrowseWatchedDirectoryCommand = new RelayCommand(this.BrowseWatchedDirectory);
+        this.AddWatchedDirectoryFromPickerCommand = new RelayCommand(this.AddWatchedDirectoryFromPicker);
         this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
         this.RemoveWatchedDirectoryCommand = new RelayCommand<string>(this.RemoveWatchedDirectory);
         this.AddIgnoredPatternCommand = new RelayCommand(this.AddIgnoredPattern);
         this.RemoveIgnoredPatternCommand = new RelayCommand<string>(this.RemoveIgnoredPattern);
+        this.ScanNowCommand = new RelayCommand(() => this.projectScanner.Reload());
 
         this.WatchedDirectories.CollectionChanged += this.OnWatchedDirectoriesChanged;
         this.projectScanner.StatusChanged += this.OnScannerStatusChanged;
-        this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
+        this.ApplyScannerStatus(this.projectScanner.Status);
     }
-
-    private const string NoWatchedDirectoriesStatus = "No watched directories configured.";
 
     /// <summary>
     ///   Raised when the window should close (on Save or Cancel).
@@ -730,7 +752,30 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         {
             if (this.SetProperty(ref this.scanDepthText, value))
             {
+                this.OnPropertyChanged(nameof(this.SelectedScanDepth));
                 this.OnPropertyChanged(nameof(this.ScanSummary));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The scan depth options offered by the selector.
+    /// </summary>
+    public IReadOnlyList<ScanDepthOption> ScanDepthOptions => ScanDepthChoices;
+
+    /// <summary>
+    ///   The selected scan depth option.
+    /// </summary>
+    public ScanDepthOption SelectedScanDepth
+    {
+        get => ScanDepthChoices.FirstOrDefault(option =>
+                   string.Equals(option.Value.ToString(), this.scanDepthText, StringComparison.Ordinal))
+               ?? ScanDepthChoices.First(option => option.Value == ProjectScanningDefaults.DefaultScanDepth);
+        set
+        {
+            if (value is not null)
+            {
+                this.ScanDepthText = value.Value.ToString();
             }
         }
     }
@@ -761,18 +806,70 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string ScanSummary => $"{this.SelectedDiscoveryMode.Name} · recursive depth {this.ScanDepthText}";
 
     /// <summary>
-    ///   A read-only description of the background repository scanner status.
+    ///   The number of repositories discovered by the last scan.
     /// </summary>
-    public string WatcherStatusText
+    public int DiscoveredProjectCount
     {
-        get => this.watcherStatusText;
-        private set => this.SetProperty(ref this.watcherStatusText, value);
+        get => this.discoveredProjectCount;
+        private set => this.SetProperty(ref this.discoveredProjectCount, value);
+    }
+
+    /// <summary>
+    ///   The number of agents installed on this machine.
+    /// </summary>
+    public int AgentsInstalledCount
+    {
+        get => this.agentsInstalledCount;
+        private set => this.SetProperty(ref this.agentsInstalledCount, value);
+    }
+
+    /// <summary>
+    ///   The number of supported agent plugins.
+    /// </summary>
+    public int AgentsSupportedCount
+    {
+        get => this.agentsSupportedCount;
+        private set
+        {
+            if (this.SetProperty(ref this.agentsSupportedCount, value))
+            {
+                this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The supported-agent count shown under the installed count.
+    /// </summary>
+    public string AgentsSupportSummary => $"{this.AgentsSupportedCount} supported";
+
+    /// <summary>
+    ///   The short watcher state shown in the summary card: Off, Idle, Scanning, Watching, or Error.
+    /// </summary>
+    public string WatcherStateLabel
+    {
+        get => this.watcherStateLabel;
+        private set => this.SetProperty(ref this.watcherStateLabel, value);
+    }
+
+    /// <summary>
+    ///   The watcher detail shown under the state, e.g. the last scan time.
+    /// </summary>
+    public string WatcherDetailText
+    {
+        get => this.watcherDetailText;
+        private set => this.SetProperty(ref this.watcherDetailText, value);
     }
 
     /// <summary>
     ///   Opens the folder picker and fills the watched-directory entry.
     /// </summary>
     public RelayCommand BrowseWatchedDirectoryCommand { get; }
+
+    /// <summary>
+    ///   Opens the folder picker and registers the selected folder as a watched root.
+    /// </summary>
+    public RelayCommand AddWatchedDirectoryFromPickerCommand { get; }
 
     /// <summary>
     ///   Registers the entered absolute folder path as a watched root.
@@ -793,6 +890,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Removes the ignored pattern passed as the command parameter.
     /// </summary>
     public RelayCommand<string> RemoveIgnoredPatternCommand { get; }
+
+    /// <summary>
+    ///   Re-scans the saved watched roots.
+    /// </summary>
+    public RelayCommand ScanNowCommand { get; }
 
     /// <summary>
     ///   The status line of the update check.
@@ -946,9 +1048,10 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.newIgnoredPatternText = string.Empty;
         this.newWatchedDirectoryText = string.Empty;
         this.watchedDirectoryError = null;
-        this.watcherStatusText = FormatScannerStatus(this.projectScanner.Status);
+        this.ApplyScannerStatus(this.projectScanner.Status);
 
         this.AgentsState.Load(draft.DefaultAgentId);
+        this.RefreshAgentSummary();
 
         this.ResetUpdateStatus();
         this.validationError = null;
@@ -975,6 +1078,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.SelectedAccent));
         this.OnPropertyChanged(nameof(this.ActiveAccentLabel));
         this.OnPropertyChanged(nameof(this.ScanDepthText));
+        this.OnPropertyChanged(nameof(this.SelectedScanDepth));
         this.OnPropertyChanged(nameof(this.SelectedDiscoveryMode));
         this.OnPropertyChanged(nameof(this.NewIgnoredPatternText));
         this.OnPropertyChanged(nameof(this.NewWatchedDirectoryText));
@@ -982,7 +1086,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
         this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
         this.OnPropertyChanged(nameof(this.ScanSummary));
-        this.OnPropertyChanged(nameof(this.WatcherStatusText));
+        this.OnPropertyChanged(nameof(this.DiscoveredProjectCount));
+        this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
+        this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
+        this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
+        this.OnPropertyChanged(nameof(this.WatcherStateLabel));
+        this.OnPropertyChanged(nameof(this.WatcherDetailText));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
         this.OnPropertyChanged(nameof(this.SelectedPage));
@@ -1032,19 +1141,43 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
+    private void AddWatchedDirectoryFromPicker()
+    {
+        var folder = this.dialogs.SelectFolder("Add Watched Directory");
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        if (this.TryAddWatchedDirectory(folder))
+        {
+            this.WatchedDirectoryError = null;
+            this.ValidationError = null;
+        }
+    }
+
     private void AddWatchedDirectory()
     {
-        var text = this.NewWatchedDirectoryText.Trim();
+        if (this.TryAddWatchedDirectory(this.NewWatchedDirectoryText))
+        {
+            this.NewWatchedDirectoryText = string.Empty;
+            this.ValidationError = null;
+        }
+    }
+
+    private bool TryAddWatchedDirectory(string value)
+    {
+        var text = value.Trim();
         if (text.Length == 0)
         {
             this.WatchedDirectoryError = "Enter a folder path or browse for one.";
-            return;
+            return false;
         }
 
         if (!Path.IsPathFullyQualified(text) || !Directory.Exists(text))
         {
             this.WatchedDirectoryError = "Enter an existing absolute folder path.";
-            return;
+            return false;
         }
 
         string path;
@@ -1055,7 +1188,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
             this.WatchedDirectoryError = "Enter a valid absolute folder path.";
-            return;
+            return false;
         }
 
         if (!this.WatchedDirectories.Any(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
@@ -1063,9 +1196,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             this.WatchedDirectories.Add(path);
         }
 
-        this.NewWatchedDirectoryText = string.Empty;
-        this.WatchedDirectoryError = null;
-        this.ValidationError = null;
+        return true;
     }
 
     private void RemoveWatchedDirectory(string directory) => this.WatchedDirectories.Remove(directory);
@@ -1096,34 +1227,38 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher is not null && !dispatcher.CheckAccess())
         {
-            dispatcher.BeginInvoke(() => this.WatcherStatusText = FormatScannerStatus(status));
+            dispatcher.BeginInvoke(() => this.ApplyScannerStatus(status));
             return;
         }
 
-        this.WatcherStatusText = FormatScannerStatus(status);
+        this.ApplyScannerStatus(status);
     }
 
-    private static string FormatScannerStatus(ProjectScanStatus? status)
+    private void ApplyScannerStatus(ProjectScanStatus? status)
     {
-        if (status is null)
+        var current = status ?? ProjectScanStatus.NotConfigured;
+        this.DiscoveredProjectCount = current.DiscoveredCount;
+        this.WatcherStateLabel = current.State switch
         {
-            return NoWatchedDirectoriesStatus;
-        }
-
-        return status.State switch
+            ProjectScanState.NotConfigured => "Off",
+            ProjectScanState.Scanning => "Scanning",
+            ProjectScanState.Error => "Error",
+            _ => current.IsWatching ? "Watching" : "Idle"
+        };
+        this.WatcherDetailText = current.State switch
         {
-            ProjectScanState.NotConfigured => NoWatchedDirectoriesStatus,
-            ProjectScanState.Scanning => "Scanning…",
-            ProjectScanState.Error => $"Scan failed: {status.Error}",
-            _ => FormatIdleStatus(status)
+            ProjectScanState.NotConfigured => "No watched roots configured",
+            ProjectScanState.Scanning => "Scan in progress",
+            ProjectScanState.Error => current.Error ?? "Scan failed",
+            _ => current.LastScanUtc is { } last ? $"Last scan {last.ToLocalTime():HH:mm:ss}" : "Not scanned yet"
         };
     }
 
-    private static string FormatIdleStatus(ProjectScanStatus status)
+    private void RefreshAgentSummary()
     {
-        var when = status.LastScanUtc is { } last ? last.ToLocalTime().ToString("HH:mm:ss") : "never";
-        var noun = status.DiscoveredCount == 1 ? "project" : "projects";
-        return $"Watching · last scan {when} · {status.DiscoveredCount} discovered {noun}";
+        var cards = this.AgentsState.Cards;
+        this.AgentsInstalledCount = cards?.Count(card => card.IsInstalled) ?? 0;
+        this.AgentsSupportedCount = cards?.Count ?? 0;
     }
 
     /// <summary>
