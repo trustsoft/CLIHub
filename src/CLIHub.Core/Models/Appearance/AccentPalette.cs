@@ -18,15 +18,21 @@ public static class AccentPalette
     public const string DefaultHex = "#4CC2FF";
 
     /// <summary>
-    ///   The preset accent colors offered by the selector.
+    ///   The preset accent colors offered by the selector. The list starts with the default and
+    ///   groups related hues: blues and teal, greens and violets, then warm tones. Every preset is
+    ///   chosen to stay legible on the dark chrome while keeping enough saturation for the light
+    ///   palette.
     /// </summary>
     public static IReadOnlyList<AccentOption> Presets { get; } = new[]
     {
         new AccentOption("Sky", "#4CC2FF"),
-        new AccentOption("Windows Blue", "#3B82F6"),
+        new AccentOption("Blue", "#3B82F6"),
+        new AccentOption("Teal", "#0D9488"),
         new AccentOption("Emerald", "#10B981"),
         new AccentOption("Purple", "#8B5CF6"),
-        new AccentOption("Amber", "#F59E0B")
+        new AccentOption("Amber", "#F59E0B"),
+        new AccentOption("Indigo", "#818CF8"),
+        new AccentOption("Tangerine", "#EA580C")
     };
 
     /// <summary>

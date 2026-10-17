@@ -29,6 +29,119 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void Load_DefaultAccent_SelectsSkyPreset()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        Assert.Equal("Sky", fixture.ViewModel.SelectedAccent.Name);
+        Assert.False(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Sky", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void Load_CustomStoredAccent_SelectsCustomEntry()
+    {
+        var fixture = new Fixture("#123456");
+        fixture.ViewModel.Load();
+
+        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.Equal("#123456", fixture.ViewModel.AccentText);
+        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void SelectedAccent_Preset_UpdatesTextAndLabel()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
+
+        Assert.Equal("#10B981", fixture.ViewModel.AccentText);
+        Assert.Equal("Active: Emerald", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void AccentText_CustomValue_SelectsCustomEntry()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.AccentText = "#123456";
+
+        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void AccentText_PartialValue_SelectsCustomEntry()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.AccentText = "#12";
+
+        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+    }
+
+    [Fact]
+    public void SelectedAccent_CustomEntry_KeepsCurrentColor()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+
+        Assert.Equal("#4CC2FF", fixture.ViewModel.AccentText);
+        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Sky", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void SelectedAccent_CustomAfterPreset_RestoresLastCustomValue()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.ViewModel.AccentText = "#123456";
+
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+
+        Assert.Equal("#123456", fixture.ViewModel.AccentText);
+        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void SelectedAccent_CustomEntry_RestoresCustomAcrossSettingsWindows()
+    {
+        var memory = new AccentSelectionMemory();
+        var first = new Fixture(accentMemory: memory);
+        first.ViewModel.Load();
+        first.ViewModel.AccentText = "#123456";
+        first.ViewModel.SelectedAccent = first.ViewModel.AccentOptions.First(choice => choice.Name == "Teal");
+
+        var second = new Fixture(accentMemory: memory);
+        second.ViewModel.Load();
+        second.ViewModel.SelectedAccent = second.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+
+        Assert.Equal("#123456", second.ViewModel.AccentText);
+    }
+
+    [Fact]
+    public void Load_CustomStoredAccent_RestoresWhenCustomReselected()
+    {
+        var fixture = new Fixture("#123456");
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
+        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+
+        Assert.Equal("#123456", fixture.ViewModel.AccentText);
+    }
+
+    [Fact]
     public void Save_ValidDraft_PersistsAndRequestsClose()
     {
         var fixture = new Fixture();
@@ -135,17 +248,20 @@ public class SettingsViewModelApplicationTests
         public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateWorkflow> Updates { get; } = new();
         public Mock<IReleaseNotesLauncher> ReleaseNotes { get; } = new();
+        public AccentSelectionMemory AccentMemory { get; }
         public SettingsViewModel ViewModel { get; }
 
-        public Fixture()
+        public Fixture(string accentColor = AccentPalette.DefaultHex, AccentSelectionMemory? accentMemory = null)
         {
+            this.AccentMemory = accentMemory ?? new AccentSelectionMemory();
             this.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
                 DefaultRuntime = RuntimeKind.PowerShell,
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                 CheckForUpdatesOnStartup = true,
-                StartMinimized = true
+                StartMinimized = true,
+                AccentColor = accentColor
             });
             this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
             this.Startup.Setup(x => x.IsEnabled()).Returns(false);
@@ -173,6 +289,7 @@ public class SettingsViewModelApplicationTests
                 new Mock<IProjectDialogService>().Object,
                 new Mock<Core.Scanning.IProjectScanner>().Object,
                 Mock.Of<IAgentManagementSection>(),
+                this.AccentMemory,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

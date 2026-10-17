@@ -45,6 +45,7 @@ public class SettingsOperationLifetimeTests
             new Mock<IProjectDialogService>().Object,
             new Mock<Core.Scanning.IProjectScanner>().Object,
             Mock.Of<IAgentManagementSection>(),
+            new AccentSelectionMemory(),
             NullLogger<SettingsViewModel>.Instance);
 
         viewModel.CheckForUpdatesCommand.Execute(null);

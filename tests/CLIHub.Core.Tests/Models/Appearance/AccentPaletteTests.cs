@@ -39,6 +39,20 @@ public class AccentPaletteTests
     }
 
     [Fact]
+    public void Presets_AreNormalizedAndUnique()
+    {
+        Assert.All(
+            AccentPalette.Presets,
+            preset => Assert.True(
+                AccentPalette.TryNormalize(preset.Hex, out var normalized) &&
+                string.Equals(normalized, preset.Hex, StringComparison.Ordinal)));
+
+        Assert.Equal(
+            AccentPalette.Presets.Count,
+            AccentPalette.Presets.Select(preset => preset.Name).Distinct(StringComparer.Ordinal).Count());
+    }
+
+    [Fact]
     public void SelectionTint_UsesLowAlpha()
     {
         Assert.Equal("#1F4CC2FF", AccentPalette.SelectionTint("#4CC2FF"));

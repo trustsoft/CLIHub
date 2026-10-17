@@ -124,32 +124,106 @@
         </controls:SettingCard>
 
         <controls:SettingCard Title="Accent color"
-                           Hint="Pick a preset or enter #RRGGBB. Applies immediately on save."
+                           Hint="Applied to active states, focus rings, toggles, and primary actions. Applies immediately on save."
+                           Badge="{Binding ActiveAccentLabel}"
+                           BadgeTone="Accent"
                            Icon="{x:Static themes:IconGlyphs.Palette}"
-                           HorizontalContentAlignment="Left"
                            Placement="Stacked">
             <StackPanel>
-                <ListBox ItemsSource="{Binding AccentOptions}"
+                <ListBox Margin="0,0,-8,-8"
+                         ItemsSource="{Binding AccentOptions}"
                          SelectedItem="{Binding SelectedAccent, Mode=TwoWay}"
-                         Style="{StaticResource SegmentGroup}">
+                         Style="{StaticResource AccentOptionGroup}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="14"
-                                        Height="14"
-                                        Margin="0,0,7,0"
-                                        CornerRadius="7"
-                                        Background="{Binding Hex}"/>
-                                <TextBlock Text="{Binding Name}"/>
-                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Width="26" Height="26" VerticalAlignment="Center">
+                                    <Ellipse x:Name="Swatch"
+                                             Width="26"
+                                             Height="26"
+                                             Fill="{Binding Hex}"/>
+                                    <Border x:Name="CustomSwatch"
+                                            Width="26"
+                                            Height="26"
+                                            Background="{DynamicResource ThumbBgBrush}"
+                                            BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="13"
+                                            Visibility="Collapsed">
+                                        <TextBlock x:Name="CustomGlyph"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   Text="{x:Static themes:IconGlyphs.Palette}"/>
+                                    </Border>
+                                    <TextBlock x:Name="Check"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="10"
+                                               Foreground="White"
+                                               Text="{x:Static themes:IconGlyphs.Checkmark}"
+                                               Visibility="Collapsed"/>
+                                </Grid>
+
+                                <StackPanel Grid.Column="1"
+                                            Margin="10,0,0,0"
+                                            VerticalAlignment="Center">
+                                    <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{Binding Name}"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Name}"/>
+                                    <TextBlock Margin="0,1,0,0"
+                                               Style="{StaticResource HintText}"
+                                               Text="{Binding Hint}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap"/>
+                                </StackPanel>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsCustom}" Value="True">
+                                    <Setter TargetName="Swatch" Property="Visibility" Value="Collapsed"/>
+                                    <Setter TargetName="CustomSwatch" Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                    <Setter TargetName="Check" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="CustomGlyph" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <TextBox Margin="0,8,0,0"
-                         HorizontalAlignment="Left"
-                         Width="140"
-                         Style="{StaticResource SettingsInput}"
-                         Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedAccent.IsCustom}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock VerticalAlignment="Center"
+                               Style="{StaticResource FieldLabel}"
+                               Text="Custom color"/>
+                    <TextBox Width="120"
+                             Margin="10,0,0,0"
+                             Style="{StaticResource SettingsInput}"
+                             Tag="#RRGGBB"
+                             Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Enter a custom accent color as #RRGGBB"/>
+                </StackPanel>
             </StackPanel>
         </controls:SettingCard>
 

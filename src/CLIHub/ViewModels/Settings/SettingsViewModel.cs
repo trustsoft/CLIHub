@@ -57,6 +57,21 @@ public sealed record PopupPositionOption(PopupScreenPosition Position, string Na
 public sealed record AppThemeOption(AppTheme Theme, string Name, string Description);
 
 /// <summary>
+///   A selectable accent color: a palette preset or the custom hex entry.
+/// </summary>
+/// <param name="Name"> Display name. </param>
+/// <param name="Hex"> The swatch color, or <c> Transparent </c> for the custom entry. </param>
+/// <param name="Hint"> The muted line under the name: the hex value or the custom-field hint. </param>
+/// <param name="IsCustom"> True for the custom hex entry. </param>
+public sealed record AccentChoice(string Name, string Hex, string Hint, bool IsCustom)
+{
+    /// <summary>
+    ///   The accessible name combining the label with the color value or hint.
+    /// </summary>
+    public string AccessibleName => $"{this.Name} {this.Hint}";
+}
+
+/// <summary>
 ///   A selectable repository discovery mode.
 /// </summary>
 /// <param name="Mode"> The discovery mode. </param>
@@ -192,6 +207,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(AppTheme.System, "System Sync", "Follow Windows personalization state")
     };
 
+    private static readonly AccentChoice CustomAccentChoice =
+        new("Custom...", "Transparent", "RGB / Hex", true);
+
+    private static readonly AccentChoice[] AccentChoices = AccentPalette.Presets
+        .Select(preset => new AccentChoice(preset.Name, preset.Hex, preset.Hex, false))
+        .Append(CustomAccentChoice)
+        .ToArray();
+
     private static readonly DiscoveryModeOption[] DiscoveryModeOptions =
     {
         new(ProjectDiscoveryMode.Git, "Git repositories"),
@@ -211,6 +234,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly IProjectDialogService dialogs;
     private readonly IProjectScanner projectScanner;
+    private readonly AccentSelectionMemory accentMemory;
     private readonly ILogger<SettingsViewModel> logger;
 
     private bool startWithWindows;
@@ -240,6 +264,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private PopupPositionOption selectedPopupPosition = PopupPositionOptions[0];
     private AppThemeOption selectedAppTheme = AppThemeOptions[0];
     private string accentText = AccentPalette.DefaultHex;
+    private bool customAccentSelected;
     private string scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
     private DiscoveryModeOption selectedDiscoveryMode = DiscoveryModeOptions[2];
     private string newIgnoredPatternText = string.Empty;
@@ -261,6 +286,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
     /// <param name="projectScanner"> Scanner whose status is shown on the Projects &amp; Paths page. </param>
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
+    /// <param name="accentMemory"> Process-wide memory of the last custom accent. </param>
     public SettingsViewModel(SettingsApplicationService settingsApplication,
                              IUpdateVersionProvider versionProvider,
                              IUpdateWorkflow updateWorkflow,
@@ -270,6 +296,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
                              IProjectDialogService dialogs,
                              IProjectScanner projectScanner,
                              IAgentManagementSection agentsState,
+                             AccentSelectionMemory accentMemory,
                              ILogger<SettingsViewModel> logger)
     {
         this.settingsApplication = settingsApplication;
@@ -281,6 +308,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
+        this.accentMemory = accentMemory ?? throw new ArgumentNullException(nameof(accentMemory));
         this.logger = logger;
 
         this.Version = this.versionProvider.GetCurrentVersion();
@@ -548,9 +576,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   The accent color presets offered by the selector.
+    ///   The accent color choices offered by the selector: the presets and the custom entry.
     /// </summary>
-    public IReadOnlyList<AccentOption> AccentOptions => AccentPalette.Presets;
+    public IReadOnlyList<AccentChoice> AccentOptions => AccentChoices;
 
     /// <summary>
     ///   The accent color text as <c> #RRGGBB </c>.
@@ -562,24 +590,65 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         {
             if (this.SetProperty(ref this.accentText, value))
             {
+                var preset = this.FindAccentPreset(value);
+                this.customAccentSelected = preset is null;
+                if (preset is null && AccentPalette.TryNormalize(value, out var normalized))
+                {
+                    this.accentMemory.LastCustomAccent = normalized;
+                }
+
                 this.OnPropertyChanged(nameof(this.SelectedAccent));
+                this.OnPropertyChanged(nameof(this.ActiveAccentLabel));
             }
         }
     }
 
     /// <summary>
-    ///   The preset matching the current accent, or null for a custom value.
+    ///   The selected accent choice: the matching preset, or the custom entry for any other value.
     /// </summary>
-    public AccentOption? SelectedAccent
+    public AccentChoice SelectedAccent
     {
-        get => this.AccentOptions.FirstOrDefault(o =>
-            string.Equals(AccentPalette.Normalize(o.Hex), AccentPalette.Normalize(this.accentText), StringComparison.Ordinal));
+        get => this.customAccentSelected
+            ? CustomAccentChoice
+            : this.FindAccentPreset(this.accentText) ?? CustomAccentChoice;
         set
         {
-            if (value is not null)
+            if (value is null)
             {
-                this.AccentText = value.Hex;
+                return;
             }
+
+            if (value.IsCustom)
+            {
+                if (this.accentMemory.LastCustomAccent is { } customAccent)
+                {
+                    this.AccentText = customAccent;
+                    return;
+                }
+
+                if (this.customAccentSelected)
+                {
+                    return;
+                }
+
+                this.customAccentSelected = true;
+                this.OnPropertyChanged(nameof(this.SelectedAccent));
+                return;
+            }
+
+            this.AccentText = value.Hex;
+        }
+    }
+
+    /// <summary>
+    ///   The accent shown next to the selector title, e.g. "Active: Blue".
+    /// </summary>
+    public string ActiveAccentLabel
+    {
+        get
+        {
+            var preset = this.FindAccentPreset(this.accentText);
+            return preset is null ? "Active: Custom" : $"Active: {preset.Name}";
         }
     }
 
@@ -798,6 +867,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             ?? PopupPositionOptions[0];
         this.selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
         this.accentText = AccentPalette.Normalize(draft.AccentColor);
+        this.customAccentSelected = this.FindAccentPreset(this.accentText) is null;
+        if (this.customAccentSelected && this.accentMemory.LastCustomAccent is null)
+        {
+            this.accentMemory.LastCustomAccent = this.accentText;
+        }
         this.startWithWindows = draft.StartWithWindows;
         this.startMinimized = draft.StartMinimized;
 
@@ -846,6 +920,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.SelectedAppTheme));
         this.OnPropertyChanged(nameof(this.AccentText));
         this.OnPropertyChanged(nameof(this.SelectedAccent));
+        this.OnPropertyChanged(nameof(this.ActiveAccentLabel));
         this.OnPropertyChanged(nameof(this.ScanDepthText));
         this.OnPropertyChanged(nameof(this.SelectedDiscoveryMode));
         this.OnPropertyChanged(nameof(this.NewIgnoredPatternText));
@@ -875,6 +950,22 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Closes the window without saving.
     /// </summary>
     public void Cancel() => this.RequestClose?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    ///   Finds the preset matching a color value, ignoring the custom entry. Invalid or partial
+    ///   values match nothing, so the selector shows the custom entry while the user types.
+    /// </summary>
+    private AccentChoice? FindAccentPreset(string value)
+    {
+        if (!AccentPalette.TryNormalize(value, out var normalized))
+        {
+            return null;
+        }
+
+        return AccentChoices.FirstOrDefault(choice =>
+            !choice.IsCustom &&
+            string.Equals(AccentPalette.Normalize(choice.Hex), normalized, StringComparison.Ordinal));
+    }
 
     private void AddWatchedDirectory()
     {
