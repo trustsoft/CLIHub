@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
+             xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -19,24 +20,24 @@
         <controls:SettingCard Margin="0,16,0,0"
                            Title="Default runtime"
                            Hint="Runtime used to open interactive agent commands."
-                           Icon="{x:Static themes:IconGlyphs.Terminal}"
-                           HorizontalContentAlignment="Left"
-                           Placement="Stacked">
-            <ListBox ItemsSource="{Binding Runtimes}"
-                     SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
-                     Style="{StaticResource SegmentGroup}">
-                <ListBox.ItemTemplate>
+                           Icon="{x:Static themes:IconGlyphs.Terminal}">
+            <ComboBox HorizontalAlignment="Right"
+                      ItemsSource="{Binding Runtimes}"
+                      SelectedItem="{Binding SelectedRuntime, Mode=TwoWay}"
+                      Style="{StaticResource SettingsComboBox}"
+                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <controls:SpacedPanel Orientation="Horizontal"
                                               Spacing="{StaticResource Sizing.Spacing}">
                             <Image Width="16"
                                    Height="16"
                                    Source="{Binding Icon}"/>
-                            <TextBlock Text="{Binding Segment}"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
                         </controls:SpacedPanel>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </controls:SettingCard>
     </StackPanel>
 </UserControl>

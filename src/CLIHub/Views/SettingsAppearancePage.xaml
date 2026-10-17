@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
+             xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -64,16 +65,19 @@
         <controls:SectionHeader Text="PATHS"/>
         <controls:SettingCard Title="Path display"
                            Hint="How long project paths are shortened in the launch window."
-                           Icon="{x:Static themes:IconGlyphs.FolderOpen}">
-            <ListBox ItemsSource="{Binding PathDisplays}"
-                     SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
-                     Style="{StaticResource SegmentGroup}">
-                <ListBox.ItemTemplate>
+                           Icon="{x:Static themes:IconGlyphs.FolderOpen}"
+                           Placement="Stacked">
+            <ComboBox HorizontalAlignment="Left"
+                      ItemsSource="{Binding PathDisplays}"
+                      SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
+                      Style="{StaticResource SettingsComboBox}"
+                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                <ComboBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Segment}"/>
+                        <TextBlock Text="{Binding Name}"/>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </controls:SettingCard>
     </StackPanel>
 </UserControl>

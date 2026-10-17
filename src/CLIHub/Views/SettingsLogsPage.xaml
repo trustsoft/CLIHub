@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
+             xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
@@ -19,18 +20,18 @@
         <controls:SectionHeader Text="LOGGING"/>
         <controls:SettingCard Title="Log level"
                            Hint="Takes effect after the next start."
-                           Icon="{x:Static themes:IconGlyphs.Diagnostic}"
-                           HorizontalContentAlignment="Left"
-                           Placement="Stacked">
-            <ListBox ItemsSource="{Binding LogLevels}"
-                     SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
-                     Style="{StaticResource SegmentGroup}">
-                <ListBox.ItemTemplate>
+                           Icon="{x:Static themes:IconGlyphs.Diagnostic}">
+            <ComboBox HorizontalAlignment="Right"
+                      ItemsSource="{Binding LogLevels}"
+                      SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                      Style="{StaticResource SettingsComboBox}"
+                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding Name}"/>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </controls:SettingCard>
 
         <controls:SettingCard Title="Retention &amp; size"

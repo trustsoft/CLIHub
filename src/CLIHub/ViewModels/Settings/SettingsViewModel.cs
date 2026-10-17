@@ -19,21 +19,19 @@ using CLIHub.Updates;
 using CLIHub.Settings;
 
 /// <summary>
-///   A selectable default runtime with a friendly label, a short segment label, and an icon.
+///   A selectable default runtime with a friendly label and an icon.
 /// </summary>
 /// <param name="Kind"> The runtime kind. </param>
-/// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
-/// <param name="Segment"> Short label rendered by the segmented selector. </param>
-/// <param name="Icon"> Pack URI of the icon rendered beside the segment label. </param>
-public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Segment, string Icon);
+/// <param name="Name"> Display name shown in the combo box and diagnostics. </param>
+/// <param name="Icon"> Pack URI of the icon rendered beside the name. </param>
+public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Icon);
 
 /// <summary>
-///   A selectable path display style with a friendly label and a short segment label.
+///   A selectable path display style with a friendly label.
 /// </summary>
 /// <param name="Style"> The path display style. </param>
-/// <param name="Name"> Display name shown in tooltips and diagnostics. </param>
-/// <param name="Segment"> Short label rendered by the segmented selector. </param>
-public sealed record PathDisplayOption(PathDisplayStyle Style, string Name, string Segment);
+/// <param name="Name"> Display name shown in the combo box and tooltips. </param>
+public sealed record PathDisplayOption(PathDisplayStyle Style, string Name);
 
 /// <summary>
 ///   A selectable log level.
@@ -89,16 +87,16 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 {
     private static readonly RuntimeOption[] RuntimeOptions =
     {
-        new(RuntimeKind.PowerShell, "PowerShell", "PowerShell", "pack://application:,,,/Assets/powershell.png"),
-        new(RuntimeKind.PowerShell7, "PowerShell 7", "PowerShell 7", "pack://application:,,,/Assets/powershell7.png"),
-        new(RuntimeKind.CommandPrompt, "Command Prompt", "Command Prompt", "pack://application:,,,/Assets/cmd.png"),
-        new(RuntimeKind.GitBash, "Git Bash", "Git Bash", "pack://application:,,,/Assets/gitbash.png")
+        new(RuntimeKind.PowerShell, "PowerShell", "pack://application:,,,/Assets/powershell.png"),
+        new(RuntimeKind.PowerShell7, "PowerShell 7", "pack://application:,,,/Assets/powershell7.png"),
+        new(RuntimeKind.CommandPrompt, "Command Prompt", "pack://application:,,,/Assets/cmd.png"),
+        new(RuntimeKind.GitBash, "Git Bash", "pack://application:,,,/Assets/gitbash.png")
     };
 
     private static readonly PathDisplayOption[] PathDisplayOptions =
     {
-        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path", "Left trim"),
-        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends", "Middle ellipsis")
+        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path"),
+        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends")
     };
 
     private static readonly SettingsPage[] AllPages =
