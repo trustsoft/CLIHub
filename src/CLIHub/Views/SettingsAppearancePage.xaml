@@ -65,9 +65,8 @@
         <controls:SectionHeader Text="PATHS"/>
         <controls:SettingCard Title="Path display"
                            Hint="How long project paths are shortened in the launch window."
-                           Icon="{x:Static themes:IconGlyphs.FolderOpen}"
-                           Placement="Stacked">
-            <ComboBox HorizontalAlignment="Left"
+                           Icon="{x:Static themes:IconGlyphs.FolderOpen}">
+            <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding PathDisplays}"
                       SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
                       Style="{StaticResource SettingsComboBox}"
