@@ -116,3 +116,6 @@ $RECYCLE.BIN/
 
 # Graphify generated index and caches (local to each machine)
 graphify-out/
+
+# Root-level scratch pages (test.html, test2.html, ...) kept out of the repository
+/test*.html
