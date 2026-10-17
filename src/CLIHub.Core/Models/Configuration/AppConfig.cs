@@ -32,9 +32,9 @@ public class AppPreferences
     public bool StartWithWindows { get; set; }
 
     /// <summary>
-    ///   Global hotkey combination (e.g., "Ctrl+Shift+A").
+    ///   Global hotkey combination (e.g., "Ctrl+Shift+Space").
     /// </summary>
-    public string Hotkey { get; set; } = "Ctrl+Shift+A";
+    public string Hotkey { get; set; } = "Ctrl+Shift+Space";
 
     /// <summary>
     ///   Legacy path to the terminal executable. Superseded by <see cref="DefaultRuntime" />;

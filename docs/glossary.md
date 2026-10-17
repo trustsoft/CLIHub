@@ -85,7 +85,7 @@ use these terms with these meanings.
   Projects pane and the AI Agents pane separated by a resizable divider.
 - **Tray** — the system tray (notification area) icon with the context menu: current project,
   recent projects, Add Project…, launch agents, Settings, What's New, exit.
-- **Global hotkey** — a configurable key combination (default `Ctrl+Shift+A`) that toggles the
+- **Global hotkey** — a configurable key combination (default `Ctrl+Shift+Space`) that toggles the
   launch window from any application. See [hotkey-support](../openspec/specs/hotkey-support/spec.md).
 - **Single instance** — a second CLIHub launch does not start a new process; it activates the
   running instance via a named mutex and a named-pipe activation signal.

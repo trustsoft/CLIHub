@@ -39,8 +39,9 @@ public sealed class HotkeyStartupRegistrar : IHotkeyStartupRegistrar
         else
         {
             this.logger.LogWarning(
-                "Invalid hotkey '{Hotkey}' in config; using default Ctrl+Shift+A",
-                preferences.Hotkey);
+                "Invalid hotkey '{Hotkey}' in config; using default {DefaultHotkey}",
+                preferences.Hotkey,
+                HotkeyParser.Format(HotkeyParser.Default));
             definition = HotkeyParser.Default;
         }
 

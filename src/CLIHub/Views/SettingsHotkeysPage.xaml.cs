@@ -58,7 +58,7 @@ public partial class SettingsHotkeysPage : UserControl
         var definition = new HotkeyDefinition(modifiers, KeyInterop.VirtualKeyFromKey(key));
         if (!HotkeyParser.TryParse(HotkeyParser.Format(definition), out _))
         {
-            viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1-F24, or a named key (Enter, Tab, Escape, arrows, and so on) with a modifier.");
+            viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1-F24, or a named key (Space, Enter, Tab, Escape, arrows, and so on) with a modifier.");
             return;
         }
 

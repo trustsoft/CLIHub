@@ -72,6 +72,24 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void Hotkey_NewConfiguration_UsesCtrlShiftSpaceDefault()
+    {
+        Assert.Equal("Ctrl+Shift+Space", new AppConfig().Preferences.Hotkey);
+    }
+
+    [Fact]
+    public void Hotkey_AbsentFromStoredDocument_UsesCtrlShiftSpaceDefault()
+    {
+        const string json = """
+        { "schemaVersion": 2, "projects": [], "preferences": {}, "currentProjectId": null }
+        """;
+
+        var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal("Ctrl+Shift+Space", config.Preferences.Hotkey);
+    }
+
+    [Fact]
     public void AppConfigDocument_RoundTripsEveryConfigurationFieldThroughDtoMapping()
     {
         var project = new Project

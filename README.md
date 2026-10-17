@@ -40,7 +40,7 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 - Project folders with current, recent, favorite, and logo-aware state.
 - Agent commands for launch, resume, version, and update.
 - Host/project availability detection, version display, and capability-aware actions.
-- Global hotkey (`Ctrl+Shift+A` by default) and a single-instance tray application.
+- Global hotkey (`Ctrl+Shift+Space` by default) and a single-instance tray application.
 - PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection.
 - Chromeless resizable launch window, Settings, and What's New windows with a shared Dark/Light theme.
 - Startup update checks, download-and-restart updates, release notes, and Windows autostart.
@@ -65,7 +65,7 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 
 ## Basic Use
 
-1. Open CLIHub from the tray icon or press `Ctrl+Shift+A`.
+1. Open CLIHub from the tray icon or press `Ctrl+Shift+Space`.
 2. Add a project folder and select it.
 3. Select an available agent and run the required command.
 4. Configure runtime, hotkey, probing, update checks, and display preferences in Settings.

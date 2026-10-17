@@ -215,7 +215,9 @@ public class HotkeyParserTests
     [Fact]
     public void Format_Default_IsCanonical()
     {
-        Assert.Equal("Ctrl+Shift+A", HotkeyParser.Format(HotkeyParser.Default));
+        Assert.Equal("Ctrl+Shift+Space", HotkeyParser.Format(HotkeyParser.Default));
+        Assert.Equal(HotkeyModifiers.Control | HotkeyModifiers.Shift, HotkeyParser.Default.Modifiers);
+        Assert.Equal(0x20, HotkeyParser.Default.VirtualKey);
     }
 
     [Fact]
