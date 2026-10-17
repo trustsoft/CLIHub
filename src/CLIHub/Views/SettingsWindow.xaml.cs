@@ -31,8 +31,9 @@ public partial class SettingsWindow : Window
     }
 
     /// <summary>
-    ///   Reloads the stored preferences and shows (or re-activates) the window. The height matches
-    ///   the launch window's current height, so the two windows read as the same surface.
+    ///   Reloads the stored preferences and shows (or re-activates) the window. The window grows to
+    ///   the launch window's height when that window is taller, but it never shrinks below its own
+    ///   size.
     /// </summary>
     public void ShowSettings()
     {
@@ -45,9 +46,9 @@ public partial class SettingsWindow : Window
             this.Owner = owner;
         }
 
-        if (Application.Current?.MainWindow is { } launch)
+        if (Application.Current?.MainWindow is { } launch && launch.ActualHeight > this.Height)
         {
-            this.Height = Math.Max(this.MinHeight, launch.ActualHeight);
+            this.Height = launch.ActualHeight;
         }
 
         this.Show();
