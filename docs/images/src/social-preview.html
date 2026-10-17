@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CLIHub social preview</title>
+<style>
+  :root {
+    --bg: #0b0c0e;
+    --fg: #f5f7fa;
+    --muted: #98a2b3;
+    --accent: #4cc2ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    width: 1280px;
+    height: 640px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  }
+
+  body { position: relative; }
+
+  .glow-a,
+  .glow-b {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .glow-a {
+    left: -220px;
+    top: -320px;
+    width: 1000px;
+    height: 1000px;
+    background: radial-gradient(circle, rgba(76, 194, 255, 0.22), rgba(76, 194, 255, 0) 64%);
+  }
+
+  .glow-b {
+    right: -260px;
+    bottom: -420px;
+    width: 1100px;
+    height: 1100px;
+    background: radial-gradient(circle, rgba(124, 109, 255, 0.18), rgba(124, 109, 255, 0) 64%);
+  }
+
+  .grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.16));
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.16));
+  }
+
+  .ghost {
+    position: absolute;
+    right: -200px;
+    top: -30px;
+    width: 760px;
+    height: auto;
+    opacity: 0.14;
+    transform: rotate(-7deg);
+    transform-origin: center;
+    filter: grayscale(0.7) blur(1px) brightness(1.05);
+    -webkit-mask-image: radial-gradient(ellipse 70% 78% at 52% 42%, #000 20%, rgba(0, 0, 0, 0.5) 48%, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 78% at 52% 42%, #000 20%, rgba(0, 0, 0, 0.5) 48%, transparent 78%);
+    pointer-events: none;
+  }
+
+  .edge {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 84px;
+  }
+
+  .intro {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .icon-wrap {
+    position: relative;
+    width: 112px;
+    height: 112px;
+    flex: none;
+  }
+
+  .icon-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -22px;
+    border-radius: 48px;
+    background: radial-gradient(circle, rgba(76, 194, 255, 0.25), rgba(76, 194, 255, 0) 70%);
+    z-index: -1;
+  }
+
+  .icon {
+    width: 112px;
+    height: 112px;
+    display: block;
+    border-radius: 28px;
+    box-shadow:
+      0 22px 60px rgba(31, 111, 181, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.10) inset;
+  }
+
+  .title {
+    margin: 0;
+    font-size: 84px;
+    line-height: 1;
+    font-weight: 650;
+    letter-spacing: -2.6px;
+  }
+
+  .tagline {
+    max-width: 520px;
+    margin: 12px 0 0;
+    font-size: 30px;
+    line-height: 1.24;
+    color: rgba(255, 255, 255, 0.80);
+    letter-spacing: -0.2px;
+  }
+
+  .meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .pill {
+    padding: 7px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  .hotkey {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding-right: 8px;
+  }
+
+  .hotkey::before {
+    content: "";
+    position: absolute;
+    inset: -54px -46px;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(11, 12, 14, 0.78), rgba(11, 12, 14, 0) 70%);
+    pointer-events: none;
+  }
+
+  .hotkey-label {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 2.6px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+  }
+
+  .keys {
+    display: flex;
+    align-items: center;
+  }
+
+  .key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 88px;
+    min-width: 88px;
+    padding: 0 22px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    background: linear-gradient(180deg, #2b2f36, #1a1d22);
+    box-shadow:
+      0 7px 0 rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.14),
+      0 16px 38px rgba(0, 0, 0, 0.35);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .key.accent {
+    border-color: rgba(130, 208, 255, 0.65);
+    background: linear-gradient(180deg, #3e9ade, #1f6fb5);
+    box-shadow:
+      0 7px 0 #0d3c60,
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      0 0 44px rgba(76, 194, 255, 0.45),
+      0 16px 38px rgba(0, 0, 0, 0.35);
+  }
+
+  .plus {
+    margin: 0 14px;
+    color: #667085;
+    font-size: 24px;
+    font-weight: 400;
+  }
+
+  .hotkey-note {
+    color: var(--muted);
+    font-size: 19px;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+  }
+</style>
+</head>
+<body>
+  <div class="glow-a"></div>
+  <div class="glow-b"></div>
+  <div class="grid"></div>
+  <img class="ghost" src="../launch-window.png" alt="">
+  <div class="edge"></div>
+
+  <div class="content">
+    <div class="intro">
+      <div class="icon-wrap">
+        <img class="icon" src="../../../assets/appIcon/GLM5.3F/icon_256.png" alt="CLIHub">
+      </div>
+      <div>
+        <h1 class="title">CLIHub</h1>
+        <p class="tagline">Launch AI coding agents in the right project folder.</p>
+        <div class="meta">
+          <span class="pill">Windows 10 / 11</span>
+          <span class="pill">.NET 10</span>
+          <span class="pill">JSON plugins</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hotkey">
+      <div class="hotkey-label">Global hotkey</div>
+      <div class="keys">
+        <div class="key">Ctrl</div>
+        <div class="plus">+</div>
+        <div class="key">Shift</div>
+        <div class="plus">+</div>
+        <div class="key accent">Space</div>
+      </div>
+      <div class="hotkey-note">Opens from any app, right where you work.</div>
+    </div>
+  </div>
+</body>
+</html>
