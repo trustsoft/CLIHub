@@ -53,7 +53,8 @@ public sealed record PopupPositionOption(PopupScreenPosition Position, string Na
 /// </summary>
 /// <param name="Theme"> The theme. </param>
 /// <param name="Name"> Display name. </param>
-public sealed record AppThemeOption(AppTheme Theme, string Name);
+/// <param name="Description"> One-line explanation shown under the name in the theme picker. </param>
+public sealed record AppThemeOption(AppTheme Theme, string Name, string Description);
 
 /// <summary>
 ///   A selectable repository discovery mode.
@@ -186,9 +187,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly AppThemeOption[] AppThemeOptions =
     {
-        new(AppTheme.Dark, "Dark"),
-        new(AppTheme.Light, "Light"),
-        new(AppTheme.System, "System")
+        new(AppTheme.Dark, "Dark Theme", "Windows 11 Fluent Dark (Recommended)"),
+        new(AppTheme.Light, "Light Theme", "High contrast daylight profile"),
+        new(AppTheme.System, "System Sync", "Follow Windows personalization state")
     };
 
     private static readonly DiscoveryModeOption[] DiscoveryModeOptions =

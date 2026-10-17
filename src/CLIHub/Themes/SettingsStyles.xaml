@@ -423,6 +423,87 @@
         </Setter>
     </Style>
 
+    <!-- Theme picker: preview cards in one equal-width row. The preview palette below is theme
+         data, not application chrome: all three samples must read the same under either theme. -->
+    <SolidColorBrush x:Key="ThemePreviewDarkBrush" Color="#FF0A0C14"/>
+    <SolidColorBrush x:Key="ThemePreviewLightBrush" Color="#FFFFFFFF"/>
+    <LinearGradientBrush x:Key="ThemePreviewSystemBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Offset="0" Color="#FF0A0C14"/>
+        <GradientStop Offset="0.4" Color="#FF0A0C14"/>
+        <GradientStop Offset="0.62" Color="#FF4B5160"/>
+        <GradientStop Offset="0.78" Color="#FFE7E8EC"/>
+        <GradientStop Offset="1" Color="#FFFFFFFF"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="ThemePreviewDotMutedBrush" Color="#FF8B8F99"/>
+    <SolidColorBrush x:Key="ThemePreviewBarDarkBrush" Color="#FF4B5160"/>
+    <SolidColorBrush x:Key="ThemePreviewBarLightBrush" Color="#FFB6BAC4"/>
+
+    <Style x:Key="ThemeOptionItem" TargetType="ListBoxItem">
+        <Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <!-- The group cancels this trailing gap with a matching negative margin, keeping the row
+             flush with the setting card while neighbours stay 8px apart. -->
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Grid>
+                        <Border x:Name="Card"
+                                Padding="10"
+                                Background="{DynamicResource ChipBgBrush}"
+                                BorderBrush="{DynamicResource FieldStrokeBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                            <ContentPresenter/>
+                        </Border>
+                        <!-- Selection ring drawn over the card edge, so selecting never shifts content -->
+                        <Border x:Name="SelectionRing"
+                                Margin="-1"
+                                BorderBrush="{DynamicResource AccentBrush}"
+                                BorderThickness="2"
+                                CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
+                                IsHitTestVisible="False"
+                                Visibility="Collapsed"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ThemeOptionGroup" TargetType="ListBox">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ThemeOptionItem}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1"/>
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <ItemsPresenter/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Projects & Paths: bordered multi-row list of editable string entries -->
     <Style x:Key="SettingsListItem" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>

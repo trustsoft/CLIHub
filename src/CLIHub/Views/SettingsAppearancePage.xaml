@@ -6,18 +6,118 @@
              xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
+             xmlns:models="clr-namespace:CLIHub.Core.Models;assembly=CLIHub.Core"
              mc:Ignorable="d">
     <StackPanel>
         <controls:SectionHeader Text="THEME"/>
         <controls:SettingCard Title="Application theme"
-                           Hint="Takes effect after the next start. System follows Windows."
-                           Icon="{x:Static themes:IconGlyphs.Brightness}">
-            <ListBox ItemsSource="{Binding AppThemes}"
+                           Hint="Select the visual palette and luminosity mode. Applies after the next start; System Sync follows Windows."
+                           Icon="{x:Static themes:IconGlyphs.Brightness}"
+                           Placement="Stacked">
+            <ListBox Margin="0,0,-8,0"
+                     ItemsSource="{Binding AppThemes}"
                      SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"
-                     Style="{StaticResource SegmentGroup}">
+                     Style="{StaticResource ThemeOptionGroup}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Palette sample: fixed colors, so each card previews its own theme -->
+                            <Border Height="56"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource ThemePreviewDarkBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Light}">
+                                                <Setter Property="Background" Value="{StaticResource ThemePreviewLightBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
+                                                <Setter Property="Background" Value="{StaticResource ThemePreviewSystemBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+
+                                <Grid>
+                                    <StackPanel Margin="12,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                        <Ellipse Width="9" Height="9">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
+                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewDotMutedBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
+                                        <Rectangle Width="30"
+                                                   Height="5"
+                                                   Margin="7,0,0,0"
+                                                   RadiusX="2.5"
+                                                   RadiusY="2.5">
+                                            <Rectangle.Style>
+                                                <Style TargetType="Rectangle">
+                                                    <Setter Property="Fill" Value="{StaticResource ThemePreviewBarDarkBrush}"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Light}">
+                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarLightBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
+                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarLightBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Rectangle.Style>
+                                        </Rectangle>
+                                    </StackPanel>
+
+                                    <!-- Selection marker, shown by the owning ListBoxItem -->
+                                    <Border Width="18"
+                                            Height="18"
+                                            Margin="0,6,6,0"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            CornerRadius="9">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="9"
+                                                   Foreground="White"
+                                                   Text="{x:Static themes:IconGlyphs.Checkmark}"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+
+                            <StackPanel Grid.Row="1" Margin="0,9,0,0">
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding Name}"/>
+                                <TextBlock Margin="0,3,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding Description}"/>
+                            </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
