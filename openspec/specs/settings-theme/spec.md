@@ -220,7 +220,7 @@ A setting card SHALL let its content be aligned within the card both horizontall
 
 ### Requirement: Numeric input fields
 
-A numeric setting SHALL render as an editable number on the themed input surface with a decrement control on the leading edge and an increment control on the trailing edge. A numeric field SHALL accept an optional unit suffix shown in the muted style next to the number, and stepped values SHALL stay within the field's allowed range.
+A numeric setting SHALL render as an editable number on the themed input surface with a decrement control on the leading edge and an increment control on the trailing edge. A numeric field SHALL accept an optional unit suffix shown in the muted style next to the number, and stepped values SHALL stay within the field's allowed range. While the pointer is over a numeric field, each mouse-wheel notch SHALL change the value by one step and SHALL NOT scroll the page.
 
 #### Scenario: Stepping with the controls
 - **WHEN** the user activates the decrement or increment control
@@ -233,6 +233,10 @@ A numeric setting SHALL render as an editable number on the themed input surface
 #### Scenario: Keyboard stepping
 - **WHEN** a numeric field has focus
 - **THEN** pressing Up or Down changes the value by one step within the allowed range
+
+#### Scenario: Mouse wheel stepping
+- **WHEN** the pointer is over a numeric field and the user turns the mouse wheel by one notch
+- **THEN** the value changes by one step in the wheel direction, stays within the allowed range, and the page does not scroll
 
 #### Scenario: Typed values stay editable
 - **WHEN** the user types a number into a numeric field
