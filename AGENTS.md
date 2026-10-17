@@ -34,6 +34,17 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 openspec validate --all
 ```
 
+## Change, Commit, and Archive Policy
+
+- You MUST get explicit user approval before `git commit`, `git push`, `git reset`/`git revert` that rewrites
+  history, `openspec archive`, or moving a change into `openspec/changes/archive/`.
+- Approval applies only to the specific action the user asked for. Approval for one change or commit never
+  carries over to a later change, a follow-up task, or another commit.
+- Implement and verify the work first, then report the result and ask whether to archive and commit. Do not
+  stage files for a commit that the user has not explicitly approved.
+- A commit MUST contain only the files that belong to the approved change; leave unrelated working-tree edits
+  and untracked files untouched.
+
 ## Documentation and OpenSpec
 
 - `README.md` is user-facing documentation.
@@ -42,7 +53,7 @@ openspec validate --all
 - `openspec/specs/` is the durable behavior contract. `openspec/changes/archive/` is historical context.
 - `docs/adr/` records why architectural decisions were made; it does not replace current implementation docs.
 - Propose and validate an OpenSpec change before implementation when the work changes a durable capability.
-- Archive completed changes after implementation and verification.
+- Archive completed changes after implementation and verification, and only with explicit user approval.
 
 ## Progressive Disclosure
 
