@@ -8,15 +8,6 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBlock Style="{StaticResource PageHeader}" Text="Terminal Profiles"/>
-        <TextBlock Margin="0,6,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="The shell used to open interactive agent commands."/>
-
-        <Rectangle Height="1"
-                   Margin="0,14,0,0"
-                   Fill="{DynamicResource HairlineBrush}"/>
-
         <controls:SettingCard Margin="0,16,0,0"
                            Title="Default runtime"
                            Hint="Runtime used to open interactive agent commands."

@@ -8,15 +8,6 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBlock Style="{StaticResource PageHeader}" Text="Logs"/>
-        <TextBlock Margin="0,6,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Log level, retention, and the log file."/>
-
-        <Rectangle Height="1"
-                   Margin="0,14,0,0"
-                   Fill="{DynamicResource HairlineBrush}"/>
-
         <controls:SectionHeader Text="LOGGING"/>
         <controls:SettingCard Title="Log level"
                            Hint="Takes effect after the next start."

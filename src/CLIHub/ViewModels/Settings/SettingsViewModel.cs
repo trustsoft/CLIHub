@@ -67,10 +67,17 @@ public sealed record DiscoveryModeOption(ProjectDiscoveryMode Mode, string Name)
 /// </summary>
 /// <param name="Key"> Stable page key used to route the page view. </param>
 /// <param name="Title"> Display title shown in the sidebar and page header. </param>
+/// <param name="Description"> One-line description shown under the page title in the page header. </param>
 /// <param name="Group"> The navigation group the page belongs to. </param>
 /// <param name="IsImplemented"> Whether the page has implemented settings. </param>
 /// <param name="Icon"> The Segoe MDL2 glyph shown before the page title in the sidebar. </param>
-public sealed record SettingsPage(string Key, string Title, string Group, bool IsImplemented, string Icon);
+public sealed record SettingsPage(
+    string Key,
+    string Title,
+    string Description,
+    string Group,
+    bool IsImplemented,
+    string Icon);
 
 /// <summary>
 ///   A Settings navigation group: an uppercase label and its pages.
@@ -101,14 +108,62 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly SettingsPage[] AllPages =
     {
-        new("general", "General & Startup", "General", true, IconGlyphs.Settings),
-        new("hotkeys", "Hotkeys & Quick Launcher", "General", true, IconGlyphs.Keyboard),
-        new("projects", "Projects & Paths", "Engines & Repos", true, IconGlyphs.FolderOpen),
-        new("agents", "CLI Agents", "Engines & Repos", true, IconGlyphs.Robot),
-        new("terminal", "Terminal Profiles", "Engines & Repos", true, IconGlyphs.Terminal),
-        new("appearance", "Appearance", "System", true, IconGlyphs.Palette),
-        new("telemetry", "Logs", "System", true, IconGlyphs.Diagnostic),
-        new("updates", "Updates", "System", true, IconGlyphs.Update)
+        new(
+            "general",
+            "General & Startup",
+            "Startup behavior and how the window opens.",
+            "General",
+            true,
+            IconGlyphs.Settings),
+        new(
+            "hotkeys",
+            "Hotkeys & Quick Launcher",
+            "The global hotkey and where the launcher appears.",
+            "General",
+            true,
+            IconGlyphs.Keyboard),
+        new(
+            "projects",
+            "Projects & Paths",
+            "Watched directories, discovery rules, and the background watcher.",
+            "Engines & Repos",
+            true,
+            IconGlyphs.FolderOpen),
+        new(
+            "agents",
+            "CLI Agents",
+            "Installed CLI agents, the default agent, and probe settings.",
+            "Engines & Repos",
+            true,
+            IconGlyphs.Robot),
+        new(
+            "terminal",
+            "Terminal Profiles",
+            "The shell used to open interactive agent commands.",
+            "Engines & Repos",
+            true,
+            IconGlyphs.Terminal),
+        new(
+            "appearance",
+            "Appearance",
+            "Theme, accent color, and how project paths are shown.",
+            "System",
+            true,
+            IconGlyphs.Palette),
+        new(
+            "telemetry",
+            "Logs",
+            "Log level, retention, and the log file.",
+            "System",
+            true,
+            IconGlyphs.Diagnostic),
+        new(
+            "updates",
+            "Updates",
+            "Update checks, downloads, and notifications.",
+            "System",
+            true,
+            IconGlyphs.Update)
     };
 
     private static readonly LogLevelOption[] LogLevelOptions =

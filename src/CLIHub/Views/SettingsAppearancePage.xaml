@@ -8,15 +8,6 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBlock Style="{StaticResource PageHeader}" Text="Appearance"/>
-        <TextBlock Margin="0,6,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Theme, accent color, and how project paths are shown."/>
-
-        <Rectangle Height="1"
-                   Margin="0,14,0,0"
-                   Fill="{DynamicResource HairlineBrush}"/>
-
         <controls:SectionHeader Text="THEME"/>
         <controls:SettingCard Title="Application theme"
                            Hint="Takes effect after the next start. System follows Windows."

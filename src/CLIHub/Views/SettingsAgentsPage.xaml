@@ -8,17 +8,9 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBlock Style="{StaticResource PageHeader}" Text="CLI Agents"/>
-        <TextBlock Margin="0,6,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Installed CLI agents, the default agent, and probe settings."/>
-        <TextBlock Margin="0,6,0,0"
+        <TextBlock Margin="0,12,0,0"
                    Style="{StaticResource HintText}"
                    Text="{Binding AgentsState.Metrics}"/>
-
-        <Rectangle Height="1"
-                   Margin="0,14,0,0"
-                   Fill="{DynamicResource HairlineBrush}"/>
 
         <controls:SectionHeader Text="MANAGEMENT"/>
         <controls:SettingCard Title="Default agent"

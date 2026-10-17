@@ -39,6 +39,14 @@ public class SettingsNavigationTests
     }
 
     [Fact]
+    public void Catalog_EveryPageHasDescription()
+    {
+        var viewModel = new Fixture().ViewModel;
+
+        Assert.All(viewModel.Pages, page => Assert.False(string.IsNullOrWhiteSpace(page.Description)));
+    }
+
+    [Fact]
     public void Catalog_MarksAllPagesAsImplemented()
     {
         var viewModel = new Fixture().ViewModel;

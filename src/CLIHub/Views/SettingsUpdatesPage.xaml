@@ -7,18 +7,10 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <TextBlock Style="{StaticResource PageHeader}" Text="Updates"/>
-        <TextBlock Margin="0,6,0,0"
-                   Style="{StaticResource HintText}"
-                   Text="Update checks, downloads, and notifications."/>
-        <StackPanel Margin="0,6,0,0" Orientation="Horizontal">
+        <StackPanel Margin="0,12,0,0" Orientation="Horizontal">
             <TextBlock Style="{StaticResource HintText}" Text="Current version: "/>
             <TextBlock Style="{StaticResource FieldLabel}" Text="{Binding Version}"/>
         </StackPanel>
-
-        <Rectangle Height="1"
-                   Margin="0,14,0,0"
-                   Fill="{DynamicResource HairlineBrush}"/>
 
         <controls:SectionHeader Text="AUTOMATIC"/>
         <controls:SettingsGroup>
