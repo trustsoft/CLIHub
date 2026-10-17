@@ -1,8 +1,39 @@
+<div align="center">
+  <img src="docs/images/banner.png" alt="CLIHub — launch AI coding agents in the right project folder" width="100%">
+</div>
+
 # CLIHub
 
-CLIHub is a Windows system-tray companion for launching AI agent CLIs in the context of the current
-project. Built-in descriptors cover OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code;
-additional agents can be added as JSON plugins.
+<p>
+  <a href="https://github.com/trustsoft/CLIHub/actions/workflows/ci.yml"><img src="https://github.com/trustsoft/CLIHub/actions/workflows/ci.yml/badge.svg?branch=master" alt="CI"></a>
+  <a href="https://github.com/trustsoft/CLIHub/releases"><img src="https://img.shields.io/github/v/release/trustsoft/CLIHub?display_name=tag&amp;sort=semver" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D4" alt="Windows 10 / 11">
+  <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10">
+</p>
+
+**CLIHub is a Windows system-tray companion for launching AI agent CLIs in the context of the current
+project.** It keeps your project folders, detects the agent CLIs installed on your machine, and opens the one
+you pick in an external terminal — in the right directory, with the right command.
+
+Built-in descriptors cover OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code; additional
+agents can be added as JSON plugins.
+
+## How it works
+
+<img src="docs/images/workflow.png" alt="Pick a project, pick an agent, then launch or resume in your terminal" width="100%">
+
+CLIHub is deliberately small: it stores your projects and detects which agents are available, then runs the
+chosen command in the terminal you already use. Agents are not embedded, proxied, or executed in-process.
+
+## Screenshots
+
+<img src="docs/images/launch-window.png" alt="CLIHub launch window: projects on the left, agents on the right" width="880">
+
+*The launch window: select a project on the left, then launch or resume an installed agent on the right.*
+
+<img src="docs/images/settings.png" alt="CLIHub Settings: appearance, theme, and accent color" width="880">
+
+*Settings: theme, accent color, hotkeys, terminal runtime, agent probes, updates, and logs.*
 
 ## Features
 

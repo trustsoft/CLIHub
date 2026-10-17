@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CLIHub workflow</title>
+<style>
+  :root {
+    --bg: #0b0c0e;
+    --card: rgba(255, 255, 255, 0.035);
+    --stroke: rgba(255, 255, 255, 0.09);
+    --fg: #f2f5f8;
+    --muted: #98a2b3;
+    --accent: #6cc5ff;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    width: 1200px;
+    height: 272px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  }
+
+  body { position: relative; }
+
+  .glow {
+    position: absolute;
+    left: 50%;
+    top: -260px;
+    width: 900px;
+    height: 520px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(76, 194, 255, 0.14), rgba(76, 194, 255, 0) 68%);
+  }
+
+  .edge {
+    position: absolute;
+    inset: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .flow {
+    position: relative;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 44px 1fr 44px 1fr;
+    align-items: center;
+    padding: 26px 40px;
+  }
+
+  .step {
+    height: 188px;
+    padding: 22px 24px;
+    border: 1px solid var(--stroke);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022));
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .step-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(108, 197, 255, 0.28);
+    border-radius: 12px;
+    background: rgba(76, 194, 255, 0.10);
+    color: var(--accent);
+  }
+
+  .index {
+    color: #5d6775;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.6px;
+  }
+
+  .step h2 {
+    margin: 0 0 7px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+
+  .step p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="edge"></div>
+
+  <div class="flow">
+    <section class="step">
+      <div class="step-head">
+        <div class="icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3.9l2 2h7.1A2.5 2.5 0 0 1 21 9.5v7A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5z"/>
+          </svg>
+        </div>
+        <span class="index">01</span>
+      </div>
+      <h2>Pick a project</h2>
+      <p>Current, recent, and favorite folders — each with its own logo and path.</p>
+    </section>
+
+    <div class="arrow">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </svg>
+    </div>
+
+    <section class="step">
+      <div class="step-head">
+        <div class="icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3.2l1.5 4.1 4.1 1.5-4.1 1.5L12 14.4l-1.5-4.1L6.4 8.8l4.1-1.5z"/>
+            <path d="M18 14.2l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z"/>
+            <path d="M5.5 15.5l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z"/>
+          </svg>
+        </div>
+        <span class="index">02</span>
+      </div>
+      <h2>Pick an agent</h2>
+      <p>OpenCode, Pi, Cline, Copilot, OpenClaude, Qwen Code — or add your own JSON plugin.</p>
+    </section>
+
+    <div class="arrow">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14M13 6l6 6-6 6"/>
+      </svg>
+    </div>
+
+    <section class="step">
+      <div class="step-head">
+        <div class="icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4.5" width="18" height="15" rx="2.5"/>
+            <path d="M7 9.5l3 2.5-3 2.5"/>
+            <path d="M13 15h4"/>
+          </svg>
+        </div>
+        <span class="index">03</span>
+      </div>
+      <h2>Launch or resume</h2>
+      <p>Opens PowerShell, pwsh, Command Prompt, or Git Bash in the project folder.</p>
+    </section>
+  </div>
+</body>
+</html>
