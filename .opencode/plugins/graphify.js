@@ -28,3 +28,24 @@ export const GraphifyPlugin = async ({ directory }) => {
     },
   };
 };
+
+// OpenCode V2 loads local plugins through a default definition. Keep the V1
+// server hook above for compatibility with older OpenCode versions.
+const graphifyPlugin = {
+  id: "graphify",
+  async setup(ctx) {
+    let reminded = false;
+    await ctx.tool.hook("execute.before", (event) => {
+      if (reminded || event.tool !== "bash") return;
+      if (!existsSync(join(ctx.location.directory, "graphify-out", "graph.json"))) return;
+
+      event.input.command =
+        'echo "[graphify] knowledge graph at graphify-out/. For focused questions, run graphify query with your question (scoped subgraph, usually much smaller than GRAPH_REPORT.md) instead of grepping raw files. Read GRAPH_REPORT.md only for broad architecture context." ; ' +
+        event.input.command;
+      reminded = true;
+    });
+  },
+  server: async ({ directory }) => GraphifyPlugin({ directory }),
+};
+
+export default graphifyPlugin;
