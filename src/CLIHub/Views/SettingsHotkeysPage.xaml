@@ -34,8 +34,8 @@
             </Border>
         </controls:SettingCard>
 
-        <controls:SectionHeader Text="POPUP"/>
-        <controls:SettingCard Title="Popup screen position"
+        <controls:SectionHeader Text="LAUNCHER POSITIONING"/>
+        <controls:SettingCard Title="Launcher window position"
                            Hint="Where the launch window appears when it is shown."
                            Icon="{x:Static themes:IconGlyphs.Location}">
             <ComboBox HorizontalAlignment="Right"

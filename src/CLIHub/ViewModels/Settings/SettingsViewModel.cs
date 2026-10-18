@@ -203,10 +203,10 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly PopupPositionOption[] PopupPositionOptions =
     {
-        new(PopupScreenPosition.Center, "Center of active monitor"),
-        new(PopupScreenPosition.TopCenter, "Top-center"),
+        new(PopupScreenPosition.Center, "Active monitor — centered"),
+        new(PopupScreenPosition.TopCenter, "Active monitor — top-center"),
         new(PopupScreenPosition.CursorRelative, "Cursor-relative"),
-        new(PopupScreenPosition.PrimaryScreen, "Primary screen")
+        new(PopupScreenPosition.PrimaryScreen, "Primary monitor — centered")
     };
 
     private static readonly AppThemeOption[] AppThemeOptions =
