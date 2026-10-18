@@ -637,6 +637,30 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void Load_EmptyProbeFields_ShowsBuiltInDefaults()
+    {
+        var fixture = new Fixture();
+
+        fixture.ViewModel.Load();
+
+        Assert.Equal("15 min · 10 s", fixture.ViewModel.ProbePolicySummary);
+        Assert.Equal("Built-in defaults", fixture.ViewModel.ProbePolicyDetail);
+    }
+
+    [Fact]
+    public void ProbeFields_PositiveValues_ShowCustomEffectivePolicy()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.ProbeTtlText = "30";
+        fixture.ViewModel.ProbeTimeoutText = "5";
+
+        Assert.Equal("30 min · 5 s", fixture.ViewModel.ProbePolicySummary);
+        Assert.Equal("Custom probe settings", fixture.ViewModel.ProbePolicyDetail);
+    }
+
+    [Fact]
     public void Save_InvalidDraft_DoesNotPersistOrClose()
     {
         var fixture = new Fixture();

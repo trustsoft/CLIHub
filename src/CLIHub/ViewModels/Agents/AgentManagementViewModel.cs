@@ -11,7 +11,7 @@ using CLIHub.Lifetime;
 using CLIHub.Launching;
 
 /// <summary>
-///   Owns the CLI Agents management surface: one card per agent, the supported/installed metrics,
+///   Owns the CLI Agents management surface: one card per agent, the supported/installed counts,
 ///   the default-agent selection, and the per-card actions.
 /// </summary>
 public sealed class AgentManagementViewModel : ObservableObject, IAgentManagementSection
@@ -63,11 +63,49 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public ObservableCollection<AgentCardItem> Cards { get; } = new();
 
     /// <inheritdoc />
-    public string Metrics
+    public int InstalledAgentCount => this.Cards.Count(card => card.IsInstalled);
+
+    /// <inheritdoc />
+    public int SupportedAgentCount => this.Cards.Count;
+
+    /// <summary>
+    ///   The number of supported agents that are not installed on this machine.
+    /// </summary>
+    public int NotInstalledAgentCount => this.SupportedAgentCount - this.InstalledAgentCount;
+
+    /// <inheritdoc />
+    public string AvailabilitySummary => this.SupportedAgentCount switch
     {
-        get;
-        private set => this.SetProperty(ref field, value);
-    } = "0 supported · 0 installed";
+        0 => "No agent plugins found",
+        var supported when this.NotInstalledAgentCount == 0 => $"{supported} supported · all installed",
+        var supported => $"{supported} supported · {this.NotInstalledAgentCount} not installed"
+    };
+
+    /// <inheritdoc />
+    public string DefaultAgentName => this.SelectedDefaultAgent.Name;
+
+    /// <inheritdoc />
+    public bool HasDefaultAgent => this.CurrentDefaultAgentId is not null;
+
+    /// <inheritdoc />
+    public string DefaultAgentDetail
+    {
+        get
+        {
+            if (!this.HasDefaultAgent)
+            {
+                return "No default agent — choose one";
+            }
+
+            var version = this.Cards
+                .FirstOrDefault(card => card.PluginId == this.CurrentDefaultAgentId)
+                ?.Version;
+
+            return string.IsNullOrEmpty(version) || version == "…"
+                ? "Preselected in the launch window"
+                : $"Version {version}";
+        }
+    }
 
     /// <inheritdoc />
     public IReadOnlyList<AgentOption> DefaultAgentOptions
@@ -80,7 +118,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public AgentOption SelectedDefaultAgent
     {
         get;
-        set => this.SetProperty(ref field, value ?? NoneOption);
+        set
+        {
+            if (this.SetProperty(ref field, value ?? NoneOption))
+            {
+                this.RaiseDefaultAgentChanges();
+            }
+        }
     } = NoneOption;
 
     /// <inheritdoc />
@@ -123,7 +167,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             this.Cards.Add(card);
         }
 
-        this.RefreshMetrics();
+        this.RefreshAvailabilitySummary();
         this.RebuildDefaultAgentOptions(defaultAgentId);
         this.PopulateVersions();
     }
@@ -143,10 +187,20 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
     }
 
-    private void RefreshMetrics()
+    private void RefreshAvailabilitySummary()
     {
-        var installed = this.Cards.Count(card => card.IsInstalled);
-        this.Metrics = $"{this.Cards.Count} supported · {installed} installed";
+        this.OnPropertyChanged(nameof(this.InstalledAgentCount));
+        this.OnPropertyChanged(nameof(this.SupportedAgentCount));
+        this.OnPropertyChanged(nameof(this.NotInstalledAgentCount));
+        this.OnPropertyChanged(nameof(this.AvailabilitySummary));
+        this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
+    }
+
+    private void RaiseDefaultAgentChanges()
+    {
+        this.OnPropertyChanged(nameof(this.DefaultAgentName));
+        this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
+        this.OnPropertyChanged(nameof(this.HasDefaultAgent));
     }
 
     private void PopulateVersions() =>
@@ -175,7 +229,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         card.Message = result.IsInstalled
             ? $"Installed · version {card.Version}"
             : "Not installed on the host";
-        this.RefreshMetrics();
+        this.RefreshAvailabilitySummary();
     }
 
     private async Task UpdateAsync(AgentCardItem card, CancellationToken cancellationToken)

@@ -66,7 +66,7 @@ public class AgentManagementViewModelTests
     }
 
     [Fact]
-    public void Load_BuildsCardsMetricsAndDefaultOptions()
+    public void Load_BuildsCardsCountsAndDefaultOptions()
     {
         var a = Launchable("a", withUpdate: true);
         var b = Launchable("b");
@@ -77,11 +77,50 @@ public class AgentManagementViewModelTests
         viewModel.Load("b");
 
         Assert.Equal(2, viewModel.Cards.Count);
-        Assert.Equal("2 supported · 1 installed", viewModel.Metrics);
+        Assert.Equal(1, viewModel.InstalledAgentCount);
+        Assert.Equal(2, viewModel.SupportedAgentCount);
+        Assert.Equal("2 supported · 1 not installed", viewModel.AvailabilitySummary);
         Assert.Equal("b", viewModel.CurrentDefaultAgentId);
+        Assert.Equal("b", viewModel.DefaultAgentName);
+        Assert.True(viewModel.HasDefaultAgent);
+        Assert.Equal("Version 1.0", viewModel.DefaultAgentDetail);
         Assert.Contains(viewModel.DefaultAgentOptions, option => option.Id is null);
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
+    }
+
+    [Fact]
+    public void Load_WithNoDefaultAgent_ShowsNone()
+    {
+        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load(null);
+
+        Assert.Equal("None", viewModel.DefaultAgentName);
+        Assert.False(viewModel.HasDefaultAgent);
+        Assert.Equal("No default agent — choose one", viewModel.DefaultAgentDetail);
+    }
+
+    [Fact]
+    public void Load_WithEveryAgentInstalled_ReportsAllInstalled()
+    {
+        var viewModel = CreateViewModel([Launchable("a"), Launchable("b")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load(null);
+
+        Assert.Equal("2 supported · all installed", viewModel.AvailabilitySummary);
+    }
+
+    [Fact]
+    public void Load_WithNoPlugins_ReportsNoAgentPlugins()
+    {
+        var viewModel = CreateViewModel([], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load(null);
+
+        Assert.Equal(0, viewModel.InstalledAgentCount);
+        Assert.Equal(0, viewModel.SupportedAgentCount);
+        Assert.Equal("No agent plugins found", viewModel.AvailabilitySummary);
     }
 
     [Fact]
@@ -95,7 +134,7 @@ public class AgentManagementViewModelTests
     }
 
     [Fact]
-    public void TestCommand_ProbeUpdatesCardAndMetrics()
+    public void TestCommand_ProbeUpdatesCardAndAvailability()
     {
         var a = Launchable("a");
         var detection = Detection();
@@ -104,13 +143,13 @@ public class AgentManagementViewModelTests
         management.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "9.9"));
         var viewModel = CreateViewModel([a], detection, Versions(), management, new Mock<IExternalLauncher>());
         viewModel.Load(null);
-        Assert.Equal("1 supported · 0 installed", viewModel.Metrics);
+        Assert.Equal("1 supported · 1 not installed", viewModel.AvailabilitySummary);
 
         viewModel.TestCommand.Execute(viewModel.Cards[0]);
 
         Assert.True(viewModel.Cards[0].IsInstalled);
         Assert.Equal("9.9", viewModel.Cards[0].Version);
-        Assert.Equal("1 supported · 1 installed", viewModel.Metrics);
+        Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);
     }
 
     [Fact]

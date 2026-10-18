@@ -595,7 +595,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string ProbeTtlText
     {
         get => this.probeTtlText;
-        set => this.SetProperty(ref this.probeTtlText, value);
+        set
+        {
+            if (this.SetProperty(ref this.probeTtlText, value))
+            {
+                this.RaiseProbePolicyChanges();
+            }
+        }
     }
 
     /// <summary>
@@ -604,7 +610,45 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string ProbeTimeoutText
     {
         get => this.probeTimeoutText;
-        set => this.SetProperty(ref this.probeTimeoutText, value);
+        set
+        {
+            if (this.SetProperty(ref this.probeTimeoutText, value))
+            {
+                this.RaiseProbePolicyChanges();
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The effective probe policy shown in the page header, e.g. "15 min · 10 s".
+    /// </summary>
+    public string ProbePolicySummary =>
+        $"{this.ResolveProbeTtlMinutes()} min · {this.ResolveProbeTimeoutSeconds()} s";
+
+    /// <summary>
+    ///   Whether the probe card reflects built-in defaults or custom values.
+    /// </summary>
+    public string ProbePolicyDetail => this.HasCustomProbePolicy
+        ? "Custom probe settings"
+        : "Built-in defaults";
+
+    private bool HasCustomProbePolicy =>
+        !string.IsNullOrWhiteSpace(this.probeTtlText) || !string.IsNullOrWhiteSpace(this.probeTimeoutText);
+
+    private int ResolveProbeTtlMinutes() =>
+        int.TryParse(this.probeTtlText.Trim(), out var minutes) && minutes > 0
+            ? minutes
+            : (int)AgentVersionService.DefaultTtl.TotalMinutes;
+
+    private int ResolveProbeTimeoutSeconds() =>
+        int.TryParse(this.probeTimeoutText.Trim(), out var seconds) && seconds > 0
+            ? seconds
+            : (int)AgentVersionService.DefaultProbeTimeout.TotalSeconds;
+
+    private void RaiseProbePolicyChanges()
+    {
+        this.OnPropertyChanged(nameof(this.ProbePolicySummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
     }
 
     /// <summary>
@@ -1256,6 +1300,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.HotkeyParts));
         this.OnPropertyChanged(nameof(this.ProbeTtlText));
         this.OnPropertyChanged(nameof(this.ProbeTimeoutText));
+        this.OnPropertyChanged(nameof(this.ProbePolicySummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
         this.OnPropertyChanged(nameof(this.CheckForUpdatesOnStartup));
         this.OnPropertyChanged(nameof(this.AutoDownloadUpdates));
         this.OnPropertyChanged(nameof(this.NotifyStableUpdates));

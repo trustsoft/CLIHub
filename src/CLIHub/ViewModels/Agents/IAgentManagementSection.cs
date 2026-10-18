@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 /// <summary>
 ///   The agent-management section of the Settings window: cards,
-///   metrics, the default-agent selection, and the per-card actions.
+///   supported/installed counts, the default-agent selection, and the per-card actions.
 /// </summary>
 public interface IAgentManagementSection : IDisposable
 {
@@ -14,9 +14,34 @@ public interface IAgentManagementSection : IDisposable
     ObservableCollection<AgentCardItem> Cards { get; }
 
     /// <summary>
-    ///   The supported/installed metrics line.
+    ///   The number of agents installed on this machine.
     /// </summary>
-    string Metrics { get; }
+    int InstalledAgentCount { get; }
+
+    /// <summary>
+    ///   The number of supported agent plugins.
+    /// </summary>
+    int SupportedAgentCount { get; }
+
+    /// <summary>
+    ///   The supported/not-installed split shown under the installed count.
+    /// </summary>
+    string AvailabilitySummary { get; }
+
+    /// <summary>
+    ///   The selected default agent name, or "None".
+    /// </summary>
+    string DefaultAgentName { get; }
+
+    /// <summary>
+    ///   The version or selection hint shown under the default agent name.
+    /// </summary>
+    string DefaultAgentDetail { get; }
+
+    /// <summary>
+    ///   Whether a default agent is selected.
+    /// </summary>
+    bool HasDefaultAgent { get; }
 
     /// <summary>
     ///   The default-agent options, including a "None" option.

@@ -426,6 +426,157 @@
                 </controls:SpacedPanel>
             </DataTemplate>
 
+            <!-- CLI Agents summary cards, pinned to the page header. -->
+            <DataTemplate x:Key="AgentsSummaryCards">
+                <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="AGENTS"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding AgentsState.InstalledAgentCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding AgentsState.AvailabilitySummary}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="Installed agents and the number of supported plugins"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           Text="{x:Static themes:IconGlyphs.Robot}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="DEFAULT"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Text="{Binding AgentsState.DefaultAgentName}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           ToolTip="{Binding AgentsState.DefaultAgentName}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontSize" Value="18"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding AgentsState.HasDefaultAgent}" Value="False">
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding AgentsState.DefaultAgentDetail}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           Text="{x:Static themes:IconGlyphs.FavoriteStar}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="PROBE"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding ProbePolicySummary}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding ProbePolicyDetail}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="Effective agent probe cache and timeout"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{x:Static themes:IconGlyphs.Diagnostic}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </controls:SpacedPanel>
+            </DataTemplate>
+
             <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
             <CollectionViewSource x:Key="NavPages" Source="{Binding Pages}">
                 <CollectionViewSource.GroupDescriptions>
@@ -617,7 +768,7 @@
                             </ContentControl.Style>
                         </ContentControl>
 
-                        <!-- Projects summary: part of the fixed header, above the divider. -->
+                        <!-- Summary row: page-specific cards, part of the fixed header above the divider. -->
                         <ContentControl Grid.Row="1"
                                         Grid.ColumnSpan="2"
                                         Margin="0,14,0,0"
@@ -634,6 +785,10 @@
                                         <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects-registry">
                                             <Setter Property="Visibility" Value="Visible"/>
                                             <Setter Property="ContentTemplate" Value="{StaticResource RegistrySummaryCards}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedPage.Key}" Value="agents">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="ContentTemplate" Value="{StaticResource AgentsSummaryCards}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
