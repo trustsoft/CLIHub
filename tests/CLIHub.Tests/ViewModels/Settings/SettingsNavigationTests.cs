@@ -39,6 +39,14 @@ public class SettingsNavigationTests
     }
 
     [Fact]
+    public void Catalog_ProjectsPageIsNamedProjectDiscovery()
+    {
+        var viewModel = new Fixture().ViewModel;
+
+        Assert.Equal("Project Discovery", viewModel.Pages.Single(page => page.Key == "projects").Title);
+    }
+
+    [Fact]
     public void Catalog_EveryPageHasDescription()
     {
         var viewModel = new Fixture().ViewModel;

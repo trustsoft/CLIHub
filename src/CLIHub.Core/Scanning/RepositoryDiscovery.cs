@@ -27,6 +27,7 @@ public static class RepositoryDiscovery
         var indicators = CollectAgentIndicators(plugins);
         var discovered = new List<string>();
         var scannedRoots = new List<string>();
+        var scannedDirectoryCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var root in options.WatchedDirectories)
@@ -55,8 +56,9 @@ public static class RepositoryDiscovery
 
             try
             {
-                Walk(normalizedRoot, 0, options.ForRoot(root), indicators, discovered, seen);
+                var examined = Walk(normalizedRoot, 0, options.ForRoot(root), indicators, discovered, seen);
                 scannedRoots.Add(normalizedRoot);
+                scannedDirectoryCounts[normalizedRoot] = examined;
             }
             catch (Exception ex)
             {
@@ -64,16 +66,18 @@ public static class RepositoryDiscovery
             }
         }
 
-        return new DiscoveryResult(discovered, scannedRoots);
+        return new DiscoveryResult(discovered, scannedRoots, scannedDirectoryCounts);
     }
 
-    private static void Walk(string directory,
-                             int depth,
-                             ProjectScanningOptions options,
-                             IReadOnlyList<string> indicators,
-                             List<string> discovered,
-                             HashSet<string> seen)
+    private static int Walk(string directory,
+                            int depth,
+                            ProjectScanningOptions options,
+                            IReadOnlyList<string> indicators,
+                            List<string> discovered,
+                            HashSet<string> seen)
     {
+        var examined = 1;
+
         if (IsRepository(directory, options.DiscoveryMode, indicators))
         {
             if (seen.Add(directory))
@@ -81,12 +85,12 @@ public static class RepositoryDiscovery
                 discovered.Add(directory);
             }
 
-            return;
+            return examined;
         }
 
         if (depth >= options.ScanDepth)
         {
-            return;
+            return examined;
         }
 
         string[] children;
@@ -96,7 +100,7 @@ public static class RepositoryDiscovery
         }
         catch (Exception)
         {
-            return;
+            return examined;
         }
 
         foreach (var child in children)
@@ -113,8 +117,10 @@ public static class RepositoryDiscovery
                 continue;
             }
 
-            Walk(child, depth + 1, options, indicators, discovered, seen);
+            examined += Walk(child, depth + 1, options, indicators, discovered, seen);
         }
+
+        return examined;
     }
 
     private static bool IsRepository(string directory, ProjectDiscoveryMode mode, IReadOnlyList<string> indicators)

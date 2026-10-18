@@ -214,6 +214,115 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void Load_DoesNotApplyScanningOrReloadScanner()
+    {
+        var fixture = new Fixture();
+
+        fixture.ViewModel.Load();
+
+        fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Never);
+    }
+
+    [Fact]
+    public void AddWatchedDirectory_AppliesImmediatelyAndReloadsScanner()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var fixture = new Fixture();
+            fixture.ViewModel.Load();
+            fixture.ViewModel.NewWatchedDirectoryText = directory;
+
+            fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+
+            Assert.Equal([directory], fixture.CapturedPreferences.WatchedDirectories ?? []);
+            var settings = fixture.CapturedPreferences.WatchedDirectorySettings;
+            Assert.NotNull(settings);
+            Assert.True(settings.ContainsKey(directory));
+            fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void RemoveWatchedDirectory_AppliesImmediatelyAndReloadsScanner()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.ViewModel.WatchedDirectories.Add(CreateRow(fixture, @"C:\repos\one"));
+        fixture.Scanner.Invocations.Clear();
+
+        fixture.ViewModel.RemoveWatchedDirectoryCommand.Execute(@"C:\repos\one");
+
+        Assert.Empty(fixture.ViewModel.WatchedDirectories);
+        Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.WatchedDirectories ?? []);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void RowDepthChange_AppliesImmediatelyAndReloadsScanner()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var row = CreateRow(fixture, @"C:\repos\one");
+        fixture.ViewModel.WatchedDirectories.Add(row);
+        fixture.Scanner.Invocations.Clear();
+
+        row.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 5);
+
+        var settings = fixture.CapturedPreferences.WatchedDirectorySettings;
+        Assert.NotNull(settings);
+        Assert.Equal(5, settings[@"C:\repos\one"].ScanDepth);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void IgnoredPatternAdd_AppliesImmediatelyAndReloadsScanner()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.ViewModel.NewIgnoredPatternText = "custom-ignored-dir";
+
+        fixture.ViewModel.AddIgnoredPatternCommand.Execute(null);
+
+        Assert.Contains("custom-ignored-dir", fixture.ViewModel.IgnoredPatterns);
+        Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.IgnoredPatterns ?? []);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void SelectedDiscoveryMode_Change_AppliesImmediately()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.Scanner.Invocations.Clear();
+
+        fixture.ViewModel.SelectedDiscoveryMode = fixture.ViewModel.DiscoveryModes
+            .First(option => option.Mode == ProjectDiscoveryMode.Git);
+
+        Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.DiscoveryMode);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void SelectedScanDepth_Change_AppliesImmediately()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.Scanner.Invocations.Clear();
+
+        fixture.ViewModel.SelectedScanDepth = fixture.ViewModel.ScanDepthOptions
+            .First(option => option.Value == 4);
+
+        Assert.Equal(4, fixture.CapturedPreferences.ScanDepth);
+        fixture.Scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
     public void WatchedDirectoryRow_DiscoveredCount_RefreshesOnScannerStatus()
     {
         const string directory = @"C:\repos\one";
@@ -242,6 +351,7 @@ public class SettingsViewModelApplicationTests
                 false,
                 DateTimeOffset.UtcNow,
                 1,
+                0,
                 null));
 
         Assert.Equal(1, row.DiscoveredCount);
@@ -322,6 +432,7 @@ public class SettingsViewModelApplicationTests
     public void Load_ScannerStatus_PopulatesSummary()
     {
         var fixture = new Fixture();
+        fixture.Scanner.Setup(scanner => scanner.CountManualProjects()).Returns(4);
         fixture.Scanner.SetupGet(scanner => scanner.Status).Returns(
             new Core.Scanning.ProjectScanStatus(
                 Core.Scanning.ProjectScanState.Idle,
@@ -329,13 +440,52 @@ public class SettingsViewModelApplicationTests
                 false,
                 DateTimeOffset.UtcNow,
                 7,
+                42,
                 null));
 
         fixture.ViewModel.Load();
 
         Assert.Equal(7, fixture.ViewModel.DiscoveredProjectCount);
+        Assert.Equal(4, fixture.ViewModel.ManualProjectCount);
+        Assert.Equal(11, fixture.ViewModel.TotalProjectCount);
+        Assert.Equal("7 discovered · 4 manual", fixture.ViewModel.ProjectMixSummary);
+        Assert.Equal(42, fixture.ViewModel.ScannedDirectoryCount);
         Assert.Equal("Watching", fixture.ViewModel.WatcherStateLabel);
         Assert.StartsWith("Last scan", fixture.ViewModel.WatcherDetailText);
+        Assert.EndsWith("· 42 folders", fixture.ViewModel.WatcherDetailText);
+    }
+
+    [Theory]
+    [InlineData(0, null)]
+    [InlineData(1, "· 1 folder")]
+    [InlineData(412, "· 412 folders")]
+    public void WatcherDetail_AppendsExaminedFolderCount(int count, string? expectedEnding)
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.Scanner.Raise(
+            scanner => scanner.StatusChanged += null,
+            fixture.Scanner.Object,
+            new Core.Scanning.ProjectScanStatus(
+                Core.Scanning.ProjectScanState.Idle,
+                true,
+                false,
+                DateTimeOffset.UtcNow,
+                0,
+                count,
+                null));
+
+        Assert.Equal(count, fixture.ViewModel.ScannedDirectoryCount);
+
+        if (expectedEnding is null)
+        {
+            Assert.StartsWith("Last scan", fixture.ViewModel.WatcherDetailText);
+            Assert.DoesNotContain("·", fixture.ViewModel.WatcherDetailText);
+            return;
+        }
+
+        Assert.EndsWith(expectedEnding, fixture.ViewModel.WatcherDetailText);
     }
 
     [Fact]
@@ -509,6 +659,13 @@ public class SettingsViewModelApplicationTests
             fixture.ViewModel.SelectedScanDepth,
             fixture.ViewModel.SelectedDiscoveryMode);
 
+    private static string CreateTempDirectory()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "clihub-settings-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
     private sealed class Fixture
     {
         public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
@@ -519,6 +676,7 @@ public class SettingsViewModelApplicationTests
         public Mock<Core.Scanning.IProjectScanner> Scanner { get; } = new();
         public Mock<IProjectDialogService> Dialogs { get; } = new();
         public AccentSelectionMemory AccentMemory { get; }
+        public AppPreferences CapturedPreferences { get; } = new();
         public SettingsViewModel ViewModel { get; }
 
         public Fixture(string accentColor = AccentPalette.DefaultHex, AccentSelectionMemory? accentMemory = null)
@@ -533,7 +691,8 @@ public class SettingsViewModelApplicationTests
                 StartMinimized = true,
                 AccentColor = accentColor
             });
-            this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
+            this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+                .Callback<Action<AppPreferences>>(update => update(this.CapturedPreferences));
             this.Startup.Setup(x => x.IsEnabled()).Returns(false);
             this.Applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
             this.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));

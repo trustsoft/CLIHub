@@ -160,6 +160,43 @@ public class RepositoryDiscoveryTests : IDisposable
     }
 
     [Fact]
+    public void Enumerate_ReportsExaminedFoldersPerRoot()
+    {
+        var root = this.CreateTempDir();
+        var repo = Path.Combine(root, "repo");
+        Directory.CreateDirectory(Path.Combine(repo, ".git"));
+        Directory.CreateDirectory(Path.Combine(root, "plain"));
+
+        var result = RepositoryDiscovery.Enumerate(Options(root), []);
+
+        Assert.Equal(3, result.ScannedDirectoryCount);
+        Assert.Equal(3, result.ScannedDirectoryCounts[root]);
+    }
+
+    [Fact]
+    public void Enumerate_StopsCountingAtScanDepth()
+    {
+        var root = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(root, "a", "b"));
+
+        var result = RepositoryDiscovery.Enumerate(Options(root, depth: 1), []);
+
+        Assert.Equal(2, result.ScannedDirectoryCount);
+    }
+
+    [Fact]
+    public void Enumerate_MissingRoot_ReportsNoExaminedFolders()
+    {
+        var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var options = new ProjectScanningOptions([missing], 2, [], ProjectDiscoveryMode.Git);
+
+        var result = RepositoryDiscovery.Enumerate(options, []);
+
+        Assert.Empty(result.ScannedDirectoryCounts);
+        Assert.Equal(0, result.ScannedDirectoryCount);
+    }
+
+    [Fact]
     public void Enumerate_UsesPerRootScanDepth()
     {
         var rootA = this.CreateTempDir();

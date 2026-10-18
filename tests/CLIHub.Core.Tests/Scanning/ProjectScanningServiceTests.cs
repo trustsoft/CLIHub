@@ -38,7 +38,8 @@ public class ProjectScanningServiceTests : IDisposable
         }
     }
 
-    private ProjectScanningService CreateService()
+    private ProjectScanningService CreateService(
+        Action<IReadOnlyCollection<string>, IReadOnlyCollection<string>>? onReconciled = null)
     {
         var preferences = new Mock<IPreferencesStore>();
         preferences.Setup(x => x.Load()).Returns(() => this.preferences);
@@ -47,7 +48,11 @@ public class ProjectScanningServiceTests : IDisposable
         projects.Setup(x => x.GetAllProjects()).Returns(() => this.projects.ToList());
         projects
             .Setup(x => x.ReconcileDiscoveredProjects(It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<IReadOnlyCollection<string>>()))
-            .Callback<IReadOnlyCollection<string>, IReadOnlyCollection<string>>((d, r) => this.reconciliations.Add((d, r)))
+            .Callback<IReadOnlyCollection<string>, IReadOnlyCollection<string>>((discovered, removed) =>
+            {
+                this.reconciliations.Add((discovered, removed));
+                onReconciled?.Invoke(discovered, removed);
+            })
             .Returns(false);
 
         var plugins = new Mock<IPluginCatalog>();
@@ -125,6 +130,130 @@ public class ProjectScanningServiceTests : IDisposable
 
         Assert.True(this.watcherFactory.Watchers[0].Disposed);
         Assert.Equal(ProjectScanState.NotConfigured, service.Status.State);
+    }
+
+    [Fact]
+    public void Status_DiscoveredCount_MatchesBetweenFullAndSingleRootPasses()
+    {
+        var root = this.CreateTempDir();
+        var manualRepo = Path.Combine(root, "manual");
+        Directory.CreateDirectory(Path.Combine(manualRepo, ".git"));
+        var discoveredRepo = Path.Combine(root, "discovered");
+        Directory.CreateDirectory(Path.Combine(discoveredRepo, ".git"));
+        this.projects.Add(new Project
+        {
+            Id = "manual",
+            Name = "manual",
+            Path = manualRepo,
+            Source = ProjectSource.Manual
+        });
+        this.preferences.WatchedDirectories = [root];
+
+        var service = this.CreateService((discovered, removed) =>
+        {
+            foreach (var path in discovered)
+            {
+                if (this.projects.Any(project => string.Equals(project.Path, path, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                this.projects.Add(new Project
+                {
+                    Id = path,
+                    Name = Path.GetFileName(path),
+                    Path = path,
+                    Source = ProjectSource.Discovered
+                });
+            }
+
+            foreach (var id in removed)
+            {
+                this.projects.RemoveAll(project => project.Id == id);
+            }
+        });
+
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle && this.reconciliations.Count > 0));
+        Assert.Equal(1, service.Status.DiscoveredCount);
+
+        var passes = this.reconciliations.Count;
+        service.Rescan(root);
+        Assert.True(WaitFor(() => this.reconciliations.Count > passes));
+        Assert.Equal(1, service.Status.DiscoveredCount);
+    }
+
+    [Fact]
+    public void Start_ReportsExaminedFoldersAcrossRoots()
+    {
+        var rootA = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
+        var rootB = this.CreateTempDir();
+        this.preferences.WatchedDirectories = [rootA, rootB];
+
+        var service = this.CreateService();
+        service.Start();
+
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle && service.Status.IsWatching));
+        Assert.Equal(3, service.Status.ScannedDirectoryCount);
+    }
+
+    [Fact]
+    public void Stop_ClearsScannedDirectoryCount()
+    {
+        var root = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(root, "repo", ".git"));
+        this.preferences.WatchedDirectories = [root];
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.ScannedDirectoryCount == 2));
+
+        service.Stop();
+
+        Assert.Equal(0, service.Status.ScannedDirectoryCount);
+    }
+
+    [Fact]
+    public void Rescan_UpdatesOnlyTheRescannedRootsCoverage()
+    {
+        var rootA = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
+        var rootB = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootB, "repo", ".git"));
+        this.preferences.WatchedDirectories = [rootA, rootB];
+        this.preferences.ScanDepth = 2;
+        this.preferences.DiscoveryMode = ProjectDiscoveryMode.Git;
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 4));
+
+        Directory.CreateDirectory(Path.Combine(rootA, "second", ".git"));
+
+        service.Rescan(rootA);
+
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 5));
+    }
+
+    [Fact]
+    public void Reload_RemovedRoot_DropsItsScannedFolders()
+    {
+        var rootA = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
+        var rootB = this.CreateTempDir();
+        this.preferences.WatchedDirectories = [rootA, rootB];
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.ScannedDirectoryCount == 3));
+
+        this.preferences.WatchedDirectories = [rootA];
+        service.Reload();
+
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 2));
     }
 
     [Fact]
@@ -280,6 +409,36 @@ public class ProjectScanningServiceTests : IDisposable
 
         Assert.True(WaitFor(() => this.reconciliations.Count > scanCount));
         Assert.DoesNotContain("nested-project", this.reconciliations[^1].Removed);
+    }
+
+    [Fact]
+    public void CountManualProjects_CountsOnlyManualProjects()
+    {
+        this.projects.Add(new Project
+        {
+            Id = "manual-a",
+            Name = "manual-a",
+            Path = Path.Combine(this.CreateTempDir(), "manual-a"),
+            Source = ProjectSource.Manual
+        });
+        this.projects.Add(new Project
+        {
+            Id = "manual-b",
+            Name = "manual-b",
+            Path = Path.Combine(this.CreateTempDir(), "manual-b"),
+            Source = ProjectSource.Manual
+        });
+        this.projects.Add(new Project
+        {
+            Id = "discovered",
+            Name = "discovered",
+            Path = Path.Combine(this.CreateTempDir(), "discovered"),
+            Source = ProjectSource.Discovered
+        });
+
+        var service = this.CreateService();
+
+        Assert.Equal(2, service.CountManualProjects());
     }
 
     [Fact]

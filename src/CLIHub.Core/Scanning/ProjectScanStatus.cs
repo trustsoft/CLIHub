@@ -33,18 +33,22 @@ public enum ProjectScanState
 /// <param name="IsWatching"> Whether watched directories are configured and being observed. </param>
 /// <param name="IsScanning"> Whether a scan is currently running. </param>
 /// <param name="LastScanUtc"> When the last scan completed, or null if none has run. </param>
-/// <param name="DiscoveredCount"> The number of repositories discovered by the last scan. </param>
+/// <param name="DiscoveredCount"> The number of discovered projects registered from the last scan. </param>
+/// <param name="ScannedDirectoryCount">
+///   The number of directories the last scan examined across the watched roots; the scan coverage.
+/// </param>
 /// <param name="Error"> The last error message, if the state is <see cref="ProjectScanState.Error" />. </param>
 public sealed record ProjectScanStatus(ProjectScanState State,
                                        bool IsWatching,
                                        bool IsScanning,
                                        DateTimeOffset? LastScanUtc,
                                        int DiscoveredCount,
+                                       int ScannedDirectoryCount,
                                        string? Error)
 {
     /// <summary>
     ///   The status before any watched directory has been configured.
     /// </summary>
     public static ProjectScanStatus NotConfigured { get; } =
-        new(ProjectScanState.NotConfigured, false, false, null, 0, null);
+        new(ProjectScanState.NotConfigured, false, false, null, 0, 0, null);
 }

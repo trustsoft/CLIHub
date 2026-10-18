@@ -93,7 +93,7 @@
                 </Grid>
             </DataTemplate>
 
-            <!-- Projects & Paths actions: add a root or rescan the saved configuration. -->
+            <!-- Project Discovery actions: add a root or rescan the saved configuration. -->
             <DataTemplate x:Key="ProjectsHeaderAction">
                 <controls:SpacedPanel VerticalAlignment="Center"
                                       Orientation="Horizontal"
@@ -115,7 +115,7 @@
                             Command="{Binding ScanNowCommand}"
                             Padding="0"
                             Style="{StaticResource AccentButton}"
-                            ToolTip="Rescan the saved watched roots">
+                            ToolTip="Rescan every watched folder">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="16"
                                    Text="{x:Static themes:IconGlyphs.Refresh}"/>
@@ -123,7 +123,7 @@
                 </controls:SpacedPanel>
             </DataTemplate>
 
-            <!-- Projects & Paths summary cards, pinned to the page header. -->
+            <!-- Project Discovery summary cards, pinned to the page header. -->
             <DataTemplate x:Key="ProjectsSummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <Border Padding="9"
@@ -145,11 +145,12 @@
                                            FontSize="18"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{Binding DiscoveredProjectCount}"/>
+                                           Text="{Binding TotalProjectCount}"/>
                                 <TextBlock Margin="0,2,0,0"
                                            Style="{StaticResource HintText}"
-                                           Text="Scanned repositories"
-                                           TextWrapping="Wrap"/>
+                                           Text="{Binding ProjectMixSummary}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="Projects found by scanning plus projects added manually"/>
                             </StackPanel>
                             <Border Grid.Column="1"
                                     Width="24"

@@ -2,6 +2,7 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.IO;
 using System.Windows;
 
@@ -257,7 +258,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             IconGlyphs.Keyboard),
         new(
             "projects",
-            "Projects & Paths",
+            "Project Discovery",
             "Watched directories, discovery rules, and the background watcher.",
             "Engines & Repos",
             true,
@@ -363,6 +364,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private readonly IProjectScanner projectScanner;
     private readonly AccentSelectionMemory accentMemory;
     private readonly ILogger<SettingsViewModel> logger;
+    private readonly List<WatchedDirectoryRow> observedWatchedDirectoryRows = new();
 
     private bool startWithWindows;
     private bool startMinimized = true;
@@ -398,6 +400,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string newWatchedDirectoryText = string.Empty;
     private string? watchedDirectoryError;
     private int discoveredProjectCount;
+    private int manualProjectCount;
+    private int scannedDirectoryCount;
     private int agentsInstalledCount;
     private int agentsSupportedCount;
     private string watcherStateLabel = "Off";
@@ -415,7 +419,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="externalLauncher"> Operating-system path launcher for opening the log folder. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
-    /// <param name="projectScanner"> Scanner whose status is shown on the Projects &amp; Paths page. </param>
+    /// <param name="projectScanner"> Scanner whose status is shown on the Project Discovery page. </param>
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
     /// <param name="accentMemory"> Process-wide memory of the last custom accent. </param>
     public SettingsViewModel(SettingsApplicationService settingsApplication,
@@ -787,7 +791,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Watched root directories edited on the Projects &amp; Paths page.
+    ///   Watched root directories edited on the Project Discovery page.
     /// </summary>
     public ObservableCollection<WatchedDirectoryRow> WatchedDirectories { get; } = new();
 
@@ -837,7 +841,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     };
 
     /// <summary>
-    ///   The ignored directory-name patterns edited on the Projects &amp; Paths page.
+    ///   The ignored directory-name patterns edited on the Project Discovery page.
     /// </summary>
     public ObservableCollection<string> IgnoredPatterns { get; } = new();
 
@@ -880,9 +884,10 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
                ?? ScanDepthChoices.First(option => option.Value == ProjectScanningDefaults.DefaultScanDepth);
         set
         {
-            if (value is not null)
+            if (value is not null && !string.Equals(this.scanDepthText, value.Value.ToString(), StringComparison.Ordinal))
             {
                 this.ScanDepthText = value.Value.ToString();
+                this.ApplyScanningSettings();
             }
         }
     }
@@ -898,16 +903,76 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public DiscoveryModeOption SelectedDiscoveryMode
     {
         get => this.selectedDiscoveryMode;
-        set => this.SetProperty(ref this.selectedDiscoveryMode, value);
+        set
+        {
+            if (value is not null && this.SetProperty(ref this.selectedDiscoveryMode, value))
+            {
+                this.ApplyScanningSettings();
+            }
+        }
     }
 
     /// <summary>
-    ///   The number of repositories discovered by the last scan.
+    ///   The number of discovered projects registered from the last scan.
     /// </summary>
     public int DiscoveredProjectCount
     {
         get => this.discoveredProjectCount;
-        private set => this.SetProperty(ref this.discoveredProjectCount, value);
+        private set
+        {
+            if (this.SetProperty(ref this.discoveredProjectCount, value))
+            {
+                this.OnProjectTotalsChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The number of projects that were added manually rather than discovered.
+    /// </summary>
+    public int ManualProjectCount
+    {
+        get => this.manualProjectCount;
+        private set
+        {
+            if (this.SetProperty(ref this.manualProjectCount, value))
+            {
+                this.OnProjectTotalsChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The total number of registered projects: discovered plus manually added.
+    /// </summary>
+    public int TotalProjectCount => this.DiscoveredProjectCount + this.ManualProjectCount;
+
+    /// <summary>
+    ///   The provenance split shown under the total project count, e.g. "31 discovered · 4 manual".
+    /// </summary>
+    public string ProjectMixSummary =>
+        $"{this.DiscoveredProjectCount} discovered · {this.ManualProjectCount} manual";
+
+    /// <summary>
+    ///   The number of folders the last scan examined across the watched roots.
+    /// </summary>
+    public int ScannedDirectoryCount
+    {
+        get => this.scannedDirectoryCount;
+        private set => this.SetProperty(ref this.scannedDirectoryCount, value);
+    }
+
+    private string ScannedCoverageSuffix => this.ScannedDirectoryCount switch
+    {
+        0 => string.Empty,
+        1 => " · 1 folder",
+        var count => $" · {count} folders"
+    };
+
+    private void OnProjectTotalsChanged()
+    {
+        this.OnPropertyChanged(nameof(this.TotalProjectCount));
+        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
     }
 
     /// <summary>
@@ -1196,6 +1261,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
         this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
         this.OnPropertyChanged(nameof(this.DiscoveredProjectCount));
+        this.OnPropertyChanged(nameof(this.ManualProjectCount));
+        this.OnPropertyChanged(nameof(this.TotalProjectCount));
+        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
         this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
@@ -1302,10 +1370,20 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         if (!this.WatchedDirectories.Any(existing => string.Equals(existing.Path, path, StringComparison.OrdinalIgnoreCase)))
         {
-            this.WatchedDirectories.Add(this.CreateWatchedDirectoryRow(
+            var row = this.CreateWatchedDirectoryRow(
                 path,
                 this.SelectedScanDepth.Value,
-                this.SelectedDiscoveryMode.Mode));
+                this.SelectedDiscoveryMode.Mode);
+
+            this.WatchedDirectories.Add(row);
+
+            if (this.ApplyScanningSettings())
+            {
+                return true;
+            }
+
+            // A failed apply must not leave an unpersisted root in the live list.
+            this.WatchedDirectories.Remove(row);
         }
 
         return true;
@@ -1325,9 +1403,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         var row = this.WatchedDirectories.FirstOrDefault(
             candidate => string.Equals(candidate.Path, directory, StringComparison.OrdinalIgnoreCase));
 
-        if (row is not null)
+        if (row is null)
         {
-            this.WatchedDirectories.Remove(row);
+            return;
+        }
+
+        var index = this.WatchedDirectories.IndexOf(row);
+        this.WatchedDirectories.RemoveAt(index);
+
+        if (!this.ApplyScanningSettings())
+        {
+            this.WatchedDirectories.Insert(index, row);
         }
     }
 
@@ -1335,8 +1421,81 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private void OnWatchedDirectoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        this.SyncObservedWatchedDirectoryRows(e);
         this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
         this.RefreshWatchedDirectoryCounts();
+    }
+
+    private void SyncObservedWatchedDirectoryRows(NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == NotifyCollectionChangedAction.Reset)
+        {
+            foreach (var row in this.observedWatchedDirectoryRows)
+            {
+                row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
+            }
+
+            this.observedWatchedDirectoryRows.Clear();
+            return;
+        }
+
+        if (e.OldItems is not null)
+        {
+            foreach (WatchedDirectoryRow row in e.OldItems)
+            {
+                row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
+                this.observedWatchedDirectoryRows.Remove(row);
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (WatchedDirectoryRow row in e.NewItems)
+            {
+                row.PropertyChanged += this.OnWatchedDirectoryRowChanged;
+                this.observedWatchedDirectoryRows.Add(row);
+            }
+        }
+    }
+
+    private void OnWatchedDirectoryRowChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(WatchedDirectoryRow.SelectedDepth) or nameof(WatchedDirectoryRow.SelectedDiscovery))
+        {
+            this.ApplyScanningSettings();
+        }
+    }
+
+    /// <summary>
+    ///   Applies the scanning settings currently shown on the page and rescans in the background.
+    ///   The remaining settings still go through Save/Cancel.
+    /// </summary>
+    /// <returns> True when the settings were persisted and the scanner was reconfigured. </returns>
+    private bool ApplyScanningSettings()
+    {
+        if (this.disposed)
+        {
+            return true;
+        }
+
+        var input = new ScanningSettingsInput(
+            this.WatchedDirectories.Select(row => row.Path).ToList(),
+            this.SelectedScanDepth.Value,
+            this.IgnoredPatterns.ToList(),
+            this.SelectedDiscoveryMode.Mode,
+            this.WatchedDirectories.ToDictionary(
+                row => row.Path,
+                row => new WatchedDirectoryScanSettings(row.SelectedDepth.Value, row.SelectedDiscovery.Mode),
+                StringComparer.OrdinalIgnoreCase));
+
+        var result = this.settingsApplication.ApplyScanning(input);
+        if (result.Success)
+        {
+            return true;
+        }
+
+        this.ValidationError = result.Error;
+        return false;
     }
 
     private void RefreshWatchedDirectoryCounts()
@@ -1358,12 +1517,31 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         if (!this.IgnoredPatterns.Any(existing => string.Equals(existing, pattern, StringComparison.OrdinalIgnoreCase)))
         {
             this.IgnoredPatterns.Add(pattern);
+
+            if (!this.ApplyScanningSettings())
+            {
+                this.IgnoredPatterns.Remove(pattern);
+            }
         }
 
         this.NewIgnoredPatternText = string.Empty;
     }
 
-    private void RemoveIgnoredPattern(string pattern) => this.IgnoredPatterns.Remove(pattern);
+    private void RemoveIgnoredPattern(string pattern)
+    {
+        var index = this.IgnoredPatterns.IndexOf(pattern);
+        if (index < 0)
+        {
+            return;
+        }
+
+        this.IgnoredPatterns.RemoveAt(index);
+
+        if (!this.ApplyScanningSettings())
+        {
+            this.IgnoredPatterns.Insert(index, pattern);
+        }
+    }
 
     private void OnScannerStatusChanged(object? sender, ProjectScanStatus status)
     {
@@ -1381,6 +1559,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         var current = status ?? ProjectScanStatus.NotConfigured;
         this.DiscoveredProjectCount = current.DiscoveredCount;
+        this.ManualProjectCount = this.projectScanner.CountManualProjects();
+        this.ScannedDirectoryCount = current.ScannedDirectoryCount;
         this.WatcherStateLabel = current.State switch
         {
             ProjectScanState.NotConfigured => "Off",
@@ -1393,7 +1573,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             ProjectScanState.NotConfigured => "No watched roots configured",
             ProjectScanState.Scanning => "Scan in progress",
             ProjectScanState.Error => current.Error ?? "Scan failed",
-            _ => current.LastScanUtc is { } last ? $"Last scan {last.ToLocalTime():HH:mm:ss}" : "Not scanned yet"
+            _ => current.LastScanUtc is { } last
+                ? $"Last scan {last.ToLocalTime():HH:mm:ss}{this.ScannedCoverageSuffix}"
+                : "Not scanned yet"
         };
 
         this.RefreshWatchedDirectoryCounts();
@@ -1418,6 +1600,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.disposed = true;
         this.projectScanner.StatusChanged -= this.OnScannerStatusChanged;
+
+        foreach (var row in this.observedWatchedDirectoryRows)
+        {
+            row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
+        }
+
+        this.observedWatchedDirectoryRows.Clear();
         this.AgentsState.Dispose();
     }
 

@@ -130,6 +130,20 @@ public sealed record SettingsApplicationResult(bool Success, string? Error)
 }
 
 /// <summary>
+///   Scanning settings edited on the Project Discovery page. They apply as soon as they change.
+/// </summary>
+/// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
+/// <param name="ScanDepth"> Default repository scan depth. </param>
+/// <param name="IgnoredPatterns"> Ignored directory-name patterns. </param>
+/// <param name="DiscoveryMode"> Default discovery mode for directories added from now on. </param>
+/// <param name="WatchedDirectorySettings"> Per-directory scan settings keyed by watched root path. </param>
+public sealed record ScanningSettingsInput(IReadOnlyList<string>? WatchedDirectories,
+                                           int ScanDepth,
+                                           IReadOnlyList<string>? IgnoredPatterns,
+                                           ProjectDiscoveryMode DiscoveryMode,
+                                           IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? WatchedDirectorySettings);
+
+/// <summary>
 ///   Loads, validates, applies, persists, and rolls back Settings drafts.
 /// </summary>
 public sealed class SettingsApplicationService
@@ -247,11 +261,9 @@ public sealed class SettingsApplicationService
             return false;
         }
 
-        if (!int.TryParse(input.ScanDepthText?.Trim(), out var scanDepth)
-            || scanDepth < ProjectScanningDefaults.MinScanDepth
-            || scanDepth > ProjectScanningDefaults.MaxScanDepth)
+        if (!int.TryParse(input.ScanDepthText?.Trim(), out var scanDepth) || !IsScanDepthInRange(scanDepth))
         {
-            error = $"Repository scan depth must be a whole number between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+            error = ScanDepthError;
             return false;
         }
 
@@ -259,10 +271,9 @@ public sealed class SettingsApplicationService
         {
             foreach (var entry in input.WatchedDirectorySettings)
             {
-                if (entry.Value.ScanDepth < ProjectScanningDefaults.MinScanDepth
-                    || entry.Value.ScanDepth > ProjectScanningDefaults.MaxScanDepth)
+                if (!IsScanDepthInRange(entry.Value.ScanDepth))
                 {
-                    error = $"Repository scan depth for {entry.Key} must be between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+                    error = WatchedDirectoryScanDepthError(entry.Key);
                     return false;
                 }
             }
@@ -299,6 +310,71 @@ public sealed class SettingsApplicationService
             watchedDirectorySettings);
         return true;
     }
+
+    /// <summary>
+    ///   Applies and persists scanning settings edited on the Project Discovery page and reconfigures the scanner.
+    ///   Only scanning preferences are written; the remaining settings keep the Save/Cancel flow.
+    /// </summary>
+    /// <param name="input"> Scanning values from the page. </param>
+    /// <returns> Application result with a user-facing error when unsuccessful. </returns>
+    public SettingsApplicationResult ApplyScanning(ScanningSettingsInput input)
+    {
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (!IsScanDepthInRange(input.ScanDepth))
+        {
+            return SettingsApplicationResult.Failed(ScanDepthError);
+        }
+
+        if (input.WatchedDirectorySettings is not null)
+        {
+            foreach (var entry in input.WatchedDirectorySettings)
+            {
+                if (!IsScanDepthInRange(entry.Value.ScanDepth))
+                {
+                    return SettingsApplicationResult.Failed(WatchedDirectoryScanDepthError(entry.Key));
+                }
+            }
+        }
+
+        var watchedDirectories = NormalizeList(input.WatchedDirectories);
+        var watchedDirectorySettings = NormalizeWatchedDirectorySettings(
+            input.WatchedDirectorySettings,
+            watchedDirectories);
+        var ignoredPatterns = NormalizeList(input.IgnoredPatterns);
+
+        try
+        {
+            this.preferencesStore.Update(preferences =>
+            {
+                preferences.WatchedDirectories = watchedDirectories.ToList();
+                preferences.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>(
+                    watchedDirectorySettings,
+                    StringComparer.OrdinalIgnoreCase);
+                preferences.ScanDepth = input.ScanDepth;
+                preferences.IgnoredPatterns = ignoredPatterns.ToList();
+                preferences.DiscoveryMode = input.DiscoveryMode;
+            });
+
+            // Reconfigure watching and rescan with the settings the page now shows.
+            this.projectScanner.Reload();
+            return SettingsApplicationResult.Applied;
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Applying scanning settings failed");
+            return SettingsApplicationResult.Failed($"Could not apply scanning settings: {ex.Message}");
+        }
+    }
+
+    private static string ScanDepthError =>
+        $"Repository scan depth must be a whole number between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+
+    private static string WatchedDirectoryScanDepthError(string root) =>
+        $"Repository scan depth for {root} must be between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+
+    private static bool IsScanDepthInRange(int scanDepth) =>
+        scanDepth is >= ProjectScanningDefaults.MinScanDepth and <= ProjectScanningDefaults.MaxScanDepth;
 
     private static IReadOnlyList<string> NormalizeList(IReadOnlyList<string>? values)
     {

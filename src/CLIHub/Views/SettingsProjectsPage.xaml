@@ -18,6 +18,11 @@
                        TextWrapping="NoWrap"/>
         </Grid>
 
+        <TextBlock Margin="0,0,0,8"
+                   Style="{StaticResource HintText}"
+                   Text="Scanning changes apply immediately. Save and Cancel only affect the other settings."
+                   TextWrapping="Wrap"/>
+
         <ItemsControl ItemsSource="{Binding WatchedDirectories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>

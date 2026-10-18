@@ -26,6 +26,7 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private readonly object gate = new();
     private readonly SemaphoreSlim scanGate = new(1, 1);
+    private readonly Dictionary<string, int> scannedDirectoryCounts = new(StringComparer.OrdinalIgnoreCase);
 
     private SynchronizationContext? context;
     private IRepositoryWatcher? watcher;
@@ -93,6 +94,10 @@ public sealed class ProjectScanningService : IProjectScanner
     }
 
     /// <inheritdoc />
+    public int CountManualProjects() =>
+        this.projects.GetAllProjects().Count(project => project.Source == ProjectSource.Manual);
+
+    /// <inheritdoc />
     public void Start()
     {
         lock (this.gate)
@@ -157,7 +162,17 @@ public sealed class ProjectScanningService : IProjectScanner
         }
 
         this.Detach(watcher, timer);
-        this.Publish(this.status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
+        this.Post(() =>
+        {
+            this.scannedDirectoryCounts.Clear();
+            this.Publish(this.status with
+            {
+                State = ProjectScanState.NotConfigured,
+                IsWatching = false,
+                IsScanning = false,
+                ScannedDirectoryCount = 0
+            });
+        });
     }
 
     /// <inheritdoc />
@@ -208,7 +223,17 @@ public sealed class ProjectScanningService : IProjectScanner
 
         if (options.WatchedDirectories.Count == 0)
         {
-            this.Publish(this.status with { State = ProjectScanState.NotConfigured, IsWatching = false, IsScanning = false });
+            this.Post(() =>
+            {
+                this.scannedDirectoryCounts.Clear();
+                this.Publish(this.status with
+                {
+                    State = ProjectScanState.NotConfigured,
+                    IsWatching = false,
+                    IsScanning = false,
+                    ScannedDirectoryCount = 0
+                });
+            });
 
             // Still reconcile so discovered projects under removed roots are cleaned up.
             this.RequestScan();
@@ -234,8 +259,45 @@ public sealed class ProjectScanningService : IProjectScanner
             this.watcher = watcher;
         }
 
-        this.Publish(this.status with { State = ProjectScanState.Idle, IsWatching = true, IsScanning = false });
+        this.Post(() =>
+        {
+            this.PruneScannedDirectoryCounts(options.WatchedDirectories);
+            this.Publish(this.status with
+            {
+                State = ProjectScanState.Idle,
+                IsWatching = true,
+                IsScanning = false,
+                ScannedDirectoryCount = this.scannedDirectoryCounts.Values.Sum()
+            });
+        });
         this.RequestScan();
+    }
+
+    private void PruneScannedDirectoryCounts(IReadOnlyList<string> watchedRoots)
+    {
+        var configured = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var root in watchedRoots)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                continue;
+            }
+
+            try
+            {
+                configured.Add(ProjectPathPolicy.Normalize(root));
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+            {
+                // A malformed root has no coverage entry to keep.
+            }
+        }
+
+        foreach (var root in this.scannedDirectoryCounts.Keys.Where(key => !configured.Contains(key)).ToArray())
+        {
+            this.scannedDirectoryCounts.Remove(root);
+        }
     }
 
     private void Detach(IRepositoryWatcher? watcher, IScanTimer? timer)
@@ -333,13 +395,26 @@ public sealed class ProjectScanningService : IProjectScanner
             var removed = this.ComputeRemovals(result.DiscoveredPaths, options.WatchedDirectories, result.ScannedRoots);
             this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
 
+            this.scannedDirectoryCounts.Clear();
+            foreach (var (scannedRoot, examined) in result.ScannedDirectoryCounts)
+            {
+                this.scannedDirectoryCounts[scannedRoot] = examined;
+            }
+
+            // Count registered discovered projects, not this pass's paths: repositories that were
+            // already registered manually keep their provenance and must not inflate the count, and
+            // a single-root pass uses the same definition.
+            var discoveredCount = this.projects.GetAllProjects()
+                .Count(project => project.Source == ProjectSource.Discovered);
+
             this.Publish(this.status with
             {
                 State = configured ? ProjectScanState.Idle : ProjectScanState.NotConfigured,
                 IsWatching = configured,
                 IsScanning = false,
                 LastScanUtc = this.time.GetUtcNow(),
-                DiscoveredCount = result.DiscoveredPaths.Count,
+                DiscoveredCount = discoveredCount,
+                ScannedDirectoryCount = this.scannedDirectoryCounts.Values.Sum(),
                 Error = null
             });
         });
@@ -394,6 +469,11 @@ public sealed class ProjectScanningService : IProjectScanner
             var removed = this.ComputeRootRemovals(root, result.DiscoveredPaths, result.ScannedRoots, options.WatchedDirectories);
             this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
 
+            foreach (var (scannedRoot, examined) in result.ScannedDirectoryCounts)
+            {
+                this.scannedDirectoryCounts[scannedRoot] = examined;
+            }
+
             var discoveredCount = this.projects.GetAllProjects()
                 .Count(project => project.Source == ProjectSource.Discovered);
 
@@ -403,6 +483,7 @@ public sealed class ProjectScanningService : IProjectScanner
                 IsScanning = false,
                 LastScanUtc = this.time.GetUtcNow(),
                 DiscoveredCount = discoveredCount,
+                ScannedDirectoryCount = this.scannedDirectoryCounts.Values.Sum(),
                 Error = null
             });
         });

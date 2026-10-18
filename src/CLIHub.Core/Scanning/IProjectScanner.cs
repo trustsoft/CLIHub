@@ -24,6 +24,12 @@ public interface IProjectScanner : IDisposable
     int CountDiscoveredProjects(string root);
 
     /// <summary>
+    ///   Returns the number of registered projects that were added manually rather than discovered.
+    /// </summary>
+    /// <returns> The count of manual projects. </returns>
+    int CountManualProjects();
+
+    /// <summary>
     ///   Starts watching and performs an initial scan. Idempotent while already started.
     /// </summary>
     void Start();
@@ -41,7 +47,7 @@ public interface IProjectScanner : IDisposable
 
     /// <summary>
     ///   Rescans one watched root without touching the other roots.
-    ///   Used by the per-directory scan action on the Projects &amp; Paths page.
+    ///   Used by the per-directory scan action on the Project Discovery page.
     /// </summary>
     /// <param name="root"> The watched root to rescan. </param>
     void Rescan(string root);

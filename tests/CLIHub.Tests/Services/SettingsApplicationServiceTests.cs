@@ -164,15 +164,109 @@ public class SettingsApplicationServiceTests
         Assert.Equal("opencode", captured.DefaultAgentId);
     }
 
+    [Fact]
+    public void ApplyScanning_ValidInput_PersistsScanningPreferencesAndReloadsScanner()
+    {
+        var captured = new AppPreferences
+        {
+            DefaultRuntime = RuntimeKind.GitBash,
+            Hotkey = "Ctrl+Shift+A"
+        };
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        preferencesStore
+            .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+            .Callback<Action<AppPreferences>>(update => update(captured));
+        var scanner = new Mock<Core.Scanning.IProjectScanner>();
+        var service = CreateService(
+            preferencesStore.Object,
+            new Mock<IStartupService>().Object,
+            new Mock<IPreferenceApplier>().Object,
+            scanner.Object);
+
+        var result = service.ApplyScanning(new ScanningSettingsInput(
+            [@"C:\repos", @"C:\repos", " "],
+            3,
+            ["node_modules", "node_modules"],
+            ProjectDiscoveryMode.Git,
+            new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                [@"C:\repos"] = new(4, ProjectDiscoveryMode.Agents),
+                [@"C:\other"] = new(2, ProjectDiscoveryMode.Git)
+            }));
+
+        Assert.True(result.Success);
+        Assert.Equal([@"C:\repos"], captured.WatchedDirectories);
+        Assert.Equal(3, captured.ScanDepth);
+        Assert.Equal(["node_modules"], captured.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Git, captured.DiscoveryMode);
+        Assert.Equal(4, captured.WatchedDirectorySettings[@"C:\repos"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Agents, captured.WatchedDirectorySettings[@"C:\repos"].DiscoveryMode);
+        Assert.DoesNotContain(@"C:\other", captured.WatchedDirectorySettings.Keys);
+        Assert.Equal(RuntimeKind.GitBash, captured.DefaultRuntime);
+        scanner.Verify(x => x.Reload(), Times.Once);
+    }
+
+    [Fact]
+    public void ApplyScanning_OutOfRangeDepth_ReturnsErrorWithoutSideEffects()
+    {
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        var scanner = new Mock<Core.Scanning.IProjectScanner>();
+        var service = CreateService(
+            preferencesStore.Object,
+            new Mock<IStartupService>().Object,
+            new Mock<IPreferenceApplier>().Object,
+            scanner.Object);
+
+        var result = service.ApplyScanning(new ScanningSettingsInput(
+            [@"C:\repos"],
+            99,
+            [],
+            ProjectDiscoveryMode.Git,
+            null));
+
+        Assert.False(result.Success);
+        Assert.Contains("scan depth", result.Error, StringComparison.OrdinalIgnoreCase);
+        preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
+        scanner.Verify(x => x.Reload(), Times.Never);
+    }
+
+    [Fact]
+    public void ApplyScanning_OutOfRangeRowDepth_ReturnsErrorWithoutSideEffects()
+    {
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        var scanner = new Mock<Core.Scanning.IProjectScanner>();
+        var service = CreateService(
+            preferencesStore.Object,
+            new Mock<IStartupService>().Object,
+            new Mock<IPreferenceApplier>().Object,
+            scanner.Object);
+
+        var result = service.ApplyScanning(new ScanningSettingsInput(
+            [@"C:\repos"],
+            2,
+            [],
+            ProjectDiscoveryMode.Git,
+            new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                [@"C:\repos"] = new(0, ProjectDiscoveryMode.Git)
+            }));
+
+        Assert.False(result.Success);
+        Assert.Contains(@"C:\repos", result.Error);
+        preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
+        scanner.Verify(x => x.Reload(), Times.Never);
+    }
+
     private static SettingsApplicationService CreateService(
         IPreferencesStore preferencesStore,
         IStartupService startupService,
-        IPreferenceApplier applier) =>
+        IPreferenceApplier applier,
+        Core.Scanning.IProjectScanner? projectScanner = null) =>
         new(
             preferencesStore,
             startupService,
             applier,
-            new Mock<Core.Scanning.IProjectScanner>().Object,
+            projectScanner ?? new Mock<Core.Scanning.IProjectScanner>().Object,
             NullLogger<SettingsApplicationService>.Instance);
 
     private static Mock<IPreferenceApplier> CreateApplier() => new(MockBehavior.Strict);
