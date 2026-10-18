@@ -216,38 +216,6 @@ WHEN the user opens the Actions menu
 THEN all agent-specific commands SHALL be disabled
 ```
 
-### Requirement: Agent card content
-
-An agent's management card SHALL present its declared identity and state: display name and logo, host installation status, installed version, plugin folder path, declared command set, and declared detection markers.
-
-#### Scenario: Identity shown
-- **WHEN** an agent card is shown
-- **THEN** it shows the agent's display name and logo (falling back to the default logo)
-
-#### Scenario: Installation status shown
-- **WHEN** an agent card is shown
-- **THEN** it indicates whether the agent is installed on the host
-
-#### Scenario: Installed version shown
-- **WHEN** an agent card is shown
-- **THEN** it shows the installed version, or an "unknown" placeholder when the version is not available
-
-#### Scenario: Plugin path shown
-- **WHEN** an agent card is shown
-- **THEN** it shows the folder the agent's `plugin.json` was loaded from
-
-#### Scenario: Command set shown
-- **WHEN** an agent card is shown
-- **THEN** it lists which named commands the agent declares (launch, resume, version, update)
-
-#### Scenario: Detection markers shown
-- **WHEN** an agent card is shown
-- **THEN** it lists the agent's declared host system paths and project indicators
-
-#### Scenario: No detection markers
-- **WHEN** an agent declares no detection markers
-- **THEN** the card indicates that none are declared without showing an error
-
 ### Requirement: Agent card action availability
 
 The card SHALL present actions appropriate to the agent's declared capabilities and current state.
@@ -267,3 +235,29 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 #### Scenario: Edit Config requires a plugin file
 - **WHEN** the agent's `plugin.json` path is known
 - **THEN** "Edit Config" is available; otherwise it is unavailable
+
+### Requirement: Agent card displayed content
+
+An agent's management card SHALL present its declared identity and current state: display name, logo, a state chip next to the name that shows the installed version when the agent is installed or a "Not installed" state when it is missing, and the declared command set listed after a "Supported commands" label. The card SHALL NOT present the plugin folder path or the declared detection markers.
+
+#### Scenario: Identity shown
+
+- **WHEN** an agent card is shown
+- **THEN** it shows the agent's display name and logo (falling back to the default logo)
+
+#### Scenario: Installation status shown
+
+- **WHEN** an agent card is shown
+- **THEN** the state chip next to the agent's name indicates whether the agent is installed on the host
+- **AND** when the agent is not installed, the chip shows a danger-styled "Not installed" state
+
+#### Scenario: Installed version shown
+
+- **WHEN** an installed agent's card is shown and the installed version is available
+- **THEN** the state chip next to the agent's name shows the installed version
+- **AND** when the version is not available, the chip shows an "Installed" state instead
+
+#### Scenario: Command set shown
+
+- **WHEN** an agent card is shown
+- **THEN** it lists which named commands the agent declares (launch, resume, version, update)
