@@ -8,8 +8,9 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <!-- State chip next to the agent name: version when installed, danger state when missing -->
-        <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource HeaderChip}">
+        <!-- State chip next to the agent name: version when installed, danger state when missing;
+             uses the footer version chip look -->
+        <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsInstalled}" Value="False">
                     <Setter Property="Background" Value="Transparent"/>
@@ -18,7 +19,7 @@
             </Style.Triggers>
         </Style>
 
-        <Style x:Key="AgentStateChipText" TargetType="TextBlock" BasedOn="{StaticResource HeaderChipLabel}">
+        <Style x:Key="AgentStateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsInstalled}" Value="False">
                     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
