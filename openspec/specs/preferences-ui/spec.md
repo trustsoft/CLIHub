@@ -456,11 +456,11 @@ Saving the scanning preferences SHALL persist them and take effect without resta
 
 ### Requirement: CLI Agents page management
 
-The CLI Agents page SHALL present one card per loaded agent, a supported/installed metrics line, and a "Default agent" selector, in addition to the existing agents-probe fields. It SHALL show the stored default agent when opened.
+The CLI Agents page SHALL present one card per loaded agent, the page-header summary cards defined by the `settings-theme` capability, and a "Default agent" selector, in addition to the existing agents-probe fields. It SHALL show the stored default agent when opened.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "CLI Agents"
-- **THEN** it shows the agent cards, the supported and installed counts, the "Default agent" selector, and the agents-probe fields
+- **THEN** it shows the agent cards, the summary cards with the supported and installed counts, the "Default agent" selector, and the agents-probe fields
 
 #### Scenario: One card per agent
 - **WHEN** the plugin catalog contains agents
