@@ -95,26 +95,32 @@
 
             <!-- Projects & Paths actions: add a root or rescan the saved configuration. -->
             <DataTemplate x:Key="ProjectsHeaderAction">
-                <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
-                    <Button Command="{Binding AddWatchedDirectoryFromPickerCommand}"
-                            Content="Add Directory"
-                            Style="{StaticResource NeutralButton}"
-                            ToolTip="Add a watched root directory"/>
-                    <Button Margin="8,0,0,0"
-                            Padding="12,7"
+                <controls:SpacedPanel VerticalAlignment="Center"
+                                      Orientation="Horizontal"
+                                      Spacing="8">
+                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                            Height="{StaticResource Sizing.IconButton.Height}"
+                            AutomationProperties.Name="Add Directory"
+                            Command="{Binding AddWatchedDirectoryFromPickerCommand}"
+                            Padding="0"
+                            Style="{StaticResource SettingsIconButton}"
+                            ToolTip="Add a watched root directory">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="16"
+                                   Text="{x:Static themes:IconGlyphs.FolderAdd}"/>
+                    </Button>
+                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                            Height="{StaticResource Sizing.IconButton.Height}"
                             AutomationProperties.Name="Scan Now"
                             Command="{Binding ScanNowCommand}"
+                            Padding="0"
                             Style="{StaticResource AccentButton}"
                             ToolTip="Rescan the saved watched roots">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock VerticalAlignment="Center"
-                                       FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                       FontSize="13"
-                                       Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                            <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" Text="Scan Now"/>
-                        </StackPanel>
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="16"
+                                   Text="{x:Static themes:IconGlyphs.Refresh}"/>
                     </Button>
-                </StackPanel>
+                </controls:SpacedPanel>
             </DataTemplate>
 
             <!-- Projects & Paths summary cards, pinned to the page header. -->
@@ -220,7 +226,7 @@
                                 <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMutedBrush}"
-                                           Text="WATCHER"/>
+                                           Text="DAEMON"/>
                                 <TextBlock Margin="0,2,0,0"
                                            Text="{Binding WatcherStateLabel}"
                                            TextTrimming="CharacterEllipsis"

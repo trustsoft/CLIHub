@@ -35,6 +35,7 @@ internal static class IconGlyphs
     public const string Copy = "\uE8C8";
     public const string Filter = "\uE71C";
     public const string FolderOpen = "\uE8B7";
+    public const string FolderAdd = "\uE8F4";
     public const string Settings = "\uE713";
     public const string Pin = "\uE718";
     public const string Pinned = "\uE77A";
