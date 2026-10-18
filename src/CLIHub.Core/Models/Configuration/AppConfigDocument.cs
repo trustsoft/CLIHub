@@ -137,6 +137,7 @@ internal sealed class AppConfigDocument
         public string PathDisplayStyle { get; set; } = PathDisplayStyles.LeftTrimToken;
         public string? LastSeenReleaseNotesVersion { get; set; }
         public List<string>? WatchedDirectories { get; set; }
+        public List<WatchedDirectorySettingDocument>? WatchedDirectorySettings { get; set; }
         public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
         public List<string>? IgnoredPatterns { get; set; }
         public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
@@ -168,6 +169,17 @@ internal sealed class AppConfigDocument
             PathDisplayStyle = preferences.PathDisplayStyle,
             LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
             WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
+            WatchedDirectorySettings = preferences.WatchedDirectorySettings is { Count: > 0 }
+                ? preferences.WatchedDirectorySettings
+                    .Where(entry => !string.IsNullOrWhiteSpace(entry.Key))
+                    .Select(entry => new WatchedDirectorySettingDocument
+                    {
+                        Path = entry.Key,
+                        ScanDepth = entry.Value.ScanDepth,
+                        DiscoveryMode = ProjectDiscoveryModes.ToToken(entry.Value.DiscoveryMode)
+                    })
+                    .ToList()
+                : null,
             ScanDepth = preferences.ScanDepth,
             IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
             DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.DiscoveryMode),
@@ -199,10 +211,46 @@ internal sealed class AppConfigDocument
             PathDisplayStyle = this.PathDisplayStyle,
             LastSeenReleaseNotesVersion = this.LastSeenReleaseNotesVersion,
             WatchedDirectories = this.WatchedDirectories is null ? null : new List<string>(this.WatchedDirectories),
+            WatchedDirectorySettings = BuildWatchedDirectorySettings(this.WatchedDirectorySettings, this.WatchedDirectories),
             ScanDepth = this.ScanDepth,
             IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
             DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode),
             DefaultAgentId = this.DefaultAgentId
         };
+
+        private static IReadOnlyDictionary<string, WatchedDirectoryScanSettings> BuildWatchedDirectorySettings(
+            List<WatchedDirectorySettingDocument>? entries,
+            List<string>? watchedDirectories)
+        {
+            var result = new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase);
+
+            if (entries is null || watchedDirectories is null || watchedDirectories.Count == 0)
+            {
+                return result;
+            }
+
+            var roots = new HashSet<string>(watchedDirectories, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var entry in entries)
+            {
+                if (string.IsNullOrWhiteSpace(entry.Path) || !roots.Contains(entry.Path))
+                {
+                    continue;
+                }
+
+                result[entry.Path] = new WatchedDirectoryScanSettings(
+                    ProjectScanningDefaults.NormalizeScanDepth(entry.ScanDepth),
+                    ProjectDiscoveryModes.Parse(entry.DiscoveryMode));
+            }
+
+            return result;
+        }
+    }
+
+    internal sealed class WatchedDirectorySettingDocument
+    {
+        public string Path { get; set; } = string.Empty;
+        public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
+        public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
     }
 }

@@ -72,6 +72,27 @@ public sealed class ProjectScanningService : IProjectScanner
     public ProjectScanStatus Status => this.status;
 
     /// <inheritdoc />
+    public int CountDiscoveredProjects(string root)
+    {
+        if (string.IsNullOrWhiteSpace(root))
+        {
+            return 0;
+        }
+
+        try
+        {
+            return this.projects.GetAllProjects()
+                .Count(project => project.Source == ProjectSource.Discovered
+                                  && ProjectPathPolicy.IsUnder(project.Path, root));
+        }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
+        {
+            // A malformed stored root must not break the page that displays its count.
+            return 0;
+        }
+    }
+
+    /// <inheritdoc />
     public void Start()
     {
         lock (this.gate)
@@ -100,6 +121,25 @@ public sealed class ProjectScanningService : IProjectScanner
         }
 
         this.Configure();
+    }
+
+    /// <inheritdoc />
+    public void Rescan(string root)
+    {
+        if (string.IsNullOrWhiteSpace(root))
+        {
+            return;
+        }
+
+        lock (this.gate)
+        {
+            if (this.disposed || !this.started)
+            {
+                return;
+            }
+        }
+
+        _ = this.RescanRootAsync(root);
     }
 
     /// <inheritdoc />
@@ -303,6 +343,120 @@ public sealed class ProjectScanningService : IProjectScanner
                 Error = null
             });
         });
+    }
+
+    private async Task RescanRootAsync(string root)
+    {
+        try
+        {
+            await this.scanGate.WaitAsync().ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            return;
+        }
+
+        try
+        {
+            await this.RunRootScanAsync(root).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Project scan failed for watched directory {Root}", root);
+            this.Publish(this.status with { State = ProjectScanState.Error, IsScanning = false, Error = ex.Message });
+        }
+        finally
+        {
+            this.scanGate.Release();
+        }
+    }
+
+    private async Task RunRootScanAsync(string root)
+    {
+        var options = ProjectScanningOptions.From(this.preferences.Load());
+        var rootOptions = options.ForRoot(root) with { WatchedDirectories = new[] { root } };
+        var plugins = this.plugins.GetAllPlugins();
+
+        this.Publish(this.status with
+        {
+            State = ProjectScanState.Scanning,
+            IsScanning = true,
+            Error = null
+        });
+
+        var result = await Task.Run(() => RepositoryDiscovery.Enumerate(
+            rootOptions,
+            plugins,
+            (candidate, ex) => this.logger.LogWarning(ex, "Could not scan watched directory {Root}", candidate))).ConfigureAwait(false);
+
+        this.Post(() =>
+        {
+            var removed = this.ComputeRootRemovals(root, result.DiscoveredPaths, result.ScannedRoots, options.WatchedDirectories);
+            this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
+
+            var discoveredCount = this.projects.GetAllProjects()
+                .Count(project => project.Source == ProjectSource.Discovered);
+
+            this.Publish(this.status with
+            {
+                State = this.status.IsWatching ? ProjectScanState.Idle : ProjectScanState.NotConfigured,
+                IsScanning = false,
+                LastScanUtc = this.time.GetUtcNow(),
+                DiscoveredCount = discoveredCount,
+                Error = null
+            });
+        });
+    }
+
+    private IReadOnlyList<string> ComputeRootRemovals(string root,
+                                                      IReadOnlyList<string> discoveredPaths,
+                                                      IReadOnlyList<string> scannedRoots,
+                                                      IReadOnlyList<string> watchedRoots)
+    {
+        // A missing or unreadable root scans nothing, so it must not be treated as "all projects vanished".
+        if (scannedRoots.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var discovered = new HashSet<string>(
+            discoveredPaths.Select(ProjectPathPolicy.Normalize),
+            StringComparer.OrdinalIgnoreCase);
+        var otherRoots = watchedRoots
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate))
+            .Where(candidate => !ProjectPathPolicy.AreEqual(candidate, root))
+            .Select(ProjectPathPolicy.Normalize)
+            .ToArray();
+
+        var removals = new List<string>();
+
+        foreach (var project in this.projects.GetAllProjects())
+        {
+            if (project.Source != ProjectSource.Discovered)
+            {
+                continue;
+            }
+
+            var path = ProjectPathPolicy.Normalize(project.Path);
+
+            if (!ProjectPathPolicy.IsUnder(path, root))
+            {
+                continue;
+            }
+
+            // The other root was not part of this pass, so it may still contain the project.
+            if (otherRoots.Any(other => ProjectPathPolicy.IsUnder(path, other)))
+            {
+                continue;
+            }
+
+            if (!discovered.Contains(path))
+            {
+                removals.Add(project.Id);
+            }
+        }
+
+        return removals;
     }
 
     private IReadOnlyList<string> ComputeRemovals(IReadOnlyList<string> discoveredPaths,

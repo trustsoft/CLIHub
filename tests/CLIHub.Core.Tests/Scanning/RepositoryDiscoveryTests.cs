@@ -158,4 +158,50 @@ public class RepositoryDiscoveryTests : IDisposable
 
         Assert.Equal([root], result.DiscoveredPaths);
     }
+
+    [Fact]
+    public void Enumerate_UsesPerRootScanDepth()
+    {
+        var rootA = this.CreateTempDir();
+        var rootB = this.CreateTempDir();
+        var deepRepo = Path.Combine(rootA, "a", "b");
+        Directory.CreateDirectory(Path.Combine(deepRepo, ".git"));
+        var shallowRepo = Path.Combine(rootB, "b");
+        Directory.CreateDirectory(Path.Combine(shallowRepo, ".git"));
+        var options = new ProjectScanningOptions(
+            [rootA, rootB],
+            1,
+            ProjectScanningDefaults.IgnoredPatterns,
+            ProjectDiscoveryMode.Git,
+            new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                [rootA] = new(2, ProjectDiscoveryMode.Git)
+            });
+
+        var result = RepositoryDiscovery.Enumerate(options, []);
+
+        Assert.Contains(deepRepo, result.DiscoveredPaths);
+        Assert.Contains(shallowRepo, result.DiscoveredPaths);
+    }
+
+    [Fact]
+    public void Enumerate_UsesPerRootDiscoveryMode()
+    {
+        var root = this.CreateTempDir();
+        var agentRepo = Path.Combine(root, "agent");
+        Directory.CreateDirectory(Path.Combine(agentRepo, ".claude"));
+        var options = new ProjectScanningOptions(
+            [root],
+            3,
+            ProjectScanningDefaults.IgnoredPatterns,
+            ProjectDiscoveryMode.Git,
+            new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                [root] = new(3, ProjectDiscoveryMode.Agents)
+            });
+
+        var result = RepositoryDiscovery.Enumerate(options, [AgentPlugin(".claude")]);
+
+        Assert.Contains(agentRepo, result.DiscoveredPaths);
+    }
 }

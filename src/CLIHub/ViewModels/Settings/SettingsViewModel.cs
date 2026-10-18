@@ -88,6 +88,113 @@ public sealed record AccentChoice(string Name, string Hex, string Hint, bool IsC
 public sealed record DiscoveryModeOption(ProjectDiscoveryMode Mode, string Name);
 
 /// <summary>
+///   One watched-directory row: its path, the per-directory scan settings, and the number of
+///   repositories found beneath it.
+/// </summary>
+public sealed class WatchedDirectoryRow : ObservableObject
+{
+    private ScanDepthOption selectedDepth;
+    private DiscoveryModeOption selectedDiscovery;
+    private int discoveredCount;
+
+    /// <summary>
+    ///   Creates a row.
+    /// </summary>
+    /// <param name="path"> The normalized watched root path. </param>
+    /// <param name="depthOptions"> The allowed scan depths. </param>
+    /// <param name="discoveryOptions"> The allowed discovery modes. </param>
+    /// <param name="selectedDepth"> The row's scan depth. </param>
+    /// <param name="selectedDiscovery"> The row's discovery mode. </param>
+    public WatchedDirectoryRow(string path,
+                               IReadOnlyList<ScanDepthOption> depthOptions,
+                               IReadOnlyList<DiscoveryModeOption> discoveryOptions,
+                               ScanDepthOption selectedDepth,
+                               DiscoveryModeOption selectedDiscovery)
+    {
+        this.Path = path;
+        this.DepthOptions = depthOptions;
+        this.DiscoveryOptions = discoveryOptions;
+        this.selectedDepth = selectedDepth;
+        this.selectedDiscovery = selectedDiscovery;
+    }
+
+    /// <summary>
+    ///   The normalized watched root path.
+    /// </summary>
+    public string Path { get; }
+
+    /// <summary>
+    ///   The scan depths offered by the depth chip.
+    /// </summary>
+    public IReadOnlyList<ScanDepthOption> DepthOptions { get; }
+
+    /// <summary>
+    ///   The discovery modes offered by the discovery chip.
+    /// </summary>
+    public IReadOnlyList<DiscoveryModeOption> DiscoveryOptions { get; }
+
+    /// <summary>
+    ///   The row's scan depth.
+    /// </summary>
+    public ScanDepthOption SelectedDepth
+    {
+        get => this.selectedDepth;
+        set
+        {
+            if (value is not null && this.SetProperty(ref this.selectedDepth, value))
+            {
+                this.OnPropertyChanged(nameof(this.DepthChipLabel));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The row's discovery mode.
+    /// </summary>
+    public DiscoveryModeOption SelectedDiscovery
+    {
+        get => this.selectedDiscovery;
+        set
+        {
+            if (value is not null && this.SetProperty(ref this.selectedDiscovery, value))
+            {
+                this.OnPropertyChanged(nameof(this.DiscoveryChipLabel));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The text shown on the depth chip.
+    /// </summary>
+    public string DepthChipLabel => $"Depth {this.selectedDepth.Value}";
+
+    /// <summary>
+    ///   The text shown on the discovery chip.
+    /// </summary>
+    public string DiscoveryChipLabel => this.selectedDiscovery.Name;
+
+    /// <summary>
+    ///   The number of discovered repositories beneath this root.
+    /// </summary>
+    public int DiscoveredCount
+    {
+        get => this.discoveredCount;
+        set
+        {
+            if (this.SetProperty(ref this.discoveredCount, value))
+            {
+                this.OnPropertyChanged(nameof(this.DiscoveredSummary));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The repository count in singular/plural wording.
+    /// </summary>
+    public string DiscoveredSummary => this.discoveredCount == 1 ? "1 repository" : $"{this.discoveredCount} repositories";
+}
+
+/// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
 ///   whether its settings are implemented yet.
 /// </summary>
@@ -226,9 +333,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly DiscoveryModeOption[] DiscoveryModeOptions =
     {
-        new(ProjectDiscoveryMode.Git, "Git repositories"),
-        new(ProjectDiscoveryMode.Agents, "Agent folders"),
-        new(ProjectDiscoveryMode.Both, "Both")
+        new(ProjectDiscoveryMode.Git, "Git only"),
+        new(ProjectDiscoveryMode.Agents, "Agents only"),
+        new(ProjectDiscoveryMode.Both, "Git and agents")
     };
 
     private static readonly ScanDepthOption[] ScanDepthChoices = Enumerable
@@ -349,6 +456,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.AddWatchedDirectoryFromPickerCommand = new RelayCommand(this.AddWatchedDirectoryFromPicker);
         this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
         this.RemoveWatchedDirectoryCommand = new RelayCommand<string>(this.RemoveWatchedDirectory);
+        this.ScanWatchedDirectoryCommand = new RelayCommand<string>(this.ScanWatchedDirectory);
         this.AddIgnoredPatternCommand = new RelayCommand(this.AddIgnoredPattern);
         this.RemoveIgnoredPatternCommand = new RelayCommand<string>(this.RemoveIgnoredPattern);
         this.ScanNowCommand = new RelayCommand(() => this.projectScanner.Reload());
@@ -681,7 +789,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   Watched root directories edited on the Projects &amp; Paths page.
     /// </summary>
-    public ObservableCollection<string> WatchedDirectories { get; } = new();
+    public ObservableCollection<WatchedDirectoryRow> WatchedDirectories { get; } = new();
 
     /// <summary>
     ///   The absolute directory path pending registration.
@@ -753,7 +861,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             if (this.SetProperty(ref this.scanDepthText, value))
             {
                 this.OnPropertyChanged(nameof(this.SelectedScanDepth));
-                this.OnPropertyChanged(nameof(this.ScanSummary));
             }
         }
     }
@@ -791,19 +898,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public DiscoveryModeOption SelectedDiscoveryMode
     {
         get => this.selectedDiscoveryMode;
-        set
-        {
-            if (this.SetProperty(ref this.selectedDiscoveryMode, value))
-            {
-                this.OnPropertyChanged(nameof(this.ScanSummary));
-            }
-        }
+        set => this.SetProperty(ref this.selectedDiscoveryMode, value);
     }
-
-    /// <summary>
-    ///   The discovery mode and scan depth shown under each watched root.
-    /// </summary>
-    public string ScanSummary => $"{this.SelectedDiscoveryMode.Name} · recursive depth {this.ScanDepthText}";
 
     /// <summary>
     ///   The number of repositories discovered by the last scan.
@@ -880,6 +976,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Removes the watched root passed as the command parameter.
     /// </summary>
     public RelayCommand<string> RemoveWatchedDirectoryCommand { get; }
+
+    /// <summary>
+    ///   Rescans only the watched root passed as the command parameter.
+    /// </summary>
+    public RelayCommand<string> ScanWatchedDirectoryCommand { get; }
 
     /// <summary>
     ///   Adds the entered ignored pattern.
@@ -1031,9 +1132,18 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.startMinimized = draft.StartMinimized;
 
         this.WatchedDirectories.Clear();
+        var defaultScanDepth = ProjectScanningDefaults.NormalizeScanDepth(draft.ScanDepth);
         foreach (var directory in draft.WatchedDirectories ?? Array.Empty<string>())
         {
-            this.WatchedDirectories.Add(directory);
+            var settings = draft.WatchedDirectorySettings is not null
+                && draft.WatchedDirectorySettings.TryGetValue(directory, out var stored)
+                    ? stored
+                    : null;
+
+            this.WatchedDirectories.Add(this.CreateWatchedDirectoryRow(
+                directory,
+                settings?.ScanDepth ?? defaultScanDepth,
+                settings?.DiscoveryMode ?? draft.DiscoveryMode));
         }
 
         this.IgnoredPatterns.Clear();
@@ -1085,7 +1195,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.WatchedDirectoryError));
         this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
         this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
-        this.OnPropertyChanged(nameof(this.ScanSummary));
         this.OnPropertyChanged(nameof(this.DiscoveredProjectCount));
         this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
@@ -1191,18 +1300,52 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             return false;
         }
 
-        if (!this.WatchedDirectories.Any(existing => string.Equals(existing, path, StringComparison.OrdinalIgnoreCase)))
+        if (!this.WatchedDirectories.Any(existing => string.Equals(existing.Path, path, StringComparison.OrdinalIgnoreCase)))
         {
-            this.WatchedDirectories.Add(path);
+            this.WatchedDirectories.Add(this.CreateWatchedDirectoryRow(
+                path,
+                this.SelectedScanDepth.Value,
+                this.SelectedDiscoveryMode.Mode));
         }
 
         return true;
     }
 
-    private void RemoveWatchedDirectory(string directory) => this.WatchedDirectories.Remove(directory);
+    private WatchedDirectoryRow CreateWatchedDirectoryRow(string path, int scanDepth, ProjectDiscoveryMode discoveryMode)
+    {
+        var normalizedDepth = ProjectScanningDefaults.NormalizeScanDepth(scanDepth);
+        var depth = ScanDepthChoices.First(option => option.Value == normalizedDepth);
+        var discovery = DiscoveryModeOptions.FirstOrDefault(option => option.Mode == discoveryMode) ?? DiscoveryModeOptions[2];
 
-    private void OnWatchedDirectoriesChanged(object? sender, NotifyCollectionChangedEventArgs e) =>
+        return new WatchedDirectoryRow(path, ScanDepthChoices, DiscoveryModeOptions, depth, discovery);
+    }
+
+    private void RemoveWatchedDirectory(string directory)
+    {
+        var row = this.WatchedDirectories.FirstOrDefault(
+            candidate => string.Equals(candidate.Path, directory, StringComparison.OrdinalIgnoreCase));
+
+        if (row is not null)
+        {
+            this.WatchedDirectories.Remove(row);
+        }
+    }
+
+    private void ScanWatchedDirectory(string directory) => this.projectScanner.Rescan(directory);
+
+    private void OnWatchedDirectoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
         this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
+        this.RefreshWatchedDirectoryCounts();
+    }
+
+    private void RefreshWatchedDirectoryCounts()
+    {
+        foreach (var row in this.WatchedDirectories)
+        {
+            row.DiscoveredCount = this.projectScanner.CountDiscoveredProjects(row.Path);
+        }
+    }
 
     private void AddIgnoredPattern()
     {
@@ -1252,6 +1395,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             ProjectScanState.Error => current.Error ?? "Scan failed",
             _ => current.LastScanUtc is { } last ? $"Last scan {last.ToLocalTime():HH:mm:ss}" : "Not scanned yet"
         };
+
+        this.RefreshWatchedDirectoryCounts();
     }
 
     private void RefreshAgentSummary()
@@ -1408,11 +1553,15 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             this.SelectedPopupPosition.Position,
             this.SelectedAppTheme.Theme,
             this.AccentText,
-            this.WatchedDirectories.ToList(),
+            this.WatchedDirectories.Select(row => row.Path).ToList(),
             this.ScanDepthText,
             this.IgnoredPatterns.ToList(),
             this.SelectedDiscoveryMode.Mode,
-            this.AgentsState.CurrentDefaultAgentId);
+            this.AgentsState.CurrentDefaultAgentId,
+            this.WatchedDirectories.ToDictionary(
+                row => row.Path,
+                row => new WatchedDirectoryScanSettings(row.SelectedDepth.Value, row.SelectedDiscovery.Mode),
+                StringComparer.OrdinalIgnoreCase));
 
         if (!this.settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

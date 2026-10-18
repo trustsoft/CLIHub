@@ -153,7 +153,7 @@ public class SettingsViewModelApplicationTests
 
         fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
 
-        Assert.Contains(path, fixture.ViewModel.WatchedDirectories);
+        Assert.Contains(fixture.ViewModel.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
         Assert.Equal(string.Empty, fixture.ViewModel.NewWatchedDirectoryText);
         Assert.False(fixture.ViewModel.HasWatchedDirectoryError);
         Assert.Equal("1 root monitored", fixture.ViewModel.WatchedRootsSummary);
@@ -202,18 +202,7 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
-    public void ScanSummary_ReflectsDepthAndDiscoveryMode()
-    {
-        var fixture = new Fixture();
-        fixture.ViewModel.Load();
-
-        fixture.ViewModel.ScanDepthText = "3";
-
-        Assert.Equal("Both · recursive depth 3", fixture.ViewModel.ScanSummary);
-    }
-
-    [Fact]
-    public void SelectedScanDepth_SetOption_UpdatesTextAndSummary()
+    public void SelectedScanDepth_SetOption_UpdatesText()
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
@@ -222,7 +211,91 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SelectedScanDepth = option;
 
         Assert.Equal("4", fixture.ViewModel.ScanDepthText);
-        Assert.Equal("Both · recursive depth 4", fixture.ViewModel.ScanSummary);
+    }
+
+    [Fact]
+    public void WatchedDirectoryRow_DiscoveredCount_RefreshesOnScannerStatus()
+    {
+        const string directory = @"C:\repos\one";
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        fixture.Scanner.Setup(scanner => scanner.CountDiscoveredProjects(directory)).Returns(2);
+        var row = new WatchedDirectoryRow(
+            directory,
+            fixture.ViewModel.ScanDepthOptions,
+            fixture.ViewModel.DiscoveryModes,
+            fixture.ViewModel.SelectedScanDepth,
+            fixture.ViewModel.SelectedDiscoveryMode);
+
+        fixture.ViewModel.WatchedDirectories.Add(row);
+
+        Assert.Equal(2, row.DiscoveredCount);
+        Assert.Equal("2 repositories", row.DiscoveredSummary);
+
+        fixture.Scanner.Setup(scanner => scanner.CountDiscoveredProjects(directory)).Returns(1);
+        fixture.Scanner.Raise(
+            scanner => scanner.StatusChanged += null,
+            fixture.Scanner.Object,
+            new Core.Scanning.ProjectScanStatus(
+                Core.Scanning.ProjectScanState.Idle,
+                true,
+                false,
+                DateTimeOffset.UtcNow,
+                1,
+                null));
+
+        Assert.Equal(1, row.DiscoveredCount);
+        Assert.Equal("1 repository", row.DiscoveredSummary);
+    }
+
+    [Fact]
+    public void WatchedDirectoryRow_Edit_DoesNotChangeAnotherRow()
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+        var first = CreateRow(fixture, @"C:\repos\one");
+        var second = CreateRow(fixture, @"C:\repos\two");
+        fixture.ViewModel.WatchedDirectories.Add(first);
+        fixture.ViewModel.WatchedDirectories.Add(second);
+
+        first.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 5);
+        first.SelectedDiscovery = fixture.ViewModel.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
+
+        Assert.Equal(5, first.SelectedDepth.Value);
+        Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, second.SelectedDepth.Value);
+        Assert.Equal(ProjectDiscoveryMode.Both, second.SelectedDiscovery.Mode);
+    }
+
+    [Fact]
+    public void Load_PerRootSettings_ApplyToEachRow()
+    {
+        const string first = @"C:\repos\one";
+        const string second = @"C:\repos\two";
+        var fixture = new Fixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        {
+            DefaultRuntime = RuntimeKind.PowerShell,
+            Hotkey = "Ctrl+Shift+A",
+            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
+            CheckForUpdatesOnStartup = true,
+            StartMinimized = true,
+            AccentColor = AccentPalette.DefaultHex,
+            WatchedDirectories = [first, second],
+            WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                [first] = new(4, ProjectDiscoveryMode.Git)
+            }
+        });
+
+        fixture.ViewModel.Load();
+
+        var stored = fixture.ViewModel.WatchedDirectories.First(row => row.Path == first);
+        Assert.Equal(4, stored.SelectedDepth.Value);
+        Assert.Equal(ProjectDiscoveryMode.Git, stored.SelectedDiscovery.Mode);
+
+        var fallback = fixture.ViewModel.WatchedDirectories.First(row => row.Path == second);
+        Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, fallback.SelectedDepth.Value);
+        Assert.Equal(ProjectDiscoveryMode.Both, fallback.SelectedDiscovery.Mode);
     }
 
     [Fact]
@@ -276,6 +349,18 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void ScanWatchedDirectoryCommand_Execute_RescansThatRootOnly()
+    {
+        var fixture = new Fixture();
+        var directory = @"C:\repos\one";
+
+        fixture.ViewModel.ScanWatchedDirectoryCommand.Execute(directory);
+
+        fixture.Scanner.Verify(scanner => scanner.Rescan(directory), Times.Once);
+        fixture.Scanner.Verify(scanner => scanner.Reload(), Times.Never);
+    }
+
+    [Fact]
     public void AddWatchedDirectoryFromPicker_SelectedFolder_AddsRoot()
     {
         var fixture = new Fixture();
@@ -285,7 +370,7 @@ public class SettingsViewModelApplicationTests
 
         fixture.ViewModel.AddWatchedDirectoryFromPickerCommand.Execute(null);
 
-        Assert.Contains(path, fixture.ViewModel.WatchedDirectories);
+        Assert.Contains(fixture.ViewModel.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -301,6 +386,35 @@ public class SettingsViewModelApplicationTests
         Assert.True(closeRequested);
         Assert.Null(fixture.ViewModel.ValidationError);
         fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Once);
+    }
+
+    [Fact]
+    public void Save_PerRowSettings_PersistsWithTheWatchedDirectory()
+    {
+        var fixture = new Fixture();
+        AppPreferences? saved = null;
+        fixture.Preferences
+            .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+            .Callback<Action<AppPreferences>>(update =>
+            {
+                var preferences = new AppPreferences();
+                update(preferences);
+                saved = preferences;
+            });
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.ViewModel.NewWatchedDirectoryText = path;
+        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+        var row = fixture.ViewModel.WatchedDirectories.Single(candidate => candidate.Path == path);
+        row.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 4);
+        row.SelectedDiscovery = fixture.ViewModel.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
+
+        fixture.ViewModel.SaveCommand.Execute(null);
+
+        Assert.NotNull(saved);
+        Assert.True(saved!.WatchedDirectorySettings.TryGetValue(path, out var settings));
+        Assert.Equal(4, settings!.ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, settings.DiscoveryMode);
     }
 
     [Fact]
@@ -387,6 +501,13 @@ public class SettingsViewModelApplicationTests
         Assert.Equal("Probe timeout must be a positive number of seconds, or empty for the default.", fixture.ViewModel.ValidationError);
         fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
     }
+
+    private static WatchedDirectoryRow CreateRow(Fixture fixture, string path) =>
+        new(path,
+            fixture.ViewModel.ScanDepthOptions,
+            fixture.ViewModel.DiscoveryModes,
+            fixture.ViewModel.SelectedScanDepth,
+            fixture.ViewModel.SelectedDiscoveryMode);
 
     private sealed class Fixture
     {

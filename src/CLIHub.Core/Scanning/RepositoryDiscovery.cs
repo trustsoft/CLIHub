@@ -55,7 +55,7 @@ public static class RepositoryDiscovery
 
             try
             {
-                Walk(normalizedRoot, 0, options, indicators, discovered, seen);
+                Walk(normalizedRoot, 0, options.ForRoot(root), indicators, discovered, seen);
                 scannedRoots.Add(normalizedRoot);
             }
             catch (Exception ex)

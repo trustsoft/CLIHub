@@ -33,6 +33,7 @@ using CLIHub.Core.Scanning;
 /// <param name="IgnoredPatterns"> Ignored directory-name patterns. </param>
 /// <param name="DiscoveryMode"> Which directories count as repositories. </param>
 /// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
+/// <param name="WatchedDirectorySettings"> Per-directory scan settings keyed by watched root path. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -55,7 +56,8 @@ public sealed record SettingsInput(
     string ScanDepthText = "2",
     IReadOnlyList<string>? IgnoredPatterns = null,
     ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
-    string? DefaultAgentId = null);
+    string? DefaultAgentId = null,
+    IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? WatchedDirectorySettings = null);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -82,6 +84,7 @@ public sealed record SettingsInput(
 /// <param name="IgnoredPatterns"> Ignored directory-name patterns (normalized). </param>
 /// <param name="DiscoveryMode"> Which directories count as repositories. </param>
 /// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
+/// <param name="WatchedDirectorySettings"> Normalized per-directory scan settings keyed by watched root path. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -104,7 +107,8 @@ public sealed record SettingsDraft(
     int ScanDepth = ProjectScanningDefaults.DefaultScanDepth,
     IReadOnlyList<string>? IgnoredPatterns = null,
     ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
-    string? DefaultAgentId = null);
+    string? DefaultAgentId = null,
+    IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? WatchedDirectorySettings = null);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -190,7 +194,8 @@ public sealed class SettingsApplicationService
             ProjectScanningDefaults.NormalizeScanDepth(preferences.ScanDepth),
             preferences.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
             preferences.DiscoveryMode,
-            preferences.DefaultAgentId);
+            preferences.DefaultAgentId,
+            preferences.WatchedDirectorySettings);
     }
 
     /// <summary>
@@ -250,6 +255,24 @@ public sealed class SettingsApplicationService
             return false;
         }
 
+        if (input.WatchedDirectorySettings is not null)
+        {
+            foreach (var entry in input.WatchedDirectorySettings)
+            {
+                if (entry.Value.ScanDepth < ProjectScanningDefaults.MinScanDepth
+                    || entry.Value.ScanDepth > ProjectScanningDefaults.MaxScanDepth)
+                {
+                    error = $"Repository scan depth for {entry.Key} must be between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+                    return false;
+                }
+            }
+        }
+
+        var watchedDirectories = NormalizeList(input.WatchedDirectories);
+        var watchedDirectorySettings = NormalizeWatchedDirectorySettings(
+            input.WatchedDirectorySettings,
+            watchedDirectories);
+
         draft = new SettingsDraft(
             input.Runtime,
             input.PathDisplayStyle,
@@ -268,11 +291,12 @@ public sealed class SettingsApplicationService
             input.PopupScreenPosition,
             input.AppTheme,
             accentColor,
-            NormalizeList(input.WatchedDirectories),
+            watchedDirectories,
             scanDepth,
             NormalizeList(input.IgnoredPatterns),
             input.DiscoveryMode,
-            string.IsNullOrWhiteSpace(input.DefaultAgentId) ? null : input.DefaultAgentId);
+            string.IsNullOrWhiteSpace(input.DefaultAgentId) ? null : input.DefaultAgentId,
+            watchedDirectorySettings);
         return true;
     }
 
@@ -298,6 +322,34 @@ public sealed class SettingsApplicationService
             {
                 result.Add(trimmed);
             }
+        }
+
+        return result;
+    }
+
+    private static IReadOnlyDictionary<string, WatchedDirectoryScanSettings> NormalizeWatchedDirectorySettings(
+        IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? settings,
+        IReadOnlyList<string> watchedDirectories)
+    {
+        var result = new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase);
+
+        if (settings is null)
+        {
+            return result;
+        }
+
+        var roots = new HashSet<string>(watchedDirectories, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var entry in settings)
+        {
+            if (string.IsNullOrWhiteSpace(entry.Key) || !roots.Contains(entry.Key))
+            {
+                continue;
+            }
+
+            result[entry.Key] = new WatchedDirectoryScanSettings(
+                ProjectScanningDefaults.NormalizeScanDepth(entry.Value.ScanDepth),
+                entry.Value.DiscoveryMode);
         }
 
         return result;
@@ -357,6 +409,11 @@ public sealed class SettingsApplicationService
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;
                 preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
                 preferences.WatchedDirectories = (draft.WatchedDirectories ?? Array.Empty<string>()).ToList();
+                preferences.WatchedDirectorySettings = draft.WatchedDirectorySettings is null
+                    ? new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase)
+                    : new Dictionary<string, WatchedDirectoryScanSettings>(
+                        draft.WatchedDirectorySettings,
+                        StringComparer.OrdinalIgnoreCase);
                 preferences.ScanDepth = draft.ScanDepth;
                 preferences.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
                 preferences.DiscoveryMode = draft.DiscoveryMode;

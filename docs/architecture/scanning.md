@@ -9,13 +9,20 @@ only) and never starts an agent process.
 Scanning is driven by four preferences (see [Configuration persistence](configuration.md)):
 
 - `watchedDirectories` — root folders to scan. Empty means nothing is watched.
-- `scanDepth` — how many directory levels below each root are inspected (clamped to `1`–`8`, default `2`).
+- `watchedDirectorySettings` — per-root `{path, scanDepth, discoveryMode}` overrides. A root without
+  an entry uses the global `scanDepth` and `discoveryMode`.
+- `scanDepth` — the default number of directory levels below a root inspected (clamped to `1`–`8`, default `2`).
 - `ignoredPatterns` — case-insensitive directory-name patterns (`*` wildcard) skipped during the walk. When
   absent, the built-in set is used; an explicit empty list ignores nothing.
-- `discoveryMode` — which directories count as repositories: `git` (a `.git` entry), `agents` (a plugin
-  `projectIndicators` marker), or `both` (default).
+- `discoveryMode` — the default rule for which directories count as repositories: `git` (a `.git` entry),
+  `agents` (a plugin `projectIndicators` marker), or `both` (default).
 
 `.git` is never descended into. `openspec` is deliberately not treated as an agent marker.
+
+`ProjectScanningOptions.ForRoot(path)` resolves the effective depth and discovery mode for one root: the
+stored per-root entry when present, otherwise the global values. Ignored patterns remain global. The full scan,
+the watcher-driven passes, and a single-root rescan all use this effective options value, so changing one
+row's settings never changes another root.
 
 ## Discovery and reconciliation
 
@@ -34,6 +41,23 @@ are skipped with a warning and do not affect the others.
 
 Scanner-driven project mutations are posted to the owner (UI) thread captured at `Start`, so bound collections
 update safely.
+
+## Single-root rescan
+
+`IProjectScanner.Rescan(root)` refreshes one watched root from the Projects & Paths page. It enumerates only that
+root with the stored scan settings and reconciles only projects beneath it:
+
+- discovered projects under the other roots are left untouched (this also protects overlapping nested roots that
+  were not part of the pass);
+- manual projects are kept;
+- a missing or unreadable root scans nothing, so it removes nothing.
+
+The pass reports `Scanning` while it runs and, afterwards, the last scan time and the total discovered-project
+count. The page-header "Scan Now" remains the full pass through `Reload()`.
+
+`IProjectScanner.CountDiscoveredProjects(root)` reports how many discovered projects sit at or below a watched
+root. The Settings page uses it for the secondary line of each watched-directory row, where the count is shown
+next to the discovery mode and the scan depth.
 
 ## Watcher and status
 

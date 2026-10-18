@@ -55,26 +55,56 @@
                                 <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
                                            FontWeight="Medium"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{Binding}"
+                                           Text="{Binding Path}"
                                            TextTrimming="CharacterEllipsis"
-                                           ToolTip="{Binding}"/>
-                                <TextBlock Margin="0,2,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding DataContext.ScanSummary, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                           TextWrapping="NoWrap"/>
+                                           ToolTip="{Binding Path}"/>
+                                <controls:SpacedPanel Margin="0"
+                                                      Orientation="Horizontal"
+                                                      Spacing="2">
+                                    <ComboBox ItemsSource="{Binding DepthOptions}"
+                                              SelectedItem="{Binding SelectedDepth, Mode=TwoWay}"
+                                              Style="{StaticResource SettingsChipComboBox}"
+                                              Tag="{Binding DepthChipLabel}"
+                                              ToolTip="Scan depth for this folder"/>
+                                    <ComboBox ItemsSource="{Binding DiscoveryOptions}"
+                                              SelectedItem="{Binding SelectedDiscovery, Mode=TwoWay}"
+                                              Style="{StaticResource SettingsChipComboBox}"
+                                              Tag="{Binding DiscoveryChipLabel}"
+                                              ToolTip="What counts as a repository in this folder"/>
+                                    <TextBlock VerticalAlignment="Center"
+                                               Style="{StaticResource HintText}"
+                                               Text="{Binding DiscoveredSummary}"/>
+                                </controls:SpacedPanel>
                             </StackPanel>
 
-                            <Button Grid.Column="2"
-                                    VerticalAlignment="Center"
-                                    AutomationProperties.Name="Remove watched root"
-                                    Command="{Binding DataContext.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource ChipRemoveButton}"
-                                    ToolTip="Remove watched root">
-                                <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                           FontSize="12"
-                                           Text="{x:Static themes:IconGlyphs.Delete}"/>
-                            </Button>
+                            <controls:SpacedPanel Grid.Column="2"
+                                                  VerticalAlignment="Center"
+                                                  Orientation="Horizontal"
+                                                  Spacing="2">
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Rescan this watched root"
+                                        Command="{Binding DataContext.ScanWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding Path}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Rescan this folder only">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="16"
+                                               Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                                </Button>
+
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Remove watched root"
+                                        Command="{Binding DataContext.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding Path}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Remove watched root">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="16"
+                                               Text="{x:Static themes:IconGlyphs.Delete}"/>
+                                </Button>
+                            </controls:SpacedPanel>
                         </Grid>
                     </Border>
                 </DataTemplate>
@@ -134,7 +164,7 @@
         <controls:SectionHeader Text="DISCOVERY &amp; SCANNING RULES"/>
 
         <controls:SettingCard Title="Repository scan depth"
-                           Hint="Folder depth scanned for .git boundaries and root indicators."
+                           Hint="Default depth for a directory you add from now on. Each row can override it."
                            Icon="{x:Static themes:IconGlyphs.Zoom}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding ScanDepthOptions}"
@@ -150,7 +180,7 @@
         </controls:SettingCard>
 
         <controls:SettingCard Title="Repository discovery"
-                           Hint="Which directories count as repositories: Git repositories (.git), Agent folders (plugin markers), or Both."
+                           Hint="Default for a directory you add from now on: Git repositories, folders used by an AI agent (such as .claude or .opencode), or either. Each row can override it."
                            Icon="{x:Static themes:IconGlyphs.Filter}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding DiscoveryModes}"

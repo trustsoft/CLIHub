@@ -186,6 +186,29 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
+    public void PerRootScanSettings_RoundTripAndIgnoreUnwatchedPaths()
+    {
+        var config = new AppConfig();
+        config.Preferences.WatchedDirectories = ["C:\\Work", "D:\\Deep"];
+        config.Preferences.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+        {
+            ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git),
+            ["D:\\Deep"] = new(7, ProjectDiscoveryMode.Agents),
+            ["E:\\Gone"] = new(3, ProjectDiscoveryMode.Both)
+        };
+
+        var restored = JsonSerializer.Deserialize<AppConfigDocument>(
+            JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
+            CoreJson.Options)!.ToAppConfig();
+
+        Assert.Equal(4, restored.Preferences.WatchedDirectorySettings["C:\\Work"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, restored.Preferences.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
+        Assert.Equal(7, restored.Preferences.WatchedDirectorySettings["D:\\Deep"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.WatchedDirectorySettings["D:\\Deep"].DiscoveryMode);
+        Assert.False(restored.Preferences.WatchedDirectorySettings.ContainsKey("E:\\Gone"));
+    }
+
+    [Fact]
     public void ProjectScanningPreferences_Absent_UseDefaults()
     {
         const string json = """

@@ -999,4 +999,137 @@
         </Setter>
     </Style>
 
+    <!-- Settings value chip: the closed state of a per-row choice menu. -->
+    <Style x:Key="SettingsChoiceChipToggle" TargetType="ToggleButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Border x:Name="Bd"
+                            Height="22"
+                            Padding="6,0"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                            <TextBlock VerticalAlignment="Center"
+                                       Text="{TemplateBinding Content}"/>
+                            <TextBlock x:Name="Chevron"
+                                       Margin="5,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                       FontSize="8"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Opacity="0"
+                                       Text="{x:Static themes:IconGlyphs.ChevronDown}"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ThumbBgBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
+                            <Setter TargetName="Chevron" Property="Opacity" Value="1"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSelectionBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                            <Setter TargetName="Chevron" Property="Opacity" Value="1"/>
+                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Popover card for a settings value menu; mirrors the launch window actions card. -->
+    <Style x:Key="SettingsChoicePopover" TargetType="Border">
+        <Setter Property="MinWidth" Value="150"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource PopoverOpenBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ActionsBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+    </Style>
+
+    <Style x:Key="SettingsChoiceListItem" TargetType="ListBoxItem">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="9,0"/>
+        <Setter Property="Foreground" Value="{DynamicResource MenuItemBrush}"/>
+        <Setter Property="FontSize" Value="12.5"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <Border x:Name="Bd"
+                            Padding="{TemplateBinding Padding}"
+                            Background="Transparent"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                        <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource AccentSelectionBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Per-row settings choice: a chip-style ComboBox. The closed chip shows the value carried in
+        Tag; the dropdown is the settings choice popover, with the item container style below.
+    -->
+    <Style x:Key="SettingsChipComboBox" TargetType="ComboBox">
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="ItemContainerStyle" Value="{StaticResource SettingsChoiceListItem}"/>
+        <Setter Property="DisplayMemberPath" Value="Name"/>
+        <Setter Property="MaxDropDownHeight" Value="280"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton x:Name="Chip"
+                                      ClickMode="Press"
+                                      Content="{TemplateBinding Tag}"
+                                      Focusable="False"
+                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                      Style="{StaticResource SettingsChoiceChipToggle}"/>
+                        <Popup AllowsTransparency="True"
+                               Focusable="False"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               Placement="Bottom"
+                               PopupAnimation="Fade"
+                               VerticalOffset="2">
+                            <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Style="{StaticResource SettingsChoicePopover}">
+                                <ScrollViewer Margin="2" VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

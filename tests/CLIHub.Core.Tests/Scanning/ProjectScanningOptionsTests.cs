@@ -35,4 +35,29 @@ public class ProjectScanningOptionsTests
 
         Assert.Equal(expected, options.ScanDepth);
     }
+
+    [Fact]
+    public void ForRoot_UsesStoredSettingsAndFallsBackToTheDefaults()
+    {
+        var options = new ProjectScanningOptions(
+            ["C:\\A", "C:\\B"],
+            2,
+            [],
+            ProjectDiscoveryMode.Both,
+            new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                ["C:\\A"] = new(5, ProjectDiscoveryMode.Git)
+            });
+
+        var specific = options.ForRoot("C:\\A");
+        Assert.Equal(5, specific.ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, specific.DiscoveryMode);
+
+        var caseInsensitive = options.ForRoot("c:\\a");
+        Assert.Equal(5, caseInsensitive.ScanDepth);
+
+        var fallback = options.ForRoot("C:\\B");
+        Assert.Equal(2, fallback.ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Both, fallback.DiscoveryMode);
+    }
 }

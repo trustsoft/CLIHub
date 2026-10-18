@@ -153,6 +153,13 @@ public class AppPreferences
     public List<string>? WatchedDirectories { get; set; }
 
     /// <summary>
+    ///   Per-directory scanning overrides keyed by normalized watched root path. A root without an
+    ///   entry uses <see cref="ScanDepth" /> and <see cref="DiscoveryMode" />.
+    /// </summary>
+    public IReadOnlyDictionary<string, WatchedDirectoryScanSettings> WatchedDirectorySettings { get; set; } =
+        new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     ///   How many directory levels below each watched root are scanned. Defaults to 2.
     /// </summary>
     public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;

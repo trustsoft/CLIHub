@@ -178,4 +178,147 @@ public class ProjectScanningServiceTests : IDisposable
 
         Assert.True(WaitFor(() => statuses.Count > 0));
     }
+
+    [Fact]
+    public void Rescan_ReconcilesOnlyTheRequestedRoot()
+    {
+        var rootA = this.CreateTempDir();
+        var rootB = this.CreateTempDir();
+        this.preferences.WatchedDirectories = [rootA, rootB];
+        this.preferences.ScanDepth = 2;
+        this.preferences.DiscoveryMode = ProjectDiscoveryMode.Git;
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle && this.reconciliations.Count > 0));
+
+        var discoveredRepo = Path.Combine(rootA, "newrepo");
+        Directory.CreateDirectory(Path.Combine(discoveredRepo, ".git"));
+
+        this.projects.Add(new Project
+        {
+            Id = "vanished-a",
+            Name = "vanished-a",
+            Path = Path.Combine(rootA, "vanished-a"),
+            Source = ProjectSource.Discovered
+        });
+        this.projects.Add(new Project
+        {
+            Id = "vanished-b",
+            Name = "vanished-b",
+            Path = Path.Combine(rootB, "vanished-b"),
+            Source = ProjectSource.Discovered
+        });
+        this.projects.Add(new Project
+        {
+            Id = "manual-a",
+            Name = "manual-a",
+            Path = Path.Combine(rootA, "manual-a"),
+            Source = ProjectSource.Manual
+        });
+
+        service.Rescan(rootA);
+
+        Assert.True(WaitFor(() => this.reconciliations.Any(r =>
+            r.Discovered.Any(path => string.Equals(path, discoveredRepo, StringComparison.OrdinalIgnoreCase)))));
+
+        var last = this.reconciliations[^1];
+        Assert.Contains(discoveredRepo, last.Discovered);
+        Assert.Contains("vanished-a", last.Removed);
+        Assert.DoesNotContain("vanished-b", last.Removed);
+        Assert.DoesNotContain("manual-a", last.Removed);
+    }
+
+    [Fact]
+    public void Rescan_MissingRoot_RemovesNothing()
+    {
+        var root = this.CreateTempDir();
+        var missingRoot = Path.Combine(root, "missing");
+        this.preferences.WatchedDirectories = [root];
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle && this.reconciliations.Count > 0));
+
+        this.projects.Add(new Project
+        {
+            Id = "p",
+            Name = "missing",
+            Path = Path.Combine(missingRoot, "repo"),
+            Source = ProjectSource.Discovered
+        });
+        var scanCount = this.reconciliations.Count;
+
+        service.Rescan(missingRoot);
+
+        Assert.True(WaitFor(() => this.reconciliations.Count > scanCount));
+        Assert.DoesNotContain("p", this.reconciliations[^1].Removed);
+    }
+
+    [Fact]
+    public void Rescan_KeepsProjectUnderAnotherWatchedRoot()
+    {
+        var root = this.CreateTempDir();
+        var nestedRoot = Path.Combine(root, "nested");
+        Directory.CreateDirectory(nestedRoot);
+        this.preferences.WatchedDirectories = [root, nestedRoot];
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle && this.reconciliations.Count > 0));
+
+        this.projects.Add(new Project
+        {
+            Id = "nested-project",
+            Name = "vanished",
+            Path = Path.Combine(nestedRoot, "vanished"),
+            Source = ProjectSource.Discovered
+        });
+        var scanCount = this.reconciliations.Count;
+
+        service.Rescan(root);
+
+        Assert.True(WaitFor(() => this.reconciliations.Count > scanCount));
+        Assert.DoesNotContain("nested-project", this.reconciliations[^1].Removed);
+    }
+
+    [Fact]
+    public void CountDiscoveredProjects_CountsOnlyDiscoveredProjectsAtOrBelowRoot()
+    {
+        var root = this.CreateTempDir();
+        var otherRoot = this.CreateTempDir();
+        this.projects.Add(new Project
+        {
+            Id = "a",
+            Name = "a",
+            Path = Path.Combine(root, "repo"),
+            Source = ProjectSource.Discovered
+        });
+        this.projects.Add(new Project
+        {
+            Id = "b",
+            Name = "b",
+            Path = Path.Combine(root, "nested", "repo"),
+            Source = ProjectSource.Discovered
+        });
+        this.projects.Add(new Project
+        {
+            Id = "c",
+            Name = "c",
+            Path = Path.Combine(root, "manual"),
+            Source = ProjectSource.Manual
+        });
+        this.projects.Add(new Project
+        {
+            Id = "d",
+            Name = "d",
+            Path = Path.Combine(otherRoot, "repo"),
+            Source = ProjectSource.Discovered
+        });
+
+        var service = this.CreateService();
+
+        Assert.Equal(2, service.CountDiscoveredProjects(root));
+        Assert.Equal(0, service.CountDiscoveredProjects(string.Empty));
+    }
 }
