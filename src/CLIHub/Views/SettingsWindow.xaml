@@ -6,6 +6,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:themes="clr-namespace:CLIHub.Themes"
         xmlns:conv="clr-namespace:CLIHub.Converters"
+        xmlns:controls="clr-namespace:CLIHub.Controls"
         xmlns:views="clr-namespace:CLIHub.Views"
         mc:Ignorable="d"
         Title="Settings"
@@ -114,6 +115,159 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+            </DataTemplate>
+
+            <!-- Projects & Paths summary cards, pinned to the page header. -->
+            <DataTemplate x:Key="ProjectsSummaryCards">
+                <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="PROJECTS"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding DiscoveredProjectCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="Scanned repositories"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="AGENTS"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding AgentsInstalledCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding AgentsSupportSummary}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource SuccessBrush}"
+                                           Text="{x:Static themes:IconGlyphs.Robot}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="WATCHER"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Text="{Binding WatcherStateLabel}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontSize" Value="18"/>
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WatcherStateLabel}" Value="Watching">
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding WatcherStateLabel}" Value="Scanning">
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding WatcherStateLabel}" Value="Error">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding WatcherDetailText}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="{Binding WatcherDetailText}"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{x:Static themes:IconGlyphs.Sync}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </controls:SpacedPanel>
             </DataTemplate>
 
             <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
@@ -246,6 +400,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -306,7 +461,26 @@
                             </ContentControl.Style>
                         </ContentControl>
 
-                        <Rectangle Grid.Row="1"
+                        <!-- Projects summary: part of the fixed header, above the divider. -->
+                        <ContentControl Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Margin="0,14,0,0"
+                                        HorizontalContentAlignment="Stretch"
+                                        Content="{Binding}">
+                            <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="ContentTemplate" Value="{StaticResource ProjectsSummaryCards}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentControl.Style>
+                        </ContentControl>
+
+                        <Rectangle Grid.Row="2"
                                    Grid.ColumnSpan="2"
                                    Height="1"
                                    Margin="0,14,0,0"
