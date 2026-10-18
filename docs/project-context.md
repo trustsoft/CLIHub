@@ -43,6 +43,8 @@ process inspection) behind ports declared in Core.
   narrower store interfaces over that document.
 - Plugins are JSON descriptors under `%APPDATA%\CLIHub\plugins\<id>\`; they contain command definitions and
   detection markers. Plugins do not load DLLs or execute code in-process.
+- Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
+  manually added projects untouched. Scanning settings apply immediately from the Project Discovery page.
 - The launch window is the active WPF shell. `MainWindow` is retained as an unregistered legacy reference.
 - The application enforces one instance with `Local\CLIHub.SingleInstance` and a named-pipe activation signal.
 - Updates are coordinated through the application `IUpdateWorkflow`; Core owns Velopack integration and update ports.

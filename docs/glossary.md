@@ -9,9 +9,10 @@ use these terms with these meanings.
 - **Project folder** — an ordinary directory on disk where the user works. CLIHub treats it as
   read-only context: it never creates or modifies files inside it. Registered via **Add Project…**.
 - **Project** — CLIHub's registration record for a project folder: a unique ID, the folder path,
-  a display name derived from the folder name, a favorite flag, and a last-used timestamp. Stored
-  in `%APPDATA%\CLIHub\config.json`. Removing a project removes the record only — the folder and
-  its contents stay untouched. See [project-management](../openspec/specs/project-management/spec.md).
+  a display name derived from the folder name, a favorite flag, a last-used timestamp, and
+  provenance (manual or discovered). Stored in `%APPDATA%\CLIHub\config.json`. Removing a project
+  removes the record only — the folder and its contents stay untouched. See
+  [project-management](../openspec/specs/project-management/spec.md).
 - **Current project** — the selected project that provides [launch context](#projects) for agent
   commands. Persisted as `currentProjectId` and restored on startup. With no current project,
   every agent command is blocked with a "select a project" message.
@@ -24,6 +25,27 @@ use these terms with these meanings.
   menu and toggled from the project pane.
 - **Project logo** — an image resolved from well-known filenames in the project folder
   (for example `logo.png`, `icon.png`); falls back to a built-in default logo.
+
+## Project discovery
+
+- **Watched root** — a folder configured on the Project Discovery page. Scanning looks for project
+  folders at or below it, up to the configured scan depth.
+- **Project discovery** — automatic registration of repositories found under watched roots. It runs
+  in the background while at least one watched root exists and re-runs after scanning settings change.
+- **Discovered project** — a project registered by discovery (`source = discovered`). It is removed when
+  it is no longer under any watched root or disappears from a rescanned root.
+- **Manual project** — a project added explicitly via **Add Project…** (`source = manual`). Discovery
+  never reclassifies or removes it.
+- **Scan depth** — the number of directory levels below each watched root that discovery inspects
+  (1–8, default 2).
+- **Discovery mode** — which directories count as repositories: `git` (a `.git` entry), `agents`
+  (a plugin project indicator), or `both` (default).
+- **Ignored pattern** — a case-insensitive directory-name glob skipped during the walk.
+- **Scan coverage** — the number of folders the last scan examined; shown in the watcher summary card
+  on the Project Discovery page.
+
+See [project-scanning](../openspec/specs/project-scanning/spec.md) and
+[Project scanning](architecture/scanning.md).
 
 ## Agents and plugins
 
@@ -90,9 +112,10 @@ use these terms with these meanings.
 - **Single instance** — a second CLIHub launch does not start a new process; it activates the
   running instance via a named mutex and a named-pipe activation signal.
 - **Preferences** — user settings persisted under the `preferences` object of `config.json`
-  (startup behavior, hotkey and popup position, runtime, agent probing, project scanning,
+  (startup behavior, hotkey and popup position, runtime, agent probing, project discovery,
   appearance, logging, updates, and the availability filter). Editable from the Settings window;
-  most changes apply without restart, while the theme takes effect on the next start.
+  most changes apply without restart, while the theme takes effect on the next start. Scanning
+  settings apply as soon as they change on the Project Discovery page; the other pages use Save.
 - **Settings window** — the window (opened from the tray) where preferences are edited.
 
 ## Releases and updates

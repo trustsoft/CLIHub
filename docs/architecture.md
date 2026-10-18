@@ -46,7 +46,8 @@ ports and update state; the application workflow owns cross-surface coordination
   and atomic persistence.
 - `Projects/` owns project state, selection, recency, favorites, paths, and project logos.
 - `Plugins/` owns descriptor discovery, validation, catalog reload, and built-in seeding.
-- `Scanning/` owns watched-root repository discovery, the background watcher, and the scan status surface.
+- `Scanning/` owns watched-root repository discovery, per-root scan coverage, the background watcher, and the
+  scan status surface.
 - `Agents/` owns commands, detection, versions, availability composition, command capability checks, and
   running-agent process monitoring.
 - `Updates/` owns Core update/release-note contracts and Velopack integration.

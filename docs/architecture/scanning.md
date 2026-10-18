@@ -6,7 +6,7 @@ only) and never starts an agent process.
 
 ## Settings
 
-Scanning is driven by four preferences (see [Configuration persistence](configuration.md)):
+Scanning is driven by five preferences (see [Configuration persistence](configuration.md)):
 
 - `watchedDirectories` — root folders to scan. Empty means nothing is watched.
 - `watchedDirectorySettings` — per-root `{path, scanDepth, discoveryMode}` overrides. A root without
@@ -27,9 +27,10 @@ row's settings never changes another root.
 ## Discovery and reconciliation
 
 `RepositoryDiscovery.Enumerate` walks each existing root to the configured depth and returns the discovered
-paths plus the roots that were scanned successfully. A directory is discovered when it matches the mode, and
-discovery stops descending at a repository (the repository itself is the project). Missing or unreadable roots
-are skipped with a warning and do not affect the others.
+paths, the roots that were scanned successfully, and the number of folders the walk examined under each of
+those roots. A directory is discovered when it matches the mode, and discovery stops descending at a
+repository (the repository itself is the project). Missing or unreadable roots are skipped with a warning and
+do not affect the others.
 
 `IProjectScanner` (implemented by `ProjectScanningService`) reconciles the discovered set through
 `IProjectService.ReconcileDiscoveredProjects`:
@@ -44,7 +45,7 @@ update safely.
 
 ## Single-root rescan
 
-`IProjectScanner.Rescan(root)` refreshes one watched root from the Projects & Paths page. It enumerates only that
+`IProjectScanner.Rescan(root)` refreshes one watched root from the Project Discovery page. It enumerates only that
 root with the stored scan settings and reconciles only projects beneath it:
 
 - discovered projects under the other roots are left untouched (this also protects overlapping nested roots that
@@ -52,12 +53,15 @@ root with the stored scan settings and reconciles only projects beneath it:
 - manual projects are kept;
 - a missing or unreadable root scans nothing, so it removes nothing.
 
-The pass reports `Scanning` while it runs and, afterwards, the last scan time and the total discovered-project
-count. The page-header "Scan Now" remains the full pass through `Reload()`.
+The pass reports `Scanning` while it runs and, afterwards, the last scan time, the total discovered-project
+count, and the scan coverage — how many folders the walk examined. The discovered-project count is always the
+number of registered projects with discovered provenance, so a project registered manually is not counted twice
+and a single-root rescan reports the same number as a full pass. The page-header "Scan Now" remains the full
+pass through `Reload()`.
 
 `IProjectScanner.CountDiscoveredProjects(root)` reports how many discovered projects sit at or below a watched
-root. The Settings page uses it for the secondary line of each watched-directory row, where the count is shown
-next to the discovery mode and the scan depth.
+root. The Project Discovery page uses it for the secondary line of each watched-directory row, where the count
+is shown next to the discovery mode and the scan depth.
 
 ## Watcher and status
 
@@ -66,11 +70,26 @@ events only arm a debounced timer (~750 ms); a single coalesced reconcile pass r
 overlap, and a watcher buffer overflow triggers a full rescan and watcher re-creation.
 
 `IProjectScanner.Status` (a `ProjectScanStatus` value) reports the state (`NotConfigured`, `Idle`, `Scanning`,
-`Error`), whether it is watching, whether a scan is running, the last scan time, the discovered count, and the
-last error. `StatusChanged` raises the same value.
+`Error`), whether it is watching, whether a scan is running, the last scan time, the discovered count, the
+scanned-folder count, and the last error. `StatusChanged` raises the same value.
+
+The scanned-folder count aggregates the coverage the walk recorded per watched root. A full pass replaces every
+root's coverage, a single-root rescan replaces only that root's coverage (so the other roots keep their last
+known number), a reload drops coverage for roots that are no longer configured, and `Stop` clears it. The
+watcher summary card appends this folder count to its last scan time, so a scan that stops at the first level
+is visible at a glance.
+
+The page summary cards read project provenance through `IProjectScanner` as well: the PROJECTS card shows the
+total number of registered projects (discovered plus manual) and the "N discovered · M manual" split beneath it,
+with `CountDiscoveredProjects(root)` feeding each watched-directory row and `CountManualProjects()` feeding the
+split.
 
 ## Lifecycle
 
 `ApplicationBootstrapper` starts the scanner after startup state is loaded; the DI container disposes it on
-shutdown. Saving the scanning preferences calls `IProjectScanner.Reload()`, which re-reads the preferences,
-reconfigures the watcher, and triggers a fresh scan — no restart required.
+shutdown. Scanning settings edited on the Project Discovery page apply immediately: the page persists them
+through a scanning-only boundary and calls `IProjectScanner.Reload()`, which re-reads the preferences,
+reconfigures the watcher, and triggers a fresh scan — no restart and no footer Save required. Saving the
+Settings window writes the same scanning values again and reloads the scanner, but the page is already in sync
+with what it shows. Cancel does not revert scanning changes that were already applied; it discards the
+remaining unsaved settings.

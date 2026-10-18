@@ -32,10 +32,12 @@ one-dimensional layout helper rather than a replacement for WPF's virtualizing p
 ## Settings Page Layout
 
 The Settings window renders the active page's title, description, and hairline divider once in a fixed
-header row of the content area. Only the page content below that divider is hosted by the vertical
-`ScrollViewer`, so the page header, sidebar, drawn window chrome, validation message, and footer stay
-visible while long pages scroll. Page views (`Settings*Page.xaml`) contain only their settings content;
-the title and description live in the `SettingsPage` metadata exposed through `SelectedPage`.
+header row of the content area. A page may add fixed content above the divider: on Project Discovery, the
+projects, agents, and watcher summary cards sit between the description and the hairline. Only the content
+below the divider is hosted by the vertical `ScrollViewer`, so the page header, summary cards, sidebar,
+drawn window chrome, validation message, and footer stay visible while long pages scroll. Page views
+(`Settings*Page.xaml`) contain only their scrolling settings content; the title and description live in
+the `SettingsPage` metadata exposed through `SelectedPage`.
 
 ## Settings Numeric Fields
 

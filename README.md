@@ -33,11 +33,12 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 <img src="docs/images/settings.png" alt="CLIHub Settings: appearance, theme, and accent color" width="880">
 
-*Settings: theme, accent color, hotkeys, terminal runtime, agent probes, updates, and logs.*
+*Settings: theme, accent color, hotkeys, terminal runtime, agent probes, project discovery, updates, and logs.*
 
 ## Features
 
 - Project folders with current, recent, favorite, and logo-aware state.
+- Automatic project discovery: watch folders, scan them with per-folder depth and rules, and keep new repositories in the project list.
 - Agent commands for launch, resume, version, and update.
 - Host/project availability detection, version display, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+Space` by default) and a single-instance tray application.
@@ -66,9 +67,9 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 ## Basic Use
 
 1. Open CLIHub from the tray icon or press `Ctrl+Shift+Space`.
-2. Add a project folder and select it.
+2. Add a project folder and select it, or let CLIHub discover folders under a watched root in Settings → Project Discovery.
 3. Select an available agent and run the required command.
-4. Configure runtime, hotkey, probing, update checks, and display preferences in Settings.
+4. Configure runtime, hotkey, probing, update checks, display preferences, and project discovery in Settings.
 5. Close running registered agents before using an Update command; CLIHub keeps the action disabled while
    a matching process is detected.
 
