@@ -76,6 +76,8 @@
     <!-- Shape roles (shared corner-radius vocabulary) -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
+    <!-- Radius of the small display chips (version/state/header chips) -->
+    <CornerRadius x:Key="Sizing.Chip.CornerRadius">6</CornerRadius>
 
     <!-- Toggle switch (CheckBox rendered as a switch): pill track with a sliding thumb.
          ThumbMargin is the unchecked rest position; ThumbMarginChecked mirrors it at the

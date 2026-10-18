@@ -618,7 +618,7 @@
         <Setter Property="Background" Value="{DynamicResource ThumbBgBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource Sizing.Chip.CornerRadius}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
