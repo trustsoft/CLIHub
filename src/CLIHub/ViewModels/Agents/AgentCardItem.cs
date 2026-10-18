@@ -41,8 +41,6 @@ public sealed class AgentCardItem : ObservableObject
         this.LogoPath = logoPath;
         this.ConfigPath = configPath;
         this.CommandLabels = BuildCommandLabels(plugin.Commands);
-        this.HostMarkers = plugin.Detection?.SystemPaths?.ToArray() ?? [];
-        this.ProjectMarkers = plugin.Detection?.ProjectIndicators?.ToArray() ?? [];
         this.isInstalled = isInstalled;
         this.version = version;
     }
@@ -78,26 +76,6 @@ public sealed class AgentCardItem : ObservableObject
     public IReadOnlyList<string> CommandLabels { get; }
 
     /// <summary>
-    ///   The declared host installation markers.
-    /// </summary>
-    public IReadOnlyList<string> HostMarkers { get; }
-
-    /// <summary>
-    ///   The declared project indicators.
-    /// </summary>
-    public IReadOnlyList<string> ProjectMarkers { get; }
-
-    /// <summary>
-    ///   Whether the agent declares any host markers.
-    /// </summary>
-    public bool HasHostMarkers => this.HostMarkers.Count > 0;
-
-    /// <summary>
-    ///   Whether the agent declares any project indicators.
-    /// </summary>
-    public bool HasProjectMarkers => this.ProjectMarkers.Count > 0;
-
-    /// <summary>
     ///   Whether the agent declares any commands.
     /// </summary>
     public bool HasCommands => this.CommandLabels.Count > 0;
@@ -106,16 +84,6 @@ public sealed class AgentCardItem : ObservableObject
     ///   The declared command kinds as a single line, or an em dash when none are declared.
     /// </summary>
     public string CommandsText => this.CommandLabels.Count > 0 ? string.Join(", ", this.CommandLabels) : "—";
-
-    /// <summary>
-    ///   The declared host markers as a single line, or an em dash when none are declared.
-    /// </summary>
-    public string HostMarkersText => this.HostMarkers.Count > 0 ? string.Join(", ", this.HostMarkers) : "—";
-
-    /// <summary>
-    ///   The declared project indicators as a single line, or an em dash when none are declared.
-    /// </summary>
-    public string ProjectMarkersText => this.ProjectMarkers.Count > 0 ? string.Join(", ", this.ProjectMarkers) : "—";
 
     /// <summary>
     ///   Whether the agent is installed on the host.
@@ -127,15 +95,16 @@ public sealed class AgentCardItem : ObservableObject
         {
             if (this.SetProperty(ref this.isInstalled, value))
             {
-                this.OnPropertyChanged(nameof(this.StatusText));
+                this.OnPropertyChanged(nameof(this.VersionChipText));
             }
         }
     }
 
     /// <summary>
-    ///   The installation status text.
+    ///   The state chip text: the installed version when known, otherwise the installation state.
     /// </summary>
-    public string StatusText => this.IsInstalled ? "Installed" : "Not installed";
+    public string VersionChipText =>
+        !this.IsInstalled ? "Not installed" : HasKnownVersion(this.version) ? $"v{this.version}" : "Installed";
 
     /// <summary>
     ///   The installed version, or an "unknown" placeholder.
@@ -143,22 +112,19 @@ public sealed class AgentCardItem : ObservableObject
     public string Version
     {
         get => this.version;
-        set => this.SetProperty(ref this.version, value);
+        set
+        {
+            if (this.SetProperty(ref this.version, value))
+            {
+                this.OnPropertyChanged(nameof(this.VersionChipText));
+            }
+        }
     }
 
     /// <summary>
     ///   Whether the Update action is available for the agent.
     /// </summary>
     public bool CanUpdate
-    {
-        get;
-        set => this.SetProperty(ref field, value);
-    }
-
-    /// <summary>
-    ///   Why the Update action is unavailable, when it is.
-    /// </summary>
-    public string? UpdateNote
     {
         get;
         set => this.SetProperty(ref field, value);
@@ -188,6 +154,9 @@ public sealed class AgentCardItem : ObservableObject
     ///   Whether the card has an action outcome message to show.
     /// </summary>
     public bool HasMessage => !string.IsNullOrEmpty(this.Message);
+
+    private static bool HasKnownVersion(string version) =>
+        !string.IsNullOrEmpty(version) && version is not ("…" or "unknown");
 
     private static IReadOnlyList<string> BuildCommandLabels(AgentCommands? commands)
     {

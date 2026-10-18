@@ -160,8 +160,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 "…",
                 AgentConfigurationPath.For(plugin))
             {
-                CanUpdate = canUpdate,
-                UpdateNote = canUpdate ? null : "Update not supported"
+                CanUpdate = canUpdate
             };
 
             this.Cards.Add(card);

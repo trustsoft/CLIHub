@@ -7,6 +7,25 @@
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
+    <UserControl.Resources>
+        <!-- State chip next to the agent name: version when installed, danger state when missing -->
+        <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource HeaderChip}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="AgentStateChipText" TargetType="TextBlock" BasedOn="{StaticResource HeaderChipLabel}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
     <StackPanel>
         <controls:SectionHeader Text="MANAGEMENT"/>
         <controls:SettingCard Title="Default agent"
@@ -31,16 +50,17 @@
         <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="0,0,0,10"
+                    <Border Margin="0,0,0,8"
                             Padding="12"
                             Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <Border Grid.Column="0"
@@ -56,81 +76,72 @@
                                 </Border.Background>
                             </Border>
 
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
-                                           FontWeight="Medium"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{Binding Name}"/>
-                                <TextBlock Margin="0,4,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding StatusText}"/>
-                                <TextBlock Margin="0,2,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding Version, StringFormat=Version: {0}}"/>
-                                <TextBlock Margin="0,2,0,0" Text="{Binding ConfigPath}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ConfigPath}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding ConfigPath}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
+                            <StackPanel Grid.Column="1" Margin="12,0,12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="{StaticResource Sizing.FontSize.Body}"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{Binding Name}"/>
+                                    <Border Margin="8,0,0,0"
+                                            Style="{StaticResource AgentStateChip}">
+                                        <TextBlock Style="{StaticResource AgentStateChipText}"
+                                                   Text="{Binding VersionChipText}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Margin="0,3,0,0"
+                                           AutomationProperties.Name="Supported commands"
+                                           Style="{StaticResource HintText}">
+                                    <Run xml:space="preserve">Supported commands: </Run>
+                                    <Run Text="{Binding CommandsText, Mode=OneWay}"/>
                                 </TextBlock>
-
-                                <TextBlock Margin="0,8,0,0"
-                                           Style="{StaticResource FieldLabel}"
-                                           Text="Commands"/>
-                                <TextBlock Style="{StaticResource HintText}" Text="{Binding CommandsText}"/>
-
-                                <TextBlock Margin="0,8,0,0"
-                                           Style="{StaticResource FieldLabel}"
-                                           Text="Detection markers"/>
-                                <TextBlock Style="{StaticResource HintText}" Text="{Binding HostMarkersText}"/>
-                                <TextBlock Style="{StaticResource HintText}" Text="{Binding ProjectMarkersText}"/>
 
                                 <TextBlock Margin="0,6,0,0"
                                            Style="{StaticResource StatusLine}"
                                            Text="{Binding Message}"
                                            Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
-
-                                <controls:SpacedPanel Margin="0,10,0,0"
-                                                      Orientation="Horizontal"
-                                                      Spacing="{StaticResource Sizing.Spacing}">
-                                    <Button Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Content="Test"
-                                            Style="{StaticResource NeutralButton}"/>
-                                    <Button Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Content="Update"
-                                            IsEnabled="{Binding CanUpdate}"
-                                            Style="{StaticResource NeutralButton}"/>
-                                    <Button Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Content="Edit Config"
-                                            IsEnabled="{Binding CanEditConfig}"
-                                            Style="{StaticResource NeutralButton}"/>
-                                </controls:SpacedPanel>
-                                <TextBlock Margin="0,4,0,0" Text="{Binding UpdateNote}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding UpdateNote}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding UpdateNote}" Value="">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
                             </StackPanel>
+
+                            <controls:SpacedPanel Grid.Column="2"
+                                                  VerticalAlignment="Top"
+                                                  Orientation="Horizontal"
+                                                  Spacing="2">
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Test agent"
+                                        Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Probe installation and version">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="16"
+                                               Text="{x:Static themes:IconGlyphs.Diagnostic}"/>
+                                </Button>
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Update agent"
+                                        Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        IsEnabled="{Binding CanUpdate}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Run the agent's update command">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="16"
+                                               Text="{x:Static themes:IconGlyphs.Update}"/>
+                                </Button>
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Edit agent config"
+                                        Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        IsEnabled="{Binding CanEditConfig}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Open the agent's plugin.json">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="16"
+                                               Text="{x:Static themes:IconGlyphs.Document}"/>
+                                </Button>
+                            </controls:SpacedPanel>
                         </Grid>
                     </Border>
                 </DataTemplate>
