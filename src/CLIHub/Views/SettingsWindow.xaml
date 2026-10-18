@@ -551,6 +551,19 @@
                                 </views:SettingsAgentsPage.Style>
                             </views:SettingsAgentsPage>
 
+                            <views:SettingsProjectRegistryPage>
+                                <views:SettingsProjectRegistryPage.Style>
+                                    <Style TargetType="UserControl">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects-registry">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </views:SettingsProjectRegistryPage.Style>
+                            </views:SettingsProjectRegistryPage>
+
                             <views:SettingsProjectsPage>
                                 <views:SettingsProjectsPage.Style>
                                     <Style TargetType="UserControl">

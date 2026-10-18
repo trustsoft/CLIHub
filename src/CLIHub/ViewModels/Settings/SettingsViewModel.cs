@@ -257,6 +257,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             true,
             IconGlyphs.Keyboard),
         new(
+            "projects-registry",
+            "Projects",
+            "Registered projects, their provenance, and manually added entries.",
+            "Engines & Repos",
+            true,
+            IconGlyphs.FolderAdd),
+        new(
             "projects",
             "Project Discovery",
             "Watched directories, discovery rules, and the background watcher.",
@@ -421,6 +428,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
     /// <param name="projectScanner"> Scanner whose status is shown on the Project Discovery page. </param>
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
+    /// <param name="projectRegistry"> Project-registry section shown on the Projects page. </param>
     /// <param name="accentMemory"> Process-wide memory of the last custom accent. </param>
     public SettingsViewModel(SettingsApplicationService settingsApplication,
                              IUpdateVersionProvider versionProvider,
@@ -431,6 +439,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
                              IProjectDialogService dialogs,
                              IProjectScanner projectScanner,
                              IAgentManagementSection agentsState,
+                             IProjectRegistrySection projectRegistry,
                              AccentSelectionMemory accentMemory,
                              ILogger<SettingsViewModel> logger)
     {
@@ -443,6 +452,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
+        this.ProjectRegistry = projectRegistry ?? throw new ArgumentNullException(nameof(projectRegistry));
         this.accentMemory = accentMemory ?? throw new ArgumentNullException(nameof(accentMemory));
         this.logger = logger;
 
@@ -499,6 +509,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   The agent-management section shown on the CLI Agents page.
     /// </summary>
     public IAgentManagementSection AgentsState { get; }
+
+    /// <summary>
+    ///   The project-registry section shown on the Projects page.
+    /// </summary>
+    public IProjectRegistrySection ProjectRegistry { get; }
 
     /// <summary>
     ///   The currently selected navigation page.
@@ -1227,6 +1242,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.AgentsState.Load(draft.DefaultAgentId);
         this.RefreshAgentSummary();
+        this.ProjectRegistry.Load();
 
         this.ResetUpdateStatus();
         this.validationError = null;
@@ -1608,6 +1624,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.observedWatchedDirectoryRows.Clear();
         this.AgentsState.Dispose();
+        this.ProjectRegistry.Dispose();
     }
 
     /// <summary>

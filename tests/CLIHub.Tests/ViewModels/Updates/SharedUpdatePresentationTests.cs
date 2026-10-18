@@ -135,6 +135,7 @@ public class SharedUpdatePresentationTests
             Mock.Of<IProjectDialogService>(),
             Mock.Of<Core.Scanning.IProjectScanner>(),
             Mock.Of<IAgentManagementSection>(),
+            Mock.Of<IProjectRegistrySection>(),
             new AccentSelectionMemory(),
             NullLogger<SettingsViewModel>.Instance);
     }

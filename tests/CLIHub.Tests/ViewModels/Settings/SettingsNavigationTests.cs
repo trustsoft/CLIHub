@@ -15,17 +15,17 @@ using CLIHub.Lifetime;
 public class SettingsNavigationTests
 {
     [Fact]
-    public void Catalog_HasThreeGroupsAndEightPagesInOrder()
+    public void Catalog_HasThreeGroupsAndNinePagesInOrder()
     {
         var viewModel = new Fixture().ViewModel;
 
         Assert.Equal(
             new[] { "General", "Engines & Repos", "System" },
             viewModel.PageGroups.Select(group => group.Title));
-        Assert.Equal(8, viewModel.Pages.Count);
+        Assert.Equal(9, viewModel.Pages.Count);
 
         Assert.Equal(
-            new[] { "general", "hotkeys", "projects", "agents", "terminal", "appearance", "telemetry", "updates" },
+            new[] { "general", "hotkeys", "projects-registry", "projects", "agents", "terminal", "appearance", "telemetry", "updates" },
             viewModel.Pages.Select(page => page.Key));
     }
 
@@ -36,6 +36,14 @@ public class SettingsNavigationTests
 
         Assert.All(viewModel.Pages, page => Assert.False(string.IsNullOrEmpty(page.Icon)));
         Assert.Equal("Hotkeys & Quick Launcher", viewModel.Pages.Single(page => page.Key == "hotkeys").Title);
+    }
+
+    [Fact]
+    public void Catalog_ProjectsRegistryPageIsNamedProjects()
+    {
+        var viewModel = new Fixture().ViewModel;
+
+        Assert.Equal("Projects", viewModel.Pages.Single(page => page.Key == "projects-registry").Title);
     }
 
     [Fact]
@@ -124,6 +132,7 @@ public class SettingsNavigationTests
                 new Mock<IProjectDialogService>().Object,
                 new Mock<Core.Scanning.IProjectScanner>().Object,
                 Mock.Of<IAgentManagementSection>(),
+                Mock.Of<IProjectRegistrySection>(),
                 new AccentSelectionMemory(),
                 NullLogger<SettingsViewModel>.Instance);
         }

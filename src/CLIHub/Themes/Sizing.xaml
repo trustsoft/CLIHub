@@ -54,6 +54,9 @@
     <!-- Gap between a project row's thumbnail and its texts: a fixed grid column, so the text
          column's measured width is exactly the space the path may fill. -->
     <GridLength x:Key="Sizing.ProjectRow.TextGap">15</GridLength>
+    <!-- Upper bound for a project name on the Settings Projects page, so the provenance mark
+         sits right after the name and a long name cannot push it away. -->
+    <sys:Double x:Key="Sizing.SettingsProjectRow.NameMaxWidth">360</sys:Double>
 
     <!-- Buttons -->
     <sys:Double x:Key="Sizing.ActionButton.Height">28</sys:Double>

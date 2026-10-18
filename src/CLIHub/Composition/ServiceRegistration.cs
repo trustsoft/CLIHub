@@ -99,6 +99,7 @@ public static class ServiceRegistration
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddSingleton<IAccentPreferenceTarget, WpfAccentPreferenceTarget>();
         services.AddTransient<IAgentManagementSection, AgentManagementViewModel>();
+        services.AddTransient<IProjectRegistrySection, ProjectRegistryViewModel>();
         services.AddSingleton<SettingsApplicationService>();
         services.AddSingleton<AccentSelectionMemory>();
         services.AddTransient<SettingsViewModel>(sp => new SettingsViewModel(
@@ -111,6 +112,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<IProjectDialogService>(),
             sp.GetRequiredService<IProjectScanner>(),
             sp.GetRequiredService<IAgentManagementSection>(),
+            sp.GetRequiredService<IProjectRegistrySection>(),
             sp.GetRequiredService<AccentSelectionMemory>(),
             sp.GetRequiredService<ILogger<SettingsViewModel>>()));
         services.AddTransient<SettingsWindow>();

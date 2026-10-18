@@ -718,6 +718,7 @@ public class SettingsViewModelApplicationTests
                 this.Dialogs.Object,
                 this.Scanner.Object,
                 Mock.Of<IAgentManagementSection>(),
+                Mock.Of<IProjectRegistrySection>(),
                 this.AccentMemory,
                 NullLogger<SettingsViewModel>.Instance);
         }

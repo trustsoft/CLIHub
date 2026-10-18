@@ -1,0 +1,55 @@
+namespace CLIHub.ViewModels;
+
+using System.Collections.ObjectModel;
+
+/// <summary>
+///   The project-registry section of the Settings window: every registered project,
+///   the manual add action, the manual remove action, and the section error line.
+/// </summary>
+public interface IProjectRegistrySection : IDisposable
+{
+    /// <summary>
+    ///   Registered projects: manual first, then discovered, each ordered by name.
+    /// </summary>
+    ObservableCollection<ProjectRegistryItem> Projects { get; }
+
+    /// <summary>
+    ///   The error from the last add or remove action, or null.
+    /// </summary>
+    string? ErrorText { get; }
+
+    /// <summary>
+    ///   Whether there is an error to show.
+    /// </summary>
+    bool HasError { get; }
+
+    /// <summary>
+    ///   The folder path typed or selected for registration.
+    /// </summary>
+    string NewProjectPath { get; set; }
+
+    /// <summary>
+    ///   Command that fills <see cref="NewProjectPath" /> from the folder picker.
+    /// </summary>
+    RelayCommand BrowseCommand { get; }
+
+    /// <summary>
+    ///   Command that registers the typed or selected folder as a manual project.
+    /// </summary>
+    RelayCommand RegisterCommand { get; }
+
+    /// <summary>
+    ///   Command that removes a manual project after confirmation.
+    /// </summary>
+    RelayCommand<ProjectRegistryItem> RemoveCommand { get; }
+
+    /// <summary>
+    ///   Command that opens the project folder in the operating system's file manager.
+    /// </summary>
+    RelayCommand<ProjectRegistryItem> OpenFolderCommand { get; }
+
+    /// <summary>
+    ///   Rebuilds the rows from the project service.
+    /// </summary>
+    void Load();
+}
