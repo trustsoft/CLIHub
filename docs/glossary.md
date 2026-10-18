@@ -118,6 +118,20 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
   settings apply as soon as they change on the Project Discovery page; the other pages use Save.
 - **Settings window** — the window (opened from the tray) where preferences are edited.
 
+## Settings UI
+
+- **Summary card** — one of the fixed information blocks in a Settings page header that summarizes
+  the state of that page, for example PROJECTS, AGENTS, and DAEMON on Project Discovery. A summary
+  card sits between the page description and the hairline and does not scroll with the page content.
+  In XAML, a page's cards are one `...SummaryCards` data template (`ProjectsSummaryCards`,
+  `RegistrySummaryCards`, `AgentsSummaryCards`). Russian: «сводная карточка».
+- **Summary row** — the horizontal row that holds a page's summary cards. Russian: «ряд сводных
+  карточек»; the whole header block is also called «сводка страницы». Use "summary cards" for the
+  individual blocks and "summary row" for the group. Prefer these terms over "metrics line",
+  "KPI cards", "metric tiles", "info tiles", or "info blocks": a card may show a name or a policy,
+  not only a number. Do not confuse a summary card with a **setting card** — the editable control
+  card inside page content. See [Settings page layout](architecture/ui.md#settings-page-layout).
+
 ## Releases and updates
 
 - **Changelog** — `CHANGELOG.md` at the repository root: the technical, developer-facing record

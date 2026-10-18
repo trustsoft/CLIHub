@@ -79,7 +79,7 @@ known number), a reload drops coverage for roots that are no longer configured, 
 watcher summary card appends this folder count to its last scan time, so a scan that stops at the first level
 is visible at a glance.
 
-The page summary cards read project provenance through `IProjectScanner` as well: the PROJECTS card shows the
+The Project Discovery summary cards read project provenance through `IProjectScanner` as well: the PROJECTS card shows the
 total number of registered projects (discovered plus manual) and the "N discovered · M manual" split beneath it,
 with `CountDiscoveredProjects(root)` feeding each watched-directory row and `CountManualProjects()` feeding the
 split.
