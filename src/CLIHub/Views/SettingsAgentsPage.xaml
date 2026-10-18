@@ -82,15 +82,11 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <Grid Margin="0,8,0,8">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0"
-                       Style="{StaticResource FieldLabel}"
-                       Text="Agents"/>
-            <Button Grid.Column="1"
+        <Grid>
+            <controls:SectionHeader Text="AGENTS"/>
+            <Button Margin="0,18,0,8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
                     AutomationProperties.Name="Re-detect installed agents"
                     Command="{Binding AgentsState.DetectCommand}"
                     IsEnabled="{Binding AgentsState.CanDetect}"
