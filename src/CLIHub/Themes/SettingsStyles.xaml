@@ -251,7 +251,7 @@
     </Style>
 
     <Style x:Key="HotkeyChipText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
@@ -623,13 +623,13 @@
     </Style>
 
     <Style x:Key="HeaderChipLabel" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style x:Key="HeaderChipValue" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
@@ -667,7 +667,7 @@
     </Style>
 
     <Style x:Key="StatusChipText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -893,17 +893,12 @@
                                                    Foreground="{DynamicResource TextPrimaryBrush}"
                                                    Text="{TemplateBinding Title}"/>
                                         <Border x:Name="BadgeBox"
-                                                Margin="8,0,0,0"
-                                                Padding="6,1"
-                                                VerticalAlignment="Center"
-                                                Background="{DynamicResource ThumbBgBrush}"
-                                                BorderBrush="{DynamicResource ControlStrokeBrush}"
-                                                BorderThickness="1"
-                                                CornerRadius="4">
+                                             Margin="8,0,0,0"
+                                             VerticalAlignment="Center"
+                                             Style="{StaticResource VersionChipBorder}">
                                             <TextBlock x:Name="BadgeText"
-                                                       FontSize="{StaticResource Sizing.FontSize.Section}"
+                                                       Style="{StaticResource VersionChipText}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextMutedBrush}"
                                                        Text="{TemplateBinding Badge}"/>
                                         </Border>
                                     </StackPanel>
@@ -1003,7 +998,7 @@
     <Style x:Key="SettingsChoiceChipToggle" TargetType="ToggleButton">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
         <Setter Property="FontWeight" Value="Normal"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">

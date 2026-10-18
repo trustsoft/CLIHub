@@ -222,7 +222,7 @@
                                     CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock VerticalAlignment="Center"
-                                               FontSize="{StaticResource Sizing.FontSize.Body}"
+                                               FontSize="{StaticResource Sizing.FontSize.Chip}"
                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                Text="{Binding}"/>
                                     <Button Margin="4,0,0,0"
