@@ -142,7 +142,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="PROJECTS"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding TotalProjectCount}"/>
@@ -186,7 +186,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="AGENTS"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding AgentsInstalledCount}"/>
@@ -234,7 +234,7 @@
                                            TextWrapping="NoWrap">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="FontSize" Value="18"/>
+                                            <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.SummaryValue}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                             <Style.Triggers>
@@ -295,7 +295,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="PROJECTS"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding ProjectRegistry.TotalCount}"/>
@@ -354,7 +354,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="MANUAL"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding ProjectRegistry.ManualCount}"/>
@@ -397,7 +397,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="DISCOVERED"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding ProjectRegistry.DiscoveredCount}"/>
@@ -445,7 +445,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="AGENTS"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding AgentsState.InstalledAgentCount}"/>
@@ -495,7 +495,7 @@
                                            ToolTip="{Binding AgentsState.DefaultAgentName}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="FontSize" Value="18"/>
+                                            <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.SummaryValue}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                                             <Style.Triggers>
@@ -545,7 +545,7 @@
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="PROBE"/>
                                 <TextBlock Margin="0,2,0,0"
-                                           FontSize="18"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{Binding ProbePolicySummary}"
