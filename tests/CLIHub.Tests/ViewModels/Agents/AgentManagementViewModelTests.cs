@@ -183,6 +183,47 @@ public class AgentManagementViewModelTests
         launcher.Verify(x => x.Open(card.ConfigPath!), Times.Once);
     }
 
+    [Fact]
+    public void Load_MarksUninstalledAgentsDisabledInDefaultOptions()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
+        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load(null);
+
+        Assert.True(viewModel.DefaultAgentOptions.Single(o => o.Id is null).IsInstalled);
+        Assert.True(viewModel.DefaultAgentOptions.Single(o => o.Id == "a").IsInstalled);
+        Assert.False(viewModel.DefaultAgentOptions.Single(o => o.Id == "b").IsInstalled);
+    }
+
+    [Fact]
+    public void DetectCommand_UpdatesCardsSummaryAndOptionAvailability()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
+        var management = new Mock<IAgentManagementService>();
+        management.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "2.0"));
+        management.Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "0.5"));
+        var viewModel = CreateViewModel([a, b], detection, Versions(), management, new Mock<IExternalLauncher>());
+        viewModel.Load(null);
+        Assert.Equal("2 supported · 1 not installed", viewModel.AvailabilitySummary);
+        Assert.False(viewModel.DefaultAgentOptions.Single(o => o.Id == "b").IsInstalled);
+
+        viewModel.DetectCommand.Execute(null);
+
+        Assert.True(viewModel.Cards.Single(c => c.PluginId == "b").IsInstalled);
+        Assert.Equal("0.5", viewModel.Cards.Single(c => c.PluginId == "b").Version);
+        Assert.Equal("2 supported · all installed", viewModel.AvailabilitySummary);
+        Assert.True(viewModel.DefaultAgentOptions.Single(o => o.Id == "b").IsInstalled);
+        Assert.True(viewModel.CanDetect);
+        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
     private sealed class InlineOperationLifetime : IApplicationOperationLifetime
     {
         public CancellationToken Token => CancellationToken.None;

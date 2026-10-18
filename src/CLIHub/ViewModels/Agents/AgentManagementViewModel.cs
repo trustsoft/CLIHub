@@ -27,6 +27,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly ILogger<AgentManagementViewModel> logger;
 
     private bool disposed;
+    private bool isDetecting;
 
     /// <summary>
     ///   Creates the section.
@@ -57,6 +58,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.TestCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent test", ct => this.TestAsync(card, ct)));
         this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
+        this.DetectCommand = new RelayCommand(() => _ = this.RunAsync("Agent detection", this.DetectAsync), () => this.CanDetect);
     }
 
     /// <inheritdoc />
@@ -140,6 +142,25 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public RelayCommand<AgentCardItem> EditConfigCommand { get; }
 
     /// <inheritdoc />
+    public RelayCommand DetectCommand { get; }
+
+    /// <inheritdoc />
+    public bool IsDetecting
+    {
+        get => this.isDetecting;
+        private set
+        {
+            if (this.SetProperty(ref this.isDetecting, value))
+            {
+                this.OnPropertyChanged(nameof(this.CanDetect));
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public bool CanDetect => !this.IsDetecting;
+
+    /// <inheritdoc />
     public void Load(string? defaultAgentId)
     {
         if (this.disposed)
@@ -180,7 +201,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private void RebuildDefaultAgentOptions(string? defaultAgentId)
     {
         var options = new List<AgentOption> { NoneOption };
-        options.AddRange(this.Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version)));
+        options.AddRange(this.Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version, card.IsInstalled)));
         this.DefaultAgentOptions = options;
 
         this.SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
@@ -229,6 +250,33 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             ? $"Installed · version {card.Version}"
             : "Not installed on the host";
         this.RefreshAvailabilitySummary();
+        this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+    }
+
+    private async Task DetectAsync(CancellationToken cancellationToken)
+    {
+        this.IsDetecting = true;
+        try
+        {
+            foreach (var card in this.Cards.ToList())
+            {
+                var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
+                if (this.disposed)
+                {
+                    return;
+                }
+
+                card.IsInstalled = result.IsInstalled;
+                card.Version = result.Version ?? "unknown";
+            }
+
+            this.RefreshAvailabilitySummary();
+            this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+        }
+        finally
+        {
+            this.IsDetecting = false;
+        }
     }
 
     private async Task UpdateAsync(AgentCardItem card, CancellationToken cancellationToken)

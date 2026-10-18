@@ -8,7 +8,8 @@ using CLIHub.Core.Models;
 /// <param name="Id"> The agent plugin id, or null for no default. </param>
 /// <param name="Name"> The display name. </param>
 /// <param name="Version"> The installed version, or null when unknown. </param>
-public sealed record AgentOption(string? Id, string Name, string? Version = null)
+/// <param name="IsInstalled"> Whether the agent is installed on the host; uninstalled agents render disabled. </param>
+public sealed record AgentOption(string? Id, string Name, string? Version = null, bool IsInstalled = true)
 {
     /// <summary>
     ///   The display text: the name with the installed version in parentheses when it is known.

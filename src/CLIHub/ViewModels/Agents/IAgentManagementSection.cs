@@ -74,6 +74,21 @@ public interface IAgentManagementSection : IDisposable
     RelayCommand<AgentCardItem> EditConfigCommand { get; }
 
     /// <summary>
+    ///   Re-runs host detection for every supported agent and refreshes the cards and the default-agent options.
+    /// </summary>
+    RelayCommand DetectCommand { get; }
+
+    /// <summary>
+    ///   Whether a detection pass is currently running.
+    /// </summary>
+    bool IsDetecting { get; }
+
+    /// <summary>
+    ///   Whether the detect action is available.
+    /// </summary>
+    bool CanDetect { get; }
+
+    /// <summary>
     ///   Rebuilds the cards and the default-agent options for the stored default agent.
     /// </summary>
     /// <param name="defaultAgentId"> The stored default agent id, or null. </param>

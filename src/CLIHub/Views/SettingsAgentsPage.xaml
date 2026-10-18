@@ -25,6 +25,34 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Ghost chip with the launcher footer behavior: hover/pressed overlays, dimmed when disabled -->
+        <Style x:Key="AgentsHeaderChipButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Padding="{TemplateBinding Padding}"
+                                Background="Transparent"
+                                CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
     <StackPanel>
         <controls:SectionHeader Text="MANAGEMENT"/>
@@ -36,6 +64,16 @@
                       SelectedItem="{Binding AgentsState.SelectedDefaultAgent, Mode=TwoWay}"
                       Style="{StaticResource SettingsComboBox}"
                       behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                <ComboBox.ItemContainerStyle>
+                    <Style TargetType="ComboBoxItem" BasedOn="{StaticResource SettingsComboBoxItem}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                                <Setter Property="IsEnabled" Value="False"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ComboBox.ItemContainerStyle>
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <TextBlock Text="{Binding DisplayName}"/>
@@ -44,9 +82,32 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <TextBlock Margin="0,8,0,8"
-                   Style="{StaticResource FieldLabel}"
-                   Text="Agents"/>
+        <Grid Margin="0,8,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Style="{StaticResource FieldLabel}"
+                       Text="Agents"/>
+            <Button Grid.Column="1"
+                    AutomationProperties.Name="Re-detect installed agents"
+                    Command="{Binding AgentsState.DetectCommand}"
+                    IsEnabled="{Binding AgentsState.CanDetect}"
+                    Style="{StaticResource AgentsHeaderChipButton}"
+                    ToolTip="Re-detect installed agents and refresh the lists">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                               FontSize="12"
+                               Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                    <TextBlock Margin="6,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="{StaticResource Sizing.FontSize.Section}"
+                               Text="Refresh"/>
+                </StackPanel>
+            </Button>
+        </Grid>
         <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
