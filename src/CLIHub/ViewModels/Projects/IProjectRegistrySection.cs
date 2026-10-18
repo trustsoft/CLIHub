@@ -14,6 +14,41 @@ public interface IProjectRegistrySection : IDisposable
     ObservableCollection<ProjectRegistryItem> Projects { get; }
 
     /// <summary>
+    ///   Number of manually registered projects.
+    /// </summary>
+    int ManualCount { get; }
+
+    /// <summary>
+    ///   Number of discovered projects.
+    /// </summary>
+    int DiscoveredCount { get; }
+
+    /// <summary>
+    ///   Total number of registered projects.
+    /// </summary>
+    int TotalCount { get; }
+
+    /// <summary>
+    ///   Number of projects whose folder no longer exists.
+    /// </summary>
+    int MissingFolderCount { get; }
+
+    /// <summary>
+    ///   Whether any project folder is missing.
+    /// </summary>
+    bool HasMissingFolders { get; }
+
+    /// <summary>
+    ///   The discovered/manual split summary, e.g. "31 discovered · 4 manual".
+    /// </summary>
+    string ProjectMixSummary { get; }
+
+    /// <summary>
+    ///   The folder-health summary shown under the split.
+    /// </summary>
+    string FolderStatusSummary { get; }
+
+    /// <summary>
     ///   The error from the last add or remove action, or null.
     /// </summary>
     string? ErrorText { get; }

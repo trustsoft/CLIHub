@@ -51,6 +51,67 @@ public class ProjectRegistryViewModelTests
     }
 
     [Fact]
+    public void Load_ComputesRegistryCountsAndFolderHealth()
+    {
+        var projects = new List<Project>
+        {
+            Project("manual-ok", "Manual OK", ProjectSource.Manual, ExistingFolder()),
+            Project("manual-missing", "Manual Missing", ProjectSource.Manual, MissingPath()),
+            Project("discovered", "Discovered", ProjectSource.Discovered, ExistingFolder())
+        };
+        var service = CreateService(projects);
+        var section = new ProjectRegistryViewModel(
+            service.Object,
+            new Mock<IProjectDialogService>().Object,
+            Mock.Of<IExternalLauncher>());
+
+        section.Load();
+
+        Assert.Equal(2, section.ManualCount);
+        Assert.Equal(1, section.DiscoveredCount);
+        Assert.Equal(3, section.TotalCount);
+        Assert.Equal(1, section.MissingFolderCount);
+        Assert.True(section.HasMissingFolders);
+        Assert.Equal("1 discovered · 2 manual", section.ProjectMixSummary);
+        Assert.Equal("1 folder missing", section.FolderStatusSummary);
+    }
+
+    [Fact]
+    public void Load_WithNoMissingFolders_LeavesFolderHealthEmpty()
+    {
+        var project = Project("manual", "Manual", ProjectSource.Manual, ExistingFolder());
+        var section = new ProjectRegistryViewModel(
+            CreateService([project]).Object,
+            new Mock<IProjectDialogService>().Object,
+            Mock.Of<IExternalLauncher>());
+
+        section.Load();
+
+        Assert.False(section.HasMissingFolders);
+        Assert.Equal(0, section.MissingFolderCount);
+        Assert.Equal(string.Empty, section.FolderStatusSummary);
+    }
+
+    [Fact]
+    public void Load_WithMultipleMissingFolders_PluralizesSummary()
+    {
+        var projects = new List<Project>
+        {
+            Project("first", "First", ProjectSource.Manual, MissingPath()),
+            Project("second", "Second", ProjectSource.Discovered, MissingPath())
+        };
+        var section = new ProjectRegistryViewModel(
+            CreateService(projects).Object,
+            new Mock<IProjectDialogService>().Object,
+            Mock.Of<IExternalLauncher>());
+
+        section.Load();
+
+        Assert.Equal(2, section.MissingFolderCount);
+        Assert.Equal("2 folders missing", section.FolderStatusSummary);
+    }
+
+    [Fact]
     public void RegisterCommand_WithExistingPath_RegistersManualProjectWithoutChangingCurrent()
     {
         var folder = ExistingFolder();
@@ -67,6 +128,8 @@ public class ProjectRegistryViewModelTests
 
         Assert.Equal(added.Id, Assert.Single(section.Projects).Id);
         Assert.Equal(string.Empty, section.NewProjectPath);
+        Assert.Equal(1, section.ManualCount);
+        Assert.Equal(1, section.TotalCount);
         service.Verify(x => x.SetCurrentProject(It.IsAny<string>()), Times.Never);
     }
 
@@ -193,6 +256,7 @@ public class ProjectRegistryViewModelTests
         section.RemoveCommand.Execute(section.Projects.Single());
 
         Assert.Empty(section.Projects);
+        Assert.Equal(0, section.TotalCount);
         service.Verify(x => x.RemoveProject("manual"), Times.Once);
     }
 

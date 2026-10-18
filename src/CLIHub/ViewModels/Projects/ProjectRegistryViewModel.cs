@@ -49,6 +49,32 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     public ObservableCollection<ProjectRegistryItem> Projects { get; } = new();
 
     /// <inheritdoc />
+    public int ManualCount => this.Projects.Count(item => item.IsManual);
+
+    /// <inheritdoc />
+    public int DiscoveredCount => this.Projects.Count(item => !item.IsManual);
+
+    /// <inheritdoc />
+    public int TotalCount => this.Projects.Count;
+
+    /// <inheritdoc />
+    public int MissingFolderCount => this.Projects.Count(item => item.IsFolderMissing);
+
+    /// <inheritdoc />
+    public bool HasMissingFolders => this.MissingFolderCount > 0;
+
+    /// <inheritdoc />
+    public string ProjectMixSummary => $"{this.DiscoveredCount} discovered · {this.ManualCount} manual";
+
+    /// <inheritdoc />
+    public string FolderStatusSummary => this.MissingFolderCount switch
+    {
+        0 => string.Empty,
+        1 => "1 folder missing",
+        var count => $"{count} folders missing"
+    };
+
+    /// <inheritdoc />
     public string NewProjectPath
     {
         get => this.newProjectPath;
@@ -103,6 +129,8 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         {
             this.Projects.Add(new ProjectRegistryItem(project, !Directory.Exists(project.Path)));
         }
+
+        this.RaiseSummaryChanges();
     }
 
     /// <inheritdoc />
@@ -222,4 +250,15 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e) => this.Load();
+
+    private void RaiseSummaryChanges()
+    {
+        this.OnPropertyChanged(nameof(this.ManualCount));
+        this.OnPropertyChanged(nameof(this.DiscoveredCount));
+        this.OnPropertyChanged(nameof(this.TotalCount));
+        this.OnPropertyChanged(nameof(this.MissingFolderCount));
+        this.OnPropertyChanged(nameof(this.HasMissingFolders));
+        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
+        this.OnPropertyChanged(nameof(this.FolderStatusSummary));
+    }
 }

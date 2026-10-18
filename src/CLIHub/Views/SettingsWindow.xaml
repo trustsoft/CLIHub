@@ -277,6 +277,155 @@
                 </controls:SpacedPanel>
             </DataTemplate>
 
+            <DataTemplate x:Key="RegistrySummaryCards">
+                <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="PROJECTS"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding ProjectRegistry.TotalCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{Binding ProjectRegistry.ProjectMixSummary}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="Projects found by scanning plus projects added manually"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Text="{Binding ProjectRegistry.FolderStatusSummary}"
+                                           TextWrapping="Wrap"
+                                           ToolTip="Projects whose folder no longer exists"
+                                           Visibility="{Binding ProjectRegistry.HasMissingFolders, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ProjectRegistry.HasMissingFolders}" Value="True">
+                                                    <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="MANUAL"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding ProjectRegistry.ManualCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="Registered manually"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource AccentBrush}"
+                                           Text="{x:Static themes:IconGlyphs.FolderAdd}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="DISCOVERED"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding ProjectRegistry.DiscoveredCount}"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="Managed by Project Discovery"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6">
+                                <TextBlock HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{x:Static themes:IconGlyphs.Sync}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </controls:SpacedPanel>
+            </DataTemplate>
+
             <!-- Navigation pages grouped by their group title; group order follows first appearance. -->
             <CollectionViewSource x:Key="NavPages" Source="{Binding Pages}">
                 <CollectionViewSource.GroupDescriptions>
@@ -481,6 +630,10 @@
                                         <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects">
                                             <Setter Property="Visibility" Value="Visible"/>
                                             <Setter Property="ContentTemplate" Value="{StaticResource ProjectsSummaryCards}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding SelectedPage.Key}" Value="projects-registry">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="ContentTemplate" Value="{StaticResource RegistrySummaryCards}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
