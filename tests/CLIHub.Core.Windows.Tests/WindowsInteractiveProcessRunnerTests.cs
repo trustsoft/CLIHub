@@ -61,10 +61,6 @@ public class WindowsInteractiveProcessRunnerTests
             return;
         }
 
-        // The probe writes to a relative path, so the report lands in the working directory the
-        // operating system gave the process no matter which bash flavor resolves: Git Bash
-        // reports POSIX paths under /c/..., a WSL bash under /mnt/c/.... Asserting that the
-        // report exists inside the requested folder and names it proves the child started there.
         var workingDirectory = Path.Combine(
             Path.GetTempPath(), "clihub launch dir " + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(workingDirectory);
@@ -72,9 +68,27 @@ public class WindowsInteractiveProcessRunnerTests
 
         try
         {
-            var arguments = "-c \"pwd > cwd-report.txt\"";
             var runtime = new RuntimeInfo { ExecutablePath = "bash.exe", Type = RuntimeType.Cmd };
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);
+
+            // Availability is not usability: the first bash.exe on PATH can be the WSL launcher
+            // in System32 with no installed distribution, which exits non-zero for any command.
+            // Skip unless this bash can actually run a command.
+            using (var setup = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+            {
+                var probeExit = await runner.LaunchAsync("-c \"true\"", runtime, workingDirectory, setup.Token);
+                if (probeExit != 0)
+                {
+                    return;
+                }
+            }
+
+            // The probe writes to a relative path, so the report lands in the working directory
+            // the operating system gave the process no matter which bash flavor resolves: Git
+            // Bash reports POSIX paths under /c/..., a WSL bash under /mnt/c/.... Asserting that
+            // the report exists inside the requested folder and names it proves the child
+            // started there.
+            var arguments = "-c \"pwd > cwd-report.txt\"";
 
             using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(60));
             var exitCode = await runner.LaunchAsync(arguments, runtime, workingDirectory, cancellation.Token);
