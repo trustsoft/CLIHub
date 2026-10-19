@@ -48,7 +48,7 @@ tree.
       comment noting version re-population is cache-served within the probe TTL
 - [x] 2.5 Gate: `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln` green (including
       `AgentListSynchronizerTests`, `AgentPaneControllerTests` unchanged behavior)
-- [ ] 2.6 Manual smoke: install/uninstall an agent on the host, re-show and re-activate the launch
+- [x] 2.6 Manual smoke: install/uninstall an agent on the host, re-show and re-activate the launch
       window → the row set and dimmed/hidden states track the change; selected agent survives;
       default-agent preselection still applies on show
 
@@ -68,7 +68,7 @@ tree.
       `CanUpdate` true with no message; no processes → unchanged behavior; the existing
       update-flow tests (Blocked outcome → card message) still pass
 - [x] 3.4 Gate: `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln` green
-- [ ] 3.5 Manual smoke: start an agent, open Settings → CLI Agents → its card's Update button is
+- [x] 3.5 Manual smoke: start an agent, open Settings → CLI Agents → its card's Update button is
       disabled with the explanation; stop the agent and reload the page → Update available again
 
 ## 4. Docs check and final validation
