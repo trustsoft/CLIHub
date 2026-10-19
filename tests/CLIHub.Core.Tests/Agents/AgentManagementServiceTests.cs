@@ -110,6 +110,27 @@ public class AgentManagementServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_OnlyOtherAgentsRunning_StartsUpdate()
+    {
+        var plugin = AgentPlugin("opencode");
+        var other = AgentPlugin("pi");
+        var otherProcess = new AgentProcessInstance(1234, @"C:\tools\pi.exe", "pi.exe", DateTime.UtcNow);
+        var commands = new Mock<IAgentCommandService>();
+        commands
+            .Setup(x => x.ExecuteAsync(plugin, AgentCommandKind.Update, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentCommandResult(true, null, null));
+        var service = CreateService(
+            new Mock<IAgentDetectionService>(),
+            new Mock<IAgentVersionService>(),
+            commands,
+            Monitor([plugin, other], otherProcess));
+
+        var result = await service.UpdateAsync(plugin);
+
+        Assert.True(result.Started);
+    }
+
+    [Fact]
     public async Task UpdateAsync_NoRunningAgent_StartsUpdate()
     {
         var plugin = AgentPlugin();

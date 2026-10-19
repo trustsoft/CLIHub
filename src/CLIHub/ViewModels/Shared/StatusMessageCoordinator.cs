@@ -90,7 +90,7 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     public void ReportUpdateBlockedByRunningAgents(IReadOnlyList<string> runningAgentNames)
     {
         var agentList = string.Join(", ", runningAgentNames);
-        this.CurrentMessage = $"Cannot update while agents are running: {agentList}";
+        this.CurrentMessage = $"Cannot update while the agent is running: {agentList}";
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e) =>

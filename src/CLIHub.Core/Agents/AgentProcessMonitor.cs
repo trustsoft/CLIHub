@@ -44,6 +44,16 @@ public sealed class AgentProcessMonitor
     }
 
     /// <summary>
+    ///   Checks if processes matching the given agent are currently running.
+    /// </summary>
+    /// <param name="plugin"> The agent whose processes are checked. </param>
+    /// <returns> True if at least one process matching the agent is running. </returns>
+    public bool HasRunningAgents(Plugin plugin)
+    {
+        return this.GetRunningAgents(plugin).Count > 0;
+    }
+
+    /// <summary>
     ///   Gets the list of currently running agents with their process details.
     /// </summary>
     /// <returns> List of running agents. Empty if none are running. </returns>
@@ -74,5 +84,19 @@ public sealed class AgentProcessMonitor
         }
 
         return runningAgents;
+    }
+
+    /// <summary>
+    ///   Gets the list of running processes matching the given agent.
+    /// </summary>
+    /// <param name="plugin"> The agent whose processes are returned. </param>
+    /// <returns> List of running agents matching the agent. Empty if none are running. </returns>
+    public IReadOnlyList<RunningAgent> GetRunningAgents(Plugin plugin)
+    {
+        ArgumentNullException.ThrowIfNull(plugin);
+
+        return this.GetRunningAgents()
+            .Where(runningAgent => runningAgent.Plugin.Id == plugin.Id)
+            .ToList();
     }
 }

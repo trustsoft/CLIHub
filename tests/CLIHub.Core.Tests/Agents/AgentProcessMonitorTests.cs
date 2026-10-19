@@ -77,6 +77,62 @@ public class AgentProcessMonitorTests
     }
 
     [Fact]
+    public void HasRunningAgents_PluginOverload_OtherAgentRunning_ReturnsFalse()
+    {
+        // Arrange
+        var opencode = CreatePlugin("opencode", "opencode");
+        var pi = CreatePlugin("pi", "pi");
+        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
+
+        // Act
+        var result = this.monitor.HasRunningAgents(pi);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void HasRunningAgents_PluginOverload_SameAgentRunning_ReturnsTrue()
+    {
+        // Arrange
+        var opencode = CreatePlugin("opencode", "opencode");
+        var pi = CreatePlugin("pi", "pi");
+        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
+
+        // Act
+        var result = this.monitor.HasRunningAgents(opencode);
+
+        // Assert
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void GetRunningAgents_PluginOverload_ReturnsOnlyRequestedAgent()
+    {
+        // Arrange
+        var opencode = CreatePlugin("opencode", "opencode");
+        var pi = CreatePlugin("pi", "pi");
+        var opencodeProcess = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+        var piProcess = CreateProcess(@"C:\tools\pi.exe", "pi.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([opencodeProcess, piProcess]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
+
+        // Act
+        var result = this.monitor.GetRunningAgents(pi);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("pi", result[0].Plugin.Id);
+    }
+
+    [Fact]
     public void GetRunningAgents_NoProcesses_ReturnsEmpty()
     {
         // Arrange

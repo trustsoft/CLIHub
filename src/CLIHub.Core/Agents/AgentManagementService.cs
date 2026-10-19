@@ -66,13 +66,13 @@ public sealed class AgentManagementService : IAgentManagementService
                 $"{plugin.Name} does not support the update command");
         }
 
-        var runningAgents = this.processMonitor.GetRunningAgents();
+        var runningAgents = this.processMonitor.GetRunningAgents(plugin);
         if (runningAgents.Count > 0)
         {
             var names = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
             return new AgentUpdateResult(
                 AgentUpdateOutcome.Blocked,
-                $"Update blocked while an agent is running: {names}");
+                $"Update blocked while the agent is running: {names}");
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

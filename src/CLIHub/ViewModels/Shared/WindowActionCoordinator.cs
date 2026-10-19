@@ -150,8 +150,9 @@ public sealed class WindowActionCoordinator
             return false;
         }
 
-        // Block update if any agents are currently running
-        if (this.processMonitor.HasRunningAgents())
+        // Block the update only while this agent's own processes are running;
+        // other agents' processes do not affect it.
+        if (this.processMonitor.HasRunningAgents(agent.Plugin))
         {
             return false;
         }
@@ -161,17 +162,23 @@ public sealed class WindowActionCoordinator
 
     private void ExecuteUpdate()
     {
-        // Double-check for running agents at execution time
-        // (processes might have started between CanExecute check and execution)
-        var runningAgents = this.processMonitor.GetRunningAgents();
+        var agent = this.getSelectedAgent();
+        if (agent is null || !agent.CanUpdate)
+        {
+            return;
+        }
+
+        // Double-check for running agent processes at execution time
+        // (processes might have started between the availability check and execution).
+        var runningAgents = this.processMonitor.GetRunningAgents(agent.Plugin);
         if (runningAgents.Count > 0)
         {
-            var agentNames = runningAgents.Select(a => a.Plugin.Name).ToList();
+            var agentNames = runningAgents.Select(runningAgent => runningAgent.Plugin.Name).ToList();
             this.statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
             return;
         }
 
-        _ = this.RunAgentCommandAsync(this.getSelectedAgent(), AgentCommandKind.Update);
+        _ = this.RunAgentCommandAsync(agent, AgentCommandKind.Update);
     }
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>
