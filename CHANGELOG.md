@@ -8,6 +8,45 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 0.9.7 — 2026-10-19
+
+### Added
+
+- Settings Projects page with the full registry, manual and discovered provenance, missing-folder flags, and manual add and remove (`preferences-ui`, `project-management`)
+- Projects page summary cards for total, manual, and discovered projects, including folder health (`settings-theme`)
+- CLI Agents summary cards for installed agents, the default agent, and the effective probe policy (`preferences-ui`, `settings-theme`)
+- Agent card compaction with an installation chip, a supported-commands line, and icon actions (`agent-ui`)
+- Default-agent gating on detection and a re-detect action in the agents list header (`preferences-ui`)
+- Per-root scan depth and discovery mode with row chips, a per-root scan action, and a per-row discovered-repository count (`configuration-snapshot`, `preferences-ui`, `project-scanning`)
+- Live scanning edits on Project Discovery: each scan setting is validated, persisted atomically, applied to the scanner, and rescanned in the background (`preferences-ui`)
+- Scan coverage (folders examined by the last pass) and the discovered/manual split on the summary cards (`project-scanning`, `settings-theme`)
+- `NumericField` in `CLIHub.Controls` with step chips, Up/Down keys, and mouse-wheel stepping (`settings-theme`)
+- Theme preview cards, Teal, Indigo, and Tangerine accent presets, a retained custom accent, and the renamed Blue preset (`application-theme`, `preferences-ui`)
+- Updates page header chips for version, channel, and update status, with the check and release-notes actions in the header (`preferences-ui`)
+- Themed toggle switch checkbox style (`settings-theme`)
+- `CLIHub.Core.Windows` platform-adapter library for registry startup, the single-instance guard, theme detection, process runners, and agent process inspection (ADR-0006)
+
+### Changed
+
+- Settings page headers are pinned above the scrolling content, and the Project Discovery summary cards moved into that header (`settings-theme`)
+- Launcher positioning labels follow the "<monitor> — <placement>" pattern, and the section is called Launcher Positioning (`configuration-snapshot`, `preferences-ui`)
+- Projects & Paths renamed to Project Discovery; the internal page key and stored preferences are unchanged (`preferences-ui`, `settings-theme`)
+- Default hotkey changed from Ctrl+Shift+A to Ctrl+Shift+Space; explicitly configured hotkeys are not migrated (`hotkey-support`)
+- Single-instance guard acquired before data-directory creation, log configuration, and DI construction, so a duplicate launch exits immediately (`app-lifecycle`)
+- Code style normalized: this-qualified member access, the C# field keyword, reflowed XML documentation, and removed unused usings; no behavior change (`code-style`)
+
+### Fixed
+
+- Settings window keeps at least its own size instead of matching a shorter launch window
+- Pre-release notifications toggle disabled until a beta channel exists
+- Path display selector aligned to the trailing edge of its row
+- 0.9.6 release files restored after a stale Git index reverted them
+- Remaining compiler warnings cleared
+
+### Removed
+
+- Plugin path and detection markers removed from agent cards; the reference data remains in each `plugin.json` (`agent-ui`)
+
 ## 0.9.6 — 2026-10-13
 
 ### Added

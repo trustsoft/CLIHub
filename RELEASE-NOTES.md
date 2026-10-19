@@ -3,6 +3,34 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.9.7 — 2026-10-19
+
+### New
+
+- Settings has a Projects page that lists every project with its path, shows whether it was added manually or discovered, flags missing folders, and lets you add or remove manual projects
+- Scanning changes on Project Discovery apply immediately, so a newly added watched folder is scanned without saving
+- Each watched folder can keep its own scan depth and discovery mode, and can be scanned on its own
+- The Projects summary shows the full project count with the manual and discovered split, and the watcher card shows how many folders the last scan examined
+- The CLI Agents page has summary cards for installed agents, the default agent, and the probe policy
+- Installed agents can be re-detected from the CLI Agents page, and agents that are not installed can no longer be picked as the default
+- Agent cards are compact, with an installation chip, a supported-commands line, and icon actions
+
+### Improved
+
+- Theme and accent choices are preview cards, with new Teal, Indigo, and Tangerine accent presets
+- The Updates page shows the version, channel, check status, and release-notes action in one header
+- Numeric settings can be stepped with buttons, the Up/Down keys, or the mouse wheel
+- Settings page headers stay visible while long pages scroll
+- The page formerly called Projects & Paths is now Project Discovery, and launcher position options use clearer monitor and placement names
+- The default hotkey is now Ctrl+Shift+Space
+- Starting CLIHub a second time exits immediately instead of preparing application data first
+
+### Fixed
+
+- The Settings window no longer shrinks to the height of the launch window
+- The pre-release notifications toggle is disabled until a beta channel exists
+- The path display selector aligns to the trailing edge of its row
+
 ## 0.9.6 — 2026-10-13
 
 ### New
