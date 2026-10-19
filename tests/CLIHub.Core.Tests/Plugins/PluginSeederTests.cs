@@ -107,7 +107,10 @@ public class PluginSeederTests : IDisposable
         this.CreateSeeder().SeedIfEmpty();
 
         var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.pluginsPath, "logos-state.json"));
-        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.pluginsPath);
+        var catalog = new PluginCatalog(
+            NullLogger<PluginCatalog>.Instance,
+            new PluginLogoResolver(cache, new LogoOptions(null)),
+            this.pluginsPath);
         catalog.LoadPlugins();
 
         var plugins = catalog.GetAllPlugins().ToList();
@@ -123,7 +126,10 @@ public class PluginSeederTests : IDisposable
         this.CreateSeeder().SeedIfEmpty();
 
         var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.pluginsPath, "logos-state.json"));
-        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.pluginsPath);
+        var catalog = new PluginCatalog(
+            NullLogger<PluginCatalog>.Instance,
+            new PluginLogoResolver(cache, new LogoOptions(null)),
+            this.pluginsPath);
         catalog.LoadPlugins();
 
         var plugins = catalog.GetAllPlugins().ToDictionary(p => p.Id);

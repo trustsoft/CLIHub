@@ -23,6 +23,9 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IConfigurationRepository>());
         Assert.NotNull(provider.GetRequiredService<IPreferencesStore>());
         Assert.NotNull(provider.GetRequiredService<ILogoCacheService>());
+        Assert.NotNull(provider.GetRequiredService<LogoOptions>());
+        Assert.NotNull(provider.GetRequiredService<ProjectLogoResolver>());
+        Assert.NotNull(provider.GetRequiredService<PluginLogoResolver>());
         Assert.NotNull(provider.GetRequiredService<IProjectService>());
         Assert.NotNull(provider.GetRequiredService<IPluginCatalog>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
@@ -78,14 +81,17 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
-    public void ProjectService_UsesInjectedDefaultLogoPath()
+    public void AddClIHubCoreServices_DefaultLogoPath_FlowsIntoSharedLogoOptions()
     {
         var services = new ServiceCollection();
         services.AddClIHubCoreServices(defaultLogoPath: "custom-logo.png");
 
         using var provider = services.BuildServiceProvider();
 
-        var projects = provider.GetRequiredService<IProjectService>();
-        Assert.Equal("custom-logo.png", projects.DefaultLogoPath);
+        var options = provider.GetRequiredService<LogoOptions>();
+
+        Assert.Equal("custom-logo.png", options.DefaultLogoPath);
+        Assert.NotNull(provider.GetRequiredService<ProjectLogoResolver>());
+        Assert.NotNull(provider.GetRequiredService<PluginLogoResolver>());
     }
 }

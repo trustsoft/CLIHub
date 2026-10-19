@@ -2,7 +2,6 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
@@ -14,9 +13,6 @@ using CLIHub.Lifetime;
 /// </summary>
 public sealed class AgentPaneController : IDisposable
 {
-    private static readonly string DefaultAgentLogoPath =
-        Path.Combine(AppContext.BaseDirectory, "default-project.png");
-
     private readonly IPluginCatalog pluginCatalog;
     private readonly IAgentDetectionService agentDetectionService;
     private readonly IAgentVersionService agentVersionService;
@@ -104,7 +100,6 @@ public sealed class AgentPaneController : IDisposable
         this.SelectedAgent = AgentListSynchronizer.Synchronize(
             this.Agents,
             entries,
-            DefaultAgentLogoPath,
             selectedPluginId);
 
         if (this.Agents.Count > 0)
@@ -122,11 +117,12 @@ public sealed class AgentPaneController : IDisposable
     }
 
     /// <summary>
-    ///   Invalidates detection, version, and logo caches before the next refresh.
+    ///   Invalidates detection, version, and plugin-logo caches before the next refresh. The logo
+    ///   clear is scoped to the plugin namespace, so project logo entries survive agent refreshes.
     /// </summary>
     public void InvalidateCaches()
     {
-        this.logoCacheService.InvalidateAll();
+        this.logoCacheService.InvalidateAll(LogoCacheKeys.PluginPrefix);
         this.agentVersionService.Invalidate();
         this.agentDetectionService.Invalidate();
     }

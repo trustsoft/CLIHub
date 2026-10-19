@@ -6,7 +6,9 @@ public sealed class ArchitectureBoundaryTests
     [
         "App.xaml.cs",
         "AssemblyInfo.cs",
+        "Imaging" + Path.DirectorySeparatorChar + "LogoImageSourceCache.cs",
         "Launching" + Path.DirectorySeparatorChar + "ProjectDialogService.cs",
+        "Startup" + Path.DirectorySeparatorChar + "ApplicationHost.cs",
         "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",
         "Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",
         "Lifetime" + Path.DirectorySeparatorChar + "WpfApplicationLifetime.cs",

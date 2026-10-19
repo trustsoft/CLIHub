@@ -32,14 +32,12 @@ public class ProjectServiceTests : IDisposable
         var cache = new LogoCacheService(
             NullLogger<LogoCacheService>.Instance,
             Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(defaultLogoPath));
 
         return new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository(config)),
-            cache,
-            NullLogger<ProjectService>.Instance)
-        {
-            DefaultLogoPath = defaultLogoPath
-        };
+            resolver,
+            NullLogger<ProjectService>.Instance);
     }
 
     [Fact]
@@ -202,7 +200,7 @@ public class ProjectServiceTests : IDisposable
         var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.CreateTempDir(), "logos.json"));
         var service = new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository()),
-            cache,
+            new ProjectLogoResolver(cache, new LogoOptions(null)),
             NullLogger<ProjectService>.Instance);
         var project = service.AddProject(folder);
 
@@ -241,7 +239,7 @@ public class ProjectServiceTests : IDisposable
         var firstCache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath);
         var first = new ProjectService(
             new ProjectStateStore(config),
-            firstCache,
+            new ProjectLogoResolver(firstCache, new LogoOptions(null)),
             NullLogger<ProjectService>.Instance);
         var project = first.AddProject(folder);
         cachedLogo = first.GetAllProjects().Single(p => p.Id == project.Id).LogoPath!;
@@ -250,7 +248,9 @@ public class ProjectServiceTests : IDisposable
         File.Delete(Path.Combine(folder, "logo.png"));
         var second = new ProjectService(
             new ProjectStateStore(config),
-            new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath),
+            new ProjectLogoResolver(
+                new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath),
+                new LogoOptions(null)),
             NullLogger<ProjectService>.Instance);
 
         var logoAfterRestart = second.GetAllProjects().Single(p => p.Id == project.Id).LogoPath;

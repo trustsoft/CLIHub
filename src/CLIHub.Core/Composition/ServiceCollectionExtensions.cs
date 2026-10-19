@@ -25,14 +25,15 @@ public static class ServiceCollectionExtensions
     ///   <c> CLIHub.Core.Windows.WindowsServiceCollectionExtensions.AddWindowsInfrastructure </c>.
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
-    /// <param name="defaultLogoPath"> The path to the fallback project logo, or null. </param>
+    /// <param name="defaultLogoPath"> The path to the fallback logo, or null. </param>
     public static IServiceCollection AddClIHubCoreServices(this IServiceCollection services,
                                                            string? defaultLogoPath = null)
     {
         services.AddLogging();
 
         services.AddConfigurationServices();
-        services.AddProjectServices(defaultLogoPath);
+        services.AddLogoServices(defaultLogoPath);
+        services.AddProjectServices();
         services.AddPluginServices();
         services.AddAgentServices();
         services.AddScanningServices();
@@ -65,18 +66,27 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static IServiceCollection AddProjectServices(this IServiceCollection services,
-                                                         string? defaultLogoPath)
+    /// <summary>
+    ///   Registers the shared logo infrastructure: the fallback options, the persistent logo
+    ///   cache, and both domain logo resolvers, all as singletons.
+    /// </summary>
+    private static IServiceCollection AddLogoServices(this IServiceCollection services,
+                                                      string? defaultLogoPath)
+    {
+        services.AddSingleton(new LogoOptions(defaultLogoPath));
+        services.AddSingleton<ILogoCacheService, LogoCacheService>();
+        services.AddSingleton<ProjectLogoResolver>();
+        services.AddSingleton<PluginLogoResolver>();
+        return services;
+    }
+
+    private static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
         services.AddSingleton<IProjectStateStore, ProjectStateStore>();
-        services.AddSingleton<ILogoCacheService, LogoCacheService>();
         services.AddSingleton<IProjectService>(sp => new ProjectService(
             sp.GetRequiredService<IProjectStateStore>(),
-            sp.GetRequiredService<ILogoCacheService>(),
-            sp.GetRequiredService<ILogger<ProjectService>>())
-        {
-            DefaultLogoPath = defaultLogoPath
-        });
+            sp.GetRequiredService<ProjectLogoResolver>(),
+            sp.GetRequiredService<ILogger<ProjectService>>()));
         return services;
     }
 

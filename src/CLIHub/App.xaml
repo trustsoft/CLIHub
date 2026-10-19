@@ -26,8 +26,9 @@
                 <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Shared converters, referenced from window content by key. -->
-            <conv:PathToImageConverter x:Key="PathToImage"/>
+            <!-- Shared converters, referenced from window content by key. The PathToImage
+                 converter is assigned at startup from the DI container (see ApplicationHost),
+                 backed by the shared decoded-image cache. -->
             <conv:PathDisplayConverter x:Key="PathDisplay"/>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 

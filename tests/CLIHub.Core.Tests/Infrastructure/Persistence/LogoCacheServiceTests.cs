@@ -148,6 +148,67 @@ public class LogoCacheServiceTests : IDisposable
     }
 
     [Fact]
+    public void InvalidateAll_WithPrefix_RemovesOnlyPrefixedEntries()
+    {
+        var service = this.CreateService();
+        service.GetOrResolve("plugin:opencode", () => "opencode.png");
+        service.GetOrResolve("plugin:pi", () => null);
+        service.GetOrResolve("project:abc", () => "abc.png");
+
+        service.InvalidateAll(LogoCacheKeys.PluginPrefix);
+
+        var pluginCalls = 0;
+        Assert.Equal("fresh.png", service.GetOrResolve("plugin:opencode", () => { pluginCalls++; return "fresh.png"; }));
+        Assert.Equal(1, pluginCalls);
+        var negativeCalls = 0;
+        Assert.Null(service.GetOrResolve("plugin:pi", () => { negativeCalls++; return null; }));
+        Assert.Equal(1, negativeCalls);
+        Assert.Equal("abc.png", service.GetOrResolve("project:abc", () => throw new InvalidOperationException("project entry must be preserved")));
+    }
+
+    [Fact]
+    public void InvalidateAll_WithPrefixMatchingNothing_DoesNotDirtyState()
+    {
+        File.WriteAllText(this.StatePath, """{ "logos": { "project:abc": "C:\\logos\\abc.png" } }""");
+        Thread.Sleep(50);
+        var lastWrite = File.GetLastWriteTimeUtc(this.StatePath);
+        var service = this.CreateService();
+
+        service.InvalidateAll(LogoCacheKeys.PluginPrefix);
+
+        service.Dispose();
+        Assert.Equal(lastWrite, File.GetLastWriteTimeUtc(this.StatePath));
+    }
+
+    [Fact]
+    public void InvalidateAll_WithPrefixMatchingEntries_MarksStateDirty()
+    {
+        File.WriteAllText(
+            this.StatePath,
+            """{ "logos": { "plugin:opencode": "C:\\logos\\open.png", "project:abc": "C:\\logos\\abc.png" } }""");
+        var service = this.CreateService();
+
+        service.InvalidateAll(LogoCacheKeys.PluginPrefix);
+
+        service.Dispose();
+        var state = File.ReadAllText(this.StatePath);
+        Assert.DoesNotContain("plugin:opencode", state);
+        Assert.Contains("project:abc", state);
+    }
+
+    [Fact]
+    public void InvalidateAll_EmptyCache_DoesNotDirtyState()
+    {
+        var service = this.CreateService();
+
+        service.InvalidateAll();
+        service.InvalidateAll(LogoCacheKeys.PluginPrefix);
+
+        service.Dispose();
+        Assert.False(File.Exists(this.StatePath), "invalidating an empty cache must not create a state file");
+    }
+
+    [Fact]
     public void Remove_ExistingKey_EntryDeletedAndNextLookupReruns()
     {
         var service = this.CreateService();

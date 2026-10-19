@@ -1,10 +1,13 @@
 namespace CLIHub.Startup;
 
+using System.Windows;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Logging;
 using CLIHub.Composition;
+using CLIHub.Converters;
 using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 
@@ -67,6 +70,8 @@ public sealed class ApplicationHost : IApplicationHost
             this.services = collection.BuildServiceProvider();
             this.guard = null;
 
+            InstallSharedUiResources(this.services);
+
             this.services.GetRequiredService<IApplicationBootstrapper>().Start(
                 new ApplicationStartupContext(dispatch, setMainWindow));
         }
@@ -116,6 +121,21 @@ public sealed class ApplicationHost : IApplicationHost
         this.services?.Dispose();
 
         Log.CloseAndFlush();
+    }
+
+    /// <summary>
+    ///   Publishes the DI-constructed shared UI pieces into the application resource dictionary
+    ///    before any window is created, so XAML <c> StaticResource </c> lookups resolve the
+    ///    cache-backed instances (the XAML declarations were removed on purpose).
+    /// </summary>
+    private static void InstallSharedUiResources(ServiceProvider services)
+    {
+        if (Application.Current is not { } application)
+        {
+            return;
+        }
+
+        application.Resources[PathToImageConverter.ResourceKey] = services.GetRequiredService<PathToImageConverter>();
     }
 
     private static void ConfigureLogging()

@@ -26,7 +26,11 @@ public interface ILogoCacheService : IDisposable
     void Remove(string key);
 
     /// <summary>
-    ///   Clears all cached entries so the next lookup re-resolves from the file system.
+    ///   Clears cached entries so the next lookup re-resolves from the file system. Without a
+    ///   prefix, all entries are cleared. With a prefix (see <see cref="LogoCacheKeys" />),
+    ///   exactly the entries whose keys start with that prefix are cleared, including cached
+    ///   negative outcomes; entries outside the prefix are preserved.
     /// </summary>
-    void InvalidateAll();
+    /// <param name="keyPrefix"> The key namespace to clear, or null to clear everything. </param>
+    void InvalidateAll(string? keyPrefix = null);
 }

@@ -68,15 +68,33 @@ public sealed class LogoCacheService : ILogoCacheService
     }
 
     /// <inheritdoc />
-    public void InvalidateAll()
+    public void InvalidateAll(string? keyPrefix = null)
     {
-        if (this.cache.IsEmpty)
+        if (string.IsNullOrEmpty(keyPrefix))
         {
+            if (this.cache.IsEmpty)
+            {
+                return;
+            }
+
+            this.cache.Clear();
+            this.isDirty = true;
             return;
         }
 
-        this.cache.Clear();
-        this.isDirty = true;
+        var removed = false;
+        foreach (var key in this.cache.Keys)
+        {
+            if (key.StartsWith(keyPrefix, StringComparison.Ordinal) && this.cache.TryRemove(key, out _))
+            {
+                removed = true;
+            }
+        }
+
+        if (removed)
+        {
+            this.isDirty = true;
+        }
     }
 
     /// <inheritdoc />

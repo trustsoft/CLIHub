@@ -2,7 +2,6 @@ namespace CLIHub.Core.Projects;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -18,18 +17,15 @@ public class ProjectService : IProjectService
     /// <inheritdoc />
     public event EventHandler? ProjectsChanged;
 
-    /// <inheritdoc />
-    public string? DefaultLogoPath { get; set; }
-
     /// <summary>
-    ///   Creates the service with the default project logo path.
+    ///   Creates the service with the project logo resolver.
     /// </summary>
     public ProjectService(IProjectStateStore projectStateStore,
-                          ILogoCacheService logoCache,
+                          ProjectLogoResolver logoResolver,
                           ILogger<ProjectService> logger)
     {
         this.projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
-        this.logoResolver = new ProjectLogoResolver(logoCache);
+        this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.projectState = this.projectStateStore.Load();
         this.ClearStaleCurrentProject();
@@ -83,11 +79,10 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    ///   Resolves the project logo through the logo cache keyed by the project ID,
-    ///   falling back to <see cref="DefaultLogoPath" /> when no logo is found.
+    ///   Resolves the project logo through the logo resolver, which applies the default
+    ///   fallback when no logo is found.
     /// </summary>
-    private string? ResolveProjectLogo(Project project) =>
-        this.logoResolver.Resolve(project, this.DefaultLogoPath);
+    private string? ResolveProjectLogo(Project project) => this.logoResolver.Resolve(project);
 
     /// <inheritdoc />
     public Project AddProject(string folderPath)
@@ -281,9 +276,9 @@ public class ProjectService : IProjectService
     }
 
     /// <summary>
-    ///   Resolves a logo for the project folder, falling back to <see cref="DefaultLogoPath" />.
+    ///   Resolves a logo for the project folder; the resolver applies the default fallback.
     /// </summary>
-    internal string? ResolveLogo(string projectPath) => this.logoResolver.ResolvePath(projectPath, this.DefaultLogoPath);
+    internal string? ResolveLogo(string projectPath) => this.logoResolver.ResolvePath(projectPath);
 
     private void ClearStaleCurrentProject()
     {

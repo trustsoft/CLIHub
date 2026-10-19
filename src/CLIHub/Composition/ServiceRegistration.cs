@@ -9,6 +9,8 @@ using CLIHub.Core;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
+using CLIHub.Converters;
+using CLIHub.Imaging;
 using CLIHub.Hotkeys;
 using CLIHub.ViewModels;
 using CLIHub.Views;
@@ -45,7 +47,7 @@ public static class ServiceRegistration
     /// <returns> The configured service collection. </returns>
     public static IServiceCollection AddClIHubServices(this IServiceCollection services, SingleInstanceGuard? guard)
     {
-        services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-project.png"));
+        services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-logo.png"));
         services.AddWindowsInfrastructure(guard);
 
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
@@ -78,6 +80,8 @@ public static class ServiceRegistration
         services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<ProjectPaneController>();
         services.AddSingleton<AgentPaneController>();
+        services.AddSingleton<LogoImageSourceCache>();
+        services.AddSingleton<PathToImageConverter>();
         services.AddSingleton<UpdateControlViewModel>();
         services.AddSingleton<StatusMessageCoordinator>();
         services.AddSingleton<LaunchWindowViewModel>();

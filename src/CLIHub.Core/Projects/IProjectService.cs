@@ -13,11 +13,6 @@ public interface IProjectService
     event EventHandler? ProjectsChanged;
 
     /// <summary>
-    ///   Default logo path used when a project has no detectable logo. May be null.
-    /// </summary>
-    string? DefaultLogoPath { get; set; }
-
-    /// <summary>
     ///   Returns all registered projects.
     /// </summary>
     IReadOnlyList<Project> GetAllProjects();

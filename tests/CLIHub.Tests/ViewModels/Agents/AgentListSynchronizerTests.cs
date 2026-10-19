@@ -7,8 +7,6 @@ using CLIHub.Core.Models;
 
 public class AgentListSynchronizerTests
 {
-    private const string DefaultLogo = "default.png";
-
     [Fact]
     public void Synchronize_ExistingRows_PreservesIdentityAndUpdatesProperties()
     {
@@ -20,7 +18,6 @@ public class AgentListSynchronizerTests
         var selected = AgentListSynchronizer.Synchronize(
             rows,
             [new AgentListEntry(refreshed, false)],
-            DefaultLogo,
             "first");
 
         Assert.Same(existing, rows[0]);
@@ -42,7 +39,6 @@ public class AgentListSynchronizerTests
         AgentListSynchronizer.Synchronize(
             rows,
             [new AgentListEntry(retained, true), new AgentListEntry(added, true)],
-            DefaultLogo,
             null);
 
         Assert.Equal(["retained", "added"], rows.Select(row => row.Plugin.Id));
@@ -59,7 +55,6 @@ public class AgentListSynchronizerTests
         AgentListSynchronizer.Synchronize(
             rows,
             [new AgentListEntry(second, true), new AgentListEntry(first, true)],
-            DefaultLogo,
             null);
 
         Assert.Equal(["second", "first"], rows.Select(row => row.Plugin.Id));
@@ -71,10 +66,22 @@ public class AgentListSynchronizerTests
         var first = Plugin("first");
         var rows = new ObservableCollection<AgentItem> { Row(first) };
 
-        var selected = AgentListSynchronizer.Synchronize(rows, [], DefaultLogo, "first");
+        var selected = AgentListSynchronizer.Synchronize(rows, [], "first");
 
         Assert.Null(selected);
         Assert.Empty(rows);
+    }
+
+    [Fact]
+    public void Synchronize_PluginLogoPathIsFinal_NoConsumerFallbackApplied()
+    {
+        var logoless = Plugin("logoless");
+        var rows = new ObservableCollection<AgentItem>();
+
+        AgentListSynchronizer.Synchronize(rows, [new AgentListEntry(logoless, true)], null);
+
+        // Rows take the plugin's logo path as final: the resolver owns the default fallback.
+        Assert.Null(rows[0].LogoPath);
     }
 
     private static AgentItem Row(Plugin plugin, bool isAvailable = true) => new()

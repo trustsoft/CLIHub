@@ -30,7 +30,7 @@
   <ItemGroup>
     <Resource Include="app.ico" />
     <Resource Include="Assets\*.png" />
-    <Content Include="default-project.png">
+    <Content Include="default-logo.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

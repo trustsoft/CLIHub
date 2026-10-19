@@ -50,7 +50,7 @@ public class AgentPaneControllerTests
         var versions = new Mock<IAgentVersionService>(MockBehavior.Strict);
         versions.Setup(x => x.Invalidate());
         var logos = new Mock<ILogoCacheService>(MockBehavior.Strict);
-        logos.Setup(x => x.InvalidateAll());
+        logos.Setup(x => x.InvalidateAll(LogoCacheKeys.PluginPrefix));
         var controller = new AgentPaneController(
             new Mock<IPluginCatalog>().Object,
             detection.Object,
@@ -62,7 +62,7 @@ public class AgentPaneControllerTests
 
         detection.Verify(x => x.Invalidate(), Times.Once);
         versions.Verify(x => x.Invalidate(), Times.Once);
-        logos.Verify(x => x.InvalidateAll(), Times.Once);
+        logos.Verify(x => x.InvalidateAll(LogoCacheKeys.PluginPrefix), Times.Once);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class AgentPaneControllerTests
         var versions = new Mock<IAgentVersionService>(MockBehavior.Strict);
         versions.Setup(x => x.Invalidate());
         var logos = new Mock<ILogoCacheService>(MockBehavior.Strict);
-        logos.Setup(x => x.InvalidateAll());
+        logos.Setup(x => x.InvalidateAll(LogoCacheKeys.PluginPrefix));
         var controller = new AgentPaneController(
             catalog.Object,
             detection.Object,
@@ -99,7 +99,7 @@ public class AgentPaneControllerTests
         Assert.Equal("second", controller.Agents[0].Plugin.Id);
         Assert.Null(controller.SelectedAgent);
         versions.Verify(x => x.Invalidate(), Times.Once);
-        logos.Verify(x => x.InvalidateAll(), Times.Once);
+        logos.Verify(x => x.InvalidateAll(LogoCacheKeys.PluginPrefix), Times.Once);
         detection.Verify(x => x.Invalidate(), Times.Once);
     }
 

@@ -1,38 +1,43 @@
 namespace CLIHub.Converters;
 
 using System.Globalization;
-using System.IO;
 using System.Windows.Data;
-using System.Windows.Media.Imaging;
+
+using CLIHub.Imaging;
 
 /// <summary>
-///   Converts a file path to an <see cref="BitmapImage" />, or null when the path is empty/missing.
+///   Converts a logo file path to a shared frozen <see cref="System.Windows.Media.ImageSource" />
+///   through the application-wide <see cref="LogoImageSourceCache" />. Null, missing, and
+///   undecodable paths yield the default logo image instead of null.
 /// </summary>
 public class PathToImageConverter : IValueConverter
 {
     /// <summary>
-    ///   Loads the image at the given path, frozen so it can be shared across rows.
+    ///   The application resource key the converter is registered under at startup.
+    /// </summary>
+    public const string ResourceKey = "PathToImage";
+
+    private readonly LogoImageSourceCache imageCache;
+
+    /// <summary>
+    ///   Creates the converter over the shared decoded-image cache.
+    /// </summary>
+    /// <param name="imageCache"> The cache producing one frozen image per distinct path. </param>
+    public PathToImageConverter(LogoImageSourceCache imageCache)
+    {
+        this.imageCache = imageCache ?? throw new ArgumentNullException(nameof(imageCache));
+    }
+
+    /// <summary>
+    ///   Returns the cached frozen image for the given path, or the default logo image.
     /// </summary>
     /// <param name="value"> The image file path. </param>
     /// <param name="targetType"> The target type of the binding. </param>
     /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
-    /// <returns> The loaded <see cref="BitmapImage" />, or null when the path is empty or missing. </returns>
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
-    {
-        if (value is not string path || string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-        {
-            return null;
-        }
-
-        var image = new BitmapImage();
-        image.BeginInit();
-        image.CacheOption = BitmapCacheOption.OnLoad;
-        image.UriSource = new Uri(path, UriKind.Absolute);
-        image.EndInit();
-        image.Freeze();
-        return image;
-    }
+    /// <returns> The shared frozen image for the path, or the default logo image. </returns>
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        this.imageCache.GetOrLoad(value as string);
 
     /// <summary>
     ///   Not supported; the converter is used in one-way bindings only.

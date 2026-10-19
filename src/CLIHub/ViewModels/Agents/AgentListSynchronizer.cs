@@ -10,16 +10,15 @@ using CLIHub.Core.Agents;
 public static class AgentListSynchronizer
 {
     /// <summary>
-    ///   Synchronizes membership, row properties, and order by plugin ID.
+    ///   Synchronizes membership, row properties, and order by plugin ID. Row logos are taken
+    ///   from the plugins as final paths; no consumer-side fallback is applied.
     /// </summary>
     /// <param name="rows"> The rows displayed by the launch window. </param>
     /// <param name="entries"> The target entries in composer order. </param>
-    /// <param name="defaultLogoPath"> The logo path used when a plugin has no logo. </param>
     /// <param name="selectedPluginId"> The plugin ID selected before synchronization. </param>
     /// <returns> The row matching the previous selection, or null when it disappeared. </returns>
     public static AgentItem? Synchronize(ObservableCollection<AgentItem> rows,
                                          IReadOnlyList<AgentListEntry> entries,
-                                         string defaultLogoPath,
                                          string? selectedPluginId)
     {
         var targetIds = entries.Select(entry => entry.Plugin.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -43,7 +42,7 @@ public static class AgentListSynchronizer
                 {
                     Plugin = entry.Plugin,
                     Name = entry.Plugin.Name,
-                    LogoPath = entry.Plugin.LogoPath ?? defaultLogoPath,
+                    LogoPath = entry.Plugin.LogoPath,
                     IsAvailable = entry.IsAvailable
                 };
             }
@@ -52,7 +51,7 @@ public static class AgentListSynchronizer
                 row.Update(
                     entry.Plugin,
                     entry.Plugin.Name,
-                    entry.Plugin.LogoPath ?? defaultLogoPath,
+                    entry.Plugin.LogoPath,
                     entry.IsAvailable);
             }
 

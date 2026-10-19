@@ -29,7 +29,10 @@ public class PluginCatalogTests : IDisposable
     }
 
     private PluginCatalog CreateManager() =>
-        new(NullLogger<PluginCatalog>.Instance, this.CreateCache(), this.root);
+        new(NullLogger<PluginCatalog>.Instance, this.CreateResolver(), this.root);
+
+    private PluginLogoResolver CreateResolver() =>
+        new(this.CreateCache(), new LogoOptions(null));
 
     private LogoCacheService CreateCache() =>
         new(NullLogger<LogoCacheService>.Instance, Path.Combine(this.root, "logos-state.json"));
@@ -124,7 +127,7 @@ public class PluginCatalogTests : IDisposable
         this.WritePlugin("second", ValidJson);
         this.WritePlugin("first", ValidJson);
         var logger = new RecordingLogger<PluginCatalog>();
-        var manager = new PluginCatalog(logger, this.CreateCache(), this.root);
+        var manager = new PluginCatalog(logger, this.CreateResolver(), this.root);
 
         manager.LoadPlugins();
 
@@ -195,12 +198,18 @@ public class PluginCatalogTests : IDisposable
         File.WriteAllBytes(Path.Combine(pluginDir, "logo.png"), [0x89, 0x50]);
 
         var cache = this.CreateCache();
-        var first = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.root);
+        var first = new PluginCatalog(
+            NullLogger<PluginCatalog>.Instance,
+            new PluginLogoResolver(cache, new LogoOptions(null)),
+            this.root);
         first.LoadPlugins();
         var cachedLogo = first.GetAllPlugins().Single().LogoPath;
 
         File.Delete(Path.Combine(pluginDir, "logo.png"));
-        var second = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.root);
+        var second = new PluginCatalog(
+            NullLogger<PluginCatalog>.Instance,
+            new PluginLogoResolver(cache, new LogoOptions(null)),
+            this.root);
         second.LoadPlugins();
 
         Assert.Equal(cachedLogo, second.GetAllPlugins().Single().LogoPath);

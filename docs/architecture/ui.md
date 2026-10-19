@@ -4,7 +4,7 @@ Window inventory and MVVM responsibilities: [../architecture.md](../architecture
 
 ## Resource Organization
 - Application icon: `src/CLIHub/app.ico` (embedded; also the exe icon)
-- Default project logo: `src/CLIHub/default-project.png` (copied to output)
+- Default logo: `src/CLIHub/default-logo.png` (copied to output)
 - Desktop app icon sources: `assets/` at the repository root (not part of the build)
 - Embedded seed descriptors/logos: `src/CLIHub.Core/SeedPlugins/`
 

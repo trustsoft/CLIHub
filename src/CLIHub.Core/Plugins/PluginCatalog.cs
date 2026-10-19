@@ -3,7 +3,6 @@ namespace CLIHub.Core.Plugins;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -12,7 +11,7 @@ using CLIHub.Core.Models;
 public sealed class PluginCatalog : IPluginCatalog
 {
     private readonly ILogger<PluginCatalog> logger;
-    private readonly ILogoCacheService logoCache;
+    private readonly PluginLogoResolver logoResolver;
     private readonly IPluginDescriptorReader descriptorReader;
     private readonly IPluginDescriptorValidator descriptorValidator;
     private readonly string pluginsPath;
@@ -25,18 +24,18 @@ public sealed class PluginCatalog : IPluginCatalog
     ///   Creates the plugin catalog for the given plugins root.
     /// </summary>
     /// <param name="logger"> The logger. </param>
-    /// <param name="logoCache"> The persistent logo cache resolving plugin logos. </param>
+    /// <param name="logoResolver"> The resolver producing final plugin logo paths. </param>
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>. </param>
     /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
     public PluginCatalog(ILogger<PluginCatalog> logger,
-                         ILogoCacheService logoCache,
+                         PluginLogoResolver logoResolver,
                          string? pluginsPath = null,
                          IPluginDescriptorReader? descriptorReader = null,
                          IPluginDescriptorValidator? descriptorValidator = null)
     {
         this.logger = logger;
-        this.logoCache = logoCache ?? throw new ArgumentNullException(nameof(logoCache));
+        this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
         this.pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
         this.descriptorReader = descriptorReader ?? new PluginDescriptorReader();
         this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
@@ -100,9 +99,7 @@ public sealed class PluginCatalog : IPluginCatalog
                     }
 
                     plugin.PluginDirectory = pluginDir;
-                    plugin.LogoPath = this.logoCache.GetOrResolve(
-                        $"plugin:{plugin.Id}",
-                        () => LoadPluginLogo(pluginDir));
+                    plugin.LogoPath = this.logoResolver.Resolve(plugin.Id, pluginDir);
 
                     plugins.Add(plugin);
                     this.logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
@@ -137,13 +134,6 @@ public sealed class PluginCatalog : IPluginCatalog
         }
 
         return true;
-    }
-
-    private static string? LoadPluginLogo(string pluginDirectory)
-    {
-        var logoPath = Path.Combine(pluginDirectory, "logo.png");
-
-        return File.Exists(logoPath) ? logoPath : null;
     }
 
     private static string? FindLoadedPluginDirectory(IReadOnlyList<Plugin> plugins,
