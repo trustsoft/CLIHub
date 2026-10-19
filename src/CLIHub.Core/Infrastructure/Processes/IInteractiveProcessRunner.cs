@@ -13,11 +13,14 @@ public interface IInteractiveProcessRunner
     /// </summary>
     /// <param name="commandLine"> The full command line to execute (already quoted/escaped). </param>
     /// <param name="runtime"> Runtime information specifying the executable and type. </param>
+    /// <param name="workingDirectory"> The working directory the process starts in. </param>
     /// <param name="cancellationToken"> Optional cancellation token. </param>
     /// <returns> The exit code of the launched process. </returns>
+    /// <exception cref="System.ArgumentException"> Thrown if the working directory is null or empty. </exception>
     /// <exception cref="System.InvalidOperationException"> Thrown if the process fails to start. </exception>
     /// <exception cref="System.OperationCanceledException"> Thrown if the operation is canceled. </exception>
     Task<int> LaunchAsync(string commandLine,
                           RuntimeInfo runtime,
+                          string workingDirectory,
                           CancellationToken cancellationToken = default);
 }

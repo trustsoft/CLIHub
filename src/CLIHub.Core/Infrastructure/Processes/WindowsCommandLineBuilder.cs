@@ -151,11 +151,8 @@ internal static class WindowsCommandLineBuilder
         return builder.ToString();
     }
 
-    private static string EncodePowerShell(string commandLine)
-    {
-        var script = $"& {QuotePowerShellExecutable(commandLine)}";
-        return Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
-    }
+    private static string EncodePowerShell(string commandLine) =>
+        Convert.ToBase64String(Encoding.Unicode.GetBytes(QuotePowerShellExecutable(commandLine)));
 
     private static string QuotePowerShellExecutable(string commandLine)
     {

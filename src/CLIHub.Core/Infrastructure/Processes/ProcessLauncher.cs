@@ -98,8 +98,8 @@ public sealed class ProcessLauncher
                 Type = runtimeType
             };
 
-            // Delegate to the interactive runner
-            _ = this.interactiveRunner.LaunchAsync(arguments, runtime, CancellationToken.None);
+            // Delegate to the interactive runner with the project folder as the process working directory
+            _ = this.interactiveRunner.LaunchAsync(arguments, runtime, workingDirectory, CancellationToken.None);
             this.logger.LogInformation("Launched {CommandName} in {WorkingDirectory}", command.Name, workingDirectory);
             return true;
         }

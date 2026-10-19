@@ -29,25 +29,18 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
     public async Task<int> LaunchAsync(
         string commandLine,
         RuntimeInfo runtime,
+        string workingDirectory,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(commandLine);
         ArgumentNullException.ThrowIfNull(runtime);
+        ArgumentException.ThrowIfNullOrWhiteSpace(workingDirectory);
 
-        this.logger.LogDebug("Launching interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
+        this.logger.LogDebug(
+            "Launching interactive process in {WorkingDirectory}: {Runtime} {CommandLine}",
+            workingDirectory, runtime.ExecutablePath, commandLine);
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = runtime.ExecutablePath,
-            Arguments = commandLine,
-            UseShellExecute = false,
-            RedirectStandardInput = false,
-            RedirectStandardOutput = false,
-            RedirectStandardError = false,
-            CreateNoWindow = false
-        };
-
-        using var process = new Process { StartInfo = startInfo };
+        using var process = new Process { StartInfo = CreateStartInfo(commandLine, runtime, workingDirectory) };
 
         try
         {
@@ -75,5 +68,28 @@ public sealed class WindowsInteractiveProcessRunner : IInteractiveProcessRunner
             this.logger.LogError(ex, "Failed to launch interactive process: {Runtime} {CommandLine}", runtime.ExecutablePath, commandLine);
             throw new InvalidOperationException($"Failed to launch process: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    ///   Creates the start info for an interactive launch, carrying the working directory
+    ///   so the shell starts in the requested folder before running any command.
+    /// </summary>
+    /// <param name="commandLine"> The full command line to execute (already quoted/escaped). </param>
+    /// <param name="runtime"> Runtime information specifying the executable and type. </param>
+    /// <param name="workingDirectory"> The working directory the process starts in. </param>
+    /// <returns> The configured start info. </returns>
+    internal static ProcessStartInfo CreateStartInfo(string commandLine, RuntimeInfo runtime, string workingDirectory)
+    {
+        return new ProcessStartInfo
+        {
+            FileName = runtime.ExecutablePath,
+            Arguments = commandLine,
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            RedirectStandardInput = false,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            CreateNoWindow = false
+        };
     }
 }

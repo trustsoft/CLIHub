@@ -24,7 +24,8 @@ public class ProcessLauncherTests
         {
             var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
             var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
-            Assert.Contains("opencode", script);
+            Assert.StartsWith("& 'opencode'", script);
+            Assert.DoesNotContain("& &", script);
             Assert.Contains("--continue", script);
         }
         else
@@ -32,6 +33,40 @@ public class ProcessLauncherTests
             Assert.Contains("opencode", arguments);
             Assert.Contains("--continue", arguments);
         }
+    }
+
+    [Theory]
+    [InlineData(RuntimeKind.PowerShell)]
+    [InlineData(RuntimeKind.PowerShell7)]
+    public void BuildStartInfo_PowerShell_EncodesSingleCallScript(RuntimeKind runtime)
+    {
+        var command = new PluginCommand { Executable = "opencode" };
+
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+
+        var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+        var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
+
+        Assert.Equal("& 'opencode'", script);
+    }
+
+    [Theory]
+    [InlineData(RuntimeKind.PowerShell)]
+    [InlineData(RuntimeKind.PowerShell7)]
+    public void BuildStartInfo_PowerShell_QuotedExecutableBuildsSingleCall(RuntimeKind runtime)
+    {
+        var command = new PluginCommand
+        {
+            Executable = @"C:\Program Files\Agent\agent.exe",
+            Arguments = "--run"
+        };
+
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+
+        var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+        var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
+
+        Assert.Equal(@"& 'C:\Program Files\Agent\agent.exe' --% --run", script);
     }
 
     [Fact]
@@ -86,6 +121,35 @@ public class ProcessLauncherTests
         Assert.Equal(Environment.GetEnvironmentVariable("COMSPEC") ?? "cmd.exe", fileName);
         Assert.Contains("/d /s /c", arguments);
         Assert.Contains("hello ^^^& world", arguments);
+    }
+
+    [Fact]
+    public void LaunchProcess_PassesWorkingDirectoryToInteractiveRunner()
+    {
+        var runner = new FakeInteractiveProcessRunner();
+        var launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            runner,
+            new FakeProcessOutputRunner());
+        launcher.SetRuntime(RuntimeKind.PowerShell);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+
+        var workingDirectory = Path.Combine(
+            Path.GetTempPath(), "clihub launch dir " + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(workingDirectory);
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.True(started);
+            var launch = Assert.Single(runner.Launches);
+            Assert.Equal(workingDirectory, launch.WorkingDirectory);
+        }
+        finally
+        {
+            try { Directory.Delete(workingDirectory, recursive: true); } catch { }
+        }
     }
 
     [Fact]
