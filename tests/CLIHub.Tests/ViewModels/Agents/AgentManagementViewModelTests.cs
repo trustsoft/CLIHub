@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.ViewModels;
@@ -36,10 +37,23 @@ public class AgentManagementViewModelTests
         Mock<IAgentDetectionService> detection,
         Mock<IAgentVersionService> version,
         Mock<IAgentManagementService> management,
-        Mock<IExternalLauncher> launcher)
+        Mock<IExternalLauncher> launcher,
+        Mock<IAgentProcessInspector>? processInspector = null)
     {
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
+
+        if (processInspector is null)
+        {
+            processInspector = new Mock<IAgentProcessInspector>();
+            processInspector.Setup(x => x.GetRunningProcesses()).Returns([]);
+        }
+
+        var processMonitor = new AgentProcessMonitor(
+            processInspector.Object,
+            new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance),
+            catalog.Object,
+            NullLogger<AgentProcessMonitor>.Instance);
 
         return new AgentManagementViewModel(
             catalog.Object,
@@ -47,8 +61,16 @@ public class AgentManagementViewModelTests
             version.Object,
             management.Object,
             launcher.Object,
+            processMonitor,
             new InlineOperationLifetime(),
             NullLogger<AgentManagementViewModel>.Instance);
+    }
+
+    private static Mock<IAgentProcessInspector> Processes(params AgentProcessInstance[] processes)
+    {
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector.Setup(x => x.GetRunningProcesses()).Returns(processes);
+        return inspector;
     }
 
     private static Mock<IAgentDetectionService> Detection()
@@ -166,6 +188,78 @@ public class AgentManagementViewModelTests
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
 
         Assert.Equal("Update started.", viewModel.Cards[0].Message);
+    }
+
+    [Fact]
+    public void UpdateCommand_WhenServiceBlocks_SurfacesServiceMessage()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Update blocked while the agent is running: a"));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>());
+        viewModel.Load(null);
+
+        viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
+
+        Assert.Equal("Update blocked while the agent is running: a", viewModel.Cards[0].Message);
+    }
+
+    [Fact]
+    public void Load_MatchingAgentProcessRunning_DisablesUpdateAndExplainsBlock()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", @"C:\tools\a.exe", DateTime.Now)));
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.CanUpdate);
+        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+        Assert.True(card.HasMessage);
+    }
+
+    [Fact]
+    public void Load_OtherAgentsProcessRunning_KeepsUpdateAvailableWithoutMessage()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var b = Launchable("b", withUpdate: true);
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", @"C:\tools\b.exe", DateTime.Now)));
+
+        viewModel.Load(null);
+
+        var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(cardA.CanUpdate);
+        Assert.Null(cardA.Message);
+        Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
+        Assert.NotNull(viewModel.Cards.Single(c => c.PluginId == "b").Message);
+    }
+
+    [Fact]
+    public void Load_WithNoRunningProcesses_KeepsDeclaredUpdateAvailableWithoutMessage()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var b = Launchable("b");
+        var viewModel = CreateViewModel([a, b], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load(null);
+
+        Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
+        Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
+        Assert.All(viewModel.Cards, card => Assert.Null(card.Message));
     }
 
     [Fact]

@@ -65,6 +65,11 @@ public partial class LaunchWindow : Window, IStartupWindow
 
         WindowPositioner.Place(this, position);
         this.viewModel.RefreshProjects();
+
+        // Refresh the agent pane too, so installation state, availability, and logos are current
+        // while the window is visible; version re-population is served by the version cache
+        // within its TTL. The default-agent lookup must run against the fresh rows.
+        this.viewModel.RefreshAgents();
         this.viewModel.ApplyDefaultAgentSelection();
         this.Show();
 
@@ -89,8 +94,13 @@ public partial class LaunchWindow : Window, IStartupWindow
     private void OnSourceInitialized(object? sender, EventArgs e) =>
         DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
 
-    private void OnWindowActivated(object? sender, EventArgs e) =>
+    private void OnWindowActivated(object? sender, EventArgs e)
+    {
         this.viewModel.RefreshProjects();
+
+        // Version re-population on this refresh is cache-served within the probe TTL.
+        this.viewModel.RefreshAgents();
+    }
 
     private void OnDeactivated(object? sender, EventArgs e)
     {

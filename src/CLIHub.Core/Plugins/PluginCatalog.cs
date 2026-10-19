@@ -116,10 +116,7 @@ public sealed class PluginCatalog : IPluginCatalog
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<Plugin> GetAllPlugins()
-    {
-        return this.plugins;
-    }
+    public IReadOnlyList<Plugin> GetAllPlugins() => this.plugins.Select(plugin => plugin.Copy()).ToArray();
 
     private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
     {

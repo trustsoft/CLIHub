@@ -23,6 +23,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IAgentVersionService version;
     private readonly IAgentManagementService management;
     private readonly IExternalLauncher launcher;
+    private readonly AgentProcessMonitor processMonitor;
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly ILogger<AgentManagementViewModel> logger;
 
@@ -37,6 +38,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="version"> Version probe service. </param>
     /// <param name="management"> On-demand probe/update operations. </param>
     /// <param name="launcher"> Opens the agent's configuration file. </param>
+    /// <param name="processMonitor"> Running-agent monitor used to gate card update availability. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked actions. </param>
     /// <param name="logger"> Logger. </param>
     public AgentManagementViewModel(IPluginCatalog catalog,
@@ -44,6 +46,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IAgentVersionService version,
                                     IAgentManagementService management,
                                     IExternalLauncher launcher,
+                                    AgentProcessMonitor processMonitor,
                                     IApplicationOperationLifetime operationLifetime,
                                     ILogger<AgentManagementViewModel> logger)
     {
@@ -52,6 +55,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.version = version ?? throw new ArgumentNullException(nameof(version));
         this.management = management ?? throw new ArgumentNullException(nameof(management));
         this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
+        this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -173,7 +177,15 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         foreach (var plugin in this.catalog.GetAllPlugins())
         {
             var isInstalled = this.detection.IsInstalledInSystem(plugin);
-            var canUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
+
+            // Availability is a Load()-time snapshot over the process state (the page load is the
+            // refresh trigger). The execution-time block itself stays in AgentManagementService.
+            var declaresUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
+            IReadOnlyList<RunningAgent> runningAgents = declaresUpdate
+                ? this.processMonitor.GetRunningAgents(plugin)
+                : [];
+            var blockedNames = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
+
             var card = new AgentCardItem(
                 plugin,
                 plugin.LogoPath,
@@ -181,7 +193,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 "…",
                 AgentConfigurationPath.For(plugin))
             {
-                CanUpdate = canUpdate
+                CanUpdate = declaresUpdate && runningAgents.Count == 0,
+                Message = blockedNames.Length > 0 ? $"Update blocked while the agent is running: {blockedNames}" : null
             };
 
             this.Cards.Add(card);

@@ -359,7 +359,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         }
     }
 
-    private void RefreshAgents()
+    /// <summary>
+    ///   Re-composes the agent pane against the current project selection and filter and restores
+    ///   the selection by plugin ID. Also the refresh trigger for the launch window being shown or
+    ///   activated, symmetrically to <see cref="RefreshProjects" />.
+    /// </summary>
+    public void RefreshAgents()
     {
         var hasAgents = this.agentPane.Refresh(this.selectedProject?.Path, this.ShowOnlyProjectAgents);
         this.SetProperty(ref this.selectedAgent, this.agentPane.SelectedAgent);

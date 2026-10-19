@@ -35,6 +35,9 @@ public sealed class AgentItem : INotifyPropertyChanged
 
     /// <summary>
     ///   Availability summary (host install and project usage).
+    ///   Legacy-window-only: bound only by MainWindow.xaml (the documented build-only exception).
+    ///   Intentionally not wired into <see cref="Apply" />, so the value freezes at construction on
+    ///   launch-window rows; do not add new bindings to this property.
     /// </summary>
     public string Status
     {
@@ -110,8 +113,29 @@ public sealed class AgentItem : INotifyPropertyChanged
     /// <param name="name"> The current display name. </param>
     /// <param name="logoPath"> The current logo path. </param>
     /// <param name="isAvailable"> Whether the agent is available in the current project. </param>
-    public void Update(Plugin plugin, string name, string? logoPath, bool isAvailable)
+    public void Update(Plugin plugin, string name, string? logoPath, bool isAvailable) =>
+        this.Apply(plugin, name, logoPath, isAvailable);
+
+    /// <inheritdoc />
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    ///   The single post-construction mutation path for the row: every refreshed field is wired
+    ///   here exactly once, so a field added to the row has one place to be announced.
+    /// </summary>
+    /// <param name="plugin"> The current plugin descriptor. </param>
+    /// <param name="name"> The current display name. </param>
+    /// <param name="logoPath"> The current logo path. </param>
+    /// <param name="isAvailable"> Whether the agent is available in the current project. </param>
+    private void Apply(Plugin plugin, string name, string? logoPath, bool isAvailable)
     {
+        // Property names stay explicit at every SetValue call site. Do not "simplify" this to a
+        // [CallerMemberName]-attributed helper while calls pass through Update/Apply: the compiler
+        // would then raise "Update"/"Apply" as the property name and silently kill every row
+        // notification. (AgentItem keeps required init accessors for the object-initializer
+        // construction in AgentListSynchronizer, so Apply writes fields and must name them.)
+        var pluginChanged = !ReferenceEquals(this.plugin, plugin);
+
         this.SetValue(ref this.plugin, plugin, nameof(this.Plugin));
         this.SetValue(ref this.name, name, nameof(this.Name));
         this.SetValue(ref this.logoPath, logoPath, nameof(this.LogoPath));
@@ -122,13 +146,21 @@ public sealed class AgentItem : INotifyPropertyChanged
             this.OnPropertyChanged(nameof(this.IsAvailable));
             this.OnPropertyChanged(nameof(this.RowOpacity));
         }
-    }
 
-    /// <inheritdoc />
-    public event PropertyChangedEventHandler? PropertyChanged;
+        if (pluginChanged)
+        {
+            // Derived command capabilities read the plugin; after every refresh supplies a fresh
+            // detached copy, a reference change is the (cheap) trigger to re-announce them.
+            this.OnPropertyChanged(nameof(this.CanLaunch));
+            this.OnPropertyChanged(nameof(this.CanResume));
+            this.OnPropertyChanged(nameof(this.CanUpdate));
+            this.OnPropertyChanged(nameof(this.CanShowVersion));
+        }
+    }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null) => this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
+    // The propertyName argument must stay explicit here; see the guard comment in Apply.
     private void SetValue<T>(ref T field, T value, string propertyName)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))

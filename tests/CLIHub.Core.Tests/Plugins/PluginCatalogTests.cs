@@ -141,6 +141,82 @@ public class PluginCatalogTests : IDisposable
     }
 
     [Fact]
+    public void GetAllPlugins_MutatingReturnedPlugin_DoesNotChangeLaterReadsOrCatalog()
+    {
+        this.WritePlugin("opencode", """
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "commands": {
+            "launch": { "executable": "opencode" },
+            "update": { "executable": "opencode", "arguments": "update" }
+          },
+          "detection": { "systemPaths": ["%USERPROFILE%\\.opencode"], "projectIndicators": [".opencode"] }
+        }
+        """);
+        var manager = this.CreateManager();
+        manager.LoadPlugins();
+
+        var original = manager.GetAllPlugins().Single();
+        var returned = manager.GetAllPlugins().Single();
+
+        returned.LogoPath = "mutated-logo";
+        returned.Commands.Update!.Executable = "mutated-update";
+        returned.Detection.SystemPaths.Clear();
+        returned.Detection.ProjectIndicators.Clear();
+
+        var reread = manager.GetAllPlugins().Single();
+
+        Assert.Equal(original.LogoPath, reread.LogoPath);
+        Assert.NotEqual("mutated-logo", reread.LogoPath);
+        Assert.Equal(original.Commands.Update!.Executable, reread.Commands.Update!.Executable);
+        Assert.NotEqual("mutated-update", reread.Commands.Update.Executable);
+        Assert.Equal(original.Detection.SystemPaths, reread.Detection.SystemPaths);
+        Assert.Equal(original.Detection.ProjectIndicators, reread.Detection.ProjectIndicators);
+        Assert.NotEmpty(reread.Detection.SystemPaths);
+        Assert.NotEmpty(reread.Detection.ProjectIndicators);
+        Assert.NotSame(original.Commands.Update, reread.Commands.Update);
+    }
+
+    [Fact]
+    public void GetAllPlugins_PluginsReturnedBeforeReload_KeepTheirValues()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var manager = this.CreateManager();
+        manager.LoadPlugins();
+
+        var returned = manager.GetAllPlugins().Single();
+
+        this.WritePlugin("pi", ValidJson.Replace("opencode", "pi", StringComparison.Ordinal));
+        manager.ReloadPlugins();
+
+        Assert.Equal("opencode", returned.Id);
+        Assert.Equal("OpenCode", returned.Name);
+        Assert.NotNull(returned.Commands.Launch);
+        Assert.Contains(@"%USERPROFILE%\.opencode", returned.Detection.SystemPaths);
+        Assert.Contains(".opencode", returned.Detection.ProjectIndicators);
+        Assert.Equal(2, manager.GetAllPlugins().Count);
+    }
+
+    [Fact]
+    public void LoadPlugins_CaseVariantIds_LoadAsDistinctPlugins()
+    {
+        // Windows directory names cannot differ by case alone, so the case variants live in
+        // distinct directories; the ordinal id comparison (not case-insensitive) decides that
+        // these are two distinct plugins rather than a duplicate.
+        this.WritePlugin("lower", ValidJson);
+        this.WritePlugin("upper", ValidJson.Replace("opencode", "OpenCode", StringComparison.Ordinal));
+        var manager = this.CreateManager();
+
+        manager.LoadPlugins();
+
+        var ids = manager.GetAllPlugins().Select(plugin => plugin.Id).ToList();
+        Assert.Equal(2, ids.Count);
+        Assert.Contains("opencode", ids);
+        Assert.Contains("OpenCode", ids);
+    }
+
+    [Fact]
     public void LoadPlugins_IsIdempotent()
     {
         this.WritePlugin("opencode", ValidJson);
