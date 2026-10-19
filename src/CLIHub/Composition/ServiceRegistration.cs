@@ -52,56 +52,109 @@ public static class ServiceRegistration
 
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
+        services.AddStartupServices();
+        services.AddLaunchWindowServices();
+        services.AddTrayServices();
+        services.AddHotkeyServices();
+        services.AddSettingsServices();
+        services.AddUpdateServices();
+        services.AddSharedUiServices();
+
+        return services;
+    }
+
+    /// <summary>
+    ///   Registers the boot and shutdown pipeline: application lifetime and single-instance
+    ///   coordination, startup state loading, the session and bootstrapper, startup UI,
+    ///   plugin initialization, startup preferences, and the optional startup coordinators
+    ///   executed during boot.
+    /// </summary>
+    private static IServiceCollection AddStartupServices(this IServiceCollection services)
+    {
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
         services.AddSingleton<IApplicationOperationLifetime, ApplicationOperationLifetime>();
         services.AddSingleton<IInstanceCoordinator, InstanceCoordinator>();
         services.AddSingleton<IStartupStateLoader, StartupStateLoader>();
         services.AddSingleton<IOptionalStartupCoordinator, OptionalStartupCoordinator>();
-        services.AddSingleton<IUpdateWorkflow, UpdateWorkflow>();
         services.AddSingleton<IApplicationSession, ApplicationSession>();
         services.AddSingleton<IApplicationBootstrapper, ApplicationBootstrapper>();
         services.AddSingleton<IApplicationStartupUi, WpfApplicationStartupUi>();
         services.AddSingleton<Func<IApplicationStartupUi>>(sp =>
             () => sp.GetRequiredService<IApplicationStartupUi>());
-        services.AddSingleton<Func<IHotkeyStartupRegistrar>>(sp =>
-            () => sp.GetRequiredService<IHotkeyStartupRegistrar>());
-        services.AddSingleton<IAgentCommandWorkflow, AgentCommandWorkflow>();
         services.AddSingleton<IPluginInitializationService, PluginInitializationService>();
         services.AddSingleton<IStartupPreferencesApplier, StartupPreferencesApplier>();
+        services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
+        services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
+        return services;
+    }
+
+    /// <summary>
+    ///   Registers the active WPF shell: the agent command workflow, launch prompt state, the
+    ///   launch window's catalog, coordinators, builders, pane controllers, and view models, and
+    ///   the <c> LaunchWindow </c> itself with its <c> IPathDisplayStyleTarget </c> forwarder.
+    ///   <c> AgentCommandWorkflow </c> is consumed cross-module by the tray command handlers.
+    /// </summary>
+    private static IServiceCollection AddLaunchWindowServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IAgentCommandWorkflow, AgentCommandWorkflow>();
         services.AddSingleton<PromptState>();
-        services.AddSingleton<IProjectDialogService, ProjectDialogService>();
-        services.AddSingleton<IUserNotificationService, UserNotificationService>();
-        services.AddSingleton<IExternalLauncher, ExternalLauncher>();
         services.AddSingleton<ProjectModelCatalog>();
         services.AddSingleton<LaunchCommandCoordinator>();
         services.AddSingleton<LaunchWindowActionBuilder>();
-        services.AddSingleton<TrayMenuBuilder>();
-        services.AddSingleton<TrayStateProjection>();
-        services.AddSingleton<TrayCommandHandlers>();
-        services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<ProjectPaneController>();
         services.AddSingleton<AgentPaneController>();
-        services.AddSingleton<LogoImageSourceCache>();
-        services.AddSingleton<PathToImageConverter>();
         services.AddSingleton<UpdateControlViewModel>();
         services.AddSingleton<StatusMessageCoordinator>();
         services.AddSingleton<LaunchWindowViewModel>();
         services.AddSingleton<IPathDisplayStyleTarget>(sp => sp.GetRequiredService<LaunchWindowViewModel>());
         services.AddSingleton<LaunchWindow>();
+        return services;
+    }
+
+    /// <summary>
+    ///   Registers the tray stack: the menu builder, state projection, command handlers, the
+    ///   <c> ITrayActions </c> port, and the tray icon controller with its <c> ITrayHost </c>
+    ///   forwarder.
+    /// </summary>
+    private static IServiceCollection AddTrayServices(this IServiceCollection services)
+    {
+        services.AddSingleton<TrayMenuBuilder>();
+        services.AddSingleton<TrayStateProjection>();
+        services.AddSingleton<TrayCommandHandlers>();
+        services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<TrayIconController>();
         services.AddSingleton<ITrayHost>(sp => sp.GetRequiredService<TrayIconController>());
+        return services;
+    }
 
+    /// <summary>
+    ///   Registers the global hotkey stack: the hotkey service whose factory joins the launch
+    ///   window with the tray toggle callback, its <c> IGlobalHotkeyService </c> forwarder, and
+    ///   the hotkey startup registrar with its <c> Func </c> accessor.
+    /// </summary>
+    private static IServiceCollection AddHotkeyServices(this IServiceCollection services)
+    {
         services.AddSingleton<GlobalHotkeyService>(sp => new GlobalHotkeyService(
             sp.GetRequiredService<LaunchWindow>(),
             () => sp.GetRequiredService<TrayIconController>().ToggleLaunchWindow(),
             sp.GetRequiredService<ILogger<GlobalHotkeyService>>()));
         services.AddSingleton<IGlobalHotkeyService>(sp => sp.GetRequiredService<GlobalHotkeyService>());
-        services.AddSingleton<IRuntimePreferenceTarget, ProcessRuntimePreferenceTarget>();
+        services.AddSingleton<Func<IHotkeyStartupRegistrar>>(sp =>
+            () => sp.GetRequiredService<IHotkeyStartupRegistrar>());
         services.AddSingleton<IHotkeyStartupRegistrar, HotkeyStartupRegistrar>();
-        services.AddSingleton<IReleaseNotesStartupCoordinator, ReleaseNotesStartupCoordinator>();
-        services.AddSingleton<IUpdateStartupCoordinator, UpdateStartupCoordinator>();
+        return services;
+    }
 
+    /// <summary>
+    ///   Registers the settings window stack (application service, section view models, the
+    ///   settings view model with its twelve dependencies, and the window with its accessor)
+    ///   plus the runtime preference-application chain (<c> PreferenceApplier </c> and its
+    ///   process and accent preference targets) consumed at startup and on preference change.
+    /// </summary>
+    private static IServiceCollection AddSettingsServices(this IServiceCollection services)
+    {
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
+        services.AddSingleton<IRuntimePreferenceTarget, ProcessRuntimePreferenceTarget>();
         services.AddSingleton<IAccentPreferenceTarget, WpfAccentPreferenceTarget>();
         services.AddTransient<IAgentManagementSection, AgentManagementViewModel>();
         services.AddTransient<IProjectRegistrySection, ProjectRegistryViewModel>();
@@ -123,14 +176,39 @@ public static class ServiceRegistration
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
+        return services;
+    }
 
+    /// <summary>
+    ///   Registers the update and whats-new stack: the <c> IUpdateWorkflow </c> anchor (shared by
+    ///   the tray projection, tray handlers, launch window, session, settings, and startup
+    ///   coordinators), the whats-new view model with its update request source accessor, and the
+    ///   transient whats-new window with its accessor and the release notes launcher.
+    /// </summary>
+    private static IServiceCollection AddUpdateServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IUpdateWorkflow, UpdateWorkflow>();
         services.AddSingleton<WhatsNewViewModel>();
         services.AddSingleton<Func<IUpdateRequestSource>>(sp =>
             () => sp.GetRequiredService<WhatsNewViewModel>());
         services.AddTransient<WhatsNewWindow>();
         services.AddSingleton<Func<WhatsNewWindow>>(sp => () => sp.GetRequiredService<WhatsNewWindow>());
         services.AddSingleton<IReleaseNotesLauncher, ReleaseNotesLauncher>();
+        return services;
+    }
 
+    /// <summary>
+    ///   Registers UI services with no single owning feature: project dialogs, user
+    ///   notifications, external launching, the logo image cache, and the path-to-image
+    ///   converter.
+    /// </summary>
+    private static IServiceCollection AddSharedUiServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IProjectDialogService, ProjectDialogService>();
+        services.AddSingleton<IUserNotificationService, UserNotificationService>();
+        services.AddSingleton<IExternalLauncher, ExternalLauncher>();
+        services.AddSingleton<LogoImageSourceCache>();
+        services.AddSingleton<PathToImageConverter>();
         return services;
     }
 }
