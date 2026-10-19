@@ -61,10 +61,10 @@ public class WindowsInteractiveProcessRunnerTests
             return;
         }
 
-        // Hand-built probe: the builder's command construction for Git Bash is covered by unit
-        // tests, and its cmd-style escaping does not translate redirect characters, so a builder
-        // driven probe cannot write the report file. What is verified here is the same OS-level
-        // working-directory propagation for bash.exe as for the other runtimes.
+        // The probe writes to a relative path, so the report lands in the working directory the
+        // operating system gave the process no matter which bash flavor resolves: Git Bash
+        // reports POSIX paths under /c/..., a WSL bash under /mnt/c/.... Asserting that the
+        // report exists inside the requested folder and names it proves the child started there.
         var workingDirectory = Path.Combine(
             Path.GetTempPath(), "clihub launch dir " + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(workingDirectory);
@@ -72,7 +72,7 @@ public class WindowsInteractiveProcessRunnerTests
 
         try
         {
-            var arguments = $"-c \"pwd > '{ToPosixPath(reportPath)}'\"";
+            var arguments = "-c \"pwd > cwd-report.txt\"";
             var runtime = new RuntimeInfo { ExecutablePath = "bash.exe", Type = RuntimeType.Cmd };
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);
 
@@ -80,10 +80,8 @@ public class WindowsInteractiveProcessRunnerTests
             var exitCode = await runner.LaunchAsync(arguments, runtime, workingDirectory, cancellation.Token);
 
             Assert.Equal(0, exitCode);
-            var reported = NormalizeReportedPath((await File.ReadAllTextAsync(reportPath)).Trim());
-            Assert.Equal(
-                Path.GetFullPath(workingDirectory).TrimEnd(Path.DirectorySeparatorChar),
-                Path.GetFullPath(reported).TrimEnd(Path.DirectorySeparatorChar));
+            var reported = (await File.ReadAllTextAsync(reportPath)).Trim().Trim('"');
+            Assert.Contains("clihub launch dir", reported);
         }
         finally
         {
@@ -182,14 +180,6 @@ public class WindowsInteractiveProcessRunnerTests
         }
 
         return reported.Trim('"');
-    }
-
-    private static string ToPosixPath(string windowsPath)
-    {
-        var normalized = windowsPath.Replace('\\', '/');
-        return normalized.Length >= 2 && normalized[1] == ':'
-            ? "/" + char.ToLowerInvariant(normalized[0]) + normalized[2..]
-            : normalized;
     }
 
     private static bool IsOnPath(string executable)
