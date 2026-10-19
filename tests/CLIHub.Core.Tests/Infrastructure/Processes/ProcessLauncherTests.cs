@@ -24,9 +24,10 @@ public class ProcessLauncherTests
         {
             var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
             var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
-            Assert.StartsWith("& 'opencode'", script);
+            Assert.StartsWith("$exe = (Get-Command 'opencode' -CommandType Application", script);
+            Assert.Contains("& $exe --% --continue", script);
+            Assert.DoesNotContain("& 'opencode' --%", script);
             Assert.DoesNotContain("& &", script);
-            Assert.Contains("--continue", script);
         }
         else
         {
@@ -48,6 +49,24 @@ public class ProcessLauncherTests
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
 
         Assert.Equal("& 'opencode'", script);
+    }
+
+    [Theory]
+    [InlineData(RuntimeKind.PowerShell)]
+    [InlineData(RuntimeKind.PowerShell7)]
+    public void BuildStartInfo_PowerShell_BareNameWithArguments_ResolvesNativeApplication(RuntimeKind runtime)
+    {
+        var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
+
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+
+        var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+        var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
+
+        Assert.Equal(
+            "$exe = (Get-Command 'opencode' -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source\n" +
+            "& $exe --% --continue",
+            script);
     }
 
     [Theory]

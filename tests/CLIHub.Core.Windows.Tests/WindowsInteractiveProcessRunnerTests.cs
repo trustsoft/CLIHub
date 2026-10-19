@@ -97,6 +97,45 @@ public class WindowsInteractiveProcessRunnerTests
     ///   probe command prints its working directory into a report file next to a script whose
     ///   path contains spaces.
     /// </summary>
+    [Fact]
+    public async Task LaunchAsync_PowerShell_PathResolvedShim_ReceivesArgumentsWithoutStopParsingToken()
+    {
+        // Simulates an npm-style agent: a bare executable name on PATH that resolves to a
+        // .cmd shim. The builder must resolve the name to a native application so the
+        // stop-parsing token is consumed by PowerShell and never reaches the agent.
+        var shimDir = Path.Combine(Path.GetTempPath(), "clihub-shim-path-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(shimDir);
+        var reportPath = Path.Combine(shimDir, "args-report.txt");
+        var shimPath = Path.Combine(shimDir, "probe-agent.cmd");
+        await File.WriteAllTextAsync(shimPath, "@echo ARGS=%*>\"%~dp0args-report.txt\"");
+
+        var originalPath = Environment.GetEnvironmentVariable("PATH");
+        Environment.SetEnvironmentVariable("PATH", shimDir + Path.PathSeparator + originalPath);
+
+        try
+        {
+            var command = new PluginCommand { Name = "resume", Executable = "probe-agent", Arguments = "--continue" };
+            var (_, arguments) = ProcessLauncher.BuildStartInfo(RuntimeKind.PowerShell, command, shimDir);
+            arguments = arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal);
+
+            var runtime = new RuntimeInfo { ExecutablePath = "powershell.exe", Type = RuntimeType.PowerShell };
+            var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);
+
+            using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+            var exitCode = await runner.LaunchAsync(arguments, runtime, shimDir, cancellation.Token);
+
+            Assert.Equal(0, exitCode);
+            var reported = (await File.ReadAllTextAsync(reportPath)).Trim();
+            Assert.Contains("ARGS=--continue", reported);
+            Assert.DoesNotContain("--%", reported);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+            try { Directory.Delete(shimDir, recursive: true); } catch { }
+        }
+    }
+
     private async Task VerifyChildWorkingDirectoryAsync(
         RuntimeKind runtimeKind,
         Func<string, string> makeHeadless,

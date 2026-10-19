@@ -166,11 +166,47 @@ internal static class WindowsCommandLineBuilder
         }
 
         var executableStart = commandLine.StartsWith('"') ? 1 : 0;
-        var executable = commandLine.Substring(executableStart, executableEnd - executableStart)
-            .Replace("'", "''", StringComparison.Ordinal);
+        var executable = commandLine.Substring(executableStart, executableEnd - executableStart);
         var arguments = commandLine[(executableEnd + 1)..].TrimStart();
-        return string.IsNullOrEmpty(arguments)
-            ? $"& '{executable}'"
-            : $"& '{executable}' --% {arguments}";
+
+        if (string.IsNullOrEmpty(arguments))
+        {
+            return $"& '{executable.Replace("'", "''", StringComparison.Ordinal)}'";
+        }
+
+        // With arguments the invocation must target a native application: the stop-parsing
+        // token is honored only for native executables, so a PATH name that resolves to a
+        // PowerShell script shim (.ps1) would otherwise receive the token literally and
+        // reject it as an unknown flag.
+        if (executable.Contains('\\') || executable.Contains('/'))
+        {
+            var escaped = executable.Replace("'", "''", StringComparison.Ordinal);
+            return EndsWithNativeExecutableExtension(executable)
+                ? $"& '{escaped}' --% {arguments}"
+                : $"$exe = (Get-Command '{EscapePsWildcard(executable)}' -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source\n& $exe --% {arguments}";
+        }
+
+        return $"$exe = (Get-Command '{executable.Replace("'", "''", StringComparison.Ordinal)}' -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source\n& $exe --% {arguments}";
+    }
+
+    private static bool EndsWithNativeExecutableExtension(string executable) =>
+        executable.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ||
+        executable.EndsWith(".com", StringComparison.OrdinalIgnoreCase);
+
+    // Get-Command -Name treats its argument as a wildcard pattern; backtick is its escape.
+    private static string EscapePsWildcard(string value)
+    {
+        var builder = new StringBuilder(value.Length + 8);
+        foreach (var character in value)
+        {
+            if (character is '*' or '?' or '[' or ']' or '`')
+            {
+                builder.Append('`');
+            }
+
+            builder.Append(character);
+        }
+
+        return builder.ToString();
     }
 }
