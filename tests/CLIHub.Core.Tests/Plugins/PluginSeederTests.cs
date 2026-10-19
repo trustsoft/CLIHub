@@ -3,6 +3,7 @@ namespace CLIHub.Core.Tests.Plugins;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 
 public class PluginSeederTests : IDisposable
@@ -114,5 +115,38 @@ public class PluginSeederTests : IDisposable
         Assert.All(plugins, p => Assert.NotNull(p.Commands.Launch));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Id)));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Name)));
+    }
+
+    [Fact]
+    public void SeededDescriptors_ExposeExpectedCommandSets()
+    {
+        this.CreateSeeder().SeedIfEmpty();
+
+        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.pluginsPath, "logos-state.json"));
+        var catalog = new PluginCatalog(NullLogger<PluginCatalog>.Instance, cache, this.pluginsPath);
+        catalog.LoadPlugins();
+
+        var plugins = catalog.GetAllPlugins().ToDictionary(p => p.Id);
+        var full = new[] { AgentCommandKind.Resume, AgentCommandKind.Version, AgentCommandKind.Update };
+        var withoutResume = new[] { AgentCommandKind.Version, AgentCommandKind.Update };
+
+        Assert.Multiple(
+            () => AssertCommandSet(plugins["opencode"], full),
+            () => AssertCommandSet(plugins["pi"], full),
+            () => AssertCommandSet(plugins["openclaude"], full),
+            () => AssertCommandSet(plugins["github-copilot"], full),
+            () => AssertCommandSet(plugins["qwen-code"], full),
+            () => AssertCommandSet(plugins["cline-cli"], withoutResume),
+            // Cline CLI can only resume by explicit session id (cline --id <session-id>);
+            // there is no resume-most-recent invocation, so the kind stays omitted.
+            () => Assert.Null(plugins["cline-cli"].Commands.Resume));
+    }
+
+    private static void AssertCommandSet(Plugin plugin, AgentCommandKind[] expectedKinds)
+    {
+        foreach (var kind in expectedKinds)
+        {
+            Assert.True(plugin.Commands.Get(kind) is not null, $"{plugin.Id} is missing the {kind} command");
+        }
     }
 }

@@ -4,6 +4,7 @@
   "description": "GitHub Copilot CLI",
   "commands": {
     "launch": { "executable": "copilot" },
+    "resume": { "executable": "copilot", "arguments": "--continue" },
     "version": { "executable": "copilot", "arguments": "--version" },
     "update": { "executable": "copilot", "arguments": "update" }
   },

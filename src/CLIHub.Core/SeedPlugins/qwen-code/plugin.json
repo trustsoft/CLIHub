@@ -4,6 +4,7 @@
   "description": "Qwen Code CLI",
   "commands": {
     "launch": { "executable": "qwen" },
+    "resume": { "executable": "qwen", "arguments": "--continue" },
     "version": { "executable": "qwen", "arguments": "--version" },
     "update": { "executable": "qwen", "arguments": "update" }
   },
