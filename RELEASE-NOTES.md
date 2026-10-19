@@ -3,6 +3,21 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.9.8 — 2026-10-19
+
+### New
+
+- Built-in agents now offer their full command set: Update for Cline CLI and OpenClaude, and Resume for GitHub Copilot and Qwen Code
+
+### Improved
+
+- An agent's Update action is blocked only while that same agent is running; other running agents no longer block it
+
+### Fixed
+
+- Launching an agent now starts it in the selected project folder instead of CLIHub's own working directory
+- Agent commands with arguments no longer fail with a script error in PowerShell and PowerShell 7
+
 ## 0.9.7 — 2026-10-19
 
 ### New

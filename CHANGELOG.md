@@ -8,6 +8,25 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 0.9.8 — 2026-10-19
+
+### Added
+
+- Resume command for GitHub Copilot (`copilot --continue`) and Qwen Code (`qwen --continue`), and Update command for Cline CLI (`cline update`) and OpenClaude (`openclaude update`) in the built-in descriptors (`plugin-seeding`)
+- Per-agent update blocking: an agent's Update action is blocked only while processes of that same agent are running, so other running agents no longer prevent an update (`agent-ui`, `preferences-ui`)
+- Design proposal for agent update availability checking against npm and GitHub Releases (`openspec/changes/agent-update-availability`, not yet implemented)
+
+### Changed
+
+- Cline resume stays intentionally omitted from the built-in descriptor: the CLI resumes only by explicit session id via `cline --id` (`plugin-seeding`)
+- The update-blocked status message names the single running agent instead of a list of all running agents (`agent-ui`)
+
+### Fixed
+
+- Launching an agent starts it in the selected project folder: the working directory is now applied to the terminal process for every supported runtime (`agent-commands`)
+- Interactive agent commands no longer fail in PowerShell and PowerShell 7 with a doubled call operator (`& &`) when built from the descriptor command line (`agent-commands`)
+- Arguments of PATH-resolved agents installed as script shims (npm-style) no longer receive the PowerShell stop-parsing token, which broke resume and update commands with arguments (`agent-commands`)
+
 ## 0.9.7 — 2026-10-19
 
 ### Added
