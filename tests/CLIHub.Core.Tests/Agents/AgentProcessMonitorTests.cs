@@ -47,7 +47,7 @@ public class AgentProcessMonitorTests
     {
         // Arrange
         var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(@"C:\Windows\System32\notepad.exe", "notepad.exe");
+        var process = CreateProcess(@"C:\Windows\System32\notepad.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
@@ -64,7 +64,7 @@ public class AgentProcessMonitorTests
     {
         // Arrange
         var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
@@ -82,7 +82,7 @@ public class AgentProcessMonitorTests
         // Arrange
         var opencode = CreatePlugin("opencode", "opencode");
         var pi = CreatePlugin("pi", "pi");
-        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
@@ -100,7 +100,7 @@ public class AgentProcessMonitorTests
         // Arrange
         var opencode = CreatePlugin("opencode", "opencode");
         var pi = CreatePlugin("pi", "pi");
-        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
@@ -118,8 +118,8 @@ public class AgentProcessMonitorTests
         // Arrange
         var opencode = CreatePlugin("opencode", "opencode");
         var pi = CreatePlugin("pi", "pi");
-        var opencodeProcess = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
-        var piProcess = CreateProcess(@"C:\tools\pi.exe", "pi.exe");
+        var opencodeProcess = CreateProcess(@"C:\tools\opencode.exe");
+        var piProcess = CreateProcess(@"C:\tools\pi.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([opencodeProcess, piProcess]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
@@ -151,7 +151,7 @@ public class AgentProcessMonitorTests
     {
         // Arrange
         var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
@@ -171,8 +171,8 @@ public class AgentProcessMonitorTests
         // Arrange
         var plugin1 = CreatePlugin("opencode", "opencode");
         var plugin2 = CreatePlugin("cline", "cline");
-        var process1 = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
-        var process2 = CreateProcess(@"C:\tools\cline.exe", "cline.exe");
+        var process1 = CreateProcess(@"C:\tools\opencode.exe");
+        var process2 = CreateProcess(@"C:\tools\cline.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process1, process2]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin1, plugin2]);
@@ -191,8 +191,8 @@ public class AgentProcessMonitorTests
     {
         // Arrange
         var plugin = CreatePlugin("opencode", "opencode");
-        var matchingProcess = CreateProcess(@"C:\tools\opencode.exe", "opencode.exe");
-        var nonMatchingProcess = CreateProcess(@"C:\Windows\System32\notepad.exe", "notepad.exe");
+        var matchingProcess = CreateProcess(@"C:\tools\opencode.exe");
+        var nonMatchingProcess = CreateProcess(@"C:\Windows\System32\notepad.exe");
 
         this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([matchingProcess, nonMatchingProcess]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
@@ -219,26 +219,6 @@ public class AgentProcessMonitorTests
         Assert.Empty(result);
     }
 
-    [Fact]
-    public void GetRunningAgents_NodeRuntimeProcess_ReturnsMatch()
-    {
-        // Arrange
-        var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(
-            @"C:\Program Files\nodejs\node.exe",
-            @"node.exe C:\npm\opencode\index.js");
-
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
-        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
-
-        // Act
-        var result = this.monitor.GetRunningAgents();
-
-        // Assert
-        Assert.Single(result);
-        Assert.Equal("opencode", result[0].Plugin.Id);
-    }
-
     private static Plugin CreatePlugin(string id, string executable)
     {
         return new Plugin
@@ -252,12 +232,11 @@ public class AgentProcessMonitorTests
         };
     }
 
-    private static AgentProcessInstance CreateProcess(string executablePath, string commandLine)
+    private static AgentProcessInstance CreateProcess(string executablePath)
     {
         return new AgentProcessInstance(
             ProcessId: 1234,
             ExecutablePath: executablePath,
-            CommandLine: commandLine,
             StartTime: DateTime.UtcNow);
     }
 }

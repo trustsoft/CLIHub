@@ -15,19 +15,20 @@ The Core process subsystem protects agent updates from running against an active
 - `WindowsAgentProcessInspector` enumerates accessible Windows processes and records the process ID,
   executable path, and start time. System processes with low process IDs and processes whose executable
   path cannot be read are skipped.
-- `AgentProcessMatcher` matches a process to a plugin by executable name. It also supports matching
-  Node.js and Python runtime processes when the inspected process includes a command line containing the
-  plugin ID, launch executable, or one of its configured system paths.
+- `AgentProcessMatcher` matches a process to a plugin by the launch executable's file name, ignoring
+  case. Agents launched through a command shim into a shared runtime — for example an npm package that
+  runs as `node.exe` — are not matched.
 - `AgentProcessMonitor` combines the inspector, matcher, and plugin catalog and exposes the matching
   `RunningAgent` records through `HasRunningAgents()` and `GetRunningAgents()`.
 - `WindowActionCoordinator` checks the monitor before enabling an agent's **Update** command and checks
   again immediately before execution. When a running agent is found, the update is not started and the
   status area explains that the action is blocked.
 
-The current Windows inspector intentionally does not perform the potentially slow WMI command-line query;
-its command-line field is empty in production. Direct executable matching therefore provides the reliable
-current detection path, while runtime-based matching remains available to inspectors that supply command
-lines.
+The Windows inspector does not retrieve command lines; it supplies only the process ID, executable path,
+and start time. Process matching is therefore executable-name based, and an agent hosted inside a shared
+runtime such as `node.exe` is not detected, so its update is not blocked. Closing that gap requires a
+separate process-identity design, either by tracking the processes CLIHub launches or by adding a cached,
+asynchronous process snapshot with command-line details.
 
 ## Process and Agent Errors
 

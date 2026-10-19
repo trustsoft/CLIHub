@@ -17,4 +17,11 @@ public interface IAgentVersionService
     ///   Clears the cached versions so the next lookup runs the command again.
     /// </summary>
     void Invalidate();
+
+    /// <summary>
+    ///   Clears one agent's cached version so its next lookup runs the command again.
+    ///   Other agents' cached versions and already-running probes are unaffected.
+    /// </summary>
+    /// <param name="plugin"> The agent whose cached version is cleared. </param>
+    void InvalidateFor(Plugin plugin);
 }

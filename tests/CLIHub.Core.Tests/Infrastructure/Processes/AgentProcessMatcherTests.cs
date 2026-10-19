@@ -19,7 +19,7 @@ public class AgentProcessMatcherTests
     {
         // Arrange
         var plugin = CreatePlugin("test-agent", "testagent.exe");
-        var process = CreateProcess(@"C:\tools\testagent.exe", "testagent.exe");
+        var process = CreateProcess(@"C:\tools\testagent.exe");
 
         // Act
         var result = this.matcher.IsMatch(process, plugin);
@@ -33,55 +33,7 @@ public class AgentProcessMatcherTests
     {
         // Arrange
         var plugin = CreatePlugin("test-agent", "TestAgent.exe");
-        var process = CreateProcess(@"C:\tools\testagent.exe", "testagent.exe");
-
-        // Act
-        var result = this.matcher.IsMatch(process, plugin);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void IsMatch_NodeRuntimeWithPluginIdInCommandLine_ReturnsTrue()
-    {
-        // Arrange
-        var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(
-            @"C:\Program Files\nodejs\node.exe",
-            @"node.exe C:\npm\opencode\index.js");
-
-        // Act
-        var result = this.matcher.IsMatch(process, plugin);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void IsMatch_PythonRuntimeWithExecutableNameInCommandLine_ReturnsTrue()
-    {
-        // Arrange
-        var plugin = CreatePlugin("cline", "cline");
-        var process = CreateProcess(
-            @"C:\Python\python.exe",
-            @"python.exe C:\scripts\cline\main.py");
-
-        // Act
-        var result = this.matcher.IsMatch(process, plugin);
-
-        // Assert
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void IsMatch_NodeRuntimeWithSystemPathInCommandLine_ReturnsTrue()
-    {
-        // Arrange
-        var plugin = CreatePluginWithSystemPath("opencode", "opencode", @"C:\Users\test\.npm\opencode");
-        var process = CreateProcess(
-            @"C:\Program Files\nodejs\node.exe",
-            @"node.exe C:\Users\test\.npm\opencode\bin\index.js");
+        var process = CreateProcess(@"C:\tools\testagent.exe");
 
         // Act
         var result = this.matcher.IsMatch(process, plugin);
@@ -95,23 +47,7 @@ public class AgentProcessMatcherTests
     {
         // Arrange
         var plugin = CreatePlugin("test-agent", "testagent.exe");
-        var process = CreateProcess(@"C:\tools\other.exe", "other.exe");
-
-        // Act
-        var result = this.matcher.IsMatch(process, plugin);
-
-        // Assert
-        Assert.False(result);
-    }
-
-    [Fact]
-    public void IsMatch_NodeRuntimeWithoutAgentMarkers_ReturnsFalse()
-    {
-        // Arrange
-        var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(
-            @"C:\Program Files\nodejs\node.exe",
-            @"node.exe C:\projects\myapp\server.js");
+        var process = CreateProcess(@"C:\tools\other.exe");
 
         // Act
         var result = this.matcher.IsMatch(process, plugin);
@@ -130,7 +66,7 @@ public class AgentProcessMatcherTests
             Name = "Test Agent",
             Commands = new AgentCommands()
         };
-        var process = CreateProcess(@"C:\tools\test.exe", "test.exe");
+        var process = CreateProcess(@"C:\tools\test.exe");
 
         // Act
         var result = this.matcher.IsMatch(process, plugin);
@@ -140,11 +76,13 @@ public class AgentProcessMatcherTests
     }
 
     [Fact]
-    public void IsMatch_EmptyCommandLine_ReturnsFalseForRuntimeProcess()
+    public void IsMatch_RuntimeHostedProcess_ReturnsFalse()
     {
         // Arrange
+        // An npm-distributed agent can run inside a shared node.exe behind a .cmd shim. The
+        // inspector does not retrieve command lines, so that process deliberately does not match.
         var plugin = CreatePlugin("opencode", "opencode");
-        var process = CreateProcess(@"C:\Program Files\nodejs\node.exe", string.Empty);
+        var process = CreateProcess(@"C:\Program Files\nodejs\node.exe");
 
         // Act
         var result = this.matcher.IsMatch(process, plugin);
@@ -166,29 +104,11 @@ public class AgentProcessMatcherTests
         };
     }
 
-    private static Plugin CreatePluginWithSystemPath(string id, string executable, string systemPath)
-    {
-        return new Plugin
-        {
-            Id = id,
-            Name = id,
-            Commands = new AgentCommands
-            {
-                Launch = new PluginCommand { Executable = executable }
-            },
-            Detection = new AgentDetection
-            {
-                SystemPaths = new List<string> { systemPath }
-            }
-        };
-    }
-
-    private static AgentProcessInstance CreateProcess(string executablePath, string commandLine)
+    private static AgentProcessInstance CreateProcess(string executablePath)
     {
         return new AgentProcessInstance(
             ProcessId: 1234,
             ExecutablePath: executablePath,
-            CommandLine: commandLine,
             StartTime: DateTime.UtcNow);
     }
 }

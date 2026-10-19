@@ -216,7 +216,7 @@ public class AgentManagementViewModelTests
             Versions(),
             new Mock<IAgentManagementService>(),
             new Mock<IExternalLauncher>(),
-            Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", @"C:\tools\a.exe", DateTime.Now)));
+            Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)));
 
         viewModel.Load(null);
 
@@ -237,7 +237,7 @@ public class AgentManagementViewModelTests
             Versions(),
             new Mock<IAgentManagementService>(),
             new Mock<IExternalLauncher>(),
-            Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", @"C:\tools\b.exe", DateTime.Now)));
+            Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", DateTime.Now)));
 
         viewModel.Load(null);
 

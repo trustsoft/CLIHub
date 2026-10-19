@@ -30,7 +30,7 @@ public class AgentVersionServiceTests
             NullLogger<AgentVersionService>.Instance,
             this.time);
 
-    private static Plugin PluginWithVersion(bool includeVersion)
+    private static Plugin PluginWithVersion(bool includeVersion, string id = "agent")
     {
         var commands = new AgentCommands
         {
@@ -41,7 +41,7 @@ public class AgentVersionServiceTests
             commands.Version = new PluginCommand { Executable = "agent", Arguments = "--version" };
         }
 
-        return new Plugin { Id = "agent", Name = "Agent", Commands = commands };
+        return new Plugin { Id = id, Name = id, Commands = commands };
     }
 
     [Fact]
@@ -224,5 +224,64 @@ public class AgentVersionServiceTests
 
         Assert.Equal("2.0.0", version);
         Assert.Equal(2, this.outputRunner.Runs.Count); // Ran twice after invalidation
+    }
+
+    [Fact]
+    public async Task InvalidateFor_Plugin_RunsOnlyThatAgentsVersionCommandAgain()
+    {
+        this.outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        var service = this.CreateService();
+        var pluginA = PluginWithVersion(true, "a");
+        var pluginB = PluginWithVersion(true, "b");
+
+        Assert.Equal("1.0.0", await service.GetVersionAsync(pluginA));
+        Assert.Equal("1.0.0", await service.GetVersionAsync(pluginB));
+
+        this.outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "2.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        service.InvalidateFor(pluginA);
+
+        Assert.Equal("2.0.0", await service.GetVersionAsync(pluginA));
+        Assert.Equal("1.0.0", await service.GetVersionAsync(pluginB));
+        Assert.Equal(3, this.outputRunner.Runs.Count); // A primed, B primed, A re-probed
+    }
+
+    [Fact]
+    public async Task InvalidateFor_UnknownPlugin_DoesNotClearExistingEntries()
+    {
+        this.outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "1.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        var service = this.CreateService();
+        var plugin = PluginWithVersion(true, "a");
+
+        Assert.Equal("1.0.0", await service.GetVersionAsync(plugin));
+
+        this.outputRunner.Result = new ProcessResult
+        {
+            StandardOutput = "2.0.0",
+            StandardError = string.Empty,
+            ExitCode = 0,
+            TimedOut = false
+        };
+        service.InvalidateFor(PluginWithVersion(true, "unknown"));
+
+        Assert.Equal("1.0.0", await service.GetVersionAsync(plugin));
+        Assert.Single(this.outputRunner.Runs);
     }
 }

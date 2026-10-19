@@ -28,14 +28,38 @@ public class AgentDetectionService : IAgentDetectionService
 
     /// <inheritdoc />
     public bool IsInstalledInSystem(Plugin plugin) =>
-        this.GetOrCheck($"sys:{plugin.Id}", () => CheckSystem(plugin));
+        this.GetOrCheck(BuildSystemKey(plugin.Id), () => CheckSystem(plugin));
 
     /// <inheritdoc />
     public bool IsAvailableInProject(Plugin plugin, string projectPath) =>
-        this.GetOrCheck($"proj:{plugin.Id}:{projectPath}", () => CheckProject(plugin, projectPath));
+        this.GetOrCheck(BuildProjectKey(plugin.Id, projectPath), () => CheckProject(plugin, projectPath));
 
     /// <inheritdoc />
     public void Invalidate() => this.cache.Clear();
+
+    /// <inheritdoc />
+    public void InvalidateFor(Plugin plugin)
+    {
+        ArgumentNullException.ThrowIfNull(plugin);
+
+        this.cache.TryRemove(BuildSystemKey(plugin.Id), out _);
+
+        var projectPrefix = BuildProjectKeyPrefix(plugin.Id);
+        foreach (var key in this.cache.Keys)
+        {
+            if (key.StartsWith(projectPrefix, StringComparison.Ordinal))
+            {
+                this.cache.TryRemove(key, out _);
+            }
+        }
+    }
+
+    private static string BuildSystemKey(string pluginId) => $"sys:{pluginId}";
+
+    private static string BuildProjectKeyPrefix(string pluginId) => $"proj:{pluginId}:";
+
+    private static string BuildProjectKey(string pluginId, string projectPath) =>
+        $"{BuildProjectKeyPrefix(pluginId)}{projectPath}";
 
     private bool GetOrCheck(string key, Func<bool> compute)
     {

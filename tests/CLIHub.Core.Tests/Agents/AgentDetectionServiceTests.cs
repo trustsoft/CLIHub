@@ -140,6 +140,100 @@ public class AgentDetectionServiceTests : IDisposable
     }
 
     [Fact]
+    public void InvalidateFor_Plugin_RemovesSystemAndProjectEntriesForThatAgentOnly()
+    {
+        var markerDir = Path.Combine(this.projectDir, "system");
+        Directory.CreateDirectory(markerDir);
+        var markerA = Path.Combine(markerDir, "a-marker");
+        var markerAb = Path.Combine(markerDir, "ab-marker");
+        File.WriteAllText(markerA, string.Empty);
+        File.WriteAllText(markerAb, string.Empty);
+        Directory.CreateDirectory(Path.Combine(this.projectDir, ".a"));
+        Directory.CreateDirectory(Path.Combine(this.projectDir, ".ab"));
+
+        var pluginA = new Plugin
+        {
+            Id = "a", Name = "A",
+            Detection = new AgentDetection { SystemPaths = { markerA }, ProjectIndicators = { ".a" } }
+        };
+        var pluginAb = new Plugin
+        {
+            Id = "ab", Name = "AB",
+            Detection = new AgentDetection { SystemPaths = { markerAb }, ProjectIndicators = { ".ab" } }
+        };
+
+        Assert.True(this.service.IsInstalledInSystem(pluginA));
+        Assert.True(this.service.IsAvailableInProject(pluginA, this.projectDir));
+        Assert.True(this.service.IsInstalledInSystem(pluginAb));
+        Assert.True(this.service.IsAvailableInProject(pluginAb, this.projectDir));
+
+        File.Delete(markerA);
+        Directory.Delete(Path.Combine(this.projectDir, ".a"));
+        File.Delete(markerAb);
+        Directory.Delete(Path.Combine(this.projectDir, ".ab"));
+
+        this.service.InvalidateFor(pluginA);
+
+        Assert.False(this.service.IsInstalledInSystem(pluginA));
+        Assert.False(this.service.IsAvailableInProject(pluginA, this.projectDir));
+
+        // "ab" shares the "a" prefix, so only the trailing colon in the project key prefix
+        // keeps the longer agent's entries cached.
+        Assert.True(this.service.IsInstalledInSystem(pluginAb));
+        Assert.True(this.service.IsAvailableInProject(pluginAb, this.projectDir));
+    }
+
+    [Fact]
+    public void InvalidateFor_Plugin_RemovesEntriesForEveryProject()
+    {
+        var projectOne = Path.Combine(this.projectDir, "one");
+        var projectTwo = Path.Combine(this.projectDir, "two");
+        Directory.CreateDirectory(Path.Combine(projectOne, ".agent"));
+        Directory.CreateDirectory(Path.Combine(projectTwo, ".agent"));
+        var plugin = new Plugin
+        {
+            Id = "a", Name = "A",
+            Detection = new AgentDetection { ProjectIndicators = { ".agent" } }
+        };
+
+        Assert.True(this.service.IsAvailableInProject(plugin, projectOne));
+        Assert.True(this.service.IsAvailableInProject(plugin, projectTwo));
+
+        Directory.Delete(Path.Combine(projectOne, ".agent"));
+        Directory.Delete(Path.Combine(projectTwo, ".agent"));
+
+        this.service.InvalidateFor(plugin);
+
+        Assert.False(this.service.IsAvailableInProject(plugin, projectOne));
+        Assert.False(this.service.IsAvailableInProject(plugin, projectTwo));
+    }
+
+    [Fact]
+    public void InvalidateFor_UnknownPlugin_PreservesExistingEntries()
+    {
+        var marker = Path.Combine(this.projectDir, "unknown-plugin-marker");
+        File.WriteAllText(marker, string.Empty);
+        var plugin = new Plugin
+        {
+            Id = "a", Name = "A",
+            Detection = new AgentDetection { SystemPaths = { marker } }
+        };
+        var unknown = new Plugin
+        {
+            Id = "unknown", Name = "Unknown",
+            Detection = new AgentDetection { SystemPaths = { marker } }
+        };
+
+        Assert.True(this.service.IsInstalledInSystem(plugin));
+
+        File.Delete(marker);
+
+        this.service.InvalidateFor(unknown);
+
+        Assert.True(this.service.IsInstalledInSystem(plugin)); // still served from cache
+    }
+
+    [Fact]
     public void IsInstalledInSystem_RespectsConfiguredTtl()
     {
         new PreferencesStore(this.config).Update(preferences => preferences.AgentProbeTtlMinutes = 1);

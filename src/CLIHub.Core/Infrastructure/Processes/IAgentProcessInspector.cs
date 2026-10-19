@@ -8,7 +8,8 @@ using CLIHub.Core.Models;
 public interface IAgentProcessInspector
 {
     /// <summary>
-    ///   Enumerates all running processes accessible to the current user.
+    ///   Enumerates all running processes accessible to the current user, supplying each process's
+    ///   identifier, executable path, and start time.
     /// </summary>
     /// <returns> List of process instances. Empty if no processes found or access denied. </returns>
     IReadOnlyList<AgentProcessInstance> GetRunningProcesses();

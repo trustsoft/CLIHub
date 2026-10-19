@@ -73,13 +73,10 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
                         startTime = DateTime.Now;
                     }
 
-                    // Skip WMI command line retrieval for now - it can hang or be slow
-                    var commandLine = string.Empty;
-
+                    // Matching is executable-name based; command lines are not retrieved.
                     instances.Add(new AgentProcessInstance(
                         process.Id,
                         executablePath,
-                        commandLine,
                         startTime));
                 }
                 catch (Exception ex) when (ex is UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
@@ -98,12 +95,5 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
         }
 
         return instances;
-    }
-
-    private static string? GetCommandLine(int processId)
-    {
-        // WMI queries can be slow or hang - disabled for now
-        // TODO: Implement async WMI query with timeout or use alternative method
-        return null;
     }
 }

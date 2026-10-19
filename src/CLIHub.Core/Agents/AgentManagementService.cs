@@ -43,8 +43,10 @@ public sealed class AgentManagementService : IAgentManagementService
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        this.detection.Invalidate();
-        this.version.Invalidate();
+        // Invalidate only the probed agent so a detect-all pass keeps every earlier card's
+        // fresh results cached instead of clearing them on the next iteration.
+        this.detection.InvalidateFor(plugin);
+        this.version.InvalidateFor(plugin);
 
         var installed = this.detection.IsInstalledInSystem(plugin);
         var version = await this.version.GetVersionAsync(plugin, cancellationToken).ConfigureAwait(false);

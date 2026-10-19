@@ -106,6 +106,18 @@ public class AgentVersionService : IAgentVersionService
     /// <inheritdoc />
     public void Invalidate() => this.cache.Clear();
 
+    /// <inheritdoc />
+    /// <remarks>
+    ///   Only a completed cache entry is removed; the in-flight map is deliberately left alone so
+    ///   concurrent callers keep sharing one probe. A probe that started before this call may still
+    ///   publish its result, which is accepted as at most one probe old.
+    /// </remarks>
+    public void InvalidateFor(Plugin plugin)
+    {
+        ArgumentNullException.ThrowIfNull(plugin);
+        this.cache.TryRemove(plugin.Id, out _);
+    }
+
     private TimeSpan Ttl
     {
         get
