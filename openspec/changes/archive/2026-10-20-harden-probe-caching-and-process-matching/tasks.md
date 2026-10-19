@@ -2,7 +2,8 @@
 
 Implemented and archived (commit `91035c2`): Stage 1 (scoped probe-cache invalidation) and Stage 2
 (process-matcher honesty) landed together, with build, tests, and `openspec validate --all` green.
-Only the manual host-side smoke (3.5) remains open until verified.
+Only the manual host-side smoke (3.5) remained open until verified; it has since been verified with no
+issues.
 
 ## 1. Stage 1 — scoped probe-cache invalidation
 
@@ -80,7 +81,7 @@ Only the manual host-side smoke (3.5) remains open until verified.
 - [x] 3.2 `dotnet test CLIHub.sln`
 - [x] 3.3 `openspec validate --all`
 - [x] 3.4 `graphify update .` after all source edits are complete
-- [ ] 3.5 Manual smoke check: test one agent in Settings, then show the launch window and confirm only
+- [x] 3.5 Manual smoke check: test one agent in Settings, then show the launch window and confirm only
       that agent's version process runs (other agents are cache-served); confirm an executable-named
       agent process still blocks its update and a `node.exe`-hosted agent does not.
 
