@@ -51,6 +51,7 @@ openspec validate --all
 - `docs/project-context.md` is the compact current context for agents.
 - `docs/architecture.md` is the architecture index; topic files under `docs/architecture/` hold focused detail.
 - `openspec/specs/` is the durable behavior contract. `openspec/changes/archive/` is historical context.
+- `docs/backlog.md` records parked findings, deferred work, and their revisit triggers.
 - `docs/adr/` records why architectural decisions were made; it does not replace current implementation docs.
 - Propose and validate an OpenSpec change before implementation when the work changes a durable capability.
 - Archive completed changes after implementation and verification, and only with explicit user approval.
