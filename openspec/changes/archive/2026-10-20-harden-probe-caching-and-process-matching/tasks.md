@@ -1,39 +1,40 @@
 # Tasks: harden-probe-caching-and-process-matching
 
-Not implemented yet. This change is the reviewed proposal; tasks stay unchecked until implementation
-is scheduled. Stage 1 and Stage 2 are independent and each ends buildable and green.
+Implemented and archived (commit `91035c2`): Stage 1 (scoped probe-cache invalidation) and Stage 2
+(process-matcher honesty) landed together, with build, tests, and `openspec validate --all` green.
+Only the manual host-side smoke (3.5) remains open until verified.
 
 ## 1. Stage 1 — scoped probe-cache invalidation
 
-- [ ] 1.1 `src/CLIHub.Core/Agents/IAgentDetectionService.cs`: add `void InvalidateFor(Plugin plugin)`
+- [x] 1.1 `src/CLIHub.Core/Agents/IAgentDetectionService.cs`: add `void InvalidateFor(Plugin plugin)`
       with XML documentation describing the system-and-project scope and the preservation of other
       agents' entries. Keep the parameterless `Invalidate()` for the full clear.
-- [ ] 1.2 `src/CLIHub.Core/Agents/AgentDetectionService.cs`: refactor the inline keys into private
+- [x] 1.2 `src/CLIHub.Core/Agents/AgentDetectionService.cs`: refactor the inline keys into private
       `BuildSystemKey`, `BuildProjectKeyPrefix`, and `BuildProjectKey` helpers used by both lookup and
       invalidation; implement `InvalidateFor` by removing the `sys:<id>` entry and every
       `proj:<id>:` entry. Guard with `ArgumentNullException.ThrowIfNull(plugin)`.
-- [ ] 1.3 `src/CLIHub.Core/Agents/IAgentVersionService.cs`: add `void InvalidateFor(Plugin plugin)`
+- [x] 1.3 `src/CLIHub.Core/Agents/IAgentVersionService.cs`: add `void InvalidateFor(Plugin plugin)`
       with XML documentation stating that it clears one cached version only and does not disturb other
       agents or an already-running probe.
-- [ ] 1.4 `src/CLIHub.Core/Agents/AgentVersionService.cs`: implement `InvalidateFor` as
+- [x] 1.4 `src/CLIHub.Core/Agents/AgentVersionService.cs`: implement `InvalidateFor` as
       `cache.TryRemove(plugin.Id, out _)`; do not remove `inFlight` (single-flight coalescing must
       survive).
-- [ ] 1.5 `src/CLIHub.Core/Agents/AgentManagementService.cs`: replace the two parameterless clears in
+- [x] 1.5 `src/CLIHub.Core/Agents/AgentManagementService.cs`: replace the two parameterless clears in
       `ProbeAsync` with `InvalidateFor(plugin)` on detection and version. No change is needed in
       `AgentManagementViewModel.DetectAsync`: its per-card `ProbeAsync` calls now invalidate each agent
       exactly once. Add a brief comment in `ProbeAsync` recording that intent.
-- [ ] 1.6 Tests in `tests/CLIHub.Core.Tests/Agents/AgentDetectionServiceTests.cs`:
+- [x] 1.6 Tests in `tests/CLIHub.Core.Tests/Agents/AgentDetectionServiceTests.cs`:
       `InvalidateFor_Plugin_RemovesSystemAndProjectEntriesForThatAgentOnly`,
       `InvalidateFor_Plugin_RemovesEntriesForEveryProject`,
       `InvalidateFor_UnknownPlugin_PreservesExistingEntries`. Use the existing `FakeTimeProvider` and
       temporary markers (add a second project directory for the multi-project test); prove B stays
       cached by deleting B's marker after priming.
-- [ ] 1.7 Tests in `tests/CLIHub.Core.Tests/Agents/AgentVersionServiceTests.cs`: generalize
+- [x] 1.7 Tests in `tests/CLIHub.Core.Tests/Agents/AgentVersionServiceTests.cs`: generalize
       `PluginWithVersion` to accept a plugin id. Add
       `InvalidateFor_Plugin_RunsOnlyThatAgentsVersionCommandAgain` (prime A and B, change the fake
       output, invalidate A: A returns the new value, B keeps its cached value, run count +1) and
       `InvalidateFor_UnknownPlugin_DoesNotClearExistingEntries`.
-- [ ] 1.8 Tests in `tests/CLIHub.Core.Tests/Agents/AgentManagementServiceTests.cs`:
+- [x] 1.8 Tests in `tests/CLIHub.Core.Tests/Agents/AgentManagementServiceTests.cs`:
       update `ProbeAsync_ReturnsInstalledStateAndVersion` to verify `InvalidateFor(plugin)` once and
       `Invalidate()` never on both mocks; add `ProbeAsync_LeavesOtherAgentsCacheServed` and
       `DetectAll_LeavesEveryProbedAgentCached` using real `AgentDetectionService` +
@@ -41,44 +42,44 @@ is scheduled. Stage 1 and Stage 2 are independent and each ends buildable and gr
       `FakeTimeProvider`, and add `DetectAll_InvalidatesEachAgentOnce` with the existing Moq mocks.
       Prove the cache by mutating the file system and fake output after priming, then asserting the
       untouched agent still returns the primed values without an extra run.
-- [ ] 1.9 Run `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln`. Both green.
+- [x] 1.9 Run `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln`. Both green.
 
 ## 2. Stage 2 — process-matcher honesty
 
-- [ ] 2.1 `src/CLIHub.Core/Infrastructure/Processes/AgentProcessMatcher.cs`: delete
+- [x] 2.1 `src/CLIHub.Core/Infrastructure/Processes/AgentProcessMatcher.cs`: delete
       `IsRuntimeProcess` and its call. Update the class and `IsMatch` XML documentation to state that
       matching uses the declared launch executable's file name, case-insensitively.
-- [ ] 2.2 `src/CLIHub.Core/Models/Agents/AgentProcessInstance.cs`: remove the `CommandLine` member and
+- [x] 2.2 `src/CLIHub.Core/Models/Agents/AgentProcessInstance.cs`: remove the `CommandLine` member and
       its XML documentation, leaving process id, executable path, and start time.
-- [ ] 2.3 `src/CLIHub.Core.Windows/WindowsAgentProcessInspector.cs`: delete `GetCommandLine` and the
+- [x] 2.3 `src/CLIHub.Core.Windows/WindowsAgentProcessInspector.cs`: delete `GetCommandLine` and the
       `commandLine` local; construct the snapshot without a command line. Replace the WMI comment with
       one sentence stating that matching is executable-name based.
-- [ ] 2.4 `src/CLIHub.Core/Infrastructure/Processes/IAgentProcessInspector.cs`: update the interface
+- [x] 2.4 `src/CLIHub.Core/Infrastructure/Processes/IAgentProcessInspector.cs`: update the interface
       XML documentation to name the supplied fields (process id, executable path, start time).
-- [ ] 2.5 `tests/CLIHub.Core.Tests/Infrastructure/Processes/AgentProcessMatcherTests.cs`: remove every
+- [x] 2.5 `tests/CLIHub.Core.Tests/Infrastructure/Processes/AgentProcessMatcherTests.cs`: remove every
       test whose scenario depends on a command line (Node/Python positive cases, the no-marker case,
       and the empty-command-line case), remove the now-unused `CreatePluginWithSystemPath` helper,
       update the process helper to the three-argument constructor, and add
       `IsMatch_RuntimeHostedProcess_ReturnsFalse` with a `node.exe` executable.
-- [ ] 2.6 `tests/CLIHub.Core.Tests/Agents/AgentProcessMonitorTests.cs`: remove
+- [x] 2.6 `tests/CLIHub.Core.Tests/Agents/AgentProcessMonitorTests.cs`: remove
       `GetRunningAgents_NodeRuntimeProcess_ReturnsMatch`; update `CreateProcess` and its call sites to
       the three-argument constructor; keep per-agent and other-agent coverage.
-- [ ] 2.7 `tests/CLIHub.Core.Tests/Agents/AgentManagementServiceTests.cs` and
+- [x] 2.7 `tests/CLIHub.Core.Tests/Agents/AgentManagementServiceTests.cs` and
       `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`: update
       `AgentProcessInstance` constructor calls to remove the command-line argument.
-- [ ] 2.8 `docs/architecture/processes.md`: replace the runtime-matching paragraph with the
+- [x] 2.8 `docs/architecture/processes.md`: replace the runtime-matching paragraph with the
       executable-name contract; replace the WMI note with an explicit statement that the Windows
       inspector does not retrieve command lines and that runtime-hosted agents are not detected, and
       name the follow-up direction without committing to it.
-- [ ] 2.9 Run `dotnet build CLIHub.sln`, `dotnet test CLIHub.sln`, and `openspec validate --all`. All
+- [x] 2.9 Run `dotnet build CLIHub.sln`, `dotnet test CLIHub.sln`, and `openspec validate --all`. All
       green.
 
 ## 3. Final verification
 
-- [ ] 3.1 `dotnet build CLIHub.sln`
-- [ ] 3.2 `dotnet test CLIHub.sln`
-- [ ] 3.3 `openspec validate --all`
-- [ ] 3.4 `graphify update .` after all source edits are complete
+- [x] 3.1 `dotnet build CLIHub.sln`
+- [x] 3.2 `dotnet test CLIHub.sln`
+- [x] 3.3 `openspec validate --all`
+- [x] 3.4 `graphify update .` after all source edits are complete
 - [ ] 3.5 Manual smoke check: test one agent in Settings, then show the launch window and confirm only
       that agent's version process runs (other agents are cache-served); confirm an executable-named
       agent process still blocks its update and a `node.exe`-hosted agent does not.
