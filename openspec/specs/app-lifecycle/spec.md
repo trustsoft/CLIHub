@@ -148,13 +148,20 @@ The launch window SHALL behave as a popup shell that stays out of the way and ca
 
 ### Requirement: Single instance resource ownership
 
-The application SHALL register and resolve exactly one `SingleInstanceGuard` singleton through the application composition root. The service provider SHALL own disposal of the guard and its named mutex and activation-pipe resources.
+The application SHALL acquire the single-instance guard at the beginning of host startup, before data-directory creation, log configuration, and service-provider construction. The application SHALL register exactly one `SingleInstanceGuard` singleton instance through the application composition root, and the service provider SHALL own disposal of the guard and its named mutex and activation-pipe resources.
 
 #### Scenario: Production registration has one owner
 
 - **WHEN** the WPF service collection is built and the guard is resolved more than once
-- **THEN** every resolution returns the same `SingleInstanceGuard` instance
-- **AND** the application startup path does not construct or dispose a separate guard instance
+- **THEN** every resolution returns the same pre-acquired `SingleInstanceGuard` instance
+- **AND** the startup path after guard acquisition does not construct or dispose a separate guard instance
+
+#### Scenario: Duplicate launch exits before environment setup
+
+- **WHEN** host startup acquires the guard and another instance already owns the mutex
+- **THEN** the process signals the running instance to activate and exits
+- **AND** the duplicate process does not create AppData directories, does not configure logging, does not build the service provider, and does not run application initialization
+- **AND** the duplicate process shows no tray icon or application window
 
 #### Scenario: Second instance exits through the provider lifecycle
 
@@ -174,15 +181,15 @@ The application SHALL execute first-instance startup through one application boo
 
 #### Scenario: First instance completes startup
 
-- **WHEN** the application acquires the single-instance guard
+- **WHEN** the application acquired the single-instance guard as the first instance
 - **THEN** the bootstrapper executes the first-instance startup steps in the defined order
 - **AND** the application exposes the tray and launch-window behavior configured by preferences
 
 #### Scenario: Second instance does not initialize the application
 
-- **WHEN** the bootstrapper resolves a guard that reports another instance is already running
-- **THEN** it signals activation to the running instance and requests application shutdown
-- **AND** it does not initialize plugins, preferences, tray, hotkey, release notes, or updates for the second instance
+- **WHEN** host startup determines that another instance already owns the mutex
+- **THEN** the second process signals activation to the running instance and exits without running the bootstrapper
+- **AND** no plugins, preferences, tray, hotkey, release notes, or updates are initialized for the second instance
 
 #### Scenario: Fatal startup failure
 
