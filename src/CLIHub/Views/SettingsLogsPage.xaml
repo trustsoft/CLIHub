@@ -9,60 +9,57 @@
              mc:Ignorable="d">
     <StackPanel>
         <controls:SectionHeader Text="LOGGING"/>
-        <controls:SettingCard Title="Log level"
-                           Hint="Takes effect after the next start."
-                           Icon="{x:Static themes:IconGlyphs.Diagnostic}">
-            <ComboBox HorizontalAlignment="Right"
-                      ItemsSource="{Binding LogLevels}"
-                      SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
-                      Style="{StaticResource SettingsComboBox}"
-                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </controls:SettingCard>
+        <controls:SettingsGroup>
+            <controls:SettingCard Title="Log level"
+                               Hint="Takes effect after the next start."
+                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Grouped="True">
+                <ComboBox HorizontalAlignment="Right"
+                          ItemsSource="{Binding LogLevels}"
+                          SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                          Style="{StaticResource SettingsComboBox}"
+                          behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </controls:SettingCard>
 
-        <controls:SettingCard Title="Retention &amp; size"
-                           Hint="Daily log files to keep and the per-file limit (0 = unlimited)."
-                           Icon="{x:Static themes:IconGlyphs.Page}"
-                           Placement="Stacked">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Margin="0,0,15,0">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Retention"/>
-                    <controls:NumericField Margin="0,6,0,0"
-                                           MinWidth="120"
-                                           Minimum="1"
-                                           Text="{Binding LogRetentionDaysText, UpdateSourceTrigger=PropertyChanged}"
-                                           Unit="days"
-                                           Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
-                </StackPanel>
-                <StackPanel Grid.Column="1">
-                    <TextBlock x:Name="LogSizeLabel" Style="{StaticResource FieldLabel}" Text="Size limit"/>
-                    <controls:NumericField Margin="0,6,0,0"
-                                           MinWidth="120"
-                                           Minimum="0"
-                                           Text="{Binding LogFileSizeLimitText, UpdateSourceTrigger=PropertyChanged}"
-                                           Unit="MB"
-                                           Width="{Binding ElementName=LogSizeLabel, Path=ActualWidth}"/>
-                </StackPanel>
-            </Grid>
-        </controls:SettingCard>
+            <controls:SettingCard Title="Log retention"
+                               Hint="Daily log files to keep."
+                               Icon="{x:Static themes:IconGlyphs.Page}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="120"
+                                       Minimum="1"
+                                       Text="{Binding LogRetentionDaysText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="days"/>
+            </controls:SettingCard>
+
+            <controls:SettingCard Title="Log size limit"
+                               Hint="The per-file limit (0 = unlimited)."
+                               Icon="{x:Static themes:IconGlyphs.Page}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="120"
+                                       Minimum="0"
+                                       Text="{Binding LogFileSizeLimitText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="MB"/>
+            </controls:SettingCard>
+        </controls:SettingsGroup>
 
         <controls:SectionHeader Text="LOG FILE"/>
         <controls:SettingCard Title="Log file"
                            Hint="The current log file path."
                            Icon="{x:Static themes:IconGlyphs.Document}"
                            Placement="Stacked">
-            <controls:SpacedPanel Orientation="Horizontal"
-                                  Spacing="{StaticResource Sizing.Spacing}">
-                <Border MinWidth="320"
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        Margin="0,0,12,0"
                         Padding="8,6"
                         Background="{DynamicResource PopoverBgBrush}"
                         BorderBrush="{DynamicResource FieldStrokeBrush}"
@@ -70,23 +67,25 @@
                         CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
                     <TextBlock Style="{StaticResource HintText}" Text="{Binding LogFilePath}"/>
                 </Border>
-                <Button
-                        Command="{Binding CopyLogPathCommand}"
-                        Style="{StaticResource SettingsIconButton}"
-                        ToolTip="Copy path">
-                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                               FontSize="14"
-                               Text="{x:Static themes:IconGlyphs.Copy}"/>
-                </Button>
-                <Button
-                        Command="{Binding OpenLogFolderCommand}"
-                        Style="{StaticResource SettingsIconButton}"
-                        ToolTip="Open log folder">
-                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                               FontSize="14"
-                               Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
-                </Button>
-            </controls:SpacedPanel>
+                <controls:SpacedPanel Grid.Column="1"
+                                      Orientation="Horizontal"
+                                      Spacing="{StaticResource Sizing.Spacing}">
+                    <Button Command="{Binding CopyLogPathCommand}"
+                            Style="{StaticResource SettingsIconButton}"
+                            ToolTip="Copy path">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="14"
+                                   Text="{x:Static themes:IconGlyphs.Copy}"/>
+                    </Button>
+                    <Button Command="{Binding OpenLogFolderCommand}"
+                            Style="{StaticResource SettingsIconButton}"
+                            ToolTip="Open log folder">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="14"
+                                   Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
+                    </Button>
+                </controls:SpacedPanel>
+            </Grid>
         </controls:SettingCard>
     </StackPanel>
 </UserControl>

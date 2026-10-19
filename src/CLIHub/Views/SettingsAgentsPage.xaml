@@ -207,28 +207,28 @@
         </ItemsControl>
 
         <controls:SectionHeader Text="PROBE"/>
-        <controls:SettingCard Title="Agents probe"
-                           Hint="How long agent availability is cached and how long a single probe may take. Empty — use defaults."
-                           Icon="{x:Static themes:IconGlyphs.Diagnostic}"
-                           Placement="Stacked">
-            <controls:SpacedPanel Orientation="Horizontal" Spacing="15">
-                <controls:SpacedPanel Orientation="Vertical" Spacing="6">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="TTL"/>
-                    <controls:NumericField MinWidth="110"
-                                           Minimum="1"
-                                           Placeholder="{Binding ProbeTtlWatermark}"
-                                           Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
-                                           Unit="min"/>
-                </controls:SpacedPanel>
-                <controls:SpacedPanel Orientation="Vertical" Spacing="6">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="Timeout"/>
-                    <controls:NumericField MinWidth="110"
-                                           Minimum="1"
-                                           Placeholder="{Binding ProbeTimeoutWatermark}"
-                                           Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
-                                           Unit="sec"/>
-                </controls:SpacedPanel>
-            </controls:SpacedPanel>
-        </controls:SettingCard>
+        <controls:SettingsGroup>
+            <controls:SettingCard Title="Probe TTL"
+                               Hint="How long agent availability is cached. Empty — use defaults."
+                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="110"
+                                       Minimum="1"
+                                       Placeholder="{Binding ProbeTtlWatermark}"
+                                       Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="min"/>
+            </controls:SettingCard>
+
+            <controls:SettingCard Title="Probe timeout"
+                               Hint="How long a single probe may take. Empty — use defaults."
+                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="110"
+                                       Minimum="1"
+                                       Placeholder="{Binding ProbeTimeoutWatermark}"
+                                       Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="sec"/>
+            </controls:SettingCard>
+        </controls:SettingsGroup>
     </StackPanel>
 </UserControl>

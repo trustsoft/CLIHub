@@ -167,10 +167,11 @@
                    Visibility="{Binding HasWatchedDirectoryError, Converter={StaticResource BoolToVisibility}}"/>
 
         <controls:SectionHeader Text="DISCOVERY &amp; SCANNING RULES"/>
-
-        <controls:SettingCard Title="Repository scan depth"
+        <controls:SettingsGroup>
+            <controls:SettingCard Title="Repository scan depth"
                            Hint="Default depth for a directory you add from now on. Each row can override it."
-                           Icon="{x:Static themes:IconGlyphs.Zoom}">
+                           Icon="{x:Static themes:IconGlyphs.Zoom}"
+                           Grouped="True">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding ScanDepthOptions}"
                       SelectedItem="{Binding SelectedScanDepth, Mode=TwoWay}"
@@ -186,7 +187,8 @@
 
         <controls:SettingCard Title="Repository discovery"
                            Hint="Default for a directory you add from now on: Git repositories, folders used by an AI agent (such as .claude or .opencode), or either. Each row can override it."
-                           Icon="{x:Static themes:IconGlyphs.Filter}">
+                           Icon="{x:Static themes:IconGlyphs.Filter}"
+                           Grouped="True">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding DiscoveryModes}"
                       SelectedItem="{Binding SelectedDiscoveryMode, Mode=TwoWay}"
@@ -204,6 +206,7 @@
                            Hint="Folders skipped while scanning. Globs are matched case-insensitively; '*' matches any characters."
                            Badge="Globs supported"
                            Icon="{x:Static themes:IconGlyphs.Blocked}"
+                           Grouped="True"
                            Placement="Stacked">
             <StackPanel>
                 <ItemsControl ItemsSource="{Binding IgnoredPatterns}">
@@ -270,5 +273,6 @@
                 </Grid>
             </StackPanel>
         </controls:SettingCard>
+        </controls:SettingsGroup>
     </StackPanel>
 </UserControl>
