@@ -40,6 +40,19 @@ public class ProjectServiceTests : IDisposable
             NullLogger<ProjectService>.Instance);
     }
 
+    private ProjectService CreateService(FakeConfigurationRepository config)
+    {
+        var cache = new LogoCacheService(
+            NullLogger<LogoCacheService>.Instance,
+            Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(null));
+
+        return new ProjectService(
+            new ProjectStateStore(config),
+            resolver,
+            NullLogger<ProjectService>.Instance);
+    }
+
     [Fact]
     public void AddProject_CreatesProject_WithFolderDerivedName()
     {
@@ -126,6 +139,78 @@ public class ProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void GetAllProjects_ReturnsNewInstancesEachCall()
+    {
+        var folder = this.CreateTempDir();
+        var service = this.CreateService();
+        var project = service.AddProject(folder);
+
+        var first = service.GetAllProjects().Single(p => p.Id == project.Id);
+        var second = service.GetAllProjects().Single(p => p.Id == project.Id);
+
+        Assert.NotSame(first, second);
+    }
+
+    [Fact]
+    public void GetAllProjects_MutatingReturnedProject_DoesNotChangeRegisteredState()
+    {
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects = { new Project { Id = "a", Name = "A", Path = "C:\\a" } }
+        });
+        var service = this.CreateService(config);
+
+        service.GetAllProjects()[0].Name = "mutated";
+        service.GetAllProjects()[0].IsFavorite = true;
+        service.GetAllProjects()[0].LastUsed = new DateTime(2026, 1, 1);
+
+        var read = service.GetAllProjects().Single();
+        Assert.Equal("A", read.Name);
+        Assert.False(read.IsFavorite);
+        Assert.NotEqual(new DateTime(2026, 1, 1), read.LastUsed);
+
+        var persisted = config.Read().Projects.Single();
+        Assert.Equal("A", persisted.Name);
+        Assert.False(persisted.IsFavorite);
+    }
+
+    [Fact]
+    public void GetRecentProjects_MutatingReturnedProject_DoesNotChangeRegisteredState()
+    {
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects = { new Project { Id = "a", Name = "A", Path = "C:\\a" } }
+        });
+        var service = this.CreateService(config);
+
+        service.GetRecentProjects(1)[0].Name = "mutated";
+
+        Assert.Equal("A", service.GetRecentProjects(1).Single().Name);
+        Assert.Equal("A", config.Read().Projects.Single().Name);
+    }
+
+    [Fact]
+    public void GetCurrentProject_MutatingReturnedProject_DoesNotChangeRegisteredState()
+    {
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            CurrentProjectId = "a",
+            Projects = { new Project { Id = "a", Name = "A", Path = "C:\\a" } }
+        });
+        var service = this.CreateService(config);
+
+        var current = service.GetCurrentProject();
+        Assert.NotNull(current);
+        current.Name = "mutated";
+        current.IsFavorite = true;
+
+        Assert.Equal("A", service.GetCurrentProject()!.Name);
+        Assert.False(service.GetCurrentProject()!.IsFavorite);
+        Assert.Equal("A", config.Read().Projects.Single().Name);
+        Assert.False(config.Read().Projects.Single().IsFavorite);
+    }
+
+    [Fact]
     public void ToggleFavorite_TogglesFlag()
     {
         var folder = this.CreateTempDir();
@@ -155,44 +240,6 @@ public class ProjectServiceTests : IDisposable
     }
 
     [Fact]
-    public void ResolveLogo_ReturnsFirstExistingCandidate()
-    {
-        var folder = this.CreateTempDir();
-        File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
-        File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-
-        var service = this.CreateService();
-
-        var logo = service.ResolveLogo(folder);
-
-        Assert.Equal(Path.Combine(folder, "logo.png"), logo);
-    }
-
-    [Fact]
-    public void ResolveLogo_ReturnsLaterCandidate_WhenEarlierMissing()
-    {
-        var folder = this.CreateTempDir();
-        File.WriteAllText(Path.Combine(folder, "icon.png"), "x");
-
-        var service = this.CreateService();
-
-        var logo = service.ResolveLogo(folder);
-
-        Assert.Equal(Path.Combine(folder, "icon.png"), logo);
-    }
-
-    [Fact]
-    public void ResolveLogo_NoMatch_ReturnsDefault()
-    {
-        var folder = this.CreateTempDir();
-        var service = this.CreateService(defaultLogoPath: "default.png");
-
-        var logo = service.ResolveLogo(folder);
-
-        Assert.Equal("default.png", logo);
-    }
-
-    [Fact]
     public void RemoveProject_RemovesLogoCacheEntry()
     {
         var folder = this.CreateTempDir();
@@ -210,52 +257,6 @@ public class ProjectServiceTests : IDisposable
 
         Assert.Equal(1, calls);
         Assert.Equal("fresh.png", cache.GetOrResolve($"project:{project.Id}", () => throw new InvalidOperationException("must stay cached")));
-    }
-
-    [Fact]
-    public void GetAllProjects_LogoAlreadyCached_DoesNotRescan()
-    {
-        var folder = this.CreateTempDir();
-        File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-        var service = this.CreateService();
-        var project = service.AddProject(folder);
-        var cachedLogo = service.GetAllProjects().Single(p => p.Id == project.Id).LogoPath;
-
-        File.Delete(Path.Combine(folder, "logo.png"));
-        var logoAfterDelete = service.GetAllProjects().Single(p => p.Id == project.Id).LogoPath;
-
-        Assert.Equal(cachedLogo, logoAfterDelete);
-    }
-
-    [Fact]
-    public void GetAllProjects_AfterServiceRestart_ReuseCachedLogoWithoutRescan()
-    {
-        var folder = this.CreateTempDir();
-        File.WriteAllText(Path.Combine(folder, "logo.png"), "x");
-        var cachePath = Path.Combine(this.CreateTempDir(), "logos.json");
-        string cachedLogo;
-
-        var config = new FakeConfigurationRepository();
-        var firstCache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath);
-        var first = new ProjectService(
-            new ProjectStateStore(config),
-            new ProjectLogoResolver(firstCache, new LogoOptions(null)),
-            NullLogger<ProjectService>.Instance);
-        var project = first.AddProject(folder);
-        cachedLogo = first.GetAllProjects().Single(p => p.Id == project.Id).LogoPath!;
-        firstCache.Dispose();
-
-        File.Delete(Path.Combine(folder, "logo.png"));
-        var second = new ProjectService(
-            new ProjectStateStore(config),
-            new ProjectLogoResolver(
-                new LogoCacheService(NullLogger<LogoCacheService>.Instance, cachePath),
-                new LogoOptions(null)),
-            NullLogger<ProjectService>.Instance);
-
-        var logoAfterRestart = second.GetAllProjects().Single(p => p.Id == project.Id).LogoPath;
-
-        Assert.Equal(cachedLogo, logoAfterRestart);
     }
 
     [Fact]

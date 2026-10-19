@@ -109,6 +109,8 @@ public class StatusMessageCoordinatorTests
         projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
         var projectPane = new ProjectPaneController(
             projectService.Object,
+            new ProjectEnricher(new ProjectLogoResolver(new Mock<ILogoCacheService>().Object, new LogoOptions(null))),
+            new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
         var pluginCatalog = new Mock<IPluginCatalog>();
@@ -149,6 +151,8 @@ public class StatusMessageCoordinatorTests
         projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
         var projectPane = new ProjectPaneController(
             projectService.Object,
+            new ProjectEnricher(new ProjectLogoResolver(new Mock<ILogoCacheService>().Object, new LogoOptions(null))),
+            new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
         var pluginCatalog = new Mock<IPluginCatalog>();
@@ -210,6 +214,8 @@ public class StatusMessageCoordinatorTests
         projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
         var projectPane = new ProjectPaneController(
             projectService.Object,
+            new ProjectEnricher(new ProjectLogoResolver(new Mock<ILogoCacheService>().Object, new LogoOptions(null))),
+            new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
         var pluginCatalog = new Mock<IPluginCatalog>();

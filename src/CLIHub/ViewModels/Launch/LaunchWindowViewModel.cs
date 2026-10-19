@@ -29,7 +29,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private readonly StatusMessageCoordinator statusCoordinator;
     private readonly WindowActionCoordinator windowActions;
 
-    private Project? selectedProject;
+    private ProjectModel? selectedProject;
     private AgentItem? selectedAgent;
     private bool isPinned;
     private PathDisplayStyle displayStyle = PathDisplayStyles.Default;
@@ -84,7 +84,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             applicationLifetime,
             externalLauncher,
             () => this.SelectedAgent,
-            () => this.projectPane.CurrentProject,
+            this.ResolveLaunchContext,
             this.RefreshAgents);
 
         this.AddProjectCommand = this.projectPane.AddCommand;
@@ -123,7 +123,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Registered projects shown in the Projects pane.
     /// </summary>
-    public ObservableCollection<Project> Projects => this.projectPane.Projects;
+    public ObservableCollection<ProjectModel> Projects => this.projectPane.Projects;
 
     /// <summary>
     ///   Agents shown in the Agents pane.
@@ -152,9 +152,9 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     public WindowActionCoordinator WindowActions => this.windowActions;
 
     /// <summary>
-    ///   The project that provides the launch context.
+    ///   The project row that provides the launch context.
     /// </summary>
-    public Project? SelectedProject
+    public ProjectModel? SelectedProject
     {
         get => this.selectedProject;
         set
@@ -321,7 +321,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         }
     }
 
-    private void RefreshProjects()
+    /// <summary>
+    ///   Re-reads and re-enriches the project pane and restores the selection by project ID.
+    ///   Also the enrichment trigger for the launch window being shown or activated, so folder
+    ///   state and logos are current while the user looks at the window.
+    /// </summary>
+    public void RefreshProjects()
     {
         this.suppressSelectionChange = true;
 
@@ -356,7 +361,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
     private void RefreshAgents()
     {
-        var hasAgents = this.agentPane.Refresh(this.projectPane.CurrentProject?.Path, this.ShowOnlyProjectAgents);
+        var hasAgents = this.agentPane.Refresh(this.selectedProject?.Path, this.ShowOnlyProjectAgents);
         this.SetProperty(ref this.selectedAgent, this.agentPane.SelectedAgent);
 
         if (!hasAgents)
@@ -364,6 +369,14 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             this.statusCoordinator.ReportNoAgentsFound();
         }
     }
+
+    /// <summary>
+    ///   Resolves the launch context from the selected row at command time: the selected model's
+    ///   project ID is looked up through the project service, so commands never hold a shared
+    ///   live record.
+    /// </summary>
+    private Project? ResolveLaunchContext() =>
+            this.selectedProject is null ? null : this.projectPane.FindProject(this.selectedProject.Id);
 
     private void ShowWarning(string message) =>
         this.notifications.ShowWarning(message);

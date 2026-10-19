@@ -3,18 +3,20 @@ namespace CLIHub.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
 using CLIHub.Launching;
 
 /// <summary>
 ///   Owns the Settings Projects page: the registered-project list, the path field and
-///   add actions, the manual remove action, and the section error line. Discovered
+///   add actions, the manual remove action, and the section error line. Rows are the shared
+///   <see cref="ProjectModel" /> catalog instances, re-enriched on every load; discovered
 ///   projects are shown read-only.
 /// </summary>
 public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistrySection
 {
     private readonly IProjectService projects;
+    private readonly ProjectEnricher enricher;
+    private readonly ProjectModelCatalog catalog;
     private readonly IProjectDialogService dialogs;
     private readonly IExternalLauncher externalLauncher;
 
@@ -26,27 +28,33 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     ///   Creates the section.
     /// </summary>
     /// <param name="projects"> The project registry service. </param>
+    /// <param name="enricher"> Produces enriched snapshots for the rows. </param>
+    /// <param name="catalog"> Owner of the shared row instances. </param>
     /// <param name="dialogs"> Folder picker and removal confirmation. </param>
     /// <param name="externalLauncher"> Opens the project folder in the file manager. </param>
     public ProjectRegistryViewModel(IProjectService projects,
+                                    ProjectEnricher enricher,
+                                    ProjectModelCatalog catalog,
                                     IProjectDialogService dialogs,
                                     IExternalLauncher externalLauncher)
     {
         this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
+        this.enricher = enricher ?? throw new ArgumentNullException(nameof(enricher));
+        this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
 
         this.BrowseCommand = new RelayCommand(this.Browse);
         this.RegisterCommand = new RelayCommand(this.RegisterProject);
-        this.RemoveCommand = new RelayCommand<ProjectRegistryItem>(this.RemoveProject, item => item.IsManual);
-        this.OpenFolderCommand = new RelayCommand<ProjectRegistryItem>(
+        this.RemoveCommand = new RelayCommand<ProjectModel>(this.RemoveProject, item => item.CanRemove);
+        this.OpenFolderCommand = new RelayCommand<ProjectModel>(
             this.OpenFolder,
-            item => !item.IsFolderMissing);
+            item => item.CanOpen);
         this.projects.ProjectsChanged += this.OnProjectsChanged;
     }
 
     /// <inheritdoc />
-    public ObservableCollection<ProjectRegistryItem> Projects { get; } = new();
+    public ObservableCollection<ProjectModel> Projects { get; } = new();
 
     /// <inheritdoc />
     public int ManualCount => this.Projects.Count(item => item.IsManual);
@@ -58,7 +66,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     public int TotalCount => this.Projects.Count;
 
     /// <inheritdoc />
-    public int MissingFolderCount => this.Projects.Count(item => item.IsFolderMissing);
+    public int MissingFolderCount => this.Projects.Count(item => !item.IsFolderAvailable);
 
     /// <inheritdoc />
     public bool HasMissingFolders => this.MissingFolderCount > 0;
@@ -104,10 +112,10 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     public RelayCommand RegisterCommand { get; }
 
     /// <inheritdoc />
-    public RelayCommand<ProjectRegistryItem> RemoveCommand { get; }
+    public RelayCommand<ProjectModel> RemoveCommand { get; }
 
     /// <inheritdoc />
-    public RelayCommand<ProjectRegistryItem> OpenFolderCommand { get; }
+    public RelayCommand<ProjectModel> OpenFolderCommand { get; }
 
     /// <inheritdoc />
     public void Load()
@@ -118,17 +126,14 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         }
 
         this.ErrorText = null;
-        this.Projects.Clear();
 
-        var ordered = this.projects.GetAllProjects()
-            .OrderByDescending(project => project.Source == ProjectSource.Manual)
-            .ThenBy(project => project.Name, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(project => project.Path, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var project in ordered)
-        {
-            this.Projects.Add(new ProjectRegistryItem(project, !Directory.Exists(project.Path)));
-        }
+        var models = this.catalog.Sync(this.enricher.Enrich(this.projects.GetAllProjects()));
+        var ordered = models
+            .OrderByDescending(model => model.IsManual)
+            .ThenBy(model => model.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(model => model.Path, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        ProjectModelListSynchronizer.Synchronize(this.Projects, ordered);
 
         this.RaiseSummaryChanges();
     }
@@ -207,9 +212,9 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         }
     }
 
-    private void OpenFolder(ProjectRegistryItem item)
+    private void OpenFolder(ProjectModel item)
     {
-        if (item is null || item.IsFolderMissing)
+        if (item is null || !item.CanOpen)
         {
             return;
         }
@@ -224,9 +229,9 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         }
     }
 
-    private void RemoveProject(ProjectRegistryItem item)
+    private void RemoveProject(ProjectModel item)
     {
-        if (item is null || !item.IsManual)
+        if (item is null || !item.CanRemove)
         {
             return;
         }

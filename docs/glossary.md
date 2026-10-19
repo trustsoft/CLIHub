@@ -10,9 +10,18 @@ use these terms with these meanings.
   read-only context: it never creates or modifies files inside it. Registered via **Add Project…**.
 - **Project** — CLIHub's registration record for a project folder: a unique ID, the folder path,
   a display name derived from the folder name, a favorite flag, a last-used timestamp, and
-  provenance (manual or discovered). Stored in `%APPDATA%\CLIHub\config.json`. Removing a project
+  provenance (manual or discovered). Stored in `%APPDATA%\CLIHub\config.json` as a plain record
+  with no change notifications; service read methods hand out detached copies. Removing a project
   removes the record only — the folder and its contents stay untouched. See
   [project-management](../openspec/specs/project-management/spec.md).
+- **ProjectModel** — the enriched display row the UI binds: a project record's identity plus the
+  enriched snapshot (final logo path with the default-logo fallback applied, folder availability,
+  favorite flag) and derived display fields (provenance mark, `CanRemove`/`CanOpen`). The app keeps
+  one shared `ProjectModel` instance per project ID across surfaces and refreshes it in place.
+- **Project enrichment** — taking a fresh snapshot of the display-only facts: one folder-existence
+  check plus one logo-cache lookup per project (Core's `ProjectEnricher`). It runs on refresh
+  triggers — a project-set change, the launch window being shown or activated, or the Settings
+  Projects page loading — not on folder watchers or timers.
 - **Current project** — the selected project that provides [launch context](#projects) for agent
   commands. Persisted as `currentProjectId` and restored on startup. With no current project,
   every agent command is blocked with a "select a project" message.

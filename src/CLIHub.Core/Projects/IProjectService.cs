@@ -13,17 +13,20 @@ public interface IProjectService
     event EventHandler? ProjectsChanged;
 
     /// <summary>
-    ///   Returns all registered projects.
+    ///   Returns all registered projects as detached copies: mutating a returned project changes
+    ///   neither later reads nor persisted state.
     /// </summary>
     IReadOnlyList<Project> GetAllProjects();
 
     /// <summary>
-    ///   Returns projects ordered by last-used descending, up to <paramref name="limit" />.
+    ///   Returns projects ordered by last-used descending, up to <paramref name="limit" />, as
+    ///   detached copies (see <see cref="GetAllProjects" />).
     /// </summary>
     IReadOnlyList<Project> GetRecentProjects(int limit);
 
     /// <summary>
-    ///   Returns the currently selected project, or null if none is selected.
+    ///   Returns the currently selected project as a detached copy, or null if none is selected
+    ///   (see <see cref="GetAllProjects" />).
     /// </summary>
     Project? GetCurrentProject();
 

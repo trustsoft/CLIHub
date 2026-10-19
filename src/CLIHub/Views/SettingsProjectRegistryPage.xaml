@@ -13,7 +13,9 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsManual}" Value="True">
+                <!-- Manual provenance colors the mark; CanRemove is true exactly for manual
+                     projects (discovered projects are read-only). -->
+                <DataTrigger Binding="{Binding CanRemove}" Value="True">
                     <!-- Same brush as the selected Settings sidebar item: the accent color
                          with that selection's alpha channel. -->
                     <Setter Property="Foreground" Value="{DynamicResource AccentSelectionBrush}"/>
@@ -21,9 +23,17 @@
             </Style.Triggers>
         </Style>
 
+        <!-- The "Folder not found" chip: visible while the row's enriched snapshot reports the
+             folder unavailable, so no inverted converter is needed. -->
         <Style x:Key="ProjectMissingChip" TargetType="Border" BasedOn="{StaticResource HeaderChip}">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+            <Setter Property="Visibility" Value="Collapsed"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsFolderAvailable}" Value="False">
+                    <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="ProjectMissingChipText" TargetType="TextBlock" BasedOn="{StaticResource HeaderChipLabel}">
@@ -145,8 +155,7 @@
                                                ToolTip="{Binding SourceLabel}"/>
 
                                     <Border Margin="8,0,0,0"
-                                            Style="{StaticResource ProjectMissingChip}"
-                                            Visibility="{Binding IsFolderMissing, Converter={StaticResource BoolToVisibility}}">
+                                            Style="{StaticResource ProjectMissingChip}">
                                         <TextBlock Style="{StaticResource ProjectMissingChipText}"
                                                    Text="Folder not found"/>
                                     </Border>
@@ -154,9 +163,9 @@
 
                                 <TextBlock Margin="0,1,0,0"
                                            Style="{StaticResource HintText}"
-                                           Text="{Binding Path}"
+                                           Text="{Binding DisplayPath}"
                                            TextTrimming="CharacterEllipsis"
-                                           ToolTip="{Binding Path}"/>
+                                           ToolTip="{Binding DisplayPath}"/>
                             </StackPanel>
 
                             <controls:SpacedPanel Grid.Column="2"
@@ -184,7 +193,7 @@
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Remove project"
-                                        Visibility="{Binding IsManual, Converter={StaticResource BoolToVisibility}}">
+                                        Visibility="{Binding CanRemove, Converter={StaticResource BoolToVisibility}}">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="16"
                                                Text="{x:Static themes:IconGlyphs.Delete}"/>

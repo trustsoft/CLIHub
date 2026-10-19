@@ -64,6 +64,7 @@ public partial class LaunchWindow : Window, IStartupWindow
         var position = this.preferencesStore.Load().PopupScreenPosition;
 
         WindowPositioner.Place(this, position);
+        this.viewModel.RefreshProjects();
         this.viewModel.ApplyDefaultAgentSelection();
         this.Show();
 
@@ -87,6 +88,9 @@ public partial class LaunchWindow : Window, IStartupWindow
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
         DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
+
+    private void OnWindowActivated(object? sender, EventArgs e) =>
+        this.viewModel.RefreshProjects();
 
     private void OnDeactivated(object? sender, EventArgs e)
     {

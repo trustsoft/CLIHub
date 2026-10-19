@@ -247,6 +247,8 @@ public class LaunchWindowViewModelBuilder
 
         var projectPane = new ProjectPaneController(
             projectService.Object,
+            this.CreateProjectEnricher(logoCacheService),
+            new ProjectModelCatalog(),
             projectDialogService.Object,
             new PromptState());
 
@@ -318,6 +320,8 @@ public class LaunchWindowViewModelBuilder
 
         var projectPane = new ProjectPaneController(
             projectService.Object,
+            this.CreateProjectEnricher(logoCacheService),
+            new ProjectModelCatalog(),
             projectDialogService.Object,
             new PromptState());
 
@@ -394,6 +398,14 @@ public class LaunchWindowViewModelBuilder
         mock.Setup(x => x.GetCurrentProject()).Returns(this.currentProject);
         return mock;
     }
+
+    /// <summary>
+    ///   Creates the real Core enricher over the logo cache mock: cache misses resolve to no
+    ///   logo (the options carry no default path), so project rows get null logo paths unless
+    ///   a test configures the cache.
+    /// </summary>
+    private ProjectEnricher CreateProjectEnricher(Mock<ILogoCacheService> logoCacheService) =>
+            new(new ProjectLogoResolver(logoCacheService.Object, new LogoOptions(null)));
 
     private Mock<IPluginCatalog> CreateDefaultPluginCatalog()
     {

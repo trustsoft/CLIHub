@@ -1,13 +1,12 @@
 namespace CLIHub.Core.Models;
 
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
 /// <summary>
-///   Represents a project directory tracked by CLIHub. Mutable display properties
-///   raise property-change notifications so bound views update in place.
+///   The persisted brief record of a project directory tracked by CLIHub: identity, path,
+///   provenance, favorite flag, last-used timestamp, and the vestigial persisted logo path.
+///   A plain mutable POCO with no change notifications; UI display rows are separate enriched
+///   models (see the app project's <c>ProjectModel</c>).
 /// </summary>
-public class Project : INotifyPropertyChanged
+public class Project
 {
     /// <summary>
     ///   Unique identifier for the project.
@@ -33,60 +32,33 @@ public class Project : INotifyPropertyChanged
     /// <summary>
     ///   Whether this project is marked as a favorite.
     /// </summary>
-    public bool IsFavorite
-    {
-        get;
-        set
-        {
-            if (field == value)
-            {
-                return;
-            }
-
-            field = value;
-            this.OnPropertyChanged();
-        }
-    }
+    public bool IsFavorite { get; set; }
 
     /// <summary>
     ///   Timestamp of when this project was last used.
     /// </summary>
-    public DateTime LastUsed
-    {
-        get;
-        set
-        {
-            if (field == value)
-            {
-                return;
-            }
-
-            field = value;
-            this.OnPropertyChanged();
-        }
-    }
+    public DateTime LastUsed { get; set; }
 
     /// <summary>
-    ///   Optional path to project-specific logo image.
+    ///   Optional path to project-specific logo image. Vestigial: logo resolution for display
+    ///   happens through the project enricher; the field stays because the config format is
+    ///   stable and no longer written by the service.
     /// </summary>
-    public string? LogoPath
+    public string? LogoPath { get; set; }
+
+    /// <summary>
+    ///   Creates a detached copy of this record. Service read methods hand out copies, so
+    ///   callers can mutate a returned record without corrupting registered project state.
+    /// </summary>
+    /// <returns> A new project record with the same field values. </returns>
+    public Project Copy() => new()
     {
-        get;
-        set
-        {
-            if (field == value)
-            {
-                return;
-            }
-
-            field = value;
-            this.OnPropertyChanged();
-        }
-    }
-
-    /// <inheritdoc />
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null) => 
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        Id = this.Id,
+        Name = this.Name,
+        Path = this.Path,
+        Source = this.Source,
+        IsFavorite = this.IsFavorite,
+        LastUsed = this.LastUsed,
+        LogoPath = this.LogoPath
+    };
 }

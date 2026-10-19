@@ -9,9 +9,10 @@ using System.Collections.ObjectModel;
 public interface IProjectRegistrySection : IDisposable
 {
     /// <summary>
-    ///   Registered projects: manual first, then discovered, each ordered by name.
+    ///   Registered projects: manual first, then discovered, each ordered by name. The rows are
+    ///   the shared enriched display models, updated in place on refresh.
     /// </summary>
-    ObservableCollection<ProjectRegistryItem> Projects { get; }
+    ObservableCollection<ProjectModel> Projects { get; }
 
     /// <summary>
     ///   Number of manually registered projects.
@@ -76,15 +77,15 @@ public interface IProjectRegistrySection : IDisposable
     /// <summary>
     ///   Command that removes a manual project after confirmation.
     /// </summary>
-    RelayCommand<ProjectRegistryItem> RemoveCommand { get; }
+    RelayCommand<ProjectModel> RemoveCommand { get; }
 
     /// <summary>
     ///   Command that opens the project folder in the operating system's file manager.
     /// </summary>
-    RelayCommand<ProjectRegistryItem> OpenFolderCommand { get; }
+    RelayCommand<ProjectModel> OpenFolderCommand { get; }
 
     /// <summary>
-    ///   Rebuilds the rows from the project service.
+    ///   Re-enriches the rows from the project service and synchronizes the collection in place.
     /// </summary>
     void Load();
 }

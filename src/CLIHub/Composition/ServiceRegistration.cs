@@ -72,6 +72,7 @@ public static class ServiceRegistration
         services.AddSingleton<IProjectDialogService, ProjectDialogService>();
         services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<IExternalLauncher, ExternalLauncher>();
+        services.AddSingleton<ProjectModelCatalog>();
         services.AddSingleton<LaunchCommandCoordinator>();
         services.AddSingleton<LaunchWindowActionBuilder>();
         services.AddSingleton<TrayMenuBuilder>();

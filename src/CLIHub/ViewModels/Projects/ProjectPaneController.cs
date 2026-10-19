@@ -7,11 +7,15 @@ using CLIHub.Core.Projects;
 using CLIHub.Launching;
 
 /// <summary>
-///   Owns project-pane collection synchronization, selection, and project mutations.
+///   Owns project-pane collection synchronization, selection, and project mutations. Rows are
+///   the shared <see cref="ProjectModel" /> instances owned by the <see cref="ProjectModelCatalog" />,
+///   re-enriched through the <see cref="ProjectEnricher" /> on every refresh.
 /// </summary>
 public sealed class ProjectPaneController : IDisposable
 {
     private readonly IProjectService projectService;
+    private readonly ProjectEnricher enricher;
+    private readonly ProjectModelCatalog catalog;
     private readonly IProjectDialogService dialogs;
     private readonly PromptState promptState;
     private bool disposed;
@@ -20,20 +24,26 @@ public sealed class ProjectPaneController : IDisposable
     ///   Creates the project-pane workflow boundary.
     /// </summary>
     /// <param name="projectService"> Project persistence and selection service. </param>
+    /// <param name="enricher"> Produces enriched snapshots for the pane rows. </param>
+    /// <param name="catalog"> Owner of the shared row instances. </param>
     /// <param name="dialogs"> Project folder and removal confirmation dialogs. </param>
     /// <param name="promptState"> Modal prompt tracker used while dialogs are open. </param>
     public ProjectPaneController(IProjectService projectService,
+                                 ProjectEnricher enricher,
+                                 ProjectModelCatalog catalog,
                                  IProjectDialogService dialogs,
                                  PromptState promptState)
     {
         this.projectService = projectService ?? throw new ArgumentNullException(nameof(projectService));
+        this.enricher = enricher ?? throw new ArgumentNullException(nameof(enricher));
+        this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
         this.promptState = promptState ?? throw new ArgumentNullException(nameof(promptState));
         this.projectService.ProjectsChanged += this.OnProjectsChanged;
 
         this.AddCommand = new RelayCommand(() => _ = this.AddProject());
-        this.RemoveCommand = new RelayCommand(() => _ = this.RemoveSelectedProject(), () => this.CurrentProject is not null);
-        this.ToggleFavoriteCommand = new RelayCommand(() => _ = this.ToggleFavorite(), () => this.CurrentProject is not null);
+        this.RemoveCommand = new RelayCommand(() => _ = this.RemoveSelectedProject(), () => this.GetCurrentProject() is not null);
+        this.ToggleFavoriteCommand = new RelayCommand(this.ToggleFavorite, () => this.GetCurrentProject() is not null);
         this.RefreshCommand = new RelayCommand(() => _ = this.Refresh());
     }
 
@@ -63,51 +73,31 @@ public sealed class ProjectPaneController : IDisposable
     public RelayCommand RefreshCommand { get; }
 
     /// <summary>
-    ///   Projects currently shown in the project pane.
+    ///   Projects currently shown in the project pane, referencing the shared catalog rows.
     /// </summary>
-    public ObservableCollection<Project> Projects { get; } = new();
+    public ObservableCollection<ProjectModel> Projects { get; } = new();
 
     /// <summary>
-    ///   Returns the current project from the project service.
+    ///   Re-reads the projects, re-enriches them, and synchronizes the pane rows in place.
     /// </summary>
-    public Project? CurrentProject => this.projectService.GetCurrentProject();
-
-    /// <summary>
-    ///   Synchronizes the collection while preserving existing project instances.
-    /// </summary>
-    /// <returns> The project selected by the project service, if it is visible. </returns>
-    public Project? Refresh()
+    /// <returns> The row matching the project service's current project, if it is visible. </returns>
+    public ProjectModel? Refresh()
     {
-        var projects = this.projectService.GetAllProjects();
+        var models = this.catalog.Sync(this.enricher.Enrich(this.projectService.GetAllProjects()));
+        ProjectModelListSynchronizer.Synchronize(this.Projects, models);
 
-        for (var index = this.Projects.Count - 1; index >= 0; index--)
-        {
-            if (projects.All(project => project.Id != this.Projects[index].Id))
-            {
-                this.Projects.RemoveAt(index);
-            }
-        }
-
-        foreach (var project in projects)
-        {
-            if (this.Projects.All(existing => existing.Id != project.Id))
-            {
-                this.Projects.Add(project);
-            }
-        }
-
-        var current = this.projectService.GetCurrentProject();
-        return current is null
+        var currentId = this.GetCurrentProject()?.Id;
+        return currentId is null
             ? null
-            : this.Projects.FirstOrDefault(project => project.Id == current.Id);
+            : models.FirstOrDefault(model => model.Id == currentId);
     }
 
     /// <summary>
     ///   Selects a project and persists it as the current project.
     /// </summary>
-    /// <param name="project"> Project to select, or null to clear selection. </param>
+    /// <param name="project"> Project row to select, or null to clear selection. </param>
     /// <returns> True when a non-null project was persisted as current. </returns>
-    public bool Select(Project? project)
+    public bool Select(ProjectModel? project)
     {
         if (project is null)
         {
@@ -117,6 +107,15 @@ public sealed class ProjectPaneController : IDisposable
         this.projectService.SetCurrentProject(project.Id);
         return true;
     }
+
+    /// <summary>
+    ///   Looks up a registered project by ID, detached from the pane rows. Used to resolve the
+    ///   launch context at command time instead of holding a row instance.
+    /// </summary>
+    /// <param name="projectId"> The project identifier. </param>
+    /// <returns> The registered project, or null when the ID is unknown. </returns>
+    public Project? FindProject(string projectId) =>
+            this.projectService.GetAllProjects().FirstOrDefault(project => project.Id == projectId);
 
     /// <summary>
     ///   Adds the folder selected by the user and makes it current.
@@ -145,7 +144,7 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> True when a project was removed. </returns>
     public bool RemoveSelectedProject()
     {
-        var project = this.CurrentProject;
+        var project = this.GetCurrentProject();
         if (project is null)
         {
             return false;
@@ -167,17 +166,15 @@ public sealed class ProjectPaneController : IDisposable
     /// <summary>
     ///   Toggles the favorite state of the current project.
     /// </summary>
-    /// <returns> The current project after the mutation, or null when none is selected. </returns>
-    public Project? ToggleFavorite()
+    public void ToggleFavorite()
     {
-        var project = this.CurrentProject;
+        var project = this.GetCurrentProject();
         if (project is null)
         {
-            return null;
+            return;
         }
 
         this.projectService.ToggleFavorite(project.Id);
-        return project;
     }
 
     private void OnProjectsChanged(object? sender, EventArgs e)
@@ -185,6 +182,8 @@ public sealed class ProjectPaneController : IDisposable
         this.Refresh();
         this.ProjectsChanged?.Invoke(this, e);
     }
+
+    private Project? GetCurrentProject() => this.projectService.GetCurrentProject();
 
     /// <summary>
     ///   Removes the project-service event subscription.

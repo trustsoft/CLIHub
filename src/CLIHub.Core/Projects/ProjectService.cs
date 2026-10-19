@@ -32,11 +32,8 @@ public class ProjectService : IProjectService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<Project> GetAllProjects()
-    {
-        this.RefreshLogos();
-        return this.projectState.Projects.ToList();
-    }
+    public IReadOnlyList<Project> GetAllProjects() =>
+            this.projectState.Projects.Select(project => project.Copy()).ToList();
 
     /// <inheritdoc />
     public IReadOnlyList<Project> GetRecentProjects(int limit)
@@ -46,10 +43,10 @@ public class ProjectService : IProjectService
             return Array.Empty<Project>();
         }
 
-        this.RefreshLogos();
         return this.projectState.Projects
             .OrderByDescending(p => p.LastUsed)
             .Take(limit)
+            .Select(p => p.Copy())
             .ToList();
     }
 
@@ -61,28 +58,10 @@ public class ProjectService : IProjectService
             return null;
         }
 
-        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == this.projectState.CurrentProjectId);
-        if (project != null)
-        {
-            project.LogoPath = this.ResolveProjectLogo(project);
-        }
-
-        return project;
+        return this.projectState.Projects
+            .FirstOrDefault(p => p.Id == this.projectState.CurrentProjectId)
+            ?.Copy();
     }
-
-    private void RefreshLogos()
-    {
-        foreach (var project in this.projectState.Projects)
-        {
-            project.LogoPath = this.ResolveProjectLogo(project);
-        }
-    }
-
-    /// <summary>
-    ///   Resolves the project logo through the logo resolver, which applies the default
-    ///   fallback when no logo is found.
-    /// </summary>
-    private string? ResolveProjectLogo(Project project) => this.logoResolver.Resolve(project);
 
     /// <inheritdoc />
     public Project AddProject(string folderPath)
@@ -222,7 +201,6 @@ public class ProjectService : IProjectService
             project.Name = normalized;
         }
 
-        project.LogoPath = this.ResolveProjectLogo(project);
         return project;
     }
 
@@ -274,11 +252,6 @@ public class ProjectService : IProjectService
         project.IsFavorite = !project.IsFavorite;
         this.Persist();
     }
-
-    /// <summary>
-    ///   Resolves a logo for the project folder; the resolver applies the default fallback.
-    /// </summary>
-    internal string? ResolveLogo(string projectPath) => this.logoResolver.ResolvePath(projectPath);
 
     private void ClearStaleCurrentProject()
     {

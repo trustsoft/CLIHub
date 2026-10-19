@@ -50,6 +50,19 @@ starting value for an empty field, and accepts the Up/Down keys. The mouse wheel
 pointer is over the field and is consumed so the settings page does not scroll at the same time. `Text`
 stays a string so the settings view model keeps its existing text validation.
 
+## Project Display Models and Enrichment
+
+Project rows everywhere in the UI (launch window and Settings Projects page) are shared
+`ProjectModel` instances owned by the app's `ProjectModelCatalog`, one per project ID, updated in
+place on refresh. Core's stateless `ProjectEnricher` produces the enriched snapshots — one
+`Directory.Exists` check plus one project-logo-resolver lookup per project — on defined triggers:
+a `ProjectsChanged` event, the launch window being shown or activated, and the Settings Projects
+page `Load()`. There are no folder watchers or timers: folder availability stays at its last
+snapshot until the next trigger. `IProjectService` reads return detached `Project` copies; only the
+catalog owns long-lived row instances. The snapshot (not live) semantics and the instance-ownership
+split are rationale-level detail: see the `introduce-project-model` change's `design.md` under
+`openspec/changes/` (archived under `openspec/changes/archive/` once completed).
+
 The dark and light palettes (`LaunchTheme.xaml`, `LightTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and `App.xaml` merges the light palette on top of the dark base at startup when the effective theme is light.
 
 To add another palette (chosen at startup):

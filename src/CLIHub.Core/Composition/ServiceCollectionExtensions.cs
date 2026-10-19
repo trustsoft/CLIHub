@@ -83,6 +83,7 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddProjectServices(this IServiceCollection services)
     {
         services.AddSingleton<IProjectStateStore, ProjectStateStore>();
+        services.AddSingleton<ProjectEnricher>();
         services.AddSingleton<IProjectService>(sp => new ProjectService(
             sp.GetRequiredService<IProjectStateStore>(),
             sp.GetRequiredService<ProjectLogoResolver>(),
