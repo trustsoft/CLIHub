@@ -49,11 +49,10 @@ fields, XML docs on public APIs, English text.
 - [x] 4.2 Rework `App.ApplyTheme()` (`src/CLIHub/App.xaml.cs:41-54`) to the D1 shape: parse the
       token, resolve via the catalog with `SystemTheme.IsLight()`, merge the resolved dictionary
       when non-null; leave `ApplyAccent()` untouched.
-- [ ] 4.3 Gate: `dotnet build CLIHub.sln` passes (build gate verified green); pending user manual
-      smoke — with stored
-      `"appTheme"` values `"dark"`, `"light"`, `"system"` (and a bogus value) in
-      `%APPDATA%\CLIHub\config.json`, start the app and confirm dark/light/system render exactly as
-      before the rework and an unknown value still renders dark.
+- [x] 4.3 Gate: `dotnet build CLIHub.sln` passes (build gate verified green); user manual smoke
+      passed 2026-10-20 — with stored `"appTheme"` values `"dark"`, `"light"`, `"system"` (and a
+      bogus value) in `%APPDATA%\CLIHub\config.json`, the app rendered dark/light/system exactly as
+      before the rework and an unknown value still rendered dark.
 
 ## Stage 5 — Blue palette file
 
@@ -63,10 +62,11 @@ fields, XML docs on public APIs, English text.
       top of the dark base for the blue theme.
 - [x] 5.2 Gate: `dotnet test tests/CLIHub.Tests --filter ThemePaletteParityTests` passes with three
       palette files (the generalized test joins Blue automatically).
-- [ ] 5.3 Manual gate: set `"appTheme": "blue"`, start the app, and verify: blue-tinted chrome on
-      the launch window and Settings, readable primary/muted/label text, visible hairlines and
-      dividers, `#3B82F6` accent on selection/hover/toggles with no stored accent override, a
-      stored non-default accent (e.g. `"accentColor": "#EA580C"`) still overriding it live.
+- [x] 5.3 Manual gate passed 2026-10-20 (user smoke): with `"appTheme": "blue"`, the app showed
+      blue-tinted chrome on the launch window and Settings, readable primary/muted/label text,
+      visible hairlines and dividers, `#3B82F6` accent on selection/hover/toggles with no stored
+      accent override, and a stored non-default accent (e.g. `"accentColor": "#EA580C"`) still
+      overrode it live.
 
 ## Stage 6 — Settings selector option and preview
 
@@ -78,11 +78,11 @@ fields, XML docs on public APIs, English text.
       `src/CLIHub/Views/SettingsAppearancePage.xaml`, add `DataTrigger`s on
       `{x:Static models:AppTheme.Blue}` to the preview `Border` background (after line 43) and the
       preview bar fill (after line 77).
-- [ ] 6.3 Gate: `dotnet build CLIHub.sln` passes (build gate verified green); pending user manual
-      check — the Appearance page shows four theme
-      cards (Dark, Light, Blue, System) with the blue preview, the accent ring and check badge land
-      on the stored card, saving "Blue Theme" persists `"appTheme": "blue"` in `config.json`, and
-      reopening Settings reselects it.
+- [x] 6.3 Gate: `dotnet build CLIHub.sln` passes (build gate verified green); user manual check
+      passed 2026-10-20 — the Appearance page shows four theme cards (Dark, Light, Blue, System)
+      with the blue preview, the accent ring and check badge land on the stored card, saving
+      "Blue Theme" persists `"appTheme": "blue"` in `config.json`, and reopening Settings
+      reselects it.
 
 ## Stage 7 — Docs and validation
 

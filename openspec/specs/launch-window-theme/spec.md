@@ -7,7 +7,10 @@ Defines the shared theme applied to the launch window — the dark palette by de
 
 ### Requirement: Dark launch window theme
 
-The launch window SHALL be rendered with the application's shared theme palette rather than the operating system's default window theme: the dark palette by default, and the light palette when the effective application theme is Light (or System resolved to light).
+The launch window SHALL be rendered with the application's shared theme palette rather than the
+operating system's default window theme: the dark palette by default, the light palette when the
+effective application theme is Light (or System resolved to light), and the blue palette when the
+effective application theme is Blue.
 
 #### Scenario: Dark surfaces
 - **WHEN** the launch window is shown with the dark theme
@@ -16,6 +19,10 @@ The launch window SHALL be rendered with the application's shared theme palette 
 #### Scenario: Light surfaces
 - **WHEN** the launch window is shown with the light theme
 - **THEN** the window background, both panes, the row surfaces, the pane headers, and the footer use the light palette
+
+#### Scenario: Blue surfaces
+- **WHEN** the launch window is shown with the blue theme
+- **THEN** the window background, both panes, the row surfaces, the pane headers, and the footer use the blue palette
 
 #### Scenario: Readable text
 - **WHEN** a pane header, a row, or the footer is rendered
