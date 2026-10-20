@@ -243,12 +243,14 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
 
 ## 8. Manual verification (user-executed)
 
-- [ ] 8.1 Run the recipe in `design.md` §"Manual verification recipe" (run the app, confirm the option is
+- [x] 8.1 Run the recipe in `design.md` §"Manual verification recipe" (run the app, confirm the option is
       labelled, launch an agent, check the `/c/...` prompt and the resolved path in the log, then the negative
       path by renaming `C:\Program Files\Git\bin\bash.exe` and restoring it). Report the outcome; keep this
-      item unchecked until the user confirms.
+      item unchecked until the user confirms. *(Confirmed by the user on 2026-10-20, including the
+      PowerShell 7 recipe steps added by D10.)*
 - [ ] 8.2 If a machine with `C:\Windows\System32\bash.exe` is available, repeat with `System32` first on PATH
-      to confirm the WSL launcher is never selected.
+      to confirm the WSL launcher is never selected. *(Not performed — no such machine was available;
+      the behavior is covered by `Locate_GitBash_WslLauncherOnPath_ReturnsNull`.)*
 
 ## 9. Out of scope (do not fold into this change)
 
