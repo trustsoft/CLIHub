@@ -117,5 +117,8 @@ $RECYCLE.BIN/
 # Graphify generated index and caches (local to each machine)
 graphify-out/
 
+# OpenCode pipeline state file (agent tooling, local to each machine)
+.opencode/pipeline.json
+
 # Root-level scratch pages (test.html, test2.html, ...) kept out of the repository
 /test*.html
