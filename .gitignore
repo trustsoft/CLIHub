@@ -119,6 +119,7 @@ graphify-out/
 
 # OpenCode pipeline state file (agent tooling, local to each machine)
 .opencode/pipeline.json
+.opencode/model-policy.json
 
 # Root-level scratch pages (test.html, test2.html, ...) kept out of the repository
 /test*.html
