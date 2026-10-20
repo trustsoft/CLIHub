@@ -8,6 +8,10 @@
     "version": { "executable": "qwen", "arguments": "--version" },
     "update": { "executable": "qwen", "arguments": "update" }
   },
+  "updateCheck": {
+    "source": "npm",
+    "package": "@qwen-code/qwen-code"
+  },
   "detection": {
     "systemPaths": [
       "%USERPROFILE%\\.qwen",

@@ -1,13 +1,16 @@
 namespace CLIHub.Core.Tests.Composition;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
+using CLIHub.Core.Tests.Fakes;
 using CLIHub.Core.Updates;
 
 public class ServiceCollectionExtensionsTests
@@ -17,6 +20,14 @@ public class ServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddClIHubCoreServices();
+        // The version probe resolves ProcessLauncher, which the Windows module normally
+        // registers; stand in the runner fakes so the Core-only container can resolve the
+        // agent chain under test here.
+        services.AddSingleton<ProcessLauncher>(sp => new ProcessLauncher(
+            sp.GetRequiredService<ILogger<ProcessLauncher>>(),
+            new FakeInteractiveProcessRunner(),
+            new FakeProcessOutputRunner(),
+            new FakeRuntimeExecutableLocator()));
 
         using var provider = services.BuildServiceProvider();
 
@@ -31,6 +42,8 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorValidator>());
         Assert.NotNull(provider.GetRequiredService<IAgentDetectionService>());
+        Assert.NotNull(provider.GetRequiredService<IAgentReleaseClient>());
+        Assert.NotNull(provider.GetRequiredService<IAgentUpdateAvailabilityService>());
         Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
     }
 

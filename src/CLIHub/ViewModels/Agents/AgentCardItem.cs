@@ -1,5 +1,6 @@
 namespace CLIHub.ViewModels;
 
+using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -25,6 +26,7 @@ public sealed class AgentCardItem : ObservableObject
 {
     private bool isInstalled;
     private string version;
+    private AgentUpdateAvailability? updateAvailability;
 
     /// <summary>
     ///   Creates a card from the agent's plugin descriptor and current state.
@@ -130,6 +132,38 @@ public sealed class AgentCardItem : ObservableObject
         get;
         set => this.SetProperty(ref field, value);
     }
+
+    /// <summary>
+    ///   The latest update availability check result, or null before the first check. The result
+    ///   is advisory only: it never gates or alters the Update action.
+    /// </summary>
+    public AgentUpdateAvailability? UpdateAvailability
+    {
+        get => this.updateAvailability;
+        set
+        {
+            if (this.SetProperty(ref this.updateAvailability, value))
+            {
+                this.OnPropertyChanged(nameof(this.UpdateAvailabilityText));
+                this.OnPropertyChanged(nameof(this.HasUpdateAvailable));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   The advisory update indicator text ("installed → latest"), or null when availability is
+    ///   unknown or the agent is up to date, so no placeholder is ever rendered.
+    /// </summary>
+    public string? UpdateAvailabilityText =>
+        this.UpdateAvailability is { Status: AgentUpdateStatus.UpdateAvailable, InstalledVersion: { } installed, LatestVersion: { } latest }
+            ? $"{installed} → {latest}"
+            : null;
+
+    /// <summary>
+    ///   Whether an update is known to be available. Advisory only; it does not enable, disable,
+    ///   or block the Update action.
+    /// </summary>
+    public bool HasUpdateAvailable => this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable;
 
     /// <summary>
     ///   Whether the Edit Config action is available.

@@ -44,15 +44,17 @@ public class AgentManagementServiceTests
         Mock<IAgentDetectionService> detection,
         Mock<IAgentVersionService> version,
         Mock<IAgentCommandService> commands,
-        AgentProcessMonitor monitor) =>
-        new(detection.Object, version.Object, commands.Object, monitor, NullLogger<AgentManagementService>.Instance);
+        AgentProcessMonitor monitor,
+        Mock<IAgentUpdateAvailabilityService>? availability = null) =>
+        new(detection.Object, version.Object, (availability ?? new Mock<IAgentUpdateAvailabilityService>()).Object, commands.Object, monitor, NullLogger<AgentManagementService>.Instance);
 
     private static AgentManagementService CreateService(
         IAgentDetectionService detection,
         IAgentVersionService version,
         IAgentCommandService commands,
-        AgentProcessMonitor monitor) =>
-        new(detection, version, commands, monitor, NullLogger<AgentManagementService>.Instance);
+        AgentProcessMonitor monitor,
+        IAgentUpdateAvailabilityService? availability = null) =>
+        new(detection, version, availability ?? new Mock<IAgentUpdateAvailabilityService>().Object, commands, monitor, NullLogger<AgentManagementService>.Instance);
 
     private static ProcessResult Output(string standardOutput) => new()
     {
@@ -77,7 +79,12 @@ public class AgentManagementServiceTests
             new FakeRuntimeExecutableLocator());
         var detection = new AgentDetectionService(preferences, time);
         var version = new AgentVersionService(launcher, preferences, NullLogger<AgentVersionService>.Instance, time);
-        var service = CreateService(detection, version, new Mock<IAgentCommandService>().Object, Monitor([]));
+        var service = CreateService(
+            detection,
+            version,
+            new Mock<IAgentCommandService>().Object,
+            Monitor([]),
+            new Mock<IAgentUpdateAvailabilityService>().Object);
 
         return (service, detection, version, outputRunner);
     }
@@ -90,7 +97,8 @@ public class AgentManagementServiceTests
         detection.Setup(x => x.IsInstalledInSystem(plugin)).Returns(true);
         var version = new Mock<IAgentVersionService>();
         version.Setup(x => x.GetVersionAsync(plugin, It.IsAny<CancellationToken>())).ReturnsAsync("1.2.3");
-        var service = CreateService(detection, version, new Mock<IAgentCommandService>(), Monitor([]));
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        var service = CreateService(detection, version, new Mock<IAgentCommandService>(), Monitor([]), availability);
 
         var result = await service.ProbeAsync(plugin);
 
@@ -98,8 +106,10 @@ public class AgentManagementServiceTests
         Assert.Equal("1.2.3", result.Version);
         detection.Verify(x => x.InvalidateFor(plugin), Times.Once);
         version.Verify(x => x.InvalidateFor(plugin), Times.Once);
+        availability.Verify(x => x.InvalidateFor(plugin), Times.Once);
         detection.Verify(x => x.Invalidate(), Times.Never);
         version.Verify(x => x.Invalidate(), Times.Never);
+        availability.Verify(x => x.Invalidate(), Times.Never);
     }
 
     [Fact]
@@ -154,10 +164,11 @@ public class AgentManagementServiceTests
         var pluginB = AgentPlugin("b");
         var detection = new Mock<IAgentDetectionService>();
         var version = new Mock<IAgentVersionService>();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
         version
             .Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("1.0");
-        var service = CreateService(detection, version, new Mock<IAgentCommandService>(), Monitor([]));
+        var service = CreateService(detection, version, new Mock<IAgentCommandService>(), Monitor([]), availability);
 
         await service.ProbeAsync(pluginA);
         await service.ProbeAsync(pluginB);
@@ -168,6 +179,9 @@ public class AgentManagementServiceTests
         version.Verify(x => x.InvalidateFor(pluginA), Times.Once);
         version.Verify(x => x.InvalidateFor(pluginB), Times.Once);
         version.Verify(x => x.Invalidate(), Times.Never);
+        availability.Verify(x => x.InvalidateFor(pluginA), Times.Once);
+        availability.Verify(x => x.InvalidateFor(pluginB), Times.Once);
+        availability.Verify(x => x.Invalidate(), Times.Never);
     }
 
     [Fact]
@@ -300,6 +314,48 @@ public class AgentManagementServiceTests
         var result = await service.UpdateAsync(plugin);
 
         Assert.True(result.Started);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Started_InvalidatesVersionAndAvailability()
+    {
+        var plugin = AgentPlugin();
+        var commands = new Mock<IAgentCommandService>();
+        commands
+            .Setup(x => x.ExecuteAsync(plugin, AgentCommandKind.Update, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentCommandResult(true, null, null));
+        var version = new Mock<IAgentVersionService>();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        var service = CreateService(new Mock<IAgentDetectionService>(), version, commands, Monitor([]), availability);
+
+        var result = await service.UpdateAsync(plugin);
+
+        Assert.True(result.Started);
+        version.Verify(x => x.InvalidateFor(plugin), Times.Once);
+        availability.Verify(x => x.InvalidateFor(plugin), Times.Once);
+        version.Verify(x => x.Invalidate(), Times.Never);
+        availability.Verify(x => x.Invalidate(), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Blocked_DoesNotInvalidateVersionOrAvailability()
+    {
+        var plugin = AgentPlugin();
+        var process = new AgentProcessInstance(1234, @"C:\tools\opencode.exe", DateTime.UtcNow);
+        var version = new Mock<IAgentVersionService>();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        var service = CreateService(
+            new Mock<IAgentDetectionService>(),
+            version,
+            new Mock<IAgentCommandService>(MockBehavior.Strict),
+            Monitor([plugin], process),
+            availability);
+
+        var result = await service.UpdateAsync(plugin);
+
+        Assert.Equal(AgentUpdateOutcome.Blocked, result.Outcome);
+        version.Verify(x => x.InvalidateFor(plugin), Times.Never);
+        availability.Verify(x => x.InvalidateFor(plugin), Times.Never);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 namespace CLIHub.ViewModels;
 
+using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -59,6 +60,69 @@ public sealed class AgentCardItemTests
 
         Assert.Contains(nameof(AgentCardItem.VersionChipText), properties);
         Assert.Equal("Not installed", card.VersionChipText);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenUpdateAvailable_ShowsArrowTextAndFlag()
+    {
+        var card = CreateCard(isInstalled: true, version: "2.0.32");
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.True(card.HasUpdateAvailable);
+        Assert.Equal("2.0.32 → 2.0.33", card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenUpToDate_ShowsNoIndicator()
+    {
+        var card = CreateCard(isInstalled: true, version: "2.0.33");
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpToDate, "2.0.33", "2.0.33");
+
+        Assert.False(card.HasUpdateAvailable);
+        Assert.Null(card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenUnknown_ShowsNoIndicator()
+    {
+        var card = CreateCard(isInstalled: true, version: "2.0.32");
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.Unknown);
+
+        Assert.False(card.HasUpdateAvailable);
+        Assert.Null(card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenSet_RaisesIndicatorNotifications()
+    {
+        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.Contains(nameof(AgentCardItem.UpdateAvailability), properties);
+        Assert.Contains(nameof(AgentCardItem.UpdateAvailabilityText), properties);
+        Assert.Contains(nameof(AgentCardItem.HasUpdateAvailable), properties);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenCleared_RaisesIndicatorNotifications()
+    {
+        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.UpdateAvailability = null;
+
+        Assert.Contains(nameof(AgentCardItem.UpdateAvailabilityText), properties);
+        Assert.Contains(nameof(AgentCardItem.HasUpdateAvailable), properties);
+        Assert.Null(card.UpdateAvailabilityText);
+        Assert.False(card.HasUpdateAvailable);
     }
 
     private static AgentCardItem CreateCard(bool isInstalled, string version) =>

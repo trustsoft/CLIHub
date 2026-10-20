@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 
 public class PluginCatalogTests : IDisposable
@@ -176,6 +177,33 @@ public class PluginCatalogTests : IDisposable
         Assert.NotEmpty(reread.Detection.SystemPaths);
         Assert.NotEmpty(reread.Detection.ProjectIndicators);
         Assert.NotSame(original.Commands.Update, reread.Commands.Update);
+    }
+
+    [Fact]
+    public void GetAllPlugins_MutatingUpdateCheckOnReturnedPlugin_DoesNotChangeLaterReads()
+    {
+        this.WritePlugin("opencode", """
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "commands": { "launch": { "executable": "opencode" } },
+          "updateCheck": { "source": "npm", "package": "@opencode/cli" }
+        }
+        """);
+        var manager = this.CreateManager();
+        manager.LoadPlugins();
+
+        var returned = manager.GetAllPlugins().Single();
+
+        Assert.Equal("npm", returned.UpdateCheck!.Source);
+        Assert.Equal("@opencode/cli", returned.UpdateCheck.Package);
+
+        returned.UpdateCheck = new PluginUpdateCheck("cargo", Package: "mutated");
+
+        var reread = manager.GetAllPlugins().Single();
+
+        Assert.Equal("npm", reread.UpdateCheck!.Source);
+        Assert.Equal("@opencode/cli", reread.UpdateCheck.Package);
     }
 
     [Fact]

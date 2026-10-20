@@ -8,6 +8,10 @@
     "version": { "executable": "copilot", "arguments": "--version" },
     "update": { "executable": "copilot", "arguments": "update" }
   },
+  "updateCheck": {
+    "source": "githubReleases",
+    "repo": "github/copilot-cli"
+  },
   "detection": {
     "systemPaths": [
       "%USERPROFILE%\\.copilot",

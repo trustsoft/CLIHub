@@ -7,6 +7,10 @@
     "version": { "executable": "cline", "arguments": "--version" },
     "update": { "executable": "cline", "arguments": "update" }
   },
+  "updateCheck": {
+    "source": "npm",
+    "package": "cline"
+  },
   "detection": {
     "systemPaths": [
       "%USERPROFILE%\\.cline",

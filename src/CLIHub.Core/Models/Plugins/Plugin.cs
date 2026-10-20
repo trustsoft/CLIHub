@@ -31,6 +31,12 @@ public class Plugin
     public AgentDetection Detection { get; set; } = new();
 
     /// <summary>
+    ///   The agent's distribution source for update detection, or null when the descriptor
+    ///   does not declare one.
+    /// </summary>
+    public PluginUpdateCheck? UpdateCheck { get; set; }
+
+    /// <summary>
     ///   Path to the plugin's logo image (typically logo.png in plugin directory).
     /// </summary>
     public string? LogoPath { get; set; }
@@ -42,10 +48,13 @@ public class Plugin
 
     /// <summary>
     ///   Creates a detached copy of this plugin. Catalog read methods hand out copies, so callers
-    ///   can mutate a returned plugin — including its commands and detection markers — without
-    ///   corrupting the loaded catalog.
+    ///   can mutate a returned plugin — including its commands, detection markers, and update
+    ///   check block — without corrupting the loaded catalog.
     /// </summary>
-    /// <returns> A new plugin with the same scalar values and cloned command and detection state. </returns>
+    /// <returns>
+    ///   A new plugin with the same scalar values, update check block, and cloned command and
+    ///   detection state.
+    /// </returns>
     public Plugin Copy()
     {
         var copy = new Plugin
@@ -56,6 +65,9 @@ public class Plugin
             LogoPath = this.LogoPath,
             PluginDirectory = this.PluginDirectory,
             Commands = this.Commands,
+            // Records are immutable, so sharing the instance keeps the copy detached while the
+            // catalog's loaded value cannot be changed through it.
+            UpdateCheck = this.UpdateCheck,
             Detection = new AgentDetection
             {
                 SystemPaths = this.Detection?.SystemPaths is { } systemPaths ? [.. systemPaths] : [],

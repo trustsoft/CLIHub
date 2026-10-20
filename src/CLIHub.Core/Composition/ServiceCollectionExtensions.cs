@@ -111,6 +111,16 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<ProcessLauncher>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
+        services.AddSingleton(_ =>
+        {
+            var client = new HttpClient();
+
+            // GitHub rejects requests without a User-Agent; identify every source request.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("CLIHub");
+            return client;
+        });
+        services.AddSingleton<IAgentReleaseClient, AgentReleaseClient>();
+        services.AddSingleton<IAgentUpdateAvailabilityService, AgentUpdateAvailabilityService>();
         services.AddSingleton<AgentProcessMatcher>();
         services.AddSingleton<AgentProcessMonitor>();
         return services;

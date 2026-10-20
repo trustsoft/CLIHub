@@ -27,6 +27,16 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Advisory update chip next to the state chip: accent-styled so it reads as
+             informational rather than as an error; shown only when an update is available -->
+        <Style x:Key="AgentUpdateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <Style x:Key="AgentUpdateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
         <!-- Ghost chip with the launcher footer behavior: hover/pressed overlays, dimmed when disabled -->
         <Style x:Key="AgentsHeaderChipButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
             <Setter Property="Padding" Value="10,5"/>
@@ -145,6 +155,14 @@
                                             Style="{StaticResource AgentStateChip}">
                                         <TextBlock Style="{StaticResource AgentStateChipText}"
                                                    Text="{Binding VersionChipText}"/>
+                                    </Border>
+                                    <Border Margin="8,0,0,0"
+                                            AutomationProperties.Name="Update available"
+                                            Style="{StaticResource AgentUpdateChip}"
+                                            ToolTip="A newer version is available from this agent's distribution channel"
+                                            Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource AgentUpdateChipText}"
+                                                   Text="{Binding UpdateAvailabilityText}"/>
                                     </Border>
                                 </StackPanel>
                                 <TextBlock Margin="0,3,0,0"

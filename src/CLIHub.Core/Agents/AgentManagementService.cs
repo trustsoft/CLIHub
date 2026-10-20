@@ -12,6 +12,7 @@ public sealed class AgentManagementService : IAgentManagementService
 {
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;
+    private readonly IAgentUpdateAvailabilityService availability;
     private readonly IAgentCommandService commands;
     private readonly AgentProcessMonitor processMonitor;
     private readonly ILogger<AgentManagementService> logger;
@@ -21,17 +22,20 @@ public sealed class AgentManagementService : IAgentManagementService
     /// </summary>
     /// <param name="detection"> Host availability detection. </param>
     /// <param name="version"> Version probe service. </param>
+    /// <param name="availability"> Update availability service. </param>
     /// <param name="commands"> Agent command execution. </param>
     /// <param name="processMonitor"> Running-agent monitor used to block updates. </param>
     /// <param name="logger"> Logger. </param>
     public AgentManagementService(IAgentDetectionService detection,
                                   IAgentVersionService version,
+                                  IAgentUpdateAvailabilityService availability,
                                   IAgentCommandService commands,
                                   AgentProcessMonitor processMonitor,
                                   ILogger<AgentManagementService> logger)
     {
         this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
         this.version = version ?? throw new ArgumentNullException(nameof(version));
+        this.availability = availability ?? throw new ArgumentNullException(nameof(availability));
         this.commands = commands ?? throw new ArgumentNullException(nameof(commands));
         this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -47,6 +51,7 @@ public sealed class AgentManagementService : IAgentManagementService
         // fresh results cached instead of clearing them on the next iteration.
         this.detection.InvalidateFor(plugin);
         this.version.InvalidateFor(plugin);
+        this.availability.InvalidateFor(plugin);
 
         var installed = this.detection.IsInstalledInSystem(plugin);
         var version = await this.version.GetVersionAsync(plugin, cancellationToken).ConfigureAwait(false);
@@ -84,6 +89,10 @@ public sealed class AgentManagementService : IAgentManagementService
 
         if (result.Success)
         {
+            // The interactive updater may still be running; invalidation only forces the next
+            // lookups to re-probe instead of serving the pre-update results.
+            this.version.InvalidateFor(plugin);
+            this.availability.InvalidateFor(plugin);
             return new AgentUpdateResult(AgentUpdateOutcome.Started, null);
         }
 

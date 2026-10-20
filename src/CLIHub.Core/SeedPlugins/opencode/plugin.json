@@ -8,6 +8,10 @@
     "version": { "executable": "opencode", "arguments": "--version" },
     "update": { "executable": "opencode", "arguments": "upgrade" }
   },
+  "updateCheck": {
+    "source": "npm",
+    "package": "@opencode/cli"
+  },
   "detection": {
     "systemPaths": [
       "%USERPROFILE%\\.opencode",

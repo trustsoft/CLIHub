@@ -45,6 +45,27 @@ public class PluginDescriptorReaderTests : IDisposable
     }
 
     [Fact]
+    public void Read_UnknownUpdateCheckSource_DeserializesWithRawSourceValue()
+    {
+        Directory.CreateDirectory(this.root);
+        File.WriteAllText(Path.Combine(this.root, "plugin.json"), """
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "commands": { "launch": { "executable": "opencode" } },
+          "updateCheck": { "source": "cargo", "package": "some-crate" }
+        }
+        """);
+
+        var result = new PluginDescriptorReader().Read(this.root);
+
+        Assert.Null(result.Error);
+        Assert.NotNull(result.Plugin);
+        Assert.Equal("cargo", result.Plugin.UpdateCheck!.Source);
+        Assert.Equal("some-crate", result.Plugin.UpdateCheck.Package);
+    }
+
+    [Fact]
     public void Read_JsonNull_ReturnsNoPluginAndNoError()
     {
         Directory.CreateDirectory(this.root);

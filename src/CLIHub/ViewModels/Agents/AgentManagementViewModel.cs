@@ -21,6 +21,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IPluginCatalog catalog;
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;
+    private readonly IAgentUpdateAvailabilityService availability;
     private readonly IAgentManagementService management;
     private readonly IExternalLauncher launcher;
     private readonly AgentProcessMonitor processMonitor;
@@ -36,6 +37,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="catalog"> Plugin catalog supplying the agents. </param>
     /// <param name="detection"> Host availability detection. </param>
     /// <param name="version"> Version probe service. </param>
+    /// <param name="availability"> Advisory update availability service. </param>
     /// <param name="management"> On-demand probe/update operations. </param>
     /// <param name="launcher"> Opens the agent's configuration file. </param>
     /// <param name="processMonitor"> Running-agent monitor used to gate card update availability. </param>
@@ -44,6 +46,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public AgentManagementViewModel(IPluginCatalog catalog,
                                     IAgentDetectionService detection,
                                     IAgentVersionService version,
+                                    IAgentUpdateAvailabilityService availability,
                                     IAgentManagementService management,
                                     IExternalLauncher launcher,
                                     AgentProcessMonitor processMonitor,
@@ -53,6 +56,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
         this.version = version ?? throw new ArgumentNullException(nameof(version));
+        this.availability = availability ?? throw new ArgumentNullException(nameof(availability));
         this.management = management ?? throw new ArgumentNullException(nameof(management));
         this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
         this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
@@ -246,6 +250,14 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 {
                     card.Version = ver ?? "unknown";
                 }
+
+                // The availability check reuses the just-probed version through the version
+                // service's cache, so this adds no extra process launch per card.
+                var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+                if (!this.disposed)
+                {
+                    card.UpdateAvailability = availability;
+                }
             }
 
             if (!this.disposed)
@@ -259,6 +271,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
         card.IsInstalled = result.IsInstalled;
         card.Version = result.Version ?? "unknown";
+        card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
         card.Message = result.IsInstalled
             ? $"Installed · version {card.Version}"
             : "Not installed on the host";
@@ -281,6 +294,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
                 card.IsInstalled = result.IsInstalled;
                 card.Version = result.Version ?? "unknown";
+                card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
             }
 
             this.RefreshAvailabilitySummary();
@@ -301,6 +315,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             AgentUpdateOutcome.Started => "Update started.",
             _ => result.Message ?? "Update failed."
         };
+
+        if (result.Started)
+        {
+            // The updater may keep running interactively; dropping the cached result only
+            // forces the next lookup to re-probe instead of serving the stale cue.
+            this.availability.InvalidateFor(card.Plugin);
+        }
     }
 
     private void EditConfig(AgentCardItem card)

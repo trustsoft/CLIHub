@@ -38,7 +38,8 @@ public class AgentManagementViewModelTests
         Mock<IAgentVersionService> version,
         Mock<IAgentManagementService> management,
         Mock<IExternalLauncher> launcher,
-        Mock<IAgentProcessInspector>? processInspector = null)
+        Mock<IAgentProcessInspector>? processInspector = null,
+        Mock<IAgentUpdateAvailabilityService>? availability = null)
     {
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
@@ -59,6 +60,7 @@ public class AgentManagementViewModelTests
             catalog.Object,
             detection.Object,
             version.Object,
+            (availability ?? new Mock<IAgentUpdateAvailabilityService>()).Object,
             management.Object,
             launcher.Object,
             processMonitor,
@@ -153,6 +155,93 @@ public class AgentManagementViewModelTests
         viewModel.Load(null);
 
         Assert.Equal("3.4.5", viewModel.Cards[0].Version);
+    }
+
+    [Fact]
+    public void Load_PopulatesUpdateAvailabilityPerCard()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33"));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(card.HasUpdateAvailable);
+        Assert.Equal("2.0.32 → 2.0.33", card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void Load_UnknownAvailability_LeavesCanUpdateUnchanged()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.HasUpdateAvailable);
+        Assert.Null(card.UpdateAvailabilityText);
+        Assert.True(card.CanUpdate);
+    }
+
+    [Fact]
+    public void Load_UpdateAvailableWithoutUpdateCommand_LeavesCanUpdateDisabled()
+    {
+        var b = Launchable("b", withUpdate: false);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "9.9.9"));
+        var viewModel = CreateViewModel([b], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "b");
+        Assert.True(card.HasUpdateAvailable);
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void UpdateCommand_WhenStarted_InvalidatesCachedAvailability()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Started, null));
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+
+        viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
+
+        availability.Verify(x => x.InvalidateFor(a), Times.Once);
+        availability.Verify(x => x.Invalidate(), Times.Never);
+    }
+
+    [Fact]
+    public void UpdateCommand_WhenNotStarted_KeepsCachedAvailability()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Failed, "boom"));
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+
+        viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
+
+        availability.Verify(x => x.InvalidateFor(It.IsAny<Plugin>()), Times.Never);
     }
 
     [Fact]

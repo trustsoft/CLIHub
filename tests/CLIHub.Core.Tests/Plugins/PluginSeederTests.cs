@@ -148,6 +148,29 @@ public class PluginSeederTests : IDisposable
             () => Assert.Null(plugins["cline-cli"].Commands.Resume));
     }
 
+    [Fact]
+    public void SeededDescriptors_DeclareExpectedUpdateSources()
+    {
+        this.CreateSeeder().SeedIfEmpty();
+
+        var cache = new LogoCacheService(NullLogger<LogoCacheService>.Instance, Path.Combine(this.pluginsPath, "logos-state.json"));
+        var catalog = new PluginCatalog(
+            NullLogger<PluginCatalog>.Instance,
+            new PluginLogoResolver(cache, new LogoOptions(null)),
+            this.pluginsPath);
+        catalog.LoadPlugins();
+
+        var plugins = catalog.GetAllPlugins().ToDictionary(p => p.Id);
+
+        Assert.Multiple(
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@opencode/cli"), plugins["opencode"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "cline"), plugins["cline-cli"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@earendil-works/pi-coding-agent"), plugins["pi"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@twigpine/openclaude"), plugins["openclaude"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@qwen-code/qwen-code"), plugins["qwen-code"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("githubReleases", Repo: "github/copilot-cli"), plugins["github-copilot"].UpdateCheck));
+    }
+
     private static void AssertCommandSet(Plugin plugin, AgentCommandKind[] expectedKinds)
     {
         foreach (var kind in expectedKinds)
