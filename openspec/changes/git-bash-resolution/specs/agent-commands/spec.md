@@ -4,7 +4,7 @@
 
 ### Requirement: Terminal vs captured execution
 
-The system SHALL run interactive commands in the configured runtime and capture the output of the version command.
+The system SHALL run interactive commands in the configured runtime and capture the output of the version command. When Git Bash is the configured runtime, the interactive command SHALL start a Git for Windows `bash.exe` and never an arbitrary `bash.exe` resolved from the operating system path.
 
 #### Scenario: Interactive command opens a terminal
 
@@ -39,20 +39,17 @@ The system SHALL run interactive commands in the configured runtime and capture 
 
 #### Scenario: Git Bash resolves to Git for Windows
 
-- **WHEN** the configured runtime is Git Bash
-- **THEN** the launched executable is a Git for Windows `bash.exe` resolved from the Git for Windows registry key, well-known install locations, or a PATH entry outside the Windows directory
+- **WHEN** the configured runtime is Git Bash and an interactive command is launched
+- **THEN** the launched executable is the absolute path of a Git for Windows `bash.exe`, resolved from the `GitForWindows` registry `InstallPath`, a well-known install location, or a PATH entry outside the Windows directory, in that order
+- **AND** the resolution happens at launch time, so a changed installation is reflected on the next launch
 
 #### Scenario: The WSL launcher is never used for Git Bash
 
 - **WHEN** the first `bash.exe` on PATH is the WSL launcher in the Windows directory
 - **THEN** that launcher is not used for the Git Bash runtime
+- **AND** the launch either starts a resolved Git for Windows `bash.exe` or fails as the next scenario describes
 
 #### Scenario: Unresolvable Git Bash fails safely
 
 - **WHEN** the Git Bash runtime is configured but no Git for Windows `bash.exe` can be resolved
-- **THEN** the launch fails with a clear logged error and no terminal opens
-
-#### Scenario: Terminal Profiles reflects Git Bash availability
-
-- **WHEN** no Git for Windows `bash.exe` can be resolved
-- **THEN** the Terminal Profiles settings page marks Git Bash as not installed
+- **THEN** the launch fails with the existing failed-command result, a clear error naming Git for Windows and the lookup order is logged, and no terminal process starts
