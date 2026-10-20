@@ -102,3 +102,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Severity: Cosmetic
 - Evidence: `AgentProcessMatcher` keeps an unused logger (deliberately left out of the amputation).
 - Proposed remedy: remove during the next dead-member sweep.
+
+### Registered-but-unused `RuntimeSelector`
+
+- Severity: Cosmetic (dead code with one live DI registration)
+- Evidence: `src/CLIHub.Core.Windows/RuntimeSelector.cs:11` is registered at
+  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:37`, but its only consumer is
+  `tests/CLIHub.Core.Windows.Tests/RuntimeSelectorTests.cs`; `RuntimeType.WindowsTerminal`
+  (`src/CLIHub.Core/Infrastructure/Processes/RuntimeType.cs:11`) has no other producer.
+- Proposed remedy: delete the selector, its registration, and its tests; drop
+  `RuntimeType.WindowsTerminal` if the settings model no longer needs it.
+- Trigger: the next dead-member sweep, or the Git Bash locator landing in the same registration file
+  (found while refreshing `openspec/changes/git-bash-resolution`; explicitly out of its scope).
