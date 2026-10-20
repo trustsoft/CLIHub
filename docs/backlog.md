@@ -72,6 +72,18 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   "not run" from "passed".
 - Trigger: a CI coverage review or a hidden-regression investigation.
 
+### Update-detection test gaps: timeout path and missing-installation indicator
+
+- Severity: Low
+- Evidence: two `agent-update-detection` scenarios are code-verified but lack direct tests —
+  release-request timeout degrading to `Unknown` (`AgentReleaseClient.cs:80-84`), and "no indicator
+  for a missing installation" (holds by construction: uninstalled → version null → Unknown → text
+  null; covered only compositionally). Recorded in
+  `openspec/changes/archive/2026-10-20-agent-update-detection/` verification.
+- Proposed remedy: one handler-stub test that delays past the probe timeout, and one card test
+  asserting no chip for an uninstalled agent with a declared `updateCheck`.
+- Trigger: touching `AgentReleaseClient`, the availability service, or the card indicator.
+
 ## Project domain
 
 ### AddProject returns the live instance
