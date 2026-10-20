@@ -1,8 +1,8 @@
 # Subagent Model Policy
 
-The policy has two layers:
+The policy has two layers, both JSON:
 
-1. **Policy (this repo, versioned):** [`agent-model-policy.yaml`](agent-model-policy.yaml) — roles,
+1. **Policy (this repo, versioned):** [`agent-model-policy.json`](agent-model-policy.json) — roles,
    model catalog, presets, and time-windowed overrides. Human-curated; changes rarely.
 2. **Runtime selection (gitignored):** `.opencode/model-policy.json` — the *effective* choice right
    now. Written by the orchestrator (observations) and the sidebar (user intent); changes often.
@@ -24,7 +24,7 @@ verifier on a weaker model — a nominal verification is worse than no verificat
 
 `default`, `plan_exhausted`, `free_only`, `flash_only` — each maps every role to an ordered fallback
 chain. Switch with `active_preset` (sidebar or by editing the runtime file), or schedule a switch with
-an `overrides` window in the YAML (`valid_from` / `valid_until`).
+an `overrides` window in the policy JSON (`valid_from` / `valid_until`).
 
 ## Billing modes
 
@@ -40,17 +40,17 @@ an `overrides` window in the YAML (`valid_from` / `valid_until`).
 {
   "schemaVersion": 1,
   "activePreset": "default",
-  "roleOverrides": { "verifier": "opencode/claude-sonnet-5-5" },
+  "roleOverrides": { "verifier": "relayfast/claude-sonnet-5" },
   "exhaustedUntil": { "zai-coding-plan/glm-5.3": "2026-10-21T14:00:00Z" },
   "sessionLog": [
     { "at": "2026-10-21T10:00:00Z", "role": "verifier", "from": "zai-coding-plan/glm-5.3",
-      "to": "deepseek/deepseek-v4-pro", "reason": "429 quota" }
+      "to": "relayfast/claude-sonnet-5", "reason": "429 quota" }
   ]
 }
 ```
 
 Ownership: the orchestrator writes `exhausted_until` and `session_log`; the sidebar writes
-`active_preset` and `role_overrides`. Each writer read-modify-writes only its own fields.
+`active_preset` and `role_overrides`. Each writer read-modify-writes only its own fields, atomically.
 
 ## How the orchestrator resolves a dispatch
 
@@ -63,12 +63,13 @@ Ownership: the orchestrator writes `exhausted_until` and `session_log`; the side
 
 ## Why two layers
 
-The YAML is a *contract* (what should be preferred, and what is safe to fall back to). The runtime
-JSON is *state* (what is actually available right now). Keeping state out of git avoids committing
-transient quota exhaustion, and lets the sidebar and orchestrator coordinate without a shared
-process.
+The policy JSON is a *contract* (what should be preferred, and what is safe to fall back to). The
+runtime JSON is *state* (what is actually available right now). Keeping state out of git avoids
+committing transient quota exhaustion, and lets the sidebar and orchestrator coordinate without a
+shared process. Both are JSON so the sidebar plugin can read them directly with `node:fs` — no YAML
+parser is needed.
 
 ## Related
 
-- Sidebar panel (planned): preset switcher + per-role dropdown + exhausted-until indicator.
+- Sidebar panel (in progress): preset switcher + per-role dropdown + exhausted-until indicator.
 - `docs/backlog.md` — escalation notes when a flash model is rejected.

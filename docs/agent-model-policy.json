@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "_comment": "CLIHub subagent model policy. TWO LAYERS: this file (versioned, human-curated) + .opencode/model-policy.json (gitignored runtime selection). Resolution at dispatch: effective_preset = first override whose window contains now, else active_preset; take the role's ordered list, drop models whose exhausted_until is in the future, try in order. Availability failure (429/quota/billing/auth/not-found) -> mark exhausted_until = now + backoff, try next. Quality failure -> escalate to the next model in the same list. If on_exhaustion is block_and_ask and no acceptable model remains -> STOP and ask the user. Merge rule for the runtime file: the orchestrator owns exhausted_until and session_log; the sidebar owns active_preset and role_overrides; each writer read-modify-writes only its own fields, atomically.",
+  "active_preset": "default",
+  "roles": {
+    "planner": { "agents": ["pipe/planner"], "tier": "high", "on_exhaustion": "block_and_ask" },
+    "implementer": { "agents": ["pipe/implementer"], "tier": "high", "on_exhaustion": "next" },
+    "verifier": { "agents": ["pipe/verifier"], "tier": "high", "on_exhaustion": "block_and_ask" },
+    "explorer": { "agents": ["explore"], "tier": "any", "on_exhaustion": "next" },
+    "mechanical": { "agents": ["general"], "tier": "any", "on_exhaustion": "next" }
+  },
+  "models": {
+    "zai-coding-plan/glm-5.3": { "billing": "plan", "tier": "high", "limits": "5-hour + weekly", "max_concurrent": 4 },
+    "zai-coding-plan/glm-5.3-flash": { "billing": "plan", "tier": "medium", "limits": "shares the Z.AI plan", "max_concurrent": 8 },
+    "relayfast/claude-sonnet-5": { "billing": "paid", "tier": "high" },
+    "relayfast/gpt-5.6-sol": { "billing": "paid", "tier": "high" },
+    "relayfast/deepseek-v4-pro": { "billing": "paid", "tier": "high" },
+    "relayfast/kimi-k2.7-code": { "billing": "paid", "tier": "high" },
+    "relayfast/claude-haiku-4-5": { "billing": "paid", "tier": "medium" },
+    "relayfast/deepseek-v4.1-flash": { "billing": "paid", "tier": "medium" },
+    "deepseek/deepseek-v4-pro": { "billing": "paid", "tier": "high" },
+    "deepseek/deepseek-flash": { "billing": "paid", "tier": "medium" },
+    "opencode/glm-5.3-flash-free": { "billing": "free", "tier": "medium" },
+    "opencode/deepseek-v4.1-flash-free": { "billing": "free", "tier": "medium" },
+    "opencode/minimax-m3.1-flash-free": { "billing": "free", "tier": "low" },
+    "opencode/mimo-v2.6-flash-free": { "billing": "free", "tier": "low" },
+    "opencode/big-pickle": { "billing": "free", "tier": "low" },
+    "opencode/longcat-2.5-preview-free": { "billing": "free", "tier": "low" },
+    "opencode/beam-free": { "billing": "free", "tier": "low" },
+    "opencode/nemotron-3.5-super-vl-free": { "billing": "free", "tier": "low" }
+  },
+  "_free_rule": "A model is free when its name contains 'free'/'Free' (usually a suffix), or it is opencode/big-pickle. The relay.fast catalogue is larger than what is listed; add entries when a chain needs one.",
+  "presets": {
+    "default": {
+      "planner": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
+      "implementer": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "zai-coding-plan/glm-5.3-flash"],
+      "verifier": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
+      "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
+      "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
+    },
+    "plan_exhausted": {
+      "planner": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro"],
+      "implementer": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro", "relayfast/deepseek-v4.1-flash"],
+      "verifier": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro"],
+      "explorer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
+      "mechanical": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"]
+    },
+    "free_only": {
+      "planner": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
+      "implementer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
+      "verifier": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
+      "explorer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
+      "mechanical": ["opencode/glm-5.3-flash-free", "opencode/mimo-v2.6-flash-free"]
+    },
+    "flash_only": {
+      "planner": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
+      "implementer": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
+      "verifier": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
+      "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"],
+      "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
+    }
+  },
+  "overrides": []
+}
