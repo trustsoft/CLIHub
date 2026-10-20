@@ -13,6 +13,7 @@ using CLIHub.Themes;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
@@ -28,7 +29,17 @@ using CLIHub.Settings;
 /// <param name="Kind"> The runtime kind. </param>
 /// <param name="Name"> Display name shown in the combo box and diagnostics. </param>
 /// <param name="Icon"> Pack URI of the icon rendered beside the name. </param>
-public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Icon);
+/// <param name="IsInstalled">
+///   Whether the runtime executable was found. An unavailable option stays selectable so the stored
+///   selection remains visible and re-selectable.
+/// </param>
+public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Icon, bool IsInstalled = true)
+{
+    /// <summary>
+    ///   The label shown in the selector; unavailable runtimes are marked as not installed.
+    /// </summary>
+    public string DisplayName => this.IsInstalled ? this.Name : $"{this.Name} (not installed)";
+}
 
 /// <summary>
 ///   A selectable path display style with a friendly label.
@@ -370,9 +381,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private readonly IProjectDialogService dialogs;
     private readonly IProjectScanner projectScanner;
     private readonly AccentSelectionMemory accentMemory;
+    private readonly IRuntimeExecutableLocator runtimeExecutables;
     private readonly ILogger<SettingsViewModel> logger;
     private readonly List<WatchedDirectoryRow> observedWatchedDirectoryRows = new();
 
+    private RuntimeOption[] runtimes = RuntimeOptions;
     private bool startWithWindows;
     private bool startMinimized = true;
     private RuntimeOption selectedRuntime = RuntimeOptions[0];
@@ -430,6 +443,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
     /// <param name="projectRegistry"> Project-registry section shown on the Projects page. </param>
     /// <param name="accentMemory"> Process-wide memory of the last custom accent. </param>
+    /// <param name="runtimeExecutables"> Resolves a runtime to its executable so the page can mark availability. </param>
     public SettingsViewModel(SettingsApplicationService settingsApplication,
                              IUpdateVersionProvider versionProvider,
                              IUpdateWorkflow updateWorkflow,
@@ -441,6 +455,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
                              IAgentManagementSection agentsState,
                              IProjectRegistrySection projectRegistry,
                              AccentSelectionMemory accentMemory,
+                             IRuntimeExecutableLocator runtimeExecutables,
                              ILogger<SettingsViewModel> logger)
     {
         this.settingsApplication = settingsApplication;
@@ -454,6 +469,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
         this.ProjectRegistry = projectRegistry ?? throw new ArgumentNullException(nameof(projectRegistry));
         this.accentMemory = accentMemory ?? throw new ArgumentNullException(nameof(accentMemory));
+        this.runtimeExecutables = runtimeExecutables ?? throw new ArgumentNullException(nameof(runtimeExecutables));
         this.logger = logger;
 
         this.Version = this.versionProvider.GetCurrentVersion();
@@ -488,7 +504,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   The runtime options offered by the segmented control.
     /// </summary>
-    public IReadOnlyList<RuntimeOption> Runtimes => RuntimeOptions;
+    public IReadOnlyList<RuntimeOption> Runtimes => this.runtimes;
 
     /// <summary>
     ///   The path display options offered by the segmented control.
@@ -557,7 +573,18 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public RuntimeOption SelectedRuntime
     {
         get => this.selectedRuntime;
-        set => this.SetProperty(ref this.selectedRuntime, value);
+        set
+        {
+            // WPF can push null through the TwoWay SelectedItem binding when the availability
+            // rebuild replaces the selected instance. Keep the last non-null selection so the
+            // stored runtime and Save() stay valid.
+            if (value is null)
+            {
+                return;
+            }
+
+            this.SetProperty(ref this.selectedRuntime, value);
+        }
     }
 
     /// <summary>
@@ -1228,8 +1255,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         var draft = this.settingsApplication.Load();
 
-        this.selectedRuntime = RuntimeOptions
-            .FirstOrDefault(o => o.Kind == draft.Runtime) ?? RuntimeOptions[0];
+        // Availability is re-evaluated on every open so a reinstall is reflected without a restart.
+        this.runtimes = RuntimeOptions
+            .Select(option => option with
+            {
+                IsInstalled = option.Kind != RuntimeKind.GitBash
+                    || this.runtimeExecutables.Locate(RuntimeKind.GitBash) is not null
+            })
+            .ToArray();
+
+        this.selectedRuntime = this.runtimes
+            .FirstOrDefault(o => o.Kind == draft.Runtime) ?? this.runtimes[0];
         this.selectedPathDisplay = PathDisplayOptions
             .FirstOrDefault(o => o.Style == draft.PathDisplayStyle) ?? PathDisplayOptions[0];
         this.hotkeyText = HotkeyParser.Format(draft.Hotkey);
@@ -1294,6 +1330,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.OnPropertyChanged(nameof(this.StartWithWindows));
         this.OnPropertyChanged(nameof(this.StartMinimized));
+        this.OnPropertyChanged(nameof(this.Runtimes));
         this.OnPropertyChanged(nameof(this.SelectedRuntime));
         this.OnPropertyChanged(nameof(this.SelectedPathDisplay));
         this.OnPropertyChanged(nameof(this.HotkeyText));

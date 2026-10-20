@@ -1,5 +1,6 @@
 namespace CLIHub.Core.Tests.Infrastructure.Processes;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Models;
@@ -12,12 +13,12 @@ public class ProcessLauncherTests
     [InlineData(RuntimeKind.PowerShell, "powershell.exe")]
     [InlineData(RuntimeKind.PowerShell7, "pwsh.exe")]
     [InlineData(RuntimeKind.CommandPrompt, "cmd.exe")]
-    [InlineData(RuntimeKind.GitBash, "bash.exe")]
     public void BuildStartInfo_UsesRuntimeExecutable(RuntimeKind runtime, string expectedFileName)
     {
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
-        var (fileName, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+        var (fileName, arguments) = ProcessLauncher.BuildStartInfo(
+            runtime, command, @"C:\proj", gitBashExecutable: null);
 
         Assert.Equal(expectedFileName, fileName);
         if (runtime is RuntimeKind.PowerShell or RuntimeKind.PowerShell7)
@@ -43,7 +44,8 @@ public class ProcessLauncherTests
     {
         var command = new PluginCommand { Executable = "opencode" };
 
-        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            runtime, command, @"C:\proj", gitBashExecutable: null);
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -58,7 +60,8 @@ public class ProcessLauncherTests
     {
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
-        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            runtime, command, @"C:\proj", gitBashExecutable: null);
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -80,7 +83,8 @@ public class ProcessLauncherTests
             Arguments = "--run"
         };
 
-        var (_, arguments) = ProcessLauncher.BuildStartInfo(runtime, command, @"C:\proj");
+        var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            runtime, command, @"C:\proj", gitBashExecutable: null);
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -94,9 +98,12 @@ public class ProcessLauncherTests
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
         var (fileName, arguments) = ProcessLauncher.BuildStartInfo(
-            RuntimeKind.GitBash, command, @"C:\proj");
+            RuntimeKind.GitBash,
+            command,
+            @"C:\proj",
+            @"C:\Program Files\Git\bin\bash.exe");
 
-        Assert.Equal("bash.exe", fileName);
+        Assert.Equal(@"C:\Program Files\Git\bin\bash.exe", fileName);
         Assert.Contains("-lic", arguments);
         Assert.Contains("opencode", arguments);
         Assert.Contains("--continue", arguments);
@@ -112,7 +119,7 @@ public class ProcessLauncherTests
         };
 
         var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            RuntimeKind.CommandPrompt, command, @"C:\Projects\Demo Folder");
+            RuntimeKind.CommandPrompt, command, @"C:\Projects\Demo Folder", gitBashExecutable: null);
 
         Assert.Contains("\"C:\\Program Files\\Agent\\agent.exe\"", arguments);
         Assert.Contains("^&", arguments);
@@ -149,7 +156,8 @@ public class ProcessLauncherTests
         var launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             runner,
-            new FakeProcessOutputRunner());
+            new FakeProcessOutputRunner(),
+            new FakeRuntimeExecutableLocator());
         launcher.SetRuntime(RuntimeKind.PowerShell);
         var command = new PluginCommand { Name = "launch", Executable = "opencode" };
 
@@ -172,15 +180,139 @@ public class ProcessLauncherTests
     }
 
     [Fact]
+    public void LaunchProcess_GitBash_UsesResolvedExecutablePath()
+    {
+        const string gitBashPath = @"C:\Program Files\Git\bin\bash.exe";
+        var runner = new FakeInteractiveProcessRunner();
+        var runtimeExecutables = new FakeRuntimeExecutableLocator();
+        runtimeExecutables.SetPath(RuntimeKind.GitBash, gitBashPath);
+        var launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            runner,
+            new FakeProcessOutputRunner(),
+            runtimeExecutables);
+        launcher.SetRuntime(RuntimeKind.GitBash);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+        var workingDirectory = CreateTempDirectory();
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.True(started);
+            var launch = Assert.Single(runner.Launches);
+            Assert.Equal(gitBashPath, launch.Runtime.ExecutablePath);
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    [Fact]
+    public void LaunchProcess_GitBashUnresolved_ReturnsFalseAndDoesNotStart()
+    {
+        var runner = new FakeInteractiveProcessRunner();
+        var logger = new RecordingLogger<ProcessLauncher>();
+        var launcher = new ProcessLauncher(
+            logger,
+            runner,
+            new FakeProcessOutputRunner(),
+            new FakeRuntimeExecutableLocator());
+        launcher.SetRuntime(RuntimeKind.GitBash);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+        var workingDirectory = CreateTempDirectory();
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.False(started);
+            Assert.Empty(runner.Launches);
+            var error = Assert.Single(logger.Entries, entry => entry.Level == LogLevel.Error);
+            Assert.Contains("Git for Windows", error.Message, StringComparison.Ordinal);
+            Assert.Contains("Lookup order", error.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    [Fact]
+    public void LaunchProcess_CommandPrompt_DoesNotConsultLocator()
+    {
+        var runtimeExecutables = new FakeRuntimeExecutableLocator();
+        var launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            new FakeInteractiveProcessRunner(),
+            new FakeProcessOutputRunner(),
+            runtimeExecutables);
+        launcher.SetRuntime(RuntimeKind.CommandPrompt);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+        var workingDirectory = CreateTempDirectory();
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.True(started);
+            Assert.Empty(runtimeExecutables.RequestedKinds);
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    private static string CreateTempDirectory() =>
+        Directory.CreateDirectory(
+            Path.Combine(Path.GetTempPath(), "clihub launch dir " + Guid.NewGuid().ToString("N"))).FullName;
+
+    private static void TryDeleteDirectory(string path)
+    {
+        try { Directory.Delete(path, recursive: true); } catch { }
+    }
+
+    [Fact]
     public void SetRuntime_ThenGetRuntime_ReturnsConfiguredRuntime()
     {
         var launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             new FakeInteractiveProcessRunner(),
-            new FakeProcessOutputRunner());
+            new FakeProcessOutputRunner(),
+            new FakeRuntimeExecutableLocator());
 
         launcher.SetRuntime(RuntimeKind.PowerShell);
 
         Assert.Equal(RuntimeKind.PowerShell, launcher.GetRuntime());
+    }
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<(LogLevel Level, string Message)> Entries { get; } = [];
+
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            this.Entries.Add((logLevel, formatter(state, exception)));
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static NullScope Instance { get; } = new();
+
+            public void Dispose()
+            {
+            }
+        }
     }
 }

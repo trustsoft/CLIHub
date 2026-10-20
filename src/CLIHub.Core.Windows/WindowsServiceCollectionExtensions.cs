@@ -6,14 +6,15 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 
 /// <summary>
-///   Registers the Windows platform infrastructure: process runners, agent process
-///   inspection, per-user startup registration, and the single-instance guard.
+///   Registers the Windows platform infrastructure: process runners, runtime executable resolution,
+///   agent process inspection, per-user startup registration, and the single-instance guard.
 /// </summary>
 public static class WindowsServiceCollectionExtensions
 {
     /// <summary>
     ///   Adds the Windows platform adapters as singletons. Combine with <c> AddClIHubCoreServices </c>,
-    ///   which registers the platform-neutral services and the process ports these adapters implement.
+    ///   which registers the platform-neutral services and the process ports these adapters implement,
+    ///   including runtime executable resolution.
     /// </summary>
     /// <param name="services"> The service collection to configure. </param>
     /// <returns> The configured service collection. </returns>
@@ -38,6 +39,9 @@ public static class WindowsServiceCollectionExtensions
         services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
         services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
         services.AddSingleton<ProcessLauncher>();
+        services.AddSingleton<IRuntimeExecutableLocator>(sp => new GitForWindowsRuntimeLocator(
+            new WindowsGitBashEnvironment(),
+            sp.GetRequiredService<ILogger<GitForWindowsRuntimeLocator>>()));
         services.AddSingleton<IAgentProcessInspector, WindowsAgentProcessInspector>();
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),

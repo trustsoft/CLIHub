@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Updates;
@@ -134,6 +135,7 @@ public class SettingsNavigationTests
                 Mock.Of<IAgentManagementSection>(),
                 Mock.Of<IProjectRegistrySection>(),
                 new AccentSelectionMemory(),
+                Mock.Of<IRuntimeExecutableLocator>(),
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

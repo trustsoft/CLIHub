@@ -18,19 +18,26 @@ public sealed class ProcessLauncher
     private readonly ILogger<ProcessLauncher> logger;
     private readonly IInteractiveProcessRunner interactiveRunner;
     private readonly IProcessOutputRunner outputRunner;
+    private readonly IRuntimeExecutableLocator runtimeExecutables;
     
     private RuntimeKind runtime = RuntimeKind.PowerShell;
 
     /// <summary>
     ///   Creates the launcher.
     /// </summary>
+    /// <param name="logger"> Logger for launch diagnostics. </param>
+    /// <param name="interactiveRunner"> Runner for interactive launches. </param>
+    /// <param name="outputRunner"> Runner for captured output. </param>
+    /// <param name="runtimeExecutables"> Resolves a configured runtime to its executable path. </param>
     public ProcessLauncher(ILogger<ProcessLauncher> logger,
                            IInteractiveProcessRunner interactiveRunner,
-                           IProcessOutputRunner outputRunner)
+                           IProcessOutputRunner outputRunner,
+                           IRuntimeExecutableLocator runtimeExecutables)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.interactiveRunner = interactiveRunner ?? throw new ArgumentNullException(nameof(interactiveRunner));
         this.outputRunner = outputRunner ?? throw new ArgumentNullException(nameof(outputRunner));
+        this.runtimeExecutables = runtimeExecutables ?? throw new ArgumentNullException(nameof(runtimeExecutables));
     }
 
     /// <summary>
@@ -81,8 +88,24 @@ public sealed class ProcessLauncher
 
         try
         {
+            // Resolve the executable before building the command line, so an unresolved runtime
+            // fails synchronously instead of starting an arbitrary PATH match.
+            string? gitBashExecutable = null;
+            if (this.runtime is RuntimeKind.GitBash)
+            {
+                gitBashExecutable = this.runtimeExecutables.Locate(RuntimeKind.GitBash);
+                if (gitBashExecutable is null)
+                {
+                    this.logger.LogError(
+                        "Git Bash is configured but no Git for Windows bash.exe was found. Lookup order: " +
+                        @"HKLM/HKCU SOFTWARE\GitForWindows InstallPath, well-known install locations " +
+                        @"(ProgramFiles, ProgramFilesX86, LocalAppData\Programs\Git), and PATH entries outside the Windows directory");
+                    return false;
+                }
+            }
+
             // Build command line for the runtime
-            var (fileName, arguments) = BuildStartInfo(this.runtime, command, workingDirectory);
+            var (fileName, arguments) = BuildStartInfo(this.runtime, command, workingDirectory, gitBashExecutable);
             
             // Create runtime info
             var runtimeType = this.runtime switch
@@ -194,11 +217,19 @@ public sealed class ProcessLauncher
     /// <summary>
     ///   Builds the process file name and arguments for the given runtime.
     /// </summary>
+    /// <param name="runtime"> The selected interactive runtime. </param>
+    /// <param name="command"> The plugin command. </param>
+    /// <param name="workingDirectory"> The command working directory. </param>
+    /// <param name="gitBashExecutable">
+    ///   The absolute Git for Windows <c> bash.exe </c> path for the Git Bash runtime; ignored by the
+    ///   other runtimes.
+    /// </param>
     internal static (string FileName, string Arguments) BuildStartInfo(RuntimeKind runtime,
                                                                        PluginCommand command,
-                                                                       string workingDirectory)
+                                                                       string workingDirectory,
+                                                                       string? gitBashExecutable)
     {
-        return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory);
+        return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory, gitBashExecutable);
     }
 
     /// <summary>

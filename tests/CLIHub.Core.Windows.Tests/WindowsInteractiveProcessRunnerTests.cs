@@ -56,8 +56,13 @@ public class WindowsInteractiveProcessRunnerTests
     [Fact]
     public async Task LaunchAsync_GitBash_ChildStartsInWorkingDirectory()
     {
-        if (!IsOnPath("bash.exe"))
+        var locator = new GitForWindowsRuntimeLocator(
+            new WindowsGitBashEnvironment(),
+            NullLogger<GitForWindowsRuntimeLocator>.Instance);
+        var resolvedGitBash = locator.Locate(RuntimeKind.GitBash);
+        if (resolvedGitBash is null)
         {
+            // Git for Windows is not installed on this machine; there is nothing to launch.
             return;
         }
 
@@ -68,26 +73,16 @@ public class WindowsInteractiveProcessRunnerTests
 
         try
         {
-            var runtime = new RuntimeInfo { ExecutablePath = "bash.exe", Type = RuntimeType.Cmd };
+            // The resolver contract is exercised end to end here: the resolved Git for Windows
+            // bash.exe is launched and the child starts in the requested folder. Because the
+            // executable comes from the resolver, the WSL launcher can no longer be selected.
+            var runtime = new RuntimeInfo { ExecutablePath = resolvedGitBash, Type = RuntimeType.Cmd };
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);
-
-            // Availability is not usability: the first bash.exe on PATH can be the WSL launcher
-            // in System32 with no installed distribution, which exits non-zero for any command.
-            // Skip unless this bash can actually run a command.
-            using (var setup = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
-            {
-                var probeExit = await runner.LaunchAsync("-c \"true\"", runtime, workingDirectory, setup.Token);
-                if (probeExit != 0)
-                {
-                    return;
-                }
-            }
 
             // The probe writes to a relative path, so the report lands in the working directory
             // the operating system gave the process no matter which bash flavor resolves: Git
-            // Bash reports POSIX paths under /c/..., a WSL bash under /mnt/c/.... Asserting that
-            // the report exists inside the requested folder and names it proves the child
-            // started there.
+            // Bash reports POSIX paths under /c/.... Asserting that the report exists inside the
+            // requested folder and names it proves the child started there.
             var arguments = "-c \"pwd > cwd-report.txt\"";
 
             using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(60));
@@ -96,6 +91,12 @@ public class WindowsInteractiveProcessRunnerTests
             Assert.Equal(0, exitCode);
             var reported = (await File.ReadAllTextAsync(reportPath)).Trim().Trim('"');
             Assert.Contains("clihub launch dir", reported);
+
+            var windowsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Windows)
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            Assert.False(
+                resolvedGitBash.StartsWith(windowsDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase),
+                $"The Git Bash runtime must not resolve inside the Windows directory: {resolvedGitBash}");
         }
         finally
         {
@@ -127,7 +128,8 @@ public class WindowsInteractiveProcessRunnerTests
         try
         {
             var command = new PluginCommand { Name = "resume", Executable = "probe-agent", Arguments = "--continue" };
-            var (_, arguments) = ProcessLauncher.BuildStartInfo(RuntimeKind.PowerShell, command, shimDir);
+            var (_, arguments) = ProcessLauncher.BuildStartInfo(
+                RuntimeKind.PowerShell, command, shimDir, gitBashExecutable: null);
             arguments = arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal);
 
             var runtime = new RuntimeInfo { ExecutablePath = "powershell.exe", Type = RuntimeType.PowerShell };
@@ -165,7 +167,8 @@ public class WindowsInteractiveProcessRunnerTests
             await File.WriteAllTextAsync(scriptPath, "@cd>\"%~dp0cwd-report.txt\"");
             var command = new PluginCommand { Name = "launch", Executable = scriptPath };
 
-            var (_, arguments) = ProcessLauncher.BuildStartInfo(runtimeKind, command, workingDirectory);
+            var (_, arguments) = ProcessLauncher.BuildStartInfo(
+                runtimeKind, command, workingDirectory, gitBashExecutable: null);
             arguments = makeHeadless(arguments);
 
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);

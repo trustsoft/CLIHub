@@ -2,6 +2,8 @@ namespace CLIHub.Core.Windows.Tests;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using Moq;
+
 using CLIHub.Core.Infrastructure.Processes;
 
 public class ProcessLauncherCaptureOutputTests
@@ -81,6 +83,7 @@ public class ProcessLauncherCaptureOutputTests
         return new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance),
-            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance));
+            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance),
+            Mock.Of<IRuntimeExecutableLocator>());
     }
 }

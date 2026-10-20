@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Launching;
 using CLIHub.Settings;
@@ -47,6 +48,7 @@ public class SettingsOperationLifetimeTests
             Mock.Of<IAgentManagementSection>(),
             Mock.Of<IProjectRegistrySection>(),
             new AccentSelectionMemory(),
+            Mock.Of<IRuntimeExecutableLocator>(),
             NullLogger<SettingsViewModel>.Instance);
 
         viewModel.CheckForUpdatesCommand.Execute(null);

@@ -50,6 +50,7 @@ public class StartupPreferencesApplierTests
         return new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance),
-            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance));
+            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance),
+            Mock.Of<IRuntimeExecutableLocator>());
     }
 }

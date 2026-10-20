@@ -20,6 +20,7 @@ public class WindowsServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IInteractiveProcessRunner>());
         Assert.NotNull(provider.GetRequiredService<IProcessOutputRunner>());
         Assert.NotNull(provider.GetRequiredService<ProcessLauncher>());
+        Assert.NotNull(provider.GetRequiredService<IRuntimeExecutableLocator>());
         Assert.NotNull(provider.GetRequiredService<IAgentProcessInspector>());
         Assert.NotNull(provider.GetRequiredService<IAgentCommandService>());
         Assert.NotNull(provider.GetRequiredService<IAgentVersionService>());

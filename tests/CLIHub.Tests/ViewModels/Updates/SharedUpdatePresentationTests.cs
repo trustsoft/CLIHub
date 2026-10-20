@@ -3,6 +3,7 @@ namespace CLIHub.Tests.ViewModels;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -137,6 +138,7 @@ public class SharedUpdatePresentationTests
             Mock.Of<IAgentManagementSection>(),
             Mock.Of<IProjectRegistrySection>(),
             new AccentSelectionMemory(),
+            Mock.Of<IRuntimeExecutableLocator>(),
             NullLogger<SettingsViewModel>.Instance);
     }
 

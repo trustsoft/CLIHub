@@ -24,7 +24,19 @@
                             <Image Width="16"
                                    Height="16"
                                    Source="{Binding Icon}"/>
-                            <TextBlock VerticalAlignment="Center" Text="{Binding Name}"/>
+                            <TextBlock VerticalAlignment="Center" Text="{Binding DisplayName}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                                                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                                                <Setter Property="AutomationProperties.HelpText"
+                                                        Value="Git for Windows was not found, so a Git Bash command cannot be launched."/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                         </controls:SpacedPanel>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>

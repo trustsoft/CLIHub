@@ -8,6 +8,7 @@ using Moq;
 
 using CLIHub.Controls;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Updates;
@@ -39,6 +40,103 @@ public class SettingsViewModelApplicationTests
         Assert.Equal("Sky", fixture.ViewModel.SelectedAccent.Name);
         Assert.False(fixture.ViewModel.SelectedAccent.IsCustom);
         Assert.Equal("Active: Sky", fixture.ViewModel.ActiveAccentLabel);
+    }
+
+    [Fact]
+    public void Load_GitBashUnresolved_MarksGitBashNotInstalled()
+    {
+        var fixture = new Fixture();
+        fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
+
+        fixture.ViewModel.Load();
+
+        var gitBash = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.GitBash);
+        Assert.False(gitBash.IsInstalled);
+        Assert.Contains("not installed", gitBash.DisplayName);
+        Assert.All(
+            fixture.ViewModel.Runtimes.Where(option => option.Kind != RuntimeKind.GitBash),
+            option => Assert.True(option.IsInstalled));
+        Assert.Equal(RuntimeKind.PowerShell, fixture.ViewModel.SelectedRuntime.Kind);
+    }
+
+    [Fact]
+    public void Load_GitBashResolved_LeavesAllRuntimesInstalled()
+    {
+        var fixture = new Fixture();
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.GitBash))
+            .Returns(@"C:\Program Files\Git\bin\bash.exe");
+
+        fixture.ViewModel.Load();
+
+        Assert.All(fixture.ViewModel.Runtimes, option => Assert.True(option.IsInstalled));
+        var gitBash = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.GitBash);
+        Assert.Equal("Git Bash", gitBash.DisplayName);
+        Assert.Equal(RuntimeKind.PowerShell, fixture.ViewModel.SelectedRuntime.Kind);
+    }
+
+    [Fact]
+    public void Load_GitBashStoredButUnavailable_PreservesSelectionAndSaves()
+    {
+        var fixture = new Fixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        {
+            DefaultRuntime = RuntimeKind.GitBash,
+            Hotkey = "Ctrl+Shift+A",
+            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
+            CheckForUpdatesOnStartup = true,
+            StartMinimized = true,
+            AccentColor = AccentPalette.DefaultHex
+        });
+        fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
+        fixture.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.GitBash));
+
+        fixture.ViewModel.Load();
+
+        Assert.Equal(RuntimeKind.GitBash, fixture.ViewModel.SelectedRuntime.Kind);
+        var gitBash = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.GitBash);
+        Assert.False(gitBash.IsInstalled);
+
+        fixture.ViewModel.SaveCommand.Execute(null);
+
+        Assert.Null(fixture.ViewModel.ValidationError);
+        Assert.Equal(RuntimeKind.GitBash, fixture.CapturedPreferences.DefaultRuntime);
+    }
+
+    [Fact]
+    public void Load_GitBashAvailabilityChanges_ReevaluatesAndPreservesSelection()
+    {
+        var fixture = new Fixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        {
+            DefaultRuntime = RuntimeKind.GitBash,
+            Hotkey = "Ctrl+Shift+A",
+            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
+            CheckForUpdatesOnStartup = true,
+            StartMinimized = true,
+            AccentColor = AccentPalette.DefaultHex
+        });
+        fixture.RuntimeExecutables
+            .SetupSequence(x => x.Locate(RuntimeKind.GitBash))
+            .Returns(@"C:\Program Files\Git\bin\bash.exe")
+            .Returns((string?)null);
+
+        fixture.ViewModel.Load();
+
+        var firstGitBash = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.GitBash);
+        Assert.True(firstGitBash.IsInstalled);
+        Assert.Equal(RuntimeKind.GitBash, fixture.ViewModel.SelectedRuntime.Kind);
+
+        fixture.ViewModel.Load();
+
+        var secondGitBash = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.GitBash);
+        Assert.False(secondGitBash.IsInstalled);
+        Assert.Equal(RuntimeKind.GitBash, fixture.ViewModel.SelectedRuntime.Kind);
+
+        // WPF can push null through the TwoWay SelectedItem binding when the rebuilt list replaces
+        // the selected instance; the last non-null selection must survive.
+        fixture.ViewModel.SelectedRuntime = null!;
+        Assert.Equal(RuntimeKind.GitBash, fixture.ViewModel.SelectedRuntime.Kind);
     }
 
     [Fact]
@@ -697,6 +795,7 @@ public class SettingsViewModelApplicationTests
         public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateWorkflow> Updates { get; } = new();
         public Mock<IReleaseNotesLauncher> ReleaseNotes { get; } = new();
+        public Mock<IRuntimeExecutableLocator> RuntimeExecutables { get; } = new();
         public Mock<Core.Scanning.IProjectScanner> Scanner { get; } = new();
         public Mock<IProjectDialogService> Dialogs { get; } = new();
         public AccentSelectionMemory AccentMemory { get; }
@@ -744,6 +843,7 @@ public class SettingsViewModelApplicationTests
                 Mock.Of<IAgentManagementSection>(),
                 Mock.Of<IProjectRegistrySection>(),
                 this.AccentMemory,
+                this.RuntimeExecutables.Object,
                 NullLogger<SettingsViewModel>.Instance);
         }
     }

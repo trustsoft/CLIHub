@@ -73,7 +73,8 @@ public class AgentManagementServiceTests
         var launcher = new ProcessLauncher(
             NullLogger<ProcessLauncher>.Instance,
             new FakeInteractiveProcessRunner(),
-            outputRunner);
+            outputRunner,
+            new FakeRuntimeExecutableLocator());
         var detection = new AgentDetectionService(preferences, time);
         var version = new AgentVersionService(launcher, preferences, NullLogger<AgentVersionService>.Instance, time);
         var service = CreateService(detection, version, new Mock<IAgentCommandService>().Object, Monitor([]));

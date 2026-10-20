@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Windows;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Converters;
@@ -147,7 +148,7 @@ public static class ServiceRegistration
 
     /// <summary>
     ///   Registers the settings window stack (application service, section view models, the
-    ///   settings view model with its twelve dependencies, and the window with its accessor)
+    ///   settings view model with its thirteen dependencies, and the window with its accessor)
     ///   plus the runtime preference-application chain (<c> PreferenceApplier </c> and its
     ///   process and accent preference targets) consumed at startup and on preference change.
     /// </summary>
@@ -172,6 +173,7 @@ public static class ServiceRegistration
             sp.GetRequiredService<IAgentManagementSection>(),
             sp.GetRequiredService<IProjectRegistrySection>(),
             sp.GetRequiredService<AccentSelectionMemory>(),
+            sp.GetRequiredService<IRuntimeExecutableLocator>(),
             sp.GetRequiredService<ILogger<SettingsViewModel>>()));
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
