@@ -36,6 +36,42 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: a small `AgentVersionText` helper with `IsKnown`/`Placeholder`.
 - Trigger: adding another agent surface or touching version display.
 
+### Runtime executable PATH-scan identity (Git Bash and PowerShell 7)
+
+- Severity: Low (design-accepted)
+- Evidence: the PATH steps of `WindowsRuntimeLocator.LocateGitBash`
+  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:260-295`) and `LocatePowerShell7` (`:335-361`)
+  accept the first matching executable outside the registry/well-known steps. For bash this may be a
+  non-Git-for-Windows flavor (Cygwin/MSYS); for pwsh it is deliberate, because Microsoft Store
+  installs surface as a WindowsApps execution alias. The `agent-commands` requirement wording
+  ("never an arbitrary `bash.exe` resolved from the operating system path") is stronger than what the
+  approved lookup order guarantees.
+- Proposed remedy: tighten the spec wording, or validate PATH hits against the distribution (Git:
+  `git.exe` sibling or version file; pwsh: keep as-is for Store alias support).
+- Trigger: a user report of a wrong bash/pwsh flavor, or any edit to the `agent-commands` spec.
+
+### Registry InstallPath precedence can shadow a valid install
+
+- Severity: Low
+- Evidence: `WindowsRuntimeEnvironment.ReadGitForWindowsInstallPath`
+  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:86-91`) returns the first non-empty value across
+  HKLM64 → HKLM32 → HKCU views, so a stale HKLM value shadows a valid HKCU/32-bit install; the class
+  has no direct unit test (only the fake seam exercises the locator).
+- Proposed remedy: collect every candidate and prefer one whose `bin\bash.exe` exists; add
+  real-registry layout tests.
+- Trigger: a report of Git Bash marked "not installed" while Git for Windows is installed.
+
+### Runtime integration tests pass silently when the runtime is absent
+
+- Severity: Low
+- Evidence: `LaunchAsync_GitBash_ChildStartsInWorkingDirectory` and
+  `LaunchAsync_PowerShell7_ChildStartsInWorkingDirectory`
+  (`tests/CLIHub.Core.Windows.Tests/WindowsInteractiveProcessRunnerTests.cs`) `return` early —
+  reported as passed, not skipped — when the runtime cannot be resolved on the machine.
+- Proposed remedy: use a skip mechanism (for example `SkippableFact`) so CI reporting distinguishes
+  "not run" from "passed".
+- Trigger: a CI coverage review or a hidden-regression investigation.
+
 ## Project domain
 
 ### AddProject returns the live instance
@@ -114,3 +150,18 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `RuntimeType.WindowsTerminal` if the settings model no longer needs it.
 - Trigger: the next dead-member sweep, or the Git Bash locator landing in the same registration file
   (found while refreshing `openspec/changes/git-bash-resolution`; explicitly out of its scope).
+
+## Test suite
+
+### Single unexplained test failure (not reproduced)
+
+- Severity: Low (watch item)
+- Evidence: during pipeline verification of `git-bash-resolution` on 2026-10-20, one run of
+  `CLIHub.Core.Tests` reported 1 failed / 553 passed and the failing test name was not captured.
+  Five subsequent runs were fully green, as were the implementer's and independent verifier's runs.
+  Likely candidates are the pre-existing timing-sensitive tests: `UpdateCheckerTests` and
+  `UpdateDownloaderTests` (100 ms cancellation windows) and `ProjectScanningServiceTests`
+  (stopwatch-bounded wait loop).
+- Proposed remedy: on recurrence, re-run with `--logger trx`, capture the test name, and stabilize the
+  offending timing window.
+- Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
