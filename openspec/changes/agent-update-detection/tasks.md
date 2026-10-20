@@ -177,12 +177,13 @@ dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj
 - [x] 8.2 `dotnet test CLIHub.sln`
 - [x] 8.3 `openspec validate --all` (must report zero failures)
 - [x] 8.4 `graphify update .`
-- [ ] 8.5 Manual live check (user-executed; leave unchecked here):
+- [x] 8.5 Manual live check (user-executed; leave unchecked here):
       launch `dotnet run --project src/CLIHub/CLIHub.csproj`, open Settings → CLI Agents.
       Confirm an outdated installed agent shows `installed → latest`; confirm an up-to-date
       agent shows no chip; disconnect the network, reopen the page, and confirm no chip, no
       crash, and an unchanged Update button. Restore the network, click Test on one agent, and
       confirm the chip refreshes for that agent only.
+      *(Confirmed by the user on 2026-10-20.)*
 
 ## Unit test matrix
 
