@@ -3,6 +3,18 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 0.9.9 — 2026-10-20
+
+### New
+- The CLI Agents page shows when a newer version of an installed agent is available, as installed → latest, based on where that agent is distributed; all six built-in agents are covered out of the box
+
+### Improved
+- Terminal Profiles marks the Git Bash and PowerShell 7 runtimes as not installed when they cannot be found on the machine, so a missing runtime is visible before you launch anything
+- Testing or re-detecting one agent no longer discards the cached detection and version data of the other agents
+
+### Fixed
+- The Git Bash runtime now always starts Git for Windows' own bash, resolved from the registry, known install folders, or PATH — never the WSL launcher; when Git Bash or PowerShell 7 cannot be resolved, launching fails with a clear, logged error instead of an arbitrary or missing executable
+
 ## 0.9.8 — 2026-10-19
 
 ### New

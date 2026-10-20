@@ -8,6 +8,27 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 0.9.9 — 2026-10-20
+
+### Added
+
+- Descriptor-declared update availability checking (`agent-update-detection`): an optional `updateCheck` block in plugin.json selects the npm or GitHub Releases channel, the latest version is compared numerically against the probed installed version, and the agents page shows an advisory `installed → latest` chip; results are cached per agent with the shared probe TTL, invalidated per agent on probes and update starts, and never gate the Update action; unknown source kinds are ignored at use time
+- Built-in descriptors declare their distribution channels: npm for opencode, cline, pi, openclaude, and qwen-code; GitHub Releases for GitHub Copilot CLI (`plugin-seeding`)
+- A runtime executable locator resolves Git Bash and PowerShell 7 to absolute paths — registry InstallPath, well-known locations, then PATH (outside the Windows directory for bash) — and Terminal Profiles marks Git Bash or PowerShell 7 as not installed when they cannot be resolved (`agent-commands`, `preferences-ui`)
+- A backlog for parked findings with evidence, remedies, and revisit triggers (`docs/backlog.md`)
+
+### Changed
+
+- Application registration is grouped into feature modules (`modularize-di-registration`)
+- The logo pipeline is unified behind `LogoOptions` and domain resolvers (`unify-logo-pipeline`)
+- Projects are read through enriched `ProjectModel` rows with detached reads (`introduce-project-model`)
+- The plugin catalog hands out detached copies, the descriptor model carries the cloned `updateCheck` block, and an agent's update action is gated only by that agent's own running processes (`harden-agent-plugin-boundaries`, `agent-ui`)
+- Probe and detection caches are invalidated per agent instead of clearing every agent's entries, and unreachable runtime command-line matching was removed from the process matcher (`harden-probe-caching-and-process-matching`, `agent-ui`)
+
+### Fixed
+
+- The Git Bash runtime no longer resolves to the WSL launcher or an arbitrary PATH `bash.exe`: launches use the resolved Git for Windows executable, and an unresolvable Git Bash or PowerShell 7 runtime fails with a logged lookup-order error (`agent-commands`)
+
 ## 0.9.8 — 2026-10-19
 
 ### Added
