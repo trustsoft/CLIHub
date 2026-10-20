@@ -66,6 +66,7 @@ Read only the documents relevant to the task:
 | Configuration and persistence | [`docs/architecture/configuration.md`](architecture/configuration.md) |
 | Plugin descriptor format | [`docs/architecture/plugins.md`](architecture/plugins.md) |
 | Project scanning and background watcher | [`docs/architecture/scanning.md`](architecture/scanning.md) |
+| Subagent model policy (which model per child task) | [`docs/agent-model-policy.md`](agent-model-policy.md) |
 | Process execution and agent safety | [`docs/architecture/processes.md`](architecture/processes.md) |
 | WPF resources and theming | [`docs/architecture/ui.md`](architecture/ui.md) |
 | Behavior contract | The relevant file under [`openspec/specs/`](../openspec/specs/) |

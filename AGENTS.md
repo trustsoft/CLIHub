@@ -34,6 +34,10 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 openspec validate --all
 ```
 
+## Subagent Model Policy
+
+See `docs/agent-model-policy.md` for which model each child task uses.
+
 ## Change, Commit, and Archive Policy
 
 - You MUST get explicit user approval before `git commit`, `git push`, `git reset`/`git revert` that rewrites
