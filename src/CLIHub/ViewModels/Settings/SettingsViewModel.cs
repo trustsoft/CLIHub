@@ -339,6 +339,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         new(AppTheme.Dark, "Dark Theme", "Windows 11 Fluent Dark (Recommended)"),
         new(AppTheme.Light, "Light Theme", "High contrast daylight profile"),
+        new(AppTheme.Blue, "Blue Theme", "Blue-tinted dark chrome with a baked-in blue accent"),
         new(AppTheme.System, "System Sync", "Follow Windows personalization state")
     };
 

@@ -16,6 +16,11 @@ public enum AppTheme
     Light,
 
     /// <summary>
+    ///   The blue-tinted dark theme.
+    /// </summary>
+    Blue,
+
+    /// <summary>
     ///   Follow the Windows personalization setting.
     /// </summary>
     System
@@ -35,6 +40,11 @@ public static class AppThemes
     ///   The token for the light theme.
     /// </summary>
     public const string LightToken = "light";
+
+    /// <summary>
+    ///   The token for the blue theme.
+    /// </summary>
+    public const string BlueToken = "blue";
 
     /// <summary>
     ///   The token for the system-synced theme.
@@ -64,6 +74,9 @@ public static class AppThemes
             case "light":
                 theme = AppTheme.Light;
                 return true;
+            case "blue":
+                theme = AppTheme.Blue;
+                return true;
             case "system":
                 theme = AppTheme.System;
                 return true;
@@ -87,6 +100,7 @@ public static class AppThemes
     public static string ToToken(AppTheme theme) => theme switch
     {
         AppTheme.Light => LightToken,
+        AppTheme.Blue => BlueToken,
         AppTheme.System => SystemToken,
         _ => DarkToken
     };

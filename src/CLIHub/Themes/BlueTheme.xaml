@@ -1,0 +1,56 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Blue palette. Defines the same keys as DarkTheme.xaml (the dark palette) so the application
+        can override the active palette at runtime for DynamicResource lookups. Merged on top of the
+        base palette only when the effective theme is blue. Blue-tinted dark chrome with the Blue
+        accent preset (#3B82F6) baked in instead of Sky; a stored non-default accent still overrides
+        the accent brushes live.
+    -->
+
+    <!-- Surfaces -->
+    <SolidColorBrush x:Key="ChromeBgBrush" Color="#FF232833"/>
+    <SolidColorBrush x:Key="StripBgBrush" Color="#24000000"/>
+    <SolidColorBrush x:Key="PopoverBgBrush" Color="#FF2A3140"/>
+    <!-- Open actions-menu surface: the Actions control's pressed tone (the pressed overlay over the
+         pane header), used as the open menu's background so the control and menu share one fill. -->
+    <SolidColorBrush x:Key="PopoverOpenBrush" Color="#FF1C212B"/>
+    <SolidColorBrush x:Key="HairlineBrush" Color="#0FFFFFFF"/>
+
+    <!-- Strokes and overlays -->
+    <SolidColorBrush x:Key="FieldStrokeBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="ActionsBorderBrush" Color="#FF353C4A"/>
+    <SolidColorBrush x:Key="ControlStrokeBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="ChipBgBrush" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="ChipStrokeBrush" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="ThumbBgBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
+    <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1A3B82F6"/>
+    <!-- 1px highlight line drawn across the top edge of the dark-chrome windows -->
+    <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
+    <!-- Thumb of the slim application-level scrollbar -->
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF"/>
+
+    <!-- Text -->
+    <!-- Primary text is one step off pure white (pure white reads harsh on the dark chrome);
+         it sits a hair above MenuItemBrush so list names keep a slight edge over menu entries. -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFE8EBF1"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#FF9BA4B5"/>
+    <SolidColorBrush x:Key="SectionLabelBrush" Color="#FF8D97A9"/>
+    <SolidColorBrush x:Key="BrandBrush" Color="#FFADB6C6"/>
+    <SolidColorBrush x:Key="IconBrush" Color="#FFD7DCE6"/>
+    <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE5E9F1"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5A6272"/>
+
+    <!-- Accent -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#FF3B82F6"/>
+
+    <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFD98282"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF4ADE80"/>
+    <SolidColorBrush x:Key="SuccessSelectionBrush" Color="#1F4ADE80"/>
+
+</ResourceDictionary>

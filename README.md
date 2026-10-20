@@ -43,7 +43,7 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 - Host/project availability detection, version display, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+Space` by default) and a single-instance tray application.
 - PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection.
-- Chromeless resizable launch window, Settings, and What's New windows with a shared Dark/Light theme.
+- Chromeless resizable launch window, Settings, and What's New windows with a shared Dark/Light/Blue theme.
 - Startup update checks, download-and-restart updates, release notes, and Windows autostart.
 - Agent update protection while a matching registered agent process is running.
 - Structured file logging with configurable level and seven-day retention.

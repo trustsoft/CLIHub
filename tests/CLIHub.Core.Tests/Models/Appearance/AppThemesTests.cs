@@ -16,6 +16,7 @@ public class AppThemesTests
     [Theory]
     [InlineData("Dark", AppTheme.Dark)]
     [InlineData("light", AppTheme.Light)]
+    [InlineData("Blue", AppTheme.Blue)]
     [InlineData("System", AppTheme.System)]
     public void Parse_KnownTokens(string value, AppTheme expected)
     {

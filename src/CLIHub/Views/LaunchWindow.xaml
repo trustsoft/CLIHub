@@ -32,7 +32,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <!--
-                ScrollThumbBrush is provided by the application-level palette (LaunchTheme.xaml /
+                ScrollThumbBrush is provided by the application-level palette (DarkTheme.xaml /
                 LightTheme.xaml) and reached here through the DynamicResource lookup in the
                 application-level ScrollBar style; no window-scoped override is needed.
             -->

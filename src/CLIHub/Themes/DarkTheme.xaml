@@ -2,8 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Launch window palette. Colours only: the palette is shared application-wide, while the
-        launch window's styles live in LaunchWindowStyles.xaml so other windows keep their own look.
+        Dark palette. Colours only: the palette is shared application-wide, while the launch
+        window's styles live in LaunchWindowStyles.xaml so other windows keep their own look.
         Values follow the approved popup design (the mockup and the reference implementation).
     -->
 

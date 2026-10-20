@@ -41,6 +41,9 @@
                                             <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
                                                 <Setter Property="Background" Value="{StaticResource ThemePreviewSystemBrush}"/>
                                             </DataTrigger>
+                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Blue}">
+                                                <Setter Property="Background" Value="{StaticResource ThemePreviewBlueBrush}"/>
+                                            </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
@@ -73,6 +76,9 @@
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
                                                             <Setter Property="Fill" Value="{StaticResource ThemePreviewBarLightBrush}"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Blue}">
+                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarBlueBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

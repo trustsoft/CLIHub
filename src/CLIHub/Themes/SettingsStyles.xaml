@@ -359,9 +359,10 @@
     </Style>
 
     <!-- Theme picker: preview cards in one equal-width row. The preview palette below is theme
-         data, not application chrome: all three samples must read the same under either theme. -->
+         data, not application chrome: all four samples must read the same under either theme. -->
     <SolidColorBrush x:Key="ThemePreviewDarkBrush" Color="#FF0A0C14"/>
     <SolidColorBrush x:Key="ThemePreviewLightBrush" Color="#FFFFFFFF"/>
+    <SolidColorBrush x:Key="ThemePreviewBlueBrush" Color="#FF232833"/>
     <LinearGradientBrush x:Key="ThemePreviewSystemBrush" StartPoint="0,0" EndPoint="1,0">
         <GradientStop Offset="0" Color="#FF0A0C14"/>
         <GradientStop Offset="0.4" Color="#FF0A0C14"/>
@@ -372,6 +373,7 @@
     <SolidColorBrush x:Key="ThemePreviewDotMutedBrush" Color="#FF8B8F99"/>
     <SolidColorBrush x:Key="ThemePreviewBarDarkBrush" Color="#FF4B5160"/>
     <SolidColorBrush x:Key="ThemePreviewBarLightBrush" Color="#FFB6BAC4"/>
+    <SolidColorBrush x:Key="ThemePreviewBarBlueBrush" Color="#FF3E4C66"/>
 
     <Style x:Key="ThemeOptionItem" TargetType="ListBoxItem">
         <Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>

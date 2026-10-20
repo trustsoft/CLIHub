@@ -10,7 +10,7 @@ Window inventory and MVVM responsibilities: [../architecture.md](../architecture
 
 ## XAML Themes and Styles Recipe
 
-Layering: `LaunchTheme.xaml` (dark palette) and `LightTheme.xaml` (light palette, merged at startup when the light theme is active) + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
+Layering: `DarkTheme.xaml` (dark base palette, merged by App.xaml) with `LightTheme.xaml` and `BlueTheme.xaml` merged on top at startup through the `ThemeCatalog` registry + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
 
 To add a window:
 1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the palette and sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries).
@@ -63,9 +63,11 @@ catalog owns long-lived row instances. The snapshot (not live) semantics and the
 split are rationale-level detail: see the `introduce-project-model` change's `design.md` under
 `openspec/changes/` (archived under `openspec/changes/archive/` once completed).
 
-The dark and light palettes (`LaunchTheme.xaml`, `LightTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and `App.xaml` merges the light palette on top of the dark base at startup when the effective theme is light.
+The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and startup merges the palette registered in `ThemeCatalog.ResolvePalettePath` for the stored theme on top of the dark base (a null resolution keeps the base).
 
-To add another palette (chosen at startup):
-1. Copy `LaunchTheme.xaml` to a new file and define the same brush keys with new colors.
-2. Merge it from `App.xaml` when the corresponding theme is active.
+To add another theme (chosen at startup):
+1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
+2. Add the `AppTheme` member and its token in Core, then one arm to `ThemeCatalog.ResolvePalettePath` (`src/CLIHub/Themes/ThemeCatalog.cs`) returning the new palette path.
+3. Add one `AppThemeOptions` entry in `SettingsViewModel` (order: Dark, Light, Blue, then System) plus the option's preview brushes, and the preview `DataTrigger`s on the Appearance page.
+4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
 Switching the palette without a restart is not supported; a theme change takes effect on the next start.

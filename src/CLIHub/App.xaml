@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Palette only: shared brushes, no implicit styles, so other windows are unaffected. -->
-                <ResourceDictionary Source="/Themes/LaunchTheme.xaml"/>
+                <ResourceDictionary Source="/Themes/DarkTheme.xaml"/>
                 <!-- Shared keyed styles (button templates, typography, DarkToolTip). -->
                 <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <!--
