@@ -63,7 +63,7 @@ The system SHALL execute an agent command using the current project's folder as 
 
 ### Requirement: Terminal vs captured execution
 
-The system SHALL run interactive commands in the configured runtime and capture the output of the version command.
+The system SHALL run interactive commands in the configured runtime and capture the output of the version command. When Git Bash is the configured runtime, the interactive command SHALL start a Git for Windows `bash.exe` and never an arbitrary `bash.exe` resolved from the operating system path. When PowerShell 7 is the configured runtime, the interactive command SHALL start a resolved PowerShell 7 `pwsh.exe` in the same way rather than a bare name.
 
 #### Scenario: Interactive command opens a terminal
 
@@ -95,6 +95,28 @@ The system SHALL run interactive commands in the configured runtime and capture 
 - **WHEN** an interactive command is built for PowerShell or PowerShell 7
 - **THEN** the encoded script contains exactly one call operator followed by the quoted executable invocation
 - **AND** the script is not rejected by the runtime as a parse error
+
+#### Scenario: Git Bash resolves to Git for Windows
+
+- **WHEN** the configured runtime is Git Bash and an interactive command is launched
+- **THEN** the launched executable is the absolute path of a Git for Windows `bash.exe`, resolved from the `GitForWindows` registry `InstallPath`, a well-known install location, or a PATH entry outside the Windows directory, in that order
+- **AND** the resolution happens at launch time, so a changed installation is reflected on the next launch
+
+#### Scenario: The WSL launcher is never used for Git Bash
+
+- **WHEN** the first `bash.exe` on PATH is the WSL launcher in the Windows directory
+- **THEN** that launcher is not used for the Git Bash runtime
+- **AND** the launch either starts a resolved Git for Windows `bash.exe` or fails as the next scenario describes
+
+#### Scenario: Unresolvable Git Bash fails safely
+
+- **WHEN** the Git Bash runtime is configured but no Git for Windows `bash.exe` can be resolved
+- **THEN** the launch fails with the existing failed-command result, a clear error naming Git for Windows and the lookup order is logged, and no terminal process starts
+
+#### Scenario: Unresolvable PowerShell 7 fails safely
+
+- **WHEN** the PowerShell 7 runtime is configured but no `pwsh.exe` can be resolved
+- **THEN** the launch fails with the existing failed-command result, a clear error naming PowerShell 7 and the lookup order is logged, and no terminal process starts
 
 ### Requirement: Command result reporting
 
