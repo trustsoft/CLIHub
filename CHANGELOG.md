@@ -8,6 +8,12 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## Unreleased
+
+### Fixed
+
+- Opening Settings no longer stalls for many seconds while the CLI Agents page loads: the running-agent check that gates each card's Update action now performs a single process enumeration per load, and the process inspector pre-filters by the registered launch executable names before reading process details — no change to card behavior (`fix-settings-open-delay`)
+
 ## 0.9.9 — 2026-10-20
 
 ### Added

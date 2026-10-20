@@ -14,7 +14,9 @@ The Core process subsystem protects agent updates from running against an active
 
 - `WindowsAgentProcessInspector` enumerates accessible Windows processes and records the process ID,
   executable path, and start time. System processes with low process IDs and processes whose executable
-  path cannot be read are skipped.
+  path cannot be read are skipped. Processes are pre-filtered by name against the registered launch
+  executables before their details are read — the process name is assumed to equal the executable
+  image's file name without extension, so no name-based match can be dropped by the filter.
 - `AgentProcessMatcher` matches a process to a plugin by the launch executable's file name, ignoring
   case. Agents launched through a command shim into a shared runtime — for example an npm package that
   runs as `node.exe` — are not matched.

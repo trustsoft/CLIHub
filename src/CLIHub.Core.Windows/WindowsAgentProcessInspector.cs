@@ -25,8 +25,10 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<AgentProcessInstance> GetRunningProcesses()
+    public IReadOnlyList<AgentProcessInstance> GetRunningProcesses(IReadOnlySet<string> candidateProcessNames)
     {
+        ArgumentNullException.ThrowIfNull(candidateProcessNames);
+
         var instances = new List<AgentProcessInstance>();
 
         try
@@ -39,6 +41,17 @@ public sealed class WindowsAgentProcessInspector : IAgentProcessInspector
                 {
                     // Skip system processes (PID < 100 typically)
                     if (process.Id < 100)
+                    {
+                        continue;
+                    }
+
+                    // Candidate-name pre-filter: ProcessName arrives with the snapshot as the image
+                    // file name without extension, so processes that cannot match any launch
+                    // executable are skipped before the expensive MainModule/StartTime reads.
+                    // Assumption A1 (fix-settings-open-delay design): ProcessName equals
+                    // GetFileNameWithoutExtension(MainModule.FileName) for every process whose
+                    // main module is accessible.
+                    if (!candidateProcessNames.Contains(process.ProcessName))
                     {
                         continue;
                     }

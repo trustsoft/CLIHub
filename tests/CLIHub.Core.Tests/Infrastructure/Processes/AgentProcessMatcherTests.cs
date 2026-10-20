@@ -91,6 +91,71 @@ public class AgentProcessMatcherTests
         Assert.False(result);
     }
 
+    [Fact]
+    public void GetCandidateProcessNames_CoversEveryNameTheMatcherAccepts()
+    {
+        // Arrange
+        var plugins = new[]
+        {
+            CreatePlugin("opencode", "opencode.exe"),
+            CreatePlugin("cline", @"C:\tools\cline.cmd"),
+            CreatePlugin("pi", "pi"),
+            PluginWithoutLaunchCommand()
+        };
+
+        // Act
+        var candidates = this.matcher.GetCandidateProcessNames(plugins);
+
+        // Assert — every process the matcher would accept has its name in the candidate set.
+        foreach (var plugin in plugins)
+        {
+            var executableName = Path.GetFileNameWithoutExtension(plugin.Commands?.Launch?.Executable ?? string.Empty);
+            var process = CreateProcess($@"C:\somewhere\{executableName}.exe");
+
+            if (this.matcher.IsMatch(process, plugin))
+            {
+                Assert.Contains(executableName, candidates);
+            }
+        }
+    }
+
+    [Fact]
+    public void GetCandidateProcessNames_StripsExtensionAndIgnoresCase()
+    {
+        // Arrange
+        var plugins = new[]
+        {
+            CreatePlugin("a", "TestAgent.exe"),
+            CreatePlugin("b", "testagent"),
+            CreatePlugin("c", "Other.cmd")
+        };
+
+        // Act
+        var candidates = this.matcher.GetCandidateProcessNames(plugins);
+
+        // Assert — extensions stripped; compared ignoring case, so case variants collapse to one
+        // entry (the set keeps the first-seen casing; membership is case-insensitive).
+        Assert.Equal(2, candidates.Count);
+        Assert.Contains("testagent", candidates);
+        Assert.Contains("TESTAGENT", candidates);
+        Assert.Contains("other", candidates);
+        Assert.DoesNotContain("testagent.exe", candidates);
+        Assert.DoesNotContain("other.cmd", candidates);
+    }
+
+    [Fact]
+    public void GetCandidateProcessNames_PluginWithoutLaunchCommand_ContributesNothing()
+    {
+        // Arrange
+        var plugins = new[] { PluginWithoutLaunchCommand() };
+
+        // Act
+        var candidates = this.matcher.GetCandidateProcessNames(plugins);
+
+        // Assert
+        Assert.Empty(candidates);
+    }
+
     private static Plugin CreatePlugin(string id, string executable)
     {
         return new Plugin
@@ -101,6 +166,16 @@ public class AgentProcessMatcherTests
             {
                 Launch = new PluginCommand { Executable = executable }
             }
+        };
+    }
+
+    private static Plugin PluginWithoutLaunchCommand()
+    {
+        return new Plugin
+        {
+            Id = "no-launch",
+            Name = "No Launch",
+            Commands = new AgentCommands()
         };
     }
 

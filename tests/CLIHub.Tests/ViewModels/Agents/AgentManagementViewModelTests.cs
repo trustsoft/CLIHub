@@ -47,7 +47,7 @@ public class AgentManagementViewModelTests
         if (processInspector is null)
         {
             processInspector = new Mock<IAgentProcessInspector>();
-            processInspector.Setup(x => x.GetRunningProcesses()).Returns([]);
+            processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
         }
 
         var processMonitor = new AgentProcessMonitor(
@@ -71,7 +71,7 @@ public class AgentManagementViewModelTests
     private static Mock<IAgentProcessInspector> Processes(params AgentProcessInstance[] processes)
     {
         var inspector = new Mock<IAgentProcessInspector>();
-        inspector.Setup(x => x.GetRunningProcesses()).Returns(processes);
+        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns(processes);
         return inspector;
     }
 
@@ -349,6 +349,47 @@ public class AgentManagementViewModelTests
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
         Assert.All(viewModel.Cards, card => Assert.Null(card.Message));
+    }
+
+    [Fact]
+    public void Load_MultipleUpdateDeclaringPlugins_EnumeratesProcessesOnce()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var b = Launchable("b", withUpdate: true);
+        var c = Launchable("c", withUpdate: true);
+        var processInspector = new Mock<IAgentProcessInspector>();
+        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+        var viewModel = CreateViewModel(
+            [a, b, c],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            processInspector);
+
+        viewModel.Load(null);
+
+        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()), Times.Once);
+    }
+
+    [Fact]
+    public void Load_NoPluginDeclaresUpdate_DoesNotEnumerateProcesses()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var processInspector = new Mock<IAgentProcessInspector>();
+        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            processInspector);
+
+        viewModel.Load(null);
+
+        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()), Times.Never);
     }
 
     [Fact]

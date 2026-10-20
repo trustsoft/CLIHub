@@ -178,15 +178,25 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         this.Cards.Clear();
 
-        foreach (var plugin in this.catalog.GetAllPlugins())
+        var plugins = this.catalog.GetAllPlugins();
+
+        // Availability is a Load()-time snapshot over the process state (the page load is the
+        // refresh trigger). The execution-time block itself stays in AgentManagementService.
+        // One enumeration feeds every card: grouping the single result by plugin id yields exactly
+        // the per-plugin partitions (first-match attribution, one match per process), so each card
+        // sees the same running-agent state a per-plugin call would report.
+        var anyDeclaresUpdate = plugins.Any(plugin => plugin.Commands?.Get(AgentCommandKind.Update) is not null);
+        ILookup<string, RunningAgent>? runningAgentsByPlugin = anyDeclaresUpdate
+            ? this.processMonitor.GetRunningAgents().ToLookup(agent => agent.Plugin.Id)
+            : null;
+
+        foreach (var plugin in plugins)
         {
             var isInstalled = this.detection.IsInstalledInSystem(plugin);
 
-            // Availability is a Load()-time snapshot over the process state (the page load is the
-            // refresh trigger). The execution-time block itself stays in AgentManagementService.
             var declaresUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
-            IReadOnlyList<RunningAgent> runningAgents = declaresUpdate
-                ? this.processMonitor.GetRunningAgents(plugin)
+            IReadOnlyList<RunningAgent> runningAgents = declaresUpdate && runningAgentsByPlugin is not null
+                ? runningAgentsByPlugin[plugin.Id].ToList()
                 : [];
             var blockedNames = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
 

@@ -28,7 +28,7 @@ public class AgentManagementServiceTests
     private static AgentProcessMonitor Monitor(Plugin[] plugins, params AgentProcessInstance[] processes)
     {
         var inspector = new Mock<IAgentProcessInspector>();
-        inspector.Setup(x => x.GetRunningProcesses()).Returns(processes);
+        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns(processes);
 
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);

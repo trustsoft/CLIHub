@@ -32,7 +32,7 @@ public class AgentProcessMonitorTests
     public void HasRunningAgents_NoProcesses_ReturnsFalse()
     {
         // Arrange
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([]);
 
         // Act
@@ -49,7 +49,7 @@ public class AgentProcessMonitorTests
         var plugin = CreatePlugin("opencode", "opencode");
         var process = CreateProcess(@"C:\Windows\System32\notepad.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
 
         // Act
@@ -66,7 +66,7 @@ public class AgentProcessMonitorTests
         var plugin = CreatePlugin("opencode", "opencode");
         var process = CreateProcess(@"C:\tools\opencode.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
 
         // Act
@@ -84,7 +84,7 @@ public class AgentProcessMonitorTests
         var pi = CreatePlugin("pi", "pi");
         var process = CreateProcess(@"C:\tools\opencode.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
 
         // Act
@@ -102,7 +102,7 @@ public class AgentProcessMonitorTests
         var pi = CreatePlugin("pi", "pi");
         var process = CreateProcess(@"C:\tools\opencode.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
 
         // Act
@@ -121,7 +121,7 @@ public class AgentProcessMonitorTests
         var opencodeProcess = CreateProcess(@"C:\tools\opencode.exe");
         var piProcess = CreateProcess(@"C:\tools\pi.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([opencodeProcess, piProcess]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([opencodeProcess, piProcess]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, pi]);
 
         // Act
@@ -136,7 +136,7 @@ public class AgentProcessMonitorTests
     public void GetRunningAgents_NoProcesses_ReturnsEmpty()
     {
         // Arrange
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([]);
 
         // Act
@@ -153,7 +153,7 @@ public class AgentProcessMonitorTests
         var plugin = CreatePlugin("opencode", "opencode");
         var process = CreateProcess(@"C:\tools\opencode.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
 
         // Act
@@ -174,7 +174,7 @@ public class AgentProcessMonitorTests
         var process1 = CreateProcess(@"C:\tools\opencode.exe");
         var process2 = CreateProcess(@"C:\tools\cline.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([process1, process2]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process1, process2]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin1, plugin2]);
 
         // Act
@@ -194,7 +194,7 @@ public class AgentProcessMonitorTests
         var matchingProcess = CreateProcess(@"C:\tools\opencode.exe");
         var nonMatchingProcess = CreateProcess(@"C:\Windows\System32\notepad.exe");
 
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Returns([matchingProcess, nonMatchingProcess]);
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([matchingProcess, nonMatchingProcess]);
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
 
         // Act
@@ -209,7 +209,7 @@ public class AgentProcessMonitorTests
     public void GetRunningAgents_InspectorThrows_ReturnsEmpty()
     {
         // Arrange
-        this.mockInspector.Setup(x => x.GetRunningProcesses()).Throws<InvalidOperationException>();
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Throws<InvalidOperationException>();
         this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([]);
 
         // Act
@@ -217,6 +217,29 @@ public class AgentProcessMonitorTests
 
         // Assert
         Assert.Empty(result);
+    }
+
+    [Fact]
+    public void GetRunningAgents_PassesLaunchExecutableNamesToInspector()
+    {
+        // Arrange
+        var opencode = CreatePlugin("opencode", "opencode");
+        var cline = CreatePlugin("cline", "cline.cmd");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([process]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([opencode, cline]);
+
+        // Act
+        var result = this.monitor.GetRunningAgents();
+
+        // Assert — the candidate set derives from the catalog's launch executables (extension
+        // stripped), so the inspector pre-filter and the matcher share one comparison basis.
+        this.mockInspector.Verify(
+            x => x.GetRunningProcesses(It.Is<IReadOnlySet<string>>(names => names.Contains("opencode") && names.Contains("cline"))),
+            Times.Once);
+        Assert.Single(result);
+        Assert.Equal("opencode", result[0].Plugin.Id);
     }
 
     private static Plugin CreatePlugin(string id, string executable)

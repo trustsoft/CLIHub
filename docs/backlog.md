@@ -6,6 +6,47 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent and process domain
 
+### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus
+
+- Severity: Low (test reliability only; pre-existing, unrelated to fix-settings-open-delay)
+- Evidence: failed 1 of 3 full-solution runs under parallel load during fix-settings-open-delay
+  verification (2026-10-20); green in isolation and on re-run. The test races `Start()`'s background
+  scan against `Stop()` — it waits only for watcher creation before stopping, so the status can still
+  read `Idle` when `NotConfigured` is asserted (`tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs:120-133`).
+- Proposed remedy: wait for the scan to settle (idle/not-configured transition) before asserting, or
+  expose a deterministic completion signal from `ProjectScanningService.Stop`.
+- Trigger: next red CI/dev run of this test, or any work touching project scanning.
+
+### Async blocked-state population on the agents page (design D2 of fix-settings-open-delay)
+
+- Severity: Medium (perceived-latency judgment call)
+- Evidence: `AgentManagementViewModel.Load` still runs the running-agent enumeration synchronously
+  on the UI thread; after `fix-settings-open-delay` the pass is cheap (one snapshot plus the
+  candidate-name pre-filter) but not free, and any future cost added to that path lands directly
+  on Settings open.
+- Proposed remedy: build cards with `CanUpdate = declaresUpdate` and populate the blocked state
+  through a fire-and-forget pass when the enumeration completes — the `PopulateVersions` shape
+  with a placeholder treatment for the Update action. Requires a **MODIFIED `agent-ui` spec delta
+  with preserved scenario names**: "Update blocked by a running agent" is state-based, so the
+  transient where a card still shows Update available while its agent runs needs explicit
+  blessing; `SettingsWindow.ShowSettings` (load-before-show) would need restructuring too.
+- Trigger: Settings open still perceived slow after the pre-filter, or a request for an async
+  Settings load.
+- Decision recorded in `openspec/changes/fix-settings-open-delay/design.md` (D2, rejected there).
+
+### Monitor-level running-agent cache
+
+- Severity: Low (performance polish with a safety risk if done naively)
+- Evidence: `AgentProcessMonitor.GetRunningAgents` enumerates on every call — once per Settings
+  load, on every `CommandManager` requery of the launch window Update command
+  (`WindowActionCoordinator.CanExecuteUpdate`), and in the execution-time gate
+  (`AgentManagementService.UpdateAsync`). After the candidate-name pre-filter each pass is one
+  snapshot plus a handful of candidate reads, so the residual cost is low.
+- Proposed remedy: only with an explicit invalidation story: a TTL cache would make the
+  execution-time safety gate stale (an agent started inside the TTL would not block an update),
+  which the `agent-ui`/`preferences-ui` blocked-state scenarios do not permit.
+- Trigger: profiling shows the filtered enumeration as a hot spot on a requery path.
+
 ### Runtime-hosted agent blocking (Option B)
 
 - Severity: Medium (product gap)

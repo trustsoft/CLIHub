@@ -56,6 +56,11 @@ public sealed class AgentProcessMonitor
     /// <summary>
     ///   Gets the list of currently running agents with their process details.
     /// </summary>
+    /// <remarks>
+    ///   Process enumeration is pre-filtered to the candidate names derived from the catalog's
+    ///   launch executables (see <see cref="AgentProcessMatcher.GetCandidateProcessNames" />);
+    ///   processes whose name cannot match any launch executable are never inspected.
+    /// </remarks>
     /// <returns> List of running agents. Empty if none are running. </returns>
     public IReadOnlyList<RunningAgent> GetRunningAgents()
     {
@@ -63,8 +68,9 @@ public sealed class AgentProcessMonitor
 
         try
         {
-            var processes = this.processInspector.GetRunningProcesses();
             var plugins = this.pluginCatalog.GetAllPlugins();
+            var candidateProcessNames = this.processMatcher.GetCandidateProcessNames(plugins);
+            var processes = this.processInspector.GetRunningProcesses(candidateProcessNames);
 
             foreach (var process in processes)
             {

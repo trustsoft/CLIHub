@@ -20,6 +20,42 @@ public sealed class AgentProcessMatcher
     }
 
     /// <summary>
+    ///   Derives the candidate process names for the given plugins: the launch executable's file
+    ///   name without extension, which is exactly the comparison basis <see cref="IsMatch" /> uses.
+    /// </summary>
+    /// <remarks>
+    ///   <para>
+    ///     The process inspector port pre-filters processes by this set before reading expensive
+    ///     per-process details such as the main module. A process can match a plugin only when its
+    ///     executable file name equals one of these candidates, so the filter cannot drop a match
+    ///     the matcher would make.
+    ///   </para>
+    /// </remarks>
+    /// <param name="plugins"> The plugins whose launch executables define the candidates. </param>
+    /// <returns>
+    ///   Candidate process names compared ordinally, ignoring case. Plugins without a launch
+    ///   command contribute nothing.
+    /// </returns>
+    public IReadOnlySet<string> GetCandidateProcessNames(IEnumerable<Plugin> plugins)
+    {
+        ArgumentNullException.ThrowIfNull(plugins);
+
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var plugin in plugins)
+        {
+            if (plugin.Commands?.Launch is null)
+            {
+                continue;
+            }
+
+            names.Add(Path.GetFileNameWithoutExtension(plugin.Commands.Launch.Executable));
+        }
+
+        return names;
+    }
+
+    /// <summary>
     ///   Attempts to match a process instance to a plugin.
     /// </summary>
     /// <remarks>
