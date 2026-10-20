@@ -1,10 +1,10 @@
-# agent-commands (partial): Git Bash runtime resolution
+# agent-commands (partial): Git Bash and PowerShell 7 runtime resolution
 
 ## MODIFIED Requirements
 
 ### Requirement: Terminal vs captured execution
 
-The system SHALL run interactive commands in the configured runtime and capture the output of the version command. When Git Bash is the configured runtime, the interactive command SHALL start a Git for Windows `bash.exe` and never an arbitrary `bash.exe` resolved from the operating system path.
+The system SHALL run interactive commands in the configured runtime and capture the output of the version command. When Git Bash is the configured runtime, the interactive command SHALL start a Git for Windows `bash.exe` and never an arbitrary `bash.exe` resolved from the operating system path. When PowerShell 7 is the configured runtime, the interactive command SHALL start a resolved PowerShell 7 `pwsh.exe` in the same way rather than a bare name.
 
 #### Scenario: Interactive command opens a terminal
 
@@ -53,3 +53,8 @@ The system SHALL run interactive commands in the configured runtime and capture 
 
 - **WHEN** the Git Bash runtime is configured but no Git for Windows `bash.exe` can be resolved
 - **THEN** the launch fails with the existing failed-command result, a clear error naming Git for Windows and the lookup order is logged, and no terminal process starts
+
+#### Scenario: Unresolvable PowerShell 7 fails safely
+
+- **WHEN** the PowerShell 7 runtime is configured but no `pwsh.exe` can be resolved
+- **THEN** the launch fails with the existing failed-command result, a clear error naming PowerShell 7 and the lookup order is logged, and no terminal process starts

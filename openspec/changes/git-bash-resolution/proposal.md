@@ -37,6 +37,19 @@ runtime can be identified deterministically instead of left to PATH order.
   `AgentCommandResult(false, …, "Failed to launch <agent>")`) with a clear error logged; no terminal opens.
 - The Terminal Profiles settings page marks Git Bash as not installed when resolution fails. The option
   stays selectable and the stored value stays shown.
+- **PowerShell 7 gets the same availability treatment** (added 2026-10-20 before archiving):
+  `ProcessLauncher` resolves `pwsh.exe` before building the command line, in this order, first hit wins:
+  1. registry `HKLM\SOFTWARE\Microsoft\PowerShellCore` value `InstallPath` — the directory containing
+     `pwsh.exe` (64-bit view, then 32-bit view; no `HKCU`, because the MSI is machine-wide and per-user
+     installs surface through PATH);
+  2. well-known `%ProgramFiles%\PowerShell\7\pwsh.exe`;
+  3. PATH scan taking the first `pwsh.exe` — no Windows-directory exclusion, because `pwsh.exe` has no
+     WSL-launcher-shaped namesake and Microsoft Store installs surface as an app-execution alias in
+     `%LOCALAPPDATA%\Microsoft\WindowsApps` that the scan must find.
+
+  An unresolved PowerShell 7 fails the launch synchronously with a logged lookup-order error, and the
+  Terminal Profiles page marks PowerShell 7 as not installed (label-only, selection preserved).
+  `cmd.exe` and `powershell.exe` stay bare-name by design.
 - Tests: locator unit tests, `ProcessLauncher` resolution/contract tests, and the Windows test that
   currently probes PATH for a working `bash` switches to the resolver.
 
@@ -44,20 +57,22 @@ runtime can be identified deterministically instead of left to PATH order.
 
 - Affected specs:
   - `agent-commands` (MODIFIED: *Terminal vs captured execution* — launch-time resolution and safe failure)
-  - `preferences-ui` (MODIFIED: *Terminal runtime options* — Git Bash availability marking)
+  - `preferences-ui` (MODIFIED: *Terminal runtime options* — Git Bash and PowerShell 7 availability marking)
 - Affected code (future):
   - `src/CLIHub.Core/Infrastructure/Processes/IRuntimeExecutableLocator.cs` (new port)
   - `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs`, `WindowsCommandLineBuilder.cs`
-  - `src/CLIHub.Core.Windows/GitForWindowsRuntimeLocator.cs` and its OS seam (new)
+  - `src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs` and its OS seam (new; named
+    `GitForWindowsRuntimeLocator.cs` until the PowerShell 7 extension renamed it)
   - `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs` (adapter registration)
   - `src/CLIHub/ViewModels/Settings/SettingsViewModel.cs`,
     `src/CLIHub/Views/SettingsTerminalPage.xaml`, `src/CLIHub/Composition/ServiceRegistration.cs`
   - tests in `CLIHub.Core.Tests`, `CLIHub.Core.Windows.Tests`, `CLIHub.Tests`
-- Docs (future): `docs/architecture/processes.md` gains the Git Bash resolution contract.
+- Docs (future): `docs/architecture/processes.md` gains the Git Bash resolution contract and, with the
+  PowerShell 7 extension, the `pwsh.exe` resolution contract beside it.
 - Non-goals:
   - supporting WSL as an explicit runtime kind;
-  - resolving or gating the other runtimes (`powershell.exe`, `pwsh.exe`, `cmd.exe`) — a missing
-    PowerShell 7 is still discovered only by the launch failing;
+  - resolving or gating the remaining Windows-shipped runtimes (`powershell.exe`, `cmd.exe`) —
+    PowerShell 7 was moved out of the non-goals by the 2026-10-20 extension;
   - auto-switching the configured runtime when Git Bash is missing;
   - caching the resolution (read on launch and when Settings opens);
   - removing the unused `RuntimeSelector` or changing the captured-output path;

@@ -47,6 +47,9 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.PowerShell7))
+            .Returns(@"C:\Program Files\PowerShell\7\pwsh.exe");
 
         fixture.ViewModel.Load();
 
@@ -66,6 +69,9 @@ public class SettingsViewModelApplicationTests
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe");
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.PowerShell7))
+            .Returns(@"C:\Program Files\PowerShell\7\pwsh.exe");
 
         fixture.ViewModel.Load();
 
@@ -89,6 +95,9 @@ public class SettingsViewModelApplicationTests
             AccentColor = AccentPalette.DefaultHex
         });
         fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.PowerShell7))
+            .Returns(@"C:\Program Files\PowerShell\7\pwsh.exe");
         fixture.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.GitBash));
 
         fixture.ViewModel.Load();
@@ -101,6 +110,57 @@ public class SettingsViewModelApplicationTests
 
         Assert.Null(fixture.ViewModel.ValidationError);
         Assert.Equal(RuntimeKind.GitBash, fixture.CapturedPreferences.DefaultRuntime);
+    }
+
+    [Fact]
+    public void Load_PowerShell7Unresolved_MarksPowerShell7NotInstalled()
+    {
+        var fixture = new Fixture();
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.GitBash))
+            .Returns(@"C:\Program Files\Git\bin\bash.exe");
+        fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.PowerShell7)).Returns((string?)null);
+
+        fixture.ViewModel.Load();
+
+        var powerShell7 = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.PowerShell7);
+        Assert.False(powerShell7.IsInstalled);
+        Assert.Contains("not installed", powerShell7.DisplayName);
+        Assert.All(
+            fixture.ViewModel.Runtimes.Where(option => option.Kind != RuntimeKind.PowerShell7),
+            option => Assert.True(option.IsInstalled));
+        Assert.Equal(RuntimeKind.PowerShell, fixture.ViewModel.SelectedRuntime.Kind);
+    }
+
+    [Fact]
+    public void Load_PowerShell7StoredButUnavailable_PreservesSelectionAndSaves()
+    {
+        var fixture = new Fixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        {
+            DefaultRuntime = RuntimeKind.PowerShell7,
+            Hotkey = "Ctrl+Shift+A",
+            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
+            CheckForUpdatesOnStartup = true,
+            StartMinimized = true,
+            AccentColor = AccentPalette.DefaultHex
+        });
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.GitBash))
+            .Returns(@"C:\Program Files\Git\bin\bash.exe");
+        fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.PowerShell7)).Returns((string?)null);
+        fixture.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell7));
+
+        fixture.ViewModel.Load();
+
+        Assert.Equal(RuntimeKind.PowerShell7, fixture.ViewModel.SelectedRuntime.Kind);
+        var powerShell7 = fixture.ViewModel.Runtimes.Single(option => option.Kind == RuntimeKind.PowerShell7);
+        Assert.False(powerShell7.IsInstalled);
+
+        fixture.ViewModel.SaveCommand.Execute(null);
+
+        Assert.Null(fixture.ViewModel.ValidationError);
+        Assert.Equal(RuntimeKind.PowerShell7, fixture.CapturedPreferences.DefaultRuntime);
     }
 
     [Fact]
@@ -120,6 +180,9 @@ public class SettingsViewModelApplicationTests
             .SetupSequence(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe")
             .Returns((string?)null);
+        fixture.RuntimeExecutables
+            .Setup(x => x.Locate(RuntimeKind.PowerShell7))
+            .Returns(@"C:\Program Files\PowerShell\7\pwsh.exe");
 
         fixture.ViewModel.Load();
 

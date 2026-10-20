@@ -10,10 +10,10 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Thin seam over the operating system, so Git for Windows resolution is testable without touching
+///   Thin seam over the operating system, so Windows runtime resolution is testable without touching
 ///   the real registry or process-wide PATH.
 /// </summary>
-internal interface IGitBashEnvironment
+internal interface IWindowsRuntimeEnvironment
 {
     /// <summary>
     ///   Reads the Git for Windows <c> InstallPath </c> registry value. Returns <c> null </c> on a miss or
@@ -22,14 +22,34 @@ internal interface IGitBashEnvironment
     string? ReadGitForWindowsInstallPath();
 
     /// <summary>
+    ///   Reads the PowerShell Core <c> InstallPath </c> registry value, which names the directory that
+    ///   contains <c> pwsh.exe </c>. Only the machine-wide hive is read, in the 64-bit view and then the
+    ///   32-bit view: the PowerShell 7 MSI is machine-wide and per-user installs surface through PATH.
+    ///   Returns <c> null </c> on a miss or on any registry fault.
+    /// </summary>
+    string? ReadPowerShellCoreInstallPath();
+
+    /// <summary>
     ///   Returns the well-known Git for Windows install roots (Program Files, Program Files (x86),
     ///   and the per-user Programs folder).
     /// </summary>
-    IReadOnlyList<string> GetWellKnownInstallRoots();
+    IReadOnlyList<string> GetGitWellKnownInstallRoots();
+
+    /// <summary>
+    ///   Returns the well-known PowerShell 7 executable path
+    ///   (<c> ProgramFiles\PowerShell\7\pwsh.exe </c>), or <c> null </c> when no well-known root is set.
+    /// </summary>
+    string? GetPowerShellWellKnownExecutablePath();
 
     /// <summary>
     ///   Returns the process PATH entries with empty entries removed.
     /// </summary>
+    /// <remarks>
+    ///   Only the Git Bash lookup excludes PATH entries under <see cref="GetWindowsDirectory" />:
+    ///   <c> pwsh.exe </c> has no WSL-launcher-shaped namesake in the Windows directory, and Microsoft
+    ///   Store installs of PowerShell 7 surface as an app-execution alias in
+    ///   <c> %LOCALAPPDATA%\Microsoft\WindowsApps </c> that the PowerShell 7 PATH scan must find.
+    /// </remarks>
     IReadOnlyList<string> GetPathDirectories();
 
     /// <summary>
@@ -44,11 +64,13 @@ internal interface IGitBashEnvironment
 }
 
 /// <summary>
-///   Default <see cref="IGitBashEnvironment" /> backed by the registry, the environment, and the file system.
+///   Default <see cref="IWindowsRuntimeEnvironment" /> backed by the registry, the environment, and the
+///   file system.
 /// </summary>
-internal sealed class WindowsGitBashEnvironment : IGitBashEnvironment
+internal sealed class WindowsRuntimeEnvironment : IWindowsRuntimeEnvironment
 {
     private const string GitForWindowsKeyPath = @"SOFTWARE\GitForWindows";
+    private const string PowerShellCoreKeyPath = @"SOFTWARE\Microsoft\PowerShellCore";
     private const string InstallPathValueName = "InstallPath";
 
     /// <inheritdoc />
@@ -61,14 +83,28 @@ internal sealed class WindowsGitBashEnvironment : IGitBashEnvironment
 
         // A machine-wide install writes the 64-bit view; a 32-bit install writes the 32-bit view.
         // The per-user layout is best-effort: it is read after the machine-wide keys.
-        return this.ReadInstallPath(RegistryHive.LocalMachine, RegistryView.Registry64)
-            ?? this.ReadInstallPath(RegistryHive.LocalMachine, RegistryView.Registry32)
-            ?? this.ReadInstallPath(RegistryHive.CurrentUser, RegistryView.Default)
-            ?? this.ReadInstallPath(RegistryHive.CurrentUser, RegistryView.Registry32);
+        return this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.LocalMachine, RegistryView.Registry64)
+            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.LocalMachine, RegistryView.Registry32)
+            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.CurrentUser, RegistryView.Default)
+            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.CurrentUser, RegistryView.Registry32);
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<string> GetWellKnownInstallRoots()
+    public string? ReadPowerShellCoreInstallPath()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        // The PowerShell 7 MSI is machine-wide, so only HKLM is read: the 64-bit view first, then the
+        // 32-bit view. There is no per-user key; per-user installs surface through PATH.
+        return this.ReadInstallPath(PowerShellCoreKeyPath, RegistryHive.LocalMachine, RegistryView.Registry64)
+            ?? this.ReadInstallPath(PowerShellCoreKeyPath, RegistryHive.LocalMachine, RegistryView.Registry32);
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyList<string> GetGitWellKnownInstallRoots()
     {
         var roots = new List<string>(3);
         AddIfPresent(roots, Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles));
@@ -81,6 +117,15 @@ internal sealed class WindowsGitBashEnvironment : IGitBashEnvironment
         }
 
         return roots;
+    }
+
+    /// <inheritdoc />
+    public string? GetPowerShellWellKnownExecutablePath()
+    {
+        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        return string.IsNullOrWhiteSpace(programFiles)
+            ? null
+            : Path.Combine(programFiles, "PowerShell", "7", "pwsh.exe");
     }
 
     /// <inheritdoc />
@@ -122,12 +167,12 @@ internal sealed class WindowsGitBashEnvironment : IGitBashEnvironment
         }
     }
 
-    private string? ReadInstallPath(RegistryHive hive, RegistryView view)
+    private string? ReadInstallPath(string keyPath, RegistryHive hive, RegistryView view)
     {
         try
         {
             using var baseKey = RegistryKey.OpenBaseKey(hive, view);
-            using var key = baseKey.OpenSubKey(GitForWindowsKeyPath, writable: false);
+            using var key = baseKey.OpenSubKey(keyPath, writable: false);
             var value = key?.GetValue(InstallPathValueName) as string;
             return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
         }
@@ -147,23 +192,26 @@ internal sealed class WindowsGitBashEnvironment : IGitBashEnvironment
 }
 
 /// <summary>
-///   Resolves the Git Bash runtime to a Git for Windows <c> bash.exe </c>, never to an arbitrary
-///   <c> bash.exe </c> resolved from the operating system path.
+///   Resolves the runtimes that must not be left to operating-system PATH order: the Git Bash runtime
+///   to a Git for Windows <c> bash.exe </c>, and the PowerShell 7 runtime to an installed
+///   <c> pwsh.exe </c>. <c> cmd.exe </c> and <c> powershell.exe </c> ship with Windows and are launched
+///   by bare name by design.
 /// </summary>
-public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
+public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
 {
     private const string BashExecutableName = "bash.exe";
+    private const string PwshExecutableName = "pwsh.exe";
 
-    private readonly IGitBashEnvironment environment;
-    private readonly ILogger<GitForWindowsRuntimeLocator> logger;
+    private readonly IWindowsRuntimeEnvironment environment;
+    private readonly ILogger<WindowsRuntimeLocator> logger;
 
     /// <summary>
     ///   Creates the locator over an operating-system seam.
     /// </summary>
     /// <param name="environment"> The operating-system seam. </param>
     /// <param name="logger"> Logger for resolution diagnostics. </param>
-    internal GitForWindowsRuntimeLocator(IGitBashEnvironment environment,
-                                         ILogger<GitForWindowsRuntimeLocator> logger)
+    internal WindowsRuntimeLocator(IWindowsRuntimeEnvironment environment,
+                                   ILogger<WindowsRuntimeLocator> logger)
     {
         this.environment = environment ?? throw new ArgumentNullException(nameof(environment));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -172,15 +220,22 @@ public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
     /// <inheritdoc />
     public string? Locate(RuntimeKind kind)
     {
-        if (kind != RuntimeKind.GitBash)
+        return kind switch
         {
-            return null;
-        }
+            RuntimeKind.GitBash => this.LocateGitBash(),
+            RuntimeKind.PowerShell7 => this.LocatePowerShell7(),
 
-        var registryInstallPath = this.ReadRegistryInstallPath();
+            // cmd.exe and powershell.exe ship with Windows and are launched by bare name by design.
+            _ => null
+        };
+    }
+
+    private string? LocateGitBash()
+    {
+        var registryInstallPath = this.ReadGitRegistryInstallPath();
         if (registryInstallPath is not null)
         {
-            var registryCandidate = this.TryCandidate(registryInstallPath);
+            var registryCandidate = this.TryGitCandidate(registryInstallPath);
             if (registryCandidate is not null)
             {
                 this.logger.LogInformation(
@@ -190,9 +245,9 @@ public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
             }
         }
 
-        foreach (var root in this.environment.GetWellKnownInstallRoots())
+        foreach (var root in this.environment.GetGitWellKnownInstallRoots())
         {
-            var wellKnownCandidate = this.TryCandidate(root);
+            var wellKnownCandidate = this.TryGitCandidate(root);
             if (wellKnownCandidate is not null)
             {
                 this.logger.LogInformation(
@@ -246,7 +301,73 @@ public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
         return null;
     }
 
-    private string? ReadRegistryInstallPath()
+    private string? LocatePowerShell7()
+    {
+        var registryInstallPath = this.ReadPowerShellRegistryInstallPath();
+        if (registryInstallPath is not null)
+        {
+            var registryCandidate = this.TryPowerShellCandidate(registryInstallPath);
+            if (registryCandidate is not null)
+            {
+                this.logger.LogInformation(
+                    "Resolved PowerShell 7 to {ExecutablePath} from the PowerShell Core registry InstallPath",
+                    registryCandidate);
+                return registryCandidate;
+            }
+        }
+
+        var wellKnownCandidate = this.environment.GetPowerShellWellKnownExecutablePath();
+        if (wellKnownCandidate is not null && this.environment.FileExists(wellKnownCandidate))
+        {
+            var wellKnownResolved = ToAbsolutePath(wellKnownCandidate);
+            if (wellKnownResolved is not null)
+            {
+                this.logger.LogInformation(
+                    "Resolved PowerShell 7 to {ExecutablePath} from the well-known install location",
+                    wellKnownResolved);
+                return wellKnownResolved;
+            }
+        }
+
+        // No Windows-directory exclusion here: unlike bash.exe, pwsh.exe has no WSL-launcher-shaped
+        // namesake in the Windows directory. A PATH hit is also how Microsoft Store installs surface,
+        // through the app-execution alias in %LOCALAPPDATA%\Microsoft\WindowsApps.
+        foreach (var directory in this.environment.GetPathDirectories())
+        {
+            string candidate;
+            try
+            {
+                candidate = Path.Combine(directory, PwshExecutableName);
+            }
+            catch (ArgumentException)
+            {
+                this.logger.LogDebug("Rejected PATH entry {Directory} because it is not a valid path", directory);
+                continue;
+            }
+
+            if (!this.environment.FileExists(candidate))
+            {
+                this.logger.LogDebug("Rejected PATH candidate {Candidate} because the file does not exist", candidate);
+                continue;
+            }
+
+            var resolved = ToAbsolutePath(candidate);
+            if (resolved is not null)
+            {
+                this.logger.LogInformation(
+                    "Resolved PowerShell 7 to {ExecutablePath} from the PATH entry {Directory}", resolved, directory);
+                return resolved;
+            }
+        }
+
+        this.logger.LogWarning(
+            "PowerShell 7 is configured but no pwsh.exe was found. Lookup order: " +
+            @"HKLM SOFTWARE\Microsoft\PowerShellCore InstallPath, the well-known install location " +
+            @"(ProgramFiles\PowerShell\7), and PATH entries");
+        return null;
+    }
+
+    private string? ReadGitRegistryInstallPath()
     {
         try
         {
@@ -267,7 +388,28 @@ public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
         }
     }
 
-    private string? TryCandidate(string installRoot)
+    private string? ReadPowerShellRegistryInstallPath()
+    {
+        try
+        {
+            var installPath = this.environment.ReadPowerShellCoreInstallPath();
+            if (string.IsNullOrWhiteSpace(installPath))
+            {
+                this.logger.LogDebug("The PowerShell Core registry InstallPath is absent");
+                return null;
+            }
+
+            return installPath;
+        }
+        catch (Exception ex) when (ex is IOException or SecurityException or UnauthorizedAccessException)
+        {
+            // Registry faults are misses, never failures.
+            this.logger.LogDebug("The PowerShell Core registry InstallPath could not be read: {Reason}", ex.Message);
+            return null;
+        }
+    }
+
+    private string? TryGitCandidate(string installRoot)
     {
         if (string.IsNullOrWhiteSpace(installRoot))
         {
@@ -288,6 +430,36 @@ public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator
         if (!this.environment.FileExists(candidate))
         {
             this.logger.LogDebug("Rejected install root {InstallRoot} because {Candidate} does not exist", installRoot, candidate);
+            return null;
+        }
+
+        return ToAbsolutePath(candidate);
+    }
+
+    private string? TryPowerShellCandidate(string installDirectory)
+    {
+        if (string.IsNullOrWhiteSpace(installDirectory))
+        {
+            return null;
+        }
+
+        string candidate;
+        try
+        {
+            // The PowerShell Core InstallPath value is the directory that contains pwsh.exe.
+            candidate = Path.Combine(installDirectory, PwshExecutableName);
+        }
+        catch (ArgumentException)
+        {
+            this.logger.LogDebug("Rejected install directory {InstallDirectory} because it is not a valid path", installDirectory);
+            return null;
+        }
+
+        if (!this.environment.FileExists(candidate))
+        {
+            this.logger.LogDebug(
+                "Rejected install directory {InstallDirectory} because {Candidate} does not exist",
+                installDirectory, candidate);
             return null;
         }
 

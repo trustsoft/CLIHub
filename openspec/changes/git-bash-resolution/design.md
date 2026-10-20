@@ -81,7 +81,7 @@ sites, and a small XAML trigger. Low; see D1.
 | `WindowsInteractiveProcessRunnerTests.cs:71` | `RuntimeInfo { ExecutablePath = "bash.exe", Type = RuntimeType.Cmd }` — the bug reproduced in a test. |
 | `WindowsInteractiveProcessRunnerTests.cs:74-84` | Comment block and a `-c "true"` probe added by `5eb8eae` to skip when the resolved bash cannot run commands. |
 | `WindowsInteractiveProcessRunnerTests.cs:86-98` | Relative-path report probe made flavor-agnostic by `b483166` (`pwd > cwd-report.txt`), tolerant of `/c/...` and `/mnt/c/...`. |
-| `WindowsInteractiveProcessRunnerTests.cs:199-209` | `IsOnPath` helper — also used by the PowerShell 7 test at `:45`, so it must stay. |
+| `WindowsInteractiveProcessRunnerTests.cs:199-209` | `IsOnPath` helper — also used by the PowerShell 7 test at `:45`, so it must stay. *(Superseded by D8 + D10: both tests are locator-gated now and the helper was deleted.)* |
 | `tests/CLIHub.Core.Tests/Infrastructure/Processes/ProcessLauncherTests.cs:11-37,91-103` | `BuildStartInfo` theory pins `RuntimeKind.GitBash → "bash.exe"` (`:15`) and the Git Bash builder test asserts `Assert.Equal("bash.exe", fileName)` (`:99`). |
 | `ProcessLauncherTests.cs:146-172` | `LaunchProcess` behavior test through `FakeInteractiveProcessRunner` — the shape to extend for the resolved-path and unresolved cases. |
 
@@ -111,9 +111,9 @@ sites, and a small XAML trigger. Low; see D1.
 resolution is testable without touching the real registry or PATH; the Terminal Profiles page tells the
 truth about the option.
 
-**Non-goals:** WSL as a runtime kind; resolving `cmd.exe`/`powershell.exe`/`pwsh.exe`; auto-switching the
-runtime; caching; changing `-lic` quoting or the captured-output path; deleting `RuntimeSelector`; any
-change to agent process matching.
+**Non-goals:** WSL as a runtime kind; resolving `cmd.exe`/`powershell.exe` (PowerShell 7 was added to
+scope by D10); auto-switching the runtime; caching; changing `-lic` quoting or the captured-output path;
+deleting `RuntimeSelector`; any change to agent process matching.
 
 ## Decisions
 
@@ -141,7 +141,9 @@ string? Locate(RuntimeKind kind);
 Contract in XML docs: returns an absolute executable path, or `null` when this locator cannot resolve the
 kind. The Windows implementation resolves **only** `RuntimeKind.GitBash` and returns `null` for the other
 kinds; callers must not read `null` for a non-Git-Bash kind as "not installed". A future `pwsh` probe can
-extend the same port without a new interface.
+extend the same port without a new interface. *(Extended by D10: the implementation now resolves
+`GitBash` and `PowerShell7`; `null` for `PowerShell`/`CommandPrompt` still means "not covered",
+not "not installed".)*
 
 ### D3 - Resolution order and no caching
 
@@ -168,18 +170,22 @@ Core.Windows is Windows-only, so the production environment is read directly; on
 injection for tests. Follow `IStartupRegistry` / `StartupService`:
 
 ```csharp
-internal interface IGitBashEnvironment
+internal interface IWindowsRuntimeEnvironment   // named IGitBashEnvironment before D10
 {
     string? ReadGitForWindowsInstallPath();          // HKCU/HKLM, both views, null on miss/error
-    IReadOnlyList<string> GetWellKnownInstallRoots(); // ProgramFiles, ProgramFilesX86, LocalAppData\Programs\Git
+    IReadOnlyList<string> GetGitWellKnownInstallRoots(); // ProgramFiles, ProgramFilesX86, LocalAppData\Programs\Git
     IReadOnlyList<string> GetPathDirectories();       // PATH entries, empties removed
     string GetWindowsDirectory();                     // %SystemRoot% (no trailing separator)
     bool FileExists(string path);                     // File.Exists
 }
 ```
 
-- `public sealed class GitForWindowsRuntimeLocator : IRuntimeExecutableLocator` with an `internal`
-  constructor `(IGitBashEnvironment environment, ILogger<GitForWindowsRuntimeLocator> logger)`, registered
+*(D10 generalizes this seam in place: it is renamed `IWindowsRuntimeEnvironment` and gains
+`ReadPowerShellCoreInstallPath()` and `GetPowerShellWellKnownExecutablePath()`; the implementation class
+becomes `WindowsRuntimeEnvironment`, and `GitForWindowsRuntimeLocator` becomes `WindowsRuntimeLocator`.)*
+
+- `public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator` with an `internal`
+  constructor `(IWindowsRuntimeEnvironment environment, ILogger<WindowsRuntimeLocator> logger)`, registered
   through a factory in `AddWindowsInfrastructure` exactly like `StartupService`
   (`WindowsServiceCollectionExtensions.cs:42-44`). No public constructor means DI cannot silently build a
   locator without its environment.
@@ -266,6 +272,7 @@ it is recorded as a follow-up candidate, not folded in.
   `Assert.Equal(0, exitCode)` then becomes a hard assertion instead of a probe-guarded one;
 - keep the flavor-agnostic report probe (`:86-98`) and `NormalizeReportedPath`-style tolerance — it is
   correct and costs nothing; keep the `IsOnPath` helper for the PowerShell 7 test (`:45`);
+  *(superseded by D10: the PowerShell 7 test is locator-gated too, and the helper was deleted)*;
 - optionally assert the resolved path is outside the Windows directory, which states the invariant in the
   test itself.
 
@@ -276,6 +283,38 @@ it is recorded as a follow-up candidate, not folded in.
 a MODIFIED requirement in `preferences-ui` and the availability scenario is removed from the
 `agent-commands` delta (it previously lived there, in the wrong capability). Both delta files preserve
 their capability's original scenario names.
+
+### D10 - PowerShell 7 gets the same availability treatment as Git Bash
+
+Decided 2026-10-20, before archiving: a missing PowerShell 7 was the one remaining silent launch
+failure (it sat in this proposal's non-goals until now). The product decision, mirrored on Git Bash's
+contract: when `pwsh.exe` cannot be resolved, Terminal Profiles marks PowerShell 7 as not installed —
+label-only, option stays selectable, stored selection never rewritten — and `LaunchProcess` fails
+synchronously with a logged lookup-order error (the `bool` contract, no throw escaping). When it
+resolves, launches use the resolved absolute path. `cmd.exe` and `powershell.exe` stay bare-name by
+design because they ship with Windows and cannot be missing.
+
+Resolution order (first hit wins; nothing cached):
+
+1. Registry `HKLM\SOFTWARE\Microsoft\PowerShellCore` value `InstallPath` — the value is the directory
+   containing `pwsh.exe`; read in the 64-bit view, then the 32-bit view. Faults are misses. No `HKCU`:
+   the PowerShell 7 MSI is machine-wide, and per-user installs surface through PATH.
+2. Well-known `%ProgramFiles%\PowerShell\7\pwsh.exe`.
+3. PATH scan taking the first `pwsh.exe`. **No Windows-directory exclusion**: unlike `bash.exe`,
+   `pwsh.exe` has no WSL-launcher-shaped namesake in the Windows directory, so there is no hazard to
+   exclude. Excluding it would also break Microsoft Store installs, which surface as an app-execution
+   alias in `%LOCALAPPDATA%\Microsoft\WindowsApps` that the PATH scan must find.
+
+Mechanics mirror D4–D7 exactly: the OS seam is generalized in place rather than duplicated
+(`IGitBashEnvironment` → `IWindowsRuntimeEnvironment`, gaining `ReadPowerShellCoreInstallPath()` and
+`GetPowerShellWellKnownExecutablePath()` beside the unchanged Git members; `WindowsGitBashEnvironment`
+→ `WindowsRuntimeEnvironment`; `GitForWindowsRuntimeLocator` → `WindowsRuntimeLocator`; the DI factory
+and every test reference updated), `ProcessLauncher` resolves PowerShell 7 before building the command
+line and returns `false` with a `LogError` naming PowerShell 7 and the lookup order, `BuildInteractive`'s
+PowerShell 7 arm requires the resolved path and throws `InvalidOperationException` when null (same guard
+shape as the Git Bash arm; a new `powerShell7Executable` parameter is threaded through `BuildStartInfo`
+with no default), and `SettingsViewModel.Load()` resolves `IsInstalled` for Git Bash *and* PowerShell 7,
+leaving the Windows-shipped kinds at the default true. The port's XML docs now name both covered kinds.
 
 ## Alternatives rejected
 
@@ -362,12 +401,17 @@ a backlog entry (the repository's `docs/backlog.md` has no such item today).
 3. Select Git Bash, Save, close Settings.
 4. Launch an agent from the launch window. Expected: an interactive Git Bash window opens in the project
    folder; `pwd` shows a `/c/...` path (Git for Windows), never `/mnt/c/...` (WSL). The log
-   (`%APPDATA%\CLIHub\logs\`) contains the resolved absolute path from `GitForWindowsRuntimeLocator`.
+   (`%APPDATA%\CLIHub\logs\`) contains the resolved absolute path from `WindowsRuntimeLocator`.
 5. Negative path (machine without Git for Windows, or temporarily rename
    `C:\Program Files\Git\bin\bash.exe`): the option shows "Not installed", and launching reports
    `launch failed: Failed to launch <agent>` in the launch window status area while the log names the
    missing Git for Windows executable. Restore the file afterwards.
-6. WSL-priority check (only on a machine with `C:\Windows\System32\bash.exe`): prepend
+6. PowerShell 7: select PowerShell 7, Save, close Settings, launch an agent. Expected: an interactive
+   PowerShell 7 window opens in the project folder and the log contains the resolved absolute
+   `pwsh.exe` path. Negative path (temporarily rename `%ProgramFiles%\PowerShell\7\pwsh.exe`): the
+   option shows "PowerShell 7 (not installed)" and launching fails with the log naming PowerShell 7
+   and the lookup order. Restore the file afterwards.
+7. WSL-priority check (only on a machine with `C:\Windows\System32\bash.exe`): prepend
    `C:\Windows\System32` to PATH, repeat step 4, confirm the Git Bash install still starts.
 
 ## Open questions

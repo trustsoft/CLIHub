@@ -91,6 +91,7 @@ public sealed class ProcessLauncher
             // Resolve the executable before building the command line, so an unresolved runtime
             // fails synchronously instead of starting an arbitrary PATH match.
             string? gitBashExecutable = null;
+            string? powerShell7Executable = null;
             if (this.runtime is RuntimeKind.GitBash)
             {
                 gitBashExecutable = this.runtimeExecutables.Locate(RuntimeKind.GitBash);
@@ -103,9 +104,21 @@ public sealed class ProcessLauncher
                     return false;
                 }
             }
+            else if (this.runtime is RuntimeKind.PowerShell7)
+            {
+                powerShell7Executable = this.runtimeExecutables.Locate(RuntimeKind.PowerShell7);
+                if (powerShell7Executable is null)
+                {
+                    this.logger.LogError(
+                        "PowerShell 7 is configured but no pwsh.exe was found. Lookup order: " +
+                        @"HKLM SOFTWARE\Microsoft\PowerShellCore InstallPath, the well-known install location " +
+                        @"(ProgramFiles\PowerShell\7), and PATH entries");
+                    return false;
+                }
+            }
 
             // Build command line for the runtime
-            var (fileName, arguments) = BuildStartInfo(this.runtime, command, workingDirectory, gitBashExecutable);
+            var (fileName, arguments) = BuildStartInfo(this.runtime, command, workingDirectory, gitBashExecutable, powerShell7Executable);
             
             // Create runtime info
             var runtimeType = this.runtime switch
@@ -224,12 +237,17 @@ public sealed class ProcessLauncher
     ///   The absolute Git for Windows <c> bash.exe </c> path for the Git Bash runtime; ignored by the
     ///   other runtimes.
     /// </param>
+    /// <param name="powerShell7Executable">
+    ///   The absolute PowerShell 7 <c> pwsh.exe </c> path for the PowerShell 7 runtime; ignored by the
+    ///   other runtimes.
+    /// </param>
     internal static (string FileName, string Arguments) BuildStartInfo(RuntimeKind runtime,
                                                                        PluginCommand command,
                                                                        string workingDirectory,
-                                                                       string? gitBashExecutable)
+                                                                       string? gitBashExecutable,
+                                                                       string? powerShell7Executable)
     {
-        return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory, gitBashExecutable);
+        return WindowsCommandLineBuilder.BuildInteractive(runtime, command, workingDirectory, gitBashExecutable, powerShell7Executable);
     }
 
     /// <summary>

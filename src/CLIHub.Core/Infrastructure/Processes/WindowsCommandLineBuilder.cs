@@ -19,18 +19,24 @@ internal static class WindowsCommandLineBuilder
     ///   The absolute path of the resolved Git for Windows <c> bash.exe </c>; required for
     ///   <see cref="RuntimeKind.GitBash" /> and ignored by the other runtimes.
     /// </param>
+    /// <param name="powerShell7Executable">
+    ///   The absolute path of the resolved PowerShell 7 <c> pwsh.exe </c>; required for
+    ///   <see cref="RuntimeKind.PowerShell7" /> and ignored by the other runtimes.
+    /// </param>
     /// <returns> The process executable and argument string. </returns>
     internal static (string FileName, string Arguments) BuildInteractive(RuntimeKind runtime,
                                                                          PluginCommand command,
                                                                          string workingDirectory,
-                                                                         string? gitBashExecutable)
+                                                                         string? gitBashExecutable,
+                                                                         string? powerShell7Executable)
     {
         var commandLine = BuildCommandLine(command);
 
         return runtime switch
         {
             RuntimeKind.CommandPrompt => ("cmd.exe", $"/d /k {QuoteCmdCommand(commandLine)}"),
-            RuntimeKind.PowerShell7 => ("pwsh.exe", $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}"),
+            RuntimeKind.PowerShell7 => (powerShell7Executable ?? throw new InvalidOperationException(
+                "PowerShell 7 executable was not resolved"), $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}"),
             RuntimeKind.GitBash => (gitBashExecutable ?? throw new InvalidOperationException(
                 "Git Bash executable was not resolved"), $"-lic {QuoteBashCommand(commandLine)}"),
             _ => ("powershell.exe", $"-NoExit -EncodedCommand {EncodePowerShell(commandLine)}")

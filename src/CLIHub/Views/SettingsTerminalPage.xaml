@@ -31,7 +31,7 @@
                                             <DataTrigger Binding="{Binding IsInstalled}" Value="False">
                                                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                                                 <Setter Property="AutomationProperties.HelpText"
-                                                        Value="Git for Windows was not found, so a Git Bash command cannot be launched."/>
+                                                        Value="The runtime executable was not found, so a command in this runtime cannot be launched."/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>

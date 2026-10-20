@@ -1256,11 +1256,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         var draft = this.settingsApplication.Load();
 
         // Availability is re-evaluated on every open so a reinstall is reflected without a restart.
+        // Git Bash and PowerShell 7 are resolved from their installations; the Windows-shipped
+        // cmd.exe and powershell.exe are always available.
         this.runtimes = RuntimeOptions
             .Select(option => option with
             {
-                IsInstalled = option.Kind != RuntimeKind.GitBash
-                    || this.runtimeExecutables.Locate(RuntimeKind.GitBash) is not null
+                IsInstalled = option.Kind switch
+                {
+                    RuntimeKind.GitBash or RuntimeKind.PowerShell7 =>
+                        this.runtimeExecutables.Locate(option.Kind) is not null,
+                    _ => true
+                }
             })
             .ToArray();
 

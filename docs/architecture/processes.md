@@ -1,7 +1,7 @@
 # Process Execution
 
 ## External Integration
-- **Windows shells** (`powershell.exe`, `pwsh.exe`, `cmd.exe`) and the resolved Git for Windows `bash.exe` (registry `InstallPath`, well-known install locations, then a PATH entry outside the Windows directory) — spawn CLI tool sessions through the configured runtime
+- **Windows shells** (`powershell.exe`, `cmd.exe`) plus the resolved executables for the runtimes that must not be left to PATH order — Git for Windows `bash.exe` (registry `InstallPath`, well-known install locations, then a PATH entry outside the Windows directory) and PowerShell 7 `pwsh.exe` (the `PowerShellCore` registry `InstallPath`, the well-known `ProgramFiles\PowerShell\7` location, then a PATH entry) — spawn CLI tool sessions through the configured runtime
 - **Windows process APIs** (`System.Diagnostics.Process`) — enumerates accessible processes for agent safety checks
 - **Named mutex** (`Local\CLIHub.SingleInstance`) + **named pipe** (`CLIHub.SingleInstance`) — single instance enforcement and activation
 - **user32.dll** (`RegisterHotKey`/`UnregisterHotKey`) — global hotkey registration via source-generated `[LibraryImport]` in `src/CLIHub/Interop/User32.cs`
@@ -34,6 +34,7 @@ asynchronous process snapshot with command-line details.
 
 - **Missing executable / permission denied:** log the error, return a failed result, surface a message in the UI
 - **Git Bash not installed:** the Git Bash runtime resolves to a Git for Windows `bash.exe` before the command line is built; when nothing resolves, the launch fails before any process starts, the log names Git for Windows and the lookup order, and the Terminal Profiles page marks the option as not installed while keeping it selectable
+- **PowerShell 7 not installed:** the PowerShell 7 runtime resolves to a `pwsh.exe` before the command line is built (no Windows-directory exclusion on the PATH scan — `pwsh.exe` has no WSL-launcher-shaped namesake, and Store installs surface as an app-execution alias in `%LOCALAPPDATA%\Microsoft\WindowsApps`); when nothing resolves, the launch fails before any process starts, the log names PowerShell 7 and the lookup order, and the Terminal Profiles page marks the option as not installed while keeping it selectable
 - **Non-zero exit for `version`:** report unknown and log
 - **Update while an agent is running:** keep the current version, block the agent update action, and report
   the reason in the launch window status area

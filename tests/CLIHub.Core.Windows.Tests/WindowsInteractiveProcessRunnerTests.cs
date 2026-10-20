@@ -42,23 +42,29 @@ public class WindowsInteractiveProcessRunnerTests
     [Fact]
     public async Task LaunchAsync_PowerShell7_ChildStartsInWorkingDirectory()
     {
-        if (!IsOnPath("pwsh.exe"))
+        var locator = new WindowsRuntimeLocator(
+            new WindowsRuntimeEnvironment(),
+            NullLogger<WindowsRuntimeLocator>.Instance);
+        var resolvedPwsh = locator.Locate(RuntimeKind.PowerShell7);
+        if (resolvedPwsh is null)
         {
+            // PowerShell 7 is not installed on this machine; there is nothing to launch.
             return;
         }
 
         await this.VerifyChildWorkingDirectoryAsync(
             RuntimeKind.PowerShell7,
             arguments => arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal),
-            new RuntimeInfo { ExecutablePath = "pwsh.exe", Type = RuntimeType.PowerShell });
+            new RuntimeInfo { ExecutablePath = resolvedPwsh, Type = RuntimeType.PowerShell },
+            resolvedPwsh);
     }
 
     [Fact]
     public async Task LaunchAsync_GitBash_ChildStartsInWorkingDirectory()
     {
-        var locator = new GitForWindowsRuntimeLocator(
-            new WindowsGitBashEnvironment(),
-            NullLogger<GitForWindowsRuntimeLocator>.Instance);
+        var locator = new WindowsRuntimeLocator(
+            new WindowsRuntimeEnvironment(),
+            NullLogger<WindowsRuntimeLocator>.Instance);
         var resolvedGitBash = locator.Locate(RuntimeKind.GitBash);
         if (resolvedGitBash is null)
         {
@@ -129,7 +135,7 @@ public class WindowsInteractiveProcessRunnerTests
         {
             var command = new PluginCommand { Name = "resume", Executable = "probe-agent", Arguments = "--continue" };
             var (_, arguments) = ProcessLauncher.BuildStartInfo(
-                RuntimeKind.PowerShell, command, shimDir, gitBashExecutable: null);
+                RuntimeKind.PowerShell, command, shimDir, gitBashExecutable: null, powerShell7Executable: null);
             arguments = arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal);
 
             var runtime = new RuntimeInfo { ExecutablePath = "powershell.exe", Type = RuntimeType.PowerShell };
@@ -153,7 +159,8 @@ public class WindowsInteractiveProcessRunnerTests
     private async Task VerifyChildWorkingDirectoryAsync(
         RuntimeKind runtimeKind,
         Func<string, string> makeHeadless,
-        RuntimeInfo runtime)
+        RuntimeInfo runtime,
+        string? powerShell7Executable = null)
     {
         // The folder name contains spaces on purpose: that shape broke before the fix.
         var workingDirectory = Path.Combine(
@@ -168,7 +175,7 @@ public class WindowsInteractiveProcessRunnerTests
             var command = new PluginCommand { Name = "launch", Executable = scriptPath };
 
             var (_, arguments) = ProcessLauncher.BuildStartInfo(
-                runtimeKind, command, workingDirectory, gitBashExecutable: null);
+                runtimeKind, command, workingDirectory, gitBashExecutable: null, powerShell7Executable);
             arguments = makeHeadless(arguments);
 
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);
@@ -197,17 +204,5 @@ public class WindowsInteractiveProcessRunnerTests
         }
 
         return reported.Trim('"');
-    }
-
-    private static bool IsOnPath(string executable)
-    {
-        var path = Environment.GetEnvironmentVariable("PATH");
-        if (string.IsNullOrEmpty(path))
-        {
-            return false;
-        }
-
-        return path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
-            .Any(directory => File.Exists(Path.Combine(directory.Trim(), executable)));
     }
 }

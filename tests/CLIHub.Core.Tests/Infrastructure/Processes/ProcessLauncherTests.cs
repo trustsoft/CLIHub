@@ -11,14 +11,13 @@ public class ProcessLauncherTests
 {
     [Theory]
     [InlineData(RuntimeKind.PowerShell, "powershell.exe")]
-    [InlineData(RuntimeKind.PowerShell7, "pwsh.exe")]
     [InlineData(RuntimeKind.CommandPrompt, "cmd.exe")]
     public void BuildStartInfo_UsesRuntimeExecutable(RuntimeKind runtime, string expectedFileName)
     {
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
         var (fileName, arguments) = ProcessLauncher.BuildStartInfo(
-            runtime, command, @"C:\proj", gitBashExecutable: null);
+            runtime, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: null);
 
         Assert.Equal(expectedFileName, fileName);
         if (runtime is RuntimeKind.PowerShell or RuntimeKind.PowerShell7)
@@ -45,7 +44,7 @@ public class ProcessLauncherTests
         var command = new PluginCommand { Executable = "opencode" };
 
         var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            runtime, command, @"C:\proj", gitBashExecutable: null);
+            runtime, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: @"C:\Program Files\PowerShell\7\pwsh.exe");
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -61,7 +60,7 @@ public class ProcessLauncherTests
         var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
 
         var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            runtime, command, @"C:\proj", gitBashExecutable: null);
+            runtime, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: @"C:\Program Files\PowerShell\7\pwsh.exe");
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -84,7 +83,7 @@ public class ProcessLauncherTests
         };
 
         var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            runtime, command, @"C:\proj", gitBashExecutable: null);
+            runtime, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: @"C:\Program Files\PowerShell\7\pwsh.exe");
 
         var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
         var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
@@ -101,12 +100,50 @@ public class ProcessLauncherTests
             RuntimeKind.GitBash,
             command,
             @"C:\proj",
-            @"C:\Program Files\Git\bin\bash.exe");
+            @"C:\Program Files\Git\bin\bash.exe",
+            powerShell7Executable: null);
 
         Assert.Equal(@"C:\Program Files\Git\bin\bash.exe", fileName);
         Assert.Contains("-lic", arguments);
         Assert.Contains("opencode", arguments);
         Assert.Contains("--continue", arguments);
+    }
+
+    [Fact]
+    public void BuildStartInfo_PowerShell7_UsesResolvedExecutablePath()
+    {
+        var command = new PluginCommand { Executable = "opencode", Arguments = "--continue" };
+
+        var (fileName, arguments) = ProcessLauncher.BuildStartInfo(
+            RuntimeKind.PowerShell7,
+            command,
+            @"C:\proj",
+            gitBashExecutable: null,
+            powerShell7Executable: @"C:\Program Files\PowerShell\7\pwsh.exe");
+
+        Assert.Equal(@"C:\Program Files\PowerShell\7\pwsh.exe", fileName);
+        var encoded = arguments.Split(' ', StringSplitOptions.RemoveEmptyEntries).Last();
+        var script = System.Text.Encoding.Unicode.GetString(Convert.FromBase64String(encoded));
+        Assert.StartsWith("$exe = (Get-Command 'opencode' -CommandType Application", script);
+        Assert.Contains("& $exe --% --continue", script);
+    }
+
+    [Fact]
+    public void BuildStartInfo_GitBash_Unresolved_ThrowsInvalidOperationException()
+    {
+        var command = new PluginCommand { Executable = "opencode" };
+
+        Assert.Throws<InvalidOperationException>(() => ProcessLauncher.BuildStartInfo(
+            RuntimeKind.GitBash, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: null));
+    }
+
+    [Fact]
+    public void BuildStartInfo_PowerShell7_Unresolved_ThrowsInvalidOperationException()
+    {
+        var command = new PluginCommand { Executable = "opencode" };
+
+        Assert.Throws<InvalidOperationException>(() => ProcessLauncher.BuildStartInfo(
+            RuntimeKind.PowerShell7, command, @"C:\proj", gitBashExecutable: null, powerShell7Executable: null));
     }
 
     [Fact]
@@ -119,7 +156,7 @@ public class ProcessLauncherTests
         };
 
         var (_, arguments) = ProcessLauncher.BuildStartInfo(
-            RuntimeKind.CommandPrompt, command, @"C:\Projects\Demo Folder", gitBashExecutable: null);
+            RuntimeKind.CommandPrompt, command, @"C:\Projects\Demo Folder", gitBashExecutable: null, powerShell7Executable: null);
 
         Assert.Contains("\"C:\\Program Files\\Agent\\agent.exe\"", arguments);
         Assert.Contains("^&", arguments);
@@ -240,7 +277,69 @@ public class ProcessLauncherTests
     }
 
     [Fact]
-    public void LaunchProcess_CommandPrompt_DoesNotConsultLocator()
+    public void LaunchProcess_PowerShell7_UsesResolvedExecutablePath()
+    {
+        const string pwshPath = @"C:\Program Files\PowerShell\7\pwsh.exe";
+        var runner = new FakeInteractiveProcessRunner();
+        var runtimeExecutables = new FakeRuntimeExecutableLocator();
+        runtimeExecutables.SetPath(RuntimeKind.PowerShell7, pwshPath);
+        var launcher = new ProcessLauncher(
+            NullLogger<ProcessLauncher>.Instance,
+            runner,
+            new FakeProcessOutputRunner(),
+            runtimeExecutables);
+        launcher.SetRuntime(RuntimeKind.PowerShell7);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+        var workingDirectory = CreateTempDirectory();
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.True(started);
+            var launch = Assert.Single(runner.Launches);
+            Assert.Equal(pwshPath, launch.Runtime.ExecutablePath);
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    [Fact]
+    public void LaunchProcess_PowerShell7Unresolved_ReturnsFalseAndDoesNotStart()
+    {
+        var runner = new FakeInteractiveProcessRunner();
+        var logger = new RecordingLogger<ProcessLauncher>();
+        var launcher = new ProcessLauncher(
+            logger,
+            runner,
+            new FakeProcessOutputRunner(),
+            new FakeRuntimeExecutableLocator());
+        launcher.SetRuntime(RuntimeKind.PowerShell7);
+        var command = new PluginCommand { Name = "launch", Executable = "opencode" };
+        var workingDirectory = CreateTempDirectory();
+
+        try
+        {
+            var started = launcher.LaunchProcess(command, workingDirectory);
+
+            Assert.False(started);
+            Assert.Empty(runner.Launches);
+            var error = Assert.Single(logger.Entries, entry => entry.Level == LogLevel.Error);
+            Assert.Contains("PowerShell 7", error.Message, StringComparison.Ordinal);
+            Assert.Contains("Lookup order", error.Message, StringComparison.Ordinal);
+        }
+        finally
+        {
+            TryDeleteDirectory(workingDirectory);
+        }
+    }
+
+    [Theory]
+    [InlineData(RuntimeKind.PowerShell)]
+    [InlineData(RuntimeKind.CommandPrompt)]
+    public void LaunchProcess_BareNameRuntime_DoesNotConsultLocator(RuntimeKind runtime)
     {
         var runtimeExecutables = new FakeRuntimeExecutableLocator();
         var launcher = new ProcessLauncher(
@@ -248,7 +347,7 @@ public class ProcessLauncherTests
             new FakeInteractiveProcessRunner(),
             new FakeProcessOutputRunner(),
             runtimeExecutables);
-        launcher.SetRuntime(RuntimeKind.CommandPrompt);
+        launcher.SetRuntime(runtime);
         var command = new PluginCommand { Name = "launch", Executable = "opencode" };
         var workingDirectory = CreateTempDirectory();
 

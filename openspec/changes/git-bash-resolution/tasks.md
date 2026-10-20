@@ -2,7 +2,9 @@
 
 Implemented and verified on 2026-10-20 against `cda2fe7`; only the user-executed manual checks (8.1, 8.2)
 remain unchecked. The plan was written against `master` at `cd11b88` and verified against the tree;
-`design.md` carries the evidence and the decisions. Work the stages in order: each one ends green.
+`design.md` carries the evidence and the decisions. On the same day, before archiving, the change was
+extended with the PowerShell 7 availability treatment (design.md D10); those items are marked *(D10)*
+and were implemented and verified in the same session. Work the stages in order: each one ends green.
 
 Conventions: file-scoped namespaces with `using` directives inside the namespace, `this.` for instance
 members, XML documentation on public APIs, test names `MethodOrScenario_Condition_ExpectedResult`.
@@ -26,6 +28,9 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
       `RuntimeKind.GitBash` today and `null` for other kinds means "not covered", not "not installed",
       (c) the result is not cached. `using CLIHub.Core.Models;` inside the namespace.
 - [x] 2.2 Gate: `dotnet build CLIHub.sln`.
+- [x] 2.3 *(D10)* Update the port's XML docs: the Windows implementation resolves `GitBash` and
+      `PowerShell7`; `null` for `PowerShell`/`CommandPrompt` means "not covered by this locator",
+      not "not installed".
 
 ## 3. Windows locator
 
@@ -68,6 +73,32 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
         `WindowsGitBashEnvironment` via a separate narrow test.
       Use `NullLogger<GitForWindowsRuntimeLocator>.Instance`. Do not touch the process-wide PATH.
 - [x] 3.5 Gate: `dotnet build CLIHub.sln` and `dotnet test tests/CLIHub.Core.Windows.Tests`.
+- [x] 3.6 *(D10)* Rename and generalize instead of duplicating:
+      `GitForWindowsRuntimeLocator.cs` → `WindowsRuntimeLocator.cs`;
+      `IGitBashEnvironment` → `IWindowsRuntimeEnvironment` with `ReadPowerShellCoreInstallPath()`
+      (HKLM 64-bit view then 32-bit view; no HKCU; faults are misses) and
+      `GetPowerShellWellKnownExecutablePath()` (`ProgramFiles\PowerShell\7\pwsh.exe`) added beside the
+      unchanged Git members; `WindowsGitBashEnvironment` → `WindowsRuntimeEnvironment`;
+      `GetWellKnownInstallRoots()` → `GetGitWellKnownInstallRoots()`. The seam XML docs state that the
+      pwsh PATH scan has no Windows-directory exclusion (no WSL-launcher-shaped namesake; Store installs
+      surface as a `%LOCALAPPDATA%\Microsoft\WindowsApps` app-execution alias).
+- [x] 3.7 *(D10)* `WindowsRuntimeLocator.Locate` dispatches per kind: Git Bash keeps its exact existing
+      order; PowerShell 7 resolves registry `InstallPath` + `pwsh.exe` → well-known path → first PATH
+      `pwsh.exe` (no Windows-directory exclusion), every hit through `Path.GetFullPath`, total miss
+      Warning-logged with the lookup order; `PowerShell`/`CommandPrompt` return null (bare-name by
+      design). Register the renamed locator in `WindowsServiceCollectionExtensions`.
+- [x] 3.8 *(D10)* Rename and extend the tests: `FakeGitBashEnvironment` → `FakeWindowsRuntimeEnvironment`
+      (gains `PowerShellInstallPath`, `PowerShellWellKnownExecutablePath`), and
+      `GitForWindowsRuntimeLocatorTests` → `WindowsRuntimeLocatorTests` with
+      `Locate_PowerShell7_RegistryInstallPathWins`,
+      `Locate_PowerShell7_FallsBackToWellKnownPathWhenRegistryMisses`,
+      `Locate_PowerShell7_PathEntryIsUsed`,
+      `Locate_PowerShell7_PathEntryInsideWindowsDirectoryIsUsed`,
+      `Locate_PowerShell7_NoCandidate_ReturnsNull`,
+      `Locate_PowerShell7_RegistryThrows_FallsThroughToPath`; the old
+      `Locate_NonGitBashKind_ReturnsNull` becomes `Locate_UncoveredKind_ReturnsNull` (`PowerShell`,
+      `CommandPrompt`) now that PowerShell 7 is covered.
+- [x] 3.9 *(D10)* Gate: `dotnet build CLIHub.sln` and `dotnet test tests/CLIHub.Core.Windows.Tests`.
 
 ## 4. Launcher wiring
 
@@ -106,6 +137,25 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
       `Assert.NotNull(provider.GetRequiredService<IRuntimeExecutableLocator>());` so the composition
       contract is pinned.
 - [x] 4.7 Gate: `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln` (all three test projects).
+- [x] 4.8 *(D10)* `WindowsCommandLineBuilder.BuildInteractive` gains `string? powerShell7Executable`;
+      the PowerShell 7 arm uses it and throws `InvalidOperationException("PowerShell 7 executable was
+      not resolved")` when null (same guard shape as Git Bash). `BuildStartInfo` threads it through with
+      no default value; every call site states it.
+- [x] 4.9 *(D10)* `ProcessLauncher.LaunchProcess` resolves `RuntimeKind.PowerShell7` like Git Bash:
+      null → `LogError` naming PowerShell 7 and the lookup order → `return false` before building the
+      command line; a resolved path lands in `RuntimeInfo.ExecutablePath`. `PowerShell`/`CommandPrompt`
+      never consult the locator.
+- [x] 4.10 *(D10)* `ProcessLauncherTests`: remove the `PowerShell7` `InlineData` from
+      `BuildStartInfo_UsesRuntimeExecutable` (it pinned the old bare-name contract); add
+      `BuildStartInfo_PowerShell7_UsesResolvedExecutablePath`,
+      `BuildStartInfo_GitBash_Unresolved_ThrowsInvalidOperationException`,
+      `BuildStartInfo_PowerShell7_Unresolved_ThrowsInvalidOperationException`,
+      `LaunchProcess_PowerShell7_UsesResolvedExecutablePath`,
+      `LaunchProcess_PowerShell7Unresolved_ReturnsFalseAndDoesNotStart` (nested `RecordingLogger`
+      asserts one Error naming "PowerShell 7" and "Lookup order"); the old
+      `LaunchProcess_CommandPrompt_DoesNotConsultLocator` becomes the theory
+      `LaunchProcess_BareNameRuntime_DoesNotConsultLocator` (`PowerShell`, `CommandPrompt`).
+- [x] 4.11 *(D10)* Gate: `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln`.
 
 ## 5. Terminal Profiles availability marking
 
@@ -137,6 +187,18 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
       `IsInstalled` false, `DisplayName` contains "not installed", the other three true) and
       `Load_GitBashResolved_LeavesAllRuntimesInstalled`. Assert by `Kind`, not by index.
 - [x] 5.6 Gate: `dotnet build CLIHub.sln` and `dotnet test tests/CLIHub.Tests`.
+- [x] 5.7 *(D10)* `SettingsViewModel.Load()` resolves `IsInstalled` for Git Bash *and* PowerShell 7
+      (`Locate(option.Kind)`; other kinds default true). Nothing else changes: the option stays
+      selectable and `Save()` still writes `SelectedRuntime.Kind`.
+- [x] 5.8 *(D10)* `SettingsTerminalPage.xaml`: the mute trigger's `AutomationProperties.HelpText`
+      becomes runtime-neutral ("The runtime executable was not found, …") so it stays truthful when the
+      unavailable option is PowerShell 7.
+- [x] 5.9 *(D10)* `SettingsViewModelApplicationTests`: stub `Locate(PowerShell7)` in the four Git Bash
+      availability tests so they keep asserting exactly the Git Bash scenario; add
+      `Load_PowerShell7Unresolved_MarksPowerShell7NotInstalled` and
+      `Load_PowerShell7StoredButUnavailable_PreservesSelectionAndSaves` (stored `PowerShell7` with an
+      unresolved locator still saves `PowerShell7`).
+- [x] 5.10 *(D10)* Gate: `dotnet build CLIHub.sln` and `dotnet test tests/CLIHub.Tests`.
 
 ## 6. Refit the PATH-dependent Windows Git Bash test
 
@@ -155,6 +217,10 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
 - [x] 6.2 Gate: `dotnet test tests/CLIHub.Core.Windows.Tests` and confirm the test either runs to green or
       skips only because Git for Windows is absent (on this machine it runs — see design.md "Observed
       machine state").
+- [x] 6.3 *(D10)* `LaunchAsync_PowerShell7_ChildStartsInWorkingDirectory` switches from the
+      `IsOnPath("pwsh.exe")` gate to the locator: unresolved → skip; resolved → `BuildStartInfo` receives
+      the absolute path and `RuntimeInfo.ExecutablePath` carries it (the old body encoded the bare-name
+      contract). The locator rename also updates the Git Bash test's construction site.
 
 ## 7. Docs and final gates
 
@@ -170,6 +236,10 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
 - [x] 7.5 `graphify update .` after all source edits are complete.
 - [x] 7.6 Confirm the diff contains no unrelated edits (no `RuntimeSelector` removal, no quoting changes, no
       backlog edits) and report the result for approval; do not commit.
+- [x] 7.7 *(D10)* `docs/architecture/processes.md`: add the PowerShell 7 resolution/failure bullet beside
+      the Git Bash one and fold the resolved `pwsh.exe` into the external-integration bullet.
+- [x] 7.8 *(D10)* Final gates re-run after the extension: `dotnet build CLIHub.sln`,
+      `dotnet test CLIHub.sln`, `openspec validate --all`, `graphify update .`.
 
 ## 8. Manual verification (user-executed)
 
@@ -182,7 +252,8 @@ members, XML documentation on public APIs, test names `MethodOrScenario_Conditio
 
 ## 9. Out of scope (do not fold into this change)
 
-- WSL as an explicit runtime kind; resolving or gating `cmd.exe`, `powershell.exe`, or `pwsh.exe`.
+- WSL as an explicit runtime kind; resolving or gating `cmd.exe` or `powershell.exe` (PowerShell 7
+  entered scope through D10).
 - Auto-switching the configured runtime when Git Bash is missing; caching the resolution.
 - Widening `LaunchProcess`'s `bool` into a reason-carrying result (design.md D7, open question 4).
 - Removing `RuntimeSelector` / `RuntimeType.WindowsTerminal`, the matcher's unused logger, or any other
