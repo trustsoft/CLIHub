@@ -67,22 +67,25 @@ an `overrides` window in the policy JSON (`valid_from` / `valid_until`).
   "exhaustedUntil": { "zai-coding-plan/glm-5.3": "2026-10-21T14:00:00Z" },
   "sessionLog": [
     { "at": "2026-10-21T10:00:00Z", "role": "verifier", "from": "zai-coding-plan/glm-5.3",
-      "to": "relayfast/claude-sonnet-5", "reason": "429 quota" }
+      "to": "relayfast/claude-sonnet-5", "preset": "default", "reason": "429 quota" }
   ]
 }
 ```
 
-Ownership: the orchestrator writes `exhausted_until` and `session_log`; the sidebar writes
-`active_preset` and `role_overrides`. Each writer read-modify-writes only its own fields, atomically.
+Ownership: the orchestrator writes `exhaustedUntil` and `sessionLog`; the sidebar writes
+`activePreset` and `roleOverrides`. Each writer read-modify-writes only its own fields, atomically.
 
 ## How the orchestrator resolves a dispatch
 
-1. `effective_preset` = first matching `overrides` window, else `active_preset`.
-2. Take the role's ordered list; drop models whose `exhausted_until` is still in the future.
+1. `effective_preset` = first matching `overrides` window in the policy, else the runtime
+   `activePreset`, else the policy `active_preset`.
+2. Take the role's ordered list; drop models whose runtime `exhaustedUntil` is still in the future.
 3. Try in order. On an **availability** failure (429 / quota / billing / auth / not-found) mark the
-   model `exhausted_until = now + backoff` and try the next. On a **quality** failure (the agent
+   model's `exhaustedUntil` = now + backoff and try the next. On a **quality** failure (the agent
    misunderstood) escalate to the next model in the same list.
 4. If a `block_and_ask` role runs out of acceptable models → stop and ask the user.
+5. Map the role's `effort` level onto the chosen model's `variants` (see
+   [Reasoning effort](#reasoning-effort)) and emit `provider/model#variant`.
 
 ## Why two layers
 

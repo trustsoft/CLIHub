@@ -9,13 +9,16 @@ Use this file for navigation. Current behavior and architecture are summarized i
 .
 ├── src/
 │   ├── CLIHub.Core/          # UI-independent Core logic, services, models, and infrastructure
+│   ├── CLIHub.Core.Windows/  # Windows platform adapters: registry, single-instance, processes, theme
 │   └── CLIHub/               # WPF application, tray, windows, startup, and UI workflows
 ├── tests/
 │   ├── CLIHub.Core.Tests/    # Core-only xUnit tests
+│   ├── CLIHub.Core.Windows.Tests/ # Windows adapter xUnit tests
 │   └── CLIHub.Tests/         # Application and WPF-dependent xUnit tests
 ├── docs/                     # Current project, architecture, release, glossary, and ADR docs
 ├── openspec/
 │   ├── specs/                # Durable behavior contracts
+│   ├── plans/                # Roadmap and plan documents
 │   └── changes/archive/      # Completed change history
 ├── .github/workflows/        # CI and tag-driven release workflows
 ├── assets/                   # Application icon source material
@@ -36,11 +39,14 @@ Build output is redirected to the git-ignored `artifacts/` and `obj/` directorie
 
 ## Source Navigation
 
-- `CLIHub.Core` is organized by ownership: `Configuration/`, `Projects/`, `Plugins/`, `Agents/`, `Updates/`,
-  `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`, `Logging/`, `Formatting/`, and
-  embedded `SeedPlugins/`.
-- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, plus subsystem folders that
-  mirror ownership: `Tray/`, `Startup/`, `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
+- `CLIHub.Core` is organized by ownership: `Configuration/`, `Projects/`, `Scanning/`, `Plugins/`, `Agents/`,
+  `Updates/`, `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`, `Logging/`, `Formatting/`,
+  and embedded `SeedPlugins/`.
+- `CLIHub.Core.Windows` holds the Windows platform adapters (registry startup, single-instance guard, process
+  runners, agent process inspection, system theme detection) behind the ports declared in Core.
+- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, `Controls/`,
+  `Behaviors/`, `Helpers/`, and `Imaging/`, plus subsystem folders that mirror ownership: `Tray/`, `Startup/`,
+  `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
   registration). Only the entry point (`Program.cs`, `App.xaml.cs`, `AssemblyInfo.cs`) stays at the project root.
 - Core contracts are colocated with their owning subsystem. Exact class locations should be checked in the
   source rather than inferred from this summary.

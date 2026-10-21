@@ -9,9 +9,10 @@
 // (block_and_ask) or has no resolvable model.
 //
 // Effort: the role declares a normalized level (off|low|medium|high|max); the
-// resolver maps it onto the chosen model's supported `variants` (nearest at or
-// below the level; `off` means `none` when supported, otherwise no variant). A
-// chain entry may override the level inline as `model#variant`.
+// resolver maps it onto the chosen model's supported `variants` (the lowest
+// variant at or above the level, else the highest available; `off` means
+// `none` when supported, otherwise no variant). A chain entry may override the
+// level inline as `model#variant`.
 //
 // This is the orchestrator's dispatch gate: run it before every subagent dispatch
 // and use its output as the `model` for tools.subagent.

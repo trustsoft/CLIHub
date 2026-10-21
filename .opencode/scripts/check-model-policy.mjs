@@ -22,6 +22,14 @@ function fail(msg) {
   problems.push(msg);
 }
 
+// Splits a `model#variant` entry into its parts; a bare id has no variant.
+function splitEntry(entry) {
+  const hash = entry.indexOf("#");
+  return hash > 0
+    ? { id: entry.slice(0, hash), variant: entry.slice(hash + 1) }
+    : { id: entry, variant: undefined };
+}
+
 const policy = JSON.parse(readFileSync(POLICY_PATH, "utf8"));
 
 // ── policy ────────────────────────────────────────────────────────────────────
@@ -136,8 +144,22 @@ if (!existsSync(RUNTIME_PATH)) {
     if (!roles.includes(entry.role)) {
       fail(`sessionLog #${i} has unknown role '${entry.role}'`);
     }
-    if (entry.to && !models.has(entry.to)) {
-      fail(`sessionLog #${i} references unknown model '${entry.to}'`);
+    for (const field of ["from", "to"]) {
+      const value = entry[field];
+      if (!value) {
+        continue;
+      }
+      const { id, variant } = splitEntry(value);
+      if (!models.has(id)) {
+        fail(`sessionLog #${i} references unknown model '${id}'`);
+        continue;
+      }
+      if (variant !== undefined) {
+        const supported = policy.models[id]?.variants ?? [];
+        if (!supported.includes(variant)) {
+          fail(`sessionLog #${i} variant '#${variant}' is not supported by '${id}'`);
+        }
+      }
     }
     if (entry.preset && !presets.includes(entry.preset)) {
       fail(`sessionLog #${i} references unknown preset '${entry.preset}'`);

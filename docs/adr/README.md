@@ -22,7 +22,7 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 
 | ADR   | Decision                                                              | Status   |
 | ----- | --------------------------------------------------------------------- | -------- |
-| 0001  | [Core/UI boundaries](0001-core-ui-boundaries.md)                       | Accepted |
+| 0001  | [Core/UI boundaries](0001-core-ui-boundaries.md)                       | Accepted (amended by 0006) |
 | 0002  | [Single configuration document](0002-single-configuration-document.md) | Accepted |
 | 0003  | [Startup orchestration](0003-startup-orchestration.md)                 | Accepted |
 | 0004  | [Plugin catalog and precedence](0004-plugin-catalog-and-precedence.md) | Accepted |

@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted — 2026-10-06. Implemented by the original application scaffold and enforced by `split-core-and-ui-test-projects`.
+Accepted — 2026-10-06. Implemented by the original application scaffold and enforced by `split-core-and-ui-test-projects`. The "Windows-aware Core" clause was amended by [0006](0006-windows-platform-library.md) (2026-10-14): the Windows adapters moved to `src/CLIHub.Core.Windows`.
 
 ## Context
 

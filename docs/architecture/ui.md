@@ -10,10 +10,10 @@ Window inventory and MVVM responsibilities: [../architecture.md](../architecture
 
 ## XAML Themes and Styles Recipe
 
-Layering: `DarkTheme.xaml` (dark base palette, merged by App.xaml) with `LightTheme.xaml` and `BlueTheme.xaml` merged on top at startup through the `ThemeCatalog` registry + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges palette and Sizing itself) → per-window dictionaries (`LaunchWindowStyles.xaml`, `SettingsStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Controls.xaml`, the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
+Layering: `DarkTheme.xaml` (dark base palette, merged by App.xaml) with `LightTheme.xaml` and `BlueTheme.xaml` merged on top at startup through the `ThemeCatalog` registry + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges the sizing tokens only — the palette brushes are referenced with `DynamicResource` and resolve from the application-level palette) → per-window dictionaries (`LaunchWindowStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Controls.xaml`, `SettingsStyles.xaml` (shared with the extracted Settings pages, which are built before they attach to the window tree), the implicit `ScrollBar` and `ToolTip` styles, and the shared converters.
 
 To add a window:
-1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the palette and sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries).
+1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries; palette brushes resolve from the application-level palette through `DynamicResource`).
 2. Define keyed styles only (no implicit styles — they would not reach popups anyway); build on the shared bases (`IconChipButton`, `QuietChipButton`, `WindowHeader`, `WindowTitle`) via `BasedOn`.
 3. Merge it from the window's `Window.Resources`; reference colors exclusively through palette brushes, metrics through `Sizing.*`, glyphs through `IconGlyphs`.
 4. Add tooltips as plain `ToolTip="..."` attributes — the app-level implicit style themes them automatically.
@@ -61,7 +61,7 @@ page `Load()`. There are no folder watchers or timers: folder availability stays
 snapshot until the next trigger. `IProjectService` reads return detached `Project` copies; only the
 catalog owns long-lived row instances. The snapshot (not live) semantics and the instance-ownership
 split are rationale-level detail: see the `introduce-project-model` change's `design.md` under
-`openspec/changes/` (archived under `openspec/changes/archive/` once completed).
+`openspec/changes/archive/2026-10-19-introduce-project-model/`.
 
 The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and startup merges the palette registered in `ThemeCatalog.ResolvePalettePath` for the stored theme on top of the dark base (a null resolution keeps the base).
 

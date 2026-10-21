@@ -32,7 +32,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   blessing; `SettingsWindow.ShowSettings` (load-before-show) would need restructuring too.
 - Trigger: Settings open still perceived slow after the pre-filter, or a request for an async
   Settings load.
-- Decision recorded in `openspec/changes/fix-settings-open-delay/design.md` (D2, rejected there).
+- Decision recorded in `openspec/changes/archive/2026-10-20-fix-settings-open-delay/design.md` (D2, rejected there).
 
 ### Monitor-level running-agent cache
 
@@ -81,7 +81,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 - Severity: Low (design-accepted)
 - Evidence: the PATH steps of `WindowsRuntimeLocator.LocateGitBash`
-  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:260-295`) and `LocatePowerShell7` (`:335-361`)
+  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:233-303`) and `LocatePowerShell7` (`:304-369`)
   accept the first matching executable outside the registry/well-known steps. For bash this may be a
   non-Git-for-Windows flavor (Cygwin/MSYS); for pwsh it is deliberate, because Microsoft Store
   installs surface as a WindowsApps execution alias. The `agent-commands` requirement wording
@@ -95,7 +95,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 - Severity: Low
 - Evidence: `WindowsRuntimeEnvironment.ReadGitForWindowsInstallPath`
-  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:86-91`) returns the first non-empty value across
+  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:77-92`) returns the first non-empty value across
   HKLM64 → HKLM32 → HKCU views, so a stale HKLM value shadows a valid HKCU/32-bit install; the class
   has no direct unit test (only the fake seam exercises the locator).
 - Proposed remedy: collect every candidate and prefer one whose `bin\bash.exe` exists; add
@@ -202,7 +202,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: delete the selector, its registration, and its tests; drop
   `RuntimeType.WindowsTerminal` if the settings model no longer needs it.
 - Trigger: the next dead-member sweep, or the Git Bash locator landing in the same registration file
-  (found while refreshing `openspec/changes/git-bash-resolution`; explicitly out of its scope).
+  (found while refreshing `openspec/changes/archive/2026-10-20-git-bash-resolution`; explicitly out of its scope).
 
 ## Test suite
 
@@ -218,3 +218,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: on recurrence, re-run with `--logger trx`, capture the test name, and stabilize the
   offending timing window.
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
+
+## Agent tooling
+
+### `resolve-model.mjs --record` can fail with EPERM and lose the session-log entry
+
+- Severity: Low (agent tooling only; the repository build and product are unaffected)
+- Evidence: on 2026-10-21 the dispatch gate
+  (`.opencode/scripts/resolve-model.mjs <role> --record`) failed with
+  `EPERM: operation not permitted, rename '.opencode/model-policy.json.tmp-<pid>' ->
+  '.opencode/model-policy.json'` while appending a session-log entry. The atomic write
+  (`writeJsonAtomic`, `.opencode/scripts/resolve-model.mjs:36-40`) has no retry, so the rename
+  failure aborts the script before the resolved model is printed and leaves the temp file behind.
+  The stale temp file `model-policy.json.tmp-37648` was removed manually.
+- Proposed remedy: retry the rename a few times before giving up (Windows can transiently hold a
+  handle on the target file), write the resolved model to stdout before the session-log write, and
+  delete the temp file when the rename fails.
+- Trigger: the next EPERM from the dispatch gate, or any change to `resolve-model.mjs`.

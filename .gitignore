@@ -121,5 +121,9 @@ graphify-out/
 .opencode/pipeline.json
 .opencode/model-policy.json
 
+# OpenCode model-policy working files (agent tooling, local to each machine)
+.opencode/model-policy-context.md
+.opencode/model-policy.json.tmp-*
+
 # Root-level scratch pages (test.html, test2.html, ...) kept out of the repository
 /test*.html
