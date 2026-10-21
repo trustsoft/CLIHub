@@ -46,8 +46,9 @@ See `docs/agent-model-policy.md` for which model each child task uses, and
 node .opencode/scripts/resolve-model.mjs <role> --record
 ```
 
-The script prints the effective model (override window → runtime preset → policy preset → role chain,
-skipping models whose `exhausted_until` is in the future) and appends a `sessionLog` entry. Use its
+The script prints the effective model — `provider/model#variant` when the model supports reasoning
+effort — (override window → runtime preset → policy preset → role chain, skipping models whose
+`exhausted_until` is in the future) and appends a `sessionLog` entry. Use its
 stdout as the subagent's `model`. If it exits non-zero, the role is blocked (`block_and_ask`) or has no
 model — stop and ask the user instead of silently weakening the task. `explorer` tasks use the
 `explorer` role; `general` tasks use `research` (investigations/summaries) or `mechanical` (gate runs,

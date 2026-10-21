@@ -1,16 +1,21 @@
-// Resolves the effective model for a subagent role from the two-layer model policy.
+// Resolves the effective model (and reasoning effort) for a subagent role from the
+// two-layer model policy.
 //
 //   node .opencode/scripts/resolve-model.mjs <role> [--record]
 //
-// Role is one of the policy's roles (planner, implementer, verifier, explorer, mechanical).
-// Prints the model id to stdout, or exits non-zero with a message when the role is
-// blocked (block_and_ask) or has no resolvable model.
+// Role is one of the policy's roles (planner, implementer, verifier, explorer,
+// research, mechanical). Prints the model id, with `#variant` when the model
+// supports reasoning effort, or exits non-zero when the role is blocked
+// (block_and_ask) or has no resolvable model.
 //
-// With --record, appends a sessionLog entry to .opencode/model-policy.json describing the
-// resolution (preset default -> resolved model, with the reason).
+// Effort: the role declares a normalized level (off|low|medium|high|max); the
+// resolver maps it onto the chosen model's supported `variants` (nearest at or
+// below the level; `off` means `none` when supported, otherwise no variant). A
+// chain entry may override the level inline as `model#variant`.
 //
-// This is the orchestrator's dispatch gate: run it before every subagent dispatch and use
-// its output as the `model` for tools.subagent. check-model-policy.mjs validates the result.
+// This is the orchestrator's dispatch gate: run it before every subagent dispatch
+// and use its output as the `model` for tools.subagent.
+// check-model-policy.mjs validates the result.
 
 import { readFileSync, writeFileSync, renameSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -21,6 +26,8 @@ const POLICY_PATH = join(repoRoot, "docs", "agent-model-policy.json");
 const RUNTIME_PATH = join(repoRoot, ".opencode", "model-policy.json");
 
 const ROLES = ["planner", "implementer", "verifier", "explorer", "research", "mechanical"];
+const EFFORTS = new Set(["off", "low", "medium", "high", "max"]);
+const EFFORT_RANK = { none: 0, minimal: 1, low: 2, medium: 3, high: 4, xhigh: 5, max: 6 };
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
@@ -39,6 +46,44 @@ function isStillExhausted(iso, now) {
   }
   const t = Date.parse(iso);
   return Number.isNaN(t) ? false : t > now.getTime();
+}
+
+/** Splits `model#variant` into its parts; a bare id has no variant. */
+export function parseModelEntry(entry) {
+  const hash = entry.indexOf("#");
+  if (hash <= 0) {
+    return { id: entry, variant: undefined };
+  }
+  return { id: entry.slice(0, hash), variant: entry.slice(hash + 1) || undefined };
+}
+
+/**
+ * Maps a normalized effort level onto a model's supported variants: the lowest
+ * variant at or above the level, or the highest available when the model has
+ * none that high. `off` selects `none` when supported. Returns undefined when
+ * the model has no variants or the level cannot be applied.
+ */
+export function mapEffort(variants, effort) {
+  const list = Array.isArray(variants) ? variants.filter((v) => EFFORT_RANK[v] !== undefined) : [];
+  if (list.length === 0) {
+    return undefined;
+  }
+  if (!effort || effort === "off") {
+    return list.includes("none") ? "none" : undefined;
+  }
+  const target = EFFORT_RANK[effort];
+  if (target === undefined) {
+    return undefined;
+  }
+  const atOrAbove = list.filter((v) => EFFORT_RANK[v] >= target);
+  if (atOrAbove.length > 0) {
+    return atOrAbove.reduce((best, v) => (EFFORT_RANK[v] < EFFORT_RANK[best] ? v : best));
+  }
+  return list.reduce((best, v) => (EFFORT_RANK[v] > EFFORT_RANK[best] ? v : best));
+}
+
+export function formatModel(id, variant) {
+  return variant ? `${id}#${variant}` : id;
 }
 
 // effective_preset = first override whose window contains now, else runtime activePreset,
@@ -65,12 +110,20 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
 
   const { preset, reason: presetReason } = effectivePreset(policy, runtime, now);
   const chain = policy.presets?.[preset]?.[role] ?? policy.presets?.default?.[role] ?? [];
+  const known = chain
+    .map(parseModelEntry)
+    .filter((entry) => policy.models?.[entry.id]);
 
   const override = runtime.roleOverrides?.[role];
-  if (override && policy.models?.[override]) {
+  const overrideEntry = override ? parseModelEntry(override) : undefined;
+  if (overrideEntry && policy.models?.[overrideEntry.id]) {
+    const variants = policy.models?.[overrideEntry.id]?.variants ?? [];
+    const variant = overrideEntry.variant ?? mapEffort(variants, roleDef.effort);
     return {
       role,
-      model: override,
+      model: formatModel(overrideEntry.id, variant),
+      modelId: overrideEntry.id,
+      variant,
       preset,
       chain,
       reason: "role override",
@@ -79,8 +132,11 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
   }
 
   const exhausted = runtime.exhaustedUntil ?? {};
-  const skipped = chain.filter((m) => policy.models?.[m] && isStillExhausted(exhausted[m], now));
-  const usable = chain.filter((m) => policy.models?.[m] && !isStillExhausted(exhausted[m], now));
+  const skipped = chain.filter((entry) => {
+    const { id } = parseModelEntry(entry);
+    return policy.models?.[id] && isStillExhausted(exhausted[id], now);
+  });
+  const usable = known.filter((entry) => !isStillExhausted(exhausted[entry.id], now));
 
   if (usable.length === 0) {
     const detail = skipped.length > 0 ? ` (${skipped.length} model(s) exhausted)` : "";
@@ -90,9 +146,15 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
     return { error: `role '${role}' has no available model in preset '${preset}'${detail}` };
   }
 
+  const chosen = usable[0];
+  const variants = policy.models?.[chosen.id]?.variants ?? [];
+  const variant = chosen.variant ?? mapEffort(variants, roleDef.effort);
+
   return {
     role,
-    model: usable[0],
+    model: formatModel(chosen.id, variant),
+    modelId: chosen.id,
+    variant,
     preset,
     chain,
     skipped,
@@ -120,7 +182,7 @@ function main() {
   }
 
   if (record) {
-    const presetDefault = result.chain.find((m) => policy.models?.[m]) ?? result.model;
+    const presetDefault = (result.chain ?? []).map(parseModelEntry).find((e) => policy.models?.[e.id])?.id ?? result.modelId;
     runtime.schemaVersion ??= 1;
     runtime.activePreset ??= policy.active_preset;
     runtime.roleOverrides ??= {};

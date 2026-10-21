@@ -9,14 +9,31 @@ The policy has two layers, both JSON:
 
 ## Roles
 
-| Role | Subagents | Tier | On exhaustion |
-|---|---|---|---|
-| planner | `pipe/planner` | high | **block & ask** |
-| implementer | `pipe/implementer` | high | fall through the chain |
-| verifier | `pipe/verifier` | high | **block & ask** |
-| explorer | `explore` | any | fall through the chain |
-| research | `general` | medium | fall through the chain |
-| mechanical | *(orchestrator-only)* | any | fall through the chain |
+| Role | Subagents | Tier | Effort | On exhaustion |
+|---|---|---|---|---|
+| planner | `pipe/planner` | high | high | **block & ask** |
+| implementer | `pipe/implementer` | high | medium | fall through the chain |
+| verifier | `pipe/verifier` | high | high | **block & ask** |
+| explorer | `explore` | any | low | fall through the chain |
+| research | `general` | medium | medium | fall through the chain |
+| mechanical | *(orchestrator-only)* | any | low | fall through the chain |
+
+## Reasoning effort
+
+Each role declares a normalized `effort` (`off|low|medium|high|max`). The resolver maps it onto
+the chosen model's supported `variants` (the lowest variant at or above the level, or the highest
+available when the model has none that high), so a `medium` role on a model without `medium` does
+not silently drop to `low`. A chain entry may pin a specific variant inline as `model#variant`, and a
+`roleOverrides` value may too; both are validated against the model's `variants` in the catalog.
+
+Models differ widely: `zai-coding-plan/glm-5.3` offers `low/high/max` (no `medium`), `relayfast/
+claude-haiku-4-5` offers only `high/max`, `relayfast/deepseek-v4-pro` has no `max`, and the free
+`longcat-2.5-preview-free`, `mimo-v2.6-flash-free`, and `big-pickle` accept no variant at all. The
+resolver omits the `#variant` suffix when a model cannot take one.
+
+**Cost note:** a higher effort consumes more tokens, so on a metered plan it burns the quota faster.
+The exhaustion logic does not yet weight usage by effort; treat `max` on a plan model as a
+quota-expensive choice.
 
 `research` serves the `general` subagent for investigations and summaries (medium tier). `mechanical`
 is an orchestrator-only role — no subagent maps to it by name — used for gate runs, status dumps, and

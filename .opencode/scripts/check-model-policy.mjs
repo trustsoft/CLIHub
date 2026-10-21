@@ -16,6 +16,8 @@ const RUNTIME_PATH = join(repoRoot, ".opencode", "model-policy.json");
 const problems = [];
 const notes = [];
 
+const EFFORTS = new Set(["off", "low", "medium", "high", "max"]);
+
 function fail(msg) {
   problems.push(msg);
 }
@@ -46,6 +48,9 @@ for (const [role, def] of Object.entries(policy.roles ?? {})) {
   } else if (!["next", "block_and_ask"].includes(def.on_exhaustion)) {
     fail(`role '${role}' has invalid on_exhaustion '${def.on_exhaustion}'`);
   }
+  if (def.effort !== undefined && !EFFORTS.has(def.effort)) {
+    fail(`role '${role}' has invalid effort '${def.effort}'`);
+  }
 }
 
 const presets = Object.keys(policy.presets ?? {});
@@ -64,9 +69,19 @@ for (const preset of presets) {
       fail(`preset '${preset}' has no chain for role '${role}'`);
       continue;
     }
-    for (const model of chain) {
+    for (const entry of chain) {
+      const hash = entry.indexOf("#");
+      const model = hash > 0 ? entry.slice(0, hash) : entry;
+      const variant = hash > 0 ? entry.slice(hash + 1) : undefined;
       if (!models.has(model)) {
         fail(`preset '${preset}' role '${role}' references unknown model '${model}'`);
+        continue;
+      }
+      if (variant !== undefined) {
+        const supported = policy.models[model]?.variants ?? [];
+        if (!supported.includes(variant)) {
+          fail(`preset '${preset}' role '${role}' variant '#${variant}' is not supported by '${model}'`);
+        }
       }
     }
   }
@@ -97,8 +112,16 @@ if (!existsSync(RUNTIME_PATH)) {
     if (!roles.includes(role)) {
       fail(`runtime.roleOverrides has unknown role '${role}'`);
     }
-    if (!models.has(model)) {
-      fail(`runtime.roleOverrides['${role}'] references unknown model '${model}'`);
+    const hash = model.indexOf("#");
+    const id = hash > 0 ? model.slice(0, hash) : model;
+    if (!models.has(id)) {
+      fail(`runtime.roleOverrides['${role}'] references unknown model '${id}'`);
+    } else if (hash > 0) {
+      const variant = model.slice(hash + 1);
+      const supported = policy.models[id]?.variants ?? [];
+      if (!supported.includes(variant)) {
+        fail(`runtime.roleOverrides['${role}'] variant '#${variant}' is not supported by '${id}'`);
+      }
     }
   }
   for (const [model, until] of Object.entries(runtime.exhaustedUntil ?? {})) {
