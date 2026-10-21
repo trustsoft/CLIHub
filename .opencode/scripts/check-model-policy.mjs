@@ -8,6 +8,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { parseModelEntry } from "./resolve-model.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const POLICY_PATH = join(repoRoot, "docs", "agent-model-policy.json");
@@ -20,14 +21,6 @@ const EFFORTS = new Set(["off", "low", "medium", "high", "max"]);
 
 function fail(msg) {
   problems.push(msg);
-}
-
-// Splits a `model#variant` entry into its parts; a bare id has no variant.
-function splitEntry(entry) {
-  const hash = entry.indexOf("#");
-  return hash > 0
-    ? { id: entry.slice(0, hash), variant: entry.slice(hash + 1) }
-    : { id: entry, variant: undefined };
 }
 
 const policy = JSON.parse(readFileSync(POLICY_PATH, "utf8"));
@@ -149,7 +142,7 @@ if (!existsSync(RUNTIME_PATH)) {
       if (!value) {
         continue;
       }
-      const { id, variant } = splitEntry(value);
+      const { id, variant } = parseModelEntry(value);
       if (!models.has(id)) {
         fail(`sessionLog #${i} references unknown model '${id}'`);
         continue;

@@ -5,7 +5,18 @@
 // block_and_ask starvation, and reasoning-effort mapping onto model variants.
 
 import assert from "node:assert/strict";
-import { resolveModel, mapEffort } from "./resolve-model.mjs";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  resolveModel,
+  mapEffort,
+  applyExhaustion,
+  writeJsonAtomic,
+  readJsonWithRetry,
+} from "./resolve-model.mjs";
 
 const HOUR = 60 * 60 * 1000;
 // `beforeWindow` is outside the override window; `inWindow` is inside it.
@@ -171,6 +182,66 @@ test("mapEffort picks the lowest variant at or above the level", () => {
   assert.equal(mapEffort([], "high"), undefined);
   assert.equal(mapEffort(["low", "high"], undefined), undefined);
   assert.equal(mapEffort(["low", "high"], "bogus"), undefined);
+});
+
+test("applyExhaustion marks the model and drops the variant", () => {
+  const state = runtime();
+  applyExhaustion(state, "zai-coding-plan/glm-5.3#high", "2026-10-22T00:00:00Z");
+  assert.equal(state.exhaustedUntil["zai-coding-plan/glm-5.3"], "2026-10-22T00:00:00Z");
+  assert.equal(state.exhaustedUntil["zai-coding-plan/glm-5.3#high"], undefined);
+});
+
+test("an exhausted model is skipped and the next chain entry is used", () => {
+  const state = runtime();
+  applyExhaustion(state, "zai-coding-plan/glm-5.3", "2026-10-22T00:00:00Z");
+  const result = resolveModel(policy, state, "planner", beforeWindow);
+  assert.equal(result.model, "relayfast/claude-sonnet-5#high");
+  assert.equal(result.reason, "exhausted skip");
+});
+
+test("writeJsonAtomic replaces the target and leaves no temp file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "model-policy-"));
+  const target = join(dir, "runtime.json");
+  try {
+    writeJsonAtomic(target, { activePreset: "default" });
+    writeJsonAtomic(target, { activePreset: "flash_only" });
+    assert.deepEqual(JSON.parse(readFileSync(target, "utf8")), { activePreset: "flash_only" });
+    assert.deepEqual(readdirSync(dir), ["runtime.json"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("writeJsonAtomic removes the temp file when the write fails", () => {
+  const dir = mkdtempSync(join(tmpdir(), "model-policy-"));
+  const target = join(dir, "target.json");
+  try {
+    // A directory cannot be replaced by a rename, so the write fails.
+    mkdirSync(target);
+    assert.throws(() => writeJsonAtomic(target, { a: 1 }, { retries: 0 }));
+    assert.deepEqual(readdirSync(dir), ["target.json"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the policy gate passes on the current policy and runtime files", () => {
+  const checker = fileURLToPath(new URL("./check-model-policy.mjs", import.meta.url));
+  const result = spawnSync(process.execPath, [checker], { encoding: "utf8" });
+  assert.equal(result.status, 0, `check-model-policy.mjs failed:\n${result.stderr}`);
+  assert.match(result.stdout, /model policy check OK/);
+});
+
+test("readJsonWithRetry reads a file and reports a missing one", () => {
+  const dir = mkdtempSync(join(tmpdir(), "model-policy-"));
+  try {
+    const target = join(dir, "runtime.json");
+    writeFileSync(target, JSON.stringify({ activePreset: "default" }), "utf8");
+    assert.deepEqual(readJsonWithRetry(target), { activePreset: "default" });
+    assert.throws(() => readJsonWithRetry(join(dir, "missing.json"), { retries: 0 }));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 console.log(`\n${passed} tests passed`);

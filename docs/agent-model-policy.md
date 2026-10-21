@@ -87,6 +87,22 @@ Ownership: the orchestrator writes `exhaustedUntil` and `sessionLog`; the sideba
 5. Map the role's `effort` level onto the chosen model's `variants` (see
    [Reasoning effort](#reasoning-effort)) and emit `provider/model#variant`.
 
+## Dispatch gate
+
+```powershell
+node .opencode/scripts/resolve-model.mjs <role> [--record] [--exhaust <model>] [--until <iso> | --backoff <minutes>]
+```
+
+- The resolved model is printed on stdout; the orchestrator uses it as the subagent `model`.
+- `--record` appends the dispatch to the runtime `sessionLog`.
+- `--exhaust <model>` records an **availability** failure: the model is marked exhausted in the
+  runtime file and the next usable model for the role is printed, so the fallback happens in one
+  command. The mark expires at `--until <iso>` or after `--backoff <minutes>` (default 30). A
+  `model#variant` argument is reduced to its model id.
+- The runtime read and write are resilient to a transient file lock: the read and the atomic
+  rename (temp file + rename) are retried on Windows sharing errors. The model is printed
+  *before* the write, so a failed write is reported on stderr but does not fail the dispatch.
+
 ## Why two layers
 
 The policy JSON is a *contract* (what should be preferred, and what is safe to fall back to). The
@@ -100,7 +116,8 @@ parser is needed.
 - Sidebar panel: preset switcher + per-role dropdown + exhausted-until indicator (the `model-policy`
   TUI plugin in the OpenCode config).
 - Dispatch gate: `.opencode/scripts/resolve-model.mjs <role> --record` — the orchestrator runs this
-  before every subagent dispatch and uses its stdout as the model; it appends to `session_log`.
+  before every subagent dispatch and uses its stdout as the model; it appends to `sessionLog`.
+  See [Dispatch gate](#dispatch-gate) for the `--exhaust` fallback flow.
 - Policy gate: `.opencode/scripts/check-model-policy.mjs` — validates the policy and runtime layers
   (roles, presets, chains, overrides, session log). Part of the verification commands in `AGENTS.md`.
 - Resolver tests: `node .opencode/scripts/resolve-model.test.mjs`.

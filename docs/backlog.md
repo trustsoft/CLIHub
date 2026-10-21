@@ -221,17 +221,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent tooling
 
-### `resolve-model.mjs --record` can fail with EPERM and lose the session-log entry
+### Reasoning effort is not weighted into the exhaustion logic
 
-- Severity: Low (agent tooling only; the repository build and product are unaffected)
-- Evidence: on 2026-10-21 the dispatch gate
-  (`.opencode/scripts/resolve-model.mjs <role> --record`) failed with
-  `EPERM: operation not permitted, rename '.opencode/model-policy.json.tmp-<pid>' ->
-  '.opencode/model-policy.json'` while appending a session-log entry. The atomic write
-  (`writeJsonAtomic`, `.opencode/scripts/resolve-model.mjs:36-40`) has no retry, so the rename
-  failure aborts the script before the resolved model is printed and leaves the temp file behind.
-  The stale temp file `model-policy.json.tmp-37648` was removed manually.
-- Proposed remedy: retry the rename a few times before giving up (Windows can transiently hold a
-  handle on the target file), write the resolved model to stdout before the session-log write, and
-  delete the temp file when the rename fails.
-- Trigger: the next EPERM from the dispatch gate, or any change to `resolve-model.mjs`.
+- Severity: Low (documented limitation; agent tooling only)
+- Evidence: the exhaustion bookkeeping in `.opencode/scripts/resolve-model.mjs` treats every model
+  as exhausted for the same backoff, while the role's `effort` level changes how much of the quota
+  a dispatch consumes — `max` on a metered plan model burns it faster than `low`. The policy's
+  `_effort_note` and `docs/agent-model-policy.md` ("Cost note") both state that the logic does not
+  weight usage by effort.
+- Proposed remedy: scale the backoff by the effort level of the dispatch that failed, so a
+  high-effort failure on a plan model blocks it longer than a low-effort one.
+- Trigger: a request for effort-aware quota handling, or the first plan-model exhaustion that
+  recovers too slowly for the workload.
