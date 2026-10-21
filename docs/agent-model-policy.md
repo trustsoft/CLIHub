@@ -15,7 +15,13 @@ The policy has two layers, both JSON:
 | implementer | `pipe/implementer` | high | fall through the chain |
 | verifier | `pipe/verifier` | high | **block & ask** |
 | explorer | `explore` | any | fall through the chain |
-| mechanical | `general` | any | fall through the chain |
+| research | `general` | medium | fall through the chain |
+| mechanical | *(orchestrator-only)* | any | fall through the chain |
+
+`research` serves the `general` subagent for investigations and summaries (medium tier). `mechanical`
+is an orchestrator-only role — no subagent maps to it by name — used for gate runs, status dumps, and
+formatting, where any model is fine. The orchestrator picks `research` vs `mechanical` per task when it
+resolves.
 
 `block & ask` means the pipeline **stops and asks the user** instead of silently running a planner or
 verifier on a weaker model — a nominal verification is worse than no verification.
@@ -71,5 +77,11 @@ parser is needed.
 
 ## Related
 
-- Sidebar panel (in progress): preset switcher + per-role dropdown + exhausted-until indicator.
+- Sidebar panel: preset switcher + per-role dropdown + exhausted-until indicator (the `model-policy`
+  TUI plugin in the OpenCode config).
+- Dispatch gate: `.opencode/scripts/resolve-model.mjs <role> --record` — the orchestrator runs this
+  before every subagent dispatch and uses its stdout as the model; it appends to `session_log`.
+- Policy gate: `.opencode/scripts/check-model-policy.mjs` — validates the policy and runtime layers
+  (roles, presets, chains, overrides, session log). Part of the verification commands in `AGENTS.md`.
+- Resolver tests: `node .opencode/scripts/resolve-model.test.mjs`.
 - `docs/backlog.md` — escalation notes when a flash model is rejected.

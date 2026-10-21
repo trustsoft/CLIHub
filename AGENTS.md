@@ -31,12 +31,28 @@ spec; do not load the whole documentation tree.
 dotnet build CLIHub.sln
 dotnet test CLIHub.sln
 dotnet run --project src/CLIHub/CLIHub.csproj
+node .opencode/scripts/check-model-policy.mjs
 openspec validate --all
 ```
 
 ## Subagent Model Policy
 
-See `docs/agent-model-policy.md` for which model each child task uses.
+See `docs/agent-model-policy.md` for which model each child task uses, and
+`docs/agent-model-policy.json` for the machine-readable policy (roles, presets, fallback chains).
+
+**Dispatch gate:** before dispatching any subagent, resolve its role's model and record it:
+
+```powershell
+node .opencode/scripts/resolve-model.mjs <role> --record
+```
+
+The script prints the effective model (override window → runtime preset → policy preset → role chain,
+skipping models whose `exhausted_until` is in the future) and appends a `sessionLog` entry. Use its
+stdout as the subagent's `model`. If it exits non-zero, the role is blocked (`block_and_ask`) or has no
+model — stop and ask the user instead of silently weakening the task. `explorer` tasks use the
+`explorer` role; `general` tasks use `research` (investigations/summaries) or `mechanical` (gate runs,
+status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents use
+`planner`/`implementer`/`verifier`.
 
 ## Change, Commit, and Archive Policy
 

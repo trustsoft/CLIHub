@@ -7,8 +7,10 @@
     "implementer": { "agents": ["pipe/implementer"], "tier": "high", "on_exhaustion": "next" },
     "verifier": { "agents": ["pipe/verifier"], "tier": "high", "on_exhaustion": "block_and_ask" },
     "explorer": { "agents": ["explore"], "tier": "any", "on_exhaustion": "next" },
-    "mechanical": { "agents": ["general"], "tier": "any", "on_exhaustion": "next" }
+    "research": { "agents": ["general"], "tier": "medium", "on_exhaustion": "next" },
+    "mechanical": { "agents": [], "tier": "any", "on_exhaustion": "next" }
   },
+  "_roles_note": "research serves the `general` subagent for investigations/summaries (medium tier). mechanical is orchestrator-only (empty agents) for gate runs, status dumps, and formatting — any model. The orchestrator picks the role per task when it resolves.",
   "models": {
     "zai-coding-plan/glm-5.3": { "billing": "plan", "tier": "high", "limits": "5-hour + weekly", "max_concurrent": 4 },
     "zai-coding-plan/glm-5.3-flash": { "billing": "plan", "tier": "medium", "limits": "shares the Z.AI plan", "max_concurrent": 8 },
@@ -36,6 +38,7 @@
       "implementer": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "zai-coding-plan/glm-5.3-flash"],
       "verifier": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
       "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
+      "research": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash", "opencode/glm-5.3-flash-free"],
       "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
     },
     "plan_exhausted": {
@@ -43,6 +46,7 @@
       "implementer": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro", "relayfast/deepseek-v4.1-flash"],
       "verifier": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro"],
       "explorer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
+      "research": ["relayfast/deepseek-v4.1-flash", "opencode/deepseek-v4.1-flash-free"],
       "mechanical": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"]
     },
     "free_only": {
@@ -50,6 +54,7 @@
       "implementer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
       "verifier": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
       "explorer": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free", "opencode/minimax-m3.1-flash-free"],
+      "research": ["opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
       "mechanical": ["opencode/glm-5.3-flash-free", "opencode/mimo-v2.6-flash-free"]
     },
     "flash_only": {
@@ -57,6 +62,7 @@
       "implementer": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
       "verifier": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
       "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"],
+      "research": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
       "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
     }
   },
