@@ -275,6 +275,22 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
   mechanism to project level is a later, separate decision.
 
+### Concurrent writers can clobber `.opencode/pipeline.json`
+
+- Severity: Medium (silent loss of pipeline state, no error surfaces)
+- Evidence: the sidebar plugin only reads the file, but every orchestrator session rewrites it
+  read-modify-write (read JSON, mutate, temp file + rename) with no lock or revision check. On
+  2026-10-22 two sessions wrote the same file minutes apart: the theme workstream advanced
+  `theme-xaml-structure` (18:21) and `live-theme-switch` (20:28) while the sidebar-limit work
+  appended `pipeline-sidebar-limit`; each write preserved the other's data only because it happened
+  to re-read first. A write landing between another writer's read and its rename drops that
+  writer's transition silently.
+- Proposed remedy: keep one writer per project (orchestrator owns the file) or serialize with a
+  lock file, and make the write re-read and retry when the top-level `updatedAt` changed since the
+  read (compare-and-swap).
+- Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
+  that run pipeline work in the same project at the same time.
+
 ## UI and theming
 
 ### Settings-page registration lives in two places
