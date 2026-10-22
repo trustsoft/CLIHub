@@ -28,7 +28,7 @@ This change eliminates all seven issues through a four-stage refactor without ch
 visible behavior (no color, size, or layout value changes). The new test from stage 2 guards
 stages 3-4 and remains as a CI gate for future edits.
 
-## What
+## What Changes
 
 Four staged work items:
 
