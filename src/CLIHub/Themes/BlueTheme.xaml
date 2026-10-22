@@ -4,9 +4,8 @@
     <!--
         Blue palette. Defines the same keys as DarkTheme.xaml (the dark palette) so the application
         can override the active palette at runtime for DynamicResource lookups. Merged on top of the
-        base palette only when the effective theme is blue. Blue-tinted dark chrome with the Blue
-        accent preset (#3B82F6) baked in instead of Sky; a stored non-default accent still overrides
-        the accent brushes live.
+        base palette only when the effective theme is blue. Defines blue-tinted chrome and surface
+        brushes only; the accent is application-scoped and applies independently of the theme.
     -->
 
     <!-- Surfaces -->
@@ -28,7 +27,6 @@
     <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
-    <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1A3B82F6"/>
     <!-- 1px highlight line drawn across the top edge of the dark-chrome windows -->
     <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
     <!-- Thumb of the slim application-level scrollbar -->
@@ -44,9 +42,6 @@
     <SolidColorBrush x:Key="IconBrush" Color="#FFD7DCE6"/>
     <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE5E9F1"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5A6272"/>
-
-    <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FF3B82F6"/>
 
     <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFD98282"/>

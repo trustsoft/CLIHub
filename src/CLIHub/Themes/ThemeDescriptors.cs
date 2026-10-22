@@ -60,7 +60,7 @@ public static class ThemeDescriptors
         new ThemeDescriptor(
             AppTheme.Blue,
             "Blue Theme",
-            "Blue-tinted dark chrome with a baked-in blue accent",
+            "Blue-tinted dark chrome",
             "/Themes/BlueTheme.xaml",
             "ThemePreviewBlueBrush",
             "ThemePreviewBarBlueBrush"),

@@ -330,17 +330,21 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   disposing the subscription with the application.
 - Trigger: a user report that switching Windows to dark leaves CLIHub light until restart.
 
-### A settings save pins the accent even when it equals the palette default
+### Accent precedence across a live palette switch (resolved)
 
-- Severity: Low (asymmetric accent precedence across a live palette switch)
-- Evidence: `WpfAccentPreferenceTarget.SetAccent`
-  (`src/CLIHub/Settings/WpfAccentPreferenceTarget.cs:21-22`) writes `AccentBrush` and
-  `AccentSelectionBrush` as local application resources on every save, while `App.ApplyAccent`
-  (`src/CLIHub/App.xaml.cs:60-63`) skips that write when the stored accent equals
-  `AccentPalette.DefaultHex`. Local entries shadow merged palettes, so the baked accent of a palette
-  selected later in the same session is not seen until the next start. Recorded as a pre-existing
-  asymmetry in `openspec/changes/live-theme-switch/design.md` (D4).
-- Proposed remedy: when the stored accent equals `AccentPalette.DefaultHex`, remove the two local
-  entries instead of writing them, so the active palette's baked accent applies.
-- Trigger: the first palette whose baked accent differs from Sky (Blue already does) being selected
-  in the same session.
+- Status: Resolved by the `accent-independent-of-theme` change (2026-10-23). Formerly parked as
+  "A settings save pins the accent even when it equals the palette default".
+- Resolved model: the accent is application-scoped with a single default (Sky `#4CC2FF`) and is
+  independent of the active theme. The three theme palettes declare chrome and surface brushes only;
+  neither `AccentBrush` nor `AccentSelectionBrush` is a palette key. `Settings/AccentApplier.cs`
+  writes both keys into `Application.Resources` (never `MergedDictionaries`) for both callers —
+  `App.ApplyAccent` at startup and `WpfAccentPreferenceTarget.SetAccent` on a Settings save — and
+  always applies the stored (normalized) accent, the default included. The former default-skip
+  branch in `App.ApplyAccent` is gone, so there is no local-entry-versus-baked-palette precedence
+  left: a theme switch never changes the accent and an accent save never changes the theme.
+- Guarded by: `AccentApplierTests` (`tests/CLIHub.Tests/Settings/AccentApplierTests.cs`, including
+  the palette-swap independence case), `ThemePaletteParityTests` (no palette may declare an accent
+  key), and `ApplicationResourceKeyTests` (the accent keys are never declared by a palette and never
+  read with `StaticResource`).
+- Trigger: an explicit product decision to reintroduce per-palette or "follow-palette" accents; none is
+  planned, and the change's non-goals reject both.

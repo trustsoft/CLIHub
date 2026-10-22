@@ -5,7 +5,8 @@ using System.Text.RegularExpressions;
 
 /// <summary>
 ///   Guards the application-level resource contract: palette brushes must be looked up dynamically,
-///   and the non-palette part of the merge tree must declare every key exactly once.
+///   the runtime-provided accent keys must stay out of the palettes, and the non-palette part of the
+///   merge tree must declare every key exactly once.
 /// </summary>
 /// <remarks>
 ///   <para>
@@ -32,6 +33,15 @@ public sealed class ApplicationResourceKeyTests
     private static readonly Regex StaticResourcePattern = new(
         "\\{StaticResource\\s+(?<key>[^\\s},]+)\\}",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex DynamicResourcePattern = new(
+        "\\{DynamicResource\\s+(?<key>[^\\s},]+)\\}",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    // The accent is application-scoped: these keys are written into Application.Resources at
+    // runtime by AccentApplier, so no palette may declare them and no XAML may freeze them with a
+    // StaticResource lookup.
+    private static readonly string[] RuntimeAccentKeys = ["AccentBrush", "AccentSelectionBrush"];
 
     [Fact]
     public void PaletteBrushKeys_AreNeverReferencedWithStaticResource()
@@ -87,6 +97,92 @@ public sealed class ApplicationResourceKeyTests
         {
             var report = new StringBuilder();
             report.AppendLine($"{failures.Count} palette brush(es) referenced with StaticResource:");
+            foreach (var failure in failures.OrderBy(failure => failure, StringComparer.Ordinal))
+            {
+                report.AppendLine(failure);
+            }
+
+            Assert.Fail(report.ToString());
+        }
+    }
+
+    [Fact]
+    public void RuntimeProvidedAccentKeys_AreNeverDeclaredByAPaletteOrReadWithStaticResource()
+    {
+        var appRoot = Path.Combine(FindRepositoryRoot(), "src", "CLIHub");
+        var themesDirectory = Path.Combine(appRoot, "Themes");
+        var paletteFiles = Directory.GetFiles(themesDirectory, "*Theme.xaml")
+            .OrderBy(Path.GetFileName, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(
+            paletteFiles.Length >= 3,
+            $"Expected the registered palettes under '{themesDirectory}', but found {paletteFiles.Length}.");
+
+        var failures = new List<string>();
+
+        foreach (var path in paletteFiles)
+        {
+            var declaredKeys = ReadDeclaredKeys(File.ReadAllText(path)).ToHashSet(StringComparer.Ordinal);
+            foreach (var key in RuntimeAccentKeys)
+            {
+                if (declaredKeys.Contains(key))
+                {
+                    failures.Add(
+                        $"{Path.GetRelativePath(appRoot, path)}: palette declares the application-scoped key " +
+                        $"'{key}'; the accent is supplied at runtime and independent of the theme.");
+                }
+            }
+        }
+
+        var xamlFiles = Directory.GetFiles(appRoot, "*.xaml", SearchOption.AllDirectories)
+            .Where(path => !IsBuildOutput(path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        // Loud failure on a broken glob: an empty walk would make the StaticResource scan a no-op.
+        Assert.True(
+            xamlFiles.Length >= 20,
+            $"Expected the full XAML tree under '{appRoot}', but found only {xamlFiles.Length} files.");
+
+        var staticReferenceCount = 0;
+        var accentReferenceCount = 0;
+
+        foreach (var path in xamlFiles)
+        {
+            var relativePath = Path.GetRelativePath(appRoot, path);
+            var lines = File.ReadAllLines(path);
+
+            for (var index = 0; index < lines.Length; index++)
+            {
+                foreach (Match match in StaticResourcePattern.Matches(lines[index]))
+                {
+                    staticReferenceCount++;
+                    var key = match.Groups["key"].Value;
+                    if (RuntimeAccentKeys.Contains(key, StringComparer.Ordinal))
+                    {
+                        failures.Add(
+                            $"{relativePath}:{index + 1}: StaticResource '{key}' refers to a runtime-provided " +
+                            "accent brush; use DynamicResource so the applied accent is not frozen at parse time.");
+                    }
+                }
+
+                accentReferenceCount += DynamicResourcePattern.Matches(lines[index])
+                    .Count(match => RuntimeAccentKeys.Contains(match.Groups["key"].Value, StringComparer.Ordinal));
+            }
+        }
+
+        Assert.True(
+            staticReferenceCount > 0,
+            "No StaticResource reference was found; the XAML walk is broken.");
+        Assert.True(
+            accentReferenceCount > 0,
+            "No DynamicResource reference to an accent brush was found; the accent scan is broken.");
+
+        if (failures.Count > 0)
+        {
+            var report = new StringBuilder();
+            report.AppendLine($"{failures.Count} application-scoped accent key problem(s):");
             foreach (var failure in failures.OrderBy(failure => failure, StringComparer.Ordinal))
             {
                 report.AppendLine(failure);

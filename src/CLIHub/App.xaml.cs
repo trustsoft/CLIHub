@@ -1,12 +1,12 @@
 namespace CLIHub;
 
 using System.Windows;
-using System.Windows.Media;
 
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
+using CLIHub.Settings;
 using CLIHub.Startup;
 using CLIHub.Themes;
 
@@ -51,26 +51,17 @@ public partial class App : Application
     }
 
     /// <summary>
-    ///   Applies the stored accent color by overriding the application-level accent brushes when it
-    ///   differs from the default, before any window is created.
+    ///   Applies the stored accent color by writing the application-level accent brushes before any
+    ///   window is created. The stored accent is always applied, the default included: the accent is
+    ///   application-scoped and does not depend on the active palette.
     /// </summary>
     private static void ApplyAccent()
     {
         var accent = AccentPalette.Normalize(PreferenceReader.ReadAccentColor(AppPaths.ConfigFile));
-        if (accent == AccentPalette.DefaultHex || Current is not { } application)
+        if (Current is { } application)
         {
-            return;
+            AccentApplier.Apply(application.Resources, accent);
         }
-
-        application.Resources["AccentBrush"] = CreateBrush(AccentPalette.Opaque(accent));
-        application.Resources["AccentSelectionBrush"] = CreateBrush(AccentPalette.SelectionTint(accent));
-    }
-
-    private static SolidColorBrush CreateBrush(string argbHex)
-    {
-        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(argbHex));
-        brush.Freeze();
-        return brush;
     }
 
     /// <summary>

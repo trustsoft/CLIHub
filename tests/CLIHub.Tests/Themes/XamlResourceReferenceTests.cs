@@ -36,8 +36,8 @@ using System.Xml.Linq;
 ///     <c>x:Static</c> references, <c>TemplateBinding</c>, and <c>Binding</c> property paths.
 ///   </para>
 ///   <para>
-///     Keys written into <c>Application.Resources</c> by code at startup are listed in
-///     <see cref="RuntimeProvidedKeys"/>; every other referenced key must be declared in XAML.
+///     Keys written into <c>Application.Resources</c> by code (at startup and on settings save) are
+///     listed in <see cref="RuntimeProvidedKeys"/>; every other referenced key must be declared in XAML.
 ///   </para>
 ///   <para>
 ///     Scope approximation: every <c>x:Key</c> in a file is treated as visible to every reference in
@@ -49,11 +49,17 @@ public sealed class XamlResourceReferenceTests
 {
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
-    // Resource keys that ApplicationHost writes into Application.Resources at startup instead of
-    // declaring them in XAML. Keep this list deliberately narrow; every other key must be declared
-    // in XAML somewhere reachable from its reference.
+    // Resource keys written into Application.Resources by code instead of being declared in XAML:
+    // AccentApplier assigns the accent brushes at startup and again on a Settings save, and
+    // ApplicationHost registers the path-to-image converter from the DI container. Keep this list
+    // deliberately narrow; every other key must be declared in XAML somewhere reachable from its
+    // reference.
     private static readonly HashSet<string> RuntimeProvidedKeys = new(StringComparer.Ordinal)
     {
+        // AccentApplier — applied from App.OnStartup and re-applied by WpfAccentPreferenceTarget.
+        "AccentBrush",
+        "AccentSelectionBrush",
+
         // PathToImageConverter.ResourceKey — registered from the DI container in ApplicationHost.
         "PathToImage"
     };

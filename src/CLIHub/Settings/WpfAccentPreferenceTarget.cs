@@ -1,12 +1,10 @@
 namespace CLIHub.Settings;
 
 using System.Windows;
-using System.Windows.Media;
-
-using CLIHub.Core.Models;
 
 /// <summary>
-///   Applies the accent color by overriding the application-level accent brushes.
+///   Applies the accent color by writing the application-scoped accent brushes through
+///   <see cref="AccentApplier" />.
 /// </summary>
 public sealed class WpfAccentPreferenceTarget : IAccentPreferenceTarget
 {
@@ -18,14 +16,6 @@ public sealed class WpfAccentPreferenceTarget : IAccentPreferenceTarget
             return;
         }
 
-        application.Resources["AccentBrush"] = CreateBrush(AccentPalette.Opaque(accentHex));
-        application.Resources["AccentSelectionBrush"] = CreateBrush(AccentPalette.SelectionTint(accentHex));
-    }
-
-    private static SolidColorBrush CreateBrush(string argbHex)
-    {
-        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(argbHex));
-        brush.Freeze();
-        return brush;
+        AccentApplier.Apply(application.Resources, accentHex);
     }
 }

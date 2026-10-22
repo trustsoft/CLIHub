@@ -26,7 +26,6 @@
     <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
-    <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1A4CC2FF"/>
     <!-- 1px highlight line drawn across the top edge of the dark-chrome windows -->
     <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
     <!-- Thumb of the slim application-level scrollbar -->
@@ -42,9 +41,6 @@
     <SolidColorBrush x:Key="IconBrush" Color="#FFD8D8D8"/>
     <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE6E6E6"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5C5C63"/>
-
-    <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FF4CC2FF"/>
 
     <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFD97B7B"/>

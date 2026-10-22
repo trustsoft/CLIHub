@@ -24,7 +24,6 @@
     <SolidColorBrush x:Key="RowDividerBrush" Color="#0F000000"/>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0F000000"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
-    <SolidColorBrush x:Key="AccentSelectionBrush" Color="#1F4CC2FF"/>
     <SolidColorBrush x:Key="TopHighlightBrush" Color="#FFFFFFFF"/>
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33000000"/>
 
@@ -36,9 +35,6 @@
     <SolidColorBrush x:Key="IconBrush" Color="#FF2A2A2E"/>
     <SolidColorBrush x:Key="MenuItemBrush" Color="#FF1E1E22"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#FFA0A0A6"/>
-
-    <!-- Accent -->
-    <SolidColorBrush x:Key="AccentBrush" Color="#FF4CC2FF"/>
 
     <!-- Status -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFC0392B"/>

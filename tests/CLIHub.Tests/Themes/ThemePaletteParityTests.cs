@@ -30,6 +30,11 @@ public sealed class ThemePaletteParityTests
                 $"Missing: [{string.Join(", ", missingInPalette)}]. " +
                 $"Extra: [{string.Join(", ", missingInReference)}].");
         }
+
+        // The accent is application-scoped and supplied at runtime, so a palette that declared an
+        // accent key again would make the accent theme-bound.
+        Assert.DoesNotContain("AccentBrush", referenceKeys);
+        Assert.DoesNotContain("AccentSelectionBrush", referenceKeys);
     }
 
     private static HashSet<string> ReadKeys(string path)
