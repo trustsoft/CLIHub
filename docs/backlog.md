@@ -287,7 +287,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   writer's transition silently.
 - Proposed remedy: keep one writer per project (orchestrator owns the file) or serialize with a
   lock file, and make the write re-read and retry when the top-level `updatedAt` changed since the
-  read (compare-and-swap).
+  read (compare-and-swap). `.opencode/scripts/pipeline-state.mjs` is now the intended single writer
+  and re-applies the operation when the target's `mtimeMs`/`size` changed before the rename (3
+  attempts); this entry stays open until every writer uses it.
 - Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
   that run pipeline work in the same project at the same time.
 
