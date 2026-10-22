@@ -34,6 +34,7 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 node .opencode/scripts/check-model-policy.mjs
 node .opencode/scripts/pipeline-state.mjs add <id> [--stage <stage>] [--status <status>]
 node .opencode/scripts/pipeline-state.mjs prune [--dry-run]
+node .opencode/scripts/pipeline-state.mjs update <id> [--stage <stage>] [--status <status>] [--stage-status <stage>=<status>]
 openspec validate --all
 ```
 
@@ -67,8 +68,9 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
   stage files for a commit that the user has not explicitly approved.
 - A commit MUST contain only the files that belong to the approved change; leave unrelated working-tree edits
   and untracked files untouched.
-- Pipeline state transitions MUST go through `node .opencode/scripts/pipeline-state.mjs` (`add`/`prune`), so
-  the 10-entry cap and the atomic compare-and-swap write are enforced in one place. The sidebar plugin
+- Pipeline state transitions MUST go through `node .opencode/scripts/pipeline-state.mjs`
+  (`add`/`update`/`prune`), so the 10-entry cap and the atomic compare-and-swap write are enforced in one
+  place; stage transitions, stage notes, and commit shas are recorded with `update`. The sidebar plugin
   (`plugins/pipeline-status`) stays read-only and never writes the state file.
 
 ## Documentation and OpenSpec

@@ -2,7 +2,8 @@
 //   node .opencode/scripts/pipeline-state.test.mjs
 //
 // Exercises the 10-entry cap, the completed-only pruning rule, the atomic
-// file shape, the duplicate refusal, and the compare-and-swap retry.
+// file shape, the duplicate refusal, the compare-and-swap retry, and the
+// `update` transitions (stage/status, stage rows, notes, commits).
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -25,6 +26,8 @@ import {
   readState,
   addChange,
   pruneChanges,
+  applyUpdate,
+  updateChange,
 } from "./pipeline-state.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./pipeline-state.mjs", import.meta.url));
@@ -390,6 +393,245 @@ test("pruneChanges reads a missing file as an error", () => {
   withDir((dir) => {
     const file = join(dir, "missing.json");
     assert.throws(() => pruneChanges(file, { dryRun: true }), /state file not found/);
+  });
+});
+
+test("update sets stage and status, refreshes both updatedAt values, and leaves other entries intact", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    const target = {
+      id: "target",
+      stage: "plan",
+      status: "active",
+      updatedAt: BASE_UPDATED_AT,
+      commits: {},
+      stages: {},
+    };
+    writeStateRaw(file, stateOf([unfinished("keep-1"), completed("keep-2"), target]));
+    const untouchedBefore = JSON.stringify(readState(file).changes.slice(0, 2));
+
+    const result = updateChange(file, { id: "target", stage: "impl", status: "active" });
+    assert.equal(result.attempts, 1);
+    assert.equal(result.change.id, "target");
+
+    const state = readState(file);
+    const updated = state.changes[2];
+    assert.equal(updated.stage, "impl");
+    assert.equal(updated.status, "active");
+    assert.notEqual(updated.updatedAt, BASE_UPDATED_AT);
+    assert.match(updated.updatedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    assert.notEqual(state.updatedAt, BASE_UPDATED_AT);
+    assert.match(state.updatedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    assert.equal(
+      JSON.stringify(state.changes.slice(0, 2)),
+      untouchedBefore,
+      "untouched entries must be byte-for-byte equivalent",
+    );
+    assert.deepEqual(Object.keys(updated), [
+      "id",
+      "stage",
+      "status",
+      "updatedAt",
+      "commits",
+      "stages",
+    ]);
+  });
+});
+
+test("update drives a partially finished entry to isCompleted", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    const partial = {
+      id: "partial",
+      stage: "impl",
+      status: "active",
+      updatedAt: BASE_UPDATED_AT,
+      commits: {},
+      stages: {
+        plan: { status: "done", at: BASE_UPDATED_AT },
+        impl: { status: "active", at: BASE_UPDATED_AT },
+      },
+    };
+    writeStateRaw(file, stateOf([partial]));
+    assert.equal(isCompleted(partial), false);
+
+    updateChange(file, {
+      id: "partial",
+      status: "done",
+      stageStatuses: { plan: "done", impl: "done", commit: "done", archive: "done" },
+      commits: { archive: "abcd123" },
+    });
+
+    const updated = readState(file).changes[0];
+    assert.equal(isCompleted(updated), true);
+    assert.equal(updated.commits.archive, "abcd123");
+    assert.equal(updated.stages.archive.status, "done");
+    assert.ok(updated.stages.archive.at, "a created row carries a fresh at");
+    assert.equal(updated.stages.archive.commit, "abcd123");
+  });
+});
+
+test("update creates a missing stage row with a fresh at and never mutates the input entry", () => {
+  const now = new Date("2026-10-23T12:34:56.000Z");
+  const input = {
+    id: "x",
+    stage: "plan",
+    status: "active",
+    updatedAt: BASE_UPDATED_AT,
+    commits: {},
+    stages: { plan: { status: "done", at: BASE_UPDATED_AT } },
+  };
+
+  const updated = applyUpdate(input, { stageStatuses: { impl: "done" }, now });
+  assert.deepEqual(updated.stages.impl, { status: "done", at: "2026-10-23T12:34:56.000Z" });
+  assert.equal(updated.updatedAt, "2026-10-23T12:34:56.000Z");
+  assert.deepEqual(
+    input.stages,
+    { plan: { status: "done", at: BASE_UPDATED_AT } },
+    "the input entry is not mutated",
+  );
+
+  // Re-applying the same status keeps the recorded at.
+  const same = applyUpdate(updated, {
+    stageStatuses: { impl: "done" },
+    now: new Date("2026-10-24T00:00:00.000Z"),
+  });
+  assert.equal(same.stages.impl.at, "2026-10-23T12:34:56.000Z");
+
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([structuredClone(input)]));
+    updateChange(file, { id: "x", stageStatuses: { impl: "done" }, now });
+    assert.deepEqual(readState(file).changes[0].stages.impl, {
+      status: "done",
+      at: "2026-10-23T12:34:56.000Z",
+    });
+  });
+});
+
+test("update with an unknown id exits 1 and leaves the file byte-identical", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("known")]));
+    const before = readFileSync(file);
+
+    const run = spawnSync(
+      process.execPath,
+      [SCRIPT, "update", "missing", "--status", "done", "--file", file],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /error: change 'missing' not found in /);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readFileSync(file), before);
+  });
+});
+
+test("update rejects an invalid stage or stage-status and writes nothing", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("known")]));
+    const before = readFileSync(file);
+
+    const badStage = spawnSync(
+      process.execPath,
+      [SCRIPT, "update", "known", "--stage", "bogus", "--file", file],
+      { encoding: "utf8" },
+    );
+    assert.equal(badStage.status, 1, badStage.stderr);
+    assert.match(badStage.stderr, /error: invalid stage 'bogus'/);
+    assert.equal(badStage.stdout, "");
+    assert.deepEqual(readFileSync(file), before);
+
+    const badStageStatus = spawnSync(
+      process.execPath,
+      [SCRIPT, "update", "known", "--stage-status", "nope=done", "--file", file],
+      { encoding: "utf8" },
+    );
+    assert.equal(badStageStatus.status, 1, badStageStatus.stderr);
+    assert.match(badStageStatus.stderr, /error: invalid stage 'nope' in --stage-status/);
+    assert.equal(badStageStatus.stdout, "");
+    assert.deepEqual(readFileSync(file), before);
+
+    assert.deepEqual(readdirSync(dir), ["pipeline.json"], "no temp file may be left behind");
+  });
+});
+
+test("the CLI prints updated and state lines for one update", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("target", "impl"), unfinished("other")]));
+
+    const run = spawnSync(
+      process.execPath,
+      [
+        SCRIPT,
+        "update",
+        "target",
+        "--stage",
+        "commit",
+        "--status",
+        "active",
+        "--note",
+        "ready to commit",
+        "--file",
+        file,
+      ],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.stderr, "");
+    assert.deepEqual(run.stdout.trimEnd().split(/\r?\n/), [
+      "updated target (commit/active)",
+      `state: ${resolvePath(file)} (2 changes)`,
+    ]);
+
+    const updated = readState(file).changes[0];
+    assert.equal(updated.stage, "commit");
+    assert.equal(updated.status, "active");
+    assert.equal(updated.note, "ready to commit");
+  });
+});
+
+test("the CLI records repeatable stage-status, stage-note, and commit pairs", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("target", "impl")]));
+
+    const run = spawnSync(
+      process.execPath,
+      [
+        SCRIPT,
+        "update",
+        "target",
+        "--stage-status",
+        "impl=active",
+        "--stage-status",
+        "commit=pending",
+        "--stage-note",
+        "impl=handed off",
+        "--commit",
+        "impl=abc1234",
+        "--file",
+        file,
+      ],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(run.stdout.trimEnd().split(/\r?\n/), [
+      "updated target (impl/active)",
+      `state: ${resolvePath(file)} (1 changes)`,
+    ]);
+
+    const updated = readState(file).changes[0];
+    assert.equal(updated.stages.impl.status, "active");
+    assert.equal(updated.stages.impl.note, "handed off");
+    assert.equal(updated.stages.impl.commit, "abc1234");
+    assert.equal(updated.stages.commit.status, "pending");
+    assert.equal(updated.commits.impl, "abc1234");
   });
 });
 

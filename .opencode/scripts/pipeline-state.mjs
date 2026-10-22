@@ -2,6 +2,11 @@
 //
 //   node .opencode/scripts/pipeline-state.mjs add <id> [--stage plan] [--status active]
 //                                              [--file <path>] [--limit <n>] [--note "..."]
+//   node .opencode/scripts/pipeline-state.mjs update <id> [--stage plan|impl|commit|archive]
+//                                              [--status pending|active|done|blocked]
+//                                              [--note "..."] [--stage-status <stage>=<status>]
+//                                              [--stage-note <stage>=<text>]
+//                                              [--commit <stage>=<sha>] [--file <path>]
 //   node .opencode/scripts/pipeline-state.mjs prune [--file <path>] [--limit <n>] [--dry-run]
 //
 // The sidebar plugin (plugins/pipeline-status) only reads this file; every
@@ -14,6 +19,11 @@
 // `done`. Unfinished work is never removed; when nothing is prunable the entry
 // is appended anyway with a warning and the read-only sidebar window keeps the
 // display at the limit.
+//
+// `update` applies a state transition to one existing entry: the stage pointer,
+// the change status, the entry note, per-stage status/note rows, and per-stage
+// commit shas. It never prunes. Unknown ids and invalid stage/status values are
+// rejected before anything is written.
 //
 // `prune` removes the oldest completed entries until the file is at or below
 // the limit; `--dry-run` reports the removals without writing.
@@ -28,6 +38,7 @@
 //   pruned <id> (<stage>/<status>)
 //   warning: ...
 //   added <id> (<before> -> <after>)
+//   updated <id> (<stage>/<status>)
 //   state: <absolute path> (<n> changes)
 //
 // Exit codes: 0 success, 1 usage/IO/malformed-state error, 2 refused (duplicate id).
@@ -378,6 +389,184 @@ export function pruneChanges(
   return updateState(target, apply, { beforeRename });
 }
 
+/**
+ * Validates the option payload of an update. Throws `StateError` for an
+ * unknown stage or status, including the stage names used as keys by the
+ * per-stage options, and for an empty commit sha.
+ */
+function validateUpdateInput({ stage, status, stageStatuses = {}, stageNotes = {}, commits = {} }) {
+  if (stage !== undefined && !STAGES.includes(stage)) {
+    throw new StateError(`invalid stage '${stage}' (expected ${STAGES.join("|")})`);
+  }
+  if (status !== undefined && !STATUSES.includes(status)) {
+    throw new StateError(`invalid status '${status}' (expected ${STATUSES.join("|")})`);
+  }
+  for (const [name, value] of Object.entries(stageStatuses)) {
+    if (!STAGES.includes(name)) {
+      throw new StateError(`invalid stage '${name}' in --stage-status (expected ${STAGES.join("|")})`);
+    }
+    if (!STATUSES.includes(value)) {
+      throw new StateError(
+        `invalid status '${value}' for stage '${name}' (expected ${STATUSES.join("|")})`,
+      );
+    }
+  }
+  for (const name of Object.keys(stageNotes)) {
+    if (!STAGES.includes(name)) {
+      throw new StateError(`invalid stage '${name}' in --stage-note (expected ${STAGES.join("|")})`);
+    }
+  }
+  for (const [name, value] of Object.entries(commits)) {
+    if (!STAGES.includes(name)) {
+      throw new StateError(`invalid stage '${name}' in --commit (expected ${STAGES.join("|")})`);
+    }
+    if (typeof value !== "string" || value.trim() === "") {
+      throw new StateError(`--commit ${name} requires a non-empty sha`);
+    }
+  }
+}
+
+/**
+ * Applies one update to a single change entry and returns the updated entry;
+ * the input is never mutated. Existing keys keep their position, missing
+ * `commits`/`stages` containers and touched stage rows are created on demand.
+ *
+ * `stageStatuses` sets a stage row's `status` and refreshes its `at` when the
+ * row had none or the status actually changed; `stageNotes` sets a row's
+ * `note`; `commits` records a sha under `commits` and mirrors it into the
+ * stage row's `commit`. The entry's `updatedAt` always becomes `now`.
+ */
+export function applyUpdate(
+  change,
+  {
+    stage,
+    status,
+    note,
+    stageStatuses = {},
+    stageNotes = {},
+    commits = {},
+    now = new Date(),
+  } = {},
+) {
+  if (!change || typeof change !== "object" || Array.isArray(change)) {
+    throw new StateError("change entry is not an object");
+  }
+  validateUpdateInput({ stage, status, stageStatuses, stageNotes, commits });
+
+  const at = now.toISOString();
+  const next = { ...change };
+
+  if (stage !== undefined) {
+    next.stage = stage;
+  }
+  if (status !== undefined) {
+    next.status = status;
+  }
+  next.updatedAt = at;
+  if (note !== undefined) {
+    next.note = note;
+  }
+
+  const touched = STAGES.filter(
+    (name) =>
+      stageStatuses[name] !== undefined ||
+      stageNotes[name] !== undefined ||
+      commits[name] !== undefined,
+  );
+  if (touched.length === 0) {
+    return next;
+  }
+
+  const stages = change.stages && typeof change.stages === "object" ? { ...change.stages } : {};
+  let commitMap =
+    change.commits && typeof change.commits === "object" ? { ...change.commits } : undefined;
+
+  for (const name of touched) {
+    const row = { ...(stages[name] ?? {}) };
+
+    if (stageStatuses[name] !== undefined) {
+      const previousStatus = row.status;
+      row.status = stageStatuses[name];
+      if (row.at === undefined || previousStatus !== row.status) {
+        row.at = at;
+      }
+    }
+    if (commits[name] !== undefined) {
+      const sha = commits[name].trim();
+      row.commit = sha;
+      commitMap = commitMap ?? {};
+      commitMap[name] = sha;
+    }
+    if (stageNotes[name] !== undefined) {
+      row.note = stageNotes[name];
+    }
+
+    stages[name] = row;
+  }
+
+  if (commitMap !== undefined) {
+    next.commits = commitMap;
+  }
+  next.stages = stages;
+  return next;
+}
+
+/**
+ * Applies an update to the entry with `id` through the compare-and-swap
+ * driver. Throws `StateError` (before any write) when the id is unknown or the
+ * options are invalid. Returns `{ change, attempts, state }`.
+ */
+export function updateChange(
+  file,
+  {
+    id,
+    stage,
+    status,
+    note,
+    stageStatuses = {},
+    stageNotes = {},
+    commits = {},
+    now = new Date(),
+    beforeRename,
+  } = {},
+) {
+  if (typeof id !== "string" || id.trim() === "") {
+    throw new StateError("change id is required");
+  }
+  validateUpdateInput({ stage, status, stageStatuses, stageNotes, commits });
+
+  const at = now.toISOString();
+  const target = resolve(file);
+
+  return updateState(
+    target,
+    (state) => {
+      const index = state.changes.findIndex((entry) => entry?.id === id);
+      if (index < 0) {
+        throw new StateError(`change '${id}' not found in ${target}`);
+      }
+
+      const change = applyUpdate(state.changes[index], {
+        stage,
+        status,
+        note,
+        stageStatuses,
+        stageNotes,
+        commits,
+        now,
+      });
+
+      const changes = state.changes.slice();
+      changes[index] = change;
+      state.changes = changes;
+      state.updatedAt = at;
+
+      return { state, change };
+    },
+    { beforeRename },
+  );
+}
+
 /** Reads the value of a `--flag value` argument, or undefined when the flag is absent. */
 function flagValue(argv, flag) {
   const index = argv.indexOf(flag);
@@ -395,6 +584,30 @@ function parseLimit(raw) {
   return limit;
 }
 
+/**
+ * Collects every `<key>=<value>` pair following a repeatable flag (`--stage-status`,
+ * `--stage-note`, `--commit`). A repeated key keeps the last value.
+ */
+function parsePairs(argv, flag) {
+  const pairs = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] !== flag) {
+      continue;
+    }
+    const raw = argv[index + 1];
+    if (raw === undefined || raw.startsWith("--")) {
+      throw new StateError(`${flag} requires <stage>=<value>`);
+    }
+    const separator = raw.indexOf("=");
+    if (separator <= 0) {
+      throw new StateError(`${flag} expects <stage>=<value>, got '${raw}'`);
+    }
+    pairs[raw.slice(0, separator)] = raw.slice(separator + 1);
+    index += 1;
+  }
+  return pairs;
+}
+
 function statePath(argv) {
   const flag = flagValue(argv, "--file");
   if (flag) {
@@ -410,13 +623,22 @@ function formatRemoved(entry) {
   return `pruned ${entry?.id ?? "?"} (${stage}/${status})`;
 }
 
+function formatUpdated(entry) {
+  const stage = typeof entry?.stage === "string" ? entry.stage : "?";
+  const status = typeof entry?.status === "string" ? entry.status : "?";
+  return `updated ${entry?.id ?? "?"} (${stage}/${status})`;
+}
+
 function stateLine(file, count) {
   return `state: ${file} (${count} changes)`;
 }
 
 const USAGE =
   "usage: pipeline-state.mjs add <id> [--stage plan|impl|commit|archive] [--status pending|active|done|blocked] " +
-  "[--file <path>] [--limit <n>] [--note \"...\"] | prune [--file <path>] [--limit <n>] [--dry-run]";
+  "[--file <path>] [--limit <n>] [--note \"...\"] | " +
+  "update <id> [--stage plan|impl|commit|archive] [--status pending|active|done|blocked] [--note \"...\"] " +
+  "[--stage-status <stage>=<status>] [--stage-note <stage>=<text>] [--commit <stage>=<sha>] [--file <path>] | " +
+  "prune [--file <path>] [--limit <n>] [--dry-run]";
 
 function runAdd(argv) {
   const id = argv[1];
@@ -441,6 +663,25 @@ function runAdd(argv) {
   console.log(stateLine(file, result.after));
 }
 
+function runUpdate(argv) {
+  const id = argv[1];
+  if (!id || id.startsWith("--")) {
+    throw new StateError(USAGE);
+  }
+
+  const file = statePath(argv);
+  const stage = flagValue(argv, "--stage");
+  const status = flagValue(argv, "--status");
+  const note = flagValue(argv, "--note");
+  const stageStatuses = parsePairs(argv, "--stage-status");
+  const stageNotes = parsePairs(argv, "--stage-note");
+  const commits = parsePairs(argv, "--commit");
+
+  const result = updateChange(file, { id, stage, status, note, stageStatuses, stageNotes, commits });
+  console.log(formatUpdated(result.change));
+  console.log(stateLine(file, result.state.changes.length));
+}
+
 function runPrune(argv) {
   const file = statePath(argv);
   const limit = parseLimit(flagValue(argv, "--limit"));
@@ -460,6 +701,8 @@ function main() {
   try {
     if (command === "add") {
       runAdd(argv);
+    } else if (command === "update") {
+      runUpdate(argv);
     } else if (command === "prune") {
       runPrune(argv);
     } else {
