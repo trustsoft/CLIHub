@@ -305,9 +305,9 @@ The Hotkeys & Quick Launcher page SHALL offer a "Launcher window position" selec
 The Appearance page SHALL offer an "Application theme" selector as a row of four preview cards with
 the options "Dark Theme", "Light Theme", "Blue Theme", and "System Sync", showing the stored value.
 Each card SHALL show a miniature palette preview, the option name, and a short description:
-"Windows 11 Fluent Dark (Recommended)", "High contrast daylight profile", "Blue-tinted dark chrome
-with a baked-in blue accent", and "Follow Windows personalization state" respectively. The selected
-card SHALL be marked with an accent ring and a check badge.
+"Fluent Dark (default)", "High contrast daylight profile", "Blue-tinted dark chrome",
+and "Follow Windows personalization state" respectively. The selected card SHALL be marked with an
+accent ring and a check badge.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Appearance"
@@ -317,12 +317,12 @@ card SHALL be marked with an accent ring and a check badge.
 
 #### Scenario: Persist on save
 - **WHEN** the user selects a theme and chooses "Save"
-- **THEN** the value is written to `config.json` and takes effect on the next start
+- **THEN** the value is written to `config.json` and every open window renders with the selected
+  palette immediately, without a restart
 
 #### Scenario: Restart note
 - **WHEN** the theme selector is shown
-- **THEN** a hint indicates that the theme applies after a restart
-- **AND** the hint states that the "System Sync" option follows Windows
+- **THEN** the "System Sync" card description indicates that it follows Windows personalization state
 
 ### Requirement: Accent color selector
 
