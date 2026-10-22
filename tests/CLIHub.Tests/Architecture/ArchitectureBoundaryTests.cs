@@ -13,7 +13,9 @@ public sealed class ArchitectureBoundaryTests
         "Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",
         "Lifetime" + Path.DirectorySeparatorChar + "WpfApplicationLifetime.cs",
         "Startup" + Path.DirectorySeparatorChar + "WpfApplicationStartupUi.cs",
-        "Settings" + Path.DirectorySeparatorChar + "WpfAccentPreferenceTarget.cs"
+        "Settings" + Path.DirectorySeparatorChar + "WpfAccentPreferenceTarget.cs",
+        "Settings" + Path.DirectorySeparatorChar + "WpfThemePreferenceTarget.cs",
+        "Themes" + Path.DirectorySeparatorChar + "PaletteSwitcher.cs"
     ];
 
     [Fact]

@@ -69,6 +69,7 @@ public class SettingsApplicationServiceTests
 
         Assert.True(result.Success);
         Assert.Null(result.Error);
+        applier.Verify(x => x.ApplyTheme(draft.AppTheme), Times.Once);
         preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Once);
     }
 
@@ -76,6 +77,7 @@ public class SettingsApplicationServiceTests
     public void Save_HotkeyFailure_RollsBackSystemChangesAndDoesNotPersist()
     {
         var previous = PreviousPreferences();
+        previous.AppTheme = AppTheme.Light;
         var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
         preferencesStore.Setup(x => x.Load()).Returns(previous);
         var startup = new Mock<IStartupService>(MockBehavior.Strict);
@@ -118,6 +120,8 @@ public class SettingsApplicationServiceTests
         applier.Verify(x => x.ApplyRuntime(RuntimeKind.GitBash), Times.Once);
         applier.Verify(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim), Times.Once);
         applier.Verify(x => x.ApplyStartWithWindows(false), Times.Once);
+        applier.Verify(x => x.ApplyTheme(AppTheme.Dark), Times.Once);
+        applier.Verify(x => x.ApplyTheme(previous.AppTheme), Times.Once);
     }
 
     [Fact]
@@ -269,7 +273,12 @@ public class SettingsApplicationServiceTests
             projectScanner ?? new Mock<Core.Scanning.IProjectScanner>().Object,
             NullLogger<SettingsApplicationService>.Instance);
 
-    private static Mock<IPreferenceApplier> CreateApplier() => new(MockBehavior.Strict);
+    private static Mock<IPreferenceApplier> CreateApplier()
+    {
+        var applier = new Mock<IPreferenceApplier>(MockBehavior.Strict);
+        applier.Setup(x => x.ApplyTheme(It.IsAny<AppTheme>()));
+        return applier;
+    }
 
     private static SettingsInput Input(string probeTtlText = "", string probeTimeoutText = "") => new(
         RuntimeKind.PowerShell,

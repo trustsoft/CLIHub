@@ -17,6 +17,7 @@ public sealed class PreferenceApplier : IPreferenceApplier
     private readonly IStartupService startupService;
     private readonly IPathDisplayStyleTarget displayStyle;
     private readonly IAccentPreferenceTarget accent;
+    private readonly IThemePreferenceTarget theme;
     private readonly ILogger<PreferenceApplier> logger;
 
     /// <summary>
@@ -27,12 +28,14 @@ public sealed class PreferenceApplier : IPreferenceApplier
     /// <param name="startupService"> Startup service receiving the start-with-Windows change. </param>
     /// <param name="displayStyle"> Display-style target receiving path changes. </param>
     /// <param name="accent"> Accent target receiving the accent change. </param>
+    /// <param name="theme"> Theme target receiving the palette change. </param>
     /// <param name="logger"> Logger. </param>
     public PreferenceApplier(IRuntimePreferenceTarget runtime,
                              IGlobalHotkeyService hotkey,
                              IStartupService startupService,
                              IPathDisplayStyleTarget displayStyle,
                              IAccentPreferenceTarget accent,
+                             IThemePreferenceTarget theme,
                              ILogger<PreferenceApplier> logger)
     {
         this.runtime = runtime;
@@ -40,6 +43,7 @@ public sealed class PreferenceApplier : IPreferenceApplier
         this.startupService = startupService;
         this.displayStyle = displayStyle;
         this.accent = accent;
+        this.theme = theme;
         this.logger = logger;
     }
 
@@ -102,5 +106,12 @@ public sealed class PreferenceApplier : IPreferenceApplier
     {
         this.accent.SetAccent(accentHex);
         this.logger.LogInformation("Accent color set to {Accent}", accentHex);
+    }
+
+    /// <inheritdoc />
+    public void ApplyTheme(AppTheme theme)
+    {
+        this.theme.SetTheme(theme);
+        this.logger.LogInformation("Theme set to {Theme}", theme);
     }
 }

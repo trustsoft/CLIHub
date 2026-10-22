@@ -20,6 +20,7 @@ using CLIHub.Settings;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Startup;
+using CLIHub.Themes;
 using CLIHub.Tray;
 
 using Serilog;
@@ -149,14 +150,17 @@ public static class ServiceRegistration
     /// <summary>
     ///   Registers the settings window stack (application service, section view models, the
     ///   settings view model with its thirteen dependencies, and the window with its accessor)
-    ///   plus the runtime preference-application chain (<c> PreferenceApplier </c> and its
-    ///   process and accent preference targets) consumed at startup and on preference change.
+    ///   plus the runtime preference-application chain (<c> PreferenceApplier </c> with its process,
+    ///   accent, and theme preference targets, and the shared palette switcher they use) consumed at
+    ///   startup and on preference change.
     /// </summary>
     private static IServiceCollection AddSettingsServices(this IServiceCollection services)
     {
         services.AddSingleton<IPreferenceApplier, PreferenceApplier>();
         services.AddSingleton<IRuntimePreferenceTarget, ProcessRuntimePreferenceTarget>();
         services.AddSingleton<IAccentPreferenceTarget, WpfAccentPreferenceTarget>();
+        services.AddSingleton<IThemePreferenceTarget, WpfThemePreferenceTarget>();
+        services.AddSingleton(PaletteSwitcher.Shared);
         services.AddTransient<IAgentManagementSection, AgentManagementViewModel>();
         services.AddTransient<IProjectRegistrySection, ProjectRegistryViewModel>();
         services.AddSingleton<SettingsApplicationService>();

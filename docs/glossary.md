@@ -123,8 +123,9 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Preferences** — user settings persisted under the `preferences` object of `config.json`
   (startup behavior, hotkey and popup position, runtime, agent probing, project discovery,
   appearance, logging, updates, and the availability filter). Editable from the Settings window;
-  most changes apply without restart, while the theme takes effect on the next start. Scanning
-  settings apply as soon as they change on the Project Discovery page; the other pages use Save.
+  most changes apply without restart, including the theme, which applies to every open window on
+  save; the persisted value is applied again on the next start. Scanning settings apply as soon as
+  they change on the Project Discovery page; the other pages use Save.
 - **Settings window** — the window (opened from the tray) where preferences are edited.
 
 ## Settings UI

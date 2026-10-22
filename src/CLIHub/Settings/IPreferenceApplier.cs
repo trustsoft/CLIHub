@@ -40,4 +40,10 @@ public interface IPreferenceApplier
     /// </summary>
     /// <param name="accentHex"> The accent as <c> #RRGGBB </c>. </param>
     void ApplyAccent(string accentHex);
+
+    /// <summary>
+    ///   Applies the application theme palette immediately.
+    /// </summary>
+    /// <param name="theme"> The theme whose palette becomes the active overlay. </param>
+    void ApplyTheme(AppTheme theme);
 }

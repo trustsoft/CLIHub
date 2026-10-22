@@ -1,6 +1,5 @@
 namespace CLIHub;
 
-using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -36,24 +35,19 @@ public partial class App : Application
     }
 
     /// <summary>
-    ///   Merges the palette registered for the stored theme into the application resources. Dark is
-    ///   the base palette merged by App.xaml, so a null resolution (dark, system-on-dark, unknown)
-    ///   keeps that base with no extra merge. Resolved before any window is created, so the choice
-    ///   applies on this start.
+    ///   Applies the palette registered for the stored theme through <see cref="PaletteSwitcher" />.
+    ///   Dark is the base palette merged by App.xaml, so a null resolution (dark, system-on-dark,
+    ///   unknown) keeps that base with no extra merge. Runs before any window is created, so the
+    ///   stored theme applies on this start; the same switcher swaps the palette later without a
+    ///   restart.
     /// </summary>
     private static void ApplyTheme()
     {
         var theme = AppThemes.Parse(PreferenceReader.ReadAppTheme(AppPaths.ConfigFile));
-        var palettePath = ThemeCatalog.ResolvePalettePath(theme, SystemTheme.IsLight());
-        if (palettePath is null || Current is not { } application)
+        if (Current is { } application)
         {
-            return;
+            PaletteSwitcher.Shared.Apply(application.Resources.MergedDictionaries, theme, SystemTheme.IsLight());
         }
-
-        application.Resources.MergedDictionaries.Add(new ResourceDictionary
-        {
-            Source = new Uri($"pack://application:,,,/CLIHub;component{palettePath}", UriKind.Absolute)
-        });
     }
 
     /// <summary>

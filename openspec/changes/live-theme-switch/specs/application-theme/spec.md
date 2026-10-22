@@ -18,10 +18,10 @@ rules in "Theme palette resolution" are unchanged.
 
 Changing the theme preference SHALL apply the matching palette to the running application when the user
 saves settings, without a restart, and SHALL persist the choice so the next start resolves the same
-theme. The dark palette remains the base palette: a saved Dark theme, an unresolvable theme, or a
-palette that cannot be loaded SHALL leave the dark base in place rather than producing a partially
-applied theme. The "System" mode SHALL resolve to the dark or light palette at the moment the theme is
-applied and SHALL never resolve to the blue palette.
+theme. The dark palette remains the base palette: a saved Dark theme or a theme that resolves to no
+palette SHALL leave that base in place, and a palette that cannot be loaded SHALL keep the palette
+already in use, so a theme is never partially applied. The "System" mode SHALL resolve to the dark or
+light palette at the moment the theme is applied and SHALL never resolve to the blue palette.
 
 #### Scenario: Theme change applies on save
 

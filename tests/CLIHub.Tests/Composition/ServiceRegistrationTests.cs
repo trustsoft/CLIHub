@@ -55,6 +55,7 @@ public class ServiceRegistrationTests
         Assert.NotNull(provider.GetRequiredService<PathToImageConverter>());
         Assert.NotNull(provider.GetRequiredService<IRuntimePreferenceTarget>());
         Assert.NotNull(provider.GetRequiredService<IAccentPreferenceTarget>());
+        Assert.NotNull(provider.GetRequiredService<IThemePreferenceTarget>());
         Assert.NotNull(provider.GetRequiredService<IAgentManagementSection>());
         Assert.NotNull(provider.GetRequiredService<IProjectRegistrySection>());
         Assert.NotNull(provider.GetRequiredService<AccentSelectionMemory>());

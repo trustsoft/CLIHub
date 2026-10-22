@@ -186,6 +186,7 @@ public class SettingsNavigationTests
             });
             this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
             this.Startup.Setup(x => x.IsEnabled()).Returns(false);
+            this.Applier.Setup(x => x.ApplyTheme(It.IsAny<AppTheme>()));
             this.Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
 
             var application = new SettingsApplicationService(

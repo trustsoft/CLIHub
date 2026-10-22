@@ -10,7 +10,7 @@
     <StackPanel>
         <controls:SectionHeader Text="THEME"/>
         <controls:SettingCard Title="Application theme"
-                           Hint="Select the visual palette and luminosity mode. Applies after the next start; System Sync follows Windows."
+                           Hint="Select the visual palette and luminosity mode. Applies immediately on save; System Sync follows Windows."
                            Icon="{x:Static themes:IconGlyphs.Brightness}"
                            Placement="Stacked">
             <ListBox Margin="0,0,-8,0"

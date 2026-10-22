@@ -16,7 +16,7 @@ The application-level merge tree is therefore exactly:
 
 ```
 App.xaml
-├─ DarkTheme.xaml            base palette (LightTheme/BlueTheme merged on top at startup)
+├─ DarkTheme.xaml            base palette (LightTheme/BlueTheme merged on top by PaletteSwitcher)
 ├─ SlimScrollBar.xaml        implicit ScrollBar style
 └─ SettingsStyles.xaml       Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
    ├─ Controls.xaml          shared keyed styles
@@ -97,14 +97,14 @@ catalog owns long-lived row instances. The snapshot (not live) semantics and the
 split are rationale-level detail: see the `introduce-project-model` change's `design.md` under
 `openspec/changes/archive/2026-10-19-introduce-project-model/`.
 
-The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys; brushes are referenced with `DynamicResource`, and startup merges the palette registered in `ThemeCatalog.ResolvePalettePath` for the stored theme on top of the dark base (a null resolution keeps the base).
+The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
 
-To add another theme (chosen at startup):
+To add another theme:
 1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
 2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
 3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Appearance page binds the swatch brushes directly, so the page and its templates need no edit.
 4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
-Switching the palette without a restart is not supported; a theme change takes effect on the next start.
+A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references.
 
 ## Theme Data Locations
 
@@ -114,7 +114,7 @@ Switching the palette without a restart is not supported; a theme change takes e
 | WPF descriptor registry | `src/CLIHub/Themes/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
 | Palettes | `src/CLIHub/Themes/DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml` (colours only, one identical key set) |
 | Picker preview data | `src/CLIHub/Themes/ThemePickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
-| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) |
+| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Themes/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`) |
 
 The static guards that keep those files coherent:
 

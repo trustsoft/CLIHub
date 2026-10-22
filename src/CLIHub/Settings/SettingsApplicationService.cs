@@ -456,6 +456,7 @@ public sealed class SettingsApplicationService
             this.applier.ApplyRuntime(draft.Runtime);
             this.applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
             this.applier.ApplyAccent(draft.AccentColor);
+            this.applier.ApplyTheme(draft.AppTheme);
 
             if (!this.applier.ApplyHotkey(draft.Hotkey))
             {
@@ -515,6 +516,7 @@ public sealed class SettingsApplicationService
         this.TryRollback("runtime", () => this.applier.ApplyRuntime(previous.DefaultRuntime));
         this.TryRollback("path display style", () => this.applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
         this.TryRollback("accent", () => this.applier.ApplyAccent(previous.AccentColor));
+        this.TryRollback("theme", () => this.applier.ApplyTheme(previous.AppTheme));
         this.TryRollback("hotkey", () => this.applier.ApplyHotkey(previousHotkey));
         this.TryRollback("Windows startup", () => this.applier.ApplyStartWithWindows(previousStartupState));
     }

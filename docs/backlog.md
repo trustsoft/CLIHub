@@ -298,3 +298,31 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: promote a value to a `Sizing.*` token when a second consumer appears; leave a
   single-use literal alone until then.
 - Trigger: copy-pasting a view and reaching for the same literal.
+
+### Windows personalization changes are not followed while the application runs
+
+- Severity: Medium (the System mode goes stale after startup)
+- Evidence: `PaletteSwitcher.Apply` has exactly two callers — `App.ApplyTheme`
+  (`src/CLIHub/App.xaml.cs:49`, startup) and `WpfThemePreferenceTarget.SetTheme`
+  (`src/CLIHub/Settings/WpfThemePreferenceTarget.cs:39`, reached from a Settings save through
+  `PreferenceApplier`). The "System" theme therefore resolves `SystemTheme.IsLight()` at startup and
+  at save only; nothing refreshes the palette when Windows personalization changes afterwards.
+- Proposed remedy: subscribe to `SystemEvents.UserPreferenceChanged` (or watch the relevant registry
+  value) and call the same switcher with the stored theme, keeping the handler on the UI thread and
+  disposing the subscription with the application.
+- Trigger: a user report that switching Windows to dark leaves CLIHub light until restart.
+
+### A settings save pins the accent even when it equals the palette default
+
+- Severity: Low (asymmetric accent precedence across a live palette switch)
+- Evidence: `WpfAccentPreferenceTarget.SetAccent`
+  (`src/CLIHub/Settings/WpfAccentPreferenceTarget.cs:21-22`) writes `AccentBrush` and
+  `AccentSelectionBrush` as local application resources on every save, while `App.ApplyAccent`
+  (`src/CLIHub/App.xaml.cs:60-63`) skips that write when the stored accent equals
+  `AccentPalette.DefaultHex`. Local entries shadow merged palettes, so the baked accent of a palette
+  selected later in the same session is not seen until the next start. Recorded as a pre-existing
+  asymmetry in `openspec/changes/live-theme-switch/design.md` (D4).
+- Proposed remedy: when the stored accent equals `AccentPalette.DefaultHex`, remove the two local
+  entries instead of writing them, so the active palette's baked accent applies.
+- Trigger: the first palette whose baked accent differs from Sky (Blue already does) being selected
+  in the same session.

@@ -1,6 +1,7 @@
 namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -75,6 +76,27 @@ public class PreferenceApplierTests
     }
 
     [Fact]
+    public void ApplyTheme_ForwardsToThemeTargetAndLogsTheAppliedTheme()
+    {
+        var theme = new Mock<IThemePreferenceTarget>(MockBehavior.Strict);
+        theme.Setup(x => x.SetTheme(AppTheme.Blue));
+        var logger = new Mock<ILogger<PreferenceApplier>>();
+        var applier = CreateApplier(theme: theme.Object, logger: logger.Object);
+
+        applier.ApplyTheme(AppTheme.Blue);
+
+        theme.Verify(x => x.SetTheme(AppTheme.Blue), Times.Once);
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
     public void AddClIHubServices_RegistersNarrowRuntimeTarget()
     {
         var services = new ServiceCollection();
@@ -105,12 +127,15 @@ public class PreferenceApplierTests
         IGlobalHotkeyService? hotkey = null,
         IStartupService? startup = null,
         IPathDisplayStyleTarget? display = null,
-        IAccentPreferenceTarget? accent = null) =>
+        IAccentPreferenceTarget? accent = null,
+        IThemePreferenceTarget? theme = null,
+        ILogger<PreferenceApplier>? logger = null) =>
         new(
             runtime ?? new Mock<IRuntimePreferenceTarget>().Object,
             hotkey ?? new Mock<IGlobalHotkeyService>().Object,
             startup ?? new Mock<IStartupService>().Object,
             display ?? new Mock<IPathDisplayStyleTarget>().Object,
             accent ?? new Mock<IAccentPreferenceTarget>().Object,
-            NullLogger<PreferenceApplier>.Instance);
+            theme ?? new Mock<IThemePreferenceTarget>().Object,
+            logger ?? NullLogger<PreferenceApplier>.Instance);
 }
