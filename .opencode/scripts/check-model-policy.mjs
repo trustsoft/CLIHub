@@ -19,6 +19,10 @@ const notes = [];
 
 const EFFORTS = new Set(["off", "low", "medium", "high", "max"]);
 
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function fail(msg) {
   problems.push(msg);
 }
@@ -101,6 +105,87 @@ for (const [i, o] of (policy.overrides ?? []).entries()) {
   }
 }
 
+// ── display ───────────────────────────────────────────────────────────────────
+// The display section holds the abbreviations the panel renders. It never
+// changes the resolution, so it is optional, but when it is present every key
+// must point at something the catalogue knows.
+const display = policy.display;
+if (display !== undefined) {
+  const catalogueProviders = new Set();
+  const catalogueNames = new Set();
+  const catalogueVariants = new Set();
+  for (const id of models) {
+    const slash = id.indexOf("/");
+    const provider = slash > 0 ? id.slice(0, slash) : id;
+    const name = slash > 0 ? id.slice(slash + 1) : id;
+    catalogueProviders.add(provider);
+    catalogueNames.add(name);
+    // A model name may be listed without its `-free` suffix when the provider
+    // is in `drop_free_suffix_for`: that suffix is dropped for display.
+    if (name.endsWith("-free")) {
+      catalogueNames.add(name.slice(0, -"-free".length));
+    }
+    for (const variant of policy.models[id]?.variants ?? []) {
+      catalogueVariants.add(variant);
+    }
+  }
+
+  const checkTable = (label, table, known, { unique = true } = {}) => {
+    if (!isRecord(table)) {
+      fail(`display.${label} must be an object`);
+      return;
+    }
+    const seen = new Set();
+    for (const [key, value] of Object.entries(table)) {
+      if (typeof value !== "string" || value.length === 0) {
+        fail(`display.${label}['${key}'] must be a non-empty string`);
+        continue;
+      }
+      if (unique && seen.has(value)) {
+        fail(`display.${label} reuses the short form '${value}'`);
+      }
+      seen.add(value);
+      if (known && !known.has(key)) {
+        fail(`display.${label} references unknown '${key}'`);
+      }
+    }
+  };
+
+  // Provider aliases may share a short form (`relayfast` and `relay.fast` are
+  // the same vendor), so uniqueness is only checked among catalogue providers.
+  checkTable("providers", display.providers, null, { unique: false });
+  const providerCodes = new Set();
+  for (const provider of catalogueProviders) {
+    const code = (display.providers ?? {})[provider];
+    if (!code) {
+      fail(`display.providers has no short form for the catalogue provider '${provider}'`);
+      continue;
+    }
+    if (providerCodes.has(code)) {
+      fail(`display.providers reuses the short form '${code}' for two catalogue providers`);
+    }
+    providerCodes.add(code);
+  }
+  checkTable("models", display.models, catalogueNames);
+  checkTable("variants", display.variants, catalogueVariants);
+  checkTable("roles", display.roles, new Set(roles));
+  for (const role of roles) {
+    if (!(display.roles ?? {})[role]) {
+      fail(`display.roles has no short form for the role '${role}'`);
+    }
+  }
+  const dropFree = display.drop_free_suffix_for ?? [];
+  if (!Array.isArray(dropFree)) {
+    fail("display.drop_free_suffix_for must be an array");
+  } else {
+    for (const provider of dropFree) {
+      if (!catalogueProviders.has(provider)) {
+        fail(`display.drop_free_suffix_for references unknown provider '${provider}'`);
+      }
+    }
+  }
+}
+
 // ── runtime ───────────────────────────────────────────────────────────────────
 if (!existsSync(RUNTIME_PATH)) {
   notes.push("runtime file absent (the sidebar creates it on first render)");
@@ -168,7 +253,10 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`model policy check OK (${roles.length} roles, ${presets.length} presets, ${models.size} models)`);
+const displaySummary = policy.display
+  ? `, ${Object.keys(policy.display.providers ?? {}).length} display providers`
+  : "";
+console.log(`model policy check OK (${roles.length} roles, ${presets.length} presets, ${models.size} models${displaySummary})`);
 for (const n of notes) {
   console.log(`  note: ${n}`);
 }

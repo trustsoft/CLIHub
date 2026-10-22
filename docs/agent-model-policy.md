@@ -103,6 +103,37 @@ node .opencode/scripts/resolve-model.mjs <role> [--record] [--exhaust <model>] [
   rename (temp file + rename) are retried on Windows sharing errors. The model is printed
   *before* the write, so a failed write is reported on stderr but does not fail the dispatch.
 
+## Display rules
+
+The policy also carries the **display abbreviations** the panel renders, in a
+`display` section. They are display-only: the full model id is always what gets
+resolved, logged, and written.
+
+```json
+"display": {
+  "providers": { "zai-coding-plan": "za", "relayfast": "rf", "deepseek": "ds", "opencode": "oc" },
+  "models": { "claude-sonnet-5": "cl-sonnet-5", "deepseek-v4.1-flash": "ds-v4.1-flash" },
+  "variants": { "none": "n", "minimal": "i", "low": "l", "medium": "m", "high": "h", "xhigh": "x", "max": "M" },
+  "roles": { "planner": "pln", "implementer": "imp", "verifier": "ver", "explorer": "exp", "research": "res", "mechanical": "mch" },
+  "drop_free_suffix_for": ["opencode"]
+}
+```
+
+| Table | Key | Value |
+|---|---|---|
+| `providers` | the provider id | its short code (`zai-coding-plan` → `za`) |
+| `models` | the model name without the provider | its short form; only the vendor word is shortened, the version and tier stay verbatim |
+| `variants` | the reasoning effort | one letter (`M` is max, `m` is medium, `i` is minimal, `l` is low) |
+| `roles` | the role name | its code in the narrow role column |
+| `drop_free_suffix_for` | a provider id | its `-free` model suffix is dropped, because every model of that provider is a free one |
+
+The sidebar renders `pln rf/cl-sonnet-5#h` from those tables and the panel's
+legend is generated from the same tables, so the two cannot disagree. The
+section is optional: a policy file without it falls back to the built-in
+tables in the plugin. `check-model-policy.mjs` validates it — every catalogue
+provider and role needs a short form, every model and variant key must exist
+in the catalogue, and the short forms must be unique.
+
 ## Why two layers
 
 The policy JSON is a *contract* (what should be preferred, and what is safe to fall back to). The

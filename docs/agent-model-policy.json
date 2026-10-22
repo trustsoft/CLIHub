@@ -3,6 +3,43 @@
   "_comment": "CLIHub subagent model policy. THREE axes per dispatch: model (which model), effort (reasoning level), and the fallback chain. TWO LAYERS: this file (versioned, human-curated) + .opencode/model-policy.json (gitignored runtime selection). Resolution at dispatch: effective_preset = first override whose window contains now, else active_preset; take the role's ordered list, drop models whose exhausted_until is in the future, try in order. Availability failure (429/quota/billing/auth/not-found) -> mark exhausted_until = now + backoff, try next. Quality failure -> escalate to the next model in the same list. If on_exhaustion is block_and_ask and no acceptable model remains -> STOP and ask the user. Merge rule for the runtime file: the orchestrator owns exhaustedUntil and sessionLog; the sidebar owns activePreset and roleOverrides; each writer read-modify-writes only its own fields, atomically.",
   "_effort_note": "effort is a normalized level (off|low|medium|high|max) that the resolver maps onto the chosen model's supported `variants` (the lowest variant at or above the level, else the highest available; `off` means `none` when supported, otherwise no variant). A chain entry may override it as `model#variant`. Reasoning level consumes more tokens, so on a metered plan a high effort burns the quota faster; the exhaustion logic does not yet weight this.",
   "active_preset": "default",
+  "display": {
+    "_comment": "Display-only abbreviations for the model-policy panel and dialogs. The versioned policy owns them so the panel and the documentation cannot drift apart. Nothing here changes the resolution: the full model id is always what is resolved, logged and written. providers: the provider id prefix -> its short code. models: the model name (without the provider) -> its short form; only the vendor word is shortened, the version and the tier stay verbatim. variants: the reasoning effort -> one letter (M is max, m is medium, i is minimal, l is low). roles: the role name -> its code in the narrow role column. drop_free_suffix_for: providers whose model names end in '-free'; the suffix is redundant there because every model of those providers is a free one.",
+    "providers": {
+      "zai-coding-plan": "za",
+      "relayfast": "rf",
+      "relay.fast": "rf",
+      "deepseek": "ds",
+      "opencode": "oc"
+    },
+    "models": {
+      "claude-sonnet-5": "cl-sonnet-5",
+      "claude-haiku-4-5": "cl-haiku-4-5",
+      "deepseek-v4-pro": "ds-v4-pro",
+      "deepseek-v4.1-flash": "ds-v4.1-flash",
+      "deepseek-flash": "ds-flash",
+      "minimax-m3.1-flash": "mm-m3.1-flash",
+      "nemotron-3.5-super-vl": "nemo-3.5-svl"
+    },
+    "variants": {
+      "none": "n",
+      "minimal": "i",
+      "low": "l",
+      "medium": "m",
+      "high": "h",
+      "xhigh": "x",
+      "max": "M"
+    },
+    "roles": {
+      "planner": "pln",
+      "implementer": "imp",
+      "verifier": "ver",
+      "explorer": "exp",
+      "research": "res",
+      "mechanical": "mch"
+    },
+    "drop_free_suffix_for": ["opencode"]
+  },
   "roles": {
     "planner": { "agents": ["pipe/planner"], "tier": "high", "effort": "high", "on_exhaustion": "block_and_ask" },
     "implementer": { "agents": ["pipe/implementer"], "tier": "high", "effort": "medium", "on_exhaustion": "next" },
