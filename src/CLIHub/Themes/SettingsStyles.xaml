@@ -2,121 +2,27 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:CLIHub.Controls">
     <!--
-        Settings window and page chrome: theme picker preview data, footer buttons, sidebar navigation,
-        page headers, and implicit styles for CLIHub.Controls custom types (SectionHeader, SettingCard,
-        SettingsGroup). Merged at application level because Settings pages are UserControls built before
-        they attach to the window tree.
+        Settings window and page chrome: sidebar, footer, headers, and implicit styles for
+        CLIHub.Controls custom types. Merged at application level because Settings pages are UserControls
+        built before they attach to the window tree. This dictionary is the application-level entry point:
+        it merges Controls.xaml (shared keyed bases), ThemePickerData.xaml (preview + picker styles) and
+        SettingsControls.xaml (input/control templates), and each of those merges Sizing.xaml for its own
+        token lookups.
     -->
 
     <ResourceDictionary.MergedDictionaries>
         <!--
             StaticResource inside a dictionary resolves only against this dictionary and its merges.
-            SettingsControls.xaml brings Controls.xaml (button/chip bases) and its Sizing tokens.
+            Controls.xaml supplies the shared keyed bases this file builds on (QuietChipButton,
+            VersionChipBorder, VersionChipText); ThemePickerData.xaml brings the theme and accent picker
+            keys, SettingsControls.xaml the input/control templates and the text styles (HintText). The
+            two leaf dictionaries merge Sizing.xaml themselves because a loose dictionary cannot reach
+            application-level siblings.
         -->
+        <ResourceDictionary Source="/Themes/Controls.xaml"/>
+        <ResourceDictionary Source="/Themes/ThemePickerData.xaml"/>
         <ResourceDictionary Source="/Themes/SettingsControls.xaml"/>
     </ResourceDictionary.MergedDictionaries>
-
-    <!-- Theme picker: preview cards in one equal-width row. The preview palette below is theme
-         data, not application chrome: all four samples must read the same under either theme. -->
-    <SolidColorBrush x:Key="ThemePreviewDarkBrush" Color="#FF0A0C14"/>
-    <SolidColorBrush x:Key="ThemePreviewLightBrush" Color="#FFFFFFFF"/>
-    <SolidColorBrush x:Key="ThemePreviewBlueBrush" Color="#FF232833"/>
-    <LinearGradientBrush x:Key="ThemePreviewSystemBrush" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Offset="0" Color="#FF0A0C14"/>
-        <GradientStop Offset="0.4" Color="#FF0A0C14"/>
-        <GradientStop Offset="0.62" Color="#FF4B5160"/>
-        <GradientStop Offset="0.78" Color="#FFE7E8EC"/>
-        <GradientStop Offset="1" Color="#FFFFFFFF"/>
-    </LinearGradientBrush>
-    <SolidColorBrush x:Key="ThemePreviewDotMutedBrush" Color="#FF8B8F99"/>
-    <SolidColorBrush x:Key="ThemePreviewBarDarkBrush" Color="#FF4B5160"/>
-    <SolidColorBrush x:Key="ThemePreviewBarLightBrush" Color="#FFB6BAC4"/>
-    <SolidColorBrush x:Key="ThemePreviewBarBlueBrush" Color="#FF3E4C66"/>
-
-    <Style x:Key="ThemeOptionItem" TargetType="ListBoxItem">
-        <Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-        <!-- The group cancels this trailing gap with a matching negative margin, keeping the row
-             flush with the setting card while neighbours stay 8px apart. -->
-        <Setter Property="Margin" Value="0,0,8,0"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ListBoxItem">
-                    <Grid>
-                        <Border x:Name="Card"
-                                Padding="10"
-                                Background="{DynamicResource ChipBgBrush}"
-                                BorderBrush="{DynamicResource FieldStrokeBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
-                            <ContentPresenter/>
-                        </Border>
-                        <!-- Selection ring drawn over the card edge, so selecting never shifts content -->
-                        <Border x:Name="SelectionRing"
-                                Margin="-1"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
-                                IsHitTestVisible="False"
-                                Visibility="Collapsed"/>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <Style x:Key="ThemeOptionGroup" TargetType="ListBox">
-        <Setter Property="ItemContainerStyle" Value="{StaticResource ThemeOptionItem}"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-        <Setter Property="ItemsPanel">
-            <Setter.Value>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="1"/>
-                </ItemsPanelTemplate>
-            </Setter.Value>
-        </Setter>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ListBox">
-                    <ItemsPresenter/>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-    <!-- Accent picker: compact swatch cards on the same chrome as the theme cards. Three columns
-         keep the name and hex readable at the window's minimum width; the group cancels the last
-         row's trailing margin so the custom field below stays close to the grid. -->
-    <Style x:Key="AccentOptionItem" TargetType="ListBoxItem" BasedOn="{StaticResource ThemeOptionItem}">
-        <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}"/>
-        <Setter Property="Margin" Value="0,0,8,8"/>
-    </Style>
-
-    <Style x:Key="AccentOptionGroup" TargetType="ListBox" BasedOn="{StaticResource ThemeOptionGroup}">
-        <Setter Property="ItemContainerStyle" Value="{StaticResource AccentOptionItem}"/>
-        <Setter Property="ItemsPanel">
-            <Setter.Value>
-                <ItemsPanelTemplate>
-                    <UniformGrid Columns="3"/>
-                </ItemsPanelTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
     <!-- Footer buttons -->
     <Style x:Key="AccentButton" TargetType="Button">
@@ -432,6 +338,122 @@
                             CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
                         <ItemsPresenter/>
                     </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Page-header summary card: label, value, optional detail and alert lines, icon block. The tones
+        are applied by triggers on the templated parent, so the brushes stay palette-driven: Neutral
+        (the default) is the muted icon tone and the primary text tone, and Alert is always danger.
+    -->
+    <Style TargetType="{x:Type controls:SummaryCard}">
+        <!-- A card is a read-only metric, not an input: it must not take part in the tab order. -->
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:SummaryCard}">
+                    <Border Padding="9"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{TemplateBinding Label}"/>
+                                <TextBlock x:Name="ValueText"
+                                           Margin="0,2,0,0"
+                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{TemplateBinding Value}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap"
+                                           ToolTip="{TemplateBinding ValueToolTip}"/>
+                                <TextBlock x:Name="DetailText"
+                                           Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{TemplateBinding Detail}"
+                                           ToolTip="{TemplateBinding DetailToolTip}"/>
+                                <TextBlock x:Name="AlertText"
+                                           Margin="0,2,0,0"
+                                           Foreground="{DynamicResource DangerBrush}"
+                                           Style="{StaticResource HintText}"
+                                           Text="{TemplateBinding Alert}"
+                                           ToolTip="{TemplateBinding AlertToolTip}"
+                                           Visibility="Collapsed"/>
+                            </StackPanel>
+                            <Border Grid.Column="1"
+                                    Width="24"
+                                    Height="24"
+                                    VerticalAlignment="Top"
+                                    Background="{DynamicResource ThumbBgBrush}"
+                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource Sizing.CornerRadius.IconBox}">
+                                <TextBlock x:Name="IconGlyph"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Text="{TemplateBinding Icon}"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <!-- Icon tone: Neutral keeps the muted brush set on the glyph above. -->
+                        <Trigger Property="IconTone" Value="Accent">
+                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IconTone" Value="Success">
+                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IconTone" Value="Danger">
+                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                        </Trigger>
+
+                        <!-- Value tone: Neutral keeps the primary text tone set on the value above. -->
+                        <Trigger Property="ValueTone" Value="Muted">
+                            <Setter TargetName="ValueText" Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+                        </Trigger>
+                        <Trigger Property="ValueTone" Value="Accent">
+                            <Setter TargetName="ValueText" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="ValueTone" Value="Success">
+                            <Setter TargetName="ValueText" Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                        </Trigger>
+                        <Trigger Property="ValueTone" Value="Danger">
+                            <Setter TargetName="ValueText" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                        </Trigger>
+
+                        <!-- The detail line drops out while it has no text. -->
+                        <Trigger Property="Detail" Value="{x:Null}">
+                            <Setter TargetName="DetailText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Detail" Value="">
+                            <Setter TargetName="DetailText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+
+                        <!-- The alert needs both the flag and non-empty text; the last two triggers win. -->
+                        <Trigger Property="IsAlertVisible" Value="True">
+                            <Setter TargetName="AlertText" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="Alert" Value="{x:Null}">
+                            <Setter TargetName="AlertText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="Alert" Value="">
+                            <Setter TargetName="AlertText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

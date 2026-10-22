@@ -20,7 +20,7 @@
                 <ComboBox.ItemTemplate>
                     <DataTemplate>
                         <controls:SpacedPanel Orientation="Horizontal"
-                                              Spacing="{StaticResource Sizing.Spacing}">
+                                              Spacing="{StaticResource Sizing.Spacing.Standard}">
                             <Image Width="16"
                                    Height="16"
                                    Source="{Binding Icon}"/>

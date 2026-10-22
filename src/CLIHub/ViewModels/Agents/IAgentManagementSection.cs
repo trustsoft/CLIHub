@@ -2,6 +2,8 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 
+using CLIHub.Controls;
+
 /// <summary>
 ///   The agent-management section of the Settings window: cards,
 ///   supported/installed counts, the default-agent selection, and the per-card actions.
@@ -42,6 +44,13 @@ public interface IAgentManagementSection : IDisposable
     ///   Whether a default agent is selected.
     /// </summary>
     bool HasDefaultAgent { get; }
+
+    /// <summary>
+    ///   The tone of the default-agent summary value: <see cref="SummaryCardTone.Muted" /> while no
+    ///   default agent is selected (the value is the "None" placeholder) and
+    ///   <see cref="SummaryCardTone.Neutral" /> otherwise.
+    /// </summary>
+    SummaryCardTone DefaultAgentValueTone { get; }
 
     /// <summary>
     ///   The default-agent options, including a "None" option.

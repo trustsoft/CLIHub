@@ -76,7 +76,7 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}"
+                    <Border CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
                             Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"

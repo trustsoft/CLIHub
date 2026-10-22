@@ -69,19 +69,19 @@
                 </Border>
                 <controls:SpacedPanel Grid.Column="1"
                                       Orientation="Horizontal"
-                                      Spacing="{StaticResource Sizing.Spacing}">
+                                      Spacing="{StaticResource Sizing.Spacing.Standard}">
                     <Button Command="{Binding CopyLogPathCommand}"
                             Style="{StaticResource SettingsIconButton}"
                             ToolTip="Copy path">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                   FontSize="14"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
                                    Text="{x:Static themes:IconGlyphs.Copy}"/>
                     </Button>
                     <Button Command="{Binding OpenLogFolderCommand}"
                             Style="{StaticResource SettingsIconButton}"
                             ToolTip="Open log folder">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                   FontSize="14"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
                                    Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
                     </Button>
                 </controls:SpacedPanel>

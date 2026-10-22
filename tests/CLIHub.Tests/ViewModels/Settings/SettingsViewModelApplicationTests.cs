@@ -617,6 +617,37 @@ public class SettingsViewModelApplicationTests
     }
 
     [Theory]
+    [InlineData(Core.Scanning.ProjectScanState.NotConfigured, false, "Off", SummaryCardTone.Neutral)]
+    [InlineData(Core.Scanning.ProjectScanState.Idle, false, "Idle", SummaryCardTone.Neutral)]
+    [InlineData(Core.Scanning.ProjectScanState.Idle, true, "Watching", SummaryCardTone.Success)]
+    [InlineData(Core.Scanning.ProjectScanState.Scanning, false, "Scanning", SummaryCardTone.Accent)]
+    [InlineData(Core.Scanning.ProjectScanState.Error, false, "Error", SummaryCardTone.Danger)]
+    public void WatcherStateTone_ScannerStatus_MatchesWatcherStateLabel(
+        Core.Scanning.ProjectScanState state,
+        bool isWatching,
+        string expectedLabel,
+        SummaryCardTone expectedTone)
+    {
+        var fixture = new Fixture();
+        fixture.ViewModel.Load();
+
+        fixture.Scanner.Raise(
+            scanner => scanner.StatusChanged += null,
+            fixture.Scanner.Object,
+            new Core.Scanning.ProjectScanStatus(
+                state,
+                isWatching,
+                state == Core.Scanning.ProjectScanState.Scanning,
+                DateTimeOffset.UtcNow,
+                0,
+                0,
+                state == Core.Scanning.ProjectScanState.Error ? "Scan failed" : null));
+
+        Assert.Equal(expectedLabel, fixture.ViewModel.WatcherStateLabel);
+        Assert.Equal(expectedTone, fixture.ViewModel.WatcherStateTone);
+    }
+
+    [Theory]
     [InlineData(0, null)]
     [InlineData(1, "· 1 folder")]
     [InlineData(412, "· 412 folders")]

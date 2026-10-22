@@ -58,7 +58,7 @@
                     <Button Click="OnCloseClick"
                             Style="{StaticResource WindowCloseButton}"
                             ToolTip="Close">
-                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="14" Text="{x:Static themes:IconGlyphs.Close}"/>
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="{StaticResource Sizing.FontSize.GlyphSmall}" Text="{x:Static themes:IconGlyphs.Close}"/>
                     </Button>
                 </StackPanel>
             </Grid>

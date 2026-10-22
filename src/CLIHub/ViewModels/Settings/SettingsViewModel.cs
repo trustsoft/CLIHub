@@ -75,7 +75,18 @@ public sealed record PopupPositionOption(PopupScreenPosition Position, string Na
 /// <param name="Theme"> The theme. </param>
 /// <param name="Name"> Display name. </param>
 /// <param name="Description"> One-line explanation shown under the name in the theme picker. </param>
-public sealed record AppThemeOption(AppTheme Theme, string Name, string Description);
+/// <param name="PreviewCardBrush"> Resource key of the preview card background brush. </param>
+/// <param name="PreviewBarBrush"> Resource key of the preview bar brush. </param>
+/// <param name="UsesAccentPreviewDot">
+///   Whether the preview dot follows the live accent brush instead of the fixed muted swatch.
+/// </param>
+public sealed record AppThemeOption(
+    AppTheme Theme,
+    string Name,
+    string Description,
+    string PreviewCardBrush,
+    string PreviewBarBrush,
+    bool UsesAccentPreviewDot);
 
 /// <summary>
 ///   A selectable accent color: a palette preset or the custom hex entry.
@@ -207,8 +218,9 @@ public sealed class WatchedDirectoryRow : ObservableObject
 }
 
 /// <summary>
-///   A Settings navigation page: a stable key, a display title, the group it belongs to, and
-///   whether its settings are implemented yet.
+///   A Settings navigation page: a stable key, a display title, the group it belongs to, whether
+///   its settings are implemented yet, and the resource keys of the page-specific header and
+///   summary templates it uses.
 /// </summary>
 /// <param name="Key"> Stable page key used to route the page view. </param>
 /// <param name="Title"> Display title shown in the sidebar and page header. </param>
@@ -216,13 +228,28 @@ public sealed class WatchedDirectoryRow : ObservableObject
 /// <param name="Group"> The navigation group the page belongs to. </param>
 /// <param name="IsImplemented"> Whether the page has implemented settings. </param>
 /// <param name="Icon"> The Segoe MDL2 glyph shown before the page title in the sidebar. </param>
+/// <param name="HeaderTitleExtraKey">
+///   Resource key of the template rendered beside the page title, or null when the page has no
+///   extra title content.
+/// </param>
+/// <param name="HeaderActionKey">
+///   Resource key of the template rendered in the header action column, or null when the page has
+///   no header actions.
+/// </param>
+/// <param name="SummaryRowKey">
+///   Resource key of the template rendered in the header summary row, or null when the page has no
+///   summary cards.
+/// </param>
 public sealed record SettingsPage(
     string Key,
     string Title,
     string Description,
     string Group,
     bool IsImplemented,
-    string Icon);
+    string Icon,
+    string? HeaderTitleExtraKey = null,
+    string? HeaderActionKey = null,
+    string? SummaryRowKey = null);
 
 /// <summary>
 ///   A Settings navigation group: an uppercase label and its pages.
@@ -273,21 +300,25 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             "Registered projects, their provenance, and manually added entries.",
             "Engines & Repos",
             true,
-            IconGlyphs.FolderAdd),
+            IconGlyphs.FolderAdd,
+            SummaryRowKey: "RegistrySummaryCards"),
         new(
             "projects",
             "Project Discovery",
             "Watched directories, discovery rules, and the background watcher.",
             "Engines & Repos",
             true,
-            IconGlyphs.FolderOpen),
+            IconGlyphs.FolderOpen,
+            HeaderActionKey: "ProjectsHeaderAction",
+            SummaryRowKey: "ProjectsSummaryCards"),
         new(
             "agents",
             "CLI Agents",
             "Installed CLI agents, the default agent, and probe settings.",
             "Engines & Repos",
             true,
-            IconGlyphs.Robot),
+            IconGlyphs.Robot,
+            SummaryRowKey: "AgentsSummaryCards"),
         new(
             "terminal",
             "Terminal Profiles",
@@ -315,7 +346,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             "Check for new CLIHub builds, configure update preferences, and view release notes.",
             "System",
             true,
-            IconGlyphs.Update)
+            IconGlyphs.Update,
+            HeaderTitleExtraKey: "UpdatesHeaderTitleExtra",
+            HeaderActionKey: "UpdatesHeaderAction")
     };
 
     private static readonly LogLevelOption[] LogLevelOptions =
@@ -335,13 +368,15 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(PopupScreenPosition.PrimaryScreen, "Primary monitor — centered")
     };
 
-    private static readonly AppThemeOption[] AppThemeOptions =
-    {
-        new(AppTheme.Dark, "Dark Theme", "Windows 11 Fluent Dark (Recommended)"),
-        new(AppTheme.Light, "Light Theme", "High contrast daylight profile"),
-        new(AppTheme.Blue, "Blue Theme", "Blue-tinted dark chrome with a baked-in blue accent"),
-        new(AppTheme.System, "System Sync", "Follow Windows personalization state")
-    };
+    private static readonly AppThemeOption[] AppThemeOptions = ThemeDescriptors.All
+        .Select(descriptor => new AppThemeOption(
+            descriptor.Theme,
+            descriptor.Name,
+            descriptor.Description,
+            descriptor.CardBrush,
+            descriptor.BarBrush,
+            descriptor.Theme != AppTheme.System))
+        .ToArray();
 
     private static readonly AccentChoice CustomAccentChoice =
         new("Custom...", "Transparent", "RGB / Hex", true);
@@ -426,6 +461,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private int agentsInstalledCount;
     private int agentsSupportedCount;
     private string watcherStateLabel = "Off";
+    private SummaryCardTone watcherStateTone;
     private string watcherDetailText = "No watched roots configured";
     private bool disposed;
 
@@ -538,8 +574,20 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public SettingsPage SelectedPage
     {
         get => this.selectedPage;
-        set => this.SetProperty(ref this.selectedPage, value);
+        set
+        {
+            if (this.SetProperty(ref this.selectedPage, value))
+            {
+                this.OnPropertyChanged(nameof(this.IsPlaceholderPageVisible));
+            }
+        }
     }
+
+    /// <summary>
+    ///   Whether the placeholder page is shown because the selected page has no implemented
+    ///   settings yet.
+    /// </summary>
+    public bool IsPlaceholderPageVisible => !this.SelectedPage.IsImplemented;
 
     /// <summary>
     ///   The selected path display style.
@@ -1101,6 +1149,16 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
+    ///   The tone of the watcher state shown in the summary card: success while watching, accent
+    ///   while scanning, danger on error, and neutral for every other state.
+    /// </summary>
+    public SummaryCardTone WatcherStateTone
+    {
+        get => this.watcherStateTone;
+        private set => this.SetProperty(ref this.watcherStateTone, value);
+    }
+
+    /// <summary>
     ///   The watcher detail shown under the state, e.g. the last scan time.
     /// </summary>
     public string WatcherDetailText
@@ -1374,10 +1432,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
         this.OnPropertyChanged(nameof(this.WatcherStateLabel));
+        this.OnPropertyChanged(nameof(this.WatcherStateTone));
         this.OnPropertyChanged(nameof(this.WatcherDetailText));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
         this.OnPropertyChanged(nameof(this.SelectedPage));
+        this.OnPropertyChanged(nameof(this.IsPlaceholderPageVisible));
     }
 
     /// <summary>
@@ -1673,6 +1733,15 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             ProjectScanState.Scanning => "Scanning",
             ProjectScanState.Error => "Error",
             _ => current.IsWatching ? "Watching" : "Idle"
+        };
+        // Mirrors the label switch above: the two must name the same states, so the card can never
+        // show a label in a tone that contradicts it.
+        this.WatcherStateTone = current.State switch
+        {
+            ProjectScanState.Scanning => SummaryCardTone.Accent,
+            ProjectScanState.Error => SummaryCardTone.Danger,
+            ProjectScanState.Idle when current.IsWatching => SummaryCardTone.Success,
+            _ => SummaryCardTone.Neutral
         };
         this.WatcherDetailText = current.State switch
         {

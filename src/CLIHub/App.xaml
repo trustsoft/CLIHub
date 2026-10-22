@@ -9,8 +9,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Palette only: shared brushes, no implicit styles, so other windows are unaffected. -->
                 <ResourceDictionary Source="/Themes/DarkTheme.xaml"/>
-                <!-- Shared keyed styles (button templates, typography, DarkToolTip). -->
-                <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <!--
                     The slim scrollbar lives here, not in a window dictionary: implicit styles
                     from window resources do not reach the scrollbars inside ScrollViewer and ListBox
@@ -18,20 +16,16 @@
                 -->
                 <ResourceDictionary Source="/Themes/SlimScrollBar.xaml"/>
                 <!--
-                    Settings input/control templates: shared across Settings pages (UserControls).
-                    Merged at application level because UserControls are built before they attach
-                    to the window tree — window-scoped resources are not reachable during XAML load.
-                    Contains the NumericField implicit style used by Settings pages.
-                -->
-                <ResourceDictionary Source="/Themes/SettingsControls.xaml"/>
-                <!--
-                    Settings window styles and page chrome: shared with the extracted Settings pages
-                    (UserControls). A UserControl is built before it attaches to the window tree, so
-                    window-scoped resources are not reachable during its load — application-level
-                    placement is required, like the scrollbar and tooltip styles above. Note: this
-                    dictionary contains 3 implicit (keyless) styles for CLIHub.Controls custom types
-                    (SectionHeader, SettingCard, SettingsGroup); they are intentional and currently
-                    used only by Settings pages.
+                    Settings window and page chrome. SettingsStyles.xaml is the application-level entry
+                    point for the settings layer: it merges Controls.xaml (shared keyed styles),
+                    ThemePickerData.xaml (theme/accent picker data), and SettingsControls.xaml
+                    (input/control templates), while those dictionaries merge Sizing.xaml for their own
+                    token lookups. Together they provide settings chrome, picker data, input templates,
+                    sizing tokens, and the implicit custom-control styles (SectionHeader, SettingCard,
+                    SettingsGroup, NumericField). Merged at application level because Settings pages are
+                    UserControls built before they attach to the window tree — window-scoped resources are
+                    not reachable during their XAML load. Controls.xaml is loaded exactly once for the
+                    application, through this entry.
                 -->
                 <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
@@ -40,6 +34,16 @@
                  converter is assigned at startup from the DI container (see ApplicationHost),
                  backed by the shared decoded-image cache. -->
             <conv:PathDisplayConverter x:Key="PathDisplay"/>
+            <conv:ThemeBrushKeyConverter x:Key="ThemeBrushKey"/>
+            <!--
+                Page host wiring: page metadata names the header and summary templates, and these
+                converters turn a key into the slot's ContentTemplate and visibility. The template
+                lookup starts at the slot element because SettingsWindow declares those templates in
+                its own window resources, which Application.TryFindResource cannot reach.
+            -->
+            <conv:ResourceKeyToTemplateConverter x:Key="ResourceKeyToTemplate"/>
+            <conv:EmptyToCollapsedVisibilityConverter x:Key="EmptyToCollapsedVisibility"/>
+            <conv:PageKeyVisibilityConverter x:Key="PageKeyVisibility"/>
             <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
             <!--

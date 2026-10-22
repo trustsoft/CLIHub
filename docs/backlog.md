@@ -274,3 +274,27 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   the same behaviour, or an explicit decision to version the pipeline mechanism per project.
 - Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
   mechanism to project level is a later, separate decision.
+
+## UI and theming
+
+### Settings-page registration lives in two places
+
+- Severity: Low (maintenance ergonomics)
+- Evidence: adding a page still touches the `SettingsPage` metadata in
+  `SettingsViewModel.AllPages` and the matching `views:Settings*Page` element in the
+  `SettingsWindow.xaml` page host; `SettingsPageMetadataTests` can only report that the two sides
+  disagree after both have been edited.
+- Proposed remedy: one registration point, for example a page factory carried on the metadata.
+  Deliberately not done now because it moves view creation into the view model.
+- Trigger: a fifth page group or a fifteenth page.
+
+### Single-use FontSize and CornerRadius literals stay untokenized
+
+- Severity: Low (consistency)
+- Evidence: after the sizing sweep, the 9, 10, 13, and 15 pt glyph and text tiers and the 9, 13, 7,
+  and 0 px radii remain literals because each has one consumer and encodes no shared role; the
+  legacy `Views/MainWindow.xaml` also keeps its pre-palette colours (allowlisted by
+  `ThemeColorLiteralTests`).
+- Proposed remedy: promote a value to a `Sizing.*` token when a second consumer appears; leave a
+  single-use literal alone until then.
+- Trigger: copy-pasting a view and reaching for the same literal.

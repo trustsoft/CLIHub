@@ -3,59 +3,83 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!--
-        Sizing tokens: metrics, font families, and radius values referenced by Controls.xaml,
-        SettingsControls.xaml, SettingsStyles.xaml, and per-window dictionaries via StaticResource.
-        Naming convention: Sizing.<Category>.<Property> (e.g., Sizing.FontSize.Body,
-        Sizing.CornerRadius.Card, Sizing.Input.Height, Sizing.Button.FooterPadding).
-        Categories: FontFamily, FontSize, CornerRadius, Input, Button, plus scalar Spacing.
+        Sizing tokens: font families, font sizes, spacing, corner radii, then component metrics,
+        referenced by Controls.xaml, SettingsControls.xaml, SettingsStyles.xaml, ThemePickerData.xaml,
+        LaunchWindowStyles.xaml, and the Views via StaticResource.
+
+        Naming convention: Sizing.<Category>.<Property>. Categories appear in the file in this order:
+        FontFamily, FontSize, Spacing, CornerRadius, then component groups (window chrome and panes,
+        content lists and rows, buttons and inputs, toggle). Keys are alphabetical within a group.
+
+        A value earns a token when it repeats across consumers or names a UI role. Never add a token
+        merely because a number exists: one-off decorative values stay literals at their use site.
     -->
 
-    <!-- Typographic roles -->
-    <sys:Double x:Key="Sizing.FontSize.Section">11</sys:Double>
-    <sys:Double x:Key="Sizing.FontSize.Body">12</sys:Double>
-    <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
-    <!-- Value line of a page-header summary card (counts, agent names, watcher states) -->
-    <sys:Double x:Key="Sizing.FontSize.SummaryValue">16</sys:Double>
-    <!-- Text of the small display chips (version/state/header/hotkey chips) -->
-    <sys:Double x:Key="Sizing.FontSize.Chip">11</sys:Double>
-    <!-- Font for Segoe MDL2 Assets glyphs (menu icons, footer icons, drawn glyph buttons) -->
+    <!-- Font families -->
     <FontFamily x:Key="Sizing.FontFamily.Icon">Segoe MDL2 Assets</FontFamily>
     <!-- Text font of the dark-chrome windows; Segoe UI Variable with a Segoe UI fallback -->
     <FontFamily x:Key="Sizing.FontFamily.Text">Segoe UI Variable Text, Segoe UI</FontFamily>
 
-    <!-- Panes, headers, footer and window chrome -->
+    <!-- Font sizes -->
+    <sys:Double x:Key="Sizing.FontSize.Body">12</sys:Double>
+    <!-- Text of the small display chips (version/state/header/hotkey chips) -->
+    <sys:Double x:Key="Sizing.FontSize.Chip">11</sys:Double>
+    <!-- Icon glyphs in row and header action buttons -->
+    <sys:Double x:Key="Sizing.FontSize.Glyph">16</sys:Double>
+    <!-- Icon glyphs in menu items, window-chrome buttons, and secondary card actions -->
+    <sys:Double x:Key="Sizing.FontSize.GlyphSmall">14</sys:Double>
+    <sys:Double x:Key="Sizing.FontSize.GlyphTiny">12</sys:Double>
+    <!-- Hint and detail text -->
+    <sys:Double x:Key="Sizing.FontSize.Hint">12.5</sys:Double>
+    <!-- Project and agent names -->
+    <sys:Double x:Key="Sizing.FontSize.Name">14.5</sys:Double>
+    <!-- Small section labels and chip text -->
+    <sys:Double x:Key="Sizing.FontSize.Section">11</sys:Double>
+    <!-- Value line of a page-header summary card (counts, agent names, watcher states) -->
+    <sys:Double x:Key="Sizing.FontSize.SummaryValue">16</sys:Double>
+
+    <!-- Spacing between adjacent controls in simple one-dimensional groups -->
+    <sys:Double x:Key="Sizing.Spacing.Standard">8</sys:Double>
+
+    <!-- Shape roles (shared corner-radius vocabulary) -->
+    <!-- Card and other surface containers -->
+    <CornerRadius x:Key="Sizing.CornerRadius.Card">8</CornerRadius>
+    <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
+    <CornerRadius x:Key="Sizing.CornerRadius.Control">4</CornerRadius>
+    <!-- 24x24 icon block of the page-header summary card template -->
+    <CornerRadius x:Key="Sizing.CornerRadius.IconBox">6</CornerRadius>
+
+    <!-- Window chrome and panes -->
+    <sys:Double x:Key="Sizing.Footer.Height">42</sys:Double>
     <Thickness x:Key="Sizing.Pane.Margin">10</Thickness>
     <sys:Double x:Key="Sizing.PaneHeader.Height">32</sys:Double>
     <Thickness x:Key="Sizing.PaneHeader.Margin">0,0,0,4</Thickness>
-    <sys:Double x:Key="Sizing.WindowHeader.Height">40</sys:Double>
-    <sys:Double x:Key="Sizing.Footer.Height">42</sys:Double>
-    <sys:Double x:Key="Sizing.Splitter.HitWidth">9</sys:Double>
     <sys:Double x:Key="Sizing.PaneList.MaxHeight">434</sys:Double>
+    <sys:Double x:Key="Sizing.Splitter.HitWidth">9</sys:Double>
+    <sys:Double x:Key="Sizing.WindowHeader.Height">40</sys:Double>
 
-    <!-- Pane and list minimums -->
-    <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->
-    <sys:Double x:Key="Sizing.ProjectList.MinWidth">300</sys:Double>
-    <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
-    <sys:Double x:Key="Sizing.ProjectPane.MinWidth">320</sys:Double>
-    <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
-    <sys:Double x:Key="Sizing.AgentPane.MinWidth">260</sys:Double>
-
-    <!-- List rows -->
-    <sys:Double x:Key="Sizing.AgentRow.Height">60</sys:Double>
-    <!-- Square project-logo thumbnail in a Projects list row -->
-    <sys:Double x:Key="Sizing.ProjectLogo.Height">42</sys:Double>
-    <sys:Double x:Key="Sizing.ProjectLogo.Width">42</sys:Double>
-    <CornerRadius x:Key="Sizing.ProjectLogo.CornerRadius">9</CornerRadius>
+    <!-- Content lists and rows -->
     <sys:Double x:Key="Sizing.AgentLogo.Height">28</sys:Double>
     <sys:Double x:Key="Sizing.AgentLogo.Width">28</sys:Double>
-    <!-- Row paddings: the divider-side insets match (10px row padding + 10px pane margin on
-         both sides of the pane divider). -->
-    <Thickness x:Key="Sizing.ProjectRow.Padding">12,9,10,9</Thickness>
+    <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
+    <sys:Double x:Key="Sizing.AgentPane.MinWidth">260</sys:Double>
+    <sys:Double x:Key="Sizing.AgentRow.Height">60</sys:Double>
     <Thickness x:Key="Sizing.AgentRow.Padding">10,0,10,0</Thickness>
     <!-- Gap between an agent's text and its action buttons. -->
     <Thickness x:Key="Sizing.AgentRow.TextMargin">14,0,24,0</Thickness>
     <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->
     <sys:Double x:Key="Sizing.AgentRow.TextMaxWidth">240</sys:Double>
+    <!-- Default width of the project list: it grows with its widest item but never starts smaller. -->
+    <sys:Double x:Key="Sizing.ProjectList.MinWidth">300</sys:Double>
+    <!-- Square project-logo thumbnail in a Projects list row -->
+    <CornerRadius x:Key="Sizing.ProjectLogo.CornerRadius">9</CornerRadius>
+    <sys:Double x:Key="Sizing.ProjectLogo.Height">42</sys:Double>
+    <sys:Double x:Key="Sizing.ProjectLogo.Width">42</sys:Double>
+    <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
+    <sys:Double x:Key="Sizing.ProjectPane.MinWidth">320</sys:Double>
+    <!-- Row paddings: the divider-side insets match (10px row padding + 10px pane margin on
+         both sides of the pane divider). -->
+    <Thickness x:Key="Sizing.ProjectRow.Padding">12,9,10,9</Thickness>
     <!-- Gap between a project row's thumbnail and its texts: a fixed grid column, so the text
          column's measured width is exactly the space the path may fill. -->
     <GridLength x:Key="Sizing.ProjectRow.TextGap">15</GridLength>
@@ -63,43 +87,25 @@
          sits right after the name and a long name cannot push it away. -->
     <sys:Double x:Key="Sizing.SettingsProjectRow.NameMaxWidth">360</sys:Double>
 
-    <!-- Buttons -->
+    <!-- Buttons and inputs -->
     <sys:Double x:Key="Sizing.ActionButton.Height">28</sys:Double>
     <sys:Double x:Key="Sizing.ActionButton.Width">28</sys:Double>
-    <sys:Double x:Key="Sizing.IconButton.Height">26</sys:Double>
-    <sys:Double x:Key="Sizing.IconButton.Width">30</sys:Double>
-
     <!-- Actions menu: the popover sizes to its content so short menus stay compact; this is the
          smallest width a menu may take. -->
     <sys:Double x:Key="Sizing.ActionsMenu.MinWidth">176</sys:Double>
-
-    <!-- Gap between adjacent controls in simple one-dimensional groups. -->
-    <sys:Double x:Key="Sizing.Spacing">8</sys:Double>
-
-    <!-- Shape roles (shared corner-radius vocabulary) -->
-    <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
-    <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
+    <Thickness x:Key="Sizing.Button.FooterPadding">18,7</Thickness>
+    <sys:Double x:Key="Sizing.IconButton.Height">26</sys:Double>
+    <sys:Double x:Key="Sizing.IconButton.Width">30</sys:Double>
+    <sys:Double x:Key="Sizing.Input.Height">30</sys:Double>
 
     <!-- Toggle switch (CheckBox rendered as a switch): pill track with a sliding thumb.
          ThumbMargin is the unchecked rest position; ThumbMarginChecked mirrors it at the
          right edge: Width - Thumb - inset. -->
-    <sys:Double x:Key="Sizing.Toggle.Width">36</sys:Double>
+    <CornerRadius x:Key="Sizing.Toggle.CornerRadius">10</CornerRadius>
     <sys:Double x:Key="Sizing.Toggle.Height">20</sys:Double>
     <sys:Double x:Key="Sizing.Toggle.Thumb">14</sys:Double>
     <Thickness x:Key="Sizing.Toggle.ThumbMargin">3,0,0,0</Thickness>
     <Thickness x:Key="Sizing.Toggle.ThumbMarginChecked">19,0,0,0</Thickness>
-    <CornerRadius x:Key="Sizing.Toggle.CornerRadius">10</CornerRadius>
-
-    <!-- Input control metrics -->
-    <sys:Double x:Key="Sizing.Input.Height">30</sys:Double>
-
-    <!-- Additional corner radius tokens -->
-    <CornerRadius x:Key="Sizing.CornerRadius.Control">4</CornerRadius>
-
-    <!-- Additional font size tokens -->
-    <sys:Double x:Key="Sizing.FontSize.Hint">12.5</sys:Double>
-
-    <!-- Button metrics -->
-    <Thickness x:Key="Sizing.Button.FooterPadding">18,7</Thickness>
+    <sys:Double x:Key="Sizing.Toggle.Width">36</sys:Double>
 
 </ResourceDictionary>

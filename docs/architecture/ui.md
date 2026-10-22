@@ -10,7 +10,24 @@ Window inventory and MVVM responsibilities: [../architecture.md](../architecture
 
 ## XAML Themes and Styles Recipe
 
-Layering: `DarkTheme.xaml` (dark base palette, merged by App.xaml) with `LightTheme.xaml` and `BlueTheme.xaml` merged on top at startup through the `ThemeCatalog` registry + `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges the sizing tokens only — the palette brushes are referenced with `DynamicResource` and resolve from the application-level palette) → `SettingsControls.xaml` (shared input/control templates for Settings pages) → `SettingsStyles.xaml` (Settings window/page chrome + custom-control implicit styles) → per-window dictionaries (`LaunchWindowStyles.xaml`, `WhatsNewStyles.xaml`) that merge only `Controls.xaml`. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Controls.xaml`, `SettingsControls.xaml`, `SettingsStyles.xaml` (both merged at application level because Settings pages are UserControls built before they attach to the window tree), the implicit `ScrollBar` (SlimScrollBar.xaml) and `ToolTip` styles, and the shared converters.
+Layering, in merge order: `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `ThemePickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `ThemePickerData.xaml`, then `SettingsControls.xaml`) → per-window dictionaries (`LaunchWindowStyles.xaml`, `WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `SlimScrollBar.xaml` (implicit `ScrollBar`), `SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
+
+The application-level merge tree is therefore exactly:
+
+```
+App.xaml
+├─ DarkTheme.xaml            base palette (LightTheme/BlueTheme merged on top at startup)
+├─ SlimScrollBar.xaml        implicit ScrollBar style
+└─ SettingsStyles.xaml       Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
+   ├─ Controls.xaml          shared keyed styles
+   │  └─ Sizing.xaml         Sizing.* tokens
+   ├─ ThemePickerData.xaml   ThemePreview*Brush + ThemeOption*/AccentOption* styles
+   │  └─ Sizing.xaml
+   └─ SettingsControls.xaml  input/control templates + NumericField implicit style
+      └─ Sizing.xaml
+```
+
+`SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, and `SettingsStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `ThemePickerData`, and `SettingsControls` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
 
 To add a window:
 1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries; palette brushes resolve from the application-level palette through `DynamicResource`).
@@ -21,7 +38,7 @@ To add a window:
 ## SpacedPanel
 
 Use `CLIHub.Controls.SpacedPanel` for simple vertical or horizontal groups where a uniform gap belongs
-between visible siblings. Bind `Spacing` to the shared `Sizing.Spacing` resource when the same
+between visible siblings. Bind `Spacing` to the shared `Sizing.Spacing.Standard` resource when the same
 rhythm is shared by more than one view. Keep outer margins, card padding, and optical one-off offsets on
 the relevant element.
 
@@ -40,6 +57,23 @@ content below the divider is hosted by the vertical `ScrollViewer`, so the page 
 sidebar, drawn window chrome, validation message, and footer stay visible while long pages scroll. Page
 views (`Settings*Page.xaml`) contain only their scrolling settings content; the title and description live
 in the `SettingsPage` metadata exposed through `SelectedPage`.
+
+## Adding a Settings Page
+
+1. Add a `views:Settings<Name>Page` `UserControl` containing only its scrolling settings content,
+   and declare it in the page host grid in `SettingsWindow.xaml`:
+   `Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=<key>}"`.
+2. Add the `SettingsPage` entry to `SettingsViewModel.AllPages` with the key, title, description,
+   group, `IsImplemented`, icon, and the optional `HeaderTitleExtraKey`, `HeaderActionKey`, and
+   `SummaryRowKey`. The sidebar groups and the page order derive from that array.
+3. If the page needs a header or summary slot, declare the `DataTemplate` in
+   `SettingsWindow.Resources` and name it in the matching metadata property.
+4. `tests/CLIHub.Tests/Views/SettingsPageMetadataTests.cs` fails when the two sides disagree: a page
+   key missing from or duplicated in the page host, a slot key that names no declared template, or a
+   host `ConverterParameter` with no metadata entry.
+5. Smoke-test the page and its slots: navigate to it, confirm only that page is visible and its
+   header title/actions and summary row appear only there, then check a not-yet-implemented page
+   still falls back to the placeholder.
 
 ## Settings Numeric Fields
 
@@ -67,7 +101,29 @@ The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) 
 
 To add another theme (chosen at startup):
 1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
-2. Add the `AppTheme` member and its token in Core, then one arm to `ThemeCatalog.ResolvePalettePath` (`src/CLIHub/Themes/ThemeCatalog.cs`) returning the new palette path.
-3. Add one `AppThemeOptions` entry in `SettingsViewModel` (order: Dark, Light, Blue, then System) plus the option's preview brushes, and the preview `DataTrigger`s on the Appearance page.
+2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
+3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Appearance page binds the swatch brushes directly, so the page and its templates need no edit.
 4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
 Switching the palette without a restart is not supported; a theme change takes effect on the next start.
+
+## Theme Data Locations
+
+| Data | Location |
+|---|---|
+| Theme identity and tokens | `src/CLIHub.Core/Models/Appearance/AppTheme.cs` (`AppTheme`, `AppThemes`; UI-independent) |
+| WPF descriptor registry | `src/CLIHub/Themes/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
+| Palettes | `src/CLIHub/Themes/DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml` (colours only, one identical key set) |
+| Picker preview data | `src/CLIHub/Themes/ThemePickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
+| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) |
+
+The static guards that keep those files coherent:
+
+- `tests/CLIHub.Tests/Themes/ThemePaletteParityTests.cs` — every palette defines one identical key set.
+- `tests/CLIHub.Tests/Themes/ThemePreviewResourceKeyTests.cs` — preview keys referenced by name
+  (descriptor values and XAML `StaticResource`) exist in the application-level tree, and no declared
+  preview key is orphaned.
+- `tests/CLIHub.Tests/Themes/ThemeColorLiteralTests.cs` — colour literals are rejected outside the
+  palettes, `ThemePickerData.xaml`, and the legacy `MainWindow.xaml`.
+- `tests/CLIHub.Tests/Themes/ApplicationResourceKeyTests.cs` — palette keys are never referenced with
+  `StaticResource`, and no `x:Key` is declared twice across the non-palette application-level merge
+  tree.

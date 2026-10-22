@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -96,6 +97,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <inheritdoc />
     public bool HasDefaultAgent => this.CurrentDefaultAgentId is not null;
+
+    /// <inheritdoc />
+    public SummaryCardTone DefaultAgentValueTone =>
+        this.HasDefaultAgent ? SummaryCardTone.Neutral : SummaryCardTone.Muted;
 
     /// <inheritdoc />
     public string DefaultAgentDetail
@@ -248,6 +253,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.OnPropertyChanged(nameof(this.DefaultAgentName));
         this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
         this.OnPropertyChanged(nameof(this.HasDefaultAgent));
+        this.OnPropertyChanged(nameof(this.DefaultAgentValueTone));
     }
 
     private void PopulateVersions() =>

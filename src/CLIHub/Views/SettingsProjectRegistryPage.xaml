@@ -71,7 +71,7 @@
                 <TextBlock Grid.Column="0"
                            VerticalAlignment="Center"
                            FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                           FontSize="12"
+                           FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                            Foreground="{DynamicResource TextMutedBrush}"
                            Text="{x:Static themes:IconGlyphs.Add}"/>
 
@@ -112,7 +112,7 @@
                             Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -182,7 +182,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Open project folder">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
                                 </Button>
 
@@ -195,7 +195,7 @@
                                         ToolTip="Remove project"
                                         Visibility="{Binding CanRemove, Converter={StaticResource BoolToVisibility}}">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Delete}"/>
                                 </Button>
                             </controls:SpacedPanel>

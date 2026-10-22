@@ -9,8 +9,11 @@
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <!-- Static lookups resolve only against merged dictionaries; this brings the Sizing tokens. -->
-        <ResourceDictionary Source="/Themes/Controls.xaml"/>
+        <!--
+            Static lookups resolve only against merged dictionaries. The templates use Sizing tokens
+            and no Controls.xaml style, so they merge the tokens directly.
+        -->
+        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Section rhythm: uppercase muted label, optional hint under the fields -->

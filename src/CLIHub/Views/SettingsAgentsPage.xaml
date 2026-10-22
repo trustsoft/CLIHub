@@ -106,7 +106,7 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center"
                                FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                               FontSize="12"
+                               FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                                Text="{x:Static themes:IconGlyphs.Refresh}"/>
                     <TextBlock Margin="6,0,0,0"
                                VerticalAlignment="Center"
@@ -123,7 +123,7 @@
                             Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -190,7 +190,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Probe installation and version">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Diagnostic}"/>
                                 </Button>
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
@@ -202,7 +202,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Run the agent's update command">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Update}"/>
                                 </Button>
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
@@ -214,7 +214,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Open the agent's plugin.json">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Document}"/>
                                 </Button>
                             </controls:SpacedPanel>

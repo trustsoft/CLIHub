@@ -31,7 +31,7 @@
                             Background="{DynamicResource PopoverBgBrush}"
                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                             BorderThickness="1"
-                            CornerRadius="{StaticResource Sizing.CornerRadius.Chunky}">
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -94,7 +94,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Rescan this folder only">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Refresh}"/>
                                 </Button>
 
@@ -106,7 +106,7 @@
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Remove watched root">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="16"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Delete}"/>
                                 </Button>
                             </controls:SpacedPanel>
@@ -133,7 +133,7 @@
                 <TextBlock Grid.Column="0"
                            VerticalAlignment="Center"
                            FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                           FontSize="12"
+                           FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                            Foreground="{DynamicResource TextMutedBrush}"
                            Text="{x:Static themes:IconGlyphs.Add}"/>
 

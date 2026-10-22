@@ -6,7 +6,6 @@
              xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
              xmlns:themes="clr-namespace:CLIHub.Themes"
-             xmlns:models="clr-namespace:CLIHub.Core.Models;assembly=CLIHub.Core"
              mc:Ignorable="d">
     <StackPanel>
         <controls:SectionHeader Text="THEME"/>
@@ -26,36 +25,26 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- Palette sample: fixed colors, so each card previews its own theme -->
+                            <!-- Palette sample: each card previews its own theme through fixed brushes -->
                             <Border Height="56"
+                                    Background="{Binding PreviewCardBrush, Converter={StaticResource ThemeBrushKey}}"
                                     BorderBrush="{DynamicResource ControlStrokeBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource Sizing.CornerRadius.Control}">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{StaticResource ThemePreviewDarkBrush}"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Light}">
-                                                <Setter Property="Background" Value="{StaticResource ThemePreviewLightBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
-                                                <Setter Property="Background" Value="{StaticResource ThemePreviewSystemBrush}"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Blue}">
-                                                <Setter Property="Background" Value="{StaticResource ThemePreviewBlueBrush}"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
 
                                 <Grid>
                                     <StackPanel Margin="12,0" VerticalAlignment="Center" Orientation="Horizontal">
+                                        <!--
+                                            The dot follows the live accent brush, so it keeps tracking an
+                                            accent change instead of freezing the brush at load time. System
+                                            previews the muted swatch because it is not a palette of its own.
+                                        -->
                                         <Ellipse Width="9" Height="9">
                                             <Ellipse.Style>
                                                 <Style TargetType="Ellipse">
                                                     <Setter Property="Fill" Value="{DynamicResource AccentBrush}"/>
                                                     <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
+                                                        <DataTrigger Binding="{Binding UsesAccentPreviewDot}" Value="False">
                                                             <Setter Property="Fill" Value="{StaticResource ThemePreviewDotMutedBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
@@ -65,25 +54,9 @@
                                         <Rectangle Width="30"
                                                    Height="5"
                                                    Margin="7,0,0,0"
+                                                   Fill="{Binding PreviewBarBrush, Converter={StaticResource ThemeBrushKey}}"
                                                    RadiusX="2.5"
-                                                   RadiusY="2.5">
-                                            <Rectangle.Style>
-                                                <Style TargetType="Rectangle">
-                                                    <Setter Property="Fill" Value="{StaticResource ThemePreviewBarDarkBrush}"/>
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Light}">
-                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarLightBrush}"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.System}">
-                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarLightBrush}"/>
-                                                        </DataTrigger>
-                                                        <DataTrigger Binding="{Binding Theme}" Value="{x:Static models:AppTheme.Blue}">
-                                                            <Setter Property="Fill" Value="{StaticResource ThemePreviewBarBlueBrush}"/>
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Rectangle.Style>
-                                        </Rectangle>
+                                                   RadiusY="2.5"/>
                                     </StackPanel>
 
                                     <!-- Selection marker, shown by the owning ListBoxItem -->
@@ -165,7 +138,7 @@
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                                                    Foreground="{DynamicResource TextMutedBrush}"
                                                    Text="{x:Static themes:IconGlyphs.Palette}"/>
                                     </Border>

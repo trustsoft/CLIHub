@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
+using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -123,6 +124,18 @@ public class AgentManagementViewModelTests
         Assert.Equal("None", viewModel.DefaultAgentName);
         Assert.False(viewModel.HasDefaultAgent);
         Assert.Equal("No default agent — choose one", viewModel.DefaultAgentDetail);
+        Assert.Equal(SummaryCardTone.Muted, viewModel.DefaultAgentValueTone);
+    }
+
+    [Fact]
+    public void Load_WithDefaultAgent_UsesNeutralValueTone()
+    {
+        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+
+        viewModel.Load("a");
+
+        Assert.True(viewModel.HasDefaultAgent);
+        Assert.Equal(SummaryCardTone.Neutral, viewModel.DefaultAgentValueTone);
     }
 
     [Fact]
