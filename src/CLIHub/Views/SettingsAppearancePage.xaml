@@ -30,7 +30,7 @@
                             <Border Height="56"
                                     BorderBrush="{DynamicResource ControlStrokeBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="4">
+                                    CornerRadius="{StaticResource Sizing.CornerRadius.Control}">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Setter Property="Background" Value="{StaticResource ThemePreviewDarkBrush}"/>

@@ -9,12 +9,6 @@ using CLIHub.Core.Models;
 public static class ThemeCatalog
 {
     /// <summary>
-    ///   The application-relative palette path of the dark theme, which App.xaml merges as the base
-    ///   palette.
-    /// </summary>
-    public const string DarkPalettePath = "/Themes/DarkTheme.xaml";
-
-    /// <summary>
     ///   Resolves the palette dictionary to merge for an application theme. Null keeps the base
     ///   palette: explicit Dark, System on a Windows-dark desktop, and every unknown resolution
     ///   stay on the dark base without an extra merge. System never resolves to blue.

@@ -3,10 +3,11 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib">
 
     <!--
-        Sizing tokens shared by the dark-chrome windows. Structural metrics live here so layout
-        changes are made in one place. Naming: Sizing.<Object>.<Property> for object-bound tokens
-        (Sizing.ActionButton.Height), Sizing.<Role> for shared roles (Sizing.FontSize.Body,
-        Sizing.CornerRadius.Chip).
+        Sizing tokens: metrics, font families, and radius values referenced by Controls.xaml,
+        SettingsControls.xaml, SettingsStyles.xaml, and per-window dictionaries via StaticResource.
+        Naming convention: Sizing.<Category>.<Property> (e.g., Sizing.FontSize.Body,
+        Sizing.CornerRadius.Card, Sizing.Input.Height, Sizing.Button.FooterPadding).
+        Categories: FontFamily, FontSize, CornerRadius, Input, Button, plus scalar Spacing.
     -->
 
     <!-- Typographic roles -->
@@ -78,8 +79,6 @@
     <!-- Shape roles (shared corner-radius vocabulary) -->
     <CornerRadius x:Key="Sizing.CornerRadius.Chip">6</CornerRadius>
     <CornerRadius x:Key="Sizing.CornerRadius.Chunky">8</CornerRadius>
-    <!-- Radius of the small display chips (version/state/header chips) -->
-    <CornerRadius x:Key="Sizing.Chip.CornerRadius">6</CornerRadius>
 
     <!-- Toggle switch (CheckBox rendered as a switch): pill track with a sliding thumb.
          ThumbMargin is the unchecked rest position; ThumbMarginChecked mirrors it at the
@@ -90,5 +89,17 @@
     <Thickness x:Key="Sizing.Toggle.ThumbMargin">3,0,0,0</Thickness>
     <Thickness x:Key="Sizing.Toggle.ThumbMarginChecked">19,0,0,0</Thickness>
     <CornerRadius x:Key="Sizing.Toggle.CornerRadius">10</CornerRadius>
+
+    <!-- Input control metrics -->
+    <sys:Double x:Key="Sizing.Input.Height">30</sys:Double>
+
+    <!-- Additional corner radius tokens -->
+    <CornerRadius x:Key="Sizing.CornerRadius.Control">4</CornerRadius>
+
+    <!-- Additional font size tokens -->
+    <sys:Double x:Key="Sizing.FontSize.Hint">12.5</sys:Double>
+
+    <!-- Button metrics -->
+    <Thickness x:Key="Sizing.Button.FooterPadding">18,7</Thickness>
 
 </ResourceDictionary>

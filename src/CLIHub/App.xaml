@@ -12,16 +12,26 @@
                 <!-- Shared keyed styles (button templates, typography, DarkToolTip). -->
                 <ResourceDictionary Source="/Themes/Controls.xaml"/>
                 <!--
-                    The slim dark scrollbar lives here, not in a window dictionary: implicit styles
+                    The slim scrollbar lives here, not in a window dictionary: implicit styles
                     from window resources do not reach the scrollbars inside ScrollViewer and ListBox
                     templates — only application-level implicit styles do.
                 -->
-                <ResourceDictionary Source="/Themes/DarkScrollBar.xaml"/>
+                <ResourceDictionary Source="/Themes/SlimScrollBar.xaml"/>
                 <!--
-                    Settings window styles: shared with the extracted Settings pages (UserControls).
-                    A UserControl is built before it attaches to the window tree, so window-scoped
-                    resources are not reachable during its load — application-level placement is
-                    required, like the scrollbar and tooltip styles above. All styles are keyed.
+                    Settings input/control templates: shared across Settings pages (UserControls).
+                    Merged at application level because UserControls are built before they attach
+                    to the window tree — window-scoped resources are not reachable during XAML load.
+                    Contains the NumericField implicit style used by Settings pages.
+                -->
+                <ResourceDictionary Source="/Themes/SettingsControls.xaml"/>
+                <!--
+                    Settings window styles and page chrome: shared with the extracted Settings pages
+                    (UserControls). A UserControl is built before it attaches to the window tree, so
+                    window-scoped resources are not reachable during its load — application-level
+                    placement is required, like the scrollbar and tooltip styles above. Note: this
+                    dictionary contains 3 implicit (keyless) styles for CLIHub.Controls custom types
+                    (SectionHeader, SettingCard, SettingsGroup); they are intentional and currently
+                    used only by Settings pages.
                 -->
                 <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>

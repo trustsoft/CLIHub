@@ -2,10 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Slim dark scrollbar, shared by the dark-chrome windows (launch window lists, Settings and
-        What's New content). Implicit style, merged at the application level in App.xaml: window
-        resources do not reach the scrollbars inside ScrollViewer and ListBox templates. The thumb
-        reads its brush dynamically, so the application-level palette (dark or light) supplies it.
+        Slim scrollbar: minimal thumb, no arrows, transparent track. Palette-neutral: the thumb
+        uses DynamicResource ScrollThumbBrush and adapts to any theme selected at startup.
     -->
 
     <Style TargetType="ScrollBar">
