@@ -219,6 +219,22 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   offending timing window.
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
 
+### ApplicationHost null-argument tests fail while the app is running
+
+- Severity: Low (test isolation; the suite result depends on machine state, not on the code under test)
+- Evidence: `tests/CLIHub.Tests/ApplicationHostTests.cs:27` (`Start_WithNullDispatch_ThrowsArgumentNullException`)
+  and `:40` (`Start_WithNullSetMainWindow_ThrowsArgumentNullException`) report
+  `Assert.Throws() Failure: No exception was thrown` whenever a CLIHub instance is running. Reproduced on
+  2026-10-23 during the `accent-independent-of-theme` smoke: with the app open `CLIHub.Tests` reported
+  410 passed / 2 failed; after closing it, 412 / 412 passed with no code change. The single-instance
+  guard short-circuits `ApplicationHost.Start` (a second instance exits before the argument checks), so
+  the null-argument guard is never reached.
+- Proposed remedy: make single-instance ownership injectable into `ApplicationHost` (or bypass it in a
+  test mode) so the argument validation is exercised regardless of a running instance, then assert both
+  the null-argument exceptions and the ownership path explicitly.
+- Trigger: the next red `CLIHub.Tests` run that coincides with the application being open, or any CI job
+  that runs the suite on a machine where CLIHub autostarts.
+
 ## Agent tooling
 
 ### Reasoning effort is not weighted into the exhaustion logic
