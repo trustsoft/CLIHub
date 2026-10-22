@@ -233,3 +233,44 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   high-effort failure on a plan model blocks it longer than a low-effort one.
 - Trigger: a request for effort-aware quota handling, or the first plan-model exhaustion that
   recovers too slowly for the workload.
+
+### `pipe/verifier` allowlist has no output-shaping cmdlets
+
+- Severity: Low (degrades verifier reports, not correctness; the orchestrator re-runs every gate)
+- Evidence: `~/.config/opencode/agents/pipe/verifier.md` (global user config, outside this repo)
+  allows a read-only cmdlet set — `Get-Content`, `Get-ChildItem`, `Test-Path`, `Select-String`,
+  `Select-Object`, `Measure-Object`, `Sort-Object`, `Format-Table`, `Format-List`, `Out-String`
+  (lines 84-110) — but deliberately excludes `ForEach-Object` and `Where-Object`, because a
+  scriptblock argument would let the "read-only" agent run arbitrary code. Shell permissions are
+  matched per pipeline segment, so a verifier that shapes gate output with a filter/loop segment
+  gets `permission.rejected` for the whole command. A second, prompt-level residual: the rule that
+  a denial must be quoted verbatim instead of generalized into "shell unavailable" (`## When a
+  command is denied`, line 124) is enforced by instruction only — the same failure that produced a
+  false `UNVERIFIABLE` verdict on 2026-10-22 is not structurally prevented.
+- Proposed remedy: either add a small allowlist of side-effect-free scriptblock-free alternatives
+  (for example `Measure-Object -Line`, `Select-String`, `-First`/`-Last` on `Select-Object`, which
+  are already allowed) and document them in the prompt's "Permitted commands" section, or give the
+  verifier a first-class read-only inspection tool so it never needs shell plumbing for reads.
+  For the reporting residual, prefer a structural fix (verifier returns a machine-readable gate
+  record with per-gate status and command) over more prompt wording.
+- Trigger: the next verifier report that quotes a denial for a pipeline-shaped read, or any verify
+  stage where a gate ends up `NOT RUN`.
+
+### Pipe agent definitions live in the global OpenCode config
+
+- Severity: Medium (unversioned, unreviewed, and silently drifts per machine)
+- Evidence: `pipe/planner`, `pipe/implementer`, and `pipe/verifier` are defined only under
+  `~/.config/opencode/agents/pipe/` (`planner.md`, `implementer.md`, `verifier.md`), outside any git
+  repository. The 2026-10-22 shell-permission fix to `verifier.md` therefore has no commit, no
+  diff, no review, and no history; a fresh machine or a reinstall restores the old, narrower
+  allowlist. The same applies to the pipeline contract they implement, which is documented in the
+  global `pipeline-protocol` skill rather than in this repo.
+- Proposed remedy: move the pipe agents (and, if the decision extends that far, the whole pipeline
+  mechanism — agents, `pipeline-protocol` skill, state-file convention) to the project level under
+  `.opencode/agents/` and `.opencode/skills/`, so they are versioned with the repository, reviewable
+  in a diff, and covered by the same approval gates as code. Project definitions override global
+  ones, so a move is reversible by deleting the project copies.
+- Trigger: any further change to a `pipe/*` agent definition, a second machine/agent host that needs
+  the same behaviour, or an explicit decision to version the pipeline mechanism per project.
+- Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
+  mechanism to project level is a later, separate decision.
