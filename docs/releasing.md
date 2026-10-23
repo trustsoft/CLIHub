@@ -1,7 +1,8 @@
 # Release Runbook
 
 How to cut a CLIHub release. The pipeline (the `ci-build` and `release-pipeline` specs) does the
-building, packaging, and publishing; your job is the notes and the tag. The durable pipeline contract is
+building, packaging, and publishing; your job is the notes, the development version, and the tag. The
+durable pipeline contract is
 [`openspec/specs/release-pipeline/spec.md`](../openspec/specs/release-pipeline/spec.md).
 
 ## Before you start
@@ -41,7 +42,23 @@ so a release can never ship without its notes.
 Commit the notes to `master` (for example `docs: release notes for 0.9.0`) and wait for CI to go
 green.
 
-## 2. Tag and push
+## 2. Set the development version
+
+Update `Directory.Build.props` to match the version being released:
+
+```xml
+<Version>0.9.0</Version>
+```
+
+Commit to `master` (for example `release: set version 0.9.0`) and wait for CI to go green. The
+automated version check ensures this step is not skipped — a stale version in the props file will
+block the release pipeline's test job.
+
+After the release is published, you may bump the props version to the next planned version (for
+example `0.10.0`) as part of the new cycle's work, or leave it at the released version until the next
+release preparation begins. Both satisfy the constraint (props >= highest release tag).
+
+## 3. Tag and push
 
 ```powershell
 git tag v0.9.0
@@ -52,7 +69,7 @@ The tag without the leading `v` is the release version — it overrides the deve
 `Directory.Build.props` for this build. Tag only commits that are on `master`; the pipeline re-runs
 the tests as a gate anyway, but a release should come from green master.
 
-## 3. Watch the pipeline
+## 4. Watch the pipeline
 
 The `Release` workflow (Actions tab) runs two jobs, about 4–6 minutes total:
 
@@ -62,7 +79,7 @@ The `Release` workflow (Actions tab) runs two jobs, about 4–6 minutes total:
    the .NET 10 Desktop Runtime when missing), and publishes everything to GitHub Releases on the
    pushed tag, with the notes section as the release body.
 
-## 4. Verify
+## 5. Verify
 
 - The workflow run is green.
 - `https://github.com/trustsoft/CLIHub/releases/tag/vX.Y.Z` exists, is not a draft, and has
@@ -89,11 +106,15 @@ git push -f origin vX.Y.Z
 Delete the GitHub release and the tag. Installed clients then never see the update; a client that
 already installed it stays on it (Velopack has no downgrade path).
 
+## Development version tracking
+
+The `Directory.Build.props` version is the development default (what a dev-run build reports). It MUST
+be equal to or ahead of the highest stable release tag — this is enforced by the CI and release
+pipelines through `.github/scripts/Check-DevVersion.ps1`.
+
 ## Not wired yet
 
 - **Prerelease channels** — a tag like `v0.9.0-beta.1` would pass the version check but publish as a
   stable release; do not use prerelease tags until a beta channel change exists (stable-only
   decision, 2026-10-03).
 - **Code signing** — packages are unsigned, so SmartScreen may warn on first install.
-- **`Directory.Build.props`** — its `Version` is only the development default (what a dev-run build
-  reports); bump it to the next version as part of the new cycle's work, not as a release step.

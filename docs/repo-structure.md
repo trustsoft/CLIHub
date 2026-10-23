@@ -20,7 +20,9 @@ Use this file for navigation. Current behavior and architecture are summarized i
 │   ├── specs/                # Durable behavior contracts
 │   ├── plans/                # Roadmap and plan documents
 │   └── changes/archive/      # Completed change history
-├── .github/workflows/        # CI and tag-driven release workflows
+├── .github/
+│   ├── workflows/        # CI and tag-driven release workflows
+│   └── scripts/          # Workflow support scripts (version checks, utilities)
 ├── assets/                   # Application icon source material
 ├── ui/mockups/               # UI design references, not build inputs
 ├── .opencode/               # OpenCode tooling configuration and skills
