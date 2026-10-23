@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/.NET-10-512BD4" alt=".NET 10">
 </p>
 
-**CLIHub is a Windows system-tray companion for launching AI agent CLIs in the context of the current
+**CLIHub is a Windows system-tray companion for launching AI agent CLIs in the context of the selected
 project.** It keeps your project folders, detects the agent CLIs installed on your machine, and opens the one
 you pick in an external terminal — in the right directory, with the right command.
 

@@ -3,7 +3,7 @@
 ## Product
 
 CLIHub is a Windows system-tray companion that reduces the friction of launching multiple AI coding-agent
-CLIs in the correct project directory.
+CLIs in the selected project directory.
 
 ## Goals
 
