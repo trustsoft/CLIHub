@@ -6,7 +6,8 @@ context: |
   Keep OpenSpec structural headings and SHALL/MUST keywords in English.
 
   CLIHub is a Windows 10/11 WPF system tray companion on .NET 10 that launches descriptor-based AI agent CLIs in a selected project directory.
-  `CLIHub.Core` is UI-independent and owns domain services, persistence, plugins, agent workflows, updates, and Windows infrastructure.
+  `CLIHub.Core` is UI-independent and owns domain services, persistence, plugins, agent workflows, updates (including Velopack integration), and infrastructure ports.
+  `CLIHub.Core.Windows` owns the Windows platform adapters: registry startup, single-instance guard, theme detection, process runners, and agent process inspection.
   `CLIHub` owns WPF composition, tray and window UI, startup/shutdown, hotkey handling, and application workflows.
   Preserve the single camelCase configuration document and its atomic persistence boundary. Plugins are JSON descriptors only.
   Current behavior is summarized in docs/project-context.md; durable behavior contracts live in openspec/specs/.

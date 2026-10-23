@@ -27,6 +27,9 @@ Use this file for navigation. Current behavior and architecture are summarized i
 ├── ui/mockups/               # UI design references, not build inputs
 ├── .opencode/               # OpenCode tooling configuration and skills
 ├── .pi/                     # Pi tooling configuration and prompts
+├── .codegraph/              # CodeGraph symbol index (generated, not startup context)
+├── .gitnexus/               # GitNexus code-intelligence index (generated, not startup context)
+├── graphify-out/            # Graphify knowledge graph output (generated, not startup context)
 ├── CLIHub.sln
 ├── Directory.Build.props
 ├── global.json

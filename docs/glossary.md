@@ -126,6 +126,10 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
   most changes apply without restart, including the theme, which applies to every open window on
   save; the persisted value is applied again on the next start. Scanning settings apply as soon as
   they change on the Project Discovery page; the other pages use Save.
+- **Accent color** — the application-scoped highlight color persisted as `accentColor` (Sky
+  `#4CC2FF` by default) and used for selection, focus, and emphasis. It is independent of the
+  active theme: a theme switch never changes it. See
+  [WPF resources and theming](architecture/ui.md#theme-data-locations).
 - **Settings window** — the window (opened from the tray) where preferences are edited.
 
 ## Settings UI

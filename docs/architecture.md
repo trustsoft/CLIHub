@@ -28,10 +28,11 @@ remain in Core.
 ## Runtime Composition
 
 The WPF application starts through `Program`, `App`, `ApplicationHost`, and
-`ApplicationBootstrapper`. Startup loads plugins and preferences, creates the tray/launch-window session,
-registers the hotkey, evaluates release notes, and starts optional update work. Shutdown removes session
-subscriptions, stops tracked operations, disposes the provider, flushes persistence and logging, and releases
-single-instance resources.
+`ApplicationBootstrapper`. `App` applies the stored theme and accent before the first window is created;
+startup then loads plugins and preferences, creates the tray/launch-window session, registers the hotkey,
+evaluates release notes, starts optional update work, and starts the background project scanner. Shutdown
+removes session subscriptions, stops tracked operations, disposes the provider, flushes persistence and
+logging, and releases single-instance resources.
 
 The launch window is the active shell. Its ViewModel composes project and agent pane controllers, command
 and action coordinators, update state, and application services. `MainWindow` is retained as an unregistered
@@ -65,6 +66,8 @@ keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
 - Plugins are JSON data; no DLL loading or in-process plugin execution.
 - Project folders are launch context and are not modified by project registration/removal.
 - `config.json` remains one camelCase document with one atomic write boundary.
+- The accent color is application-scoped and independent of the theme: palettes declare no accent keys, and
+  both startup and a Settings save apply the stored accent.
 - UI code depends on narrow interfaces such as `IPreferencesStore` rather than the full configuration document.
 - Interactive process launching and captured output are separate contracts (`IInteractiveProcessRunner`,
   `IProcessOutputRunner`); no compatibility aggregate is registered.
@@ -87,6 +90,7 @@ keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
   and Velopack.
 - User data: `%APPDATA%\CLIHub\` with `config.json`, `logs\`, `plugins\`, and `cache\`.
 - CI builds and tests on `windows-latest`; `release.yml` packages framework-dependent `win-x64` builds from
-  `v*` tags and publishes them to GitHub Releases.
+  `v*` tags and publishes them to GitHub Releases. Both workflows gate the `Directory.Build.props`
+  development version against the highest stable tag through `.github/scripts/Check-DevVersion.ps1`.
 - Build, test, run, and OpenSpec commands are listed in [`AGENTS.md`](../AGENTS.md) and
   [`docs/project-context.md`](project-context.md).

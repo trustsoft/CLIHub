@@ -53,7 +53,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 
 - Resume command for GitHub Copilot (`copilot --continue`) and Qwen Code (`qwen --continue`), and Update command for Cline CLI (`cline update`) and OpenClaude (`openclaude update`) in the built-in descriptors (`plugin-seeding`)
 - Per-agent update blocking: an agent's Update action is blocked only while processes of that same agent are running, so other running agents no longer prevent an update (`agent-ui`, `preferences-ui`)
-- Design proposal for agent update availability checking against npm and GitHub Releases (`openspec/changes/agent-update-availability`, not yet implemented)
+- Design proposal for agent update availability checking against npm and GitHub Releases (`agent-update-availability`); later implemented as `agent-update-detection` (`openspec/changes/archive/2026-10-20-agent-update-detection/`)
 
 ### Changed
 

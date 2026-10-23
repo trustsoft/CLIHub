@@ -1,6 +1,7 @@
 # UI Architecture and Theming
 
-Window inventory and MVVM responsibilities: [../architecture.md](../architecture.md) (Project Responsibilities). This document covers resource organization and theming.
+Architecture overview: [../architecture.md](../architecture.md). This document covers resource organization and
+theming.
 
 ## Resource Organization
 - Application icon: `src/CLIHub/app.ico` (embedded; also the exe icon)
@@ -107,6 +108,8 @@ split are rationale-level detail: see the `introduce-project-model` change's `de
 
 The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
 
+The accent is application-scoped and independent of the theme. The palettes declare chrome and surface brushes only — neither `AccentBrush` nor `AccentSelectionBrush` is a palette key — and `AccentApplier` writes both brushes into `Application.Resources` for the startup call in `App` and the Settings-save call in `WpfAccentPreferenceTarget`. A theme switch therefore leaves the accent untouched, and an accent save never changes the palette. The stored accent is always applied, the default Sky included; an invalid or missing value normalizes back to Sky.
+
 To add another theme:
 1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
 2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
@@ -119,10 +122,12 @@ A saved theme applies to every open window immediately through `PaletteSwitcher`
 | Data | Location |
 |---|---|
 | Theme identity and tokens | `src/CLIHub.Core/Models/Appearance/AppTheme.cs` (`AppTheme`, `AppThemes`; UI-independent) |
+| Accent identity and presets | `src/CLIHub.Core/Models/Appearance/AccentPalette.cs` (`AccentPalette`: the Sky default and the preset names/hex values; UI-independent) |
 | WPF descriptor registry | `src/CLIHub/Themes/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
 | Palettes | `src/CLIHub/Themes/DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml` (colours only, one identical key set) |
 | Picker preview data | `src/CLIHub/Themes/ThemePickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
 | Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Themes/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`) |
+| Runtime accent application | `src/CLIHub/Settings/AccentApplier.cs` (writes `AccentBrush` and `AccentSelectionBrush` into `Application.Resources`, never `MergedDictionaries`; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfAccentPreferenceTarget.cs`) |
 
 The static guards that keep those files coherent:
 
@@ -135,3 +140,6 @@ The static guards that keep those files coherent:
 - `tests/CLIHub.Tests/Themes/ApplicationResourceKeyTests.cs` — palette keys are never referenced with
   `StaticResource`, and no `x:Key` is declared twice across the non-palette application-level merge
   tree.
+- `tests/CLIHub.Tests/Settings/AccentApplierTests.cs` — the accent stays application-scoped and survives a
+  palette swap unchanged; both the startup and the Settings-save paths apply the stored accent, the default
+  included.

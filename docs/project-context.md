@@ -49,6 +49,9 @@ process inspection) behind ports declared in Core.
   manual projects, opens project folders, and flags missing folders; discovered projects are read-only
   there. Project changes apply immediately from that page.
 - The launch window is the active WPF shell. `MainWindow` is retained as an unregistered legacy reference.
+- Appearance is a Dark, Light, Blue, or System-synced palette plus one application-scoped accent color
+  (Sky by default). Theme and accent changes apply immediately on a Settings save, and the accent is
+  independent of the theme.
 - The application enforces one instance with `Local\CLIHub.SingleInstance` and a named-pipe activation signal.
 - Updates are coordinated through the application `IUpdateWorkflow`; Core owns Velopack integration and update ports.
 - Agent process monitoring blocks the agent update action while any matching registered agent process is running.
@@ -62,6 +65,7 @@ Read only the documents relevant to the task:
 | User-facing behavior and quickstart | [`README.md`](../README.md) |
 | Terminology | [`docs/glossary.md`](glossary.md) |
 | Current architecture and boundaries | [`docs/architecture.md`](architecture.md) |
+| Repository layout and source navigation | [`docs/repo-structure.md`](repo-structure.md) |
 | Startup and shutdown | [`docs/architecture/startup.md`](architecture/startup.md) |
 | Configuration and persistence | [`docs/architecture/configuration.md`](architecture/configuration.md) |
 | Plugin descriptor format | [`docs/architecture/plugins.md`](architecture/plugins.md) |
@@ -71,6 +75,8 @@ Read only the documents relevant to the task:
 | WPF resources and theming | [`docs/architecture/ui.md`](architecture/ui.md) |
 | Behavior contract | The relevant file under [`openspec/specs/`](../openspec/specs/) |
 | Architectural rationale | [`docs/adr/`](adr/) |
+| Parked findings and deferred work | [`docs/backlog.md`](backlog.md) |
+| Product vision and non-goals | [`docs/vision.md`](vision.md) |
 | Release procedure | [`docs/releasing.md`](releasing.md) |
 | Change history | [`CHANGELOG.md`](../CHANGELOG.md) and [`openspec/changes/archive/`](../openspec/changes/archive/) |
 

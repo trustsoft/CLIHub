@@ -309,6 +309,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
   that run pipeline work in the same project at the same time.
 
+### `.gitnexus/` is excluded only by the local git exclude file
+
+- Severity: Low (repo hygiene; a fresh clone produces untracked `.gitnexus/` noise after a GitNexus run)
+- Evidence: `.gitignore` ignores `.codegraph/` and `graphify-out/` but has no `.gitnexus/` entry; this working
+  copy hides it only through the local, uncommitted `.git/info/exclude:7`.
+- Proposed remedy: add `.gitnexus/` to `.gitignore`, or ignore only its generated index files if the
+  `.gitnexus/run.cjs` runner is meant to be versioned (it is currently untracked here).
+- Trigger: the next GitNexus run on a fresh clone, or any `.gitignore` edit.
+
 ## UI and theming
 
 ### Settings-page registration lives in two places

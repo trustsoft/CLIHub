@@ -8,11 +8,10 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
 
 ## Application Startup Sequence
 
-`App.OnStartup` delegates to `ApplicationHost.Start`, which prepares the environment, builds the DI container, and delegates application initialization to `ApplicationBootstrapper`. The bootstrapper then coordinates startup through specialized coordinators:
+Before the host starts, `App.OnStartup` calls the WPF base implementation, applies the stored theme through `PaletteSwitcher` and the stored accent through `AccentApplier` to the application resources, and then delegates to `ApplicationHost.Start`. The first window is therefore created with the persisted appearance. `ApplicationHost.Start` prepares the environment, builds the DI container, and delegates application initialization to `ApplicationBootstrapper`. The bootstrapper then coordinates startup through specialized coordinators:
 
 1. **ApplicationHost** (WPF lifecycle boundary):
-   - Calls the WPF base implementation.
-   - Acquires the single-instance guard as the first startup action, before any environment setup. If another instance owns the mutex, the host signals activation to the running instance, requests WPF shutdown, and returns; no data directories, logging, or services are initialized for the duplicate process, and no tray icon or window is created.
+   - Acquires the single-instance guard as the first host action, before any environment setup. If another instance owns the mutex, the host signals activation to the running instance, requests WPF shutdown, and returns; no data directories, logging, or services are initialized for the duplicate process, and no tray icon or window is created.
    - Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
    - Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
    - Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services; the pre-acquired guard is registered into the composition so the provider owns guard disposal.
@@ -41,7 +40,12 @@ The observable lifecycle requirements are defined by the [`app-lifecycle` specif
    - Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled. `UpdateStartupCoordinator` calls the shared workflow, so a concurrent manual check joins the same operation.
    - Logs warnings on failure; does not throw.
 
-6. ApplicationBootstrapper logs that startup is complete.
+6. **ApplicationBootstrapper** (background scanning):
+   - Starts the project scanner (`IProjectScanner.Start`), which applies the scanning preferences loaded by `StartupStateLoader`; the DI container disposes it on shutdown.
+
+7. ApplicationBootstrapper logs that startup is complete.
+
+Because theme and accent application happens before the host acquires the single-instance guard, a duplicate launch applies them to its own in-memory resources; it still creates no data directories, logging, services, tray icon, or window, and writes nothing to `%APPDATA%`.
 
 The implementation is in:
 - `src/CLIHub/Program.cs` — Velopack entry point
@@ -53,6 +57,8 @@ The implementation is in:
 - `src/CLIHub/Startup/OptionalStartupCoordinator.cs` — release notes and update check
 - `src/CLIHub/Lifetime/ApplicationSession.cs` — session lifecycle and coordinator ownership
 - `src/CLIHub/Startup/ShellCoordinator.cs` — shell creation and event wiring
+- `src/CLIHub/Themes/PaletteSwitcher.cs` — stored-theme application before the first window
+- `src/CLIHub/Settings/AccentApplier.cs` — stored-accent application before the first window
 - `src/CLIHub/Composition/ServiceRegistration.cs` — WPF service registration
 
 Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`.
@@ -91,4 +97,6 @@ The order is implemented in:
 
 Persistence disposal behavior is implemented by `src/CLIHub.Core/Configuration/ConfigurationRepository.cs` and `src/CLIHub.Core/Infrastructure/Persistence/LogoCacheService.cs`.
 
-The current shutdown sequence is not wrapped in a per-resource recovery boundary or `finally` block. An exception from a disposal step can therefore prevent later cleanup steps from running.
+The session disposal and the tracked-operation stop are individually guarded: a failure is logged as a
+warning and shutdown continues. The service-provider disposal and the Serilog flush are not wrapped, so an
+exception there can still prevent later cleanup steps from running.

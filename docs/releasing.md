@@ -36,8 +36,9 @@ list item. **The release fails if there is no section for the tagged version** â
 so a release can never ship without its notes.
 
 **`CHANGELOG.md`** (technical, for developers): `## 0.9.0 â€” YYYY-MM-DD` with `Added` / `Changed` /
-`Fixed` / `Removed` groups, `**BREAKING**` markers, and spec references where useful. The pending
-`## Unreleased` section moves under the new dated heading; do not leave it in place.
+`Fixed` / `Removed` groups, `**BREAKING**` markers, and spec references where useful. If an
+`## Unreleased` section exists, move its groups under the new dated heading and remove it; do not leave it
+in place.
 
 Commit the notes to `master` (for example `docs: release notes for 0.9.0`) and wait for CI to go
 green.

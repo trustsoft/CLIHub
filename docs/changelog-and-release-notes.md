@@ -13,9 +13,10 @@ Git history and the archived OpenSpec changes.
 Both files use matching `## <version> — <date>` headings. Add the same release version and date to both
 files when preparing a release.
 
-`CHANGELOG.md` additionally keeps an `## Unreleased` section at the top for work that is not released
-yet; at release time its groups move under the new dated version heading. `RELEASE-NOTES.md` has no
-`Unreleased` section — user-facing notes for unreleased work are written when the release is prepared.
+`CHANGELOG.md` additionally keeps an `## Unreleased` section at the top while unreleased work is pending; at
+release time its groups move under the new dated version heading, and the empty section may be removed.
+`RELEASE-NOTES.md` has no `Unreleased` section — user-facing notes for unreleased work are written when the
+release is prepared.
 
 ## Application Contract
 
