@@ -31,23 +31,36 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 *The launch window: select a project on the left, then launch or resume an installed agent on the right.*
 
-<img src="docs/images/settings.png" alt="CLIHub Settings: appearance, theme, and accent color" width="880">
+<img src="docs/images/settings-appearance.png" alt="CLIHub Settings: theme, accent color, and path display" width="880">
 
-*Settings: theme, accent color, hotkeys, terminal runtime, agent probes, project discovery, updates, and logs.*
+*Settings → Appearance: theme, accent color, and path display. Theme and accent changes apply immediately after Save.*
+
+<img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and discovery rules" width="880">
+
+*Settings → Project Discovery: watched roots, scan depth and discovery rules, and the background watcher.*
+
+<img src="docs/images/settings-agents.png" alt="CLIHub Settings: installed CLI agents and probe settings" width="880">
+
+*Settings → CLI Agents: installed agents, the default agent, and probe settings.*
 
 ## Features
 
 - Project folders with current, recent, favorite, and logo-aware state.
-- Automatic project discovery: watch folders, scan them with per-folder depth and rules, and keep new repositories in the project list.
-- Agent commands for launch, resume, version, and update.
-- Host/project availability detection, version display, and capability-aware actions.
+- Automatic project discovery: watch folders, scan them with per-folder depth and rules, and keep new
+  repositories in the project list.
+- A Settings → Projects registry that shows manual versus discovered provenance, flags folders that no longer
+  exist, and manages manual entries.
+- Agent commands for launch, resume, version, and update, with a configurable default agent.
+- Host/project availability detection, version display, installed-versus-latest hints, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+Space` by default) and a single-instance tray application.
-- PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection.
-- Chromeless resizable launch window, Settings, and What's New windows with a shared Dark/Light/Blue theme and a
-  system-synced option that follows the Windows light/dark personalization setting.
+- PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection, with missing runtimes flagged
+  before launch.
+- Chromeless launch window with drag-resizable panes, a resizable Settings window, and a What's New window,
+  all sharing the Dark, Light, and Blue palettes plus a system-synced option, with an accent color that is
+  independent of the theme.
 - Startup update checks, download-and-restart updates, release notes, and Windows autostart.
-- Agent update protection while a matching registered agent process is running.
-- Structured file logging with configurable level and seven-day retention.
+- Agent update protection while that agent's own processes are running.
+- Structured file logging with configurable level and retention.
 
 ## Requirements
 
@@ -68,11 +81,13 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 ## Basic Use
 
 1. Open CLIHub from the tray icon or press `Ctrl+Shift+Space`.
-2. Add a project folder and select it, or let CLIHub discover folders under a watched root in Settings → Project Discovery.
+2. Add a project folder and select it, or let CLIHub discover folders under a watched root in Settings →
+   Project Discovery; Settings → Projects shows the full registry and manages manual entries.
 3. Select an available agent and run the required command.
-4. Configure runtime, hotkey, probing, update checks, display preferences, and project discovery in Settings.
-5. Close running registered agents before using an Update command; CLIHub keeps the action disabled while
-   a matching process is detected.
+4. Configure startup behavior, hotkey, launcher position, default agent, terminal runtime, probing, update checks,
+   theme and accent, logging, and project discovery in Settings.
+5. Close an agent's running processes before using its Update action; CLIHub keeps that action disabled while
+   the matching process is detected.
 
 ## Data and Plugins
 

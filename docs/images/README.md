@@ -9,7 +9,9 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `social-preview.png` | `src/social-preview.html` + `launch-window.png` | Repository social preview (1280 × 640) for the GitHub link card. Not referenced by the README. |
 | `workflow.png` | `src/workflow.html` | Three-step product summary: project, agent, terminal. |
 | `launch-window.png` | App capture | The launch window with the Projects and Agents panes. |
-| `settings.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
+| `settings-appearance.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
+| `settings-discovery.png` | App capture | Settings → Project Discovery (watched roots, scanning rules, watcher status). |
+| `settings-agents.png` | App capture | Settings → CLI Agents (installed agents, default agent, probe settings). |
 
 ## Regenerate the banner and workflow
 
@@ -48,5 +50,6 @@ or GIF files under 1 MB.
 ## Replace the app screenshots
 
 Capture the windows from a running build at 150% display scaling, then crop the two-pixel DWM frame
-ring and apply a 12 px rounded-corner mask. Use illustrative project names in the configuration so the
-screenshots do not expose private workspaces.
+ring and apply a 12 px rounded-corner mask. The README uses the launch window plus the Appearance,
+Project Discovery, and CLI Agents settings pages. Capture them against a throwaway configuration with
+illustrative project names and watched directories so the screenshots do not expose private workspaces.
