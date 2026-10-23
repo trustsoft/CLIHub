@@ -2,12 +2,14 @@
 //   node .opencode/scripts/pipeline-state.test.mjs
 //
 // Exercises the 10-entry cap, the completed-only pruning rule, the atomic
-// file shape, the duplicate refusal, the compare-and-swap retry, and the
-// `update` transitions (stage/status, stage rows, notes, commits).
+// file shape, the duplicate refusal, the compare-and-swap retry, the
+// `update` transitions (stage/status, stage rows, notes, commits), and the
+// `check` evidence reconciliation plus its write-time warning.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  mkdirSync,
   mkdtempSync,
   readFileSync,
   readdirSync,
@@ -28,6 +30,8 @@ import {
   pruneChanges,
   applyUpdate,
   updateChange,
+  collectFindings,
+  evidenceProbes,
 } from "./pipeline-state.mjs";
 
 const SCRIPT = fileURLToPath(new URL("./pipeline-state.mjs", import.meta.url));
@@ -584,6 +588,7 @@ test("the CLI prints updated and state lines for one update", () => {
     assert.equal(run.status, 0, run.stderr);
     assert.equal(run.stderr, "");
     assert.deepEqual(run.stdout.trimEnd().split(/\r?\n/), [
+      `warning: no ground truth evidence for 'target'; if this is out-of-repo tooling work, add --note "tooling: <location>"`,
       "updated target (commit/active)",
       `state: ${resolvePath(file)} (2 changes)`,
     ]);
@@ -632,6 +637,202 @@ test("the CLI records repeatable stage-status, stage-note, and commit pairs", ()
     assert.equal(updated.stages.impl.commit, "abc1234");
     assert.equal(updated.stages.commit.status, "pending");
     assert.equal(updated.commits.impl, "abc1234");
+  });
+});
+
+/** Probes that report no evidence of any kind, without touching the filesystem or git. */
+const NO_EVIDENCE_PROBES = {
+  repoRoot: "C:/nowhere",
+  archiveIds: () => new Set(),
+  specDirExists: () => false,
+  commitResolves: () => false,
+};
+
+test("collectFindings_DoneEntryWithResolvableSha_OkWithCommitEvidence", () => {
+  const entry = {
+    ...completed("sha-entry"),
+    commits: { plan: null, impl: "abc1234", archive: null },
+  };
+  const probes = {
+    repoRoot: "C:/repo",
+    archiveIds: () => new Set(),
+    specDirExists: () => false,
+    commitResolves: (sha) => sha === "abc1234",
+  };
+
+  const { entries, findings } = collectFindings([entry], probes);
+
+  assert.equal(findings.length, 0);
+  assert.equal(entries[0].level, "ok");
+  assert.deepEqual(entries[0].evidence, { kind: "commit", detail: "abc1234" });
+});
+
+test("collectFindings_DoneEntryWithArchiveDir_OkWithArchiveEvidence", () => {
+  const probes = {
+    repoRoot: "C:/repo",
+    archiveIds: () => new Set(["2026-01-01-archived-entry"]),
+    specDirExists: () => false,
+    commitResolves: () => false,
+  };
+
+  const { entries, findings } = collectFindings([completed("archived-entry")], probes);
+
+  assert.equal(findings.length, 0);
+  assert.equal(entries[0].level, "ok");
+  assert.deepEqual(entries[0].evidence, { kind: "archive-dir" });
+});
+
+test("collectFindings_ActivePlanEntryNoEvidence_NoFinding", () => {
+  const { entries, findings } = collectFindings(
+    [{ id: "wip", stage: "plan", status: "active" }],
+    NO_EVIDENCE_PROBES,
+  );
+
+  assert.equal(findings.length, 0);
+  assert.equal(entries[0].level, "ok");
+  assert.deepEqual(entries[0].evidence, { kind: "mid-flight" });
+});
+
+test("collectFindings_DoneEntryNoEvidence_WarningNoEvidence", () => {
+  const { entries, findings } = collectFindings([completed("orphan")], NO_EVIDENCE_PROBES);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].id, "orphan");
+  assert.equal(findings[0].level, "warning");
+  assert.equal(findings[0].kind, "no-evidence");
+  assert.equal(entries[0].level, "warning");
+});
+
+test("collectFindings_MissingSha_WarningShaMissing", () => {
+  const entry = {
+    ...completed("stale"),
+    commits: { plan: null, impl: "deadbeef", archive: null },
+  };
+  const probes = { ...NO_EVIDENCE_PROBES, repoRoot: "C:/repo" };
+
+  const { findings } = collectFindings([entry], probes);
+
+  assert.equal(findings.length, 1, "the recorded sha suppresses no-evidence");
+  assert.equal(findings[0].kind, "sha-missing");
+  assert.equal(findings[0].detail, "deadbeef");
+  assert.equal(findings[0].repoRoot, "C:/repo");
+});
+
+test("collectFindings_ToolingNote_OkAttestation", () => {
+  const entry = {
+    ...completed("tooling-work"),
+    note: "  Tooling: C:/Users/Maxim/.config/opencode/plugins/x",
+  };
+
+  const { entries, findings } = collectFindings([entry], NO_EVIDENCE_PROBES);
+
+  assert.equal(findings.length, 0);
+  assert.deepEqual(entries[0].evidence, { kind: "attestation" });
+});
+
+test("the CLI check reports evidence, mid-flight, and warnings without writing", () => {
+  withDir((dir) => {
+    const repo = join(dir, "repo");
+    const file = join(repo, ".opencode", "pipeline.json");
+    mkdirSync(join(repo, ".opencode"), { recursive: true });
+    mkdirSync(join(repo, "openspec", "changes", "archive", "2026-01-01-archived-one"), {
+      recursive: true,
+    });
+    mkdirSync(join(repo, "openspec", "changes", "spec-one"), { recursive: true });
+    writeStateRaw(
+      file,
+      stateOf([
+        completed("archived-one"),
+        completed("spec-one"),
+        completed("orphan"),
+        unfinished("wip", "plan"),
+      ]),
+    );
+    const before = readFileSync(file);
+
+    const run = spawnSync(process.execPath, [SCRIPT, "check", "--file", file], { encoding: "utf8" });
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.equal(run.stderr, "");
+    assert.deepEqual(run.stdout.trimEnd().split(/\r?\n/), [
+      "ok archived-one (archive-dir)",
+      "ok spec-one (spec-dir)",
+      "warning: orphan no evidence (commit sha, openspec dir, archive dir, or note 'tooling: ...')",
+      "ok wip (mid-flight)",
+      "checked 4 changes: 3 ok, 1 warning(s)",
+      `state: ${resolvePath(file)} (4 changes)`,
+    ]);
+    assert.deepEqual(readFileSync(file), before, "check must not write the state file");
+
+    const strict = spawnSync(process.execPath, [SCRIPT, "check", "--file", file, "--strict"], {
+      encoding: "utf8",
+    });
+    assert.equal(strict.status, 1, strict.stderr);
+    assert.equal(strict.stderr, "", "strict exits 1 without an error message");
+    assert.deepEqual(readFileSync(file), before);
+  });
+});
+
+test("the CLI check exits 1 on a malformed state file", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeFileSync(file, "{ not json", "utf8");
+
+    const run = spawnSync(process.execPath, [SCRIPT, "check", "--file", file], { encoding: "utf8" });
+
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /error: malformed state file /);
+    assert.equal(run.stdout, "");
+  });
+});
+
+test("updateChange_DoneWithNoEvidence_AppendsGroundTruthWarning", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("tooling-entry", "impl")]));
+
+    const probed = updateChange(file, {
+      id: "tooling-entry",
+      status: "done",
+      evidenceProbe: NO_EVIDENCE_PROBES,
+    });
+
+    assert.equal(probed.warnings.length, 1);
+    assert.match(probed.warnings[0], /no ground truth evidence for 'tooling-entry'/);
+    assert.match(probed.warnings[0], /--note "tooling: <location>"/);
+    assert.equal(readState(file).changes[0].status, "done");
+
+    const backCompat = updateChange(file, { id: "tooling-entry", note: "no probe" });
+    assert.deepEqual(backCompat.warnings, [], "no probe keeps the previous behavior");
+  });
+});
+
+test("updateChange_AttestedToolingNote_SkipsGroundTruthWarning", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([unfinished("tooling-entry", "impl")]));
+
+    const result = updateChange(file, {
+      id: "tooling-entry",
+      status: "done",
+      note: "tooling: C:/Users/Maxim/.config/opencode/plugins/x",
+      evidenceProbe: NO_EVIDENCE_PROBES,
+    });
+
+    assert.deepEqual(result.warnings, []);
+  });
+});
+
+test("evidenceProbes_RealRepoLayout_ReportsArchiveAndSpecDirs", () => {
+  withDir((repo) => {
+    mkdirSync(join(repo, "openspec", "changes", "archive", "2026-01-01-one"), { recursive: true });
+    mkdirSync(join(repo, "openspec", "changes", "two"), { recursive: true });
+    const probes = evidenceProbes(repo);
+
+    assert.deepEqual([...probes.archiveIds()], ["2026-01-01-one"]);
+    assert.equal(probes.specDirExists("two"), true);
+    assert.equal(probes.specDirExists("missing"), false);
+    assert.equal(probes.commitResolves("deadbeef"), false, "an unknown sha is not evidence");
   });
 });
 

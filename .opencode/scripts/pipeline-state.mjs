@@ -8,6 +8,7 @@
 //                                              [--stage-note <stage>=<text>]
 //                                              [--commit <stage>=<sha>] [--file <path>]
 //   node .opencode/scripts/pipeline-state.mjs prune [--file <path>] [--limit <n>] [--dry-run]
+//   node .opencode/scripts/pipeline-state.mjs check [--file <path>] [--repo <path>] [--strict]
 //
 // The sidebar plugin (plugins/pipeline-status) only reads this file; every
 // mutation goes through this script so that the 10-entry cap and the atomic
@@ -28,6 +29,15 @@
 // `prune` removes the oldest completed entries until the file is at or below
 // the limit; `--dry-run` reports the removals without writing.
 //
+// `check` reconciles the entries against ground truth and never writes. An
+// entry is `ok` when any evidence exists: a recorded commit sha that git can
+// resolve, an `openspec/changes/<id>/` directory, an
+// `openspec/changes/archive/*-<id>/` directory, or a note starting with
+// `tooling:`. A completed entry with no evidence is a `no-evidence` warning,
+// and a recorded sha that git cannot resolve is a `sha-missing` warning. The
+// repository root is `--repo`, else the parent of a `.opencode/pipeline.json`
+// state file, else the current working directory.
+//
 // Writes are atomic (temp file in the same directory, then rename) and
 // UTF-8 without BOM. Before the rename the target is re-statted: if another
 // writer changed its mtime/size since the read, the state is re-read, the
@@ -39,11 +49,25 @@
 //   warning: ...
 //   added <id> (<before> -> <after>)
 //   updated <id> (<stage>/<status>)
+//   ok <id> (<evidence-kind> [detail])
+//   warning: <id> no evidence (...)
+//   warning: <id> commit sha <sha> not found in <repo>
+//   checked <n> changes: <ok> ok, <warnings> warning(s)
 //   state: <absolute path> (<n> changes)
 //
-// Exit codes: 0 success, 1 usage/IO/malformed-state error, 2 refused (duplicate id).
+// Exit codes: 0 success, 1 usage/IO/malformed-state error or `check --strict`
+// with warnings, 2 refused (duplicate id).
 
-import { readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -314,12 +338,23 @@ export function updateState(file, operation, { attempts = 3, beforeRename } = {}
 
 /**
  * Appends `id` and prunes the oldest completed entries first. Throws
- * `RefusalError` (before any write) when the id already exists. Returns
+ * `RefusalError` (before any write) when the id already exists. With
+ * `evidenceProbe`, a new entry that already claims completion and has no
+ * evidence appends a `no ground truth evidence` warning. Returns
  * `{ removed, before, after, change, state, warnings, attempts }`.
  */
 export function addChange(
   file,
-  { id, stage = "plan", status = "active", note, limit = LIMIT, now = new Date(), beforeRename } = {},
+  {
+    id,
+    stage = "plan",
+    status = "active",
+    note,
+    limit = LIMIT,
+    now = new Date(),
+    beforeRename,
+    evidenceProbe,
+  } = {},
 ) {
   const change = buildChange({ id, stage, status, note, now });
 
@@ -350,6 +385,10 @@ export function addChange(
         warnings.push(
           `change count ${kept.length} exceeds limit ${limit}: no completed entry left to prune`,
         );
+      }
+      const groundTruth = groundTruthWarning(change, evidenceProbe);
+      if (groundTruth) {
+        warnings.push(groundTruth);
       }
 
       return { state, change, removed, before, after: kept.length, warnings };
@@ -512,9 +551,204 @@ export function applyUpdate(
 }
 
 /**
+ * Returns the recorded commit shas of a change as `[stage, sha]` pairs in the
+ * fixed `STAGES` order. Null, empty, and non-string values are skipped.
+ */
+function recordedShas(change) {
+  const commits = change?.commits;
+  if (!commits || typeof commits !== "object") {
+    return [];
+  }
+
+  const pairs = [];
+  for (const stage of STAGES) {
+    const sha = commits[stage];
+    if (typeof sha === "string" && sha.trim() !== "") {
+      pairs.push([stage, sha.trim()]);
+    }
+  }
+  return pairs;
+}
+
+/**
+ * True when the entry's stage pointer or status claims the change is finished:
+ * `status` is `done`, or the stage is `commit`/`archive`. Mid-flight entries
+ * (plan/impl, not done) are not completion claims and need no evidence yet.
+ */
+function claimsCompletion(change) {
+  return change?.status === "done" || change?.stage === "commit" || change?.stage === "archive";
+}
+
+/**
+ * Finds the first ground-truth evidence for one entry, in the order `check`
+ * reports it: a resolvable commit sha, an archive directory whose name ends in
+ * `-<id>`, an `openspec/changes/<id>/` directory, or a note that starts with
+ * `tooling:`. Returns `{ kind, detail }` or null and never throws.
+ */
+function findEvidence(change, probes, archiveIds) {
+  if (!probes) {
+    return null;
+  }
+
+  if (typeof probes.commitResolves === "function") {
+    for (const [, sha] of recordedShas(change)) {
+      if (probes.commitResolves(sha)) {
+        return { kind: "commit", detail: sha };
+      }
+    }
+  }
+
+  const id = typeof change?.id === "string" ? change.id.trim() : "";
+  if (id !== "") {
+    const archived = [...(archiveIds ?? [])].some((name) => name.endsWith(`-${id}`));
+    if (archived) {
+      return { kind: "archive-dir" };
+    }
+    if (typeof probes.specDirExists === "function" && probes.specDirExists(id)) {
+      return { kind: "spec-dir" };
+    }
+  }
+
+  const note = typeof change?.note === "string" ? change.note.trim() : "";
+  if (/^tooling:/i.test(note)) {
+    return { kind: "attestation" };
+  }
+
+  return null;
+}
+
+/**
+ * Builds the write-time ground-truth warning for an entry that claims
+ * completion but has no evidence. Out-of-repo tooling work can attest itself
+ * with a `tooling:` note; the warning never refuses the write. Returns null
+ * when there is nothing to warn about or when no probe was supplied.
+ */
+function groundTruthWarning(change, probes) {
+  if (!probes || !claimsCompletion(change)) {
+    return null;
+  }
+
+  const archiveIds = typeof probes.archiveIds === "function" ? probes.archiveIds() : new Set();
+  if (findEvidence(change, probes, archiveIds)) {
+    return null;
+  }
+
+  return (
+    `no ground truth evidence for '${change.id}'; if this is out-of-repo tooling work, ` +
+    `add --note "tooling: <location>"`
+  );
+}
+
+/**
+ * Reconciles the state entries against ground truth without touching the file.
+ *
+ * Every entry yields a verdict `{ id, level, evidence, findings }`: `level` is
+ * `warning` when `findings` is non-empty and `ok` otherwise; `evidence` is
+ * `{ kind, detail }` or `{ kind: "mid-flight" }` for a change that has not
+ * claimed completion. `findings` holds `{ id, level, kind, detail }` records
+ * where `detail` is the sha for `sha-missing`; the repository root travels on
+ * the finding as `repoRoot` so the CLI can render it. A completed entry with no
+ * evidence is `no-evidence`; every recorded sha that git cannot resolve is a
+ * separate `sha-missing` finding, which suppresses `no-evidence` so an entry
+ * stays on one output line. Mid-flight entries are never `no-evidence`.
+ *
+ * @param {Array<object>} changes entries from the state file.
+ * @param {{repoRoot?: string, archiveIds?: () => Set<string>, specDirExists?: (id: string) => boolean, commitResolves?: (sha: string) => boolean}} [probes]
+ *   evidence source; a missing probe reports no evidence.
+ * @param {{repoRoot?: string}} [options] fallback repository root for rendering.
+ * @returns {{entries: Array<{id: string, level: string, evidence: ({kind: string, detail?: string}|null), findings: Array<object>}>, findings: Array<object>}}
+ *   serializable verdicts plus the flattened warning findings.
+ */
+export function collectFindings(changes, probes, options = {}) {
+  const list = Array.isArray(changes) ? changes : [];
+  const repoRoot = probes?.repoRoot ?? options.repoRoot ?? process.cwd();
+  const archiveIds = typeof probes?.archiveIds === "function" ? probes.archiveIds() : new Set();
+
+  const entries = [];
+  const findings = [];
+
+  for (const change of list) {
+    const id = typeof change?.id === "string" && change.id.trim() !== "" ? change.id.trim() : "?";
+    const entryFindings = [];
+    const evidence = findEvidence(change, probes, archiveIds);
+
+    const seen = new Set();
+    for (const [, sha] of recordedShas(change)) {
+      if (seen.has(sha)) {
+        continue;
+      }
+      seen.add(sha);
+      if (typeof probes?.commitResolves === "function" && !probes.commitResolves(sha)) {
+        entryFindings.push({ id, level: "warning", kind: "sha-missing", detail: sha, repoRoot });
+      }
+    }
+
+    if (evidence === null && entryFindings.length === 0 && claimsCompletion(change)) {
+      entryFindings.push({ id, level: "warning", kind: "no-evidence" });
+    }
+
+    entries.push({
+      id,
+      level: entryFindings.length > 0 ? "warning" : "ok",
+      evidence: evidence ?? (claimsCompletion(change) ? null : { kind: "mid-flight" }),
+      findings: entryFindings,
+    });
+    findings.push(...entryFindings);
+  }
+
+  return { entries, findings };
+}
+
+/**
+ * Builds the real evidence probes for `repoRoot`: archive directory names,
+ * OpenSpec change directories, and `git cat-file -e <sha>^{commit}`. A missing
+ * directory or a git failure means "no evidence" and is never thrown.
+ */
+export function evidenceProbes(repoRoot = process.cwd()) {
+  const root = resolve(repoRoot);
+
+  return {
+    repoRoot: root,
+    archiveIds: () => {
+      try {
+        const archive = join(root, "openspec", "changes", "archive");
+        return new Set(
+          readdirSync(archive, { withFileTypes: true })
+            .filter((entry) => entry.isDirectory())
+            .map((entry) => entry.name),
+        );
+      } catch {
+        return new Set();
+      }
+    },
+    specDirExists: (id) => {
+      try {
+        return existsSync(join(root, "openspec", "changes", id));
+      } catch {
+        return false;
+      }
+    },
+    commitResolves: (sha) => {
+      try {
+        const run = spawnSync("git", ["cat-file", "-e", `${sha}^{commit}`], {
+          cwd: root,
+          encoding: "utf8",
+          windowsHide: true,
+        });
+        return run.status === 0;
+      } catch {
+        return false;
+      }
+    },
+  };
+}
+
+/**
  * Applies an update to the entry with `id` through the compare-and-swap
  * driver. Throws `StateError` (before any write) when the id is unknown or the
- * options are invalid. Returns `{ change, attempts, state }`.
+ * options are invalid. With `evidenceProbe`, an update that results in a
+ * completion claim and has no evidence appends a `no ground truth evidence`
+ * warning (never a refusal). Returns `{ change, attempts, state, warnings }`.
  */
 export function updateChange(
   file,
@@ -528,6 +762,7 @@ export function updateChange(
     commits = {},
     now = new Date(),
     beforeRename,
+    evidenceProbe,
   } = {},
 ) {
   if (typeof id !== "string" || id.trim() === "") {
@@ -561,7 +796,13 @@ export function updateChange(
       state.changes = changes;
       state.updatedAt = at;
 
-      return { state, change };
+      const warnings = [];
+      const groundTruth = groundTruthWarning(change, evidenceProbe);
+      if (groundTruth) {
+        warnings.push(groundTruth);
+      }
+
+      return { state, change, warnings };
     },
     { beforeRename },
   );
@@ -638,7 +879,41 @@ const USAGE =
   "[--file <path>] [--limit <n>] [--note \"...\"] | " +
   "update <id> [--stage plan|impl|commit|archive] [--status pending|active|done|blocked] [--note \"...\"] " +
   "[--stage-status <stage>=<status>] [--stage-note <stage>=<text>] [--commit <stage>=<sha>] [--file <path>] | " +
-  "prune [--file <path>] [--limit <n>] [--dry-run]";
+  "prune [--file <path>] [--limit <n>] [--dry-run] | " +
+  "check [--file <path>] [--repo <path>] [--strict]";
+
+/**
+ * Resolves the repository root used by the evidence probes: `--repo` when
+ * given, else the parent of a state file that is `.opencode/pipeline.json`,
+ * else the current working directory.
+ */
+function repoRootFor(file, argv) {
+  const flag = flagValue(argv, "--repo");
+  if (flag) {
+    return resolve(flag);
+  }
+
+  const target = resolve(file);
+  if (basename(target) === "pipeline.json" && basename(dirname(target)) === ".opencode") {
+    return dirname(dirname(target));
+  }
+
+  return process.cwd();
+}
+
+/** Renders one warning finding as the script's greppable single line. */
+function formatFinding(finding) {
+  if (finding.kind === "sha-missing") {
+    return `warning: ${finding.id} commit sha ${finding.detail} not found in ${finding.repoRoot}`;
+  }
+  if (finding.kind === "no-evidence") {
+    return (
+      `warning: ${finding.id} no evidence ` +
+      `(commit sha, openspec dir, archive dir, or note 'tooling: ...')`
+    );
+  }
+  return `warning: ${finding.id} ${finding.kind}`;
+}
 
 function runAdd(argv) {
   const id = argv[1];
@@ -651,8 +926,9 @@ function runAdd(argv) {
   const status = flagValue(argv, "--status") ?? "active";
   const note = flagValue(argv, "--note");
   const limit = parseLimit(flagValue(argv, "--limit"));
+  const evidenceProbe = evidenceProbes(repoRootFor(file, argv));
 
-  const result = addChange(file, { id, stage, status, note, limit });
+  const result = addChange(file, { id, stage, status, note, limit, evidenceProbe });
   for (const entry of result.removed) {
     console.log(formatRemoved(entry));
   }
@@ -676,8 +952,21 @@ function runUpdate(argv) {
   const stageStatuses = parsePairs(argv, "--stage-status");
   const stageNotes = parsePairs(argv, "--stage-note");
   const commits = parsePairs(argv, "--commit");
+  const evidenceProbe = evidenceProbes(repoRootFor(file, argv));
 
-  const result = updateChange(file, { id, stage, status, note, stageStatuses, stageNotes, commits });
+  const result = updateChange(file, {
+    id,
+    stage,
+    status,
+    note,
+    stageStatuses,
+    stageNotes,
+    commits,
+    evidenceProbe,
+  });
+  for (const warning of result.warnings ?? []) {
+    console.log(`warning: ${warning}`);
+  }
   console.log(formatUpdated(result.change));
   console.log(stateLine(file, result.state.changes.length));
 }
@@ -694,6 +983,34 @@ function runPrune(argv) {
   console.log(stateLine(file, result.after));
 }
 
+function runCheck(argv) {
+  const file = statePath(argv);
+  const repoRoot = repoRootFor(file, argv);
+  const state = readState(file);
+  const probes = evidenceProbes(repoRoot);
+  const { entries, findings } = collectFindings(state.changes, probes, { repoRoot });
+
+  for (const entry of entries) {
+    if (entry.findings.length > 0) {
+      for (const finding of entry.findings) {
+        console.log(formatFinding(finding));
+      }
+      continue;
+    }
+    const kind = entry.evidence?.kind ?? "unknown";
+    const detail = entry.evidence?.detail;
+    console.log(`ok ${entry.id} (${kind}${detail ? ` ${detail}` : ""})`);
+  }
+
+  const ok = entries.filter((entry) => entry.findings.length === 0).length;
+  console.log(`checked ${state.changes.length} changes: ${ok} ok, ${findings.length} warning(s)`);
+  console.log(stateLine(file, state.changes.length));
+
+  if (argv.includes("--strict") && findings.length > 0) {
+    process.exitCode = 1;
+  }
+}
+
 function main() {
   const argv = process.argv.slice(2);
   const command = argv[0];
@@ -705,6 +1022,8 @@ function main() {
       runUpdate(argv);
     } else if (command === "prune") {
       runPrune(argv);
+    } else if (command === "check") {
+      runCheck(argv);
     } else {
       throw new StateError(USAGE);
     }
