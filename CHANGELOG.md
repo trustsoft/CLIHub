@@ -8,7 +8,19 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## Unreleased
+## 1.0.0 — 2026-10-23
+
+### Added
+
+- A third palette, Blue, behind a descriptor-driven theme registry: `AppTheme`, `ThemeDescriptor`, and `ThemeCatalog` resolve Dark, Light, Blue, and System without hardcoded branches, and the palette parity test enumerates every registered palette (`theme-registry`)
+- Live theme switching: a Settings save applies the resolved palette to every open window through `PaletteSwitcher`, so the theme no longer waits for the next start (`live-theme-switch`)
+- The accent color is application-scoped and independent of the theme: palettes carry chrome and surface brushes only, `AccentApplier` writes the accent into `Application.Resources`, and a theme switch never changes the accent (`accent-independent-of-theme`)
+- A CI and release gate that fails when the `Directory.Build.props` version is older than the highest stable `v*` tag, with full tag history checked out in both workflows (`keep-dev-version-current`)
+
+### Changed
+
+- Theme and Settings XAML resources are layered for extension: `Sizing`/`Controls`/`ThemePickerData`/`SettingsControls`/`SettingsStyles` merge once, shared card and badge templates replace duplicated page markup, and adding a palette or page no longer duplicates trigger chains (`theme-xaml-structure`, `tidy-theme-resources`)
+- The launch and Settings footers share `Sizing.Footer.*` insets: the brand block starts 12 DIP from the left, the action block ends 8 DIP from the right, and the Settings version chip is optically lowered 2 DIP against the brand label (`settings-theme`, `main-window-layout`)
 
 ### Fixed
 

@@ -3,6 +3,19 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.0 — 2026-10-23
+
+### New
+- A third theme, Blue, joins Dark and Light; System Sync still follows the Windows light/dark setting
+- Theme changes take effect as soon as you save Settings, with no restart
+- The accent color is now independent of the theme: every accent preset works with every theme, and switching themes leaves your accent untouched
+
+### Improved
+- The launch and Settings footers share the same spacing, with the version chip aligned to the CLIHub label
+
+### Fixed
+- Opening Settings no longer freezes the window for several seconds while the CLI Agents page loads; agent update blocking behaves exactly as before
+
 ## 0.9.9 — 2026-10-20
 
 ### New
