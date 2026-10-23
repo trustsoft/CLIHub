@@ -346,6 +346,21 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   disposing the subscription with the application.
 - Trigger: a user report that switching Windows to dark leaves CLIHub light until restart.
 
+### Unversioned README screenshot capture harness
+
+- Severity: Low (reproducibility)
+- Evidence: the 0.9.9 README refresh used an ad-hoc PowerShell harness kept only in `%TEMP%`
+  (`capture-final.ps1`): it seeds `%APPDATA%\CLIHub\config.json` with a throwaway workspace, opens
+  Settings through UI Automation, captures with `CopyFromScreen`, crops the 2 px ring, applies the
+  12 px mask, and restores the config. `PrintWindow` intermittently returned black frames on
+  2026-10-23, which is why the screen-copy path was added. `docs/images/README.md` records only the
+  manual attributes (150% scaling, crop, mask), not the harness.
+- Proposed remedy: commit a sanitized script under `docs/images/tools/` with parameters for the mock
+  workspace and output directory, an explicit backup/restore of the user configuration, a
+  black-frame retry, and a guard against overwriting `%APPDATA%\CLIHub`; alternatively extend
+  `docs/images/README.md` with the exact automation steps.
+- Trigger: the next README screenshot refresh.
+
 ### Accent precedence across a live palette switch (resolved)
 
 - Status: Resolved by the `accent-independent-of-theme` change (2026-10-23). Formerly parked as

@@ -58,6 +58,14 @@ sidebar, drawn window chrome, validation message, and footer stay visible while 
 views (`Settings*Page.xaml`) contain only their scrolling settings content; the title and description live
 in the `SettingsPage` metadata exposed through `SelectedPage`.
 
+## Footer Insets
+
+The launch and Settings footers share their horizontal insets: the brand block starts 12 DIP from
+the left edge and the action block ends 8 DIP from the right edge. Both windows read
+`Sizing.Footer.BrandMargin` and `Sizing.Footer.ActionsMargin` from `Sizing.xaml`; do not reintroduce
+literal margins. The Settings version chip adds `Sizing.Footer.VersionChipMargin`, which lowers it
+2 DIP against the brand label for optical alignment.
+
 ## Adding a Settings Page
 
 1. Add a `views:Settings<Name>Page` `UserControl` containing only its scrolling settings content,

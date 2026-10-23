@@ -510,26 +510,36 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Style="{StaticResource BrandText}" Text="CLIHub"/>
-                        <Border Margin="8,0,0,0"
+                    <StackPanel Grid.Column="0"
+                                Margin="{StaticResource Sizing.Footer.BrandMargin}"
+                                Orientation="Horizontal"
+                                UseLayoutRounding="True"
+                                VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource BrandText}"
+                                   Text="CLIHub"
+                                   VerticalAlignment="Center"/>
+                        <Border Margin="{StaticResource Sizing.Footer.VersionChipMargin}"
                                 VerticalAlignment="Center"
                                 Style="{StaticResource VersionChipBorder}">
-                            <TextBlock Style="{StaticResource VersionChipText}" Text="{Binding Version}"/>
+                            <TextBlock Style="{StaticResource VersionChipText}"
+                                       Text="{Binding Version}"
+                                       VerticalAlignment="Center"/>
                         </Border>
                     </StackPanel>
-                    <Button Grid.Column="1"
-                            Command="{Binding SaveCommand}"
-                            Content="Save"
-                            IsDefault="True"
-                            Margin="0,0,10,0"
-                            Style="{StaticResource AccentButton}"/>
-                    <Button Grid.Column="2"
-                            Command="{Binding CancelCommand}"
-                            Content="Cancel"
-                            Style="{StaticResource NeutralButton}"/>
+                    <StackPanel Grid.Column="1"
+                                Margin="{StaticResource Sizing.Footer.ActionsMargin}"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button Command="{Binding SaveCommand}"
+                                Content="Save"
+                                IsDefault="True"
+                                Margin="0,0,10,0"
+                                Style="{StaticResource AccentButton}"/>
+                        <Button Command="{Binding CancelCommand}"
+                                Content="Cancel"
+                                Style="{StaticResource NeutralButton}"/>
+                    </StackPanel>
                 </Grid>
             </Border>
         </Grid>

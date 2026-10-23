@@ -51,6 +51,15 @@
 
     <!-- Window chrome and panes -->
     <sys:Double x:Key="Sizing.Footer.Height">42</sys:Double>
+    <!--
+        Footer insets shared by the launch and Settings windows: the brand block starts at the
+        same left edge and the action block ends at the same right edge in both footers. The
+        Settings version chip is optically lowered by 2 DIP against the brand label.
+    -->
+    <Thickness x:Key="Sizing.Footer.BrandMargin">12,0,0,0</Thickness>
+    <Thickness x:Key="Sizing.Footer.ActionsMargin">0,0,8,0</Thickness>
+    <Thickness x:Key="Sizing.Footer.VersionChipMargin">8,2,0,0</Thickness>
+    <Thickness x:Key="Sizing.Footer.VerticalPadding">0,10</Thickness>
     <Thickness x:Key="Sizing.Pane.Margin">10</Thickness>
     <sys:Double x:Key="Sizing.PaneHeader.Height">32</sys:Double>
     <Thickness x:Key="Sizing.PaneHeader.Margin">0,0,0,4</Thickness>

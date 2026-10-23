@@ -369,7 +369,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0"
-                            Margin="12,0,0,0"
+                            Margin="{StaticResource Sizing.Footer.BrandMargin}"
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                     <TextBlock Style="{StaticResource BrandText}" Text="CLIHub"/>
@@ -394,7 +394,7 @@
                            TextTrimming="CharacterEllipsis"/>
 
                 <StackPanel Grid.Column="3"
-                            Margin="0,0,12,0"
+                            Margin="{StaticResource Sizing.Footer.ActionsMargin}"
                             VerticalAlignment="Center"
                             Orientation="Horizontal">
                     <Button Command="{Binding OpenDataFolderCommand}"
