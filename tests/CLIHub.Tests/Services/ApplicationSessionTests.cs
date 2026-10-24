@@ -1,11 +1,16 @@
 namespace CLIHub.Tests.Services;
 
+using System.Windows;
+
+using Microsoft.Win32;
+
 using Moq;
 
 using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
 using CLIHub.Startup;
+using CLIHub.Themes;
 
 public class ApplicationSessionTests
 {
@@ -29,6 +34,7 @@ public class ApplicationSessionTests
         fixture.Guard.Raise(x => x.ActivationRequested += null);
 
         Assert.Equal(2, dispatched);
+        Assert.Single(fixture.ThemeFollowerSubscribed);
         fixture.StartupUi.Verify(x => x.RefreshMenu(), Times.Once);
         fixture.StartupUi.Verify(x => x.ShowLaunchWindow(), Times.Once);
         fixture.OperationLifetime.Verify(
@@ -54,6 +60,7 @@ public class ApplicationSessionTests
         fixture.Guard.Raise(x => x.ActivationRequested += null);
 
         Assert.Equal(0, dispatched);
+        Assert.Single(fixture.ThemeFollowerUnsubscribed);
         fixture.OperationLifetime.Verify(
             x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()),
             Times.Never);
@@ -89,6 +96,8 @@ public class ApplicationSessionTests
         public Mock<IUpdateWorkflow> UpdateDownload { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateRequestSource> UpdateRequests { get; } = new(MockBehavior.Strict);
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
+        public List<UserPreferenceChangedEventHandler> ThemeFollowerSubscribed { get; } = [];
+        public List<UserPreferenceChangedEventHandler> ThemeFollowerUnsubscribed { get; } = [];
         public ApplicationSession Session { get; }
 
         public SessionFixture()
@@ -111,7 +120,13 @@ public class ApplicationSessionTests
                 () => this.StartupUi.Object,
                 () => this.UpdateRequests.Object,
                 this.Guard.Object,
-                this.UpdateDownload.Object);
+                this.UpdateDownload.Object,
+                new SystemThemeFollower(
+                    new PaletteSwitcher(_ => new ResourceDictionary()),
+                    () => null,
+                    () => false,
+                    this.ThemeFollowerSubscribed.Add,
+                    this.ThemeFollowerUnsubscribed.Add));
         }
     }
 }

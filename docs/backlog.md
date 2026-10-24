@@ -342,18 +342,25 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   single-use literal alone until then.
 - Trigger: copy-pasting a view and reaching for the same literal.
 
-### Windows personalization changes are not followed while the application runs
+### Windows personalization changes are not followed while the application runs (resolved)
 
-- Severity: Medium (the System mode goes stale after startup)
-- Evidence: `PaletteSwitcher.Apply` has exactly two callers — `App.ApplyTheme`
-  (`src/CLIHub/App.xaml.cs:49`, startup) and `WpfThemePreferenceTarget.SetTheme`
-  (`src/CLIHub/Settings/WpfThemePreferenceTarget.cs:39`, reached from a Settings save through
-  `PreferenceApplier`). The "System" theme therefore resolves `SystemTheme.IsLight()` at startup and
-  at save only; nothing refreshes the palette when Windows personalization changes afterwards.
-- Proposed remedy: subscribe to `SystemEvents.UserPreferenceChanged` (or watch the relevant registry
-  value) and call the same switcher with the stored theme, keeping the handler on the UI thread and
-  disposing the subscription with the application.
-- Trigger: a user report that switching Windows to dark leaves CLIHub light until restart.
+- Status: Resolved by the `follow-windows-theme-changes` change (2026-10-24).
+- Resolved model: `SystemThemeFollower` (`src/CLIHub/Themes/SystemThemeFollower.cs`) subscribes to
+  `SystemEvents.UserPreferenceChanged` for the first-instance session — `ShellCoordinator` starts it
+  with the startup dispatch during shell wiring and disposes it with the session, so a second
+  instance never subscribes. The handler ignores the event category and filters by value: it re-reads
+  the stored theme from config.json, and only when it parses to System and the freshly read
+  `SystemTheme.IsLight()` differs from the last observed mode does it dispatch one palette re-apply
+  through the shared `PaletteSwitcher` — the same path startup and a Settings save use, so System
+  still never resolves to blue. Fixed Dark, Light, and Blue themes (and unknown values, which fall
+  back to Dark) ignore personalization changes, and a successful follow logs one informational line
+  (added by user decision on 2026-10-24, overriding the original silent-on-success design D7).
+- Guarded by: `SystemThemeFollowerTests` (`tests/CLIHub.Tests/Themes/SystemThemeFollowerTests.cs`)
+  plus the follower start/dispose assertions in `ShellCoordinatorTests` and
+  `ApplicationSessionTests`; the live repaint under a real `Application` stays manual smoke per the
+  documented test-host precedent.
+- Trigger: a regression report that switching Windows light/dark leaves the System palette stale
+  until restart or the next Settings save.
 
 ### Unversioned README screenshot capture harness
 

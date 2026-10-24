@@ -115,7 +115,7 @@ To add another theme:
 2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
 3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Appearance page binds the swatch brushes directly, so the page and its templates need no edit.
 4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
-A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references.
+A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references. While the stored theme is System, `SystemThemeFollower` also re-applies the palette through the same switcher when the Windows apps light/dark mode changes during the session; fixed themes ignore personalization changes.
 
 ## Theme Data Locations
 
@@ -126,7 +126,7 @@ A saved theme applies to every open window immediately through `PaletteSwitcher`
 | WPF descriptor registry | `src/CLIHub/Themes/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
 | Palettes | `src/CLIHub/Themes/DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml` (colours only, one identical key set) |
 | Picker preview data | `src/CLIHub/Themes/ThemePickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
-| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Themes/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`) |
+| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Themes/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`). While the stored theme is System, `src/CLIHub/Themes/SystemThemeFollower.cs` follows the Windows personalization setting for the running first-instance session and re-applies through the same switcher |
 | Runtime accent application | `src/CLIHub/Settings/AccentApplier.cs` (writes `AccentBrush` and `AccentSelectionBrush` into `Application.Resources`, never `MergedDictionaries`; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfAccentPreferenceTarget.cs`) |
 
 The static guards that keep those files coherent:

@@ -33,7 +33,7 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 <img src="docs/images/settings-appearance.png" alt="CLIHub Settings: theme, accent color, and path display" width="880">
 
-*Settings → Appearance: theme, accent color, and path display. Theme and accent changes apply immediately after Save.*
+*Settings → Appearance: theme, accent color, and path display. Theme and accent changes apply immediately after Save, and the System theme follows the Windows light/dark mode live.*
 
 <img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and discovery rules" width="880">
 

@@ -16,7 +16,8 @@ public sealed class ArchitectureBoundaryTests
         "Settings" + Path.DirectorySeparatorChar + "AccentApplier.cs",
         "Settings" + Path.DirectorySeparatorChar + "WpfAccentPreferenceTarget.cs",
         "Settings" + Path.DirectorySeparatorChar + "WpfThemePreferenceTarget.cs",
-        "Themes" + Path.DirectorySeparatorChar + "PaletteSwitcher.cs"
+        "Themes" + Path.DirectorySeparatorChar + "PaletteSwitcher.cs",
+        "Themes" + Path.DirectorySeparatorChar + "SystemThemeFollower.cs"
     ];
 
     [Fact]

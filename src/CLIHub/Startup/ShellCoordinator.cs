@@ -3,9 +3,12 @@ namespace CLIHub.Startup;
 using CLIHub.Core.Windows;
 using CLIHub.Updates;
 using CLIHub.Lifetime;
+using CLIHub.Themes;
 
 /// <summary>
-///   Coordinates application shell creation (tray and launch window) and event wiring.
+///   Coordinates application shell creation (tray and launch window) and event wiring. The
+///   wiring also starts the Windows personalization theme follow for the stored "System" theme,
+///   owned by the first-instance session and removed at its disposal.
 /// </summary>
 public sealed class ShellCoordinator : IShellCoordinator
 {
@@ -14,6 +17,7 @@ public sealed class ShellCoordinator : IShellCoordinator
     private readonly Func<IUpdateRequestSource> updateRequestSourceFactory;
     private readonly ISingleInstanceGuard singleInstanceGuard;
     private readonly IUpdateWorkflow updateWorkflow;
+    private readonly SystemThemeFollower themeFollower;
     private readonly ApplicationStartupContext context;
 
     private IApplicationStartupUi? startupUi;
@@ -34,12 +38,14 @@ public sealed class ShellCoordinator : IShellCoordinator
     /// <param name="updateRequestSourceFactory"> Lazy presentation update-request source factory. </param>
     /// <param name="singleInstanceGuard"> Single-instance activation source. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
+    /// <param name="themeFollower"> Session-owned Windows personalization theme follower. </param>
     /// <param name="context"> WPF lifecycle callbacks for dispatcher and window registration. </param>
     public ShellCoordinator(IApplicationOperationLifetime operationLifetime,
                             Func<IApplicationStartupUi> startupUiFactory,
                             Func<IUpdateRequestSource> updateRequestSourceFactory,
                             ISingleInstanceGuard singleInstanceGuard,
                             IUpdateWorkflow updateWorkflow,
+                            SystemThemeFollower themeFollower,
                             ApplicationStartupContext context)
     {
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
@@ -47,6 +53,7 @@ public sealed class ShellCoordinator : IShellCoordinator
         this.updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
         this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
         this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
+        this.themeFollower = themeFollower ?? throw new ArgumentNullException(nameof(themeFollower));
         this.context = context ?? throw new ArgumentNullException(nameof(context));
 
         this.InitializeShell();
@@ -101,6 +108,8 @@ public sealed class ShellCoordinator : IShellCoordinator
         this.singleInstanceGuard.ActivationRequested += activationRequested;
         this.updateWorkflow.UpdateDownloaded += updateDownloaded;
         this.updateWorkflow.UpdateDownloadFailed += updateDownloadFailed;
+
+        this.themeFollower.Start(this.context.Dispatch);
     }
 
     /// <inheritdoc />
@@ -142,6 +151,8 @@ public sealed class ShellCoordinator : IShellCoordinator
         {
             this.updateWorkflow.UpdateDownloadFailed -= this.updateDownloadFailedHandler;
         }
+
+        this.themeFollower.Dispose();
 
         if (this.startupUi is IDisposable disposableStartupUi)
         {

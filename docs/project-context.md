@@ -51,7 +51,8 @@ process inspection) behind ports declared in Core.
 - The launch window is the active WPF shell. `MainWindow` is retained as an unregistered legacy reference.
 - Appearance is a Dark, Light, Blue, or System-synced palette plus one application-scoped accent color
   (Sky by default). Theme and accent changes apply immediately on a Settings save, and the accent is
-  independent of the theme.
+  independent of the theme. With the System theme, a Windows personalization change is followed while
+  the application runs and re-resolves the palette; fixed themes ignore it.
 - The application enforces one instance with `Local\CLIHub.SingleInstance` and a named-pipe activation signal.
 - Updates are coordinated through the application `IUpdateWorkflow`; Core owns Velopack integration and update ports.
 - Agent process monitoring blocks the agent update action while any matching registered agent process is running.

@@ -1,11 +1,17 @@
 namespace CLIHub.Tests.Services;
 
+using System.Windows;
+
+using Microsoft.Win32;
+
 using Moq;
 
+using CLIHub.Core.Models;
 using CLIHub.Core.Windows;
 using CLIHub.Startup;
 using CLIHub.Updates;
 using CLIHub.Lifetime;
+using CLIHub.Themes;
 
 public class ShellCoordinatorTests
 {
@@ -16,6 +22,15 @@ public class ShellCoordinatorTests
 
         Assert.NotNull(fixture.Coordinator.StartupUi);
         Assert.Same(fixture.StartupUi.Object, fixture.Coordinator.StartupUi);
+    }
+
+    [Fact]
+    public void Constructor_StartsThemeFollower()
+    {
+        var fixture = new CoordinatorFixture();
+
+        Assert.Single(fixture.ThemeFollowerSubscribed);
+        Assert.Empty(fixture.ThemeFollowerUnsubscribed);
     }
 
     [Fact]
@@ -140,6 +155,24 @@ public class ShellCoordinatorTests
     }
 
     [Fact]
+    public void Dispose_DisposesThemeFollower()
+    {
+        var fixture = new CoordinatorFixture();
+        var dispatched = 0;
+        fixture.SetupDispatch(_ => dispatched++);
+        var handler = Assert.Single(fixture.ThemeFollowerSubscribed);
+
+        fixture.Coordinator.Dispose();
+
+        Assert.Same(handler, Assert.Single(fixture.ThemeFollowerUnsubscribed));
+
+        fixture.ThemeFollowerSystemLight = true;
+        fixture.RaisePreferenceChanged();
+
+        Assert.Equal(0, dispatched);
+    }
+
+    [Fact]
     public void Dispose_MultipleCalls_DoesNotThrow()
     {
         var fixture = new CoordinatorFixture();
@@ -166,8 +199,11 @@ public class ShellCoordinatorTests
         public Mock<IUpdateWorkflow> UpdateWorkflow { get; } = new(MockBehavior.Strict);
         public Mock<IUpdateRequestSource> UpdateRequestSource { get; } = new(MockBehavior.Strict);
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
+        public List<UserPreferenceChangedEventHandler> ThemeFollowerSubscribed { get; } = [];
+        public List<UserPreferenceChangedEventHandler> ThemeFollowerUnsubscribed { get; } = [];
         public ShellCoordinator Coordinator { get; }
 
+        private UserPreferenceChangedEventHandler? themeFollowerHandler;
         private Action<Action>? dispatchAction;
 
         public CoordinatorFixture()
@@ -202,12 +238,35 @@ public class ShellCoordinatorTests
                 () => this.UpdateRequestSource.Object,
                 this.Guard.Object,
                 this.UpdateWorkflow.Object,
+                new SystemThemeFollower(
+                    new PaletteSwitcher(_ => new ResourceDictionary()),
+                    () => AppThemes.SystemToken,
+                    () => this.ThemeFollowerSystemLight,
+                    handler =>
+                    {
+                        this.ThemeFollowerSubscribed.Add(handler);
+                        this.themeFollowerHandler = handler;
+                    },
+                    handler =>
+                    {
+                        this.ThemeFollowerUnsubscribed.Add(handler);
+                        this.themeFollowerHandler = null;
+                    }),
                 context);
         }
+
+        public bool ThemeFollowerSystemLight { get; set; }
 
         public void SetupDispatch(Action<Action> dispatchAction)
         {
             this.dispatchAction = dispatchAction;
         }
+
+        /// <summary>
+        ///   Raises the personalization broadcast like the static system event would: only the
+        ///   currently subscribed handler is invoked, none after an unsubscribe.
+        /// </summary>
+        public void RaisePreferenceChanged() =>
+            this.themeFollowerHandler?.Invoke(this, new UserPreferenceChangedEventArgs(UserPreferenceCategory.General));
     }
 }

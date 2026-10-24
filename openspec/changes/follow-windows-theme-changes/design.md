@@ -177,6 +177,13 @@ pattern and the swap is fast. An event racing shutdown at worst dispatches one g
 
 ### D7: Logging — silent on success
 
+> **Updated 2026-10-24 by user decision: a successful follow logs one informational line.** `Apply`
+> logs `The Windows apps mode changed to {AppsMode}; the {Theme} palette was re-resolved and
+> re-applied` through the static Serilog `Log` class — the same idiom `PaletteSwitcher` uses for its
+> failure warning — so no DI logger dependency is added. The guard paths still log nothing. The
+> original decision and its rationale are kept below for context; their "silent on success" clause
+> no longer applies.
+
 A successful follow re-applies through the switcher, which logs nothing on success (same as
 `App.ApplyTheme`) and logs its own warning when a palette fails to load. The follower adds no logger
 dependency.
