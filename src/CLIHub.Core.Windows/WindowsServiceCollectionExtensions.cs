@@ -41,7 +41,9 @@ public static class WindowsServiceCollectionExtensions
         services.AddSingleton<IRuntimeExecutableLocator>(sp => new WindowsRuntimeLocator(
             new WindowsRuntimeEnvironment(),
             sp.GetRequiredService<ILogger<WindowsRuntimeLocator>>()));
-        services.AddSingleton<IAgentProcessInspector, WindowsAgentProcessInspector>();
+        services.AddSingleton<IAgentProcessInspector>(sp => new WindowsAgentProcessInspector(
+            sp.GetRequiredService<ILogger<WindowsAgentProcessInspector>>(),
+            new WmiProcessCommandLineSource(sp.GetRequiredService<ILogger<WmiProcessCommandLineSource>>())));
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));

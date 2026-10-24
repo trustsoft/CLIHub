@@ -2,6 +2,7 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
@@ -150,9 +151,11 @@ public sealed class WindowActionCoordinator
             return false;
         }
 
-        // Block the update only while this agent's own processes are running;
-        // other agents' processes do not affect it.
-        if (this.processMonitor.HasRunningAgents(agent.Plugin))
+        // Advisory early-out only: this requery check runs on every WPF CommandManager requery,
+        // so it uses the cheap executable-name tier (no command-line retrieval). A runtime-hosted
+        // agent (for example a node.exe behind an npm shim) can leave the button enabled; the
+        // execution-time gate in ExecuteUpdate blocks that update authoritatively (design D3).
+        if (this.processMonitor.HasRunningAgents(agent.Plugin, AgentProcessMatchDetail.ExecutableName))
         {
             return false;
         }
@@ -168,17 +171,42 @@ public sealed class WindowActionCoordinator
             return;
         }
 
-        // Double-check for running agent processes at execution time
-        // (processes might have started between the availability check and execution).
-        var runningAgents = this.processMonitor.GetRunningAgents(agent.Plugin);
-        if (runningAgents.Count > 0)
+        // Cheap name-only fast block: a directly matched agent process reports the block without
+        // paying the full command-line pass on the UI thread.
+        if (this.processMonitor.HasRunningAgents(agent.Plugin, AgentProcessMatchDetail.ExecutableName))
         {
-            var agentNames = runningAgents.Select(runningAgent => runningAgent.Plugin.Name).ToList();
-            this.statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
+            this.statusCoordinator.ReportUpdateBlockedByRunningAgents([agent.Plugin.Name]);
             return;
         }
 
-        _ = this.RunAgentCommandAsync(agent, AgentCommandKind.Update);
+        _ = this.ExecuteUpdateAsync(agent);
+    }
+
+    private async Task ExecuteUpdateAsync(AgentItem agent)
+    {
+        try
+        {
+            // Authoritative full-fidelity gate (design D3/D7): a runtime-hosted agent whose
+            // command line names the agent's npm package is caught here even though the advisory
+            // requery check saw nothing. Task.Run keeps the command-line retrieval off the UI
+            // thread.
+            var runningAgents = await Task.Run(() => this.processMonitor.GetRunningAgents(agent.Plugin));
+            if (runningAgents.Count > 0)
+            {
+                var agentNames = runningAgents.Select(runningAgent => runningAgent.Plugin.Name).ToList();
+                this.statusCoordinator.ReportUpdateBlockedByRunningAgents(agentNames);
+                return;
+            }
+
+            _ = this.RunAgentCommandAsync(agent, AgentCommandKind.Update);
+        }
+        catch (Exception ex)
+        {
+            // Nothing may escape a fire-and-forget continuation; the coordinator's existing
+            // status surface is the failure report (no new logger dependency).
+            this.statusCoordinator.ReportCommandOutcome(
+                $"Could not check for running agents before the update: {ex.Message}");
+        }
     }
 
     private Task RunAgentCommandAsync(AgentItem? item, AgentCommandKind kind) =>

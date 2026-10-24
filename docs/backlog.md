@@ -58,17 +58,34 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   which the `agent-ui`/`preferences-ui` blocked-state scenarios do not permit.
 - Trigger: profiling shows the filtered enumeration as a hot spot on a requery path.
 
-### Runtime-hosted agent blocking (Option B)
+### Runtime-hosted agent blocking (Option B) (resolved)
 
-- Severity: Medium (product gap)
-- Evidence: `src/CLIHub.Core/Infrastructure/Processes/AgentProcessMatcher.cs` matches executable file
-  names only; `WindowsAgentProcessInspector` does not read command lines. npm-shim agents running as
-  `node.exe` are not matched, so update blocking does not fire for them.
-- Proposed remedy: command-line retrieval (WMI `Win32_Process` with a timeout, or PEB) behind the
-  inspector port, keeping the synchronous UI path off the blocking call.
-- Trigger: a user reports an update not being blocked for an agent launched through node or python.
-- Decision recorded in
-  `openspec/changes/archive/2026-10-20-harden-probe-caching-and-process-matching/design.md`.
+- Status: Resolved by the `commandline-agent-blocking` change (2026-10-24). Provenance note: the user
+  pulled this item out of the backlog on 2026-10-24 as a proactive product-gap decision, before its
+  trigger fired — no user report of an unblocked update existed.
+- Resolved model: `WindowsAgentProcessInspector` joins command lines onto the enumerated candidate
+  processes with one bulk WMI query (`SELECT ProcessId, CommandLine FROM Win32_Process`, name-filtered
+  to the candidates) behind an internal `IProcessCommandLineSource` seam, bounded by a hard 2-second
+  wall-clock budget; on failure or timeout it logs one warning and the pass degrades to
+  executable-name matching (fail-open, matching the enumeration-failure contract). Matching runs in
+  two detail tiers (`AgentProcessMatchDetail`): the cheap executable-name tier never retrieves command
+  lines, and the command-line tier — the default — additionally matches a process running inside a
+  shared runtime host (`node`, `python`, `pythonw`) whose command line contains
+  `node_modules\` + the plugin's declared npm `updateCheck` package + a trailing separator
+  (OrdinalIgnoreCase, forward slashes normalized). The requery availability check
+  (`WindowActionCoordinator.CanExecuteUpdate`) stays on the cheap tier as an advisory early-out, and
+  both execution-time gates (`AgentManagementService.UpdateAsync`, moved into `Task.Run`, and the
+  launch window's `ExecuteUpdate`, restructured as a fire-and-forget async flow) use the full tier, so
+  a runtime-hosted agent blocks its update authoritatively even when the button was enabled.
+- Guarded by: the Stage 1–4 tests — `AgentProcessMatcherTests` (command-line semantics and candidate
+  derivation), `AgentProcessMonitorTests` (tier flow), `AgentManagementServiceTests`
+  (`UpdateAsync_RuntimeHostedAgent_IsBlocked`, `UpdateAsync_UnrelatedNodeScript_StartsUpdate`),
+  `WindowsAgentProcessInspectorTests` (join, timeout, degradation), `WindowActionCoordinatorTests`
+  (advisory/gate split), and `Load_NodeShimAgentRunning_DisablesUpdateAndExplainsBlock`
+  (`tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`); real-WMI behavior and
+  the live UI remain manual smoke.
+- Trigger: a report of a runtime-hosted agent not blocking an update, or observed WMI-timeout
+  pile-up (abandoned queries) on a machine with a hung Winmgmt.
 
 ### Version population loop consolidation (resolved)
 

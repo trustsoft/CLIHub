@@ -440,7 +440,7 @@ public class LaunchWindowViewModelBuilder
     private Mock<IAgentProcessInspector> CreateDefaultProcessInspector()
     {
         var mock = new Mock<IAgentProcessInspector>();
-        mock.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+        mock.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([]);
         return mock;
     }
 

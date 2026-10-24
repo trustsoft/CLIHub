@@ -16,21 +16,37 @@ The Core process subsystem protects agent updates from running against an active
   executable path, and start time. System processes with low process IDs and processes whose executable
   path cannot be read are skipped. Processes are pre-filtered by name against the registered launch
   executables before their details are read — the process name is assumed to equal the executable
-  image's file name without extension, so no name-based match can be dropped by the filter.
+  image's file name without extension, so no name-based match can be dropped by the filter. Under the
+  command-line detail tier it additionally joins command lines onto the candidate processes with one
+  bulk WMI query (`SELECT ProcessId, CommandLine FROM Win32_Process`, name-filtered to the candidate
+  names) inside a hard 2-second wall-clock budget. On a query failure or timeout it logs one warning
+  and degrades to executable-name matching; no availability is withheld because retrieval degraded.
 - `AgentProcessMatcher` matches a process to a plugin by the launch executable's file name, ignoring
-  case. Agents launched through a command shim into a shared runtime — for example an npm package that
-  runs as `node.exe` — are not matched.
+  case, and — for plugins that declare an npm `updateCheck` package — by a runtime-host command line:
+  a process running inside a known shared runtime host (`node`, `python`, `pythonw`; shells are
+  deliberately excluded) matches when its command line contains `node_modules\` + the declared npm
+  package + a trailing separator, compared ignoring case after forward slashes are normalized. The
+  trailing separator is the boundary, so `@opencode/cli` does not match `@opencode/cli-extra`. Matching
+  runs in two detail tiers: the cheap executable-name tier never retrieves command lines, and the
+  command-line tier adds the runtime-host rule and is authoritative for the execution-time update
+  gates.
 - `AgentProcessMonitor` combines the inspector, matcher, and plugin catalog and exposes the matching
-  `RunningAgent` records through `HasRunningAgents()` and `GetRunningAgents()`.
-- `WindowActionCoordinator` checks the monitor before enabling an agent's **Update** command and checks
-  again immediately before execution. When a running agent is found, the update is not started and the
-  status area explains that the action is blocked.
+  `RunningAgent` records through `HasRunningAgents()` and `GetRunningAgents()`; the runtime-host names
+  join the candidate set exactly when command-line detail is requested and at least one plugin declares
+  an npm package, so the name pre-filter never drops a match the matcher would make, and a machine
+  full of `node.exe` processes with no npm-declared agent never triggers a WMI read.
+- `WindowActionCoordinator` checks the monitor before enabling an agent's **Update** command (the
+  cheap executable-name tier as an advisory early-out; a runtime-hosted agent can therefore leave the
+  button enabled) and re-checks at execution time with the full command-line tier off the UI thread
+  before anything starts. `AgentManagementService.UpdateAsync` runs the same full-tier check for the
+  Settings agent cards. When a running agent is found, the update is not started and the status area
+  explains that the action is blocked.
 
-The Windows inspector does not retrieve command lines; it supplies only the process ID, executable path,
-and start time. Process matching is therefore executable-name based, and an agent hosted inside a shared
-runtime such as `node.exe` is not detected, so its update is not blocked. Closing that gap requires a
-separate process-identity design, either by tracking the processes CLIHub launches or by adding a cached,
-asynchronous process snapshot with command-line details.
+Known residuals: command lines of elevated or other-session processes are often unreadable and simply
+absent from the join; a degraded pass (WMI failure, timeout, or unreadable command line) matches by
+executable name only and fails open — the update proceeds exactly as the enumeration-failure contract
+already prescribes. Closing those residuals would require a different process-identity mechanism and
+is deliberately out of scope.
 
 ## Process and Agent Errors
 

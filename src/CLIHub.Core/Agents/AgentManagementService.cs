@@ -73,7 +73,12 @@ public sealed class AgentManagementService : IAgentManagementService
                 $"{plugin.Name} does not support the update command");
         }
 
-        var runningAgents = this.processMonitor.GetRunningAgents(plugin);
+        // The full command-line-detail enumeration runs off the caller's context so the process
+        // snapshot (and the command-line retrieval under it) never lands on a UI thread; the
+        // blocked outcome and message shape are unchanged.
+        var runningAgents = await Task.Run(
+            () => this.processMonitor.GetRunningAgents(plugin),
+            cancellationToken).ConfigureAwait(false);
         if (runningAgents.Count > 0)
         {
             var names = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));

@@ -52,7 +52,7 @@ public class AgentManagementViewModelTests
         if (processInspector is null)
         {
             processInspector = new Mock<IAgentProcessInspector>();
-            processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+            processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([]);
         }
 
         var processMonitor = new AgentProcessMonitor(
@@ -76,8 +76,13 @@ public class AgentManagementViewModelTests
     private static Mock<IAgentProcessInspector> Processes(params AgentProcessInstance[] processes)
     {
         var inspector = new Mock<IAgentProcessInspector>();
-        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns(processes);
+        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns(processes);
         return inspector;
+    }
+
+    private static Mock<IAgentProcessInspector> Processes(string executablePath, string? commandLine = null)
+    {
+        return Processes(new AgentProcessInstance(1, executablePath, DateTime.Now, commandLine));
     }
 
     private static Mock<IAgentProcessInspector> GatedProcesses(
@@ -86,8 +91,8 @@ public class AgentManagementViewModelTests
     {
         var inspector = new Mock<IAgentProcessInspector>();
         inspector
-            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
-            .Returns<IReadOnlySet<string>>(_ =>
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
+            .Returns<IReadOnlySet<string>, AgentProcessMatchDetail>((_, _) =>
             {
                 gate.Wait();
                 return processes;
@@ -452,6 +457,46 @@ public class AgentManagementViewModelTests
     }
 
     [Fact]
+    public void Load_NodeShimAgentRunning_DisablesUpdateAndExplainsBlock()
+    {
+        var a = Launchable("a", withUpdate: true);
+        a.UpdateCheck = new PluginUpdateCheck("npm", "@opencode/cli");
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            Processes(
+                @"C:\Program Files\nodejs\node.exe",
+                @"node.exe C:\Users\Maxim\AppData\Roaming\npm\node_modules\@opencode\cli\bin\opencode.js run"));
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.CanUpdate);
+        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+        Assert.True(card.HasMessage);
+
+        // An unrelated node script names no declared npm package and blocks nothing.
+        var b = Launchable("b", withUpdate: true);
+        b.UpdateCheck = new PluginUpdateCheck("npm", "@other/package");
+        var unrelatedViewModel = CreateViewModel(
+            [b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            Processes(@"C:\Program Files\nodejs\node.exe", @"node.exe server.js"));
+
+        unrelatedViewModel.Load(null);
+
+        var unrelatedCard = unrelatedViewModel.Cards.Single(c => c.PluginId == "b");
+        Assert.True(unrelatedCard.CanUpdate);
+        Assert.Null(unrelatedCard.Message);
+    }
+
+    [Fact]
     public void Load_OtherAgentsProcessRunning_KeepsUpdateAvailableWithoutMessage()
     {
         var a = Launchable("a", withUpdate: true);
@@ -494,7 +539,7 @@ public class AgentManagementViewModelTests
         var b = Launchable("b", withUpdate: true);
         var c = Launchable("c", withUpdate: true);
         var processInspector = new Mock<IAgentProcessInspector>();
-        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([]);
         var viewModel = CreateViewModel(
             [a, b, c],
             Detection(),
@@ -505,7 +550,7 @@ public class AgentManagementViewModelTests
 
         viewModel.Load(null);
 
-        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()), Times.Once);
+        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()), Times.Once);
     }
 
     [Fact]
@@ -514,7 +559,7 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var processInspector = new Mock<IAgentProcessInspector>();
-        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns([]);
+        processInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([]);
         var viewModel = CreateViewModel(
             [a, b],
             Detection(),
@@ -525,7 +570,7 @@ public class AgentManagementViewModelTests
 
         viewModel.Load(null);
 
-        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()), Times.Never);
+        processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()), Times.Never);
     }
 
     [Fact]
@@ -591,8 +636,8 @@ public class AgentManagementViewModelTests
         var enumerationCalls = 0;
         var inspector = new Mock<IAgentProcessInspector>();
         inspector
-            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
-            .Returns<IReadOnlySet<string>>(_ =>
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
+            .Returns<IReadOnlySet<string>, AgentProcessMatchDetail>((_, _) =>
             {
                 if (Interlocked.Increment(ref enumerationCalls) == 1)
                 {
@@ -638,7 +683,7 @@ public class AgentManagementViewModelTests
         var b = Launchable("b", withUpdate: true);
         var inspector = new Mock<IAgentProcessInspector>();
         inspector
-            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
             .Throws(new InvalidOperationException("enumeration failed"));
         var processMonitorLogger = new Mock<ILogger<AgentProcessMonitor>>();
         var viewModel = CreateViewModel(

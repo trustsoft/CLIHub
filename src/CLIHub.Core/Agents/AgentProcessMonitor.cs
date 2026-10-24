@@ -47,36 +47,50 @@ public sealed class AgentProcessMonitor
     ///   Checks if processes matching the given agent are currently running.
     /// </summary>
     /// <param name="plugin"> The agent whose processes are checked. </param>
+    /// <param name="detail">
+    ///   The matching fidelity: <see cref="AgentProcessMatchDetail.ExecutableName" /> consults
+    ///   executable names only; <see cref="AgentProcessMatchDetail.CommandLine" /> additionally
+    ///   matches runtime-hosted agents by command line. Update gating uses
+    ///   <see cref="AgentProcessMatchDetail.CommandLine" />.
+    /// </param>
     /// <returns> True if at least one process matching the agent is running. </returns>
-    public bool HasRunningAgents(Plugin plugin)
+    public bool HasRunningAgents(Plugin plugin, AgentProcessMatchDetail detail = AgentProcessMatchDetail.CommandLine)
     {
-        return this.GetRunningAgents(plugin).Count > 0;
+        return this.GetRunningAgents(plugin, detail).Count > 0;
     }
 
     /// <summary>
     ///   Gets the list of currently running agents with their process details.
     /// </summary>
     /// <remarks>
-    ///   Process enumeration is pre-filtered to the candidate names derived from the catalog's
-    ///   launch executables (see <see cref="AgentProcessMatcher.GetCandidateProcessNames" />);
-    ///   processes whose name cannot match any launch executable are never inspected.
+    ///   <para>
+    ///     Process enumeration is pre-filtered to the candidate names derived from the catalog's
+    ///     launch executables (see <see cref="AgentProcessMatcher.GetCandidateProcessNames" />);
+    ///     processes whose name cannot match any launch executable are never inspected. Under
+    ///     <see cref="AgentProcessMatchDetail.CommandLine" /> the runtime host names join the
+    ///     candidates and command lines are retrieved for candidate processes; under
+    ///     <see cref="AgentProcessMatchDetail.ExecutableName" /> no command lines are retrieved.
+    ///     Update gating uses <see cref="AgentProcessMatchDetail.CommandLine" />.
+    ///   </para>
     /// </remarks>
+    /// <param name="detail"> The matching fidelity of the enumeration. </param>
     /// <returns> List of running agents. Empty if none are running. </returns>
-    public IReadOnlyList<RunningAgent> GetRunningAgents()
+    public IReadOnlyList<RunningAgent> GetRunningAgents(
+        AgentProcessMatchDetail detail = AgentProcessMatchDetail.CommandLine)
     {
         var runningAgents = new List<RunningAgent>();
 
         try
         {
             var plugins = this.pluginCatalog.GetAllPlugins();
-            var candidateProcessNames = this.processMatcher.GetCandidateProcessNames(plugins);
-            var processes = this.processInspector.GetRunningProcesses(candidateProcessNames);
+            var candidateProcessNames = this.processMatcher.GetCandidateProcessNames(plugins, detail);
+            var processes = this.processInspector.GetRunningProcesses(candidateProcessNames, detail);
 
             foreach (var process in processes)
             {
                 foreach (var plugin in plugins)
                 {
-                    if (this.processMatcher.IsMatch(process, plugin))
+                    if (this.processMatcher.IsMatch(process, plugin, detail))
                     {
                         runningAgents.Add(new RunningAgent(plugin, process));
                         break; // One match per process
@@ -96,12 +110,20 @@ public sealed class AgentProcessMonitor
     ///   Gets the list of running processes matching the given agent.
     /// </summary>
     /// <param name="plugin"> The agent whose processes are returned. </param>
+    /// <param name="detail">
+    ///   The matching fidelity: <see cref="AgentProcessMatchDetail.ExecutableName" /> consults
+    ///   executable names only; <see cref="AgentProcessMatchDetail.CommandLine" /> additionally
+    ///   matches runtime-hosted agents by command line. Update gating uses
+    ///   <see cref="AgentProcessMatchDetail.CommandLine" />.
+    /// </param>
     /// <returns> List of running agents matching the agent. Empty if none are running. </returns>
-    public IReadOnlyList<RunningAgent> GetRunningAgents(Plugin plugin)
+    public IReadOnlyList<RunningAgent> GetRunningAgents(
+        Plugin plugin,
+        AgentProcessMatchDetail detail = AgentProcessMatchDetail.CommandLine)
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        return this.GetRunningAgents()
+        return this.GetRunningAgents(detail)
             .Where(runningAgent => runningAgent.Plugin.Id == plugin.Id)
             .ToList();
     }

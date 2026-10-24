@@ -28,7 +28,7 @@ public class AgentManagementServiceTests
     private static AgentProcessMonitor Monitor(Plugin[] plugins, params AgentProcessInstance[] processes)
     {
         var inspector = new Mock<IAgentProcessInspector>();
-        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns(processes);
+        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns(processes);
 
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
@@ -356,6 +356,54 @@ public class AgentManagementServiceTests
         Assert.Equal(AgentUpdateOutcome.Blocked, result.Outcome);
         version.Verify(x => x.InvalidateFor(plugin), Times.Never);
         availability.Verify(x => x.InvalidateFor(plugin), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_RuntimeHostedAgent_IsBlocked()
+    {
+        var plugin = AgentPlugin();
+        plugin.UpdateCheck = new PluginUpdateCheck("npm", "@opencode/cli");
+        var process = new AgentProcessInstance(
+            1234,
+            @"C:\Program Files\nodejs\node.exe",
+            DateTime.UtcNow,
+            @"node.exe C:\Users\Maxim\AppData\Roaming\npm\node_modules\@opencode\cli\bin\opencode.js run");
+        var commands = new Mock<IAgentCommandService>(MockBehavior.Strict);
+        var service = CreateService(
+            new Mock<IAgentDetectionService>(),
+            new Mock<IAgentVersionService>(),
+            commands,
+            Monitor([plugin], process));
+
+        var result = await service.UpdateAsync(plugin);
+
+        Assert.Equal(AgentUpdateOutcome.Blocked, result.Outcome);
+        Assert.Contains(plugin.Name, result.Message, StringComparison.Ordinal);
+        commands.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_UnrelatedNodeScript_StartsUpdate()
+    {
+        var plugin = AgentPlugin();
+        var process = new AgentProcessInstance(
+            1234,
+            @"C:\Program Files\nodejs\node.exe",
+            DateTime.UtcNow,
+            @"node.exe server.js");
+        var commands = new Mock<IAgentCommandService>();
+        commands
+            .Setup(x => x.ExecuteAsync(plugin, AgentCommandKind.Update, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentCommandResult(true, null, null));
+        var service = CreateService(
+            new Mock<IAgentDetectionService>(),
+            new Mock<IAgentVersionService>(),
+            commands,
+            Monitor([plugin], process));
+
+        var result = await service.UpdateAsync(plugin);
+
+        Assert.True(result.Started);
     }
 
     [Fact]
