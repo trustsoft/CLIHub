@@ -1,8 +1,7 @@
-# main-window-layout Specification
+# launch-window-layout Specification
 
 ## Purpose
-
-Defines the main window's two-pane layout — a Projects pane and an AI Agents pane — including how the user can resize their proportions and how the panes stay visually aligned.
+Defines the launch window's two-pane layout — a Projects pane and an AI Agents pane — including how the user can resize their proportions and how the panes stay visually aligned. The launch window (`src/CLIHub/Views/LaunchWindow.xaml.cs`) is the application's active shell and the subject of this capability; the legacy `MainWindow` class is an unregistered build-only reference, not the subject of this capability.
 
 ## Requirements
 
@@ -11,7 +10,7 @@ Defines the main window's two-pane layout — a Projects pane and an AI Agents p
 The system SHALL provide a draggable vertical splitter between the Projects pane and the AI Agents pane that lets the user change the width of the Projects pane.
 
 #### Scenario: Splitter is available
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** a vertical splitter is present in the gap between the Projects pane and the AI Agents pane
 
 #### Scenario: Dragging changes pane widths
@@ -31,7 +30,7 @@ The system SHALL enforce minimum widths for both panes so that neither pane can 
 - **THEN** the splitter stops at the minimum width and the pane remains usable
 
 #### Scenario: Initial proportions
-- **WHEN** the main window first opens
+- **WHEN** the launch window first opens
 - **THEN** the Projects pane starts at its default width and the AI Agents pane takes the remaining width
 
 ### Requirement: Pane and footer alignment
@@ -39,15 +38,15 @@ The system SHALL enforce minimum widths for both panes so that neither pane can 
 The system SHALL align the two panes so their layout is visually consistent, aligning the pane headers with each other and the pane bodies with the footer.
 
 #### Scenario: Pane headers aligned
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** the Projects pane header and the AI Agents pane header share the same vertical position and height
 
 #### Scenario: Pane bodies end at the footer
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** the project list and the agent list end at the same vertical position, directly above the footer
 
 #### Scenario: Uniform outer margins
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** both panes use the same outer margin and padding on all sides
 
 ### Requirement: Pane headers with actions
@@ -55,7 +54,7 @@ The system SHALL align the two panes so their layout is visually consistent, ali
 The system SHALL give each pane a header that names the pane and exposes that pane's actions through a menu.
 
 #### Scenario: Headers name the panes
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** the Projects pane header names the projects pane and the AI Agents pane header names the agents pane
 
 #### Scenario: Actions menu opens
@@ -167,7 +166,7 @@ The system SHALL present each agent as a single row with its logo, name, version
 The system SHALL provide a footer that shows the application identity, keeps the update control - which itself displays the current application version - in the left part of the footer immediately to the right of the application name, and exposes the window-level actions.
 
 #### Scenario: Footer identity and version
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** the left part of the footer shows the application name followed by the update control, and the control displays the current application version
 
 #### Scenario: Update check from the footer
@@ -175,7 +174,7 @@ The system SHALL provide a footer that shows the application identity, keeps the
 - **THEN** an update check runs immediately and its outcome is reported in the footer
 
 #### Scenario: Footer actions
-- **WHEN** the main window is shown
+- **WHEN** the launch window is shown
 - **THEN** the footer exposes actions to add a project, open the application data folder, open Settings, and exit the application
 
 #### Scenario: Open the data folder from the footer
