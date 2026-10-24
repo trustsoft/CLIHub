@@ -3,6 +3,14 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.1 — 2026-10-24
+
+### New
+- The System theme now follows Windows light/dark changes while the app runs: switching Windows personalization repaints every open window immediately, with no restart or Settings save needed
+
+### Improved
+- Settings opens instantly: the CLI Agents page renders right away and the running-agent check that gates Update actions completes in the background moments later
+
 ## 1.0.0 — 2026-10-23
 
 ### New

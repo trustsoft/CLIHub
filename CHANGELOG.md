@@ -8,6 +8,18 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.0.1 — 2026-10-24
+
+### Added
+
+- While the stored theme is System, a change of the Windows apps-use-light setting re-resolves the effective theme and reapplies the matching palette to every open window through the shared `PaletteSwitcher`; the follower is owned by the first-instance session, disposed at shutdown, and fixed themes ignore personalization changes; System still never resolves to Blue (`application-theme`)
+
+### Changed
+
+- The CLI Agents page renders cards with declarative Update availability and populates the blocked state in a fire-and-forget pass off the UI thread, so Settings opens without the running-agent enumeration; until the pass lands a blocked card can show Update as available, choosing it is still blocked by the execution-time gate, a re-load supersedes the in-flight pass, and closing the window cancels it (`agent-ui`)
+- The agent version-population loops of the launch pane and the CLI Agents page share one shape — generation counter, surface-owned cancellation on supersession and exit, parallel probes with generation-guarded writes, and unexpected failures logged through Serilog instead of `Debug.WriteLine`; the version display is unchanged (`consolidate-version-population`)
+- Hygiene sweep: removed the registered-but-unused `RuntimeSelector` with its `RuntimeType.WindowsTerminal` producer member and the unused `AgentProcessMatcher` logger; `.gitnexus/` is ignored; the Settings Projects page reuses `ProjectPathPolicy` for duplicate-folder detection (an already-registered drive/UNC root now reports the duplicate error instead of being silently accepted); `ProjectService` mutations return detached copies (`hygiene-sweep`)
+
 ## 1.0.0 — 2026-10-23
 
 ### Added
