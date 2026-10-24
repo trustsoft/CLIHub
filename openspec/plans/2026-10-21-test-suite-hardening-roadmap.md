@@ -78,7 +78,7 @@ Severity reflects impact on the suite's ability to catch regressions, not on pro
 | `launch-window-theme` | "Always on top", "Positioned on the pointer's monitor" | `Interop/WindowPositioner.cs` — 0 % coverage |
 | `logging` | "Daily log rotation", "Framework noise filtering" | `LoggingSetupTests` covers level filtering and size-based rollover only |
 | `settings-theme` | "Segmented selectors", "Themed footer", "Sidebar navigation styling", "Keyboard stepping", "Mouse wheel stepping" | XAML/visual |
-| `main-window-layout` | "Uniform outer margins", "Rounded corners", "Hairline divider", "Pointer feedback" | XAML/visual |
+| `launch-window-layout` | "Uniform outer margins", "Rounded corners", "Hairline divider", "Pointer feedback" | XAML/visual |
 | `code-style` | "Naming conventions are machine-enforced", "XML documentation comments are compiler-validated", "Using directives are grouped and sorted" | enforced by build warnings, not by a test — see H2 |
 | `agent-update-detection` | release-request timeout degrades to `Unknown`; "no indicator for a missing installation" | no direct test (already in `docs/backlog.md:116-126`) |
 | `release-pipeline` | "Green push to master", "Broken push to master" | CI behaviour, asserted only by string-matching `ci.yml` for csproj names |

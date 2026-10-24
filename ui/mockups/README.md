@@ -68,5 +68,5 @@ Launch window and Settings elements:
 
 - `launch-window-chrome` (delivered) — the chromeless popup shell: no OS chrome with DWM-rounded corners, always on top, hide on focus loss with a persisted pin, Escape to hide, pointer-monitor placement, the reference palette and sizing tokens, hairline divider, reference row metrics and vector action buttons, Actions menus with icons, and the path display preference.
 - `launch-window-ui` (delivered) — the dark two-pane launch window: pane headers with Actions menus, project and agent rows, inline launch/resume, footer with version pill, update check and add-project/settings/exit actions, scrolling, and the `LaunchWindowViewModel` behind it.
-- `main-window-layout` (delivered, redesigned) — resizable Projects/Agents panes and aligned pane layout, now expressed in the launch window as aligned pane headers and pane bodies ending at the footer.
+- `launch-window-layout` (delivered, redesigned) — resizable Projects/Agents panes and aligned pane layout, now expressed in the launch window as aligned pane headers and pane bodies ending at the footer.
 - `preferences-ui` (delivered) — the Settings window, default-runtime `cmd`/`ps`/`wt` selection, hotkey capture, agent probe TTL/timeout, and the startup update toggle.

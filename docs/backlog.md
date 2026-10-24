@@ -224,13 +224,27 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Specifications and docs
 
-### `main-window-layout` names the wrong window
+### `main-window-layout` names the wrong window (resolved)
 
-- Severity: Medium (documentation debt)
+- Status: Resolved by the `launch-window-layout-rename` change (2026-10-24).
+- Resolved model: the capability was renamed to `launch-window-layout` (create + retire deltas in
+  the change; `openspec archive` applies the rename, authorized by `retire_capabilities: true`)
+  and its "the main window" wording became "the launch window" in the Purpose and the eight
+  scenario WHEN lines; requirement and scenario names are byte-identical.
 - Evidence: the capability describes the launch window (hairline divider, action popovers, DWM
   rounding, Escape behavior) while `MainWindow` is an unregistered legacy reference.
-- Proposed remedy: rename or annotate the capability in the next spec-touching change.
-- Trigger: any `main-window-layout` edit.
+- Trigger: any `launch-window-layout` edit.
+
+### `app-lifecycle`/`preferences-ui` say "main window" for the launch window
+
+- Severity: Cosmetic
+- Evidence: `openspec/specs/app-lifecycle/spec.md:23` ("the running instance shows and activates
+  its main window"), `:99` (requirement text "show or hide its main window"), `:103` ("the main
+  window is shown"), and `:107` ("the main window is not shown and the application runs in the
+  system tray") plus `openspec/specs/preferences-ui/spec.md:96` ("the next application start
+  shows the main window") call the launch window "the main window".
+- Proposed remedy: normalize the window noun opportunistically when each file is next edited.
+- Trigger: any edit to either spec.
 
 ### `agent-ui` requirement naming style drift
 
