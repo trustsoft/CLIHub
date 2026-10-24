@@ -2,6 +2,7 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
+using CLIHub.Helpers;
 
 /// <summary>
 ///   Tests for AgentCardItem state chip formatting and change notifications.
@@ -93,6 +94,30 @@ public sealed class AgentCardItemTests
 
         Assert.False(card.HasUpdateAvailable);
         Assert.Null(card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void UpdateAvailability_WhenNotInstalledWithDeclaredUpdateCheck_ShowsNoIndicator()
+    {
+        // The card never reads Plugin.UpdateCheck itself; the declared block is the scenario's
+        // precondition — the real availability pass only ever runs for agents that declare it.
+        var plugin = new Plugin
+        {
+            Id = "test-agent",
+            Name = "Test Agent",
+            UpdateCheck = new PluginUpdateCheck("npm", Package: "test-pkg")
+        };
+        var card = new AgentCardItem(
+            plugin,
+            logoPath: null,
+            isInstalled: false,
+            version: AgentVersionText.Pending,
+            configPath: null);
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.Unknown);
+
+        Assert.Null(card.UpdateAvailabilityText);
+        Assert.False(card.HasUpdateAvailable);
     }
 
     [Fact]

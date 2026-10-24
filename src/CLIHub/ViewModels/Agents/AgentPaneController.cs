@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Plugins;
+using CLIHub.Helpers;
 using CLIHub.Lifetime;
 
 /// <summary>
@@ -179,7 +180,7 @@ public sealed class AgentPaneController : IDisposable
                 var version = await this.agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
                 if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
-                    item.Version = version ?? "unknown";
+                    item.Version = version ?? AgentVersionText.Unknown;
                 }
             }));
         }

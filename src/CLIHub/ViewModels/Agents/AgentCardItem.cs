@@ -2,6 +2,7 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
+using CLIHub.Helpers;
 
 /// <summary>
 ///   A selectable default-agent option; a null <see cref="Id" /> means "None".
@@ -16,7 +17,7 @@ public sealed record AgentOption(string? Id, string Name, string? Version = null
     ///   The display text: the name with the installed version in parentheses when it is known.
     /// </summary>
     public string DisplayName =>
-        string.IsNullOrEmpty(this.Version) || this.Version == "…" ? this.Name : $"{this.Name} ({this.Version})";
+        AgentVersionText.IsPending(this.Version) ? this.Name : $"{this.Name} ({this.Version})";
 }
 
 /// <summary>
@@ -191,7 +192,7 @@ public sealed class AgentCardItem : ObservableObject
     public bool HasMessage => !string.IsNullOrEmpty(this.Message);
 
     private static bool HasKnownVersion(string version) =>
-        !string.IsNullOrEmpty(version) && version is not ("…" or "unknown");
+        AgentVersionText.IsKnown(version);
 
     private static IReadOnlyList<string> BuildCommandLabels(AgentCommands? commands)
     {

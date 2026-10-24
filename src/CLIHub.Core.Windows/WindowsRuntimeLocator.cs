@@ -16,10 +16,12 @@ using CLIHub.Core.Models;
 internal interface IWindowsRuntimeEnvironment
 {
     /// <summary>
-    ///   Reads the Git for Windows <c> InstallPath </c> registry value. Returns <c> null </c> on a miss or
-    ///   on any registry fault; per-user layout is best-effort.
+    ///   Reads every non-empty Git for Windows <c> InstallPath </c> registry value across the four
+    ///   registry views (HKLM 64-bit, HKLM 32-bit, HKCU default, HKCU 32-bit), in that order. A view
+    ///   that faults contributes nothing, and values are trimmed. Returns an empty list when no view
+    ///   yields a value; per-user layout is best-effort.
     /// </summary>
-    string? ReadGitForWindowsInstallPath();
+    IReadOnlyList<string> ReadGitForWindowsInstallPaths();
 
     /// <summary>
     ///   Reads the PowerShell Core <c> InstallPath </c> registry value, which names the directory that
@@ -73,20 +75,27 @@ internal sealed class WindowsRuntimeEnvironment : IWindowsRuntimeEnvironment
     private const string PowerShellCoreKeyPath = @"SOFTWARE\Microsoft\PowerShellCore";
     private const string InstallPathValueName = "InstallPath";
 
+    private static readonly (RegistryHive Hive, RegistryView View)[] GitViews =
+    [
+        (RegistryHive.LocalMachine, RegistryView.Registry64),
+        (RegistryHive.LocalMachine, RegistryView.Registry32),
+        (RegistryHive.CurrentUser, RegistryView.Default),
+        (RegistryHive.CurrentUser, RegistryView.Registry32)
+    ];
+
     /// <inheritdoc />
-    public string? ReadGitForWindowsInstallPath()
+    public IReadOnlyList<string> ReadGitForWindowsInstallPaths()
     {
         if (!OperatingSystem.IsWindows())
         {
-            return null;
+            return [];
         }
 
         // A machine-wide install writes the 64-bit view; a 32-bit install writes the 32-bit view.
         // The per-user layout is best-effort: it is read after the machine-wide keys.
-        return this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.LocalMachine, RegistryView.Registry64)
-            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.LocalMachine, RegistryView.Registry32)
-            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.CurrentUser, RegistryView.Default)
-            ?? this.ReadInstallPath(GitForWindowsKeyPath, RegistryHive.CurrentUser, RegistryView.Registry32);
+        return CollectInstallPaths(
+            GitViews,
+            (hive, view) => this.ReadInstallPath(GitForWindowsKeyPath, hive, view));
     }
 
     /// <inheritdoc />
@@ -167,6 +176,32 @@ internal sealed class WindowsRuntimeEnvironment : IWindowsRuntimeEnvironment
         }
     }
 
+    /// <summary>
+    ///   Collects every non-empty, trimmed install path across the registry views in order, so view
+    ///   order, non-empty filtering, and trimming stay testable without touching the registry.
+    ///   Views are deliberately not de-duplicated: aliased views may yield the same value twice,
+    ///   which is harmless (a stale duplicate fails twice; a valid one succeeds on the first hit).
+    /// </summary>
+    /// <param name="views"> The registry views to read, in preference order. </param>
+    /// <param name="readInstallPath"> Reads one view's install path, or null on a miss or fault. </param>
+    /// <returns> The non-empty trimmed values, in view order. </returns>
+    internal static IReadOnlyList<string> CollectInstallPaths(
+        IReadOnlyList<(RegistryHive Hive, RegistryView View)> views,
+        Func<RegistryHive, RegistryView, string?> readInstallPath)
+    {
+        var installPaths = new List<string>(views.Count);
+        foreach (var (hive, view) in views)
+        {
+            var value = readInstallPath(hive, view);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                installPaths.Add(value.Trim());
+            }
+        }
+
+        return installPaths;
+    }
+
     private string? ReadInstallPath(string keyPath, RegistryHive hive, RegistryView view)
     {
         try
@@ -232,10 +267,9 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
 
     private string? LocateGitBash()
     {
-        var registryInstallPath = this.ReadGitRegistryInstallPath();
-        if (registryInstallPath is not null)
+        foreach (var installPath in this.ReadGitRegistryInstallPaths())
         {
-            var registryCandidate = this.TryGitCandidate(registryInstallPath);
+            var registryCandidate = this.TryGitCandidate(installPath);
             if (registryCandidate is not null)
             {
                 this.logger.LogInformation(
@@ -367,24 +401,24 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         return null;
     }
 
-    private string? ReadGitRegistryInstallPath()
+    private IReadOnlyList<string> ReadGitRegistryInstallPaths()
     {
         try
         {
-            var installPath = this.environment.ReadGitForWindowsInstallPath();
-            if (string.IsNullOrWhiteSpace(installPath))
+            var installPaths = this.environment.ReadGitForWindowsInstallPaths();
+            if (installPaths.Count == 0)
             {
                 this.logger.LogDebug("The Git for Windows registry InstallPath is absent");
-                return null;
+                return [];
             }
 
-            return installPath;
+            return installPaths;
         }
         catch (Exception ex) when (ex is IOException or SecurityException or UnauthorizedAccessException)
         {
             // Registry faults are misses, never failures.
             this.logger.LogDebug("The Git for Windows registry InstallPath could not be read: {Reason}", ex.Message);
-            return null;
+            return [];
         }
     }
 

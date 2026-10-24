@@ -101,6 +101,19 @@ public class AgentReleaseClientTests
     }
 
     [Fact]
+    public async Task GetLatestVersion_RequestTimesOut_ReturnsNull()
+    {
+        var preferences = new PreferencesStore(new FakeConfigurationRepository());
+        preferences.Update(p => p.AgentProbeTimeoutSeconds = 1);
+        var client = new AgentReleaseClient(this.httpClient, preferences, NullLogger<AgentReleaseClient>.Instance);
+        this.handler.Delay = TimeSpan.FromSeconds(30);
+
+        var version = await client.GetLatestVersionAsync(new PluginUpdateCheck("npm", Package: "cline"));
+
+        Assert.Null(version);
+    }
+
+    [Fact]
     public async Task GetLatestVersion_RequestCarriesUserAgent()
     {
         this.RespondWithJson("""{"version":"1.0.0"}""");
@@ -141,7 +154,9 @@ public class AgentReleaseClientTests
 
         public Exception? Throw { get; set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public TimeSpan? Delay { get; set; }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             this.LastRequest = request;
             if (this.Throw is not null)
@@ -149,7 +164,12 @@ public class AgentReleaseClientTests
                 throw this.Throw;
             }
 
-            return Task.FromResult(this.Response);
+            if (this.Delay.HasValue)
+            {
+                await Task.Delay(this.Delay.Value, cancellationToken);
+            }
+
+            return this.Response;
         }
     }
 }

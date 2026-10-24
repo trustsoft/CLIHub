@@ -10,9 +10,13 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 - Severity: Low (test reliability only; pre-existing, unrelated to fix-settings-open-delay)
 - Evidence: failed 1 of 3 full-solution runs under parallel load during fix-settings-open-delay
-  verification (2026-10-20); green in isolation and on re-run. The test races `Start()`'s background
-  scan against `Stop()` — it waits only for watcher creation before stopping, so the status can still
-  read `Idle` when `NotConfigured` is asserted (`tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs:120-133`).
+  verification (2026-10-20); green in isolation and on re-run. Recurred during the `low-sweep`
+  verification (2026-10-24): failed 2 of 3 full-solution runs, green isolated, and the failing
+  test was captured by a trx run — `ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus`,
+  matching the test-planning prediction recorded in that change's design. The test races
+  `Start()`'s background scan against `Stop()` — it waits only for watcher creation before
+  stopping, so the status can still read `Idle` when `NotConfigured` is asserted
+  (`tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs:120-133`).
 - Proposed remedy: wait for the scan to settle (idle/not-configured transition) before asserting, or
   expose a deterministic completion signal from `ProjectScanningService.Stop`.
 - Trigger: next red CI/dev run of this test, or any work touching project scanning.
@@ -112,13 +116,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a regression report that versions stay `…` after closing and re-opening Settings, or
   any future edit to a version-population loop (a third live surface should lift the shared shape).
 
-### Magic version sentinels
+### Magic version sentinels (resolved)
 
-- Severity: Low
-- Evidence: `"…"` and `"unknown"` are checked in `AgentCardItem`, `AgentManagementViewModel`,
-  `AgentPaneController`, and legacy `MainWindow`.
-- Proposed remedy: a small `AgentVersionText` helper with `IsKnown`/`Placeholder`.
-- Trigger: adding another agent surface or touching version display.
+- Status: Resolved by the `low-sweep` change (2026-10-24).
+- Resolved model: the `AgentVersionText` helper (`src/CLIHub/Helpers/AgentVersionText.cs`) owns
+  `Pending` (`"…"`) / `Unknown` (`"unknown"`) and the `IsPending`/`IsKnown` checks; all live
+  surfaces route through it — the `AgentItem` placeholder initializer (a site the entry had
+  missed), the `AgentCardItem` pending-only `DisplayName` asymmetry and `HasKnownVersion`, the
+  five `AgentManagementViewModel` sites, and `AgentPaneController` — with display strings
+  byte-identical. The legacy `MainWindow.xaml.cs` copy remains the documented untouched
+  exception, and `UpdateService`'s "unknown" stays out of domain.
+- Guarded by: `AgentVersionTextTests` truth tables plus the unchanged sentinel-pinning consumer
+  tests (`AgentCardItemTests`, `AgentManagementViewModelTests`, `AgentPaneControllerTests`).
+- Trigger: a regression report of wrong version placeholder text, or any future edit that adds a
+  sentinel-literal check.
 
 ### Runtime executable PATH-scan identity (Git Bash and PowerShell 7)
 
@@ -134,15 +145,18 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `git.exe` sibling or version file; pwsh: keep as-is for Store alias support).
 - Trigger: a user report of a wrong bash/pwsh flavor, or any edit to the `agent-commands` spec.
 
-### Registry InstallPath precedence can shadow a valid install
+### Registry InstallPath precedence can shadow a valid install (resolved)
 
-- Severity: Low
-- Evidence: `WindowsRuntimeEnvironment.ReadGitForWindowsInstallPath`
-  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:77-92`) returns the first non-empty value across
-  HKLM64 → HKLM32 → HKCU views, so a stale HKLM value shadows a valid HKCU/32-bit install; the class
-  has no direct unit test (only the fake seam exercises the locator).
-- Proposed remedy: collect every candidate and prefer one whose `bin\bash.exe` exists; add
-  real-registry layout tests.
+- Status: Resolved by the `low-sweep` change (2026-10-24).
+- Resolved model: `WindowsRuntimeEnvironment.ReadGitForWindowsInstallPaths()` (plural) reads all
+  four views (HKLM64 → HKLM32 → HKCU Default → HKCU Registry32) through the internal
+  `CollectInstallPaths(views, reader)` seam, and the locator's registry step verifies each
+  candidate (`bin\bash.exe` exists) and prefers the first valid one — preserving the
+  registry → well-known → PATH order and the fall-through when no candidate verifies.
+- Guarded by: `WindowsRuntimeEnvironmentTests` (three hermetic collector facts plus a guarded
+  HKCU-only real-registry fact) and the locator facts
+  `Locate_GitBash_FirstRegistryCandidateStale_SecondCandidateWins` /
+  `Locate_GitBash_AllRegistryCandidatesStale_FallsThroughToWellKnownRoot`.
 - Trigger: a report of Git Bash marked "not installed" while Git for Windows is installed.
 
 ### Runtime integration tests pass silently when the runtime is absent
@@ -156,17 +170,18 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   "not run" from "passed".
 - Trigger: a CI coverage review or a hidden-regression investigation.
 
-### Update-detection test gaps: timeout path and missing-installation indicator
+### Update-detection test gaps: timeout path and missing-installation indicator (resolved)
 
-- Severity: Low
-- Evidence: two `agent-update-detection` scenarios are code-verified but lack direct tests —
-  release-request timeout degrading to `Unknown` (`AgentReleaseClient.cs:80-84`), and "no indicator
-  for a missing installation" (holds by construction: uninstalled → version null → Unknown → text
-  null; covered only compositionally). Recorded in
-  `openspec/changes/archive/2026-10-20-agent-update-detection/` verification.
-- Proposed remedy: one handler-stub test that delays past the probe timeout, and one card test
-  asserting no chip for an uninstalled agent with a declared `updateCheck`.
-- Trigger: touching `AgentReleaseClient`, the availability service, or the card indicator.
+- Status: Resolved by the `low-sweep` change (2026-10-24).
+- Resolved model: the `StubHandler` gained a token-respecting `Delay`, and
+  `GetLatestVersion_RequestTimesOut_ReturnsNull` sets the 1-second `AgentProbeTimeoutSeconds`
+  floor and pins the release-request timeout → null (`Unknown`) degradation;
+  `UpdateAvailability_WhenNotInstalledWithDeclaredUpdateCheck_ShowsNoIndicator` pins the
+  no-chip case (uninstalled agent + declared `updateCheck` → `Unknown` → null indicator text).
+  No production change.
+- Guarded by: those two tests (`tests/CLIHub.Core.Tests/Agents/AgentReleaseClientTests.cs`,
+  `tests/CLIHub.Tests/ViewModels/Agents/AgentCardItemTests.cs`).
+- Trigger: a regression report of a stuck availability chip or a hanging update check.
 
 ## Project domain
 

@@ -12,7 +12,7 @@ public class WindowsRuntimeLocatorTests
     {
         var environment = new FakeWindowsRuntimeEnvironment
         {
-            InstallPath = @"C:\Program Files\Git"
+            InstallPaths = { @"C:\Program Files\Git" }
         };
         environment.AddExistingFile(@"C:\Program Files\Git\bin\bash.exe");
         environment.WellKnownInstallRoots.Add(@"D:\Tools\Git");
@@ -25,6 +25,37 @@ public class WindowsRuntimeLocatorTests
         var resolved = locator.Locate(RuntimeKind.GitBash);
 
         Assert.Equal(@"c:\program files\git\bin\bash.exe", resolved, ignoreCase: true);
+    }
+
+    [Fact]
+    public void Locate_GitBash_FirstRegistryCandidateStale_SecondCandidateWins()
+    {
+        var environment = new FakeWindowsRuntimeEnvironment();
+        environment.InstallPaths.Add(@"C:\Stale\Git");
+        environment.InstallPaths.Add(@"D:\Real\Git");
+        environment.AddExistingFile(@"D:\Real\Git\bin\bash.exe");
+
+        var locator = CreateLocator(environment);
+
+        var resolved = locator.Locate(RuntimeKind.GitBash);
+
+        Assert.Equal(@"D:\Real\Git\bin\bash.exe", resolved, ignoreCase: true);
+    }
+
+    [Fact]
+    public void Locate_GitBash_AllRegistryCandidatesStale_FallsThroughToWellKnownRoot()
+    {
+        var environment = new FakeWindowsRuntimeEnvironment();
+        environment.InstallPaths.Add(@"C:\StaleOne\Git");
+        environment.InstallPaths.Add(@"C:\StaleTwo\Git");
+        environment.WellKnownInstallRoots.Add(@"D:\Tools\Git");
+        environment.AddExistingFile(@"D:\Tools\Git\bin\bash.exe");
+
+        var locator = CreateLocator(environment);
+
+        var resolved = locator.Locate(RuntimeKind.GitBash);
+
+        Assert.Equal(@"D:\Tools\Git\bin\bash.exe", resolved, ignoreCase: true);
     }
 
     [Theory]
@@ -93,7 +124,7 @@ public class WindowsRuntimeLocatorTests
     [InlineData(RuntimeKind.CommandPrompt)]
     public void Locate_UncoveredKind_ReturnsNull(RuntimeKind kind)
     {
-        var environment = new FakeWindowsRuntimeEnvironment { InstallPath = @"C:\Program Files\Git" };
+        var environment = new FakeWindowsRuntimeEnvironment { InstallPaths = { @"C:\Program Files\Git" } };
         environment.AddExistingFile(@"C:\Program Files\Git\bin\bash.exe");
 
         var locator = CreateLocator(environment);

@@ -11,9 +11,10 @@ public sealed class FakeWindowsRuntimeEnvironment : IWindowsRuntimeEnvironment
     private readonly HashSet<string> existingFiles = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    ///   The Git for Windows registry install root, or <c> null </c> when the registry misses.
+    ///   The Git for Windows registry install root candidates, in registry view order; empty when
+    ///   the registry misses.
     /// </summary>
-    public string? InstallPath { get; set; }
+    public List<string> InstallPaths { get; } = [];
 
     /// <summary>
     ///   The PowerShell Core registry install directory (the directory containing pwsh.exe), or
@@ -53,8 +54,8 @@ public sealed class FakeWindowsRuntimeEnvironment : IWindowsRuntimeEnvironment
     public void AddExistingFile(string path) => this.existingFiles.Add(Normalize(path));
 
     /// <inheritdoc />
-    public string? ReadGitForWindowsInstallPath() =>
-        this.ThrowOnRegistryRead ? throw new IOException("registry unavailable") : this.InstallPath;
+    public IReadOnlyList<string> ReadGitForWindowsInstallPaths() =>
+        this.ThrowOnRegistryRead ? throw new IOException("registry unavailable") : this.InstallPaths;
 
     /// <inheritdoc />
     public string? ReadPowerShellCoreInstallPath() =>

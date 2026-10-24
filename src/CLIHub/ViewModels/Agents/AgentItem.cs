@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 using CLIHub.Core.Models;
+using CLIHub.Helpers;
 
 /// <summary>
 ///   Display item for an agent row in the launch window.
@@ -104,7 +105,7 @@ public sealed class AgentItem : INotifyPropertyChanged
             field = value;
             this.OnPropertyChanged();
         }
-    } = "…";
+    } = AgentVersionText.Pending;
 
     /// <summary>
     ///   Updates the row with the current values for its stable plugin identity.

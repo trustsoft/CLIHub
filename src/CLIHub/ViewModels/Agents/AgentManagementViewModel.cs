@@ -8,6 +8,7 @@ using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Helpers;
 using CLIHub.Lifetime;
 using CLIHub.Launching;
 
@@ -120,7 +121,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 .FirstOrDefault(card => card.PluginId == this.CurrentDefaultAgentId)
                 ?.Version;
 
-            return string.IsNullOrEmpty(version) || version == "…"
+            return AgentVersionText.IsPending(version)
                 ? "Preselected in the launch window"
                 : $"Version {version}";
         }
@@ -208,7 +209,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 plugin,
                 plugin.LogoPath,
                 isInstalled,
-                "…",
+                AgentVersionText.Pending,
                 AgentConfigurationPath.For(plugin))
             {
                 CanUpdate = declaresUpdate
@@ -301,7 +302,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 var ver = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
                 if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
-                    card.Version = ver ?? "unknown";
+                    card.Version = ver ?? AgentVersionText.Unknown;
                 }
 
                 // The availability check reuses the just-probed version through the version
@@ -394,7 +395,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     {
         var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
         card.IsInstalled = result.IsInstalled;
-        card.Version = result.Version ?? "unknown";
+        card.Version = result.Version ?? AgentVersionText.Unknown;
         card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
         card.Message = result.IsInstalled
             ? $"Installed · version {card.Version}"
@@ -417,7 +418,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 }
 
                 card.IsInstalled = result.IsInstalled;
-                card.Version = result.Version ?? "unknown";
+                card.Version = result.Version ?? AgentVersionText.Unknown;
                 card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
             }
 
