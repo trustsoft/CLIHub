@@ -57,23 +57,23 @@ Runs when the change is being committed/archived, per current policy (not before
 Follows the low-sweep-2 stage-3 pattern: resolved format, one hunk per entry, nothing else in
 `docs/backlog.md` touched.
 
-- [ ] 4.1 Rewrite "`app-lifecycle`/`preferences-ui` say \"main window\" for the launch window"
+- [x] 4.1 Rewrite "`app-lifecycle`/`preferences-ui` say \"main window\" for the launch window"
       (`docs/backlog.md:262-271`) to the resolved format: heading suffix " (resolved)"; `Status:` resolved by
       the spec-wording-cosmetics change (2026-10-24); `Resolved model:` the five occurrences
       (`app-lifecycle:23,99,103,107`, `preferences-ui:96`) now say "the launch window" via three MODIFIED
       requirement blocks with all scenario names preserved — matching `launch-window-layout` and
       `launch-window-theme`; keep the original evidence lines as the record; `Trigger:` any future edit to
       either spec's window wording.
-- [ ] 4.2 Rewrite "`agent-ui` requirement naming style drift" (`docs/backlog.md:273-277`) to the resolved
+- [x] 4.2 Rewrite "`agent-ui` requirement naming style drift" (`docs/backlog.md:273-277`) to the resolved
       format: `Status:` resolved by the spec-wording-cosmetics change (2026-10-24); `Resolved model:` the
       ten ID-style headers renamed to sentence-style names via RENAMED pairs (bodies untouched), so all 13
       requirement names in the capability are sentence-style; keep the evidence line as the record;
       `Trigger:` any future requirement added to `agent-ui`.
-- [ ] 4.3 Gate: `git diff docs/backlog.md` shows exactly the two entry hunks and nothing else;
+- [x] 4.3 Gate: `git diff docs/backlog.md` shows exactly the two entry hunks and nothing else;
       `openspec validate --all` still passes.
-- [ ] 4.4 Run `graphify update .` so the knowledge graph reflects the new change directory and the backlog
+- [x] 4.4 Run `graphify update .` so the knowledge graph reflects the new change directory and the backlog
       edits.
-- [ ] 4.5 Report stage results and wait for the user's explicit approval before any `git commit` or
+- [x] 4.5 Report stage results and wait for the user's explicit approval before any `git commit` or
       `openspec archive spec-wording-cosmetics` (repo policy; approval for one never carries to the other).
       On approved archive, verify `openspec/specs/agent-ui/spec.md` shows the ten renamed headers with
       bodies unchanged, the two wording-fixed specs validate, and run a final `openspec validate --all`.
