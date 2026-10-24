@@ -259,22 +259,31 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   rounding, Escape behavior) while `MainWindow` is an unregistered legacy reference.
 - Trigger: any `launch-window-layout` edit.
 
-### `app-lifecycle`/`preferences-ui` say "main window" for the launch window
+### `app-lifecycle`/`preferences-ui` say "main window" for the launch window (resolved)
 
-- Severity: Cosmetic
-- Evidence: `openspec/specs/app-lifecycle/spec.md:23` ("the running instance shows and activates
-  its main window"), `:99` (requirement text "show or hide its main window"), `:103` ("the main
-  window is shown"), and `:107` ("the main window is not shown and the application runs in the
-  system tray") plus `openspec/specs/preferences-ui/spec.md:96` ("the next application start
-  shows the main window") call the launch window "the main window".
-- Proposed remedy: normalize the window noun opportunistically when each file is next edited.
-- Trigger: any edit to either spec.
+- Status: Resolved by the `spec-wording-cosmetics` change (2026-10-25).
+- Resolved model: all five occurrences normalized to "the launch window" via MODIFIED requirement
+  deltas ("Single instance enforcement" and "Startup window visibility" in `app-lifecycle`;
+  "Save applies preferences" in `preferences-ui`), with every scenario name and all other
+  requirement content byte-identical.
+- Guarded by: the live-spec census — a case-insensitive "main window" grep over `openspec/specs/`
+  returns zero hits; the wording matches the sibling capabilities `launch-window-layout` and
+  `launch-window-theme`.
+- Trigger: a reintroduced "main window" occurrence in a live spec.
 
-### `agent-ui` requirement naming style drift
+### `agent-ui` requirement naming style drift (resolved)
 
-- Severity: Cosmetic
-- Evidence: `REQ-AGENT-CAP-002…012` naming inside an otherwise sentence-style capability.
-- Proposed remedy: normalize opportunistically when the file is edited.
+- Status: Resolved by the `spec-wording-cosmetics` change (2026-10-25).
+- Resolved model: the ten existing ID-style headers (`REQ-AGENT-CAP-002…012` — the set is
+  non-contiguous; 001 and 004 were removed historically) renamed via `## RENAMED Requirements`
+  pairs to sentence-style names derived from each requirement's body (e.g. `Update command support
+  detection`, `Resume command enablement for session-capable agents`,
+  `Unconditional launch command availability`, `Plugin schema compatibility`); requirement bodies
+  and all scenario names untouched.
+- Guarded by: the live-spec census — no `REQ-AGENT-CAP-` header remains in
+  `openspec/specs/agent-ui/spec.md`; the only live references are historical (archive, CHANGELOG
+  history, the resolved backlog entries).
+- Trigger: a new ID-style requirement header in a live spec.
 
 ## DI and lifetime
 

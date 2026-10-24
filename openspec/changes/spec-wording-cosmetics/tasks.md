@@ -7,47 +7,47 @@ before its stage instead of mid-stage.
 
 ## 1. Stage 1 — verify the item-1 deltas (launch-window wording)
 
-- [ ] 1.1 Re-run the occurrence census: `rg -n -i "main window" openspec/ docs/` — the only live hits must be
+- [x] 1.1 Re-run the occurrence census: `rg -n -i "main window" openspec/ docs/` — the only live hits must be
       `openspec/specs/app-lifecycle/spec.md:23,99,103,107` and `openspec/specs/preferences-ui/spec.md:96`
       plus `docs/backlog.md` (the two items); everything else must be under `openspec/changes/archive/`.
       Any new live occurrence: stop, record it, and extend the delta before continuing.
-- [ ] 1.2 Faithfulness diff of `openspec/changes/spec-wording-cosmetics/specs/app-lifecycle/spec.md` against
+- [x] 1.2 Faithfulness diff of `openspec/changes/spec-wording-cosmetics/specs/app-lifecycle/spec.md` against
       `openspec/specs/app-lifecycle/spec.md`: the two MODIFIED blocks ("Single instance enforcement",
       "Startup window visibility") must differ from the main spec only in the four wording edits
       (`:23` its main window → its launch window; `:99` show or hide its main window → launch window;
       `:103` and `:107` the main window → the launch window); requirement prose otherwise identical; the
       five scenario names (3 + 2) byte-identical; no other requirement of the spec carried.
-- [ ] 1.3 Faithfulness diff of `openspec/changes/spec-wording-cosmetics/specs/preferences-ui/spec.md`
+- [x] 1.3 Faithfulness diff of `openspec/changes/spec-wording-cosmetics/specs/preferences-ui/spec.md`
       against `openspec/specs/preferences-ui/spec.md`: the MODIFIED block ("Save applies preferences") must
       differ only in the `:96` THEN ("shows the main window" → "shows the launch window"); all eight
       scenario names byte-identical; requirement prose identical.
-- [ ] 1.4 Gate: `openspec validate --all` passes (the validator runs the archive merge, so it also proves
+- [x] 1.4 Gate: `openspec validate --all` passes (the validator runs the archive merge, so it also proves
       the MODIFIED names resolve and no scenario name is dropped).
 
 ## 2. Stage 2 — verify the item-2 delta (agent-ui requirement renames)
 
 Apply open question Q1 (defaults: keep the proposed names) before this stage.
 
-- [ ] 2.1 Confirm the ten `FROM:` names in
+- [x] 2.1 Confirm the ten `FROM:` names in
       `openspec/changes/spec-wording-cosmetics/specs/agent-ui/spec.md` are byte-identical to the current
       headers at `openspec/specs/agent-ui/spec.md:9,29,49,69,89,109,132,146,160,174` (including the
       `REQ-AGENT-CAP-NNN: ` prefix — it is part of the requirement name), and that the ten `TO:` names do
       not equal or case/spacing-collide with any of the 13 current names (`:9-289`) or each other.
-- [ ] 2.2 Confirm the delta carries RENAMED pairs only — no requirement bodies, no MODIFIED/ADDED/REMOVED
+- [x] 2.2 Confirm the delta carries RENAMED pairs only — no requirement bodies, no MODIFIED/ADDED/REMOVED
       sections — so requirement bodies and scenario blocks cannot change. If Q1 changed a TO name, edit the
       pair and re-run 2.1.
-- [ ] 2.3 Re-run the external-reference census: `rg -n "REQ-AGENT-CAP" -g "!openspec/changes/archive/**" .`
+- [x] 2.3 Re-run the external-reference census: `rg -n "REQ-AGENT-CAP" -g "!openspec/changes/archive/**" .`
       must return only `openspec/specs/agent-ui/spec.md` and `docs/backlog.md:276` (rewritten in stage 4).
-- [ ] 2.4 Gate: `openspec validate --all` passes (proves every FROM resolves in the main spec and no TO
+- [x] 2.4 Gate: `openspec validate --all` passes (proves every FROM resolves in the main spec and no TO
       collides).
 
 ## 3. Stage 3 — whole-change verification
 
-- [ ] 3.1 Gate: `dotnet build CLIHub.sln` — zero errors (no code changed; pins the no-regression baseline).
-- [ ] 3.2 Gate: `dotnet test CLIHub.sln` — zero failures (same expectation as HEAD).
-- [ ] 3.3 Gate: `openspec validate --all` passes; the pre-existing warnings elsewhere
+- [x] 3.1 Gate: `dotnet build CLIHub.sln` — zero errors (no code changed; pins the no-regression baseline).
+- [x] 3.2 Gate: `dotnet test CLIHub.sln` — zero failures (same expectation as HEAD).
+- [x] 3.3 Gate: `openspec validate --all` passes; the pre-existing warnings elsewhere
       (long-requirement/placeholder-Purpose on other specs) are unchanged.
-- [ ] 3.4 Review `git status --porcelain`: only `openspec/changes/spec-wording-cosmetics/` is new; no
+- [x] 3.4 Review `git status --porcelain`: only `openspec/changes/spec-wording-cosmetics/` is new; no
       `src/`, `tests/`, `docs/`, or main-spec file is modified. Smoke: empty (spec-only change) — record
       that explicitly in the report.
 
