@@ -1,5 +1,7 @@
 namespace CLIHub.ViewModels;
 
+using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
 
 using CLIHub.Core.Agents;
@@ -120,7 +122,8 @@ public class StatusMessageCoordinatorTests
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object);
+            new Mock<IApplicationOperationLifetime>().Object,
+            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
         var coordinator = new StatusMessageCoordinator(projectPane, agentPane, updateControl);
 
@@ -162,7 +165,8 @@ public class StatusMessageCoordinatorTests
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object);
+            new Mock<IApplicationOperationLifetime>().Object,
+            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
         var coordinator = new StatusMessageCoordinator(projectPane, agentPane, updateControl);
 
@@ -225,7 +229,8 @@ public class StatusMessageCoordinatorTests
             new Mock<IAgentDetectionService>().Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object);
+            new Mock<IApplicationOperationLifetime>().Object,
+            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
         return new StatusMessageCoordinator(projectPane, agentPane, updateControl);
     }

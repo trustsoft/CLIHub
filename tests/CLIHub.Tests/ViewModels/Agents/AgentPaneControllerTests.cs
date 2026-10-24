@@ -1,5 +1,8 @@
 namespace CLIHub.ViewModels;
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
 using Moq;
 
 using CLIHub.Core.Agents;
@@ -29,7 +32,8 @@ public class AgentPaneControllerTests
             detection.Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            lifetime.Object);
+            lifetime.Object,
+            NullLogger<AgentPaneController>.Instance);
 
         Assert.True(controller.Refresh("C:\\Project", false));
         var selected = controller.Agents[0];
@@ -56,7 +60,8 @@ public class AgentPaneControllerTests
             detection.Object,
             versions.Object,
             logos.Object,
-            CreateLifetime().Object);
+            CreateLifetime().Object,
+            NullLogger<AgentPaneController>.Instance);
 
         controller.InvalidateCaches();
 
@@ -86,7 +91,8 @@ public class AgentPaneControllerTests
             detection.Object,
             versions.Object,
             logos.Object,
-            CreateLifetime().Object);
+            CreateLifetime().Object,
+            NullLogger<AgentPaneController>.Instance);
 
         controller.Refresh("C:\\Project", true);
         var selected = controller.Agents[0];
@@ -120,7 +126,8 @@ public class AgentPaneControllerTests
             detection.Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            lifetime.Object);
+            lifetime.Object,
+            NullLogger<AgentPaneController>.Instance);
         controller.Refresh(null, false);
 
         controller.Dispose();
@@ -129,6 +136,47 @@ public class AgentPaneControllerTests
         detection.Verify(x => x.Invalidate(), Times.Never);
         lifetime.Verify(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()), Times.Once);
         Assert.False(controller.Refresh(null, false));
+    }
+
+    [Fact]
+    public void PopulateVersionsAsync_WhenProbeThrows_LogsError()
+    {
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
+        catalog.Setup(x => x.GetAllPlugins()).Returns([Plugin("agent")]);
+        var detection = new Mock<IAgentDetectionService>(MockBehavior.Strict);
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        var versions = new Mock<IAgentVersionService>(MockBehavior.Strict);
+        versions
+            .Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("probe failed"));
+        var lifetime = new Mock<IApplicationOperationLifetime>(MockBehavior.Strict);
+        lifetime
+            .Setup(x => x.RunAsync(It.IsAny<string>(), It.IsAny<Func<CancellationToken, Task>>()))
+            .Returns<string, Func<CancellationToken, Task>>((_, operation) =>
+            {
+                operation(CancellationToken.None).GetAwaiter().GetResult();
+                return Task.CompletedTask;
+            });
+        var logger = new Mock<ILogger<AgentPaneController>>();
+        var controller = new AgentPaneController(
+            catalog.Object,
+            detection.Object,
+            versions.Object,
+            new Mock<ILogoCacheService>().Object,
+            lifetime.Object,
+            logger.Object);
+
+        controller.Refresh(null, false);
+
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+        Assert.Equal("…", controller.Agents[0].Version);
     }
 
     [Fact]
@@ -146,7 +194,8 @@ public class AgentPaneControllerTests
             detection.Object,
             new Mock<IAgentVersionService>().Object,
             new Mock<ILogoCacheService>().Object,
-            lifetime.Object);
+            lifetime.Object,
+            NullLogger<AgentPaneController>.Instance);
 
         controller.Refresh("C:\\Project", true);
         controller.RefreshCommand.Execute(null);

@@ -257,7 +257,8 @@ public class LaunchWindowViewModelBuilder
             agentDetectionService.Object,
             agentVersionService.Object,
             logoCacheService.Object,
-            operationLifetime.Object);
+            operationLifetime.Object,
+            NullLogger<AgentPaneController>.Instance);
 
         var updateControl = new UpdateControlViewModel(
             updateWorkflow.Object,
@@ -330,7 +331,8 @@ public class LaunchWindowViewModelBuilder
             agentDetectionService.Object,
             agentVersionService.Object,
             logoCacheService.Object,
-            operationLifetime.Object);
+            operationLifetime.Object,
+            NullLogger<AgentPaneController>.Instance);
 
         var updateControl = new UpdateControlViewModel(
             updateWorkflow.Object,

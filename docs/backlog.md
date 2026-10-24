@@ -59,15 +59,30 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Decision recorded in
   `openspec/changes/archive/2026-10-20-harden-probe-caching-and-process-matching/design.md`.
 
-### Version population loop consolidation
+### Version population loop consolidation (resolved)
 
-- Severity: Medium
-- Evidence: three loops — `AgentPaneController.PopulateVersionsAsync` (generation + CTS),
-  `AgentManagementViewModel.PopulateVersions` (serial, no cancellation), and legacy
-  `MainWindow.xaml.cs` (dead window). Two of them swallow exceptions into `Debug.WriteLine`.
-- Proposed remedy: give the management loop the pane's CTS/generation shape; route failures to
-  `ILogger`; leave the legacy window untouched (documented exception).
-- Trigger: touching agent version population or a stale-version report.
+- Status: Resolved by the `consolidate-version-population` change (2026-10-24).
+- Resolved model: both live loops use the pane's shape — a generation counter plus a
+  surface-owned `CancellationTokenSource` that is cancelled and replaced when a newer pass starts
+  or the surface is disposed (`AgentPaneController`, `AgentManagementViewModel`), with parallel
+  per-card probes under a linked refresh+application token and writes guarded by
+  not-cancelled + current-generation. Closing the Settings window or a re-`Load` therefore
+  cancels the management pass; an in-flight version command still completes and caches by design
+  (`AgentVersionService` runs probes on `CancellationToken.None`), but its result is not applied.
+  Unexpected population failures log through each surface's injected `ILogger<T>` (`LogError`);
+  surface-local cancellation stays silent. The legacy `Views/MainWindow.xaml.cs` copy remains the
+  documented untouched exception (the window is never constructed).
+- Guarded by: `PopulateVersionsAsync_WhenProbeThrows_LogsError` and
+  `Dispose_UnsubscribesAndCancelsVersionPopulation`
+  (`tests/CLIHub.Tests/ViewModels/Agents/AgentPaneControllerTests.cs`), plus
+  `Dispose_CancelsInFlightPopulation`, `Load_SecondLoadCancelsFirstPass`,
+  `PopulateVersions_WhenProbeThrows_LogsErrorAndKeepsOtherCards`, and the unchanged
+  `Load_PopulatesVersions` / `Load_PopulatesUpdateAvailabilityPerCard`
+  (`tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`); the strengthened
+  contract is recorded in the `agent-version` spec's "Stale version population does not update
+  the current list" requirement.
+- Trigger: a regression report that versions stay `…` after closing and re-opening Settings, or
+  any future edit to a version-population loop (a third live surface should lift the shared shape).
 
 ### Magic version sentinels
 

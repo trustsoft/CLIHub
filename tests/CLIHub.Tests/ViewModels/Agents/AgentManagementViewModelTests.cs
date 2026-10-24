@@ -1,5 +1,6 @@
 namespace CLIHub.Tests.ViewModels;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -40,7 +41,9 @@ public class AgentManagementViewModelTests
         Mock<IAgentManagementService> management,
         Mock<IExternalLauncher> launcher,
         Mock<IAgentProcessInspector>? processInspector = null,
-        Mock<IAgentUpdateAvailabilityService>? availability = null)
+        Mock<IAgentUpdateAvailabilityService>? availability = null,
+        IApplicationOperationLifetime? operationLifetime = null,
+        ILogger<AgentManagementViewModel>? logger = null)
     {
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
@@ -65,8 +68,8 @@ public class AgentManagementViewModelTests
             management.Object,
             launcher.Object,
             processMonitor,
-            new InlineOperationLifetime(),
-            NullLogger<AgentManagementViewModel>.Instance);
+            operationLifetime ?? new InlineOperationLifetime(),
+            logger ?? NullLogger<AgentManagementViewModel>.Instance);
     }
 
     private static Mock<IAgentProcessInspector> Processes(params AgentProcessInstance[] processes)
@@ -168,6 +171,110 @@ public class AgentManagementViewModelTests
         viewModel.Load(null);
 
         Assert.Equal("3.4.5", viewModel.Cards[0].Version);
+    }
+
+    [Fact]
+    public void Dispose_CancelsInFlightPopulation()
+    {
+        var a = Launchable("a");
+        var versionCompletion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var capturedToken = CancellationToken.None;
+        var version = new Mock<IAgentVersionService>();
+        version
+            .Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, token) =>
+            {
+                capturedToken = token;
+                return versionCompletion.Task;
+            });
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            version,
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+
+        viewModel.Dispose();
+        versionCompletion.SetResult("1.0");
+
+        Assert.True(capturedToken.IsCancellationRequested);
+        Assert.Equal("…", viewModel.Cards[0].Version);
+    }
+
+    [Fact]
+    public void Load_SecondLoadCancelsFirstPass()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var firstPassCompletion = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstPassBlocked = true;
+        var firstPassToken = CancellationToken.None;
+        var version = new Mock<IAgentVersionService>();
+        version
+            .Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, token) =>
+            {
+                if (plugin.Id == "a" && firstPassBlocked)
+                {
+                    firstPassBlocked = false;
+                    firstPassToken = token;
+                    return firstPassCompletion.Task;
+                }
+
+                return Task.FromResult<string?>("2.0");
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            version,
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+
+        viewModel.Load(null);
+        viewModel.Load(null);
+        firstPassCompletion.SetResult("9.9");
+
+        Assert.True(firstPassToken.IsCancellationRequested);
+        Assert.Equal("2.0", viewModel.Cards.Single(card => card.PluginId == "a").Version);
+        Assert.Equal("2.0", viewModel.Cards.Single(card => card.PluginId == "b").Version);
+    }
+
+    [Fact]
+    public void PopulateVersions_WhenProbeThrows_LogsErrorAndKeepsOtherCards()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var version = new Mock<IAgentVersionService>();
+        version
+            .Setup(x => x.GetVersionAsync(a, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("probe failed"));
+        version
+            .Setup(x => x.GetVersionAsync(b, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("2.0");
+        var logger = new Mock<ILogger<AgentManagementViewModel>>();
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            version,
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            logger: logger.Object);
+
+        viewModel.Load(null);
+
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+        Assert.Equal("…", viewModel.Cards.Single(card => card.PluginId == "a").Version);
+        Assert.Equal("2.0", viewModel.Cards.Single(card => card.PluginId == "b").Version);
     }
 
     [Fact]
@@ -471,6 +578,16 @@ public class AgentManagementViewModelTests
             task.GetAwaiter().GetResult();
             return task;
         }
+
+        public Task StopAsync(TimeSpan timeout) => Task.CompletedTask;
+    }
+
+    private sealed class DeferredOperationLifetime : IApplicationOperationLifetime
+    {
+        public CancellationToken Token => CancellationToken.None;
+
+        public Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>
+            operation(CancellationToken.None);
 
         public Task StopAsync(TimeSpan timeout) => Task.CompletedTask;
     }

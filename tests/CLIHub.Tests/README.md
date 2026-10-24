@@ -57,6 +57,7 @@ public void AddProject_WhenFolderSelectionIsCancelled_UsesDialogService()
         new Mock<IAgentDetectionService>().Object,
         new Mock<IAgentVersionService>().Object,
         new Mock<ILogoCacheService>().Object,
+        NullLogger<AgentPaneController>.Instance,
         operationLifetime.Object);
     var updateControl = new UpdateControlViewModel(
         new Mock<IUpdateWorkflow>().Object,

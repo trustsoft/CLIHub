@@ -30,6 +30,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly ILogger<AgentManagementViewModel> logger;
 
     private bool disposed;
+    private CancellationTokenSource? versionPopulationCts;
+    private int versionPopulationGeneration;
     private bool isDetecting;
 
     /// <summary>
@@ -227,6 +229,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public void Dispose()
     {
+        this.versionPopulationGeneration++;
+        this.versionPopulationCts?.Cancel();
+        this.versionPopulationCts?.Dispose();
+        this.versionPopulationCts = null;
         this.disposed = true;
     }
 
@@ -256,13 +262,38 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.OnPropertyChanged(nameof(this.DefaultAgentValueTone));
     }
 
-    private void PopulateVersions() =>
-        _ = this.RunAsync("Agent version population", async cancellationToken =>
+    private void PopulateVersions()
+    {
+        this.versionPopulationCts?.Cancel();
+        this.versionPopulationCts?.Dispose();
+        this.versionPopulationCts = new CancellationTokenSource();
+        var generation = ++this.versionPopulationGeneration;
+        var refreshCancellationToken = this.versionPopulationCts.Token;
+
+        var cards = this.Cards.ToList();
+
+        _ = this.RunAsync(
+            "Agent version population",
+            applicationToken => this.PopulateVersionsAsync(cards, generation, refreshCancellationToken, applicationToken));
+    }
+
+    private async Task PopulateVersionsAsync(
+        IReadOnlyList<AgentCardItem> cards,
+        int generation,
+        CancellationToken refreshCancellationToken,
+        CancellationToken applicationToken)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+            refreshCancellationToken,
+            applicationToken);
+        var cancellationToken = cancellation.Token;
+
+        try
         {
-            foreach (var card in this.Cards.ToList())
+            await Task.WhenAll(cards.Select(async card =>
             {
                 var ver = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
-                if (!this.disposed)
+                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
                     card.Version = ver ?? "unknown";
                 }
@@ -270,17 +301,25 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 // The availability check reuses the just-probed version through the version
                 // service's cache, so this adds no extra process launch per card.
                 var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
-                if (!this.disposed)
+                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
                     card.UpdateAvailability = availability;
                 }
-            }
+            }));
 
-            if (!this.disposed)
+            if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
             {
                 this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
-        });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Agent version population failed");
+        }
+    }
 
     private async Task TestAsync(AgentCardItem card, CancellationToken cancellationToken)
     {

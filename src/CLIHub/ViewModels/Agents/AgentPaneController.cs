@@ -1,7 +1,8 @@
 namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+
+using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public sealed class AgentPaneController : IDisposable
     private readonly IAgentVersionService agentVersionService;
     private readonly ILogoCacheService logoCacheService;
     private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly ILogger<AgentPaneController> logger;
     private CancellationTokenSource? versionPopulationCts;
     private int versionPopulationGeneration;
     private string? currentProjectPath;
@@ -32,17 +34,20 @@ public sealed class AgentPaneController : IDisposable
     /// <param name="agentVersionService"> Service resolving agent versions. </param>
     /// <param name="logoCacheService"> Logo cache used while composing rows. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked version work. </param>
+    /// <param name="logger"> Logger for version-population failures. </param>
     public AgentPaneController(IPluginCatalog pluginCatalog,
                                IAgentDetectionService agentDetectionService,
                                IAgentVersionService agentVersionService,
                                ILogoCacheService logoCacheService,
-                               IApplicationOperationLifetime operationLifetime)
+                               IApplicationOperationLifetime operationLifetime,
+                               ILogger<AgentPaneController> logger)
     {
         this.pluginCatalog = pluginCatalog ?? throw new ArgumentNullException(nameof(pluginCatalog));
         this.agentDetectionService = agentDetectionService ?? throw new ArgumentNullException(nameof(agentDetectionService));
         this.agentVersionService = agentVersionService ?? throw new ArgumentNullException(nameof(agentVersionService));
         this.logoCacheService = logoCacheService ?? throw new ArgumentNullException(nameof(logoCacheService));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.pluginCatalog.PluginsChanged += this.OnPluginsChanged;
 
         this.RefreshCommand = new RelayCommand(() => _ = this.Refresh(this.currentProjectPath, this.showOnlyProjectAgents));
@@ -183,7 +188,7 @@ public sealed class AgentPaneController : IDisposable
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Agent version population failed: {ex}");
+            this.logger.LogError(ex, "Agent version population failed");
         }
     }
 }
