@@ -35,7 +35,6 @@ public static class WindowsServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddSingleton<RuntimeSelector>();
         services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
         services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
         services.AddSingleton<ProcessLauncher>();

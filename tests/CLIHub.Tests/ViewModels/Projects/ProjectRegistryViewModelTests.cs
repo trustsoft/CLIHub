@@ -160,6 +160,23 @@ public class ProjectRegistryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void RegisterCommand_WithAlreadyRegisteredRootPath_ShowsDuplicateErrorWithoutAdding()
+    {
+        var existing = Project("root", "Root", ProjectSource.Manual, "C:");
+        var service = CreateService([existing]);
+        var section = this.CreateSection(service);
+        section.NewProjectPath = "C:\\";
+        section.Load();
+
+        section.RegisterCommand.Execute(null);
+
+        Assert.Single(section.Projects);
+        Assert.True(section.HasError);
+        Assert.Contains("already registered", section.ErrorText);
+        service.Verify(x => x.AddProject(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
     public void RegisterCommand_WithBlankPath_ShowsErrorAndAddsNothing()
     {
         var service = CreateService([]);

@@ -2,7 +2,6 @@ namespace CLIHub.Core.Tests.Infrastructure.Processes;
 
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 public class AgentProcessMatcherTests
@@ -11,7 +10,7 @@ public class AgentProcessMatcherTests
 
     public AgentProcessMatcherTests()
     {
-        this.matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
+        this.matcher = new AgentProcessMatcher();
     }
 
     [Fact]

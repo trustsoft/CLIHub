@@ -276,7 +276,7 @@ public class LaunchWindowViewModelBuilder
             userNotificationService.Object,
             NullLogger<LaunchCommandCoordinator>.Instance);
 
-        var matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
+        var matcher = new AgentProcessMatcher();
         var processMonitor = new AgentProcessMonitor(
             processInspector.Object,
             matcher,
@@ -350,7 +350,7 @@ public class LaunchWindowViewModelBuilder
             userNotificationService.Object,
             NullLogger<LaunchCommandCoordinator>.Instance);
 
-        var matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
+        var matcher = new AgentProcessMatcher();
         var processMonitor = new AgentProcessMonitor(
             processInspector.Object,
             matcher,

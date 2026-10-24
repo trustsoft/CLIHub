@@ -81,14 +81,14 @@ public class ProjectService : IProjectService
         var existing = this.projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
         if (existing != null)
         {
-            return existing;
+            return existing.Copy();
         }
 
         var project = this.CreateProject(normalized, ProjectSource.Manual);
         this.projectState.Projects.Add(project);
         this.logger.LogInformation("Added project {ProjectName} at {Path}", project.Name, project.Path);
         this.Persist();
-        return project;
+        return project.Copy();
     }
 
     /// <inheritdoc />
@@ -109,14 +109,14 @@ public class ProjectService : IProjectService
         var existing = this.projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
         if (existing != null)
         {
-            return existing;
+            return existing.Copy();
         }
 
         var project = this.CreateProject(normalized, ProjectSource.Discovered);
         this.projectState.Projects.Add(project);
         this.logger.LogInformation("Discovered project {ProjectName} at {Path}", project.Name, project.Path);
         this.Persist();
-        return project;
+        return project.Copy();
     }
 
     /// <inheritdoc />

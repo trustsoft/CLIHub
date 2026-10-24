@@ -35,7 +35,7 @@ public class AgentManagementServiceTests
 
         return new AgentProcessMonitor(
             inspector.Object,
-            new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance),
+            new AgentProcessMatcher(),
             catalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
     }

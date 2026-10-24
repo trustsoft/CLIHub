@@ -1,24 +1,12 @@
 namespace CLIHub.Core.Infrastructure.Processes;
 
 using CLIHub.Core.Models;
-using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Matches running processes to registered agent plugins by the launch executable's file name.
 /// </summary>
 public sealed class AgentProcessMatcher
 {
-    private readonly ILogger<AgentProcessMatcher> logger;
-
-    /// <summary>
-    ///   Initializes a new instance of the <see cref="AgentProcessMatcher" /> class.
-    /// </summary>
-    /// <param name="logger"> The logger instance. </param>
-    public AgentProcessMatcher(ILogger<AgentProcessMatcher> logger)
-    {
-        this.logger = logger;
-    }
-
     /// <summary>
     ///   Derives the candidate process names for the given plugins: the launch executable's file
     ///   name without extension, which is exactly the comparison basis <see cref="IsMatch" /> uses.

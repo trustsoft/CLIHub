@@ -6,11 +6,6 @@ namespace CLIHub.Core.Infrastructure.Processes;
 public enum RuntimeType
 {
     /// <summary>
-    ///   Windows Terminal (wt.exe) runtime.
-    /// </summary>
-    WindowsTerminal,
-
-    /// <summary>
     ///   Command Prompt (cmd.exe) runtime.
     /// </summary>
     Cmd,

@@ -56,7 +56,7 @@ public class AgentManagementViewModelTests
 
         var processMonitor = new AgentProcessMonitor(
             processInspector.Object,
-            new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance),
+            new AgentProcessMatcher(),
             catalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
 

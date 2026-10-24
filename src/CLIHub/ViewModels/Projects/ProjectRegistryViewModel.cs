@@ -185,7 +185,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         string path;
         try
         {
-            path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(text));
+            path = ProjectPathPolicy.Normalize(text);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
@@ -193,7 +193,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
             return false;
         }
 
-        if (this.Projects.Any(item => string.Equals(item.Path, path, StringComparison.OrdinalIgnoreCase)))
+        if (this.Projects.Any(item => ProjectPathPolicy.AreEqual(item.Path, path)))
         {
             this.ErrorText = "This folder is already registered as a project.";
             return false;

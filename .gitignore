@@ -117,6 +117,9 @@ $RECYCLE.BIN/
 # Graphify generated index and caches (local to each machine)
 graphify-out/
 
+# GitNexus index and runner (local to each machine)
+.gitnexus/
+
 # OpenCode pipeline state file (agent tooling, local to each machine)
 .opencode/pipeline.json
 .opencode/model-policy.json

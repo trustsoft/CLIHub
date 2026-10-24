@@ -80,6 +80,26 @@ public class ProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void AddProject_MutatingReturnedProject_DoesNotChangeRegisteredState()
+    {
+        var folder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig());
+        var service = this.CreateService(config);
+
+        var returned = service.AddProject(folder);
+        returned.Name = "mutated";
+        returned.IsFavorite = true;
+
+        var read = service.GetAllProjects().Single();
+        Assert.Equal(Path.GetFileName(folder), read.Name);
+        Assert.False(read.IsFavorite);
+
+        var persisted = config.Read().Projects.Single();
+        Assert.Equal(Path.GetFileName(folder), persisted.Name);
+        Assert.False(persisted.IsFavorite);
+    }
+
+    [Fact]
     public void AddProject_MissingFolder_Throws()
     {
         var service = this.CreateService();

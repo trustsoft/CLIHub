@@ -31,16 +31,20 @@ public interface IProjectService
     Project? GetCurrentProject();
 
     /// <summary>
-    ///   Registers a project folder as a manual project. Returns the existing project
-    ///   if the folder is already registered (without changing its source).
+    ///   Registers a project folder as a manual project. Returns the registered project as a
+    ///   detached copy; the existing project is returned if the folder is already registered
+    ///   (without changing its source). Mutating a returned project changes neither later reads
+    ///   nor persisted state.
     /// </summary>
     /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
     /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>
     Project AddProject(string folderPath);
 
     /// <summary>
-    ///   Registers a discovered project folder. Returns the existing project
-    ///   if the folder is already registered (without reclassifying a manual project).
+    ///   Registers a discovered project folder. Returns the registered project as a detached
+    ///   copy; the existing project is returned if the folder is already registered
+    ///   (without reclassifying a manual project). Mutating a returned project changes neither
+    ///   later reads nor persisted state.
     /// </summary>
     /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
     /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>

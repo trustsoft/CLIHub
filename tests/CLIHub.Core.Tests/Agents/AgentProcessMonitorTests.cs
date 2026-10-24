@@ -19,8 +19,7 @@ public class AgentProcessMonitorTests
     {
         this.mockInspector = new Mock<IAgentProcessInspector>();
         this.mockCatalog = new Mock<IPluginCatalog>();
-        this.matcher = new AgentProcessMatcher(
-            NullLogger<AgentProcessMatcher>.Instance);
+        this.matcher = new AgentProcessMatcher();
         this.monitor = new AgentProcessMonitor(
             this.mockInspector.Object,
             this.matcher,

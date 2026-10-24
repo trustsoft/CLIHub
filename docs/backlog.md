@@ -142,12 +142,16 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Project domain
 
-### AddProject returns the live instance
+### AddProject returns the live instance (resolved)
 
-- Severity: Low
-- Evidence: `ProjectService.AddProject`/`AddDiscoveredProject` return internal `Project` instances
-  while read methods return `Copy()`.
-- Proposed remedy: return `Copy()`; one line plus XML docs.
+- Status: Resolved by the hygiene-sweep change (2026-10-24).
+- Resolved model: `ProjectService.AddProject`/`AddDiscoveredProject` return `Copy()` at all four
+  return points (each method's existing-project early return and fresh-add return), aligned with
+  the read methods and the detached-copies invariant; the interface docs state it.
+- Guarded by: the new `AddProject_MutatingReturnedProject_DoesNotChangeRegisteredState` plus the
+  unchanged `AddProject_DuplicatePath_ReturnsExisting` /
+  `AddDiscoveredProject_ExistingManual_DoesNotReclassify`
+  (`tests/CLIHub.Core.Tests/Projects/ProjectServiceTests.cs`).
 - Trigger: any project-domain change.
 
 ### Hand-rolled clone siblings
@@ -166,12 +170,17 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: copy items when crossing the boundary.
 - Trigger: anything that reads projects through `ConfigurationRepository`.
 
-### ProjectPathPolicy duplication
+### ProjectPathPolicy duplication (resolved)
 
-- Severity: Cosmetic
-- Evidence: `ProjectRegistryViewModel` re-implements normalize/compare because `ProjectPathPolicy` is
-  internal to Core.
-- Proposed remedy: make the policy public and reuse it.
+- Status: Resolved by the hygiene-sweep change (2026-10-24).
+- Resolved model: `ProjectPathPolicy` is public and `ProjectRegistryViewModel.TryRegisterProject`
+  reuses `Normalize`/`AreEqual` instead of its hand-rolled normalize/compare. Accepted alignment:
+  re-registering an already-registered drive/UNC root from the Settings Projects page now shows
+  the duplicate error instead of silently no-opping through `AddProject`'s existing-project
+  branch (both outcomes satisfy the spec's duplicate-folder scenarios).
+- Guarded by: `ProjectPathPolicyTests`, the unchanged
+  `RegisterCommand_WithAlreadyRegisteredPath_KeepsSingleRowAndReportsError`, and the new
+  `RegisterCommand_WithAlreadyRegisteredRootPath_ShowsDuplicateErrorWithoutAdding` pin.
 - Trigger: path handling changes.
 
 ## Specifications and docs
@@ -201,21 +210,25 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   growth.
 - Trigger: a memory-growth report.
 
-### Matcher's unused logger
+### Matcher's unused logger (resolved)
 
-- Severity: Cosmetic
-- Evidence: `AgentProcessMatcher` keeps an unused logger (deliberately left out of the amputation).
-- Proposed remedy: remove during the next dead-member sweep.
+- Status: Resolved by the hygiene-sweep change (2026-10-24).
+- Resolved model: the field, constructor, and `Microsoft.Extensions.Logging` using are removed;
+  the matcher uses its implicit parameterless constructor and the DI registration is unchanged.
+- Guarded by: the unchanged `AgentProcessMatcherTests`, `AgentProcessMonitorTests`,
+  `AgentManagementServiceTests`, and `AgentManagementViewModelTests`.
+- Trigger: any edit to `AgentProcessMatcher`'s construction shape or its DI registration.
 
-### Registered-but-unused `RuntimeSelector`
+### Registered-but-unused `RuntimeSelector` (resolved)
 
-- Severity: Cosmetic (dead code with one live DI registration)
-- Evidence: `src/CLIHub.Core.Windows/RuntimeSelector.cs:11` is registered at
-  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:37`, but its only consumer is
-  `tests/CLIHub.Core.Windows.Tests/RuntimeSelectorTests.cs`; `RuntimeType.WindowsTerminal`
-  (`src/CLIHub.Core/Infrastructure/Processes/RuntimeType.cs:11`) has no other producer.
-- Proposed remedy: delete the selector, its registration, and its tests; drop
-  `RuntimeType.WindowsTerminal` if the settings model no longer needs it.
+- Status: Resolved by the hygiene-sweep change (2026-10-24).
+- Resolved model: the selector, its registration
+  (`WindowsServiceCollectionExtensions.cs:38`), and `RuntimeSelectorTests` are deleted;
+  `RuntimeType.WindowsTerminal` is dropped with them. Settings parsing is unaffected — it goes
+  through `RuntimeKinds`, whose fallback resolves stale `defaultRuntime` tokens to PowerShell;
+  `RuntimeType` never round-trips config.json.
+- Guarded by: the full-solution build and test suite (the build is the proof that no residual
+  `RuntimeSelector`/`RuntimeType.WindowsTerminal` reference exists).
 - Trigger: the next dead-member sweep, or the Git Bash locator landing in the same registration file
   (found while refreshing `openspec/changes/archive/2026-10-20-git-bash-resolution`; explicitly out of its scope).
 
@@ -324,13 +337,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
   that run pipeline work in the same project at the same time.
 
-### `.gitnexus/` is excluded only by the local git exclude file
+### `.gitnexus/` is excluded only by the local git exclude file (resolved)
 
-- Severity: Low (repo hygiene; a fresh clone produces untracked `.gitnexus/` noise after a GitNexus run)
-- Evidence: `.gitignore` ignores `.codegraph/` and `graphify-out/` but has no `.gitnexus/` entry; this working
-  copy hides it only through the local, uncommitted `.git/info/exclude:7`.
-- Proposed remedy: add `.gitnexus/` to `.gitignore`, or ignore only its generated index files if the
-  `.gitnexus/run.cjs` runner is meant to be versioned (it is currently untracked here).
+- Status: Resolved by the hygiene-sweep change (2026-10-24).
+- Resolved model: `.gitignore` ignores the whole `.gitnexus/` directory beside `.codegraph/` and
+  `graphify-out/`; nothing under it was tracked and `run.cjs` stays untracked — it is bootstrapped
+  per machine (`npx`/`bunx`/`pnpm dlx`). The local `.git/info/exclude` line stays as harmless
+  duplication.
+- Guarded by: `git check-ignore -v .gitnexus/run.cjs` resolving through `.gitignore` (not only the
+  local exclude file).
 - Trigger: the next GitNexus run on a fresh clone, or any `.gitignore` edit.
 
 ## UI and theming
