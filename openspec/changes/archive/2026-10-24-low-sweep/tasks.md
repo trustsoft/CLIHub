@@ -117,24 +117,24 @@ Rewrite each swept entry to the resolved format used by "Version population loop
 / `Trigger: …`. One edit per entry — three separate hunks; every other line in the file
 untouched.
 
-- [ ] 4.1 Rewrite "Magic version sentinels" (`docs/backlog.md:115-121`): resolved model — the
+- [x] 4.1 Rewrite "Magic version sentinels" (`docs/backlog.md:115-121`): resolved model — the
       `AgentVersionText` helper in `src/CLIHub/Helpers/` owns `Pending`/`Unknown` and the
       `IsPending`/`IsKnown` checks; all live surfaces (including the `AgentItem` placeholder
       initializer the entry had missed) route through it; the legacy `MainWindow` copy stays the
       documented exception. Guarded by `AgentVersionTextTests` plus the unchanged sentinel-
       pinning tests listed in design A3.
-- [ ] 4.2 Rewrite "Update-detection test gaps: timeout path and missing-installation indicator"
+- [x] 4.2 Rewrite "Update-detection test gaps: timeout path and missing-installation indicator"
       (`:159-169`): resolved model — `GetLatestVersion_RequestTimesOut_ReturnsNull`
       (handler-stub delay past the 1-second configured probe timeout) and
       `UpdateAvailability_WhenNotInstalledWithDeclaredUpdateCheck_ShowsNoIndicator`; no
       production change. Guarded by those two tests directly.
-- [ ] 4.3 Rewrite "Registry InstallPath precedence can shadow a valid install" (`:137-146`):
+- [x] 4.3 Rewrite "Registry InstallPath precedence can shadow a valid install" (`:137-146`):
       resolved model — the plural seam collects every non-empty `InstallPath` across
       HKLM64/HKLM32/HKCU-default/HKCU-32 (including the fourth view the entry had not listed),
       and `LocateGitBash` prefers the first candidate whose `bin\bash.exe` exists, falling
       through to well-known/PATH when none verifies. Guarded by the collector facts, the two
       new locator facts, and the guarded HKCU real-registry fact.
-- [ ] 4.4 Gate: `git diff docs/backlog.md` shows exactly the three entry hunks and nothing else;
+- [x] 4.4 Gate: `git diff docs/backlog.md` shows exactly the three entry hunks and nothing else;
       `openspec validate --all` still passes.
 
 ## 5. Stage 5 — final verification
