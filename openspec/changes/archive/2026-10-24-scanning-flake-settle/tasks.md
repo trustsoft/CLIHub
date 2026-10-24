@@ -66,7 +66,7 @@ Per the change/commit/archive policy, this stage is not executed during implemen
 orchestrator applies it when the user approves the commit, and ticks the checkboxes then. Content
 per design D5:
 
-- [ ] 3.1 Rewrite "Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus"
+- [x] 3.1 Rewrite "Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus"
       (`docs/backlog.md:9-22`) to the resolved format (heading suffix ` (resolved)`; bullets
       `Status:` / `Resolved model:` / `Guarded by:` / `Trigger:`, following
       "Magic version sentinels (resolved)" in the same file): resolved by the
@@ -79,7 +79,7 @@ per design D5:
       `Stop_ClearsScannedDirectoryCount`, verified by 6 consecutive green full-solution runs
       (record the actual count from stage 2). Trigger: any future red run of a
       `ProjectScanningServiceTests` fact.
-- [ ] 3.2 Update the sibling entry "Single unexplained test failure (not reproduced)"
+- [x] 3.2 Update the sibling entry "Single unexplained test failure (not reproduced)"
       (`docs/backlog.md:305-316`) — Evidence only, entry stays open: the confirmed flake
       `Stop_DisposesWatcherAndClearsStatus` (failed 2026-10-20 during fix-settings-open-delay
       verification; trx-captured 2026-10-24 during low-sweep verification; stabilized by
@@ -89,7 +89,7 @@ per design D5:
       `UpdateCheckerTests`/`UpdateDownloaderTests` remain unexcluded candidates and the standing
       remedy (trx on recurrence) is unchanged. Do not add a `(resolved)` suffix. If the user
       answered open question Q2 otherwise, follow that decision instead.
-- [ ] 3.3 Gate: `git diff docs/backlog.md` shows exactly the two entry hunks and nothing else;
+- [x] 3.3 Gate: `git diff docs/backlog.md` shows exactly the two entry hunks and nothing else;
       `openspec validate --all` still passes.
 
 ## 4. Stage 4 — final gates and report
