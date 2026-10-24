@@ -112,7 +112,7 @@ place, do not recreate it.
 - [x] 3.7 Run `dotnet test CLIHub.sln` — every suite green; report the per-project counts.
 - [x] 3.8 Run `openspec validate --all` — every item passes.
 - [x] 3.9 Run `graphify update .` from the repository root so the graph reflects the new wiring.
-- [ ] 3.10 Manual smoke (user): store the "System" theme and save; with the app running (launch window
+- [x] 3.10 Manual smoke (user): store the "System" theme and save; with the app running (launch window
   and Settings both open), switch Windows Settings → Personalization → Colors between light and dark
   and confirm both windows repaint with the re-resolved palette, never blue; store "Dark", toggle the
   Windows mode and confirm nothing changes; exit the app and confirm a clean shutdown with no
