@@ -211,6 +211,44 @@ public class ConfigurationRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void Read_MutatingReturnedSnapshotCollections_DoesNotChangeStoredState()
+    {
+        using var repository = this.CreateRepository();
+        repository.Update(snapshot =>
+        {
+            snapshot.CurrentProjectId = "project-1";
+            snapshot.Projects.Add(new Project { Id = "project-1", Name = "Original", Path = "C:\\Original" });
+            snapshot.Preferences.Hotkey = "Ctrl+Shift+A";
+            snapshot.Preferences.WatchedDirectories = ["C:\\Work"];
+            snapshot.Preferences.IgnoredPatterns = ["node_modules"];
+            snapshot.Preferences.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git)
+            };
+        });
+        repository.Flush();
+
+        var loaded = repository.Read();
+        loaded.Projects[0].Name = "Mutated";
+        loaded.Preferences.Hotkey = "Ctrl+Alt+M";
+        loaded.Preferences.WatchedDirectories!.Add("E:\\Extra");
+        loaded.Preferences.IgnoredPatterns!.Add("extra");
+        var loadedSettings = Assert.IsType<Dictionary<string, WatchedDirectoryScanSettings>>(loaded.Preferences.WatchedDirectorySettings);
+        loadedSettings["C:\\Work"] = new WatchedDirectoryScanSettings(8, ProjectDiscoveryMode.Agents);
+        loadedSettings["E:\\Extra"] = new WatchedDirectoryScanSettings(2, ProjectDiscoveryMode.Both);
+
+        var reread = repository.Read();
+
+        Assert.Equal("Original", reread.Projects[0].Name);
+        Assert.Equal("Ctrl+Shift+A", reread.Preferences.Hotkey);
+        Assert.Equal(["C:\\Work"], reread.Preferences.WatchedDirectories);
+        Assert.Equal(["node_modules"], reread.Preferences.IgnoredPatterns);
+        Assert.Equal(4, reread.Preferences.WatchedDirectorySettings["C:\\Work"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, reread.Preferences.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
+        Assert.False(reread.Preferences.WatchedDirectorySettings.ContainsKey("E:\\Extra"));
+    }
+
+    [Fact]
     public void Update_WhileWorkerIsExiting_StartsReplacementWorkerAndPersistsValue()
     {
         using var repository = this.CreateRepository();

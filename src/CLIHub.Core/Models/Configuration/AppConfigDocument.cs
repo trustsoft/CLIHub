@@ -89,6 +89,8 @@ internal sealed class AppConfigDocument
         public string? LogoPath { get; set; }
         public string Source { get; set; } = ProjectSources.ManualToken;
 
+        // Both From and ToProject must map every public property of Project;
+        // PersistenceCloneRoundTripTests fails the suite when a field is missed.
         public static ProjectDocument From(Project project) => new()
         {
             Id = project.Id,
@@ -143,6 +145,8 @@ internal sealed class AppConfigDocument
         public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
         public string? DefaultAgentId { get; set; }
 
+        // Both From and ToPreferences must map every public property of AppPreferences;
+        // PersistenceCloneRoundTripTests fails the suite when a field is missed.
         public static PreferencesDocument From(AppPreferences preferences) => new()
         {
             StartWithWindows = preferences.StartWithWindows,

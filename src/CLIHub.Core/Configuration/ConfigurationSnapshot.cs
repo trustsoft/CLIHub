@@ -33,7 +33,7 @@ public sealed class ConfigurationSnapshot
 
         return new ConfigurationSnapshot
         {
-            Projects = config.Projects.Select(CloneProject).ToList(),
+            Projects = config.Projects.Select(project => project.Copy()).ToList(),
             Preferences = ClonePreferences(config.Preferences),
             CurrentProjectId = config.CurrentProjectId
         };
@@ -45,7 +45,7 @@ public sealed class ConfigurationSnapshot
     /// <returns> A detached application configuration. </returns>
     public AppConfig ToAppConfig() => new()
     {
-        Projects = this.Projects.Select(CloneProject).ToList(),
+        Projects = this.Projects.Select(project => project.Copy()).ToList(),
         Preferences = ClonePreferences(this.Preferences),
         CurrentProjectId = this.CurrentProjectId
     };
@@ -56,17 +56,8 @@ public sealed class ConfigurationSnapshot
     /// <returns> A detached snapshot copy. </returns>
     public ConfigurationSnapshot Clone() => From(this.ToAppConfig());
 
-    private static Project CloneProject(Project project) => new()
-    {
-        Id = project.Id,
-        Name = project.Name,
-        Path = project.Path,
-        IsFavorite = project.IsFavorite,
-        LastUsed = project.LastUsed,
-        LogoPath = project.LogoPath,
-        Source = project.Source
-    };
-
+    // Must copy every public property of AppPreferences, including the nested collections;
+    // PersistenceCloneRoundTripTests fails the suite when a field is missed.
     private static AppPreferences ClonePreferences(AppPreferences preferences) => new()
     {
         StartWithWindows = preferences.StartWithWindows,

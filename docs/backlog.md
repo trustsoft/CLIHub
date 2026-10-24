@@ -165,14 +165,25 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   (`tests/CLIHub.Core.Tests/Projects/ProjectServiceTests.cs`).
 - Trigger: any project-domain change.
 
-### Hand-rolled clone siblings
+### Hand-rolled clone siblings (resolved)
 
-- Severity: Medium (silent field loss on clone)
-- Evidence: `ConfigurationSnapshot.CloneProject` duplicates `Project.Copy()`;
-  `AppConfigDocument.ProjectDocument.From/ToProject` and `ClonePreferences` are further manual copies.
-- Proposed remedy: `CloneProject` delegates to `Project.Copy()`; add round-trip tests for the
-  persistence boundary; guard comments on the remaining manual copies.
-- Trigger: next persistence-boundary change or when adding a `Project`/preferences field.
+- Status: Resolved by the `consolidate-clone-siblings` change (2026-10-24).
+- Resolved model: `ConfigurationSnapshot.CloneProject` is deleted; `From`/`ToAppConfig` call
+  `project.Copy()` directly, leaving `Project.Copy()` the one canonical project copy. The three
+  remaining manual copies (`ClonePreferences`, `ProjectDocument.From`/`ToProject`, and
+  `PreferencesDocument.From`/`ToPreferences`) cannot delegate — the document mappings are
+  transformers and `ClonePreferences` is the only `AppPreferences` clone site — so each carries a
+  guard comment requiring it to map every public property of its source model.
+- Guarded by: the round-trip and census tests in
+  `tests/CLIHub.Core.Tests/Configuration/PersistenceCloneRoundTripTests.cs` (every public property
+  of `Project` and `AppPreferences` round-trips through the document boundary, `From`/`ToAppConfig`,
+  and `Clone`; mutating a clone's nested `WatchedDirectories`/`IgnoredPatterns`/
+  `WatchedDirectorySettings` does not change the source; the reflection census fails when a property
+  is missing from the covered lists) plus the repository-level
+  `Read_MutatingReturnedSnapshotCollections_DoesNotChangeStoredState`
+  (`tests/CLIHub.Core.Tests/Configuration/ConfigurationRepositoryTests.cs`).
+- Trigger: a red round-trip or census test after adding a `Project`/`AppPreferences` property, or
+  any future persistence-boundary change.
 
 ### ProjectState shares live items at the persistence boundary
 
