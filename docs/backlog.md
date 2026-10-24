@@ -17,22 +17,33 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   expose a deterministic completion signal from `ProjectScanningService.Stop`.
 - Trigger: next red CI/dev run of this test, or any work touching project scanning.
 
-### Async blocked-state population on the agents page (design D2 of fix-settings-open-delay)
+### Async blocked-state population on the agents page (resolved)
 
-- Severity: Medium (perceived-latency judgment call)
-- Evidence: `AgentManagementViewModel.Load` still runs the running-agent enumeration synchronously
-  on the UI thread; after `fix-settings-open-delay` the pass is cheap (one snapshot plus the
-  candidate-name pre-filter) but not free, and any future cost added to that path lands directly
-  on Settings open.
-- Proposed remedy: build cards with `CanUpdate = declaresUpdate` and populate the blocked state
-  through a fire-and-forget pass when the enumeration completes — the `PopulateVersions` shape
-  with a placeholder treatment for the Update action. Requires a **MODIFIED `agent-ui` spec delta
-  with preserved scenario names**: "Update blocked by a running agent" is state-based, so the
-  transient where a card still shows Update available while its agent runs needs explicit
-  blessing; `SettingsWindow.ShowSettings` (load-before-show) would need restructuring too.
-- Trigger: Settings open still perceived slow after the pre-filter, or a request for an async
-  Settings load.
-- Decision recorded in `openspec/changes/archive/2026-10-20-fix-settings-open-delay/design.md` (D2, rejected there).
+- Status: Resolved by the `async-blocked-state` change (2026-10-24). Formerly parked as design D2
+  of fix-settings-open-delay.
+- Resolved model: management cards build with `CanUpdate = declaresUpdate` (the declarative
+  interim); a sibling blocked-state pass in the canonical population shape (own
+  `blockedStateCts`/`blockedStateGeneration`, operation name "Agent blocked-state population")
+  starts at `Load` only when a plugin declares an `update` command, enumerates via `Task.Run` off
+  the UI thread, and — under the token + generation guard — writes `CanUpdate` per card plus the
+  blocked `Message` only when blocked (never clearing). A re-`Load` or page exit cancels the pass;
+  an in-flight enumeration may complete but its result is not applied. Enumeration failures log
+  through the monitor and the cards settle fail-open at declarative availability. The
+  `SettingsWindow.ShowSettings` restructure listed in the parked remedy was evaluated and dropped
+  as unnecessary: the pass removes the load-blocking cost, and load-before-show serves every page.
+- Guarded by: `Load_ShowsDeclarativeAvailability_BeforeBlockedStateLands`,
+  `Dispose_CancelsBlockedStatePass`, `Load_SecondLoadCancelsBlockedStatePass`, and
+  `Load_WhenEnumerationFails_KeepsDeclaredAvailability`, plus the unchanged
+  `Load_MatchingAgentProcessRunning_DisablesUpdateAndExplainsBlock`,
+  `Load_OtherAgentsProcessRunning_KeepsUpdateAvailableWithoutMessage`,
+  `Load_WithNoRunningProcesses_KeepsDeclaredUpdateAvailableWithoutMessage`,
+  `Load_MultipleUpdateDeclaringPlugins_EnumeratesProcessesOnce`,
+  `Load_NoPluginDeclaresUpdate_DoesNotEnumerateProcesses`,
+  `Load_BuildsCardsCountsAndDefaultOptions`, and
+  `Load_UnknownAvailability_LeavesCanUpdateUnchanged`
+  (`tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`).
+- Trigger: a regression report that the blocked state never lands or lands on a closed surface, or
+  any future edit that adds cost to the running-agent enumeration path.
 
 ### Monitor-level running-agent cache
 

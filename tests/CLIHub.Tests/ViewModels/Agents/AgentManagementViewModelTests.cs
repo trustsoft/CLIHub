@@ -43,7 +43,8 @@ public class AgentManagementViewModelTests
         Mock<IAgentProcessInspector>? processInspector = null,
         Mock<IAgentUpdateAvailabilityService>? availability = null,
         IApplicationOperationLifetime? operationLifetime = null,
-        ILogger<AgentManagementViewModel>? logger = null)
+        ILogger<AgentManagementViewModel>? logger = null,
+        ILogger<AgentProcessMonitor>? processMonitorLogger = null)
     {
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
@@ -58,7 +59,7 @@ public class AgentManagementViewModelTests
             processInspector.Object,
             new AgentProcessMatcher(),
             catalog.Object,
-            NullLogger<AgentProcessMonitor>.Instance);
+            processMonitorLogger ?? NullLogger<AgentProcessMonitor>.Instance);
 
         return new AgentManagementViewModel(
             catalog.Object,
@@ -76,6 +77,21 @@ public class AgentManagementViewModelTests
     {
         var inspector = new Mock<IAgentProcessInspector>();
         inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>())).Returns(processes);
+        return inspector;
+    }
+
+    private static Mock<IAgentProcessInspector> GatedProcesses(
+        ManualResetEventSlim gate,
+        params AgentProcessInstance[] processes)
+    {
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
+            .Returns<IReadOnlySet<string>>(_ =>
+            {
+                gate.Wait();
+                return processes;
+            });
         return inspector;
     }
 
@@ -510,6 +526,142 @@ public class AgentManagementViewModelTests
         viewModel.Load(null);
 
         processInspector.Verify(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()), Times.Never);
+    }
+
+    [Fact]
+    public void Load_ShowsDeclarativeAvailability_BeforeBlockedStateLands()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var gate = new ManualResetEventSlim(false);
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)),
+            operationLifetime: new DeferredOperationLifetime());
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(card.CanUpdate);
+        Assert.Null(card.Message);
+
+        gate.Set();
+        SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromSeconds(5));
+
+        Assert.False(card.CanUpdate);
+        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+    }
+
+    [Fact]
+    public void Dispose_CancelsBlockedStatePass()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var gate = new ManualResetEventSlim(false);
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)),
+            operationLifetime: new DeferredOperationLifetime());
+
+        viewModel.Load(null);
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        viewModel.Dispose();
+        gate.Set();
+
+        // Give a broken guard time to manifest: after Dispose the pass's token and generation
+        // are stale, so its blocking write must never reach the card.
+        SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromMilliseconds(250));
+
+        Assert.True(card.CanUpdate);
+        Assert.Null(card.Message);
+    }
+
+    [Fact]
+    public void Load_SecondLoadCancelsBlockedStatePass()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var gate = new ManualResetEventSlim(false);
+        var firstCallStarted = new ManualResetEventSlim(false);
+        var enumerationCalls = 0;
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
+            .Returns<IReadOnlySet<string>>(_ =>
+            {
+                if (Interlocked.Increment(ref enumerationCalls) == 1)
+                {
+                    firstCallStarted.Set();
+                    gate.Wait();
+                    return new AgentProcessInstance[] { new(1, @"C:\tools\a.exe", DateTime.Now) };
+                }
+
+                return [];
+            });
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            inspector,
+            operationLifetime: new DeferredOperationLifetime());
+
+        viewModel.Load(null);
+        var firstLoadCard = viewModel.Cards.Single(c => c.PluginId == "a");
+
+        // Pin the gated enumeration to the first pass before the second load starts its own.
+        Assert.True(firstCallStarted.Wait(TimeSpan.FromSeconds(5)));
+
+        viewModel.Load(null);
+        var secondLoadCard = viewModel.Cards.Single(c => c.PluginId == "a");
+
+        gate.Set();
+        SpinWait.SpinUntil(() => !firstLoadCard.CanUpdate, TimeSpan.FromMilliseconds(250));
+
+        // The superseded pass's blocking write is rejected by the generation guard; the new
+        // load's own pass settles unblocked (its enumeration returned no processes).
+        Assert.True(firstLoadCard.CanUpdate);
+        Assert.True(secondLoadCard.CanUpdate);
+        Assert.Null(secondLoadCard.Message);
+    }
+
+    [Fact]
+    public void Load_WhenEnumerationFails_KeepsDeclaredAvailability()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var b = Launchable("b", withUpdate: true);
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>()))
+            .Throws(new InvalidOperationException("enumeration failed"));
+        var processMonitorLogger = new Mock<ILogger<AgentProcessMonitor>>();
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            inspector,
+            processMonitorLogger: processMonitorLogger.Object);
+
+        viewModel.Load(null);
+
+        Assert.All(viewModel.Cards, card => Assert.True(card.CanUpdate));
+        Assert.All(viewModel.Cards, card => Assert.Null(card.Message));
+        processMonitorLogger.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     [Fact]

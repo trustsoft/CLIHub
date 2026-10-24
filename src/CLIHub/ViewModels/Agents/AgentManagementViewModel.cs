@@ -32,6 +32,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private bool disposed;
     private CancellationTokenSource? versionPopulationCts;
     private int versionPopulationGeneration;
+    private CancellationTokenSource? blockedStateCts;
+    private int blockedStateGeneration;
     private bool isDetecting;
 
     /// <summary>
@@ -187,25 +189,20 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         var plugins = this.catalog.GetAllPlugins();
 
-        // Availability is a Load()-time snapshot over the process state (the page load is the
-        // refresh trigger). The execution-time block itself stays in AgentManagementService.
-        // One enumeration feeds every card: grouping the single result by plugin id yields exactly
-        // the per-plugin partitions (first-match attribution, one match per process), so each card
-        // sees the same running-agent state a per-plugin call would report.
+        // Cards render with declarative availability (Update enabled exactly when the plugin
+        // declares an update command); the running-agent blocked state populates afterwards
+        // through a fire-and-forget pass, so the page load stays the refresh trigger. The
+        // execution-time block itself stays in AgentManagementService. The pass runs one
+        // enumeration that feeds every card: grouping the single result by plugin id yields
+        // exactly the per-plugin partitions (first-match attribution, one match per process), so
+        // each card sees the same running-agent state a per-plugin call would report.
         var anyDeclaresUpdate = plugins.Any(plugin => plugin.Commands?.Get(AgentCommandKind.Update) is not null);
-        ILookup<string, RunningAgent>? runningAgentsByPlugin = anyDeclaresUpdate
-            ? this.processMonitor.GetRunningAgents().ToLookup(agent => agent.Plugin.Id)
-            : null;
 
         foreach (var plugin in plugins)
         {
             var isInstalled = this.detection.IsInstalledInSystem(plugin);
 
             var declaresUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
-            IReadOnlyList<RunningAgent> runningAgents = declaresUpdate && runningAgentsByPlugin is not null
-                ? runningAgentsByPlugin[plugin.Id].ToList()
-                : [];
-            var blockedNames = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
 
             var card = new AgentCardItem(
                 plugin,
@@ -214,8 +211,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 "…",
                 AgentConfigurationPath.For(plugin))
             {
-                CanUpdate = declaresUpdate && runningAgents.Count == 0,
-                Message = blockedNames.Length > 0 ? $"Update blocked while the agent is running: {blockedNames}" : null
+                CanUpdate = declaresUpdate
             };
 
             this.Cards.Add(card);
@@ -223,6 +219,12 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         this.RefreshAvailabilitySummary();
         this.RebuildDefaultAgentOptions(defaultAgentId);
+
+        if (anyDeclaresUpdate)
+        {
+            this.PopulateBlockedState();
+        }
+
         this.PopulateVersions();
     }
 
@@ -233,6 +235,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.versionPopulationCts?.Cancel();
         this.versionPopulationCts?.Dispose();
         this.versionPopulationCts = null;
+        this.blockedStateGeneration++;
+        this.blockedStateCts?.Cancel();
+        this.blockedStateCts?.Dispose();
+        this.blockedStateCts = null;
         this.disposed = true;
     }
 
@@ -318,6 +324,69 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         catch (Exception ex)
         {
             this.logger.LogError(ex, "Agent version population failed");
+        }
+    }
+
+    private void PopulateBlockedState()
+    {
+        this.blockedStateCts?.Cancel();
+        this.blockedStateCts?.Dispose();
+        this.blockedStateCts = new CancellationTokenSource();
+        var generation = ++this.blockedStateGeneration;
+        var refreshCancellationToken = this.blockedStateCts.Token;
+
+        var cards = this.Cards.ToList();
+
+        _ = this.RunAsync(
+            "Agent blocked-state population",
+            applicationToken => this.PopulateBlockedStateAsync(cards, generation, refreshCancellationToken, applicationToken));
+    }
+
+    private async Task PopulateBlockedStateAsync(
+        IReadOnlyList<AgentCardItem> cards,
+        int generation,
+        CancellationToken refreshCancellationToken,
+        CancellationToken applicationToken)
+    {
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+            refreshCancellationToken,
+            applicationToken);
+        var cancellationToken = cancellation.Token;
+
+        try
+        {
+            // GetRunningAgents is synchronous, so Task.Run moves the process snapshot (and its
+            // candidate reads) off the UI thread; without it the pass would execute inline on the
+            // caller's thread. The token only prevents the delegate from starting — an in-flight
+            // enumeration may complete, but the guard below discards its result.
+            var runningAgents = await Task.Run(() => this.processMonitor.GetRunningAgents(), cancellationToken);
+            var runningByPlugin = runningAgents.ToLookup(agent => agent.Plugin.Id);
+
+            foreach (var card in cards)
+            {
+                var declaresUpdate = card.Plugin.Commands?.Get(AgentCommandKind.Update) is not null;
+                var running = runningByPlugin[card.Plugin.Id].ToList();
+                var blockedNames = string.Join(", ", running.Select(agent => agent.Plugin.Name));
+
+                if (!cancellationToken.IsCancellationRequested && generation == this.blockedStateGeneration)
+                {
+                    card.CanUpdate = declaresUpdate && running.Count == 0;
+
+                    // Write the block explanation only when blocked; never clear a message a
+                    // user action may have set between render and pass completion.
+                    if (blockedNames.Length > 0)
+                    {
+                        card.Message = $"Update blocked while the agent is running: {blockedNames}";
+                    }
+                }
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Agent blocked-state population failed");
         }
     }
 
