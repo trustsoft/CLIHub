@@ -66,6 +66,9 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
   carries over to a later change, a follow-up task, or another commit.
 - Implement and verify the work first, then report the result and ask whether to archive and commit. Do not
   stage files for a commit that the user has not explicitly approved.
+- For a change with a manual smoke task, `git commit` and `openspec archive` MUST wait until the user
+  completes and confirms the smoke: run gates, verify, report, wait for the smoke result, then ask for
+  commit/archive approval.
 - A commit MUST contain only the files that belong to the approved change; leave unrelated working-tree edits
   and untracked files untouched.
 - Pipeline state transitions MUST go through `node .opencode/scripts/pipeline-state.mjs`
