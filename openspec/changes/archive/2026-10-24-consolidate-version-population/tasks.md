@@ -134,7 +134,7 @@ correct it in place, do not recreate it.
 - [x] 3.5 Run `openspec validate --all` — every item passes; quote the output.
 - [x] 3.6 Run `graphify update .` from the repository root so the graph reflects the new loop
   shape.
-- [ ] 3.7 Manual smoke (user): open Settings → CLI Agents with at least two agents declaring
+- [x] 3.7 Manual smoke (user): open Settings → CLI Agents with at least two agents declaring
   `version` commands; confirm cards appear with `…` and versions fill in; close Settings while
   the chip still shows `…` and confirm no `Agent version population` errors appear in the
   current day's log (`%APPDATA%\CLIHub\logs\`); re-open Settings and confirm versions fill in
