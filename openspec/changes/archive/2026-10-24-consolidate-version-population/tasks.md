@@ -8,28 +8,28 @@ Stages are sized for a fresh session. Each stage ends green: `dotnet build CLIHu
 **Goal**: unexpected pane population failures reach `ILogger` instead of `Debug.WriteLine`;
 nothing else changes on this surface.
 
-- [ ] 1.1 `src/CLIHub/ViewModels/Agents/AgentPaneController.cs`: add a constructor parameter
+- [x] 1.1 `src/CLIHub/ViewModels/Agents/AgentPaneController.cs`: add a constructor parameter
   `ILogger<AgentPaneController> logger` (last position), a `private readonly ILogger<AgentPaneController>
   logger;` field with the standard null-guard (`this.logger = logger ?? throw
   new ArgumentNullException(nameof(logger));`), and a `<param name="logger">` XML doc entry
   ("Logger for version-population failures."). Add `using Microsoft.Extensions.Logging;` in the
   file's configured ordering. Remove `using System.Diagnostics;` (line 4) — `Debug` was its only
   consumer.
-- [ ] 1.2 Same file, `PopulateVersionsAsync` (lines 184-187): replace
+- [x] 1.2 Same file, `PopulateVersionsAsync` (lines 184-187): replace
   `catch (Exception ex) { Debug.WriteLine($"Agent version population failed: {ex}"); }` with
   `catch (Exception ex) { this.logger.LogError(ex, "Agent version population failed"); }`.
   Keep the preceding `catch (OperationCanceledException) when
   (cancellationToken.IsCancellationRequested)` (lines 181-183) exactly as is — it is what keeps
   refresh-supersede cancellation out of the runner's generic Error catch
   (`src/CLIHub/Lifetime/ApplicationOperationLifetime.cs:98-105`, design D2).
-- [ ] 1.3 Update every direct construction site with `NullLogger<AgentPaneController>.Instance`
+- [x] 1.3 Update every direct construction site with `NullLogger<AgentPaneController>.Instance`
   (`using Microsoft.Extensions.Logging.Abstractions;`): the five sites in
   `tests/CLIHub.Tests/ViewModels/Agents/AgentPaneControllerTests.cs` (lines 27, 54, 84, 118,
   144), the three in `tests/CLIHub.Tests/ViewModels/Shared/StatusMessageCoordinatorTests.cs`
   (lines 118, 160, 223), and the two in `tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilder.cs`
   (lines 255, 328). Update the illustrative constructor in `tests/CLIHub.Tests/README.md`
   (lines 55, 209) to include the logger argument.
-- [ ] 1.4 In `AgentPaneControllerTests`, add `PopulateVersionsAsync_WhenProbeThrows_LogsError`:
+- [x] 1.4 In `AgentPaneControllerTests`, add `PopulateVersionsAsync_WhenProbeThrows_LogsError`:
   mock `IApplicationOperationLifetime.RunAsync` to *execute* the operation (capture the
   `Func<CancellationToken, Task>`, invoke it with `CancellationToken.None`, await it — unlike the
   existing no-execute mock at lines 115-117), mock `IAgentVersionService.GetVersionAsync` to
@@ -49,10 +49,10 @@ nothing else changes on this surface.
 parallel shape with surface-exit cancellation, while its user-visible fill-in behavior is
 unchanged.
 
-- [ ] 2.1 `src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs`: add fields
+- [x] 2.1 `src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs`: add fields
   `private CancellationTokenSource? versionPopulationCts;` and
   `private int versionPopulationGeneration;` next to the existing `disposed` field (line 32).
-- [ ] 2.2 Rewrite `PopulateVersions` (lines 259-283) as the pane's header plus a loop body:
+- [x] 2.2 Rewrite `PopulateVersions` (lines 259-283) as the pane's header plus a loop body:
   cancel-and-dispose `versionPopulationCts`, create a new CTS, `var generation =
   ++this.versionPopulationGeneration;`, capture the token (mirroring
   `src/CLIHub/ViewModels/Agents/AgentPaneController.cs:87-91`), snapshot
@@ -73,13 +73,13 @@ unchanged.
   { }` and `catch (Exception ex) { this.logger.LogError(ex, "Agent version population
   failed"); }` (design D2 — the local catches stop surface-local cancellation and failures from
   reaching the runner's generic Error catch; the runner stays as backstop).
-- [ ] 2.3 Same file, `Dispose` (lines 228-231): before setting `disposed = true`, mirror
+- [x] 2.3 Same file, `Dispose` (lines 228-231): before setting `disposed = true`, mirror
   `AgentPaneController.Dispose` (`AgentPaneController.cs:144-157`) —
   `this.versionPopulationGeneration++; this.versionPopulationCts?.Cancel();
   this.versionPopulationCts?.Dispose(); this.versionPopulationCts = null;`. Keep the
   `disposed` flag and the existing `Load`/`DetectAsync` guards (lines 179-182, 306-309)
   unchanged.
-- [ ] 2.4 `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`: extend
+- [x] 2.4 `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`: extend
   `CreateViewModel` (lines 36-70) with an optional `ILogger<AgentManagementViewModel>? logger =
   null` parameter defaulting to `NullLogger<AgentManagementViewModel>.Instance`, and add a
   small non-blocking test lifetime beside `InlineOperationLifetime` (lines 464-477) —
@@ -89,17 +89,17 @@ unchanged.
   `Load_PopulatesUpdateAvailabilityPerCard` (174-188) untouched — a `Task.WhenAll` body with
   completed mock tasks completes synchronously under `InlineOperationLifetime`, so they pin the
   unchanged fill-in outcome through the new shape.
-- [ ] 2.5 Same test file, add `Dispose_CancelsInFlightPopulation`: version mock whose
+- [x] 2.5 Same test file, add `Dispose_CancelsInFlightPopulation`: version mock whose
   `GetVersionAsync` returns a `TaskCompletionSource`-backed task and captures the passed
   `CancellationToken`; `Load(null)` under `DeferredOperationLifetime`; `viewModel.Dispose()`;
   assert the captured token `IsCancellationRequested`, complete the source, and assert the card
   version remains `"…"` (the generation guard rejects the write).
-- [ ] 2.6 Same test file, add `Load_SecondLoadCancelsFirstPass`: two plugins; first
+- [x] 2.6 Same test file, add `Load_SecondLoadCancelsFirstPass`: two plugins; first
   `GetVersionAsync` call blocks on a `TaskCompletionSource` and captures its token; second
   `Load(null)`; assert the first pass's captured token is cancelled and only the second pass's
   results reach the (new) card objects — the pane's supersession semantics
   (`AgentPaneController.Refresh`, `AgentPaneController.cs:87-91`).
-- [ ] 2.7 Same test file, add `PopulateVersions_WhenProbeThrows_LogsErrorAndKeepsOtherCards`:
+- [x] 2.7 Same test file, add `PopulateVersions_WhenProbeThrows_LogsErrorAndKeepsOtherCards`:
   plugin "a" throws from `GetVersionAsync`, plugin "b" returns "2.0"; mock logger; assert one
   `LogLevel.Error` entry, card "a" keeps `"…"`, card "b" shows "2.0" (`Task.WhenAll` runs every
   task; the failing card's writes are skipped, the others apply).
@@ -114,14 +114,14 @@ unchanged.
 The delta already exists under `openspec/changes/consolidate-version-population/specs/`;
 correct it in place, do not recreate it.
 
-- [ ] 3.1 Re-read `openspec/specs/agent-version/spec.md` (requirement at lines 97-107) against
+- [x] 3.1 Re-read `openspec/specs/agent-version/spec.md` (requirement at lines 97-107) against
   the implemented code from Stages 1-2 and correct any statement that does not match. Keep both
   original scenario names ("Refresh supersedes a population pass", "Current population
   completes"); the two new scenarios ("Surface exit cancels its population pass", "Population
   pass failure is logged") stay accurate — in particular the in-flight-probe clause: a probe
   already started may complete and cache its result (`AgentVersionService.cs:89-90` runs the
   process with `CancellationToken.None`), it just must not update the abandoned surface.
-- [ ] 3.2 `docs/backlog.md`: replace only the "Version population loop consolidation" entry
+- [x] 3.2 `docs/backlog.md`: replace only the "Version population loop consolidation" entry
   (lines 62-70) with a resolved entry in the format of the accent entry (lines 410+): resolved
   by the `consolidate-version-population` change (2026-10-24); state the resolved model — both
   live loops use the pane's generation + CTS + parallel shape, failures log through each
@@ -129,17 +129,17 @@ correct it in place, do not recreate it.
   complete and cache by design), and the legacy `MainWindow` remains the documented untouched
   exception. The file carries two unrelated pre-existing uncommitted entries — rewrite only
   this entry and leave every other line untouched.
-- [ ] 3.3 Run `dotnet build CLIHub.sln` — 0 warnings, 0 errors.
-- [ ] 3.4 Run `dotnet test CLIHub.sln` — every suite green; report the per-project counts.
-- [ ] 3.5 Run `openspec validate --all` — every item passes; quote the output.
-- [ ] 3.6 Run `graphify update .` from the repository root so the graph reflects the new loop
+- [x] 3.3 Run `dotnet build CLIHub.sln` — 0 warnings, 0 errors.
+- [x] 3.4 Run `dotnet test CLIHub.sln` — every suite green; report the per-project counts.
+- [x] 3.5 Run `openspec validate --all` — every item passes; quote the output.
+- [x] 3.6 Run `graphify update .` from the repository root so the graph reflects the new loop
   shape.
 - [ ] 3.7 Manual smoke (user): open Settings → CLI Agents with at least two agents declaring
   `version` commands; confirm cards appear with `…` and versions fill in; close Settings while
   the chip still shows `…` and confirm no `Agent version population` errors appear in the
   current day's log (`%APPDATA%\CLIHub\logs\`); re-open Settings and confirm versions fill in
   again (cache-served or re-probed).
-- [ ] 3.8 Report the exact gate outputs, any deviation, and the files changed for review. Do
+- [x] 3.8 Report the exact gate outputs, any deviation, and the files changed for review. Do
   not commit; ask the user about archiving and committing.
 
 **Final gate:** every step above passes or is explicitly reported as not run.
