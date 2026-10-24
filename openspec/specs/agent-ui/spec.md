@@ -218,7 +218,7 @@ THEN all agent-specific commands SHALL be disabled
 
 ### Requirement: Agent card action availability
 
-The card SHALL present actions appropriate to the agent's declared capabilities and current state. A card SHALL render with "Update" available exactly when the agent declares an `update` command; the running-agent blocked state SHALL be populated asynchronously after the cards render, through a population pass that is cancelled when the list is reloaded or the surface that started it goes away, so that a result from an obsolete pass is not applied. The state-based scenarios below apply to the settled state — once the population pass has completed for the current list. Until then, a card MAY transiently show "Update" as available while a process matching its agent is running; choosing "Update" in that state SHALL NOT start the update — the execution-time running-agent check blocks it and the card reports the block. When no agent declares an `update` command, no running-agent enumeration SHALL run. An enumeration or population failure SHALL be logged and SHALL leave the cards showing "Update" per declaration.
+The card SHALL present actions appropriate to the agent's declared capabilities and current state. A card SHALL render with "Update" available exactly when the agent declares an `update` command; the running-agent blocked state SHALL be populated asynchronously after the cards render, through a population pass that is cancelled when the list is reloaded or the surface that started it goes away, so that a result from an obsolete pass is not applied. The state-based scenarios below apply to the settled state — once the population pass has completed for the current list. Until then, a card MAY transiently show "Update" as available while a process matching its agent is running; choosing "Update" in that state SHALL NOT start the update — the execution-time running-agent check blocks it and the card reports the block. When no agent declares an `update` command, no running-agent enumeration SHALL run. An enumeration or population failure SHALL be logged and SHALL leave the cards showing "Update" per declaration. A process matches an agent per the `agent-process-matching` capability, including a process hosted inside a shared runtime whose command line identifies the agent.
 
 #### Scenario: Test always available
 
@@ -275,6 +275,16 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 - **WHEN** the running-agent enumeration fails
 - **THEN** the failure is logged through the application logger
 - **AND** the cards keep "Update" available exactly for the agents that declare an `update` command (no block is shown)
+
+#### Scenario: Update blocked by a runtime-hosted agent
+
+- **WHEN** the agent being updated runs inside a shared runtime host (for example a `node.exe` process started by the agent's npm shim whose command line names the agent's declared npm package) and no executable-name match exists
+- **THEN** once the blocked-state pass settles, "Update" is unavailable and the card explains that the running agent blocks it
+
+#### Scenario: Unrelated runtime-hosted processes do not block an update
+
+- **WHEN** runtime-host processes are running whose command lines do not name any declared npm package of the agent being updated (for example an unrelated node script)
+- **THEN** "Update" stays available for that agent
 
 ### Requirement: Agent card displayed content
 
