@@ -49,18 +49,19 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a regression report that the blocked state never lands or lands on a closed surface, or
   any future edit that adds cost to the running-agent enumeration path.
 
-### Monitor-level running-agent cache
+### Monitor-level running-agent cache (resolved)
 
-- Severity: Low (performance polish with a safety risk if done naively)
-- Evidence: `AgentProcessMonitor.GetRunningAgents` enumerates on every call — once per Settings
-  load, on every `CommandManager` requery of the launch window Update command
-  (`WindowActionCoordinator.CanExecuteUpdate`), and in the execution-time gate
-  (`AgentManagementService.UpdateAsync`). After the candidate-name pre-filter each pass is one
-  snapshot plus a handful of candidate reads, so the residual cost is low.
-- Proposed remedy: only with an explicit invalidation story: a TTL cache would make the
-  execution-time safety gate stale (an agent started inside the TTL would not block an update),
-  which the `agent-ui`/`preferences-ui` blocked-state scenarios do not permit.
-- Trigger: profiling shows the filtered enumeration as a hot spot on a requery path.
+- Status: Resolved by design, no code — the `commandline-agent-blocking` tier restructure
+  (2026-10-24) is the resolution.
+- Resolved model: the requery availability check runs the cheap executable-name tier (no WMI,
+  spec-pinned advisory), both execution-time gates run the full command-line tier off the UI
+  thread under the 2-second WMI budget, and the Settings blocked-state pass is async and
+  cancellable; the residual per-requery cost is one name-filtered `Process.GetProcesses`
+  snapshot. A cache was evaluated and rejected: gates must never be stale
+  (`agent-process-matching` "Execution-time checks use the command-line tier"), and an advisory
+  TTL cache has no provably fresh key and no profiling evidence.
+- Guarded by: the existing `WindowActionCoordinatorTests`/`AgentProcessMonitorTests` tier tests.
+- Trigger (reopen): profiling shows the filtered enumeration as a hot spot on a requery path.
 
 ### Runtime-hosted agent blocking (Option B) (resolved)
 
@@ -131,19 +132,22 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a regression report of wrong version placeholder text, or any future edit that adds a
   sentinel-literal check.
 
-### Runtime executable PATH-scan identity (Git Bash and PowerShell 7)
+### Runtime executable PATH-scan identity (Git Bash and PowerShell 7) (resolved)
 
-- Severity: Low (design-accepted)
-- Evidence: the PATH steps of `WindowsRuntimeLocator.LocateGitBash`
-  (`src/CLIHub.Core.Windows/WindowsRuntimeLocator.cs:233-303`) and `LocatePowerShell7` (`:304-369`)
-  accept the first matching executable outside the registry/well-known steps. For bash this may be a
-  non-Git-for-Windows flavor (Cygwin/MSYS); for pwsh it is deliberate, because Microsoft Store
-  installs surface as a WindowsApps execution alias. The `agent-commands` requirement wording
-  ("never an arbitrary `bash.exe` resolved from the operating system path") is stronger than what the
-  approved lookup order guarantees.
-- Proposed remedy: tighten the spec wording, or validate PATH hits against the distribution (Git:
-  `git.exe` sibling or version file; pwsh: keep as-is for Store alias support).
-- Trigger: a user report of a wrong bash/pwsh flavor, or any edit to the `agent-commands` spec.
+- Status: Resolved by the low-sweep-2 change (2026-10-24) via the spec-wording remedy; no
+  production change.
+- Resolved model: the `agent-commands` "Terminal vs captured execution" requirement now states
+  the actual guarantee (fixed preference order, absolute path, WSL-launcher exclusion, PATH hits
+  accepted without distribution verification for bash; pwsh PATH acceptance including the Store
+  execution alias pinned by an ADDED scenario). Distribution validation of bash PATH hits was
+  evaluated and rejected (heuristic false positives on Cygwin/MSYS2-with-git, false negatives on
+  portable layouts, safe-fail regression risk).
+- Guarded by: the unchanged locator facts
+  `Locate_GitBash_PathEntryOutsideWindowsDirectoryIsUsed`,
+  `Locate_GitBash_WslLauncherOnPath_ReturnsNull`,
+  `Locate_PowerShell7_PathEntryIsUsed`,
+  `Locate_PowerShell7_PathEntryInsideWindowsDirectoryIsUsed`.
+- Trigger (reopen): a user report of a wrong bash/pwsh flavor being launched.
 
 ### Registry InstallPath precedence can shadow a valid install (resolved)
 
@@ -217,12 +221,17 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a red round-trip or census test after adding a `Project`/`AppPreferences` property, or
   any future persistence-boundary change.
 
-### ProjectState shares live items at the persistence boundary
+### ProjectState shares live items at the persistence boundary (resolved)
 
-- Severity: Low
-- Evidence: `ProjectState.CopyTo`/`ApplyTo` share `Project` references with the cached snapshot.
-- Proposed remedy: copy items when crossing the boundary.
-- Trigger: anything that reads projects through `ConfigurationRepository`.
+- Status: Resolved by the low-sweep-2 change (2026-10-24).
+- Resolved model: all five `ProjectState` crossing points (`From`/`ApplyTo` ×2, `CopyTo`) copy
+  projects with the canonical `Project.Copy()`, and `ApplyTo` stores a fresh list of copies, so
+  the repository's cached snapshot never aliases `ProjectService`'s live `Project` instances and
+  in-place service mutations (`SetCurrentProject`, `ToggleFavorite`) can no longer leak into
+  stored state outside an update transaction.
+- Guarded by: the five `ProjectStateTests` isolation facts and the two `ProjectStateStoreTests`
+  facts (including the real-repository post-transaction mutation fact).
+- Trigger: any future persistence-boundary change or a new `ProjectState` consumer.
 
 ### ProjectPathPolicy duplication (resolved)
 

@@ -18,25 +18,28 @@ public sealed class ProjectState
     public string? CurrentProjectId { get; set; }
 
     /// <summary>
-    ///   Creates project state from the persisted application configuration.
+    ///   Creates owned project state from the persisted application configuration; each
+    ///   project is detached into its own copy so the state shares no references with the
+    ///   configuration.
     /// </summary>
     /// <param name="config"> The configuration containing project state. </param>
-    /// <returns> The owned project state. </returns>
+    /// <returns> The owned project state with detached project copies. </returns>
     public static ProjectState From(AppConfig config)
     {
         var state = new ProjectState
         {
             CurrentProjectId = config.CurrentProjectId
         };
-        state.Projects.AddRange(config.Projects);
+        state.Projects.AddRange(config.Projects.Select(project => project.Copy()));
         return state;
     }
 
     /// <summary>
-    ///   Creates project state from a detached configuration snapshot.
+    ///   Creates owned project state from a detached configuration snapshot; each project is
+    ///   copied so the state shares no references with the snapshot.
     /// </summary>
     /// <param name="snapshot"> The configuration snapshot. </param>
-    /// <returns> The owned project state. </returns>
+    /// <returns> The owned project state with detached project copies. </returns>
     public static ProjectState From(ConfigurationSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
@@ -45,34 +48,37 @@ public sealed class ProjectState
         {
             CurrentProjectId = snapshot.CurrentProjectId
         };
-        state.Projects.AddRange(snapshot.Projects);
+        state.Projects.AddRange(snapshot.Projects.Select(project => project.Copy()));
         return state;
     }
 
     /// <summary>
-    ///   Copies the owned project state into the persistence-facing configuration model.
+    ///   Copies the owned project state — each project detached — into the
+    ///   persistence-facing configuration model.
     /// </summary>
     /// <param name="config"> The configuration to update. </param>
     public void ApplyTo(AppConfig config)
     {
-        config.Projects = this.Projects;
+        config.Projects = this.Projects.Select(project => project.Copy()).ToList();
         config.CurrentProjectId = this.CurrentProjectId;
     }
 
     /// <summary>
-    ///   Copies the owned project state into a configuration snapshot.
+    ///   Copies the owned project state — each project detached — into a configuration
+    ///   snapshot.
     /// </summary>
     /// <param name="snapshot"> The snapshot to update. </param>
     public void ApplyTo(ConfigurationSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
 
-        snapshot.Projects = this.Projects;
+        snapshot.Projects = this.Projects.Select(project => project.Copy()).ToList();
         snapshot.CurrentProjectId = this.CurrentProjectId;
     }
 
     /// <summary>
-    ///   Copies this state into another owned project state.
+    ///   Copies this state into another owned project state, detaching each project from
+    ///   this state.
     /// </summary>
     /// <param name="target"> The state to replace. </param>
     public void CopyTo(ProjectState target)
@@ -80,7 +86,7 @@ public sealed class ProjectState
         ArgumentNullException.ThrowIfNull(target);
 
         target.Projects.Clear();
-        target.Projects.AddRange(this.Projects);
+        target.Projects.AddRange(this.Projects.Select(project => project.Copy()));
         target.CurrentProjectId = this.CurrentProjectId;
     }
 }

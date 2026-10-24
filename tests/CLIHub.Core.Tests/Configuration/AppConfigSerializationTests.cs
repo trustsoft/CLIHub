@@ -276,7 +276,7 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
-    public void ProjectState_TransfersProjectOwnershipWithoutChangingValues()
+    public void ProjectState_ApplyTo_CopiesProjectsWithoutSharingReferences()
     {
         var config = new AppConfig
         {
