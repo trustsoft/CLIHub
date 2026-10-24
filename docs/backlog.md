@@ -370,7 +370,37 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   local exclude file).
 - Trigger: the next GitNexus run on a fresh clone, or any `.gitignore` edit.
 
+### `pipeline-state check` cannot validate commit shas from foreign repositories
+
+- Severity: Low (informational warning only; `check` still exits 0 and the sidebar is unaffected)
+- Evidence: `.opencode/scripts/pipeline-state.mjs:676-684` validates every recorded sha with
+  `git cat-file -e` against a single repo root (`--repo`, defaulting to the state file's parent —
+  the CLIHub repo). The `opencode-sidebar-suite-packaging` entry records `0185674` from
+  `D:\Projects\opencode-sidebar-suite`, so `check` reports a standing `sha-missing` warning (first
+  seen 2026-10-24). `update` cannot clear a sha (empty values are rejected at
+  `.opencode/scripts/pipeline-state.mjs:462-464`), and a direct JSON edit would bypass the
+  single-writer rule.
+- Proposed remedy: support foreign-repo shas — e.g. an attested form
+  (`tooling: <repo>: <sha>`) that `check` validates against the named repository, or a per-entry
+  repo hint — so out-of-repo tooling commits stay traceable without a standing warning.
+- Trigger: the next state entry that records a sha from a non-CLIHub repository, or any edit of the
+  `pipeline-state.mjs` check path.
+
 ## UI and theming
+
+### Resolver role override ignores exhaustedUntil
+
+- Severity: Low (agent tooling; a dispatch fails at runtime instead of falling back)
+- Evidence: `.opencode/scripts/resolve-model.mjs:181-196` — the `roleOverrides` branch returns the
+  pinned model immediately without consulting `runtime.exhaustedUntil`; the exhaustion filter
+  (lines 198-225) applies only to the preset chain. Observed 2026-10-24: with
+  `roleOverrides.planner = opencode/glm-5.3-flash-free` and the free quota exhausted, the
+  `pipe/planner` dispatch for `follow-windows-theme-changes` died with "Free usage limit reached",
+  and after `--exhaust` the resolver kept returning the same model.
+- Proposed remedy: apply the same `isStillExhausted` skip to the role override (fall through to the
+  preset chain when the pinned model is exhausted), or at least print a loud warning on resolution.
+- Trigger: any dispatch that fails on an exhausted overridden model, or the next
+  `resolve-model.mjs` edit.
 
 ### Settings-page registration lives in two places
 
