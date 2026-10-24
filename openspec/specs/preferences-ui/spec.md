@@ -93,7 +93,7 @@ Saving SHALL validate a typed settings draft, apply all required system preferen
 #### Scenario: Startup window visibility applied
 
 - **WHEN** the user changes "Start minimized to tray" and saves
-- **THEN** the next application start shows the main window when the toggle is off and starts in the system tray when it is on
+- **THEN** the next application start shows the launch window when the toggle is off and starts in the system tray when it is on
 
 #### Scenario: Invalid draft does not save
 

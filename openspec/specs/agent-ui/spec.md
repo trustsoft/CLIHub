@@ -6,7 +6,7 @@ presented as usable operations for the selected agent.
 
 ## Requirements
 
-### Requirement: REQ-AGENT-CAP-002: Update Command Support Detection
+### Requirement: Update command support detection
 
 The system SHALL detect whether an agent supports the update command.
 
@@ -26,7 +26,7 @@ THEN it SHALL return false
 
 ---
 
-### Requirement: REQ-AGENT-CAP-003: Version Command Support Detection
+### Requirement: Version command support detection
 
 The system SHALL detect whether an agent supports the version command.
 
@@ -46,7 +46,7 @@ THEN it SHALL return false
 
 ---
 
-### Requirement: REQ-AGENT-CAP-005: Resume Command Capability Check
+### Requirement: Resume command enablement for session-capable agents
 
 The system SHALL enable the Resume command only when the selected agent supports session resumption.
 
@@ -66,7 +66,7 @@ THEN the Resume Session menu item SHALL be disabled
 
 ---
 
-### Requirement: REQ-AGENT-CAP-006: Update Command Capability Check
+### Requirement: Update command enablement for updatable agents
 
 The system SHALL enable the Update command only when the selected agent supports updates.
 
@@ -86,7 +86,7 @@ THEN the Update menu item SHALL be disabled
 
 ---
 
-### Requirement: REQ-AGENT-CAP-007: Version Command Capability Check
+### Requirement: Version command enablement for version-capable agents
 
 The system SHALL enable the Show Version command only when the selected agent supports version display.
 
@@ -106,7 +106,7 @@ THEN the Show Version menu item SHALL be disabled
 
 ---
 
-### Requirement: REQ-AGENT-CAP-008: Dynamic Command State Updates
+### Requirement: Dynamic command state updates
 
 The system SHALL update command enabled/disabled states immediately when agent selection changes.
 
@@ -129,7 +129,7 @@ THEN the menu commands SHALL reflect that agent's capabilities accurately
 
 ---
 
-### Requirement: REQ-AGENT-CAP-009: Launch Command Always Available
+### Requirement: Unconditional launch command availability
 
 The system SHALL always enable the Launch command when an agent is selected, regardless of plugin.json contents.
 
@@ -143,7 +143,7 @@ BECAUSE all agents support launching by convention
 
 ---
 
-### Requirement: REQ-AGENT-CAP-010: Visual Distinction of Disabled Commands
+### Requirement: Visual distinction of disabled commands
 
 The system SHALL visually distinguish disabled menu commands from enabled ones.
 
@@ -157,7 +157,7 @@ AND the command SHALL not be clickable
 
 ---
 
-### Requirement: REQ-AGENT-CAP-011: No Breaking Changes to Plugin Schema
+### Requirement: Plugin schema compatibility
 
 The capability detection system SHALL work with existing plugin.json files without requiring schema changes.
 
@@ -171,7 +171,7 @@ AND capability detection SHALL correctly identify supported commands
 
 ---
 
-### Requirement: REQ-AGENT-CAP-012: Graceful Handling of Malformed Plugins
+### Requirement: Graceful handling of malformed plugins
 
 The system SHALL handle malformed or incomplete plugin.json files without crashing.
 
