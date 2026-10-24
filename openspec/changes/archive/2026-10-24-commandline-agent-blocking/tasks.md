@@ -240,7 +240,7 @@ in place, do not recreate them.
 - [x] 5.5 Run `openspec validate --all` — every item passes; quote the output.
 - [x] 5.6 Run `graphify update .` from the repository root so the graph reflects the new
   matching, monitor, inspector, and coordinator surfaces.
-- [ ] 5.7 Manual smoke (user; blocks commit and archive per the repository policy): start a
+- [x] 5.7 Manual smoke (user; blocks commit and archive per the repository policy): start a
   runtime-hosted agent (for example
   `node "%APPDATA%\npm\node_modules\@opencode\cli\bin\opencode.js"` or any installed npm agent
   shim); open Settings → CLI Agents and confirm the card's Update is blocked with the running
