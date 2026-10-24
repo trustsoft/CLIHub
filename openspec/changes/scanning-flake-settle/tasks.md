@@ -10,13 +10,13 @@ reports a `Stop` caller not listed there, stop and reconcile before editing.
 
 ## 1. Stage 1 — the settle-wait fix in `Stop_DisposesWatcherAndClearsStatus`
 
-- [ ] 1.1 Run `node .gitnexus/run.cjs impact "Stop_DisposesWatcherAndClearsStatus"
+- [x] 1.1 Run `node .gitnexus/run.cjs impact "Stop_DisposesWatcherAndClearsStatus"
       --direction upstream --repo .` and `node .gitnexus/run.cjs impact "Stop"
       --direction upstream --repo .` (or the MCP equivalent). Expected: the test method has no
       callers (a test is a leaf; `UNKNOWN`/empty is the expected verdict, not a warning to act
       on), and `ProjectScanningService.Stop`'s upstream set matches the design census — the two
       test callers and no production caller. Stop and reconcile on any surprise.
-- [ ] 1.2 In `tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs`, replace the wait
+- [x] 1.2 In `tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs`, replace the wait
       at `:127` of `Stop_DisposesWatcherAndClearsStatus` with the design D1 predicate (watcher
       created **and** scan settled):
 
@@ -28,13 +28,13 @@ reports a `Stop` caller not listed there, stop and reconcile before editing.
 
       Change nothing else in the file — not `WaitFor`, not the asserts at `:131-132`, not any
       other test. Do not touch production code.
-- [ ] 1.3 Gate: `dotnet build CLIHub.sln` (zero errors), then
+- [x] 1.3 Gate: `dotnet build CLIHub.sln` (zero errors), then
       `dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj --filter "FullyQualifiedName~ProjectScanningServiceTests"`
       — all facts in the class green (the rewritten test included). If the rewritten wait itself
       fails, diagnose against design "Current state" before touching anything — the predicate is
       pinned by the green sibling (`Stop_ClearsScannedDirectoryCount`, `:209`); do not bump the
       timeout or weaken the predicate.
-- [ ] 1.4 Gate: full-solution run 1 of 6 — `dotnet test CLIHub.sln --logger trx` — zero failures.
+- [x] 1.4 Gate: full-solution run 1 of 6 — `dotnet test CLIHub.sln --logger trx` — zero failures.
       Any failure of `Stop_DisposesWatcherAndClearsStatus` here stops the change: capture the trx,
       diagnose, report (deviation protocol); never re-run until green and call it fixed.
 
@@ -46,14 +46,14 @@ bar over the observed 1/3–2/3 failure rate, not a proof; the structural determ
 (design D1) is the actual fix proof, and the runs verify the rewritten test still exercises the
 start → settle → stop → `NotConfigured` transition under load.
 
-- [ ] 2.1 Run the remaining nine full-solution runs (runs 2–10): `dotnet test CLIHub.sln
+- [x] 2.1 Run the remaining nine full-solution runs (runs 2–10): `dotnet test CLIHub.sln
       --logger trx`, sequentially, no filters. Record pass/fail per run in the stage report
       (timestamp + totals). On any failure of this test: stop, capture the trx, diagnose against
       design "Current state", and report — do not restart the count silently and do not weaken
       anything. A failure of a *different* test is handled per its own backlog entry (for the
       sibling watch item, record the named test as the recurrence evidence it asks for) and is
       not a gate failure of this change unless the change caused it.
-- [ ] 2.2 Gate: ten consecutive green full-solution runs recorded (1 from stage 1 + 9 here), and
+- [x] 2.2 Gate: ten consecutive green full-solution runs recorded (1 from stage 1 + 9 here), and
       `git status --porcelain` shows no tracked-file modifications beyond the stage-1 test edit
       (trx files under `TestResults/` are run artifacts — leave them out of any commit).
 - [x] 2.3 Resolved by the user (2026-10-24): the acceptance bar is **10** consecutive green
@@ -94,12 +94,12 @@ per design D5:
 
 ## 4. Stage 4 — final gates and report
 
-- [ ] 4.1 Gate: `dotnet build CLIHub.sln` zero errors; the sixth (or tenth) full-solution run
+- [x] 4.1 Gate: `dotnet build CLIHub.sln` zero errors; the sixth (or tenth) full-solution run
       from stage 2 is the final full-suite evidence — do not skip it and do not re-run the suite
       here without cause.
-- [ ] 4.2 Gate: `openspec validate --all` passes.
-- [ ] 4.3 `graphify update .` to refresh the knowledge graph after the test edit.
-- [ ] 4.4 Review `git status --porcelain` and `git diff --stat`: only
+- [x] 4.2 Gate: `openspec validate --all` passes.
+- [x] 4.3 `graphify update .` to refresh the knowledge graph after the test edit.
+- [x] 4.4 Review `git status --porcelain` and `git diff --stat`: only
       `tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs` (one predicate) plus this
       change's files under `openspec/changes/scanning-flake-settle/` are modified; no production
       file, no other test, no spec. Report the stage-2 run log and results honestly (a red run is

@@ -6,20 +6,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent and process domain
 
-### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus
+### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus (resolved)
 
-- Severity: Low (test reliability only; pre-existing, unrelated to fix-settings-open-delay)
-- Evidence: failed 1 of 3 full-solution runs under parallel load during fix-settings-open-delay
-  verification (2026-10-20); green in isolation and on re-run. Recurred during the `low-sweep`
-  verification (2026-10-24): failed 2 of 3 full-solution runs, green isolated, and the failing
-  test was captured by a trx run — `ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus`,
-  matching the test-planning prediction recorded in that change's design. The test races
-  `Start()`'s background scan against `Stop()` — it waits only for watcher creation before
-  stopping, so the status can still read `Idle` when `NotConfigured` is asserted
-  (`tests/CLIHub.Core.Tests/Scanning/ProjectScanningServiceTests.cs:120-133`).
-- Proposed remedy: wait for the scan to settle (idle/not-configured transition) before asserting, or
-  expose a deterministic completion signal from `ProjectScanningService.Stop`.
-- Trigger: next red CI/dev run of this test, or any work touching project scanning.
+- Status: Resolved by the `scanning-flake-settle` change (2026-10-24).
+- Resolved model: the test's pre-`Stop()` wait now settles on the service's real observables —
+  `Watchers.Count == 1 && Status.State == Idle && Status.ScannedDirectoryCount == 2` — which only
+  the scan-final status post can publish in this scenario, so `Stop()`'s `NotConfigured` write is
+  deterministically the final one (the race is removed structurally, not narrowed). Post-`Stop`
+  asserts are byte-identical; no production change — `Stop()` has zero production callers (only
+  the two sibling tests).
+- Guarded by: the rewritten test itself, ten consecutive green full-solution trx-logged runs
+  (2026-10-24, ~15 s each, 1140/0 each; corroborated by 30 on-disk trx artifacts with zero failed
+  counters), and the structural publisher-enumeration argument in the change's design (D1) — the
+  actual fix proof.
+- Trigger: a recurrence report of this test failing under parallel load.
 
 ### Async blocked-state population on the agents page (resolved)
 
@@ -310,7 +310,11 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   Five subsequent runs were fully green, as were the implementer's and independent verifier's runs.
   Likely candidates are the pre-existing timing-sensitive tests: `UpdateCheckerTests` and
   `UpdateDownloaderTests` (100 ms cancellation windows) and `ProjectScanningServiceTests`
-  (stopwatch-bounded wait loop).
+  (stopwatch-bounded wait loop). During the `scanning-flake-settle` fix (2026-10-24), the captured
+  recurring flake was exactly `ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus`
+  (see its resolved entry), making it the probable identity of this incident too; the
+  `UpdateCheckerTests`/`UpdateDownloaderTests` candidates stay unexcluded until a captured failure
+  names one of them.
 - Proposed remedy: on recurrence, re-run with `--logger trx`, capture the test name, and stabilize the
   offending timing window.
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.

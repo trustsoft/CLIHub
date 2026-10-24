@@ -124,7 +124,9 @@ public class ProjectScanningServiceTests : IDisposable
         this.preferences.WatchedDirectories = [root];
         var service = this.CreateService();
         service.Start();
-        Assert.True(WaitFor(() => this.watcherFactory.Watchers.Count == 1));
+        Assert.True(WaitFor(() => this.watcherFactory.Watchers.Count == 1
+                             && service.Status.State == ProjectScanState.Idle
+                             && service.Status.ScannedDirectoryCount == 2));
 
         service.Stop();
 
