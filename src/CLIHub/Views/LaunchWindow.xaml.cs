@@ -36,6 +36,7 @@ public partial class LaunchWindow : Window, IStartupWindow
     private bool draggingSplitter;
     private double dragStartX;
     private double dragStartProjectsWidth;
+    private bool closed;
 
     /// <summary>
     ///   Creates the window and binds it to the shared view model.
@@ -57,10 +58,17 @@ public partial class LaunchWindow : Window, IStartupWindow
     }
 
     /// <summary>
-    ///   Shows the window at the configured popup screen position.
+    ///   Shows the window at the configured popup screen position. A request that arrives after the
+    ///   window has closed — during application shutdown, while the tray icon and activation
+    ///   subscriptions are still live — is ignored: it does no work at all.
     /// </summary>
     public void ShowOnPointerMonitor()
     {
+        if (this.closed)
+        {
+            return;
+        }
+
         var position = this.preferencesStore.Load().PopupScreenPosition;
 
         WindowPositioner.Place(this, position);
@@ -82,13 +90,28 @@ public partial class LaunchWindow : Window, IStartupWindow
         this.Activate();
 
         // SizeToContent settles during the first layout pass, so place again once the real
-        // size is known.
+        // size is known. The deferred placement goes through PlaceWhenOpen so it is ignored
+        // when the window has closed by the time the callback runs.
         this.Dispatcher.BeginInvoke(
-            new Action<Window, PopupScreenPosition>(static (window, popupPosition) =>
-                WindowPositioner.Place(window, popupPosition)),
+            new Action<PopupScreenPosition>(this.PlaceWhenOpen),
             DispatcherPriority.Loaded,
-            this,
             position);
+    }
+
+    /// <summary>
+    ///   Places the window at <paramref name="position" />. Used for the deferred placement queued
+    ///   after <c>Show</c>, which runs when the layout pass settles and can arrive after the
+    ///   window has closed; the request is ignored in that case.
+    /// </summary>
+    /// <param name="position"> The configured popup screen position. </param>
+    internal void PlaceWhenOpen(PopupScreenPosition position)
+    {
+        if (this.closed)
+        {
+            return;
+        }
+
+        WindowPositioner.Place(this, position);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
@@ -272,6 +295,19 @@ public partial class LaunchWindow : Window, IStartupWindow
     ///   inside it is clicked, so the click handler closes both.
     /// </summary>
     private void OnMenuActionInvoked(object sender, RoutedEventArgs e) => this.CloseActionsMenus();
+
+    /// <summary>
+    ///   Marks the window as closed before the base close bookkeeping runs. During application
+    ///   shutdown WPF closes the window even though <see cref="OnClosing" /> cancels, so this is
+    ///   the single point that records that the window cannot be reopened after application
+    ///   shutdown has closed it; show requests that still arrive afterwards are ignored.
+    /// </summary>
+    /// <param name="e"> Closed event arguments. </param>
+    protected override void OnClosed(EventArgs e)
+    {
+        this.closed = true;
+        base.OnClosed(e);
+    }
 
     /// <summary>
     ///   Hides the window instead of closing it; the application lives in the tray.

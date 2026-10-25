@@ -22,6 +22,10 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - The CLI Agents page shows the probe settings above the agent list (page order MANAGEMENT → PROBE → AGENTS); layout-only reorder, no behavior change
 - The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout" with matching hints and validation errors, and the list button is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`settings-theme`, `preferences-ui`)
 
+### Fixed
+
+- A show request arriving after the launch window has closed during application shutdown (tray click, tray menu command, or second-instance activation before the tray icon is disposed) no longer crashes the process with `InvalidOperationException`: the launch window tracks that it has closed and ignores late show requests and deferred placements without loading preferences or positioning, and normal show and positioning behavior is unchanged (`app-lifecycle`)
+
 ## 1.0.0 — 2026-10-23
 
 ### Added
