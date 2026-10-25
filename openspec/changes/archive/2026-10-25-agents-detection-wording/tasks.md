@@ -86,7 +86,7 @@ session needs no other context.
 
 ## 6. Stage 5 — manual smoke and wrap-up
 
-- [ ] 6.1 Manual smoke (user-confirmed; blocks commit/archive per repo policy): open
+- [x] 6.1 Manual smoke (user-confirmed; blocks commit/archive per repo policy): open
       Settings → CLI Agents and confirm — the third summary card is labelled "DETECTION" (value
       still "15 min · 10 s", detail "Built-in defaults", tooltip "Effective detection cache and
       version-check timeout"); the section header reads "DETECTION"; the field cards read
@@ -96,6 +96,6 @@ session needs no other context.
       value (e.g. 0) into "Version check timeout" and saving shows the new "Version check timeout
       must be..." error and does not save; setting a custom value flips the card detail to
       "Custom detection settings".
-- [ ] 6.2 Report results and wait for the user's explicit approval before any `git commit` or
+- [x] 6.2 Report results and wait for the user's explicit approval before any `git commit` or
       `openspec archive agents-detection-wording` (repo policy; approval for one never carries to
       the other; 6.1 must be confirmed first).
