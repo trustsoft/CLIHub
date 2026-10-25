@@ -391,6 +391,24 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the next red `CLIHub.Tests` run that coincides with the application being open, or any CI job
   that runs the suite on a machine where CLIHub autostarts.
 
+### ApplicationHost second-instance activation test times out on CI (low, deferred)
+
+- Severity: Low (CI flake; the same test passes locally and on the next commit).
+- Evidence: CI run `40226957693` (commit `7355819`) failed
+  `ApplicationHostTests.Start_SecondInstance_SignalsActivationAndSkipsEnvironmentSetup`
+  (`tests/CLIHub.Tests/ApplicationHostTests.cs:46-76`) with `System.TimeoutException` at `:70` after its
+  5 s wait; the following commit `bdd9770` passed the same test on the same runner image. The signal is
+  best-effort: `SignalActivation` makes two `Connect(500)` attempts with a 100 ms pause and swallows
+  every failure (`src/CLIHub.Core.Windows/SingleInstanceGuard.cs:70-87`), while the listening server is
+  started through `Task.Run` in the constructor (`:59-63`). On a cold or loaded runner the pipe server
+  may not yet sit in `WaitForConnectionAsync` when the duplicate signals, so the signal is lost and
+  nothing retries.
+- Proposed remedy: retry the connect until an overall deadline (~2 s) instead of two fixed attempts, or
+  retry signalling from the test until the activation event fires; optionally expose a server-ready
+  signal for tests.
+- Trigger: a second CI occurrence, or a user report that launching the app while it is already open
+  does not bring the window forward.
+
 ## Agent tooling
 
 ### Reasoning effort is not weighted into the exhaustion logic
