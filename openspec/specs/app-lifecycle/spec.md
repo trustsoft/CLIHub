@@ -108,7 +108,11 @@ The application SHALL show or hide its launch window at startup according to the
 
 ### Requirement: Launch window popup shell
 
-The launch window SHALL behave as a popup shell that stays out of the way and can be pinned open.
+The launch window SHALL behave as a popup shell that stays out of the way and can be pinned open. A
+show request that arrives after the launch window has closed — which happens during application
+shutdown, when windows are closed while the tray icon and activation subscriptions are still live —
+SHALL be ignored: the closed window SHALL not be positioned, shown, or acted on, no unhandled
+exception SHALL escape the request, and the application SHALL continue its shutdown.
 
 #### Scenario: No taskbar entry
 - **WHEN** the launch window is shown
@@ -145,6 +149,12 @@ The launch window SHALL behave as a popup shell that stays out of the way and ca
 #### Scenario: Positioned on the pointer's monitor
 - **WHEN** the launch window is shown from the tray, the global hotkey, a second-instance activation, or startup
 - **THEN** it is positioned according to the configured popup screen position, which defaults to centred in the work area of the monitor that contains the pointer at that moment
+
+#### Scenario: Show request after the window has closed is ignored
+- **WHEN** the launch window has closed during application shutdown and a show request arrives before the tray icon is disposed, from a tray click, a tray menu command, or a second-instance activation
+- **THEN** the request is ignored without positioning or showing the closed window and without loading preferences
+- **AND** the deferred placement that was queued before the window closed is also ignored
+- **AND** the application completes its shutdown without an unhandled exception
 
 ### Requirement: Single instance resource ownership
 
