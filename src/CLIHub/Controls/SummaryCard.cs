@@ -9,8 +9,7 @@ using System.Windows.Controls;
 public enum SummaryCardTone
 {
     /// <summary>
-    ///   The muted tone: the icon uses the muted text brush and the value uses the primary text
-    ///   brush.
+    ///   The neutral tone: the value uses the primary text brush.
     /// </summary>
     Neutral,
 
@@ -18,8 +17,8 @@ public enum SummaryCardTone
     Accent,
 
     /// <summary>
-    ///   The fully muted tone: both the icon and the value use the muted text brush. Used for a value
-    ///   that is a placeholder rather than a measurement, such as an unset selection.
+    ///   The fully muted tone: the value uses the muted text brush. Used for a value that is a
+    ///   placeholder rather than a measurement, such as an unset selection.
     /// </summary>
     Muted,
 
@@ -35,10 +34,10 @@ public enum SummaryCardTone
 ///   optional danger-toned alert line, with an optional leading icon block.
 /// </summary>
 /// <remarks>
-///   <see cref="SummaryCardTone.Neutral" /> is the muted tone. On <see cref="Icon" /> it renders the
-///   muted text brush; on <see cref="Value" /> it renders the primary text tone. <see cref="Alert" />
-///   always renders in the danger tone and has no tone property of its own, because every alert is a
-///   problem statement.
+///   The icon always renders in the primary text brush, so a summary row reads as one block of text.
+///   <see cref="SummaryCardTone.Neutral" /> is the muted tone and renders <see cref="Value" /> in the
+///   primary text tone. <see cref="Alert" /> always renders in the danger tone and has no tone
+///   property of its own, because every alert is a problem statement.
 /// </remarks>
 public sealed class SummaryCard : Control
 {
@@ -47,12 +46,6 @@ public sealed class SummaryCard : Control
     /// </summary>
     public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
         nameof(Icon), typeof(string), typeof(SummaryCard), new PropertyMetadata(string.Empty));
-
-    /// <summary>
-    ///   Identifies the <see cref="IconTone" /> property.
-    /// </summary>
-    public static readonly DependencyProperty IconToneProperty = DependencyProperty.Register(
-        nameof(IconTone), typeof(SummaryCardTone), typeof(SummaryCard), new PropertyMetadata(SummaryCardTone.Neutral));
 
     /// <summary>
     ///   Identifies the <see cref="Label" /> property.
@@ -122,16 +115,6 @@ public sealed class SummaryCard : Control
     {
         get => (string)this.GetValue(IconProperty);
         set => this.SetValue(IconProperty, value);
-    }
-
-    /// <summary>
-    ///   The tone of the icon glyph. <see cref="SummaryCardTone.Neutral" /> renders it in the muted
-    ///   text brush.
-    /// </summary>
-    public SummaryCardTone IconTone
-    {
-        get => (SummaryCardTone)this.GetValue(IconToneProperty);
-        set => this.SetValue(IconToneProperty, value);
     }
 
     /// <summary>

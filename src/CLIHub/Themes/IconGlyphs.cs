@@ -34,8 +34,12 @@ internal static class IconGlyphs
     public const string Ringer = "\uEA8F";
     public const string Info = "\uE946";
     public const string Zoom = "\uE71E";
+    public const string Search = "\uE721";
+    public const string Eye = "\uE7B3";
     public const string Blocked = "\uE733";
     public const string Copy = "\uE8C8";
+    public const string Edit = "\uE70F";
+    public const string Code = "\uE943";
     public const string Filter = "\uE71C";
     public const string BulletedList = "\uE8FD";
     public const string FolderOpen = "\uE8B7";

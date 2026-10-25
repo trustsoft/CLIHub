@@ -344,9 +344,10 @@
     </Style>
 
     <!--
-        Page-header summary card: label, value, optional detail and alert lines, icon block. The tones
-        are applied by triggers on the templated parent, so the brushes stay palette-driven: Neutral
-        (the default) is the muted icon tone and the primary text tone, and Alert is always danger.
+        Page-header summary card: label, value, optional detail and alert lines, icon block. The icon
+        always uses the primary text brush so it matches the value line and the palette. The value
+        tones are applied by triggers on the templated parent, so the brushes stay palette-driven:
+        Neutral (the default) is the primary text tone, and Alert is always danger.
     -->
     <Style TargetType="{x:Type controls:SummaryCard}">
         <!-- A card is a read-only metric, not an input: it must not take part in the tab order. -->
@@ -399,28 +400,16 @@
                                     BorderBrush="{DynamicResource ControlStrokeBrush}"
                                     BorderThickness="1"
                                     CornerRadius="{StaticResource Sizing.CornerRadius.IconBox}">
-                                <TextBlock x:Name="IconGlyph"
-                                           HorizontalAlignment="Center"
+                                <TextBlock HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                            FontSize="11"
-                                           Foreground="{DynamicResource TextMutedBrush}"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{TemplateBinding Icon}"/>
                             </Border>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <!-- Icon tone: Neutral keeps the muted brush set on the glyph above. -->
-                        <Trigger Property="IconTone" Value="Accent">
-                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource AccentBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IconTone" Value="Success">
-                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IconTone" Value="Danger">
-                            <Setter TargetName="IconGlyph" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
-                        </Trigger>
-
                         <!-- Value tone: Neutral keeps the primary text tone set on the value above. -->
                         <Trigger Property="ValueTone" Value="Muted">
                             <Setter TargetName="ValueText" Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>

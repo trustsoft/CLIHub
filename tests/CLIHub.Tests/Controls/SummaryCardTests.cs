@@ -7,13 +7,12 @@ using CLIHub.Controls;
 public sealed class SummaryCardTests
 {
     [Fact]
-    public void Constructor_DefaultToneProperties_AreNeutral()
+    public void Constructor_DefaultValueTone_IsNeutral()
     {
         RunOnSta(() =>
         {
             var card = new SummaryCard();
 
-            Assert.Equal(SummaryCardTone.Neutral, card.IconTone);
             Assert.Equal(SummaryCardTone.Neutral, card.ValueTone);
         });
     }

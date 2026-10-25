@@ -184,20 +184,18 @@
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <controls:SummaryCard Detail="{Binding ProjectMixSummary}"
                                           DetailToolTip="Projects found by scanning plus projects added manually"
-                                          Icon="{x:Static themes:IconGlyphs.FolderOpen}"
-                                          IconTone="Accent"
+                                          Icon="{x:Static themes:IconGlyphs.Code}"
                                           Label="PROJECTS"
                                           Value="{Binding TotalProjectCount}"/>
 
                     <controls:SummaryCard Detail="{Binding AgentsSupportSummary}"
                                           Icon="{x:Static themes:IconGlyphs.Robot}"
-                                          IconTone="Success"
                                           Label="AGENTS"
                                           Value="{Binding AgentsInstalledCount}"/>
 
                     <controls:SummaryCard Detail="{Binding WatcherDetailText}"
                                           DetailToolTip="{Binding WatcherDetailText}"
-                                          Icon="{x:Static themes:IconGlyphs.Sync}"
+                                          Icon="{x:Static themes:IconGlyphs.Eye}"
                                           Label="DAEMON"
                                           Value="{Binding WatcherStateLabel}"
                                           ValueTone="{Binding WatcherStateTone}"/>
@@ -210,20 +208,18 @@
                                           AlertToolTip="Projects whose folder no longer exists"
                                           Detail="{Binding ProjectRegistry.ProjectMixSummary}"
                                           DetailToolTip="Projects found by scanning plus projects added manually"
-                                          Icon="{x:Static themes:IconGlyphs.FolderOpen}"
-                                          IconTone="Accent"
+                                          Icon="{x:Static themes:IconGlyphs.Code}"
                                           IsAlertVisible="{Binding ProjectRegistry.HasMissingFolders}"
                                           Label="PROJECTS"
                                           Value="{Binding ProjectRegistry.TotalCount}"/>
 
                     <controls:SummaryCard Detail="Registered manually"
-                                          Icon="{x:Static themes:IconGlyphs.FolderAdd}"
-                                          IconTone="Accent"
+                                          Icon="{x:Static themes:IconGlyphs.Edit}"
                                           Label="MANUAL"
                                           Value="{Binding ProjectRegistry.ManualCount}"/>
 
                     <controls:SummaryCard Detail="Managed by Project Scanning"
-                                          Icon="{x:Static themes:IconGlyphs.Sync}"
+                                          Icon="{x:Static themes:IconGlyphs.Search}"
                                           Label="DISCOVERED"
                                           Value="{Binding ProjectRegistry.DiscoveredCount}"/>
                 </controls:SpacedPanel>
@@ -235,13 +231,11 @@
                     <controls:SummaryCard Detail="{Binding AgentsState.AvailabilitySummary}"
                                           DetailToolTip="Installed agents and the number of supported plugins"
                                           Icon="{x:Static themes:IconGlyphs.Robot}"
-                                          IconTone="Success"
                                           Label="AGENTS"
                                           Value="{Binding AgentsState.InstalledAgentCount}"/>
 
                     <controls:SummaryCard Detail="{Binding AgentsState.DefaultAgentDetail}"
                                           Icon="{x:Static themes:IconGlyphs.FavoriteStar}"
-                                          IconTone="Accent"
                                           Label="DEFAULT"
                                           Value="{Binding AgentsState.DefaultAgentName}"
                                           ValueTone="{Binding AgentsState.DefaultAgentValueTone}"
