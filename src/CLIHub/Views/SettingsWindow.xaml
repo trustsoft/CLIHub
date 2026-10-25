@@ -249,7 +249,7 @@
 
                     <controls:SummaryCard Detail="{Binding ProbePolicyDetail}"
                                           DetailToolTip="Effective detection cache and version-check timeout"
-                                          Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                                          Icon="{x:Static themes:IconGlyphs.Refresh}"
                                           Label="DETECTION"
                                           Value="{Binding ProbePolicySummary}"/>
                 </controls:SpacedPanel>

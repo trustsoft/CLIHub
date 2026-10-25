@@ -21,6 +21,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - Hygiene sweep: removed the registered-but-unused `RuntimeSelector` with its `RuntimeType.WindowsTerminal` producer member and the unused `AgentProcessMatcher` logger; `.gitnexus/` is ignored; the Settings Projects page reuses `ProjectPathPolicy` for duplicate-folder detection (an already-registered drive/UNC root now reports the duplicate error instead of being silently accepted); `ProjectService` mutations return detached copies (`hygiene-sweep`)
 - The CLI Agents page shows the probe settings above the agent list (page order MANAGEMENT → PROBE → AGENTS); layout-only reorder, no behavior change
 - The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout" with matching hints and validation errors, and the list button is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`settings-theme`, `preferences-ui`)
+- Two Settings icons now match their actions: the CLI Agents detection summary card uses the same refresh glyph as the Detect action above the agent list, and the sidebar's Updates page uses the sync glyph (E895); icon-only visual changes, no behavior change
 
 ### Fixed
 

@@ -346,7 +346,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             "Check for new CLIHub builds, configure update preferences, and view release notes.",
             "System",
             true,
-            IconGlyphs.Update,
+            IconGlyphs.Sync,
             HeaderTitleExtraKey: "UpdatesHeaderTitleExtra",
             HeaderActionKey: "UpdatesHeaderAction")
     };
