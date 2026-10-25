@@ -10,6 +10,7 @@ What's new in CLIHub, newest first. These are the short, user-facing notes; the 
 
 ### Improved
 - Settings opens instantly: the CLI Agents page renders right away and the running-agent check that gates Update actions completes in the background moments later
+- The Settings page Project Discovery is now called Project Scanning, matching what its controls do
 
 ## 1.0.0 — 2026-10-23
 

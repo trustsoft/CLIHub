@@ -51,7 +51,7 @@
 
         <TextBlock Margin="0,0,0,10"
                    Style="{StaticResource HintText}"
-                   Text="Discovered projects are managed by Project Discovery and are read-only here."
+                   Text="Discovered projects are managed by Project Scanning and are read-only here."
                    TextWrapping="Wrap"/>
 
         <Grid MinHeight="44" Margin="0,0,0,4">

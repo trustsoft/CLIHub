@@ -48,11 +48,11 @@ public class SettingsNavigationTests
     }
 
     [Fact]
-    public void Catalog_ProjectsPageIsNamedProjectDiscovery()
+    public void Catalog_ProjectsPageIsNamedProjectScanning()
     {
         var viewModel = new Fixture().ViewModel;
 
-        Assert.Equal("Project Discovery", viewModel.Pages.Single(page => page.Key == "projects").Title);
+        Assert.Equal("Project Scanning", viewModel.Pages.Single(page => page.Key == "projects").Title);
     }
 
     [Fact]

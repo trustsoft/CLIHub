@@ -47,7 +47,7 @@ public interface IProjectScanner : IDisposable
 
     /// <summary>
     ///   Rescans one watched root without touching the other roots.
-    ///   Used by the per-directory scan action on the Project Discovery page.
+    ///   Used by the per-directory scan action on the Project Scanning page.
     /// </summary>
     /// <param name="root"> The watched root to rescan. </param>
     void Rescan(string root);

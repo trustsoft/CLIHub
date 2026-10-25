@@ -35,9 +35,9 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 *Settings → Appearance: theme, accent color, and path display. Theme and accent changes apply immediately after Save, and the System theme follows the Windows light/dark mode live.*
 
-<img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and discovery rules" width="880">
+<img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and scanning rules" width="880">
 
-*Settings → Project Discovery: watched roots, scan depth and discovery rules, and the background watcher.*
+*Settings → Project Scanning: watched roots, scan depth and scanning rules, and the background watcher.*
 
 <img src="docs/images/settings-agents.png" alt="CLIHub Settings: installed CLI agents and probe settings" width="880">
 
@@ -82,10 +82,10 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 
 1. Open CLIHub from the tray icon or press `Ctrl+Shift+Space`.
 2. Add a project folder and select it, or let CLIHub discover folders under a watched root in Settings →
-   Project Discovery; Settings → Projects shows the full registry and manages manual entries.
+   Project Scanning; Settings → Projects shows the full registry and manages manual entries.
 3. Select an available agent and run the required command.
 4. Configure startup behavior, hotkey, launcher position, default agent, terminal runtime, probing, update checks,
-   theme and accent, logging, and project discovery in Settings.
+   theme and accent, logging, and project scanning in Settings.
 5. Close an agent's running processes before using its Update action; CLIHub keeps that action disabled while
    the matching process is detected.
 

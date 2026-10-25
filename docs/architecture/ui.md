@@ -50,7 +50,7 @@ one-dimensional layout helper rather than a replacement for WPF's virtualizing p
 ## Settings Page Layout
 
 The Settings window renders the active page's title, description, and hairline divider once in a fixed
-header row of the content area. A page may add a summary row above the divider: on Project Discovery, the
+header row of the content area. A page may add a summary row above the divider: on Project Scanning, the
 projects, agents, and watcher summary cards sit between the description and the hairline; on Projects, the
 total, manual, and discovered summary cards use the same row; on CLI Agents, the agents, default-agent, and
 detection summary cards use it. The terms are defined in the [glossary](../glossary.md#settings-ui). Only the

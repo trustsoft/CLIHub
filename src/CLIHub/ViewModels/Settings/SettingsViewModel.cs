@@ -304,8 +304,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             SummaryRowKey: "RegistrySummaryCards"),
         new(
             "projects",
-            "Project Discovery",
-            "Watched directories, discovery rules, and the background watcher.",
+            "Project Scanning",
+            "Watched directories, scanning rules, and the background watcher.",
             "Engines & Repos",
             true,
             IconGlyphs.FolderOpen,
@@ -476,7 +476,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <param name="externalLauncher"> Operating-system path launcher for opening the log folder. </param>
     /// <param name="logger"> Logger for unexpected settings update-check failures. </param>
     /// <param name="dialogs"> Folder picker used to add watched directories. </param>
-    /// <param name="projectScanner"> Scanner whose status is shown on the Project Discovery page. </param>
+    /// <param name="projectScanner"> Scanner whose status is shown on the Project Scanning page. </param>
     /// <param name="agentsState"> Agent-management section shown on the CLI Agents page. </param>
     /// <param name="projectRegistry"> Project-registry section shown on the Projects page. </param>
     /// <param name="accentMemory"> Process-wide memory of the last custom accent. </param>
@@ -926,7 +926,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Watched root directories edited on the Project Discovery page.
+    ///   Watched root directories edited on the Project Scanning page.
     /// </summary>
     public ObservableCollection<WatchedDirectoryRow> WatchedDirectories { get; } = new();
 
@@ -976,7 +976,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     };
 
     /// <summary>
-    ///   The ignored directory-name patterns edited on the Project Discovery page.
+    ///   The ignored directory-name patterns edited on the Project Scanning page.
     /// </summary>
     public ObservableCollection<string> IgnoredPatterns { get; } = new();
 

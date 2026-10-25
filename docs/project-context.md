@@ -44,7 +44,7 @@ process inspection) behind ports declared in Core.
 - Plugins are JSON descriptors under `%APPDATA%\CLIHub\plugins\<id>\`; they contain command definitions and
   detection markers. Plugins do not load DLLs or execute code in-process.
 - Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
-  manually added projects untouched. Scanning settings apply immediately from the Project Discovery page.
+  manually added projects untouched. Scanning settings apply immediately from the Project Scanning page.
 - The Settings Projects page lists every registered project with its provenance, registers and removes
   manual projects, opens project folders, and flags missing folders; discovered projects are read-only
   there. Project changes apply immediately from that page.

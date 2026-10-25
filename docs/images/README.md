@@ -10,7 +10,7 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `workflow.png` | `src/workflow.html` | Three-step product summary: project, agent, terminal. |
 | `launch-window.png` | App capture | The launch window with the Projects and Agents panes. |
 | `settings-appearance.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
-| `settings-discovery.png` | App capture | Settings → Project Discovery (watched roots, scanning rules, watcher status). |
+| `settings-discovery.png` | App capture | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
 | `settings-agents.png` | App capture | Settings → CLI Agents (installed agents, default agent, detection settings). |
 
 ## Regenerate the banner and workflow
@@ -51,5 +51,5 @@ or GIF files under 1 MB.
 
 Capture the windows from a running build at 150% display scaling, then crop the two-pixel DWM frame
 ring and apply a 12 px rounded-corner mask. The README uses the launch window plus the Appearance,
-Project Discovery, and CLI Agents settings pages. Capture them against a throwaway configuration with
+Project Scanning, and CLI Agents settings pages. Capture them against a throwaway configuration with
 illustrative project names and watched directories so the screenshots do not expose private workspaces.

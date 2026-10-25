@@ -130,7 +130,7 @@ public sealed record SettingsApplicationResult(bool Success, string? Error)
 }
 
 /// <summary>
-///   Scanning settings edited on the Project Discovery page. They apply as soon as they change.
+///   Scanning settings edited on the Project Scanning page. They apply as soon as they change.
 /// </summary>
 /// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
 /// <param name="ScanDepth"> Default repository scan depth. </param>
@@ -312,7 +312,7 @@ public sealed class SettingsApplicationService
     }
 
     /// <summary>
-    ///   Applies and persists scanning settings edited on the Project Discovery page and reconfigures the scanner.
+    ///   Applies and persists scanning settings edited on the Project Scanning page and reconfigures the scanner.
     ///   Only scanning preferences are written; the remaining settings keep the Save/Cancel flow.
     /// </summary>
     /// <param name="input"> Scanning values from the page. </param>

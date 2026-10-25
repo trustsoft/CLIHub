@@ -45,7 +45,7 @@ update safely.
 
 ## Single-root rescan
 
-`IProjectScanner.Rescan(root)` refreshes one watched root from the Project Discovery page. It enumerates only that
+`IProjectScanner.Rescan(root)` refreshes one watched root from the Project Scanning page. It enumerates only that
 root with the stored scan settings and reconciles only projects beneath it:
 
 - discovered projects under the other roots are left untouched (this also protects overlapping nested roots that
@@ -60,7 +60,7 @@ and a single-root rescan reports the same number as a full pass. The page-header
 pass through `Reload()`.
 
 `IProjectScanner.CountDiscoveredProjects(root)` reports how many discovered projects sit at or below a watched
-root. The Project Discovery page uses it for the secondary line of each watched-directory row, where the count
+root. The Project Scanning page uses it for the secondary line of each watched-directory row, where the count
 is shown next to the discovery mode and the scan depth.
 
 ## Watcher and status
@@ -79,7 +79,7 @@ known number), a reload drops coverage for roots that are no longer configured, 
 watcher summary card appends this folder count to its last scan time, so a scan that stops at the first level
 is visible at a glance.
 
-The Project Discovery summary cards read project provenance through `IProjectScanner` as well: the PROJECTS card shows the
+The Project Scanning summary cards read project provenance through `IProjectScanner` as well: the PROJECTS card shows the
 total number of registered projects (discovered plus manual) and the "N discovered · M manual" split beneath it,
 with `CountDiscoveredProjects(root)` feeding each watched-directory row and `CountManualProjects()` feeding the
 split.
@@ -87,7 +87,7 @@ split.
 ## Lifecycle
 
 `ApplicationBootstrapper` starts the scanner after startup state is loaded; the DI container disposes it on
-shutdown. Scanning settings edited on the Project Discovery page apply immediately: the page persists them
+shutdown. Scanning settings edited on the Project Scanning page apply immediately: the page persists them
 through a scanning-only boundary and calls `IProjectScanner.Reload()`, which re-reads the preferences,
 reconfigures the watcher, and triggers a fresh scan — no restart and no footer Save required. Saving the
 Settings window writes the same scanning values again and reloads the scanner, but the page is already in sync

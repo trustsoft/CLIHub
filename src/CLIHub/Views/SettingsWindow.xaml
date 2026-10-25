@@ -149,7 +149,7 @@
                 </Grid>
             </DataTemplate>
 
-            <!-- Project Discovery actions: add a root or rescan the saved configuration. -->
+            <!-- Project Scanning actions: add a root or rescan the saved configuration. -->
             <DataTemplate x:Key="ProjectsHeaderAction">
                 <controls:SpacedPanel VerticalAlignment="Center"
                                       Orientation="Horizontal"
@@ -179,7 +179,7 @@
                 </controls:SpacedPanel>
             </DataTemplate>
 
-            <!-- Project Discovery summary cards, pinned to the page header. -->
+            <!-- Project Scanning summary cards, pinned to the page header. -->
             <DataTemplate x:Key="ProjectsSummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <controls:SummaryCard Detail="{Binding ProjectMixSummary}"
@@ -222,7 +222,7 @@
                                           Label="MANUAL"
                                           Value="{Binding ProjectRegistry.ManualCount}"/>
 
-                    <controls:SummaryCard Detail="Managed by Project Discovery"
+                    <controls:SummaryCard Detail="Managed by Project Scanning"
                                           Icon="{x:Static themes:IconGlyphs.Sync}"
                                           Label="DISCOVERED"
                                           Value="{Binding ProjectRegistry.DiscoveredCount}"/>

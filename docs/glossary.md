@@ -37,7 +37,7 @@ use these terms with these meanings.
 
 ## Project discovery
 
-- **Watched root** — a folder configured on the Project Discovery page. Scanning looks for project
+- **Watched root** — a folder configured on the Project Scanning page. Scanning looks for project
   folders at or below it, up to the configured scan depth.
 - **Project discovery** — automatic registration of repositories found under watched roots. It runs
   in the background while at least one watched root exists and re-runs after scanning settings change.
@@ -51,7 +51,7 @@ use these terms with these meanings.
   (a plugin project indicator), or `both` (default).
 - **Ignored pattern** — a case-insensitive directory-name glob skipped during the walk.
 - **Scan coverage** — the number of folders the last scan examined; shown in the watcher summary card
-  on the Project Discovery page.
+  on the Project Scanning page.
 
 See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 [Project scanning](architecture/scanning.md).
@@ -124,11 +124,11 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Single instance** — a second CLIHub launch does not start a new process; it activates the
   running instance via a named mutex and a named-pipe activation signal.
 - **Preferences** — user settings persisted under the `preferences` object of `config.json`
-  (startup behavior, hotkey and popup position, runtime, agent probing, project discovery,
+  (startup behavior, hotkey and popup position, runtime, agent probing, project scanning,
   appearance, logging, updates, and the availability filter). Editable from the Settings window;
   most changes apply without restart, including the theme, which applies to every open window on
   save; the persisted value is applied again on the next start. Scanning settings apply as soon as
-  they change on the Project Discovery page; the other pages use Save.
+  they change on the Project Scanning page; the other pages use Save.
 - **Accent color** — the application-scoped highlight color persisted as `accentColor` (Sky
   `#4CC2FF` by default) and used for selection, focus, and emphasis. It is independent of the
   active theme: a theme switch never changes it. See
@@ -138,7 +138,7 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 ## Settings UI
 
 - **Summary card** — one of the fixed information blocks in a Settings page header that summarizes
-  the state of that page, for example PROJECTS, AGENTS, and DAEMON on Project Discovery. A summary
+  the state of that page, for example PROJECTS, AGENTS, and DAEMON on Project Scanning. A summary
   card sits between the page description and the hairline and does not scroll with the page content.
   In XAML, a page's cards are one `...SummaryCards` data template (`ProjectsSummaryCards`,
   `RegistrySummaryCards`, `AgentsSummaryCards`). Russian: «сводная карточка».

@@ -107,7 +107,7 @@ public sealed class ProjectModel : INotifyPropertyChanged
 
     /// <summary>
     ///   Whether the surface may offer the remove action: manual provenance only, since
-    ///   discovered projects are managed by Project Discovery.
+    ///   discovered projects are managed by Project Scanning.
     /// </summary>
     public bool CanRemove => this.IsManual;
 
