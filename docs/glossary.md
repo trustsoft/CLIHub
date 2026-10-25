@@ -108,7 +108,10 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Probe** — an umbrella term for the checks CLIHub runs against agents: detection checks and
   the [version](#agents-and-plugins) lookup. `agentProbeTtlMinutes` bounds how long detection
   and version results are cached; `agentProbeTimeoutSeconds` bounds how long a version probe may
-  run before the process is terminated and the version is reported as `unknown`.
+  run before the process is terminated and the version is reported as `unknown`. The Settings UI
+  labels this area "DETECTION" (the section header and the page-header summary card) with the
+  "Cache TTL" and "Version check timeout" fields, while the configuration keys keep their
+  `agentProbe*` names.
 
 ## Application
 

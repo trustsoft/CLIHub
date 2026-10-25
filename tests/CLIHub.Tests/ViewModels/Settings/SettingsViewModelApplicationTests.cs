@@ -849,7 +849,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.ProbeTimeoutText = "5";
 
         Assert.Equal("30 min · 5 s", fixture.ViewModel.ProbePolicySummary);
-        Assert.Equal("Custom probe settings", fixture.ViewModel.ProbePolicyDetail);
+        Assert.Equal("Custom detection settings", fixture.ViewModel.ProbePolicyDetail);
     }
 
     [Fact]
@@ -864,7 +864,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SaveCommand.Execute(null);
 
         Assert.False(closeRequested);
-        Assert.Equal("Probe timeout must be a positive number of seconds, or empty for the default.", fixture.ViewModel.ValidationError);
+        Assert.Equal("Version check timeout must be a positive number of seconds, or empty for the default.", fixture.ViewModel.ValidationError);
         fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
     }
 

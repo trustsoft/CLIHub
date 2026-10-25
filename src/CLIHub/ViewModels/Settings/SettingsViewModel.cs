@@ -314,7 +314,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(
             "agents",
             "CLI Agents",
-            "Installed CLI agents, the default agent, and probe settings.",
+            "Installed CLI agents, the default agent, and detection settings.",
             "Engines & Repos",
             true,
             IconGlyphs.Robot,
@@ -705,7 +705,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Whether the probe card reflects built-in defaults or custom values.
     /// </summary>
     public string ProbePolicyDetail => this.HasCustomProbePolicy
-        ? "Custom probe settings"
+        ? "Custom detection settings"
         : "Built-in defaults";
 
     private bool HasCustomProbePolicy =>

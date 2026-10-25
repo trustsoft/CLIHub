@@ -248,9 +248,9 @@
                                           ValueToolTip="{Binding AgentsState.DefaultAgentName}"/>
 
                     <controls:SummaryCard Detail="{Binding ProbePolicyDetail}"
-                                          DetailToolTip="Effective agent probe cache and timeout"
+                                          DetailToolTip="Effective detection cache and version-check timeout"
                                           Icon="{x:Static themes:IconGlyphs.Diagnostic}"
-                                          Label="PROBE"
+                                          Label="DETECTION"
                                           Value="{Binding ProbePolicySummary}"/>
                 </controls:SpacedPanel>
             </DataTemplate>

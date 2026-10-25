@@ -20,6 +20,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - The agent version-population loops of the launch pane and the CLI Agents page share one shape — generation counter, surface-owned cancellation on supersession and exit, parallel probes with generation-guarded writes, and unexpected failures logged through Serilog instead of `Debug.WriteLine`; the version display is unchanged (`consolidate-version-population`)
 - Hygiene sweep: removed the registered-but-unused `RuntimeSelector` with its `RuntimeType.WindowsTerminal` producer member and the unused `AgentProcessMatcher` logger; `.gitnexus/` is ignored; the Settings Projects page reuses `ProjectPathPolicy` for duplicate-folder detection (an already-registered drive/UNC root now reports the duplicate error instead of being silently accepted); `ProjectService` mutations return detached copies (`hygiene-sweep`)
 - The CLI Agents page shows the probe settings above the agent list (page order MANAGEMENT → PROBE → AGENTS); layout-only reorder, no behavior change
+- The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout" with matching hints and validation errors, and the list button is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`settings-theme`, `preferences-ui`)
 
 ## 1.0.0 — 2026-10-23
 

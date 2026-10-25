@@ -93,10 +93,10 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <controls:SectionHeader Text="PROBE"/>
+        <controls:SectionHeader Text="DETECTION"/>
         <controls:SettingsGroup>
-            <controls:SettingCard Title="Probe TTL"
-                               Hint="How long agent availability is cached. Empty — use defaults."
+            <controls:SettingCard Title="Cache TTL"
+                               Hint="How long detection and version results are cached. Empty — use defaults."
                                Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"
@@ -106,8 +106,8 @@
                                        Unit="min"/>
             </controls:SettingCard>
 
-            <controls:SettingCard Title="Probe timeout"
-                               Hint="How long a single probe may take. Empty — use defaults."
+            <controls:SettingCard Title="Version check timeout"
+                               Hint="How long a single version check may take. Empty — use defaults."
                                Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"
@@ -123,11 +123,11 @@
             <Button Margin="0,18,0,8"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    AutomationProperties.Name="Re-detect installed agents"
+                    AutomationProperties.Name="Detect installed agents and updates"
                     Command="{Binding AgentsState.DetectCommand}"
                     IsEnabled="{Binding AgentsState.CanDetect}"
                     Style="{StaticResource AgentsHeaderChipButton}"
-                    ToolTip="Re-detect installed agents and refresh the lists">
+                    ToolTip="Re-detect installed agents, versions, and available updates">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center"
                                FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -136,7 +136,7 @@
                     <TextBlock Margin="6,0,0,0"
                                VerticalAlignment="Center"
                                FontSize="{StaticResource Sizing.FontSize.Section}"
-                               Text="Refresh"/>
+                               Text="Detect"/>
                 </StackPanel>
             </Button>
         </Grid>
@@ -213,7 +213,7 @@
                                         Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Probe installation and version">
+                                        ToolTip="Detect installation and version">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Diagnostic}"/>

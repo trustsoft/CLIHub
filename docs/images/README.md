@@ -11,7 +11,7 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `launch-window.png` | App capture | The launch window with the Projects and Agents panes. |
 | `settings-appearance.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
 | `settings-discovery.png` | App capture | Settings → Project Discovery (watched roots, scanning rules, watcher status). |
-| `settings-agents.png` | App capture | Settings → CLI Agents (installed agents, default agent, probe settings). |
+| `settings-agents.png` | App capture | Settings → CLI Agents (installed agents, default agent, detection settings). |
 
 ## Regenerate the banner and workflow
 
