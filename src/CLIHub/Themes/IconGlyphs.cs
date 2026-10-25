@@ -21,6 +21,9 @@ internal static class IconGlyphs
     public const string Robot = "\uE99A";
     public const string Palette = "\uE790";
     public const string Diagnostic = "\uE9D9";
+    public const string History = "\uE81C";
+    public const string Calendar = "\uE787";
+    public const string Equalizer = "\uE9E9";
     public const string Power = "\uE7E8";
     public const string ChevronDown = "\uE70D";
     public const string Location = "\uE81D";
@@ -34,6 +37,7 @@ internal static class IconGlyphs
     public const string Blocked = "\uE733";
     public const string Copy = "\uE8C8";
     public const string Filter = "\uE71C";
+    public const string BulletedList = "\uE8FD";
     public const string FolderOpen = "\uE8B7";
     public const string FolderAdd = "\uE8F4";
     public const string Settings = "\uE713";

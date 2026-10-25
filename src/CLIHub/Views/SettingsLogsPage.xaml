@@ -12,7 +12,7 @@
         <controls:SettingsGroup>
             <controls:SettingCard Title="Log level"
                                Hint="Takes effect after the next start."
-                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Icon="{x:Static themes:IconGlyphs.Filter}"
                                Grouped="True">
                 <ComboBox HorizontalAlignment="Right"
                           ItemsSource="{Binding LogLevels}"
@@ -29,7 +29,7 @@
 
             <controls:SettingCard Title="Log retention"
                                Hint="Daily log files to keep."
-                               Icon="{x:Static themes:IconGlyphs.Page}"
+                               Icon="{x:Static themes:IconGlyphs.Calendar}"
                                Grouped="True">
                 <controls:NumericField MinWidth="120"
                                        Minimum="1"
@@ -39,7 +39,7 @@
 
             <controls:SettingCard Title="Log size limit"
                                Hint="The per-file limit (0 = unlimited)."
-                               Icon="{x:Static themes:IconGlyphs.Page}"
+                               Icon="{x:Static themes:IconGlyphs.Equalizer}"
                                Grouped="True">
                 <controls:NumericField MinWidth="120"
                                        Minimum="0"

@@ -23,6 +23,9 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout" with matching hints and validation errors, and the list button is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`settings-theme`, `preferences-ui`)
 - Two Settings icons now match their actions: the CLI Agents detection summary card uses the same refresh glyph as the Detect action above the agent list, and the sidebar's Updates page uses the sync glyph (E895); icon-only visual changes, no behavior change
 - The Settings page "Project Discovery" is renamed to "Project Scanning" and its description now says "scanning rules"; the page key, configuration keys, and behavior are unchanged (`preferences-ui`, `settings-theme`, `project-management`)
+- The Settings sidebar's Logs page uses the history glyph (E81C) instead of the diagnostic glyph; icon-only visual change, no behavior change
+- The Settings sidebar's Projects page uses the bulleted-list glyph (E8FD) instead of the add-folder glyph; icon-only visual change, no behavior change
+- The Logs page cards use distinct glyphs: Filter for log level, Calendar for retention, Equalizer for the size limit, and Document for the file; icon-only visual change, no behavior change
 
 ### Fixed
 

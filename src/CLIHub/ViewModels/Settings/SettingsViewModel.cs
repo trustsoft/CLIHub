@@ -300,7 +300,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             "Registered projects, their provenance, and manually added entries.",
             "Engines & Repos",
             true,
-            IconGlyphs.FolderAdd,
+            IconGlyphs.BulletedList,
             SummaryRowKey: "RegistrySummaryCards"),
         new(
             "projects",
@@ -339,7 +339,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             "Log level, retention, and the log file.",
             "System",
             true,
-            IconGlyphs.Diagnostic),
+            IconGlyphs.History),
         new(
             "updates",
             "Updates",
