@@ -8,7 +8,7 @@ Retrieves each agent's version via its own version command and presents it in th
 
 ### Requirement: Version lookup
 
-The system SHALL retrieve an agent's version by running its declared `version` command and capturing the output.
+The system SHALL retrieve an agent's version by running its declared `version` command and capturing the output. The system SHALL NOT run the version command for an agent that detection reports as not installed on the host; such an agent has no version to retrieve and its version stays unresolved (no value).
 
 #### Scenario: Version command defined
 - **WHEN** an agent declares a `version` command
@@ -25,6 +25,11 @@ The system SHALL retrieve an agent's version by running its declared `version` c
 #### Scenario: Version command fails
 - **WHEN** the version command cannot start or exits non-zero
 - **THEN** the version is reported as unknown and the failure is logged
+
+#### Scenario: No version command for a not-installed agent
+- **WHEN** an agent is not installed on the host and its version is requested or probed
+- **THEN** no version command process is started
+- **AND** the version stays unresolved (no value) rather than being reported through a placeholder
 
 ### Requirement: Project-independent lookup
 
@@ -76,11 +81,12 @@ The system SHALL render the agent list before versions resolve and update it as 
 
 ### Requirement: Unknown version display
 
-The system SHALL display a clear placeholder when a version is not available.
+The system SHALL NOT display placeholder text for a version that is not available. An unresolved version SHALL render no version text at all — no `unknown` placeholder and no pending marker such as `…` — in any agent list surface.
 
 #### Scenario: Unknown shown
-- **WHEN** an agent's version is unknown
-- **THEN** the list shows a placeholder (for example, `unknown`) for that agent
+- **WHEN** an agent's version is unknown or still unresolved
+- **THEN** no placeholder text (for example `unknown` or `…`) is rendered for that agent
+- **AND** the list entry shows no version text rather than a marker
 
 ### Requirement: Concurrent version probes are coalesced
 
