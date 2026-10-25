@@ -180,11 +180,11 @@ A settings page SHALL show a short description under its page title, and SHALL g
 
 ### Requirement: Cards on the data pages
 
-The Project Discovery and CLI Agents pages SHALL present their settings as cards in the shared palette, with a page description and section headers, consistent with the other settings pages. List editors SHALL be rendered as stacked cards that carry their list and controls. The per-agent cards SHALL follow the shared card visual language (a rounded bordered surface, an icon block, a title, and a hint).
+The Project Scanning and CLI Agents pages SHALL present their settings as cards in the shared palette, with a page description and section headers, consistent with the other settings pages. List editors SHALL be rendered as stacked cards that carry their list and controls. The per-agent cards SHALL follow the shared card visual language (a rounded bordered surface, an icon block, a title, and a hint).
 
 #### Scenario: Projects page cards
 
-- **WHEN** the Project Discovery page is shown
+- **WHEN** the Project Scanning page is shown
 - **THEN** watched directories, scan depth, discovery mode, ignored patterns, and the watcher status each appear as cards under the page description and section headers
 
 #### Scenario: List editor card
@@ -257,7 +257,7 @@ A numeric setting SHALL render as an editable number on the themed input surface
 
 ### Requirement: Persistent page header
 
-The Settings window SHALL keep the active page's header visible while page content scrolls. The header SHALL show the active page's title and its one-line description above the content, separated from the content by a hairline. A page MAY add a summary row of summary cards between its description and the hairline: the "Project Discovery" page shows the projects, agents, and watcher cards, the "Projects" page shows the total, manual, and discovered cards, and the "CLI Agents" page shows the agents, default-agent, and detection cards. On the "Project Discovery" page the projects card SHALL show the total number of registered projects with the number of discovered and manually added projects beneath it, and both numbers SHALL refresh whenever the scanner status changes. The watcher card SHALL report the number of folders examined by the last scan after its last scan time, using the singular "folder" for one and the plural "folders" otherwise. The vertical scrollbar SHALL belong to the content region below the header, so the drawn title bar, sidebar, page header, summary row, validation message, and footer remain in place while the content scrolls.
+The Settings window SHALL keep the active page's header visible while page content scrolls. The header SHALL show the active page's title and its one-line description above the content, separated from the content by a hairline. A page MAY add a summary row of summary cards between its description and the hairline: the "Project Scanning" page shows the projects, agents, and watcher cards, the "Projects" page shows the total, manual, and discovered cards, and the "CLI Agents" page shows the agents, default-agent, and detection cards. On the "Project Scanning" page the projects card SHALL show the total number of registered projects with the number of discovered and manually added projects beneath it, and both numbers SHALL refresh whenever the scanner status changes. The watcher card SHALL report the number of folders examined by the last scan after its last scan time, using the singular "folder" for one and the plural "folders" otherwise. The vertical scrollbar SHALL belong to the content region below the header, so the drawn title bar, sidebar, page header, summary row, validation message, and footer remain in place while the content scrolls.
 
 #### Scenario: Content taller than the window
 
@@ -284,33 +284,33 @@ The Settings window SHALL keep the active page's header visible while page conte
 
 #### Scenario: Projects summary stays pinned
 
-- **WHEN** the "Project Discovery" page is active and its content is taller than the content region
+- **WHEN** the "Project Scanning" page is active and its content is taller than the content region
 - **THEN** the three summary cards for projects, agents, and watcher remain visible in the page header while the content scrolls
 - **AND** the header hairline sits below the summary cards
 - **AND** a page without summary cards, such as "General & Startup", shows no summary row in the header
 
 #### Scenario: Projects card shows the provenance split
 
-- **WHEN** the "Project Discovery" page is shown
+- **WHEN** the "Project Scanning" page is shown
 - **THEN** the projects card shows the total number of registered projects
 - **AND** beneath it shows the number of discovered and manually added projects, e.g. "31 discovered · 4 manual"
 - **AND** both numbers refresh whenever the scanner status changes
 
 #### Scenario: Watcher card shows scan coverage
 
-- **WHEN** the "Project Discovery" page is shown after a scan completed
+- **WHEN** the "Project Scanning" page is shown after a scan completed
 - **THEN** the watcher card shows the last scan time followed by the number of folders the last scan examined
 - **AND** the folder count refreshes whenever the scanner status changes
 - **AND** the folder count reads "1 folder" for one folder and "N folders" otherwise
 
 #### Scenario: Projects content starts below the header
 
-- **WHEN** the "Project Discovery" page is shown
+- **WHEN** the "Project Scanning" page is shown
 - **THEN** the scrollable content begins at the "WATCHED REPOSITORY DIRECTORIES" section below the header divider
 
 ### Requirement: Projects page summary cards
 
-The Settings window SHALL show three summary cards under the "Projects" page header: total projects, manual projects, and discovered projects. The total card SHALL show the manual/discovered split and a folder-health line that names the number of projects whose folder no longer exists using the danger tone; the folder-health line SHALL NOT be shown when every folder exists. The manual card SHALL state that those projects were registered manually, and the discovered card SHALL state that Project Discovery manages them. The counts and the folder-health line SHALL refresh whenever the project registry changes, including a manual add or removal made on the page.
+The Settings window SHALL show three summary cards under the "Projects" page header: total projects, manual projects, and discovered projects. The total card SHALL show the manual/discovered split and a folder-health line that names the number of projects whose folder no longer exists using the danger tone; the folder-health line SHALL NOT be shown when every folder exists. The manual card SHALL state that those projects were registered manually, and the discovered card SHALL state that Project Scanning manages them. The counts and the folder-health line SHALL refresh whenever the project registry changes, including a manual add or removal made on the page.
 
 #### Scenario: Cards shown
 

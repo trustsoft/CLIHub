@@ -100,8 +100,8 @@ unrelated uncommitted icon edits (`SettingsWindow.xaml:252`, `SettingsViewModel.
       hint reads "Discovered projects are managed by Project Scanning and are read-only here."; the
       Projects page DISCOVERED summary card reads "Managed by Project Scanning"; and no visible
       "Project Discovery" string remains anywhere in the UI.
-- [ ] 6.2 Record the smoke result in the change report. `git commit` and `openspec archive
+- [x] 6.2 Record the smoke result in the change report. `git commit` and `openspec archive
       project-scanning-rename` MUST wait until the user confirms the smoke and then gives explicit
       approval (repo policy; approval for one never carries to the other).
-- [ ] 6.3 On approved archive: verify the three main specs show the renamed page with all
+- [x] 6.3 On approved archive: verify the three main specs show the renamed page with all
       requirement/scenario names intact, and run a final `openspec validate --all`.

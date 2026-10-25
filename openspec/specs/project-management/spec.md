@@ -200,7 +200,7 @@ The Settings window SHALL provide a Projects page that lists every registered pr
 
 - **WHEN** a discovered project is listed
 - **THEN** the row offers no project mutation action
-- **AND** the page states that project discovery manages discovered projects
+- **AND** the page states that Project Scanning manages discovered projects
 
 #### Scenario: Open the project folder
 
