@@ -12,7 +12,7 @@
              uses the footer version chip look -->
         <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                <DataTrigger Binding="{Binding InstallState}" Value="NotInstalled">
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
                 </DataTrigger>
@@ -21,7 +21,7 @@
 
         <Style x:Key="AgentStateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                <DataTrigger Binding="{Binding InstallState}" Value="NotInstalled">
                     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -78,7 +78,7 @@
                 <ComboBox.ItemContainerStyle>
                     <Style TargetType="ComboBoxItem" BasedOn="{StaticResource SettingsComboBoxItem}">
                         <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsInstalled}" Value="False">
+                            <DataTrigger Binding="{Binding InstallState}" Value="NotInstalled">
                                 <Setter Property="IsEnabled" Value="False"/>
                                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                             </DataTrigger>

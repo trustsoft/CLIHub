@@ -2,44 +2,49 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
-using CLIHub.Helpers;
 
 /// <summary>
-///   Tests for AgentCardItem state chip formatting and change notifications.
+///   Tests for AgentCardItem install-state chip formatting and change notifications.
 /// </summary>
 public sealed class AgentCardItemTests
 {
     [Fact]
     public void VersionChipText_WhenInstalledWithVersion_ShowsVersion()
     {
-        var card = CreateCard(isInstalled: true, version: "1.2.3");
+        var card = CreateCard(AgentInstallState.Installed, "1.2.3");
 
         Assert.Equal("v1.2.3", card.VersionChipText);
     }
 
     [Fact]
-    public void VersionChipText_WhenNotInstalled_ShowsNotInstalled()
+    public void VersionChipText_WhenInstalledWithoutVersion_ShowsInstalled()
     {
-        var card = CreateCard(isInstalled: false, version: "1.2.3");
-
-        Assert.Equal("Not installed", card.VersionChipText);
-    }
-
-    [Theory]
-    [InlineData("…")]
-    [InlineData("unknown")]
-    [InlineData("")]
-    public void VersionChipText_WhenInstalledWithoutKnownVersion_ShowsInstalled(string version)
-    {
-        var card = CreateCard(isInstalled: true, version: version);
+        var card = CreateCard(AgentInstallState.Installed, null);
 
         Assert.Equal("Installed", card.VersionChipText);
     }
 
     [Fact]
+    public void VersionChipText_WhenNotInstalled_ShowsNotInstalled()
+    {
+        // The version is irrelevant in this state; the chip never derives text from it.
+        var card = CreateCard(AgentInstallState.NotInstalled, "1.2.3");
+
+        Assert.Equal("Not installed", card.VersionChipText);
+    }
+
+    [Fact]
+    public void VersionChipText_WhenDetecting_ShowsDetecting()
+    {
+        var card = CreateCard(AgentInstallState.Detecting, null);
+
+        Assert.Equal("Detecting…", card.VersionChipText);
+    }
+
+    [Fact]
     public void Version_WhenChanged_RaisesVersionChipTextNotification()
     {
-        var card = CreateCard(isInstalled: true, version: "unknown");
+        var card = CreateCard(AgentInstallState.Installed, null);
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
 
@@ -51,22 +56,82 @@ public sealed class AgentCardItemTests
     }
 
     [Fact]
-    public void IsInstalled_WhenChanged_RaisesVersionChipTextNotification()
+    public void InstallState_WhenChanged_RaisesDerivedPropertyNotifications()
     {
-        var card = CreateCard(isInstalled: true, version: "1.2.3");
+        var card = CreateCard(AgentInstallState.Installed, "1.2.3");
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
 
-        card.IsInstalled = false;
+        card.InstallState = AgentInstallState.NotInstalled;
 
+        Assert.Contains(nameof(AgentCardItem.InstallState), properties);
+        Assert.Contains(nameof(AgentCardItem.IsInstalled), properties);
         Assert.Contains(nameof(AgentCardItem.VersionChipText), properties);
         Assert.Equal("Not installed", card.VersionChipText);
+    }
+
+    [Theory]
+    [InlineData(AgentInstallState.Installed, true)]
+    [InlineData(AgentInstallState.Detecting, false)]
+    [InlineData(AgentInstallState.NotInstalled, false)]
+    public void IsInstalled_WhenDerivedFromInstallState_IsTrueOnlyWhenInstalled(AgentInstallState state, bool expected)
+    {
+        var card = CreateCard(state, null);
+
+        Assert.Equal(expected, card.IsInstalled);
+    }
+
+    [Theory]
+    [InlineData(AgentInstallState.Installed, "2.0.32")]
+    [InlineData(AgentInstallState.Installed, null)]
+    public void DisplayName_WhenInstalled_ShowsNameWithVersionOnlyWhenResolved(AgentInstallState state, string? version)
+    {
+        var option = new AgentOption("agent", "OpenClaude", version, state);
+
+        Assert.Equal(version is null ? "OpenClaude" : "OpenClaude (2.0.32)", option.DisplayName);
+    }
+
+    [Fact]
+    public void DisplayName_WhenNotInstalled_ShowsCapitalizedNotInstalledSuffix()
+    {
+        // Deliberately capitalized, unlike the runtime selector's lowercase suffix.
+        var option = new AgentOption("agent", "OpenClaude", null, AgentInstallState.NotInstalled);
+
+        Assert.Equal("OpenClaude (Not installed)", option.DisplayName);
+    }
+
+    [Fact]
+    public void DisplayName_WhenDetecting_ShowsNameOnly()
+    {
+        var option = new AgentOption("agent", "OpenClaude", null, AgentInstallState.Detecting);
+
+        Assert.Equal("OpenClaude", option.DisplayName);
+        Assert.False(option.IsInstalled);
+    }
+
+    [Fact]
+    public void DisplayName_WhenNotInstalledWithResolvedVersion_NeverRendersTheVersion()
+    {
+        var option = new AgentOption("agent", "OpenClaude", "1.2.3", AgentInstallState.NotInstalled);
+
+        Assert.Equal("OpenClaude (Not installed)", option.DisplayName);
+    }
+
+    [Theory]
+    [InlineData(AgentInstallState.Installed, true)]
+    [InlineData(AgentInstallState.Detecting, false)]
+    [InlineData(AgentInstallState.NotInstalled, false)]
+    public void OptionIsInstalled_WhenDerivedFromInstallState_DisablesOnlyNotInstalled(AgentInstallState state, bool expected)
+    {
+        var option = new AgentOption("agent", "OpenClaude", null, state);
+
+        Assert.Equal(expected, option.IsInstalled);
     }
 
     [Fact]
     public void UpdateAvailability_WhenUpdateAvailable_ShowsArrowTextAndFlag()
     {
-        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
 
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
 
@@ -77,7 +142,7 @@ public sealed class AgentCardItemTests
     [Fact]
     public void UpdateAvailability_WhenUpToDate_ShowsNoIndicator()
     {
-        var card = CreateCard(isInstalled: true, version: "2.0.33");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.33");
 
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpToDate, "2.0.33", "2.0.33");
 
@@ -88,7 +153,7 @@ public sealed class AgentCardItemTests
     [Fact]
     public void UpdateAvailability_WhenUnknown_ShowsNoIndicator()
     {
-        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
 
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.Unknown);
 
@@ -111,7 +176,7 @@ public sealed class AgentCardItemTests
             plugin,
             logoPath: null,
             isInstalled: false,
-            version: AgentVersionText.Pending,
+            version: null,
             configPath: null);
 
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.Unknown);
@@ -123,7 +188,7 @@ public sealed class AgentCardItemTests
     [Fact]
     public void UpdateAvailability_WhenSet_RaisesIndicatorNotifications()
     {
-        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
 
@@ -137,7 +202,7 @@ public sealed class AgentCardItemTests
     [Fact]
     public void UpdateAvailability_WhenCleared_RaisesIndicatorNotifications()
     {
-        var card = CreateCard(isInstalled: true, version: "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
@@ -150,11 +215,14 @@ public sealed class AgentCardItemTests
         Assert.False(card.HasUpdateAvailable);
     }
 
-    private static AgentCardItem CreateCard(bool isInstalled, string version) =>
+    private static AgentCardItem CreateCard(AgentInstallState state, string? version) =>
         new(
             new Plugin { Id = "test-agent", Name = "Test Agent" },
             logoPath: null,
-            isInstalled: isInstalled,
+            isInstalled: state == AgentInstallState.Installed,
             version: version,
-            configPath: null);
+            configPath: null)
+        {
+            InstallState = state
+        };
 }

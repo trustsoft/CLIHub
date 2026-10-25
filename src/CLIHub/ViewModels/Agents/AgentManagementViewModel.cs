@@ -8,7 +8,6 @@ using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using CLIHub.Helpers;
 using CLIHub.Lifetime;
 using CLIHub.Launching;
 
@@ -121,7 +120,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 .FirstOrDefault(card => card.PluginId == this.CurrentDefaultAgentId)
                 ?.Version;
 
-            return AgentVersionText.IsPending(version)
+            return version is null
                 ? "Preselected in the launch window"
                 : $"Version {version}";
         }
@@ -209,7 +208,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 plugin,
                 plugin.LogoPath,
                 isInstalled,
-                AgentVersionText.Pending,
+                null,
                 AgentConfigurationPath.For(plugin))
             {
                 CanUpdate = declaresUpdate
@@ -246,7 +245,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private void RebuildDefaultAgentOptions(string? defaultAgentId)
     {
         var options = new List<AgentOption> { NoneOption };
-        options.AddRange(this.Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version, card.IsInstalled)));
+        options.AddRange(this.Cards.Select(card => new AgentOption(card.PluginId, card.Name, card.Version, card.InstallState)));
         this.DefaultAgentOptions = options;
 
         this.SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
@@ -299,10 +298,22 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         {
             await Task.WhenAll(cards.Select(async card =>
             {
+                if (card.InstallState == AgentInstallState.NotInstalled)
+                {
+                    // A missing CLI has no version to probe and no update source to check; clear
+                    // any stale advisory indicator so it cannot survive an uninstall.
+                    if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+                    {
+                        card.UpdateAvailability = null;
+                    }
+
+                    return;
+                }
+
                 var ver = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
                 if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
-                    card.Version = ver ?? AgentVersionText.Unknown;
+                    card.Version = ver;
                 }
 
                 // The availability check reuses the just-probed version through the version
@@ -393,15 +404,28 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private async Task TestAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
-        var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
-        card.IsInstalled = result.IsInstalled;
-        card.Version = result.Version ?? AgentVersionText.Unknown;
-        card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
-        card.Message = result.IsInstalled
-            ? $"Installed · version {card.Version}"
-            : "Not installed on the host";
-        this.RefreshAvailabilitySummary();
-        this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+        var previousState = card.InstallState;
+        card.InstallState = AgentInstallState.Detecting;
+        try
+        {
+            var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
+            await this.ApplyProbeResultAsync(card, result, cancellationToken);
+            card.Message = (result.IsInstalled, result.Version) switch
+            {
+                (true, { } version) => $"Installed · version {version}",
+                (true, null) => "Installed",
+                _ => "Not installed on the host"
+            };
+            this.RefreshAvailabilitySummary();
+            this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+        }
+        catch (Exception)
+        {
+            // Never leave the card stuck in Detecting: settle it back and let the caller's
+            // operation logging observe the failure. Version and availability stay untouched.
+            card.InstallState = previousState;
+            throw;
+        }
     }
 
     private async Task DetectAsync(CancellationToken cancellationToken)
@@ -409,25 +433,73 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.IsDetecting = true;
         try
         {
-            foreach (var card in this.Cards.ToList())
-            {
-                var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
-                if (this.disposed)
-                {
-                    return;
-                }
+            var cards = this.Cards.ToList();
+            var previousStates = cards.ToDictionary(card => card, card => card.InstallState);
 
-                card.IsInstalled = result.IsInstalled;
-                card.Version = result.Version ?? AgentVersionText.Unknown;
-                card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+            // Announce the pass on every card before the first probe, so no chip shows a stale
+            // settled state while its agent is being re-probed.
+            foreach (var card in cards)
+            {
+                card.InstallState = AgentInstallState.Detecting;
             }
 
-            this.RefreshAvailabilitySummary();
-            this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+            try
+            {
+                foreach (var card in cards)
+                {
+                    var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
+                    if (this.disposed)
+                    {
+                        return;
+                    }
+
+                    await this.ApplyProbeResultAsync(card, result, cancellationToken);
+                }
+
+                this.RefreshAvailabilitySummary();
+                this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
+            }
+            catch (Exception)
+            {
+                // The pass is abandoning: settle every card it had flipped to Detecting back to
+                // its pre-pass state so no chip stays stuck, then let the caller log the failure.
+                foreach (var card in cards)
+                {
+                    card.InstallState = previousStates[card];
+                }
+
+                throw;
+            }
         }
         finally
         {
             this.IsDetecting = false;
+        }
+    }
+
+    /// <summary>
+    ///   Settles a card from a finished probe: the install state, the raw version (null stays
+    ///   unresolved), and — only for an installed agent — the advisory update availability. A
+    ///   not-installed agent gets no availability check, and any stale update indicator is
+    ///   cleared so it cannot survive an uninstall.
+    /// </summary>
+    /// <param name="card"> The card to settle. </param>
+    /// <param name="result"> The finished probe result. </param>
+    /// <param name="cancellationToken"> Token for the availability check. </param>
+    /// <returns> A task that completes when the card is settled. </returns>
+    private async Task ApplyProbeResultAsync(AgentCardItem card, AgentProbeResult result, CancellationToken cancellationToken)
+    {
+        if (result.IsInstalled)
+        {
+            card.InstallState = AgentInstallState.Installed;
+            card.Version = result.Version;
+            card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+        }
+        else
+        {
+            card.InstallState = AgentInstallState.NotInstalled;
+            card.Version = null;
+            card.UpdateAvailability = null;
         }
     }
 

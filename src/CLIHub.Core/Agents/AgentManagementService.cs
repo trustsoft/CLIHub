@@ -54,6 +54,15 @@ public sealed class AgentManagementService : IAgentManagementService
         this.availability.InvalidateFor(plugin);
 
         var installed = this.detection.IsInstalledInSystem(plugin);
+
+        // A missing CLI has no version to retrieve; running the version command would be a
+        // doomed process launch, so the probe settles on the detection result alone.
+        if (!installed)
+        {
+            this.logger.LogInformation("Probed {PluginId}: installed={Installed}, version={Version}", plugin.Id, installed, null);
+            return new AgentProbeResult(false, null);
+        }
+
         var version = await this.version.GetVersionAsync(plugin, cancellationToken).ConfigureAwait(false);
 
         this.logger.LogInformation("Probed {PluginId}: installed={Installed}, version={Version}", plugin.Id, installed, version);

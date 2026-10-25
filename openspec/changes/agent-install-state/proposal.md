@@ -43,9 +43,10 @@ Decisions were taken with the user; this change implements exactly these:
    The `"…"` pending sentinel is no longer rendered anywhere. `AgentVersionText` survives as the
    owner of display text only.
 3. **Selector text.** Installed + resolved version → `{Name} ({version})`; installed without one →
-   `{Name}`; not installed → `{Name} (not installed)` (lowercase, mirroring the runtime selector at
-   src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:41 and its tests); detecting → `{Name}`. Only
-   `NotInstalled` options are disabled — a Detecting option stays selectable
+   `{Name}`; not installed → `{Name} (Not installed)` (capitalized — a deliberate divergence from
+   the runtime selector's lowercase `(not installed)` at
+   src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:41, which stays unchanged); detecting →
+   `{Name}`. Only `NotInstalled` options are disabled — a Detecting option stays selectable
    (today's DataTrigger binds `IsInstalled`, src/CLIHub/Views/SettingsAgentsPage.xaml:81-84).
 4. **Card chip.** Detecting → "Detecting…"; NotInstalled → "Not installed" (danger styling kept);
    Installed + version → `v{version}`; Installed without → "Installed". "Detecting…" uses the chip's

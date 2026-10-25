@@ -143,13 +143,15 @@ public class AgentManagementServiceTests
             var result = await service.ProbeAsync(pluginA);
 
             Assert.False(result.IsInstalled);
-            Assert.Equal("2.0.0", result.Version);
+
+            // A's marker is gone, so the probe is gated: no version command runs for it.
+            Assert.Null(result.Version);
 
             // B's detection and version were primed before the probe and must still be served
             // from cache even though its marker is gone and the fake output changed.
             Assert.True(detection.IsInstalledInSystem(pluginB));
             Assert.Equal("1.0.0", await version.GetVersionAsync(pluginB));
-            Assert.Equal(3, outputRunner.Runs.Count); // A primed, B primed, A re-probed
+            Assert.Equal(2, outputRunner.Runs.Count); // A primed, B primed; A's gated probe adds no run
         }
         finally
         {
@@ -247,6 +249,26 @@ public class AgentManagementServiceTests
 
         Assert.False(result.IsInstalled);
         Assert.Null(result.Version);
+
+        // The gate is the point: a not-installed agent must not get a version probe at all.
+        version.Verify(x => x.GetVersionAsync(plugin, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ProbeAsync_InstalledAgent_StillRunsVersionCommand()
+    {
+        var plugin = AgentPlugin();
+        var detection = new Mock<IAgentDetectionService>();
+        detection.Setup(x => x.IsInstalledInSystem(plugin)).Returns(true);
+        var version = new Mock<IAgentVersionService>();
+        version.Setup(x => x.GetVersionAsync(plugin, It.IsAny<CancellationToken>())).ReturnsAsync((string?)"4.1");
+        var service = CreateService(detection, version, new Mock<IAgentCommandService>(), Monitor([]));
+
+        var result = await service.ProbeAsync(plugin);
+
+        Assert.True(result.IsInstalled);
+        Assert.Equal("4.1", result.Version);
+        version.Verify(x => x.GetVersionAsync(plugin, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

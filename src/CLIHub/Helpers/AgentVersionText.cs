@@ -1,34 +1,24 @@
 namespace CLIHub.Helpers;
 
 /// <summary>
-///   Owns the agent version placeholder texts and the pending/known checks shared by the agent
-///   surfaces, so the sentinel literals live in exactly one place.
+///   Owns the user-facing agent state chip texts shared by the agent surfaces, so the display
+///   literals live in exactly one place. The class owns display text only — no parseable state:
+///   an unresolved version is a null value, never sentinel text.
 /// </summary>
 public static class AgentVersionText
 {
     /// <summary>
-    ///   The placeholder shown while a version probe has not finished.
+    ///   The chip text shown while an installation probe is running.
     /// </summary>
-    public const string Pending = "…";
+    public const string Detecting = "Detecting…";
 
     /// <summary>
-    ///   The placeholder shown when a probe finished without producing a version.
+    ///   The chip text shown when the agent is not installed on the host.
     /// </summary>
-    public const string Unknown = "unknown";
+    public const string NotInstalled = "Not installed";
 
     /// <summary>
-    ///   Whether the version is still pending: absent, empty, or the pending placeholder.
+    ///   The chip text shown when the agent is installed without a resolved version.
     /// </summary>
-    /// <param name="version"> The version text to test. </param>
-    /// <returns> True when no resolved version value exists yet. </returns>
-    public static bool IsPending(string? version) =>
-        string.IsNullOrEmpty(version) || version == Pending;
-
-    /// <summary>
-    ///   Whether the version is a resolved value: neither pending nor the unknown placeholder.
-    /// </summary>
-    /// <param name="version"> The version text to test. </param>
-    /// <returns> True when the version is a known value. </returns>
-    public static bool IsKnown(string? version) =>
-        !IsPending(version) && version != Unknown;
+    public const string Installed = "Installed";
 }

@@ -5,19 +5,53 @@ using CLIHub.Core.Models;
 using CLIHub.Helpers;
 
 /// <summary>
+///   Installation state of an agent as known by a view-model surface. XAML data triggers match
+///   enum members by name, so renaming a member is a XAML-breaking change.
+/// </summary>
+public enum AgentInstallState
+{
+    /// <summary>An installation probe is running; the settled state is not known yet.</summary>
+    Detecting,
+
+    /// <summary>The agent is installed on the host.</summary>
+    Installed,
+
+    /// <summary>The agent is not installed on the host.</summary>
+    NotInstalled
+}
+
+/// <summary>
 ///   A selectable default-agent option; a null <see cref="Id" /> means "None".
 /// </summary>
 /// <param name="Id"> The agent plugin id, or null for no default. </param>
 /// <param name="Name"> The display name. </param>
-/// <param name="Version"> The installed version, or null when unknown. </param>
-/// <param name="IsInstalled"> Whether the agent is installed on the host; uninstalled agents render disabled. </param>
-public sealed record AgentOption(string? Id, string Name, string? Version = null, bool IsInstalled = true)
+/// <param name="Version"> The resolved installed version, or null when unresolved. </param>
+/// <param name="InstallState"> The agent's installation state; defaults to installed. </param>
+public sealed record AgentOption(
+    string? Id,
+    string Name,
+    string? Version = null,
+    AgentInstallState InstallState = AgentInstallState.Installed)
 {
     /// <summary>
-    ///   The display text: the name with the installed version in parentheses when it is known.
+    ///   Whether the agent is installed on the host; uninstalled options render disabled.
+    ///   Prefer binding <see cref="InstallState" />: this derived flag is also false while the
+    ///   state is being detected.
     /// </summary>
-    public string DisplayName =>
-        AgentVersionText.IsPending(this.Version) ? this.Name : $"{this.Name} ({this.Version})";
+    public bool IsInstalled => this.InstallState == AgentInstallState.Installed;
+
+    /// <summary>
+    ///   The display text: the name with the resolved version in parentheses, a capitalized
+    ///   "(Not installed)" suffix for a missing agent (deliberately different from the runtime
+    ///   selector's lowercase suffix), or the bare name otherwise — including while the
+    ///   installation state is being detected.
+    /// </summary>
+    public string DisplayName => this.InstallState switch
+    {
+        AgentInstallState.NotInstalled => $"{this.Name} (Not installed)",
+        AgentInstallState.Installed when this.Version is { } version => $"{this.Name} ({version})",
+        _ => this.Name
+    };
 }
 
 /// <summary>
@@ -25,8 +59,8 @@ public sealed record AgentOption(string? Id, string Name, string? Version = null
 /// </summary>
 public sealed class AgentCardItem : ObservableObject
 {
-    private bool isInstalled;
-    private string version;
+    private AgentInstallState installState;
+    private string? version;
     private AgentUpdateAvailability? updateAvailability;
 
     /// <summary>
@@ -35,9 +69,9 @@ public sealed class AgentCardItem : ObservableObject
     /// <param name="plugin"> The agent plugin. </param>
     /// <param name="logoPath"> The agent logo path, or null. </param>
     /// <param name="isInstalled"> Whether the agent is installed on the host. </param>
-    /// <param name="version"> The installed version, or a placeholder. </param>
+    /// <param name="version"> The resolved installed version, or null when unresolved. </param>
     /// <param name="configPath"> The path to the agent's plugin.json, or null. </param>
-    public AgentCardItem(Plugin plugin, string? logoPath, bool isInstalled, string version, string? configPath)
+    public AgentCardItem(Plugin plugin, string? logoPath, bool isInstalled, string? version = null, string? configPath = null)
     {
         this.Plugin = plugin ?? throw new ArgumentNullException(nameof(plugin));
         this.PluginId = plugin.Id;
@@ -45,7 +79,7 @@ public sealed class AgentCardItem : ObservableObject
         this.LogoPath = logoPath;
         this.ConfigPath = configPath;
         this.CommandLabels = BuildCommandLabels(plugin.Commands);
-        this.isInstalled = isInstalled;
+        this.installState = isInstalled ? AgentInstallState.Installed : AgentInstallState.NotInstalled;
         this.version = version;
     }
 
@@ -90,30 +124,48 @@ public sealed class AgentCardItem : ObservableObject
     public string CommandsText => this.CommandLabels.Count > 0 ? string.Join(", ", this.CommandLabels) : "—";
 
     /// <summary>
-    ///   Whether the agent is installed on the host.
+    ///   The agent's installation state as currently known; the observable source of truth for
+    ///   the chip and selector styling. Bindings should prefer this property over
+    ///   <see cref="IsInstalled" />, which is also false while detecting.
     /// </summary>
-    public bool IsInstalled
+    public AgentInstallState InstallState
     {
-        get => this.isInstalled;
+        get => this.installState;
         set
         {
-            if (this.SetProperty(ref this.isInstalled, value))
+            if (this.SetProperty(ref this.installState, value))
             {
+                this.OnPropertyChanged(nameof(this.IsInstalled));
                 this.OnPropertyChanged(nameof(this.VersionChipText));
             }
         }
     }
 
     /// <summary>
-    ///   The state chip text: the installed version when known, otherwise the installation state.
+    ///   Whether the agent is installed on the host. Derived from <see cref="InstallState" />;
+    ///   the value is also false while the state is being detected.
     /// </summary>
-    public string VersionChipText =>
-        !this.IsInstalled ? "Not installed" : HasKnownVersion(this.version) ? $"v{this.version}" : "Installed";
+    public bool IsInstalled => this.InstallState == AgentInstallState.Installed;
 
     /// <summary>
-    ///   The installed version, or an "unknown" placeholder.
+    ///   The state chip text: "Detecting…" while an installation probe runs, "Not installed"
+    ///   for a missing agent, the resolved version as "v{version}" when installed with one, and
+    ///   "Installed" when installed without one.
     /// </summary>
-    public string Version
+    public string VersionChipText => this.InstallState switch
+    {
+        AgentInstallState.Detecting => AgentVersionText.Detecting,
+        AgentInstallState.NotInstalled => AgentVersionText.NotInstalled,
+        AgentInstallState.Installed when this.version is { } version => $"v{version}",
+        _ => AgentVersionText.Installed
+    };
+
+    /// <summary>
+    ///   The resolved installed version, or null when no version has been resolved. Display
+    ///   text never derives from this value's shape; it is read together with
+    ///   <see cref="InstallState" />.
+    /// </summary>
+    public string? Version
     {
         get => this.version;
         set
@@ -190,9 +242,6 @@ public sealed class AgentCardItem : ObservableObject
     ///   Whether the card has an action outcome message to show.
     /// </summary>
     public bool HasMessage => !string.IsNullOrEmpty(this.Message);
-
-    private static bool HasKnownVersion(string version) =>
-        AgentVersionText.IsKnown(version);
 
     private static IReadOnlyList<string> BuildCommandLabels(AgentCommands? commands)
     {

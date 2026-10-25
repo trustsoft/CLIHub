@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 using CLIHub.Core.Models;
-using CLIHub.Helpers;
 
 /// <summary>
 ///   Display item for an agent row in the launch window.
@@ -90,9 +89,9 @@ public sealed class AgentItem : INotifyPropertyChanged
     public double RowOpacity => this.IsAvailable ? 1.0 : 0.4;
 
     /// <summary>
-    ///   Version string; starts as a placeholder and updates when resolved.
+    ///   The resolved version, or null while unresolved; renders no subtitle when null.
     /// </summary>
-    public string Version
+    public string? Version
     {
         get;
         set
@@ -105,7 +104,7 @@ public sealed class AgentItem : INotifyPropertyChanged
             field = value;
             this.OnPropertyChanged();
         }
-    } = AgentVersionText.Pending;
+    } = null;
 
     /// <summary>
     ///   Updates the row with the current values for its stable plugin identity.

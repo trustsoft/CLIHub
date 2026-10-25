@@ -203,7 +203,7 @@ public partial class MainWindow : Window
                 var version = await this.agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
                 if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
                 {
-                    item.Version = version ?? "unknown";
+                    item.Version = version;
                 }
             }));
         }

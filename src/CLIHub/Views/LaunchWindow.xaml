@@ -314,7 +314,8 @@
                                             <TextBlock Margin="0,1,0,0"
                                                        FontSize="{StaticResource Sizing.FontSize.Section}"
                                                        Foreground="{DynamicResource TextMutedBrush}"
-                                                       Text="{Binding Version}"/>
+                                                       Text="{Binding Version}"
+                                                       Visibility="{Binding Version, Converter={StaticResource EmptyToCollapsedVisibility}}"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="3"

@@ -83,9 +83,11 @@ All file:line references below were verified against the working tree at commit 
 - Converters already exist app-wide: `EmptyToCollapsedVisibility` (App.xaml:45;
   null/whitespace → `Collapsed`, src/CLIHub/Converters/EmptyToCollapsedVisibilityConverter.cs) and
   `BoolToVisibility` (App.xaml:47).
-- Precedent for selector wording: `RuntimeOption.DisplayName`
+- Baseline runtime-selector wording (no longer the agent selector's precedent):
+  `RuntimeOption.DisplayName`
   (src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:41) renders `{Name} (not installed)`;
   tests assert it (tests/CLIHub.Tests/ViewModels/Settings/SettingsViewModelApplicationTests.cs:58,128).
+  The agent selector deliberately diverges with a capitalized suffix — see Decision 4.
 - `IsDetecting`/`CanDetect` already gate the Detect button
   (AgentManagementViewModel.cs:166-179); there is no per-card detecting state today.
 - The launch list only ever contains installed agents (`AgentListComposer` filter, archived change
@@ -154,15 +156,18 @@ beyond the chip).
    no `Unknown`/`Pending` constants. Rationale: the class's stated purpose ("sentinel literals live
    in exactly one place") inverts from state parsing to display text.
 
-4. **Selector text derives from state, mirroring `RuntimeOption`.**
+4. **Selector text derives from state; the suffix is capitalized.**
    `AgentOption.DisplayName` becomes a switch on `InstallState`: NotInstalled →
-   `$"{Name} (not installed)"`; Installed with non-null `Version` → `$"{Name} ({Version})"`;
-   otherwise → `Name`. The `NoneOption` (`new(null, "None")`, AgentManagementViewModel.cs:21) keeps
-   the default `Installed` state and renders "None" unchanged. The ComboBox
-   `ItemContainerStyle` DataTrigger (SettingsAgentsPage.xaml:81-84) changes from
-   `{Binding IsInstalled}` Value=False to `{Binding InstallState}` Value=NotInstalled so a
-   Detecting option (derived `IsInstalled` = false) stays selectable. WPF DataTrigger compares enum
-   values by name, so `Value="NotInstalled"` binds without a converter.
+   `$"{Name} (Not installed)"` (revised decision, 2026-10-25: the suffix is capitalized,
+   deliberately different from `RuntimeOption.DisplayName`'s lowercase `(not installed)` at
+   src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:41, which keeps its style — the two
+   selectors no longer match wording and that is intended); Installed with non-null `Version` →
+   `$"{Name} ({Version})"`; otherwise → `Name`. The `NoneOption` (`new(null, "None")`,
+   AgentManagementViewModel.cs:21) keeps the default `Installed` state and renders "None"
+   unchanged. The ComboBox `ItemContainerStyle` DataTrigger (SettingsAgentsPage.xaml:81-84)
+   changes from `{Binding IsInstalled}` Value=False to `{Binding InstallState}` Value=NotInstalled
+   so a Detecting option (derived `IsInstalled` = false) stays selectable. WPF DataTrigger
+   compares enum values by name, so `Value="NotInstalled"` binds without a converter.
    - *Alternative rejected:* keep binding `IsInstalled` and accept Detecting options being
      disabled — violates decision 3 of the brief ("a Detecting option must stay selectable").
 

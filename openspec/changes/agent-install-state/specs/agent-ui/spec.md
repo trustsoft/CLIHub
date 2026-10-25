@@ -17,7 +17,7 @@ The default-agent selector SHALL present each agent option with display text der
 #### Scenario: Not-installed agent marked and disabled
 
 - **WHEN** the selector lists an agent that is not installed on the host
-- **THEN** the option reads `{Name} (not installed)` in the same lowercase style as the default-runtime selector
+- **THEN** the option reads `{Name} (Not installed)` with a capitalized suffix, deliberately different from the default-runtime selector's lowercase `(not installed)`, whose own style stays unchanged
 - **AND** the option is disabled and cannot be selected
 
 #### Scenario: Detecting option stays selectable

@@ -176,7 +176,7 @@ public class AgentPaneControllerTests
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
-        Assert.Equal("…", controller.Agents[0].Version);
+        Assert.Null(controller.Agents[0].Version);
     }
 
     [Fact]

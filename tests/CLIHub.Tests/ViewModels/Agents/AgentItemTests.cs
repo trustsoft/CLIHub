@@ -172,6 +172,37 @@ public sealed class AgentItemTests
         Assert.Empty(notifications);
     }
 
+    [Fact]
+    public void Version_WhenCreated_DefaultsToNull()
+    {
+        var item = new AgentItem { Plugin = CreatePluginWithCommands(AgentCommandKind.Launch), Name = "Test" };
+
+        Assert.Null(item.Version);
+    }
+
+    [Fact]
+    public void Version_WhenChanged_RaisesNotification()
+    {
+        var item = new AgentItem { Plugin = CreatePluginWithCommands(AgentCommandKind.Launch), Name = "Test" };
+        var notifications = TrackNotifications(item);
+
+        item.Version = "1.2.3";
+
+        Assert.Contains(nameof(AgentItem.Version), notifications);
+        Assert.Equal("1.2.3", item.Version);
+    }
+
+    [Fact]
+    public void Version_WhenSetToSameValue_RaisesNoNotification()
+    {
+        var item = new AgentItem { Plugin = CreatePluginWithCommands(AgentCommandKind.Launch), Name = "Test", Version = "1.2.3" };
+        var notifications = TrackNotifications(item);
+
+        item.Version = "1.2.3";
+
+        Assert.Empty(notifications);
+    }
+
     private static List<string> TrackNotifications(AgentItem item)
     {
         var notifications = new List<string>();

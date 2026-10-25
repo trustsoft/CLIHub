@@ -114,7 +114,8 @@
                                            Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"/>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Version, StringFormat='Version: {0}'}" FontSize="11" Foreground="#2C3E50"/>
+                                        <TextBlock Text="{Binding Version, StringFormat='Version: {0}'}" FontSize="11" Foreground="#2C3E50"
+                                                   Visibility="{Binding Version, Converter={StaticResource EmptyToCollapsedVisibility}}"/>
                                         <TextBlock Text="{Binding Status}" FontSize="11" Foreground="Gray"/>
                                     </StackPanel>
                                 </StackPanel>

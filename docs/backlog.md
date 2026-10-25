@@ -119,18 +119,56 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ### Magic version sentinels (resolved)
 
-- Status: Resolved by the `low-sweep` change (2026-10-24).
-- Resolved model: the `AgentVersionText` helper (`src/CLIHub/Helpers/AgentVersionText.cs`) owns
-  `Pending` (`"…"`) / `Unknown` (`"unknown"`) and the `IsPending`/`IsKnown` checks; all live
-  surfaces route through it — the `AgentItem` placeholder initializer (a site the entry had
-  missed), the `AgentCardItem` pending-only `DisplayName` asymmetry and `HasKnownVersion`, the
-  five `AgentManagementViewModel` sites, and `AgentPaneController` — with display strings
-  byte-identical. The legacy `MainWindow.xaml.cs` copy remains the documented untouched
-  exception, and `UpdateService`'s "unknown" stays out of domain.
-- Guarded by: `AgentVersionTextTests` truth tables plus the unchanged sentinel-pinning consumer
-  tests (`AgentCardItemTests`, `AgentManagementViewModelTests`, `AgentPaneControllerTests`).
-- Trigger: a regression report of wrong version placeholder text, or any future edit that adds a
-  sentinel-literal check.
+- Status: Resolved by the `agent-install-state` change (2026-10-25), superseding the `low-sweep`
+  sentinel model.
+- Resolved model: the string sentinels are gone. `Pending` (`"…"`), `Unknown` (`"unknown"`), and
+  the `IsPending`/`IsKnown` checks were deleted from `AgentVersionText`
+  (`src/CLIHub/Helpers/AgentVersionText.cs`); an unresolved version is now a null value, never
+  placeholder text, and `AgentVersionText` survives only as the owner of the chip display texts
+  ("Detecting…", "Not installed", "Installed"). Installation state is explicit:
+  `AgentInstallState { Detecting, Installed, NotInstalled }` lives on `AgentCardItem` and
+  `AgentOption` (with a derived `IsInstalled` convenience), card chips and the default-agent
+  selector derive their text and styling from it, and version/availability work is gated on it
+  (`AgentManagementService.ProbeAsync` runs no version command for a not-installed agent).
+  `UpdateService`'s own "unknown" fallback for the application version stays out of domain.
+- Guarded by: the state-driven tests in `AgentCardItemTests` (chip and selector `DisplayName`
+  matrices), `AgentManagementViewModelTests` (gating, Detecting transitions and restore-on-throw,
+  null-version assertions), and `AgentManagementServiceTests` (`ProbeAsync_UnknownVersion_ReturnsNullVersion`
+  verifying the version service is never called for a not-installed agent).
+- Trigger: a regression report of placeholder version text (`unknown` or `…`) anywhere in an agent
+  list surface, a card stuck on "Detecting…", or any future edit that re-derives display state
+  from a version string's shape.
+
+### Detect/Test failure restores install state but not the version (low, deferred)
+
+- Severity: Low — exception path only, no notification fires there, and it self-heals on the next
+  successful pass.
+- Evidence: `DetectAsync` snapshots only `InstallState`
+  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:437`) and, on a thrown probe, restores
+  that state for every flipped card (`:462-472`); cards that had already settled keep the
+  `Version`/`UpdateAvailability` the abandoned pass wrote. `TestAsync` has the same family
+  (`:422-428` with `ApplyProbeResultAsync` `:490-503`). `DefaultAgentDetail` (`:110-125`) reads only
+  `Version`, so after a later selection change a card restored to NotInstalled can pair
+  "(Not installed)" in the selector with "Version 2.0" in the summary. The spec scenario "Detecting
+  never persists after a failed probe" is satisfied.
+- Proposed remedy: snapshot `Version` and `UpdateAvailability` together with `InstallState` and
+  restore all three on a thrown pass, or revert only the cards still `Detecting` and leave settled
+  cards wholly settled; extend the existing restore tests to the chosen rule.
+- Trigger: the next change touching `AgentManagementViewModel`'s probe paths, or a report of a
+  version line beside an uninstalled agent after a failed Detect/Test.
+
+### Dispose racing a Detect pass can leave unprobed cards in Detecting (low, deferred)
+
+- Severity: Low — the surface is torn down, and `Load()` rebuilds the cards, so nothing renders the
+  residual state.
+- Evidence: `DetectAsync` returns early when `this.disposed`
+  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:451-454`); cards flipped to
+  `Detecting` at pass start (`:441-444`) that were never probed keep that state, because the
+  restore path runs only for exceptions.
+- Proposed remedy: treat the early return like a cancelled pass — restore the snapshot before
+  returning, or route it through the exception restore path.
+- Trigger: reuse of a disposed or abandoned section instance, or a future surface that keeps cards
+  alive across a cancelled Detect.
 
 ### Runtime executable PATH-scan identity (Git Bash and PowerShell 7) (resolved)
 
