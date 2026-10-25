@@ -461,7 +461,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private int agentsInstalledCount;
     private int agentsSupportedCount;
     private string watcherStateLabel = "Off";
-    private SummaryCardTone watcherStateTone;
     private string watcherDetailText = "No watched roots configured";
     private bool disposed;
 
@@ -1149,16 +1148,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   The tone of the watcher state shown in the summary card: success while watching, accent
-    ///   while scanning, danger on error, and neutral for every other state.
-    /// </summary>
-    public SummaryCardTone WatcherStateTone
-    {
-        get => this.watcherStateTone;
-        private set => this.SetProperty(ref this.watcherStateTone, value);
-    }
-
-    /// <summary>
     ///   The watcher detail shown under the state, e.g. the last scan time.
     /// </summary>
     public string WatcherDetailText
@@ -1432,7 +1421,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
         this.OnPropertyChanged(nameof(this.WatcherStateLabel));
-        this.OnPropertyChanged(nameof(this.WatcherStateTone));
         this.OnPropertyChanged(nameof(this.WatcherDetailText));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
@@ -1733,15 +1721,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             ProjectScanState.Scanning => "Scanning",
             ProjectScanState.Error => "Error",
             _ => current.IsWatching ? "Watching" : "Idle"
-        };
-        // Mirrors the label switch above: the two must name the same states, so the card can never
-        // show a label in a tone that contradicts it.
-        this.WatcherStateTone = current.State switch
-        {
-            ProjectScanState.Scanning => SummaryCardTone.Accent,
-            ProjectScanState.Error => SummaryCardTone.Danger,
-            ProjectScanState.Idle when current.IsWatching => SummaryCardTone.Success,
-            _ => SummaryCardTone.Neutral
         };
         this.WatcherDetailText = current.State switch
         {

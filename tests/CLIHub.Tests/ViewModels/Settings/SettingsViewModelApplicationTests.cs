@@ -617,16 +617,15 @@ public class SettingsViewModelApplicationTests
     }
 
     [Theory]
-    [InlineData(Core.Scanning.ProjectScanState.NotConfigured, false, "Off", SummaryCardTone.Neutral)]
-    [InlineData(Core.Scanning.ProjectScanState.Idle, false, "Idle", SummaryCardTone.Neutral)]
-    [InlineData(Core.Scanning.ProjectScanState.Idle, true, "Watching", SummaryCardTone.Success)]
-    [InlineData(Core.Scanning.ProjectScanState.Scanning, false, "Scanning", SummaryCardTone.Accent)]
-    [InlineData(Core.Scanning.ProjectScanState.Error, false, "Error", SummaryCardTone.Danger)]
-    public void WatcherStateTone_ScannerStatus_MatchesWatcherStateLabel(
+    [InlineData(Core.Scanning.ProjectScanState.NotConfigured, false, "Off")]
+    [InlineData(Core.Scanning.ProjectScanState.Idle, false, "Idle")]
+    [InlineData(Core.Scanning.ProjectScanState.Idle, true, "Watching")]
+    [InlineData(Core.Scanning.ProjectScanState.Scanning, false, "Scanning")]
+    [InlineData(Core.Scanning.ProjectScanState.Error, false, "Error")]
+    public void WatcherStateLabel_ScannerStatus_MatchesState(
         Core.Scanning.ProjectScanState state,
         bool isWatching,
-        string expectedLabel,
-        SummaryCardTone expectedTone)
+        string expectedLabel)
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
@@ -644,7 +643,6 @@ public class SettingsViewModelApplicationTests
                 state == Core.Scanning.ProjectScanState.Error ? "Scan failed" : null));
 
         Assert.Equal(expectedLabel, fixture.ViewModel.WatcherStateLabel);
-        Assert.Equal(expectedTone, fixture.ViewModel.WatcherStateTone);
     }
 
     [Theory]

@@ -197,8 +197,7 @@
                                           DetailToolTip="{Binding WatcherDetailText}"
                                           Icon="{x:Static themes:IconGlyphs.Eye}"
                                           Label="DAEMON"
-                                          Value="{Binding WatcherStateLabel}"
-                                          ValueTone="{Binding WatcherStateTone}"/>
+                                          Value="{Binding WatcherStateLabel}"/>
                 </controls:SpacedPanel>
             </DataTemplate>
 
