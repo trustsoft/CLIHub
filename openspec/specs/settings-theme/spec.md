@@ -308,6 +308,13 @@ The Settings window SHALL keep the active page's header visible while page conte
 - **WHEN** the "Project Scanning" page is shown
 - **THEN** the scrollable content begins at the "WATCHED REPOSITORY DIRECTORIES" section below the header divider
 
+#### Scenario: Summary detail lines span the card width
+
+- **WHEN** a summary card shows its detail or alert line
+- **THEN** the line's text box extends to the card's right content edge, level with the icon block's right edge, instead of stopping at the icon block's left edge
+- **AND** the line's text stays left-aligned
+- **AND** the label and value lines keep reserving the icon block's column so they never run under the icon
+
 ### Requirement: Projects page summary cards
 
 The Settings window SHALL show three summary cards under the "Projects" page header: total projects, manual projects, and discovered projects. The total card SHALL show the manual/discovered split and a folder-health line that names the number of projects whose folder no longer exists using the danger tone; the folder-health line SHALL NOT be shown when every folder exists. The manual card SHALL state that those projects were registered manually, and the discovered card SHALL state that Project Scanning manages them. The counts and the folder-health line SHALL refresh whenever the project registry changes, including a manual add or removal made on the page.
