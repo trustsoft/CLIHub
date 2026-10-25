@@ -347,7 +347,9 @@
         Page-header summary card: label, value, optional detail and alert lines, icon block. The icon
         always uses the primary text brush so it matches the value line and the palette. The value
         tones are applied by triggers on the templated parent, so the brushes stay palette-driven:
-        Neutral (the default) is the primary text tone, and Alert is always danger.
+        Neutral (the default) is the primary text tone, and Alert is always danger. The label and
+        value reserve the icon block's column, while the detail and alert lines span both columns
+        below the icon row, so their right edge is the card's right content edge.
     -->
     <Style TargetType="{x:Type controls:SummaryCard}">
         <!-- A card is a read-only metric, not an input: it must not take part in the tab order. -->
@@ -361,6 +363,10 @@
                             BorderThickness="1"
                             CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
                         <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -379,18 +385,6 @@
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="NoWrap"
                                            ToolTip="{TemplateBinding ValueToolTip}"/>
-                                <TextBlock x:Name="DetailText"
-                                           Margin="0,2,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{TemplateBinding Detail}"
-                                           ToolTip="{TemplateBinding DetailToolTip}"/>
-                                <TextBlock x:Name="AlertText"
-                                           Margin="0,2,0,0"
-                                           Foreground="{DynamicResource DangerBrush}"
-                                           Style="{StaticResource HintText}"
-                                           Text="{TemplateBinding Alert}"
-                                           ToolTip="{TemplateBinding AlertToolTip}"
-                                           Visibility="Collapsed"/>
                             </StackPanel>
                             <Border Grid.Column="1"
                                     Width="24"
@@ -407,6 +401,21 @@
                                            Foreground="{DynamicResource TextPrimaryBrush}"
                                            Text="{TemplateBinding Icon}"/>
                             </Border>
+                            <StackPanel Grid.Row="1"
+                                        Grid.ColumnSpan="2">
+                                <TextBlock x:Name="DetailText"
+                                           Margin="0,2,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="{TemplateBinding Detail}"
+                                           ToolTip="{TemplateBinding DetailToolTip}"/>
+                                <TextBlock x:Name="AlertText"
+                                           Margin="0,2,0,0"
+                                           Foreground="{DynamicResource DangerBrush}"
+                                           Style="{StaticResource HintText}"
+                                           Text="{TemplateBinding Alert}"
+                                           ToolTip="{TemplateBinding AlertToolTip}"
+                                           Visibility="Collapsed"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
                     <ControlTemplate.Triggers>
