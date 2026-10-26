@@ -201,7 +201,7 @@
                              Style="{StaticResource SettingsInput}"
                              Tag="#RRGGBB"
                              Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Enter a custom accent color as #RRGGBB"/>
+                             ToolTip="Custom accent color as #RRGGBB"/>
                 </StackPanel>
             </StackPanel>
         </controls:SettingCard>

@@ -135,7 +135,7 @@
                         Command="{Binding AgentsState.DetectCommand}"
                         IsEnabled="{Binding AgentsState.CanDetect}"
                         Style="{StaticResource AgentsHeaderChipButton}"
-                        ToolTip="Re-detect installed agents and their versions locally; does not check for updates">
+                        ToolTip="Detect installed agents and versions">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -151,7 +151,7 @@
                         Command="{Binding AgentsState.CheckUpdatesCommand}"
                         IsEnabled="{Binding AgentsState.CanCheckUpdates}"
                         Style="{StaticResource AgentsHeaderChipButton}"
-                        ToolTip="Force a fresh update-availability check for installed agents; does not re-detect installation or version">
+                        ToolTip="Check for agent updates">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -209,7 +209,7 @@
                                     <Border Margin="8,0,0,0"
                                             AutomationProperties.Name="Update available"
                                             Style="{StaticResource AgentUpdateChip}"
-                                            ToolTip="A newer version is available from this agent's distribution channel"
+                                            ToolTip="A newer version is available"
                                             Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
                                         <TextBlock Style="{StaticResource AgentUpdateChipText}"
                                                    Text="{Binding UpdateAvailabilityText}"/>
@@ -239,7 +239,7 @@
                                         CommandParameter="{Binding}"
                                         IsEnabled="{Binding DataContext.AgentsState.CanDetect, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Detect installation and version; does not check for updates">
+                                        ToolTip="Detect installation and version">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Diagnostic}"/>
