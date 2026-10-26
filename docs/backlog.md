@@ -597,20 +597,19 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a regression report that switching Windows light/dark leaves the System palette stale
   until restart or the next Settings save.
 
-### Unversioned README screenshot capture harness
+### Unversioned README screenshot capture harness (resolved)
 
-- Severity: Low (reproducibility)
-- Evidence: the 0.9.9 README refresh used an ad-hoc PowerShell harness kept only in `%TEMP%`
+- Status: Resolved 2026-10-26 by `docs/images/tools/Capture-ReadmeImages.ps1` and the debug-only
+  `src/CLIHub/Views/ReadmeImageCapture.cs` path. The script backs up and restores
+  `%APPDATA%\CLIHub\config.json` and `cache\logos.json`, seeds a throwaway mock workspace, renders
+  the app windows in-process at 1.5× (so a locked or headless desktop is enough), applies the rounded
+  mask, and regenerates the HTML images with headless Chrome.
+- Former evidence: the 0.9.9 README refresh used an ad-hoc PowerShell harness kept only in `%TEMP%`
   (`capture-final.ps1`): it seeds `%APPDATA%\CLIHub\config.json` with a throwaway workspace, opens
   Settings through UI Automation, captures with `CopyFromScreen`, crops the 2 px ring, applies the
   12 px mask, and restores the config. `PrintWindow` intermittently returned black frames on
   2026-10-23, which is why the screen-copy path was added. `docs/images/README.md` records only the
   manual attributes (150% scaling, crop, mask), not the harness.
-- Proposed remedy: commit a sanitized script under `docs/images/tools/` with parameters for the mock
-  workspace and output directory, an explicit backup/restore of the user configuration, a
-  black-frame retry, and a guard against overwriting `%APPDATA%\CLIHub`; alternatively extend
-  `docs/images/README.md` with the exact automation steps.
-- Trigger: the next README screenshot refresh.
 
 ### Accent precedence across a live palette switch (resolved)
 

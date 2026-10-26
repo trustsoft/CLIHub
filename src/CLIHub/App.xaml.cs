@@ -32,6 +32,13 @@ public partial class App : Application
         this.host.Start(
             action => this.Dispatcher.Invoke(action),
             window => this.MainWindow = (Window)window);
+
+#if DEBUG
+        if (CLIHub.Views.ReadmeImageCapture.TryStart(this))
+        {
+            return;
+        }
+#endif
     }
 
     /// <summary>

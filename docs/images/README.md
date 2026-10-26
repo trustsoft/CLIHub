@@ -8,10 +8,32 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `banner.png` | `src/banner.html` + `launch-window.png` | Repository banner: identity, tagline, the default global hotkey, and the launch window as a translucent background. |
 | `social-preview.png` | `src/social-preview.html` + `launch-window.png` | Repository social preview (1280 × 640) for the GitHub link card. Not referenced by the README. |
 | `workflow.png` | `src/workflow.html` | Three-step product summary: project, agent, terminal. |
-| `launch-window.png` | App capture | The launch window with the Projects and Agents panes. |
-| `settings-appearance.png` | App capture | Settings → Appearance (theme, accent color, and path display). |
-| `settings-discovery.png` | App capture | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
-| `settings-agents.png` | App capture | Settings → CLI Agents (installed agents, default agent, detection settings). |
+| `launch-window.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | The launch window with the Projects and Agents panes. |
+| `settings-appearance.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Appearance (theme, accent color, and path display). |
+| `settings-discovery.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
+| `settings-agents.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → CLI Agents (installed agents, default agent, detection settings). |
+
+## Regenerate all README images
+
+The app captures are rendered in-process by the debug build, so the harness works on a locked or
+headless desktop where screen-copy and `PrintWindow` return black frames. It builds the Debug app,
+seeds a throwaway configuration and mock workspace, captures each window at 144 DPI (1.5×), applies
+the 12 px rounded-corner mask, regenerates the banner, workflow, and social preview with headless
+Chrome, then restores the original configuration and logo cache.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File docs\images\tools\Capture-ReadmeImages.ps1
+```
+
+The script refuses to run while CLIHub is running. Useful parameters:
+
+- `-MockWorkspaceRoot` — illustrative workspace used by the projects and the watched root
+  (default `D:\Projects\Acme`). Point it at a disposable folder; the script only deletes a root it
+  created itself.
+- `-OutputDirectory` — image directory (default `docs\images`).
+- `-SkipBuild` — reuse the existing Debug build.
+- `-SkipWebImages` — keep `banner.png`, `workflow.png`, and `social-preview.png` unchanged.
+- `-KeepMockWorkspace` — keep the mock workspace when the script created it.
 
 ## Regenerate the banner and workflow
 
@@ -49,7 +71,14 @@ or GIF files under 1 MB.
 
 ## Replace the app screenshots
 
-Capture the windows from a running build at 150% display scaling, then crop the two-pixel DWM frame
-ring and apply a 12 px rounded-corner mask. The README uses the launch window plus the Appearance,
-Project Scanning, and CLI Agents settings pages. Capture them against a throwaway configuration with
-illustrative project names and watched directories so the screenshots do not expose private workspaces.
+The app captures are produced by `tools\Capture-ReadmeImages.ps1` through the debug-only
+`CLIHUB_CAPTURE_DIR` mode (`src/CLIHub/Views/ReadmeImageCapture.cs`). The debug build renders
+the launch window and the Appearance, Project Scanning, and CLI Agents Settings pages with
+`RenderTargetBitmap` at 144 DPI (1.5×), applies the 12 px rounded-corner mask, and shuts down. The
+render path has no DWM frame ring to crop, which is why the harness does not perform the old
+two-pixel crop.
+
+The harness seeds a throwaway configuration with illustrative project names and a watched
+directory, backs up and restores `%APPDATA%\CLIHub\config.json` and `cache\logos.json`, and creates
+only mock project folders for the workspace. Run it from an unlocked desktop or a headless session;
+no 150% display scaling is required because the render target is DPI-independent.
