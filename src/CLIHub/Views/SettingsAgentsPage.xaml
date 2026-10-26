@@ -181,18 +181,13 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0"
-                                    Width="32"
-                                    Height="32"
-                                    VerticalAlignment="Top"
-                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6">
-                                <Border.Background>
-                                    <ImageBrush ImageSource="{Binding LogoPath, Converter={StaticResource PathToImage}}"
-                                                Stretch="Uniform"/>
-                                </Border.Background>
-                            </Border>
+                            <Image Grid.Column="0"
+                                   Width="32"
+                                   Height="32"
+                                   VerticalAlignment="Top"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                   Stretch="Uniform"/>
 
                             <StackPanel Grid.Column="1" Margin="12,0,12,0">
                                 <StackPanel Orientation="Horizontal">
