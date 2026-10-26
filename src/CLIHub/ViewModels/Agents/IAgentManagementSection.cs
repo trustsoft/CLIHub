@@ -74,6 +74,13 @@ public interface IAgentManagementSection : IDisposable
     RelayCommand<AgentCardItem> DetectCardCommand { get; }
 
     /// <summary>
+    ///   Forces a fresh update-availability check for the selected agent only, by invalidating
+    ///   that agent's cached result first; does not re-run installation detection, does not issue
+    ///   a version command, and does not touch the header-wide update-check summary.
+    /// </summary>
+    RelayCommand<AgentCardItem> CheckCardUpdatesCommand { get; }
+
+    /// <summary>
     ///   Updates the selected agent.
     /// </summary>
     RelayCommand<AgentCardItem> UpdateCommand { get; }
@@ -103,7 +110,7 @@ public interface IAgentManagementSection : IDisposable
 
     /// <summary>
     ///   Whether the detect action is available: true while neither the detection pass nor the
-    ///   update-availability check pass is running.
+    ///   update-availability check pass is running, nor while a per-card update check is running.
     /// </summary>
     bool CanDetect { get; }
 
@@ -114,9 +121,17 @@ public interface IAgentManagementSection : IDisposable
 
     /// <summary>
     ///   Whether the check-updates action is available: true while neither the detection pass nor
-    ///   the update-availability check pass is running.
+    ///   the update-availability check pass is running, nor while a per-card update check is
+    ///   running.
     /// </summary>
     bool CanCheckUpdates { get; }
+
+    /// <summary>
+    ///   Whether a per-card update-availability check is currently running: true while any single
+    ///   card's "Check updates" action runs, gating the header actions and every per-card check.
+    ///   Distinct from <see cref="IsCheckingUpdates" />, the header-wide pass flag.
+    /// </summary>
+    bool IsCheckingCardUpdates { get; }
 
     /// <summary>
     ///   The muted summary of the last manual update check, or null when no summary is shown.

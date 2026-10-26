@@ -215,6 +215,51 @@ public sealed class AgentCardItemTests
         Assert.False(card.HasUpdateAvailable);
     }
 
+    [Theory]
+    [InlineData(AgentInstallState.Installed, false, true)]
+    [InlineData(AgentInstallState.Installed, true, false)]
+    [InlineData(AgentInstallState.Detecting, false, false)]
+    [InlineData(AgentInstallState.Detecting, true, false)]
+    [InlineData(AgentInstallState.NotInstalled, false, false)]
+    [InlineData(AgentInstallState.NotInstalled, true, false)]
+    public void CanCheckUpdates_WhenDerivedFromInstallAndBusyState_IsTrueOnlyForInstalledIdleCard(
+        AgentInstallState state,
+        bool isCheckingUpdates,
+        bool expected)
+    {
+        var card = CreateCard(state, null);
+        card.IsCheckingUpdates = isCheckingUpdates;
+
+        Assert.Equal(expected, card.CanCheckUpdates);
+    }
+
+    [Fact]
+    public void IsCheckingUpdates_WhenSet_RaisesCanCheckUpdatesNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.IsCheckingUpdates = true;
+
+        Assert.Contains(nameof(AgentCardItem.IsCheckingUpdates), properties);
+        Assert.Contains(nameof(AgentCardItem.CanCheckUpdates), properties);
+        Assert.False(card.CanCheckUpdates);
+    }
+
+    [Fact]
+    public void InstallState_WhenChangedToNotInstalled_RaisesCanCheckUpdatesNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.InstallState = AgentInstallState.NotInstalled;
+
+        Assert.Contains(nameof(AgentCardItem.CanCheckUpdates), properties);
+        Assert.False(card.CanCheckUpdates);
+    }
+
     private static AgentCardItem CreateCard(AgentInstallState state, string? version) =>
         new(
             new Plugin { Id = "test-agent", Name = "Test Agent" },

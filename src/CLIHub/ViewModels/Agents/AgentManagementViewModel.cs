@@ -36,6 +36,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private int blockedStateGeneration;
     private bool isDetecting;
     private bool isCheckingUpdates;
+    private bool isCheckingCardUpdates;
 
     /// <summary>
     ///   Creates the section.
@@ -70,6 +71,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), _ => this.CanDetect);
+        this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
         this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
         this.DetectCommand = new RelayCommand(() => _ = this.RunAsync("Agent detection", this.DetectAsync), () => this.CanDetect);
@@ -155,6 +157,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public RelayCommand<AgentCardItem> DetectCardCommand { get; }
 
     /// <inheritdoc />
+    public RelayCommand<AgentCardItem> CheckCardUpdatesCommand { get; }
+
+    /// <inheritdoc />
     public RelayCommand<AgentCardItem> UpdateCommand { get; }
 
     /// <inheritdoc />
@@ -180,7 +185,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates;
+    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCheckingCardUpdates;
 
     /// <inheritdoc />
     public bool IsCheckingUpdates
@@ -196,7 +201,29 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates;
+    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCheckingCardUpdates;
+
+    /// <inheritdoc />
+    public bool IsCheckingCardUpdates
+    {
+        get => this.isCheckingCardUpdates;
+        private set
+        {
+            if (this.SetProperty(ref this.isCheckingCardUpdates, value))
+            {
+                this.RaiseBusyStateChanges();
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Whether the per-card Check updates action may run for the card: the card is checkable
+    ///   (installed, not already being checked by its own action) and no header-wide pass or
+    ///   other per-card check is running.
+    /// </summary>
+    /// <param name="card"> The card to check. </param>
+    /// <returns> Whether the command may execute for the card. </returns>
+    private bool CanCheckCardUpdates(AgentCardItem card) => card.CanCheckUpdates && this.CanDetect;
 
     /// <inheritdoc />
     public string? UpdateCheckSummary
@@ -302,6 +329,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.DetectCommand.RaiseCanExecuteChanged();
         this.CheckUpdatesCommand.RaiseCanExecuteChanged();
         this.DetectCardCommand.RaiseCanExecuteChanged();
+        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseDefaultAgentChanges()
@@ -565,6 +593,53 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         finally
         {
             this.IsCheckingUpdates = false;
+        }
+    }
+
+    /// <summary>
+    ///   Runs the per-card forced update-availability check for one agent: invalidates only that
+    ///   agent's cached result, re-checks its declared source, and reports the outcome on the
+    ///   card's message line. Never re-runs installation detection, never issues a version
+    ///   command, and never touches the header-wide update-check summary.
+    /// </summary>
+    /// <param name="card"> The card whose agent is checked. </param>
+    /// <param name="cancellationToken"> Token that cancels the check. </param>
+    private async Task CheckCardUpdatesAsync(AgentCardItem card, CancellationToken cancellationToken)
+    {
+        if (card.InstallState != AgentInstallState.Installed)
+        {
+            // Defensive gate (command + IsEnabled already refuse not-installed cards): a missing
+            // CLI has no update source to check; clear any stale advisory indicator.
+            card.UpdateAvailability = null;
+            card.Message = "Not installed on the host";
+            return;
+        }
+
+        card.IsCheckingUpdates = true;
+        this.IsCheckingCardUpdates = true;
+        try
+        {
+            // Invalidate first so the check below bypasses the cached result and its TTL.
+            this.availability.InvalidateFor(card.Plugin);
+            var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+            if (!this.disposed)
+            {
+                card.UpdateAvailability = availability;
+                card.Message = availability.Status switch
+                {
+                    AgentUpdateStatus.UpdateAvailable when availability.InstalledVersion is { } installed
+                                                     && availability.LatestVersion is { } latest
+                        => $"Update available · {installed} → {latest}",
+                    AgentUpdateStatus.UpdateAvailable => "Update available",
+                    AgentUpdateStatus.UpToDate => "Up to date",
+                    _ => "Update availability unknown"
+                };
+            }
+        }
+        finally
+        {
+            this.IsCheckingCardUpdates = false;
+            card.IsCheckingUpdates = false;
         }
     }
 

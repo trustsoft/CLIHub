@@ -1334,6 +1334,496 @@ public class AgentManagementViewModelTests
         Assert.True(viewModel.DetectCardCommand.CanExecute(card));
     }
 
+    [Fact]
+    public void CheckCardUpdatesCommand_WithInstalledIdleCard_CanExecuteIsTrue()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+
+        Assert.True(card.IsInstalled);
+        Assert.False(card.IsCheckingUpdates);
+        Assert.True(card.CanCheckUpdates);
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+    }
+
+    [Theory]
+    [InlineData(AgentInstallState.Detecting)]
+    [InlineData(AgentInstallState.NotInstalled)]
+    public void CheckCardUpdatesCommand_WithNotInstallableCard_CanExecuteIsFalse(AgentInstallState state)
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        card.InstallState = state;
+
+        Assert.False(card.CanCheckUpdates);
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhileHeaderDetectRuns_CanExecuteIsFalseOnEveryCard()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
+                ? gateA.Task
+                : Task.FromResult(new AgentProbeResult(true, "1.0")));
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            management,
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        viewModel.DetectCommand.Execute(null);
+
+        // Mid-pass: the per-card Check updates command is unavailable on every card alongside
+        // both header actions.
+        Assert.True(viewModel.IsDetecting);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+
+        gateA.SetResult(new AgentProbeResult(true, "2.0"));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardB), TimeSpan.FromSeconds(5)));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhileHeaderCheckUpdatesRuns_CanExecuteIsFalseOnEveryCard()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 or 2 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the forced header pass: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        viewModel.CheckUpdatesCommand.Execute(null);
+
+        // Mid-pass: the per-card Check updates command is unavailable on every card alongside
+        // both header actions.
+        Assert.True(viewModel.IsCheckingUpdates);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardB), TimeSpan.FromSeconds(5)));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhilePerCardCheckRuns_CanExecuteIsFalseOnEveryCardAndRestoresAfter()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 or 2 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardA);
+
+        // Mid-check: every card's Check updates action is unavailable, including its own; the
+        // header actions are gated too. Card-local enablement holds for the other card; the
+        // command gate is what blocks it.
+        Assert.True(viewModel.IsCheckingCardUpdates);
+        Assert.True(cardA.IsCheckingUpdates);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CanCheckUpdates);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.False(cardA.CanCheckUpdates);
+        Assert.True(cardB.CanCheckUpdates);
+
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardA), TimeSpan.FromSeconds(5)));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.False(viewModel.IsCheckingCardUpdates);
+        Assert.False(cardA.IsCheckingUpdates);
+        Assert.True(cardA.CanCheckUpdates);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WithTwoInstalledAgents_InvalidatesOnlyTheTargetBeforeChecking()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var order = new List<string>();
+        var management = new Mock<IAgentManagementService>();
+        var version = new Mock<IAgentVersionService>();
+        version.Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>())).ReturnsAsync("1.0");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.InvalidateFor(It.IsAny<Plugin>()))
+            .Callback<Plugin>(plugin => order.Add($"invalidate:{plugin.Id}"));
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) =>
+            {
+                order.Add($"check:{plugin.Id}");
+                return Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+            });
+        var viewModel = CreateViewModel([a, b], Detection(), version, management, new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
+        var cardB = viewModel.Cards.Single(c => c.PluginId == "b");
+        var staleB = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "0.1.0", "0.2.0");
+        cardB.UpdateAvailability = staleB;
+        order.Clear(); // Discard the Load pass's checks; the per-card check is what is under test.
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardA);
+
+        availability.Verify(x => x.InvalidateFor(a), Times.Once);
+        availability.Verify(x => x.InvalidateFor(b), Times.Never);
+        availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Exactly(2)); // Load + per-card
+        availability.Verify(x => x.CheckAsync(b, It.IsAny<CancellationToken>()), Times.Once); // Load only
+
+        // Invalidation must precede the check so it bypasses the cached TTL result.
+        Assert.Equal(new[] { "invalidate:a", "check:a" }, order);
+
+        // The other agent's cached result is untouched.
+        Assert.Equal(staleB, cardB.UpdateAvailability);
+
+        // The per-card action is availability-only: no probe and no version command at the call
+        // site (each agent was versioned exactly once, by the Load pass).
+        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Never);
+        version.Verify(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_AssignsFreshResultToCard()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // per-card
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        Assert.False(card.HasUpdateAvailable);
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+
+        Assert.True(card.HasUpdateAvailable);
+        Assert.Equal("1.0.0 → 2.0.0", card.UpdateAvailabilityText);
+    }
+
+    [Theory]
+    [InlineData(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0", "Update available · 1.0.0 → 2.0.0")]
+    [InlineData(AgentUpdateStatus.UpdateAvailable, null, null, "Update available")]
+    [InlineData(AgentUpdateStatus.UpToDate, null, null, "Up to date")]
+    [InlineData(AgentUpdateStatus.Unknown, null, null, "Update availability unknown")]
+    public void CheckCardUpdatesCommand_WhenCheckSettles_WritesExpectedOutcomeMessage(
+        AgentUpdateStatus status,
+        string? installedVersion,
+        string? latestVersion,
+        string expected)
+    {
+        var a = Launchable("a");
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => Task.FromResult(new AgentUpdateAvailability(status, installedVersion, latestVersion)) // per-card
+            });
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+
+        Assert.Equal(expected, card.Message);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_DoesNotTouchHeaderUpdateCheckSummary()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+
+        viewModel.CheckUpdatesCommand.Execute(null);
+        var summary = viewModel.UpdateCheckSummary;
+        Assert.NotNull(summary);
+
+        viewModel.CheckCardUpdatesCommand.Execute(viewModel.Cards[0]);
+
+        Assert.Equal(summary, viewModel.UpdateCheckSummary);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhenExecutedOnNotInstalledCard_ClearsIndicatorWithoutRequestingSource()
+    {
+        var a = Launchable("a");
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(a)).Returns(false);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = CreateViewModel([a], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "0.1.0", "0.2.0");
+
+        // RelayCommand<T>.Execute does not consult CanExecute — the handler re-applies the gate.
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+
+        Assert.Null(card.UpdateAvailability);
+        Assert.Equal("Not installed on the host", card.Message);
+        availability.Verify(x => x.InvalidateFor(a), Times.Never);
+        availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhileChecking_GatesHeaderActionsAndRestoresAfter()
+    {
+        var a = Launchable("a");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+
+        // Mid-check: both header actions are gated and the card never flips to Detecting.
+        Assert.True(viewModel.IsCheckingCardUpdates);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CanCheckUpdates);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.Equal(AgentInstallState.Installed, card.InstallState);
+
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CanDetect && viewModel.CanCheckUpdates, TimeSpan.FromSeconds(5)));
+        Assert.False(viewModel.IsCheckingCardUpdates);
+        Assert.False(card.IsCheckingUpdates);
+        Assert.Equal("Up to date", card.Message);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhenCheckThrows_RestoresGatesAfterFailure()
+    {
+        var a = Launchable("a");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: fail it below
+            });
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        Assert.True(SpinWait.SpinUntil(() => card.UpdateAvailability is not null, TimeSpan.FromSeconds(5)));
+        var beforeFailure = card.UpdateAvailability;
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+        Assert.True(viewModel.IsCheckingCardUpdates);
+
+        gate.SetException(new InvalidOperationException("source unreachable"));
+        Assert.True(SpinWait.SpinUntil(
+            () => !viewModel.IsCheckingCardUpdates && viewModel.CanDetect && viewModel.CanCheckUpdates,
+            TimeSpan.FromSeconds(5)));
+        Assert.False(card.IsCheckingUpdates);
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+        Assert.Equal(beforeFailure, card.UpdateAvailability);
+        Assert.Null(card.Message);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_RaisesCanExecuteChangedAtCheckStartAndEnd()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 or 2 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        var detectRaises = 0;
+        var checkRaises = 0;
+        var cardDetectRaises = 0;
+        var cardCheckRaises = 0;
+        viewModel.DetectCommand.CanExecuteChanged += (_, _) => detectRaises++;
+        viewModel.CheckUpdatesCommand.CanExecuteChanged += (_, _) => checkRaises++;
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => cardDetectRaises++;
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => cardCheckRaises++;
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+
+        // The check start re-queries every gated command, which now reports busy.
+        Assert.Equal(1, detectRaises);
+        Assert.Equal(1, checkRaises);
+        Assert.Equal(1, cardDetectRaises);
+        Assert.Equal(1, cardCheckRaises);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(card));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        Assert.True(SpinWait.SpinUntil(() => cardCheckRaises >= 2, TimeSpan.FromSeconds(5)));
+
+        // The check end re-queries again (cardCheckRaises is raised last, so the others are done).
+        Assert.Equal(2, detectRaises);
+        Assert.Equal(2, checkRaises);
+        Assert.Equal(2, cardDetectRaises);
+        Assert.Equal(2, cardCheckRaises);
+        Assert.True(viewModel.DetectCommand.CanExecute(null));
+        Assert.True(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(card));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+    }
+
+    [Fact]
+    public void Dispose_WhilePerCardCheckHeldOpen_DiscardsWritesAndResetsFlags()
+    {
+        var a = Launchable("a");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: complete it after Dispose
+            });
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+
+        viewModel.CheckCardUpdatesCommand.Execute(card);
+        Assert.True(viewModel.IsCheckingCardUpdates);
+
+        viewModel.Dispose();
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+
+        Assert.True(SpinWait.SpinUntil(
+            () => !viewModel.IsCheckingCardUpdates && !card.IsCheckingUpdates,
+            TimeSpan.FromSeconds(5)));
+
+        // The late result and message writes are discarded; both busy flags still reset.
+        Assert.False(card.HasUpdateAvailable);
+        Assert.Null(card.UpdateAvailabilityText);
+        Assert.Null(card.Message);
+    }
+
     private sealed class InlineOperationLifetime : IApplicationOperationLifetime
     {
         public CancellationToken Token => CancellationToken.None;
