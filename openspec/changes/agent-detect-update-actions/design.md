@@ -89,7 +89,10 @@ All file:line references below were verified against the working tree at commit 
   (src/CLIHub/ViewModels/Mvvm/RelayCommand.cs:18,25-29; RelayCommandOfT.cs:19,25-29). The header
   button therefore uses **both** a `canExecute` lambda and an explicit `IsEnabled` binding today
   (AgentManagementViewModel.cs:74 + SettingsAgentsPage.xaml:128) — the established pattern this
-  change mirrors.
+  change mirrors. **The smoke falsified this assumption**: WPF caches each button's `CanExecute`
+  result and re-queries it only on `CanExecuteChanged`, which the flag setters never triggered, so
+  the buttons stayed disabled until page navigation raised `RequerySuggested` again. Fixed in
+  Decision 6 (amendment) and covered by tasks.md stage 3b.
 - Layout width: the Settings window is `Width="888" MinWidth="640"` with a 220px nav column
   (src/CLIHub/Views/SettingsWindow.xaml:16-17, 325). At the default width the AGENTS row has room
   for the header, two chip buttons, and a ~200px muted summary; at `MinWidth` the row will be tight
@@ -234,6 +237,14 @@ progress UI).
      UserControl like the Command binding at SettingsAgentsPage.xaml:213) and the command gains a
      defensive `canExecute: _ => this.CanDetect` (RelayCommandOfT.cs:19) so a missed requery can
      only disable, never enable, the wrong action.
+   - **Re-query on every busy flip (smoke-found fix).** `RelayCommand`/`RelayCommand<T>` keep the
+     `CommandManager.RequerySuggested` subscription for every existing caller and additionally hold
+     explicit subscribers; `RaiseCanExecuteChanged()` raises only those. `RaiseBusyStateChanges()`,
+     called from both flag setters, raises the `CanDetect`/`CanCheckUpdates` notifications and calls
+     `RaiseCanExecuteChanged()` on `DetectCommand`, `CheckUpdatesCommand`, and `DetectCardCommand`,
+     so WPF re-queries the cached `CanExecute` at pass start and at pass end — including the
+     exception path, which still runs through `finally`. Guarded by the two raise-count tests and
+     the `agent-ui` scenario "Header actions become available again when a pass completes".
    - **A per-card Detect does not block header actions** (unchanged from today, where `TestCommand`
      has no gating at all): header Detect during a per-card probe stays possible. Interleaving a
      per-card probe with a header pass can make the header pass's restore-on-throw snapshot

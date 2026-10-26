@@ -139,15 +139,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   list surface, a card stuck on "Detecting…", or any future edit that re-derives display state
   from a version string's shape.
 
-### Detect/Test failure restores install state but not the version (low, deferred)
+### Detect failure restores install state but not the version (low, deferred)
 
 - Severity: Low — exception path only, no notification fires there, and it self-heals on the next
   successful pass.
 - Evidence: `DetectAsync` snapshots only `InstallState`
   (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:437`) and, on a thrown probe, restores
   that state for every flipped card (`:462-472`); cards that had already settled keep the
-  `Version`/`UpdateAvailability` the abandoned pass wrote. `TestAsync` has the same family
-  (`:422-428` with `ApplyProbeResultAsync` `:490-503`). `DefaultAgentDetail` (`:110-125`) reads only
+  `Version`/`UpdateAvailability` the abandoned pass wrote. `DetectCardAsync` has the same family
+  (`:422-428` with `ApplyProbeResult` `:490-503`). `DefaultAgentDetail` (`:110-125`) reads only
   `Version`, so after a later selection change a card restored to NotInstalled can pair
   "(Not installed)" in the selector with "Version 2.0" in the summary. The spec scenario "Detecting
   never persists after a failed probe" is satisfied.
@@ -155,7 +155,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   restore all three on a thrown pass, or revert only the cards still `Detecting` and leave settled
   cards wholly settled; extend the existing restore tests to the chosen rule.
 - Trigger: the next change touching `AgentManagementViewModel`'s probe paths, or a report of a
-  version line beside an uninstalled agent after a failed Detect/Test.
+  version line beside an uninstalled agent after a failed Detect.
 
 ### Dispose racing a Detect pass can leave unprobed cards in Detecting (low, deferred)
 
@@ -169,6 +169,35 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   returning, or route it through the exception restore path.
 - Trigger: reuse of a disposed or abandoned section instance, or a future surface that keeps cards
   alive across a cancelled Detect.
+
+### A failed manual update check leaves no summary and stale indicators (low, deferred)
+
+- Severity: Low — exception path only; the next successful check or a page reload heals it.
+- Evidence: `CheckUpdatesAsync` clears `UpdateCheckSummary` at the start and only rebuilds it after
+  `Task.WhenAll` (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:518,545-550`), so a
+  thrown `CheckAsync` leaves the line empty; cards checked before the failure keep their fresh
+  results, cards after it keep the previous (possibly stale) advisory indicators. `InvalidateFor`
+  has already dropped their cached results, so the next press re-fetches. The failure is logged by
+  the operation lifetime (`ApplicationOperationLifetime`, "Application operation failed").
+- Proposed remedy: on a thrown pass, either restore the pre-pass indicators for every card or set a
+  short failure summary (for example "Update check failed") so the empty line cannot read as "no
+  updates"; cover the half-finished pass in a test.
+- Trigger: a report of a silent or ambiguous manual update check, or the next change touching
+  `CheckUpdatesAsync`.
+
+### Per-card Detect interleaving with a header action drops that card's update indicator (low, deferred)
+
+- Severity: Low — advisory indicator only, self-heals on the next check or reload; install state is
+  never corrupted (the update check never writes `InstallState`).
+- Evidence: a per-card `DetectCardAsync` that is already running when a header `Check updates`
+  starts is seen as `Detecting` by the check's snapshot, so it is cleared and skipped
+  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:524-533`); the detect settle then leaves
+  `UpdateAvailability` null (`:589-602`). Starting a per-card Detect during a header action is
+  already prevented by the command and `IsEnabled` double gate.
+- Proposed remedy: either block the header check while any per-card detect runs (a shared busy
+  counter), or have the check re-read the settle state per card instead of the pass-start snapshot.
+- Trigger: the next change touching the detection/update-check busy rules, or a report of an update
+  chip that disappears after pressing Detect on a card.
 
 ### Runtime executable PATH-scan identity (Git Bash and PowerShell 7) (resolved)
 

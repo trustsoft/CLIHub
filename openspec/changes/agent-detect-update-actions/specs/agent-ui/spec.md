@@ -125,6 +125,11 @@ The AGENTS section of the CLI Agents page SHALL present two header actions along
 - **THEN** both header actions are unavailable and report their busy state
 - **AND** the per-card Detect action is unavailable on every card
 
+#### Scenario: Header actions become available again when a pass completes
+
+- **WHEN** a header action's pass completes, including when it ends abnormally
+- **THEN** both header actions are available again and the per-card Detect action is available on every card
+
 #### Scenario: Tooltips disambiguate the header actions
 
 - **WHEN** the user inspects either header action

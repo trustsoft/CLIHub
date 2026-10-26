@@ -35,6 +35,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private CancellationTokenSource? blockedStateCts;
     private int blockedStateGeneration;
     private bool isDetecting;
+    private bool isCheckingUpdates;
 
     /// <summary>
     ///   Creates the section.
@@ -68,10 +69,11 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        this.TestCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent test", ct => this.TestAsync(card, ct)));
+        this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), _ => this.CanDetect);
         this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
         this.DetectCommand = new RelayCommand(() => _ = this.RunAsync("Agent detection", this.DetectAsync), () => this.CanDetect);
+        this.CheckUpdatesCommand = new RelayCommand(() => _ = this.RunAsync("Agent update check", this.CheckUpdatesAsync), () => this.CanCheckUpdates);
     }
 
     /// <inheritdoc />
@@ -150,7 +152,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public string? CurrentDefaultAgentId => this.SelectedDefaultAgent.Id;
 
     /// <inheritdoc />
-    public RelayCommand<AgentCardItem> TestCommand { get; }
+    public RelayCommand<AgentCardItem> DetectCardCommand { get; }
 
     /// <inheritdoc />
     public RelayCommand<AgentCardItem> UpdateCommand { get; }
@@ -162,6 +164,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public RelayCommand DetectCommand { get; }
 
     /// <inheritdoc />
+    public RelayCommand CheckUpdatesCommand { get; }
+
+    /// <inheritdoc />
     public bool IsDetecting
     {
         get => this.isDetecting;
@@ -169,13 +174,36 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         {
             if (this.SetProperty(ref this.isDetecting, value))
             {
-                this.OnPropertyChanged(nameof(this.CanDetect));
+                this.RaiseBusyStateChanges();
             }
         }
     }
 
     /// <inheritdoc />
-    public bool CanDetect => !this.IsDetecting;
+    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates;
+
+    /// <inheritdoc />
+    public bool IsCheckingUpdates
+    {
+        get => this.isCheckingUpdates;
+        private set
+        {
+            if (this.SetProperty(ref this.isCheckingUpdates, value))
+            {
+                this.RaiseBusyStateChanges();
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates;
+
+    /// <inheritdoc />
+    public string? UpdateCheckSummary
+    {
+        get;
+        private set => this.SetProperty(ref field, value);
+    }
 
     /// <inheritdoc />
     public void Load(string? defaultAgentId)
@@ -185,6 +213,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             return;
         }
 
+        this.UpdateCheckSummary = null;
         this.Cards.Clear();
 
         var plugins = this.catalog.GetAllPlugins();
@@ -258,6 +287,21 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.OnPropertyChanged(nameof(this.NotInstalledAgentCount));
         this.OnPropertyChanged(nameof(this.AvailabilitySummary));
         this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
+    }
+
+    /// <summary>
+    ///   Reports a busy-state flip to the UI: the derived availability properties change, and the
+    ///   gated commands re-query explicitly. WPF buttons cache the <see cref="System.Windows.Input.ICommand.CanExecute" />
+    ///   result and only re-query on <c>CanExecuteChanged</c>, so without the explicit raise a
+    ///   button that re-queried mid-pass would stay disabled after the pass ends.
+    /// </summary>
+    private void RaiseBusyStateChanges()
+    {
+        this.OnPropertyChanged(nameof(this.CanDetect));
+        this.OnPropertyChanged(nameof(this.CanCheckUpdates));
+        this.DetectCommand.RaiseCanExecuteChanged();
+        this.CheckUpdatesCommand.RaiseCanExecuteChanged();
+        this.DetectCardCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseDefaultAgentChanges()
@@ -402,14 +446,14 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         }
     }
 
-    private async Task TestAsync(AgentCardItem card, CancellationToken cancellationToken)
+    private async Task DetectCardAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
         var previousState = card.InstallState;
         card.InstallState = AgentInstallState.Detecting;
         try
         {
             var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
-            await this.ApplyProbeResultAsync(card, result, cancellationToken);
+            this.ApplyProbeResult(card, result);
             card.Message = (result.IsInstalled, result.Version) switch
             {
                 (true, { } version) => $"Installed · version {version}",
@@ -453,7 +497,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                         return;
                     }
 
-                    await this.ApplyProbeResultAsync(card, result, cancellationToken);
+                    this.ApplyProbeResult(card, result);
                 }
 
                 this.RefreshAvailabilitySummary();
@@ -477,23 +521,90 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         }
     }
 
+    private async Task CheckUpdatesAsync(CancellationToken cancellationToken)
+    {
+        this.IsCheckingUpdates = true;
+        try
+        {
+            // A new pass starts from a clean slate: the previous summary line goes away and is
+            // only rebuilt once every card has settled.
+            this.UpdateCheckSummary = null;
+
+            var cards = this.Cards.ToList();
+
+            // The counted checks are the cards that were installed when the pass started; the
+            // pass itself never changes an install state.
+            var checkedCount = cards.Count(card => card.InstallState == AgentInstallState.Installed);
+
+            await Task.WhenAll(cards.Select(async card =>
+            {
+                if (card.InstallState != AgentInstallState.Installed)
+                {
+                    // A missing CLI has no update source to check; clear any stale advisory
+                    // indicator so it cannot survive an uninstall.
+                    card.UpdateAvailability = null;
+                    return;
+                }
+
+                // Invalidate first so the check below bypasses the cached result and its TTL.
+                this.availability.InvalidateFor(card.Plugin);
+                var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+                if (!this.disposed)
+                {
+                    card.UpdateAvailability = availability;
+                }
+            }));
+
+            if (!this.disposed)
+            {
+                this.UpdateCheckSummary = BuildUpdateCheckSummary(
+                    checkedCount,
+                    cards.Count(card => card.HasUpdateAvailable));
+            }
+        }
+        finally
+        {
+            this.IsCheckingUpdates = false;
+        }
+    }
+
     /// <summary>
-    ///   Settles a card from a finished probe: the install state, the raw version (null stays
-    ///   unresolved), and — only for an installed agent — the advisory update availability. A
-    ///   not-installed agent gets no availability check, and any stale update indicator is
+    ///   Builds the muted summary line for a finished manual update check: the singular/plural
+    ///   agent and update wordings, or the no-installed-agents notice when nothing was checked.
+    /// </summary>
+    /// <param name="checkedCount"> The number of installed agents the pass checked. </param>
+    /// <param name="updateCount"> The number of checked agents with an update available. </param>
+    /// <returns> The summary text. </returns>
+    private static string BuildUpdateCheckSummary(int checkedCount, int updateCount)
+    {
+        if (checkedCount == 0)
+        {
+            return "No installed agents to check";
+        }
+
+        var agents = checkedCount == 1 ? "1 agent" : $"{checkedCount} agents";
+        return updateCount switch
+        {
+            0 => $"Checked {agents} · no updates",
+            1 => $"Checked {agents} · 1 update available",
+            _ => $"Checked {agents} · {updateCount} updates available"
+        };
+    }
+
+    /// <summary>
+    ///   Settles a card from a finished probe: the install state and the raw version (null stays
+    ///   unresolved). A detect never re-checks update availability — an installed agent keeps its
+    ///   last shown indicator untouched, and a not-installed agent gets its stale indicator
     ///   cleared so it cannot survive an uninstall.
     /// </summary>
     /// <param name="card"> The card to settle. </param>
     /// <param name="result"> The finished probe result. </param>
-    /// <param name="cancellationToken"> Token for the availability check. </param>
-    /// <returns> A task that completes when the card is settled. </returns>
-    private async Task ApplyProbeResultAsync(AgentCardItem card, AgentProbeResult result, CancellationToken cancellationToken)
+    private void ApplyProbeResult(AgentCardItem card, AgentProbeResult result)
     {
         if (result.IsInstalled)
         {
             card.InstallState = AgentInstallState.Installed;
             card.Version = result.Version;
-            card.UpdateAvailability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
         }
         else
         {

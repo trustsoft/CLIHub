@@ -68,9 +68,10 @@ public interface IAgentManagementSection : IDisposable
     string? CurrentDefaultAgentId { get; }
 
     /// <summary>
-    ///   Re-evaluates the selected agent.
+    ///   Re-detects the selected agent's host installation and version locally, without an
+    ///   update-availability check.
     /// </summary>
-    RelayCommand<AgentCardItem> TestCommand { get; }
+    RelayCommand<AgentCardItem> DetectCardCommand { get; }
 
     /// <summary>
     ///   Updates the selected agent.
@@ -83,9 +84,17 @@ public interface IAgentManagementSection : IDisposable
     RelayCommand<AgentCardItem> EditConfigCommand { get; }
 
     /// <summary>
-    ///   Re-runs host detection for every supported agent and refreshes the cards and the default-agent options.
+    ///   Re-detects every supported agent's host installation and version locally, without an
+    ///   update-availability check, and refreshes the cards and the default-agent options.
     /// </summary>
     RelayCommand DetectCommand { get; }
+
+    /// <summary>
+    ///   Forces a fresh update-availability check for every installed agent by invalidating each
+    ///   agent's cached result first; does not re-run installation detection or issue a version
+    ///   command.
+    /// </summary>
+    RelayCommand CheckUpdatesCommand { get; }
 
     /// <summary>
     ///   Whether a detection pass is currently running.
@@ -93,9 +102,27 @@ public interface IAgentManagementSection : IDisposable
     bool IsDetecting { get; }
 
     /// <summary>
-    ///   Whether the detect action is available.
+    ///   Whether the detect action is available: true while neither the detection pass nor the
+    ///   update-availability check pass is running.
     /// </summary>
     bool CanDetect { get; }
+
+    /// <summary>
+    ///   Whether an update-availability check pass is currently running.
+    /// </summary>
+    bool IsCheckingUpdates { get; }
+
+    /// <summary>
+    ///   Whether the check-updates action is available: true while neither the detection pass nor
+    ///   the update-availability check pass is running.
+    /// </summary>
+    bool CanCheckUpdates { get; }
+
+    /// <summary>
+    ///   The muted summary of the last manual update check, or null when no summary is shown.
+    ///   Cleared on page reload and when a new check starts.
+    /// </summary>
+    string? UpdateCheckSummary { get; }
 
     /// <summary>
     ///   Rebuilds the cards and the default-agent options for the stored default agent.

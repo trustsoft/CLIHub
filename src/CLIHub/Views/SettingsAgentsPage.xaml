@@ -120,25 +120,50 @@
 
         <Grid>
             <controls:SectionHeader Text="AGENTS"/>
-            <Button Margin="0,18,0,8"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    AutomationProperties.Name="Detect installed agents and updates"
-                    Command="{Binding AgentsState.DetectCommand}"
-                    IsEnabled="{Binding AgentsState.CanDetect}"
-                    Style="{StaticResource AgentsHeaderChipButton}"
-                    ToolTip="Re-detect installed agents, versions, and available updates">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center"
-                               FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                               FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
-                               Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                    <TextBlock Margin="6,0,0,0"
-                               VerticalAlignment="Center"
-                               FontSize="{StaticResource Sizing.FontSize.Section}"
-                               Text="Detect"/>
-                </StackPanel>
-            </Button>
+            <controls:SpacedPanel Margin="0,18,0,8"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  Orientation="Horizontal"
+                                  Spacing="8">
+                <!-- Muted result of the last manual update check; collapses when empty so it
+                     never takes space next to the buttons -->
+                <TextBlock VerticalAlignment="Center"
+                           Style="{StaticResource HintText}"
+                           Text="{Binding AgentsState.UpdateCheckSummary}"
+                           Visibility="{Binding AgentsState.UpdateCheckSummary, Converter={StaticResource EmptyToCollapsedVisibility}}"/>
+                <Button AutomationProperties.Name="Detect installed agents and versions"
+                        Command="{Binding AgentsState.DetectCommand}"
+                        IsEnabled="{Binding AgentsState.CanDetect}"
+                        Style="{StaticResource AgentsHeaderChipButton}"
+                        ToolTip="Re-detect installed agents and their versions locally; does not check for updates">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Detect"/>
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="Check for agent updates"
+                        Command="{Binding AgentsState.CheckUpdatesCommand}"
+                        IsEnabled="{Binding AgentsState.CanCheckUpdates}"
+                        Style="{StaticResource AgentsHeaderChipButton}"
+                        ToolTip="Force a fresh update-availability check for installed agents; does not re-detect installation or version">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Sync}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Check updates"/>
+                    </StackPanel>
+                </Button>
+            </controls:SpacedPanel>
         </Grid>
         <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
             <ItemsControl.ItemTemplate>
@@ -209,11 +234,12 @@
                                                   Spacing="2">
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Test agent"
-                                        Command="{Binding DataContext.AgentsState.TestCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        AutomationProperties.Name="Detect agent"
+                                        Command="{Binding DataContext.AgentsState.DetectCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
+                                        IsEnabled="{Binding DataContext.AgentsState.CanDetect, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Detect installation and version">
+                                        ToolTip="Detect installation and version; does not check for updates">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Diagnostic}"/>
