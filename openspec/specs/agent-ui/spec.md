@@ -393,7 +393,7 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 
 ### Requirement: Agent management header actions
 
-The AGENTS section of the CLI Agents page SHALL present two header actions alongside the section header. "Detect" SHALL re-detect every agent's host installation and version locally: it SHALL NOT perform an update-availability check and SHALL NOT request any agent's declared update source. "Check updates" SHALL force a fresh update-availability check for every installed agent by invalidating the agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. Each header action SHALL expose a tooltip and automation name that state its own work and that the other header action's work is not performed. The two header actions SHALL NOT run concurrently: while either is running, both SHALL be unavailable, and the per-card Detect action SHALL be unavailable as well. The load-time population pass SHALL remain as it is; "Check updates" is an additional trigger for an availability check, not a replacement for the automatic one.
+The AGENTS section of the CLI Agents page SHALL present two header actions alongside the section header. "Detect" SHALL re-detect every agent's host installation and version locally: it SHALL NOT perform an update-availability check and SHALL NOT request any agent's declared update source. "Check updates" SHALL force a fresh update-availability check for every installed agent by invalidating the agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. Each header action SHALL expose a tooltip and automation name that state its own work and distinguish it from the other header action. The two header actions SHALL NOT run concurrently: while either is running, both SHALL be unavailable, and the per-card Detect action SHALL be unavailable as well. The load-time population pass SHALL remain as it is; "Check updates" is an additional trigger for an availability check, not a replacement for the automatic one.
 
 #### Scenario: Header Detect leaves update indicators untouched
 
@@ -439,4 +439,4 @@ The AGENTS section of the CLI Agents page SHALL present two header actions along
 #### Scenario: Tooltips disambiguate the header actions
 
 - **WHEN** the user inspects either header action
-- **THEN** its tooltip and automation name state only that action's work and state that the other header action's work is not performed by it
+- **THEN** its tooltip and automation name state only that action's work, using wording that distinguishes it from the other header action

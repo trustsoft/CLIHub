@@ -43,9 +43,13 @@ none of the final after-strings contain an apostrophe.
       moved since 2026-10-26, regenerate by script like design D8 describes — do not hand-merge.
 - [x] 2.2 Confirm `.openspec.yaml` in this change has `schema: spec-driven`, `created:
       2026-10-26`, and NO `skip_specs` line (a delta exists now).
-- [ ] 2.3 At archive time only (needs the user's explicit approval per repo policy): the delta
+- [x] 2.3 At archive time only (needs the user's explicit approval per repo policy): the delta
       replaces the main-spec requirement in place; all eight scenario names carry over; nothing
       else in `openspec/specs/` changes.
+
+> Archive result (2026-10-26): applied with user approval; `openspec/specs/agent-ui/spec.md`
+> changed exactly two lines (the requirement sentence and the tooltip scenario THEN); all eight
+> scenario names preserved; archived as `2026-10-26-settings-tooltip-copy`.
 
 ## 3. Stage 3 — SettingsWindow.xaml (applied in pass 1; verify, do not re-edit)
 
