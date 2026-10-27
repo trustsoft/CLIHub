@@ -185,19 +185,16 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a report of a silent or ambiguous manual update check, or the next change touching
   `CheckUpdatesAsync`.
 
-### Per-card Detect interleaving with a header action drops that card's update indicator (low, deferred)
+### Per-card Detect interleaving with a header action drops that card's update indicator (resolved)
 
-- Severity: Low — advisory indicator only, self-heals on the next check or reload; install state is
-  never corrupted (the update check never writes `InstallState`).
-- Evidence: a per-card `DetectCardAsync` that is already running when a header `Check updates`
-  starts is seen as `Detecting` by the check's snapshot, so it is cleared and skipped
-  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:524-533`); the detect settle then leaves
-  `UpdateAvailability` null (`:589-602`). Starting a per-card Detect during a header action is
-  already prevented by the command and `IsEnabled` double gate.
-- Proposed remedy: either block the header check while any per-card detect runs (a shared busy
-  counter), or have the check re-read the settle state per card instead of the pass-start snapshot.
-- Trigger: the next change touching the detection/update-check busy rules, or a report of an update
-  chip that disappears after pressing Detect on a card.
+- Status: Resolved by the `independent-card-actions` change (2026-10-27) via the shared-busy-counter
+  remedy: a per-card Detect (or Check updates) now blocks the header actions while it runs, so a
+  header check can no longer snapshot a concurrently detecting card as `Detecting` and drop its
+  update indicator.
+- Guarded by: the per-card Detect/header gating facts `DetectCardCommand_WhilePerCardDetectRuns_DisablesOnlyTheActingCardAndGatesHeader`,
+  `DetectCardCommand_RaisesCanExecuteChangedAtDetectStartAndEnd`, and the header pass tests in
+  `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs`.
+- Trigger (reopen): a report of an update chip that disappears after pressing Detect on a card.
 
 ### Runtime executable PATH-scan identity (Git Bash and PowerShell 7) (resolved)
 

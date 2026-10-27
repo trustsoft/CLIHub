@@ -110,7 +110,8 @@ public interface IAgentManagementSection : IDisposable
 
     /// <summary>
     ///   Whether the detect action is available: true while neither the detection pass nor the
-    ///   update-availability check pass is running, nor while a per-card update check is running.
+    ///   update-availability check pass is running, nor while any per-card action (Detect or
+    ///   Check updates) is running.
     /// </summary>
     bool CanDetect { get; }
 
@@ -121,17 +122,10 @@ public interface IAgentManagementSection : IDisposable
 
     /// <summary>
     ///   Whether the check-updates action is available: true while neither the detection pass nor
-    ///   the update-availability check pass is running, nor while a per-card update check is
-    ///   running.
+    ///   the update-availability check pass is running, nor while any per-card action (Detect or
+    ///   Check updates) is running.
     /// </summary>
     bool CanCheckUpdates { get; }
-
-    /// <summary>
-    ///   Whether a per-card update-availability check is currently running: true while any single
-    ///   card's "Check updates" action runs, gating the header actions and every per-card check.
-    ///   Distinct from <see cref="IsCheckingUpdates" />, the header-wide pass flag.
-    /// </summary>
-    bool IsCheckingCardUpdates { get; }
 
     /// <summary>
     ///   The muted summary of the last manual update check, or null when no summary is shown.

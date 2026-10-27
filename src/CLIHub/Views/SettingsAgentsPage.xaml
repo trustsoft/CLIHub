@@ -227,7 +227,7 @@
                                             AutomationProperties.Name="Detect agent"
                                             Command="{Binding DataContext.AgentsState.DetectCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
-                                            IsEnabled="{Binding DataContext.AgentsState.CanDetect, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            IsEnabled="{Binding CanDetect}"
                                             Style="{StaticResource ChipRemoveButton}"
                                             ToolTip="Detect installation and version">
                                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"

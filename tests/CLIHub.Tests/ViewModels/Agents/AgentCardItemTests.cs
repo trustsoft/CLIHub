@@ -216,21 +216,46 @@ public sealed class AgentCardItemTests
     }
 
     [Theory]
-    [InlineData(AgentInstallState.Installed, false, true)]
-    [InlineData(AgentInstallState.Installed, true, false)]
-    [InlineData(AgentInstallState.Detecting, false, false)]
-    [InlineData(AgentInstallState.Detecting, true, false)]
-    [InlineData(AgentInstallState.NotInstalled, false, false)]
-    [InlineData(AgentInstallState.NotInstalled, true, false)]
+    [InlineData(AgentInstallState.Installed, false, false, true)]
+    [InlineData(AgentInstallState.Installed, false, true, false)]
+    [InlineData(AgentInstallState.Installed, true, false, false)]
+    [InlineData(AgentInstallState.Installed, true, true, false)]
+    [InlineData(AgentInstallState.Detecting, false, false, false)]
+    [InlineData(AgentInstallState.Detecting, false, true, false)]
+    [InlineData(AgentInstallState.Detecting, true, false, false)]
+    [InlineData(AgentInstallState.Detecting, true, true, false)]
+    [InlineData(AgentInstallState.NotInstalled, false, false, false)]
+    [InlineData(AgentInstallState.NotInstalled, false, true, false)]
+    [InlineData(AgentInstallState.NotInstalled, true, false, false)]
+    [InlineData(AgentInstallState.NotInstalled, true, true, false)]
     public void CanCheckUpdates_WhenDerivedFromInstallAndBusyState_IsTrueOnlyForInstalledIdleCard(
         AgentInstallState state,
+        bool isDetecting,
         bool isCheckingUpdates,
         bool expected)
     {
         var card = CreateCard(state, null);
+        card.IsDetecting = isDetecting;
         card.IsCheckingUpdates = isCheckingUpdates;
 
         Assert.Equal(expected, card.CanCheckUpdates);
+    }
+
+    [Theory]
+    [InlineData(false, false, true)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    public void CanDetect_WhenDerivedFromBusyState_IsTrueOnlyForIdleCard(
+        bool isDetecting,
+        bool isCheckingUpdates,
+        bool expected)
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        card.IsDetecting = isDetecting;
+        card.IsCheckingUpdates = isCheckingUpdates;
+
+        Assert.Equal(expected, card.CanDetect);
     }
 
     [Fact]
@@ -248,6 +273,35 @@ public sealed class AgentCardItemTests
     }
 
     [Fact]
+    public void IsCheckingUpdates_WhenSet_AlsoRaisesCanDetectNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.IsCheckingUpdates = true;
+
+        Assert.Contains(nameof(AgentCardItem.CanDetect), properties);
+        Assert.False(card.CanDetect);
+    }
+
+    [Fact]
+    public void IsDetecting_WhenSet_RaisesCanDetectAndCanCheckUpdatesNotifications()
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.IsDetecting = true;
+
+        Assert.Contains(nameof(AgentCardItem.IsDetecting), properties);
+        Assert.Contains(nameof(AgentCardItem.CanDetect), properties);
+        Assert.Contains(nameof(AgentCardItem.CanCheckUpdates), properties);
+        Assert.False(card.CanDetect);
+        Assert.False(card.CanCheckUpdates);
+    }
+
+    [Fact]
     public void InstallState_WhenChangedToNotInstalled_RaisesCanCheckUpdatesNotification()
     {
         var card = CreateCard(AgentInstallState.Installed, null);
@@ -258,6 +312,18 @@ public sealed class AgentCardItemTests
 
         Assert.Contains(nameof(AgentCardItem.CanCheckUpdates), properties);
         Assert.False(card.CanCheckUpdates);
+    }
+
+    [Fact]
+    public void InstallState_WhenChangedToNotInstalled_RaisesCanDetectNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, null);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.InstallState = AgentInstallState.NotInstalled;
+
+        Assert.Contains(nameof(AgentCardItem.CanDetect), properties);
     }
 
     private static AgentCardItem CreateCard(AgentInstallState state, string? version) =>

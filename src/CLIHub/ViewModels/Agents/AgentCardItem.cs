@@ -62,6 +62,7 @@ public sealed class AgentCardItem : ObservableObject
     private AgentInstallState installState;
     private string? version;
     private AgentUpdateAvailability? updateAvailability;
+    private bool isDetecting;
     private bool isCheckingUpdates;
 
     /// <summary>
@@ -138,6 +139,7 @@ public sealed class AgentCardItem : ObservableObject
             {
                 this.OnPropertyChanged(nameof(this.IsInstalled));
                 this.OnPropertyChanged(nameof(this.VersionChipText));
+                this.OnPropertyChanged(nameof(this.CanDetect));
                 this.OnPropertyChanged(nameof(this.CanCheckUpdates));
             }
         }
@@ -221,6 +223,25 @@ public sealed class AgentCardItem : ObservableObject
     public bool HasUpdateAvailable => this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable;
 
     /// <summary>
+    ///   Whether the per-card "Detect" action is currently running for this card: the per-card
+    ///   busy flag for that action, written by the management view model. Distinct from the
+    ///   section-level <c>IsDetecting</c> pass flag on <c>IAgentManagementSection</c>, which
+    ///   tracks the header-wide detection pass.
+    /// </summary>
+    public bool IsDetecting
+    {
+        get => this.isDetecting;
+        set
+        {
+            if (this.SetProperty(ref this.isDetecting, value))
+            {
+                this.OnPropertyChanged(nameof(this.CanDetect));
+                this.OnPropertyChanged(nameof(this.CanCheckUpdates));
+            }
+        }
+    }
+
+    /// <summary>
     ///   Whether the per-card "Check updates" action is currently running for this card: the
     ///   per-card busy flag for that action, written by the management view model. Distinct from
     ///   the section-level <c>IsCheckingUpdates</c> pass flag on <c>IAgentManagementSection</c>,
@@ -233,18 +254,28 @@ public sealed class AgentCardItem : ObservableObject
         {
             if (this.SetProperty(ref this.isCheckingUpdates, value))
             {
+                this.OnPropertyChanged(nameof(this.CanDetect));
                 this.OnPropertyChanged(nameof(this.CanCheckUpdates));
             }
         }
     }
 
     /// <summary>
-    ///   Whether the per-card "Check updates" action is available for this card: the agent is
-    ///   installed and this card's own check is not already running. Card-local enablement only;
-    ///   exclusion from header-wide passes and other cards' checks is added by the view model's
-    ///   command predicate.
+    ///   Whether the per-card "Detect" action is available for this card: neither of this card's
+    ///   own "Detect" and "Check updates" actions is currently running. Card-local enablement
+    ///   only; the header-wide passes and other cards' actions never gate it — exclusion from a
+    ///   running header pass is added by the view model's command predicate.
     /// </summary>
-    public bool CanCheckUpdates => this.IsInstalled && !this.IsCheckingUpdates;
+    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates;
+
+    /// <summary>
+    ///   Whether the per-card "Check updates" action is available for this card: the agent is
+    ///   installed and neither of this card's own "Detect" and "Check updates" actions is
+    ///   currently running. Card-local enablement only; the header-wide passes and other cards'
+    ///   actions never gate it — exclusion from a running header pass is added by the view
+    ///   model's command predicate.
+    /// </summary>
+    public bool CanCheckUpdates => this.IsInstalled && !this.IsDetecting && !this.IsCheckingUpdates;
 
     /// <summary>
     ///   Whether the Edit Config action is available.

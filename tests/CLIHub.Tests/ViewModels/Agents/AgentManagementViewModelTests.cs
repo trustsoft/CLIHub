@@ -1450,7 +1450,7 @@ public class AgentManagementViewModelTests
     }
 
     [Fact]
-    public void CheckCardUpdatesCommand_WhilePerCardCheckRuns_CanExecuteIsFalseOnEveryCardAndRestoresAfter()
+    public void CheckCardUpdatesCommand_WhilePerCardCheckRuns_DisablesOnlyTheActingCardAndGatesHeader()
     {
         var a = Launchable("a");
         var b = Launchable("b");
@@ -1478,26 +1478,277 @@ public class AgentManagementViewModelTests
 
         viewModel.CheckCardUpdatesCommand.Execute(cardA);
 
-        // Mid-check: every card's Check updates action is unavailable, including its own; the
-        // header actions are gated too. Card-local enablement holds for the other card; the
-        // command gate is what blocks it.
-        Assert.True(viewModel.IsCheckingCardUpdates);
+        // Mid-check: only the acting card's own actions are disabled — card B stays enabled
+        // under its own rules — while the header actions are gated by the running card action.
+        Assert.True(viewModel.IsCardActionRunning);
         Assert.True(cardA.IsCheckingUpdates);
         Assert.False(viewModel.CanDetect);
         Assert.False(viewModel.CanCheckUpdates);
         Assert.False(viewModel.DetectCommand.CanExecute(null));
         Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardA));
         Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
-        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.False(cardA.CanDetect);
         Assert.False(cardA.CanCheckUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.True(cardB.CanDetect);
         Assert.True(cardB.CanCheckUpdates);
 
         gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
         Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardA), TimeSpan.FromSeconds(5)));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardA));
         Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
-        Assert.False(viewModel.IsCheckingCardUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.False(viewModel.IsCardActionRunning);
         Assert.False(cardA.IsCheckingUpdates);
+        Assert.True(cardA.CanDetect);
         Assert.True(cardA.CanCheckUpdates);
+        Assert.True(viewModel.CanDetect);
+        Assert.True(viewModel.CanCheckUpdates);
+    }
+
+    [Fact]
+    public void DetectCardCommand_WhilePerCardDetectRuns_DisablesOnlyTheActingCardAndGatesHeader()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
+                ? gateA.Task
+                : Task.FromResult(new AgentProbeResult(true, "1.0")));
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            management,
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        viewModel.DetectCardCommand.Execute(cardA);
+
+        // Mid-detect: only the acting card's own actions are disabled — card B stays enabled
+        // under its own rules — while the header actions are gated by the running card action.
+        Assert.True(cardA.IsDetecting);
+        Assert.True(viewModel.IsCardActionRunning);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CanCheckUpdates);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.False(cardA.CanDetect);
+        Assert.False(cardA.CanCheckUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.True(cardB.CanDetect);
+        Assert.True(cardB.CanCheckUpdates);
+
+        gateA.SetResult(new AgentProbeResult(true, "2.0"));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.DetectCardCommand.CanExecute(cardA), TimeSpan.FromSeconds(5)));
+        Assert.False(cardA.IsDetecting);
+        Assert.False(viewModel.IsCardActionRunning);
+        Assert.True(viewModel.CanDetect);
+        Assert.True(viewModel.CanCheckUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardA));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+    }
+
+    [Fact]
+    public void DetectCardCommand_WhenProbeThrowsAfterStart_ResetsDetectingFlagAndRunningCounter()
+    {
+        var a = Launchable("a");
+        var gate = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => gate.Task);
+        var viewModel = CreateViewModel(
+            [a],
+            Detection(),
+            Versions(),
+            management,
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+
+        viewModel.DetectCardCommand.Execute(card);
+        Assert.True(card.IsDetecting);
+        Assert.True(viewModel.IsCardActionRunning);
+        Assert.Equal(AgentInstallState.Detecting, card.InstallState);
+
+        gate.SetException(new InvalidOperationException("probe failed"));
+        Assert.True(SpinWait.SpinUntil(
+            () => !viewModel.IsCardActionRunning && !card.IsDetecting,
+            TimeSpan.FromSeconds(5)));
+
+        // The finally settles every boundary state: the counter, the card's busy flag, the
+        // card's install state (restored by the catch), and both per-card commands.
+        Assert.False(viewModel.IsCardActionRunning);
+        Assert.False(card.IsDetecting);
+        Assert.Equal(AgentInstallState.Installed, card.InstallState);
+        Assert.True(viewModel.CanDetect);
+        Assert.True(viewModel.CanCheckUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(card));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+    }
+
+    [Fact]
+    public void DetectCardCommand_WhenDetectCompletes_FinalCanExecuteChangedSeesIdleCard()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
+                ? gateA.Task
+                : Task.FromResult(new AgentProbeResult(true, "1.0")));
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            management,
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        // Record what every raise observes: WPF caches the CanExecute result it queries during
+        // CanExecuteChanged, so the final raises of the completion boundary must see the acting
+        // card already idle — a raise while the card still reports busy would cache false and
+        // leave the button disabled until an unrelated re-query.
+        bool? actingDetect = null;
+        bool? actingCheck = null;
+        bool? otherDetect = null;
+        bool? otherCheck = null;
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => actingDetect = viewModel.DetectCardCommand.CanExecute(cardA);
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => actingCheck = viewModel.CheckCardUpdatesCommand.CanExecute(cardA);
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => otherDetect = viewModel.DetectCardCommand.CanExecute(cardB);
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => otherCheck = viewModel.CheckCardUpdatesCommand.CanExecute(cardB);
+
+        viewModel.DetectCardCommand.Execute(cardA);
+
+        // The start raises observed the acting card busy; the other card was never gated.
+        Assert.True(actingDetect is false);
+        Assert.True(actingCheck is false);
+        Assert.True(otherDetect is true);
+        Assert.True(otherCheck is true);
+
+        gateA.SetResult(new AgentProbeResult(true, "2.0"));
+        SpinWait.SpinUntil(() => actingDetect == true && actingCheck == true, TimeSpan.FromSeconds(5));
+
+        // The final raises of the completion boundary observed the idle card — on the acting
+        // card and the other card alike.
+        Assert.True(actingDetect == true);
+        Assert.True(actingCheck == true);
+        Assert.True(otherDetect == true);
+        Assert.True(otherCheck == true);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhileTwoPerCardChecksRun_HeaderStaysGatedUntilBothEnd()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateA = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var gateB = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCallsA = 0;
+        var checkCallsB = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) =>
+            {
+                if (plugin.Id == "a")
+                {
+                    return Interlocked.Increment(ref checkCallsA) == 1
+                        ? Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)) // Load
+                        : gateA.Task; // the per-card check: hold it open
+                }
+
+                return Interlocked.Increment(ref checkCallsB) == 1
+                    ? Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)) // Load
+                    : gateB.Task; // the per-card check: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardA);
+
+        // Card A's running check must not gate card B's commands: card B stays enabled, the
+        // header actions are gated.
+        Assert.True(viewModel.IsCardActionRunning);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardB);
+
+        // Both checks run at once: each card is blocked only by its own action; the header
+        // stays gated until the last one ends.
+        Assert.True(viewModel.IsCardActionRunning);
+        Assert.True(cardA.IsCheckingUpdates);
+        Assert.True(cardB.IsCheckingUpdates);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CanCheckUpdates);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardA));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+
+        gateA.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardA), TimeSpan.FromSeconds(5)));
+
+        // One of two finished: card A's commands restore while card B's stay blocked by its own
+        // still-running check, and the header stays gated by the remaining action.
+        Assert.True(viewModel.IsCardActionRunning);
+        Assert.False(viewModel.CanDetect);
+        Assert.False(viewModel.CanCheckUpdates);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(cardA.IsCheckingUpdates);
+        Assert.True(cardB.IsCheckingUpdates);
+        Assert.False(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+
+        gateB.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CanDetect && viewModel.CanCheckUpdates, TimeSpan.FromSeconds(5)));
+
+        Assert.False(viewModel.IsCardActionRunning);
+        Assert.False(cardA.IsCheckingUpdates);
+        Assert.False(cardB.IsCheckingUpdates);
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardA));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardA));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
+        Assert.True(viewModel.DetectCommand.CanExecute(null));
+        Assert.True(viewModel.CheckUpdatesCommand.CanExecute(null));
     }
 
     [Fact]
@@ -1669,7 +1920,7 @@ public class AgentManagementViewModelTests
         viewModel.CheckCardUpdatesCommand.Execute(card);
 
         // Mid-check: both header actions are gated and the card never flips to Detecting.
-        Assert.True(viewModel.IsCheckingCardUpdates);
+        Assert.True(viewModel.IsCardActionRunning);
         Assert.False(viewModel.CanDetect);
         Assert.False(viewModel.CanCheckUpdates);
         Assert.False(viewModel.DetectCommand.CanExecute(null));
@@ -1678,7 +1929,7 @@ public class AgentManagementViewModelTests
 
         gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
         Assert.True(SpinWait.SpinUntil(() => viewModel.CanDetect && viewModel.CanCheckUpdates, TimeSpan.FromSeconds(5)));
-        Assert.False(viewModel.IsCheckingCardUpdates);
+        Assert.False(viewModel.IsCardActionRunning);
         Assert.False(card.IsCheckingUpdates);
         Assert.Equal("Up to date", card.Message);
     }
@@ -1711,16 +1962,75 @@ public class AgentManagementViewModelTests
         var beforeFailure = card.UpdateAvailability;
 
         viewModel.CheckCardUpdatesCommand.Execute(card);
-        Assert.True(viewModel.IsCheckingCardUpdates);
+        Assert.True(viewModel.IsCardActionRunning);
 
         gate.SetException(new InvalidOperationException("source unreachable"));
         Assert.True(SpinWait.SpinUntil(
-            () => !viewModel.IsCheckingCardUpdates && viewModel.CanDetect && viewModel.CanCheckUpdates,
+            () => !viewModel.IsCardActionRunning && viewModel.CanDetect && viewModel.CanCheckUpdates,
             TimeSpan.FromSeconds(5)));
         Assert.False(card.IsCheckingUpdates);
         Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
         Assert.Equal(beforeFailure, card.UpdateAvailability);
         Assert.Null(card.Message);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhenCheckCompletes_FinalCanExecuteChangedSeesIdleCard()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gate = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var checkCalls = 0;
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((_, _) => Interlocked.Increment(ref checkCalls) switch
+            {
+                1 or 2 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
+                _ => gate.Task // the per-card check: hold it open
+            });
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            new Mock<IAgentManagementService>(),
+            new Mock<IExternalLauncher>(),
+            availability: availability,
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var cardA = viewModel.Cards[0];
+        var cardB = viewModel.Cards[1];
+
+        // Record what every raise observes: WPF caches the CanExecute result it queries during
+        // CanExecuteChanged, so the final raises of the completion boundary must see the acting
+        // card already idle — a raise while the card still reports busy would cache false and
+        // leave the button disabled until an unrelated re-query.
+        bool? actingDetect = null;
+        bool? actingCheck = null;
+        bool? otherDetect = null;
+        bool? otherCheck = null;
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => actingDetect = viewModel.DetectCardCommand.CanExecute(cardA);
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => actingCheck = viewModel.CheckCardUpdatesCommand.CanExecute(cardA);
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => otherDetect = viewModel.DetectCardCommand.CanExecute(cardB);
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => otherCheck = viewModel.CheckCardUpdatesCommand.CanExecute(cardB);
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardA);
+
+        // The start raises observed the acting card busy; the other card was never gated.
+        Assert.True(actingDetect is false);
+        Assert.True(actingCheck is false);
+        Assert.True(otherDetect is true);
+        Assert.True(otherCheck is true);
+
+        gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        SpinWait.SpinUntil(() => actingDetect == true && actingCheck == true, TimeSpan.FromSeconds(5));
+
+        // The final raises of the completion boundary observed the idle card — on the acting
+        // card and the other card alike.
+        Assert.True(actingDetect == true);
+        Assert.True(actingCheck == true);
+        Assert.True(otherDetect == true);
+        Assert.True(otherCheck == true);
     }
 
     [Fact]
@@ -1748,6 +2058,7 @@ public class AgentManagementViewModelTests
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
         var card = viewModel.Cards[0];
+        var otherCard = viewModel.Cards[1];
         var detectRaises = 0;
         var checkRaises = 0;
         var cardDetectRaises = 0;
@@ -1759,7 +2070,8 @@ public class AgentManagementViewModelTests
 
         viewModel.CheckCardUpdatesCommand.Execute(card);
 
-        // The check start re-queries every gated command, which now reports busy.
+        // Start boundary: one counter enter raises the two header commands, and the explicit
+        // per-card raises add exactly one each for the two per-card commands — 1 per command.
         Assert.Equal(1, detectRaises);
         Assert.Equal(1, checkRaises);
         Assert.Equal(1, cardDetectRaises);
@@ -1768,11 +2080,81 @@ public class AgentManagementViewModelTests
         Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
         Assert.False(viewModel.DetectCardCommand.CanExecute(card));
         Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+        // The other card's commands re-query and stay enabled: one card's action never gates
+        // another card's commands.
+        Assert.True(viewModel.DetectCardCommand.CanExecute(otherCard));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(otherCard));
 
         gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
         Assert.True(SpinWait.SpinUntil(() => cardCheckRaises >= 2, TimeSpan.FromSeconds(5)));
 
-        // The check end re-queries again (cardCheckRaises is raised last, so the others are done).
+        // End boundary: one counter exit raises the two header commands and the explicit
+        // per-card raises add one more each — 2 per command in total (cardCheckRaises is raised
+        // last, so the others are done).
+        Assert.Equal(2, detectRaises);
+        Assert.Equal(2, checkRaises);
+        Assert.Equal(2, cardDetectRaises);
+        Assert.Equal(2, cardCheckRaises);
+        Assert.True(viewModel.DetectCommand.CanExecute(null));
+        Assert.True(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.True(viewModel.DetectCardCommand.CanExecute(card));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+    }
+
+    [Fact]
+    public void DetectCardCommand_RaisesCanExecuteChangedAtDetectStartAndEnd()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var management = new Mock<IAgentManagementService>();
+        management
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
+                ? gateA.Task
+                : Task.FromResult(new AgentProbeResult(true, "1.0")));
+        var viewModel = CreateViewModel(
+            [a, b],
+            Detection(),
+            Versions(),
+            management,
+            new Mock<IExternalLauncher>(),
+            operationLifetime: new DeferredOperationLifetime());
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        var otherCard = viewModel.Cards[1];
+        var detectRaises = 0;
+        var checkRaises = 0;
+        var cardDetectRaises = 0;
+        var cardCheckRaises = 0;
+        viewModel.DetectCommand.CanExecuteChanged += (_, _) => detectRaises++;
+        viewModel.CheckUpdatesCommand.CanExecuteChanged += (_, _) => checkRaises++;
+        viewModel.DetectCardCommand.CanExecuteChanged += (_, _) => cardDetectRaises++;
+        viewModel.CheckCardUpdatesCommand.CanExecuteChanged += (_, _) => cardCheckRaises++;
+
+        viewModel.DetectCardCommand.Execute(card);
+
+        // Start boundary: one counter enter raises the two header commands, and the explicit
+        // per-card raises add exactly one each for the two per-card commands — 1 per command.
+        Assert.Equal(1, detectRaises);
+        Assert.Equal(1, checkRaises);
+        Assert.Equal(1, cardDetectRaises);
+        Assert.Equal(1, cardCheckRaises);
+        Assert.False(viewModel.DetectCommand.CanExecute(null));
+        Assert.False(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(viewModel.DetectCardCommand.CanExecute(card));
+        Assert.False(viewModel.CheckCardUpdatesCommand.CanExecute(card));
+        // The other card's commands re-query and stay enabled: one card's action never gates
+        // another card's commands.
+        Assert.True(viewModel.DetectCardCommand.CanExecute(otherCard));
+        Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(otherCard));
+
+        gateA.SetResult(new AgentProbeResult(true, "2.0"));
+        Assert.True(SpinWait.SpinUntil(() => cardCheckRaises >= 2, TimeSpan.FromSeconds(5)));
+
+        // End boundary: one counter exit raises the two header commands and the explicit
+        // per-card raises add one more each — 2 per command in total (cardCheckRaises is raised
+        // last, so the others are done).
         Assert.Equal(2, detectRaises);
         Assert.Equal(2, checkRaises);
         Assert.Equal(2, cardDetectRaises);
@@ -1809,13 +2191,13 @@ public class AgentManagementViewModelTests
         var card = viewModel.Cards[0];
 
         viewModel.CheckCardUpdatesCommand.Execute(card);
-        Assert.True(viewModel.IsCheckingCardUpdates);
+        Assert.True(viewModel.IsCardActionRunning);
 
         viewModel.Dispose();
         gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
 
         Assert.True(SpinWait.SpinUntil(
-            () => !viewModel.IsCheckingCardUpdates && !card.IsCheckingUpdates,
+            () => !viewModel.IsCardActionRunning && !card.IsCheckingUpdates,
             TimeSpan.FromSeconds(5)));
 
         // The late result and message writes are discarded; both busy flags still reset.

@@ -36,7 +36,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private int blockedStateGeneration;
     private bool isDetecting;
     private bool isCheckingUpdates;
-    private bool isCheckingCardUpdates;
+    private int runningCardActionCount;
 
     /// <summary>
     ///   Creates the section.
@@ -70,7 +70,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), _ => this.CanDetect);
+        this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), card => this.CanDetectCard(card));
         this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
         this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
@@ -185,7 +185,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCheckingCardUpdates;
+    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCardActionRunning;
 
     /// <inheritdoc />
     public bool IsCheckingUpdates
@@ -201,29 +201,72 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCheckingCardUpdates;
+    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCardActionRunning;
 
-    /// <inheritdoc />
-    public bool IsCheckingCardUpdates
+    /// <summary>
+    ///   Whether any per-card Detect or Check updates action is currently running: true while at
+    ///   least one card's action runs, gating the header actions. Not exposed on
+    ///   <see cref="IAgentManagementSection" />, which carries only what its consumers bind and
+    ///   read; tests assert it through this concrete view model. Distinct from
+    ///   <see cref="IsDetecting" /> and <see cref="IsCheckingUpdates" />, the header-wide pass
+    ///   flags.
+    /// </summary>
+    public bool IsCardActionRunning => this.runningCardActionCount > 0;
+
+    /// <summary>
+    ///   Enters a per-card action: increments the running-action counter and reports the change
+    ///   so the header actions re-query while any card action runs. Raises on every mutation,
+    ///   not only on 0↔1 transitions — a raise when the value did not change is a harmless
+    ///   re-query. A plain <see cref="int" /> counter is safe here: increments happen
+    ///   synchronously in the command execute delegates and decrements in <c>finally</c>
+    ///   continuations, both on the UI thread.
+    /// </summary>
+    private void EnterCardAction()
     {
-        get => this.isCheckingCardUpdates;
-        private set
-        {
-            if (this.SetProperty(ref this.isCheckingCardUpdates, value))
-            {
-                this.RaiseBusyStateChanges();
-            }
-        }
+        this.runningCardActionCount++;
+        this.RaiseCardActionCountChanges();
     }
 
     /// <summary>
-    ///   Whether the per-card Check updates action may run for the card: the card is checkable
-    ///   (installed, not already being checked by its own action) and no header-wide pass or
-    ///   other per-card check is running.
+    ///   Exits a per-card action: decrements the running-action counter and reports the change.
+    ///   Called from a <c>finally</c>, so the counter resets on every path, including failures.
+    /// </summary>
+    private void ExitCardAction()
+    {
+        this.runningCardActionCount--;
+        this.RaiseCardActionCountChanges();
+    }
+
+    private void RaiseCardActionCountChanges()
+    {
+        this.OnPropertyChanged(nameof(this.IsCardActionRunning));
+        this.OnPropertyChanged(nameof(this.CanDetect));
+        this.OnPropertyChanged(nameof(this.CanCheckUpdates));
+        this.DetectCommand.RaiseCanExecuteChanged();
+        this.CheckUpdatesCommand.RaiseCanExecuteChanged();
+    }
+
+    /// <summary>
+    ///   Whether the per-card Detect action may run for the card: the card is idle (neither of
+    ///   its own "Detect" and "Check updates" actions is running) and no header-wide pass is
+    ///   running. Card-local and header flags only — other cards' actions and the running-action
+    ///   counter never gate a card's own commands, so per-card actions stay independent across
+    ///   cards.
     /// </summary>
     /// <param name="card"> The card to check. </param>
     /// <returns> Whether the command may execute for the card. </returns>
-    private bool CanCheckCardUpdates(AgentCardItem card) => card.CanCheckUpdates && this.CanDetect;
+    private bool CanDetectCard(AgentCardItem card) => card.CanDetect && !this.IsDetecting && !this.IsCheckingUpdates;
+
+    /// <summary>
+    ///   Whether the per-card Check updates action may run for the card: the card is checkable
+    ///   (installed, neither of its own "Detect" and "Check updates" actions is running) and no
+    ///   header-wide pass is running. Card-local and header flags only — other cards' actions and
+    ///   the running-action counter never gate a card's own commands, so per-card actions stay
+    ///   independent across cards.
+    /// </summary>
+    /// <param name="card"> The card to check. </param>
+    /// <returns> Whether the command may execute for the card. </returns>
+    private bool CanCheckCardUpdates(AgentCardItem card) => card.CanCheckUpdates && !this.IsDetecting && !this.IsCheckingUpdates;
 
     /// <inheritdoc />
     public string? UpdateCheckSummary
@@ -475,6 +518,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private async Task DetectCardAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
+        card.IsDetecting = true;
+        this.EnterCardAction();
+        this.DetectCardCommand.RaiseCanExecuteChanged();
+        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
         var previousState = card.InstallState;
         card.InstallState = AgentInstallState.Detecting;
         try
@@ -496,6 +543,17 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // operation logging observe the failure. Version and availability stay untouched.
             card.InstallState = previousState;
             throw;
+        }
+        finally
+        {
+            // Clear the card's busy flag BEFORE the completion raises: WPF caches the
+            // CanExecute result it queries during CanExecuteChanged, so a raise that still
+            // sees the card busy would cache false and leave the button disabled until an
+            // unrelated input event re-queries it.
+            card.IsDetecting = false;
+            this.ExitCardAction();
+            this.DetectCardCommand.RaiseCanExecuteChanged();
+            this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -615,7 +673,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         }
 
         card.IsCheckingUpdates = true;
-        this.IsCheckingCardUpdates = true;
+        this.EnterCardAction();
+        this.DetectCardCommand.RaiseCanExecuteChanged();
+        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
         try
         {
             // Invalidate first so the check below bypasses the cached result and its TTL.
@@ -637,8 +697,14 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         }
         finally
         {
-            this.IsCheckingCardUpdates = false;
+            // Clear the card's busy flag BEFORE the completion raises: WPF caches the
+            // CanExecute result it queries during CanExecuteChanged, so a raise that still
+            // sees the card busy would cache false and leave the button disabled until an
+            // unrelated input event re-queries it.
             card.IsCheckingUpdates = false;
+            this.ExitCardAction();
+            this.DetectCardCommand.RaiseCanExecuteChanged();
+            this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
         }
     }
 
