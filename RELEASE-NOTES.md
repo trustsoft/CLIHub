@@ -3,6 +3,23 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.2 — 2026-10-27
+
+### New
+- Finding an update is now its own action, separate from detecting an agent: Settings → CLI Agents has Check updates next to Detect in the header and on every card, so you can check one agent or all of them without re-detecting anything
+
+### Improved
+- Each agent card's actions are independent: checking or detecting one agent no longer disables the buttons on the other cards
+- Agents that are not installed are reported as not installed everywhere, including the Default agent list, which no longer shows "(unknown)"; Settings also opens faster because missing agents are no longer probed for a version or checked online
+- Update blocking now also covers agents installed through npm and running under a shared Node.js process, not only agents whose own executable is running
+- The CLI Agents page says Detection instead of Probe, with Cache TTL and Version check timeout, and its main action is called Detect instead of Refresh; Project Discovery is now called Project Scanning
+- Agent cards on Settings → CLI Agents show the logo without a frame, put each action's result directly under its buttons, and report a blocked update as "Update blocked while running"
+- Summary card detail and alert lines on the Projects, Project Scanning, and CLI Agents pages use the full card width, so short details such as "Managed by Project Scanning" stay on one line
+- Settings tooltips are shorter and plainer, the detection settings sit above the agent list, and the Settings and Logs icons now match their actions
+
+### Fixed
+- A show request that arrives after the launch window has closed during application shutdown no longer crashes CLIHub
+
 ## 1.0.1 — 2026-10-24
 
 ### New
@@ -10,7 +27,6 @@ What's new in CLIHub, newest first. These are the short, user-facing notes; the 
 
 ### Improved
 - Settings opens instantly: the CLI Agents page renders right away and the running-agent check that gates Update actions completes in the background moments later
-- The Settings page Project Discovery is now called Project Scanning, matching what its controls do
 
 ## 1.0.0 — 2026-10-23
 

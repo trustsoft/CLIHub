@@ -8,6 +8,32 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.0.2 — 2026-10-27
+
+### Added
+
+- The CLI Agents header has two separate actions: `Detect` re-detects installation and version locally with no network call, and `Check updates` forces a fresh update-availability check for every installed agent, with a summary line reporting how many agents were checked and how many updates were found; the per-card action is renamed from Test to Detect with the same local-only semantics, each action reports its own busy state, and the two header actions never run concurrently (`agent-detect-update-actions`, `agent-ui`)
+- Every agent card gains a `Check updates` action between Detect and Update, so one agent's update availability can be re-checked without hitting the other agents' distribution sources, and the per-card Detect action renders the same refresh glyph as the header Detect (`agent-card-check-updates`)
+- Agent install state is explicit (`Detecting`/`Installed`/`NotInstalled`) instead of being carried by the `"…"`/`"unknown"` display sentinels: a not-installed agent no longer appears as "(unknown)" in the Default agent selector, version and availability work is skipped for cards that are not installed, and the probe pipeline short-circuits the version command for a missing agent (`agent-install-state`)
+- Update blocking matches runtime-hosted agents: the process inspector reads command lines through a second tier so an npm `.cmd` shim that launches a shared `node.exe C:\...\node_modules\<package>\...` is matched to its agent, and a runtime-hosted agent's running process blocks its own update (`commandline-agent-blocking`, `agent-ui`)
+
+### Changed
+
+- Per-card actions are independent across cards: a running Detect or Check updates on one card disables only that card's actions (`AgentCardItem.IsDetecting`, `CanDetect`, `CanCheckUpdates`), the section-wide `IsCheckingCardUpdates` flag is replaced by a `runningCardActionCount`, and header passes remain mutually exclusive and disable per-card actions while they run (`independent-card-actions`)
+- Each card's action-outcome message renders under the action-button panel instead of in the identity column, and the blocked-update message is shortened from the agent-name list to `Update blocked while running` (`agent-card-message-under-actions`)
+- Agent logos on the CLI Agents cards render as plain unframed 32x32 images, matching the launch window, instead of the shared framed icon plate (`agent-logo-unframed`)
+- The shared `SummaryCard` template puts detail and alert lines in their own row spanning both columns, so they use the card's full content width; no string or layout intent changes (`summary-card-detail-width`)
+- The Settings tooltips are shortened to brief, plain sentence-case copy and the Project Scanning tooltips use the "watched root" glossary wording; the `agent-ui` rule now requires only that each header action's tooltip and automation name state its own work distinctly (`settings-tooltip-copy`, `agent-ui`)
+- The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout", and the list action is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`agents-detection-wording`, `settings-theme`, `preferences-ui`)
+- The CLI Agents page shows the probe settings above the agent list (page order MANAGEMENT → PROBE → AGENTS); layout-only reorder, no behavior change (`agents-probe-order`)
+- The Settings page "Project Discovery" is renamed to "Project Scanning" and its description now says "scanning rules"; the page key, configuration keys, and behavior are unchanged (`project-scanning-rename`, `preferences-ui`, `settings-theme`)
+- Settings icons match their actions: the sidebar's Logs page uses the history glyph, Projects uses the bulleted-list glyph, and Updates uses the sync glyph; the CLI Agents detection summary card reuses the Detect refresh glyph and the per-card Detect action drops the picture-like diagnostic glyph; the Logs cards use Filter, Calendar, Equalizer, and Document; the Projects and Project Scanning summary cards use per-card glyphs drawn in the primary text brush, and the Projects watcher state renders in the default text color; icon- and color-only changes with no behavior change
+- Internal: the configuration persistence boundary consolidates its hand-rolled clone siblings (`consolidate-clone-siblings`); the low-severity sweeps replace magic version sentinels, fix the Git-for-Windows registry InstallPath precedence, and detach `ProjectState` copies (`low-sweep`, `low-sweep-2`); the flaky `Stop_DisposesWatcherAndClearsStatus` scanning test settles the initial scan before stopping (`scanning-flake-settle`); the `main-window-layout` capability is renamed to `launch-window-layout`, and `app-lifecycle`/`preferences-ui`/`agent-ui` spec wording is normalized (`launch-window-layout-rename`, `spec-wording-cosmetics`)
+
+### Fixed
+
+- A show request arriving after the launch window has closed during application shutdown (tray click, tray menu command, or second-instance activation before the tray icon is disposed) no longer crashes the process with `InvalidOperationException`: the launch window tracks that it has closed and ignores late show requests and deferred placements without loading preferences or positioning, and normal show and positioning behavior is unchanged (`launch-window-closed-guard`, `app-lifecycle`)
+
 ## 1.0.1 — 2026-10-24
 
 ### Added
@@ -16,21 +42,9 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 
 ### Changed
 
-- The Settings tooltips are shortened to brief, plain sentence-case copy and the Project Scanning tooltips are aligned to the "watched root" glossary wording; XAML string edits with no behavior change, and the `agent-ui` header-action tooltip rule now requires only that each action's tooltip and automation name state its own work distinctly
 - The CLI Agents page renders cards with declarative Update availability and populates the blocked state in a fire-and-forget pass off the UI thread, so Settings opens without the running-agent enumeration; until the pass lands a blocked card can show Update as available, choosing it is still blocked by the execution-time gate, a re-load supersedes the in-flight pass, and closing the window cancels it (`agent-ui`)
 - The agent version-population loops of the launch pane and the CLI Agents page share one shape — generation counter, surface-owned cancellation on supersession and exit, parallel probes with generation-guarded writes, and unexpected failures logged through Serilog instead of `Debug.WriteLine`; the version display is unchanged (`consolidate-version-population`)
 - Hygiene sweep: removed the registered-but-unused `RuntimeSelector` with its `RuntimeType.WindowsTerminal` producer member and the unused `AgentProcessMatcher` logger; `.gitnexus/` is ignored; the Settings Projects page reuses `ProjectPathPolicy` for duplicate-folder detection (an already-registered drive/UNC root now reports the duplicate error instead of being silently accepted); `ProjectService` mutations return detached copies (`hygiene-sweep`)
-- The CLI Agents page shows the probe settings above the agent list (page order MANAGEMENT → PROBE → AGENTS); layout-only reorder, no behavior change
-- The Settings → CLI Agents page renames the user-visible detection wording: the section header and summary card "PROBE" become "DETECTION", the fields become "Cache TTL" and "Version check timeout" with matching hints and validation errors, and the list button is labelled "Detect" instead of "Refresh"; identifiers, configuration keys, and behavior are unchanged (`settings-theme`, `preferences-ui`)
-- Two Settings icons now match their actions: the CLI Agents detection summary card uses the same refresh glyph as the Detect action above the agent list, and the sidebar's Updates page uses the sync glyph (E895); icon-only visual changes, no behavior change
-- The Settings page "Project Discovery" is renamed to "Project Scanning" and its description now says "scanning rules"; the page key, configuration keys, and behavior are unchanged (`preferences-ui`, `settings-theme`, `project-management`)
-- The Settings sidebar's Logs page uses the history glyph (E81C) instead of the diagnostic glyph; icon-only visual change, no behavior change
-- The Settings sidebar's Projects page uses the bulleted-list glyph (E8FD) instead of the add-folder glyph; icon-only visual change, no behavior change
-- The Logs page cards use distinct glyphs: Filter for log level, Calendar for retention, Equalizer for the size limit, and Document for the file; icon-only visual change, no behavior change
-
-### Fixed
-
-- A show request arriving after the launch window has closed during application shutdown (tray click, tray menu command, or second-instance activation before the tray icon is disposed) no longer crashes the process with `InvalidOperationException`: the launch window tracks that it has closed and ignores late show requests and deferred placements without loading preferences or positioning, and normal show and positioning behavior is unchanged (`app-lifecycle`)
 
 ## 1.0.0 — 2026-10-23
 
