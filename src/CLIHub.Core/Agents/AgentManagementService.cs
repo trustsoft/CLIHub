@@ -90,10 +90,9 @@ public sealed class AgentManagementService : IAgentManagementService
             cancellationToken).ConfigureAwait(false);
         if (runningAgents.Count > 0)
         {
-            var names = string.Join(", ", runningAgents.Select(agent => agent.Plugin.Name));
             return new AgentUpdateResult(
                 AgentUpdateOutcome.Blocked,
-                $"Update blocked while the agent is running: {names}");
+                "Update blocked while running");
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

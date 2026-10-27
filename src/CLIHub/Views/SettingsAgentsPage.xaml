@@ -216,66 +216,70 @@
                                     <Run xml:space="preserve">Supported commands: </Run>
                                     <Run Text="{Binding CommandsText, Mode=OneWay}"/>
                                 </TextBlock>
-
-                                <TextBlock Margin="0,6,0,0"
-                                           Style="{StaticResource StatusLine}"
-                                           Text="{Binding Message}"
-                                           Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
                             </StackPanel>
 
-                            <controls:SpacedPanel Grid.Column="2"
-                                                  VerticalAlignment="Top"
-                                                  Orientation="Horizontal"
-                                                  Spacing="2">
-                                <Button Width="{StaticResource Sizing.IconButton.Width}"
-                                        Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Detect agent"
-                                        Command="{Binding DataContext.AgentsState.DetectCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        IsEnabled="{Binding DataContext.AgentsState.CanDetect, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Detect installation and version">
-                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
-                                               Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                                </Button>
-                                <Button Width="{StaticResource Sizing.IconButton.Width}"
-                                        Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Check this agent for updates"
-                                        Command="{Binding DataContext.AgentsState.CheckCardUpdatesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        IsEnabled="{Binding CanCheckUpdates}"
-                                        Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Check this agent for updates">
-                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
-                                               Text="{x:Static themes:IconGlyphs.Sync}"/>
-                                </Button>
-                                <Button Width="{StaticResource Sizing.IconButton.Width}"
-                                        Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Update agent"
-                                        Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        IsEnabled="{Binding CanUpdate}"
-                                        Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Run the agent's update command">
-                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
-                                               Text="{x:Static themes:IconGlyphs.Update}"/>
-                                </Button>
-                                <Button Width="{StaticResource Sizing.IconButton.Width}"
-                                        Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Edit agent config"
-                                        Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        IsEnabled="{Binding CanEditConfig}"
-                                        Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Open the agent's plugin.json">
-                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
-                                               Text="{x:Static themes:IconGlyphs.Document}"/>
-                                </Button>
-                            </controls:SpacedPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                                <controls:SpacedPanel HorizontalAlignment="Right"
+                                                      Orientation="Horizontal"
+                                                      Spacing="2">
+                                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                            Height="{StaticResource Sizing.IconButton.Height}"
+                                            AutomationProperties.Name="Detect agent"
+                                            Command="{Binding DataContext.AgentsState.DetectCardCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding DataContext.AgentsState.CanDetect, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Detect installation and version">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                                   Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                                    </Button>
+                                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                            Height="{StaticResource Sizing.IconButton.Height}"
+                                            AutomationProperties.Name="Check this agent for updates"
+                                            Command="{Binding DataContext.AgentsState.CheckCardUpdatesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding CanCheckUpdates}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Check this agent for updates">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                                   Text="{x:Static themes:IconGlyphs.Sync}"/>
+                                    </Button>
+                                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                            Height="{StaticResource Sizing.IconButton.Height}"
+                                            AutomationProperties.Name="Update agent"
+                                            Command="{Binding DataContext.AgentsState.UpdateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding CanUpdate}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Run the agent's update command">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                                   Text="{x:Static themes:IconGlyphs.Update}"/>
+                                    </Button>
+                                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                            Height="{StaticResource Sizing.IconButton.Height}"
+                                            AutomationProperties.Name="Edit agent config"
+                                            Command="{Binding DataContext.AgentsState.EditConfigCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            IsEnabled="{Binding CanEditConfig}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Open the agent's plugin.json">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                                   Text="{x:Static themes:IconGlyphs.Document}"/>
+                                    </Button>
+                                </controls:SpacedPanel>
+                                <TextBlock Margin="0,2,0,0"
+                                           MaxWidth="{StaticResource Sizing.AgentRow.TextMaxWidth}"
+                                           HorizontalAlignment="Right"
+                                           Style="{StaticResource StatusLine}"
+                                           FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           Text="{Binding Message}"
+                                           TextAlignment="Right"
+                                           Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
+                            </StackPanel>
                         </Grid>
                     </Border>
                 </DataTemplate>

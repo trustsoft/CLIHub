@@ -450,7 +450,6 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             {
                 var declaresUpdate = card.Plugin.Commands?.Get(AgentCommandKind.Update) is not null;
                 var running = runningByPlugin[card.Plugin.Id].ToList();
-                var blockedNames = string.Join(", ", running.Select(agent => agent.Plugin.Name));
 
                 if (!cancellationToken.IsCancellationRequested && generation == this.blockedStateGeneration)
                 {
@@ -458,9 +457,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
                     // Write the block explanation only when blocked; never clear a message a
                     // user action may have set between render and pass completion.
-                    if (blockedNames.Length > 0)
+                    if (running.Count > 0)
                     {
-                        card.Message = $"Update blocked while the agent is running: {blockedNames}";
+                        card.Message = "Update blocked while running";
                     }
                 }
             }

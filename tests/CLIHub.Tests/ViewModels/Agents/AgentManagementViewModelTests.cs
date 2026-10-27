@@ -443,13 +443,13 @@ public class AgentManagementViewModelTests
         var management = new Mock<IAgentManagementService>();
         management
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Update blocked while the agent is running: a"));
+            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Update blocked while running"));
         var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>());
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
 
-        Assert.Equal("Update blocked while the agent is running: a", viewModel.Cards[0].Message);
+        Assert.Equal("Update blocked while running", viewModel.Cards[0].Message);
     }
 
     [Fact]
@@ -468,7 +468,7 @@ public class AgentManagementViewModelTests
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+        Assert.Equal("Update blocked while running", card.Message);
         Assert.True(card.HasMessage);
     }
 
@@ -491,7 +491,7 @@ public class AgentManagementViewModelTests
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+        Assert.Equal("Update blocked while running", card.Message);
         Assert.True(card.HasMessage);
 
         // An unrelated node script names no declared npm package and blocks nothing.
@@ -613,7 +613,7 @@ public class AgentManagementViewModelTests
         SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromSeconds(5));
 
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while the agent is running: a", card.Message);
+        Assert.Equal("Update blocked while running", card.Message);
     }
 
     [Fact]
