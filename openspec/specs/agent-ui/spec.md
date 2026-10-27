@@ -316,11 +316,11 @@ The default-agent selector SHALL present each agent option with display text der
 
 ### Requirement: Agent card actions
 
-The card SHALL present actions appropriate to the agent's declared capabilities and current state, in the order "Detect", "Check updates", "Update", "Edit config". A card SHALL render with "Update" available exactly when the agent declares an `update` command; the running-agent blocked state SHALL be populated asynchronously after the cards render, through a population pass that is cancelled when the list is reloaded or the surface that started it goes away, so that a result from an obsolete pass is not applied. Until then, a card MAY transiently show "Update" as available while a process matching its agent is running; choosing "Update" in that state SHALL NOT start the update — the execution-time running-agent check blocks it and the card reports the block. When no agent declares an `update` command, no running-agent enumeration SHALL run. An enumeration or population failure SHALL be logged and SHALL leave the cards showing "Update" per declaration. A process matches an agent per the `agent-process-matching` capability, including a process hosted inside a shared runtime whose command line identifies the agent. The card's "Detect" action re-detects the agent's host installation and version locally; it SHALL NOT trigger an update-availability check, and it SHALL be unavailable while a header-wide action or a per-card update check is running. The card's "Check updates" action SHALL force a fresh update-availability check for that one agent by invalidating only that agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. It SHALL be unavailable for an agent whose installation state is not installed, while its own check runs, and while any header-wide action or other per-card check runs. The per-card check SHALL NOT alter the header-wide update-check summary or the Update action's availability, and SHALL report its outcome on the card's message line. The per-card "Detect" action SHALL render the same glyph as the header "Detect" action, and the per-card "Check updates" action the same glyph as the header "Check updates" action.
+The card SHALL present actions appropriate to the agent's declared capabilities and current state, in the order "Detect", "Check updates", "Update", "Edit config". A card SHALL render with "Update" available exactly when the agent declares an `update` command; the running-agent blocked state SHALL be populated asynchronously after the cards render, through a population pass that is cancelled when the list is reloaded or the surface that started it goes away, so that a result from an obsolete pass is not applied. Until then, a card MAY transiently show "Update" as available while a process matching its agent is running; choosing "Update" in that state SHALL NOT start the update — the execution-time running-agent check blocks it and the card reports the block. When no agent declares an `update` command, no running-agent enumeration SHALL run. An enumeration or population failure SHALL be logged and SHALL leave the cards showing "Update" per declaration. A process matches an agent per the `agent-process-matching` capability, including a process hosted inside a shared runtime whose command line identifies the agent. The card's "Detect" action re-detects the agent's host installation and version locally; it SHALL NOT trigger an update-availability check, and it SHALL be unavailable while a header-wide action is running and while the card's own "Detect" or "Check updates" action is running. The card's "Check updates" action SHALL force a fresh update-availability check for that one agent by invalidating only that agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. It SHALL be unavailable for an agent whose installation state is not installed, while the card's own "Detect" or "Check updates" action is running, and while a header-wide action is running. Per-card actions SHALL be independent across cards: starting "Detect" or "Check updates" on one card SHALL NOT disable another card's "Detect" or "Check updates" actions, which remain available under their own installation and busy rules. The per-card check SHALL NOT alter the header-wide update-check summary or the Update action's availability, and SHALL report its outcome on the card's message line. The per-card "Detect" action SHALL render the same glyph as the header "Detect" action, and the per-card "Check updates" action the same glyph as the header "Check updates" action.
 
 #### Scenario: Detect available on every card
 
-- **WHEN** an agent card is shown and no header-wide action or per-card update check is running
+- **WHEN** an agent card is shown, no header-wide action is running, and the card's own "Detect" and "Check updates" actions are not running
 - **THEN** "Detect" is available on the card
 
 #### Scenario: Per-card Detect is local only
@@ -416,9 +416,22 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 
 - **WHEN** a header-wide Detect or "Check updates" pass is running
 - **THEN** the per-card "Check updates" action is unavailable on every card
-- **WHEN** a per-card "Check updates" action is running
-- **THEN** the per-card "Check updates" action is unavailable on every card, including its own
-- **AND** when the per-card check completes, including when it ends abnormally, the other per-card checks become available again under their own rules
+- **WHEN** a per-card "Check updates" action is running on a card
+- **THEN** that card's own "Detect" and "Check updates" actions are unavailable
+- **AND** when the per-card check completes, including when it ends abnormally, the card's actions become available again under their own rules
+
+#### Scenario: Per-card Detect is independent of other cards
+
+- **WHEN** a per-card "Detect" action is running on one card
+- **THEN** that card's own "Detect" and "Check updates" actions are unavailable
+- **AND** the "Detect" and "Check updates" actions on every other card remain available under their own installation and busy rules
+- **AND** when the Detect completes, including when it ends abnormally, the card's own actions become available again under their own rules
+
+#### Scenario: Per-card Check updates is independent of other cards
+
+- **WHEN** a per-card "Check updates" action is running on one card
+- **THEN** the "Detect" and "Check updates" actions on every other card remain available under their own installation and busy rules
+- **AND** while the check runs, a per-card action may be started on another card
 
 #### Scenario: Tooltips disambiguate the per-card Check updates action
 
@@ -433,7 +446,7 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 
 ### Requirement: Agent management header actions
 
-The AGENTS section of the CLI Agents page SHALL present two header actions alongside the section header. "Detect" SHALL re-detect every agent's host installation and version locally: it SHALL NOT perform an update-availability check and SHALL NOT request any agent's declared update source. "Check updates" SHALL force a fresh update-availability check for every installed agent by invalidating the agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. Each header action SHALL expose a tooltip and automation name that state its own work and distinguish it from the other header action. The two header actions SHALL NOT run concurrently: while either is running, both SHALL be unavailable, and the per-card Detect and per-card "Check updates" actions SHALL be unavailable as well. While a per-card "Check updates" action is running, both header actions SHALL be unavailable. The load-time population pass SHALL remain as it is; "Check updates" is an additional trigger for an availability check, not a replacement for the automatic one.
+The AGENTS section of the CLI Agents page SHALL present two header actions alongside the section header. "Detect" SHALL re-detect every agent's host installation and version locally: it SHALL NOT perform an update-availability check and SHALL NOT request any agent's declared update source. "Check updates" SHALL force a fresh update-availability check for every installed agent by invalidating the agent's cached availability result before checking, bypassing the per-agent time-to-live; it SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site. Each header action SHALL expose a tooltip and automation name that state its own work and distinguish it from the other header action. The two header actions SHALL NOT run concurrently: while either is running, both SHALL be unavailable, and the per-card Detect and per-card "Check updates" actions SHALL be unavailable as well. While any per-card action — Detect or "Check updates" — is running, both header actions SHALL be unavailable. The load-time population pass SHALL remain as it is; "Check updates" is an additional trigger for an availability check, not a replacement for the automatic one.
 
 #### Scenario: Header Detect leaves update indicators untouched
 
@@ -487,5 +500,10 @@ The AGENTS section of the CLI Agents page SHALL present two header actions along
 
 - **WHEN** a per-card "Check updates" action is running
 - **THEN** both header actions are unavailable
-- **AND** the per-card Detect action is unavailable on every card
 - **AND** when the per-card check completes, including when it ends abnormally, the header actions become available again under their own rules
+
+#### Scenario: A per-card Detect gates the header actions
+
+- **WHEN** a per-card "Detect" action is running
+- **THEN** both header actions are unavailable
+- **AND** when the per-card Detect completes, including when it ends abnormally, the header actions become available again under their own rules
