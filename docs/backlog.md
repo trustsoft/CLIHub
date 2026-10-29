@@ -34,6 +34,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   catalogue complete: `domain-events-adoption` `49f6511` (`docs/architecture/domain-events.md` adoption
   rules + candidate triggers; `AgentLaunched` on Launch/Resume with audit subscriber; lazy-singleton
   subscriber activation fixed and pinned; 1,248 tests, smoke confirmed). Remaining proposals 3, 5, 6 open.**
+  **Proposal 3 first slice complete: `capability-service-slice` `774d468` (IAgentManagementService split
+  into IAgentProbeService + IAgentUpdateService, `AgentManagementViewModel` composes both; zero behavior
+  change, 1,248 tests). Further decompositions deferred until consumer/test subset-use evidence appears.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
