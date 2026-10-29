@@ -54,6 +54,8 @@ ports and update state; the application workflow owns cross-surface coordination
 - `Updates/` owns Core update/release-note contracts and Velopack integration.
 - `Infrastructure/` owns process-launch orchestration, agent process matching, filesystem paths, logging
   persistence, and the infrastructure ports implemented by `CLIHub.Core.Windows`.
+- `Events/` owns the synchronous domain event bus, event contracts, and event subscribers for observable
+  domain workflows.
 - `Composition/` groups Core dependency-injection registration; `CLIHub.Core.Windows` registers its own
   adapters via `AddWindowsInfrastructure`, and the application composition root calls both.
 

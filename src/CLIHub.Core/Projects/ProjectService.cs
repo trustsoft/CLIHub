@@ -2,6 +2,7 @@ namespace CLIHub.Core.Projects;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Events;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -12,6 +13,7 @@ public class ProjectService : IProjectService
     private readonly IProjectStateStore projectStateStore;
     private readonly ProjectLogoResolver logoResolver;
     private readonly ILogger<ProjectService> logger;
+    private readonly IDomainEventPublisher eventPublisher;
     private readonly ProjectState projectState;
 
     /// <inheritdoc />
@@ -22,11 +24,13 @@ public class ProjectService : IProjectService
     /// </summary>
     public ProjectService(IProjectStateStore projectStateStore,
                           ProjectLogoResolver logoResolver,
-                          ILogger<ProjectService> logger)
+                          ILogger<ProjectService> logger,
+                          IDomainEventPublisher eventPublisher)
     {
         this.projectStateStore = projectStateStore ?? throw new ArgumentNullException(nameof(projectStateStore));
         this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.eventPublisher = eventPublisher ?? throw new ArgumentNullException(nameof(eventPublisher));
         this.projectState = this.projectStateStore.Load();
         this.ClearStaleCurrentProject();
     }
@@ -234,10 +238,17 @@ public class ProjectService : IProjectService
             return;
         }
 
+        var selectionChanged = projectId != this.projectState.CurrentProjectId;
+
         this.projectState.CurrentProjectId = projectId;
         project.LastUsed = DateTime.UtcNow;
         this.logger.LogDebug("Current project set to {ProjectName}", project.Name);
         this.Persist();
+
+        if (selectionChanged)
+        {
+            this.eventPublisher.Publish(new ProjectSelected(projectId, project.Path, DateTimeOffset.UtcNow));
+        }
     }
 
     /// <inheritdoc />

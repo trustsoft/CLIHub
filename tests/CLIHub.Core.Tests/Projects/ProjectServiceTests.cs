@@ -2,6 +2,7 @@ namespace CLIHub.Core.Tests.Projects;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using CLIHub.Core.Events;
 using CLIHub.Core.Models;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Projects;
@@ -37,7 +38,8 @@ public class ProjectServiceTests : IDisposable
         return new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository(config)),
             resolver,
-            NullLogger<ProjectService>.Instance);
+            NullLogger<ProjectService>.Instance,
+            new FakeDomainEventPublisher());
     }
 
     private ProjectService CreateService(FakeConfigurationRepository config)
@@ -50,7 +52,8 @@ public class ProjectServiceTests : IDisposable
         return new ProjectService(
             new ProjectStateStore(config),
             resolver,
-            NullLogger<ProjectService>.Instance);
+            NullLogger<ProjectService>.Instance,
+            new FakeDomainEventPublisher());
     }
 
     [Fact]
@@ -268,7 +271,8 @@ public class ProjectServiceTests : IDisposable
         var service = new ProjectService(
             new ProjectStateStore(new FakeConfigurationRepository()),
             new ProjectLogoResolver(cache, new LogoOptions(null)),
-            NullLogger<ProjectService>.Instance);
+            NullLogger<ProjectService>.Instance,
+            new FakeDomainEventPublisher());
         var project = service.AddProject(folder);
 
         service.RemoveProject(project.Id);
@@ -361,5 +365,80 @@ public class ProjectServiceTests : IDisposable
         var changed = service.ReconcileDiscoveredProjects([folder], []);
 
         Assert.False(changed);
+    }
+
+    [Fact]
+    public void SetCurrentProject_PublishesProjectSelectedEvent()
+    {
+        var folder = this.CreateTempDir();
+        var eventPublisher = new FakeDomainEventPublisher();
+        var cache = new LogoCacheService(
+            NullLogger<LogoCacheService>.Instance,
+            Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(null));
+        var service = new ProjectService(
+            new ProjectStateStore(new FakeConfigurationRepository()),
+            resolver,
+            NullLogger<ProjectService>.Instance,
+            eventPublisher);
+
+        var project = service.AddProject(folder);
+        service.SetCurrentProject(project.Id);
+
+        Assert.Single(eventPublisher.PublishedEvents);
+        var evt = Assert.IsType<ProjectSelected>(eventPublisher.PublishedEvents[0]);
+        Assert.Equal(project.Id, evt.Id);
+        Assert.Equal(project.Path, evt.Path);
+        Assert.True((DateTimeOffset.UtcNow - evt.SelectedAt).TotalSeconds < 5);
+    }
+
+    [Fact]
+    public void SetCurrentProject_AlreadySelected_DoesNotPublishEvent()
+    {
+        var folder = this.CreateTempDir();
+        var eventPublisher = new FakeDomainEventPublisher();
+        var cache = new LogoCacheService(
+            NullLogger<LogoCacheService>.Instance,
+            Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(null));
+        var service = new ProjectService(
+            new ProjectStateStore(new FakeConfigurationRepository()),
+            resolver,
+            NullLogger<ProjectService>.Instance,
+            eventPublisher);
+
+        var project = service.AddProject(folder);
+        service.SetCurrentProject(project.Id);
+        eventPublisher.PublishedEvents.Clear();
+        service.SetCurrentProject(project.Id);
+
+        Assert.Empty(eventPublisher.PublishedEvents);
+    }
+
+    [Fact]
+    public void SetCurrentProject_AlreadySelected_StillRefreshesLastUsedAndPersists()
+    {
+        var folder = this.CreateTempDir();
+        var eventPublisher = new FakeDomainEventPublisher();
+        var cache = new LogoCacheService(
+            NullLogger<LogoCacheService>.Instance,
+            Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(null));
+        var service = new ProjectService(
+            new ProjectStateStore(new FakeConfigurationRepository()),
+            resolver,
+            NullLogger<ProjectService>.Instance,
+            eventPublisher);
+
+        var project = service.AddProject(folder);
+        service.SetCurrentProject(project.Id);
+        var firstLastUsed = service.GetAllProjects().First(p => p.Id == project.Id).LastUsed;
+
+        // Wait a bit to ensure timestamp changes
+        System.Threading.Thread.Sleep(100);
+        service.SetCurrentProject(project.Id);
+        var secondLastUsed = service.GetAllProjects().First(p => p.Id == project.Id).LastUsed;
+
+        Assert.True(secondLastUsed > firstLastUsed, "LastUsed should be refreshed on re-selection");
     }
 }

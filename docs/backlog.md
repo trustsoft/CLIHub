@@ -27,7 +27,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   slice complete: `logging-context-provider` `7d92bf3` (ILoggingContextProvider + OperationName/CorrelationId
   scopes on orchestrator, monitor, application lifetime, and scanning; behavior unchanged, 1,228 tests).
   Remaining Proposal 1 slices: `IPersistenceService<T>` and `ICacheService` (deferred; triggers: second
-  consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).**
+  consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).** **Proposal 2 POC
+  complete: `domain-events-poc` (synchronous domain event bus + `ProjectSelected` event published from
+  `ProjectService.SetCurrentProject` + logging subscriber using `ILoggingContextProvider`; zero
+  user-visible behavior change, 1,240 tests). Adoption catalogue pending Proposal 2 follow-up.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 

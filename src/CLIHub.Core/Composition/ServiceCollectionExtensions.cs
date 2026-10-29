@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
@@ -34,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddLogging();
         services.AddSingleton<ILoggingContextProvider, LoggingContextProvider>();
 
+        services.AddEventServices();
         services.AddConfigurationServices();
         services.AddLogoServices(defaultLogoPath);
         services.AddProjectServices();
@@ -91,7 +93,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IProjectService>(sp => new ProjectService(
             sp.GetRequiredService<IProjectStateStore>(),
             sp.GetRequiredService<ProjectLogoResolver>(),
-            sp.GetRequiredService<ILogger<ProjectService>>()));
+            sp.GetRequiredService<ILogger<ProjectService>>(),
+            sp.GetRequiredService<IDomainEventPublisher>()));
         return services;
     }
 
@@ -139,6 +142,15 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IUpdateDownloader>(sp => sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IUpdateInstaller>(sp => sp.GetRequiredService<IUpdateService>());
         services.AddSingleton<IReleaseNotesService, ReleaseNotesService>();
+        return services;
+    }
+
+    private static IServiceCollection AddEventServices(this IServiceCollection services)
+    {
+        services.AddSingleton<DomainEventBus>();
+        services.AddSingleton<IDomainEventPublisher>(sp => sp.GetRequiredService<DomainEventBus>());
+        services.AddSingleton<IDomainEventSubscriber>(sp => sp.GetRequiredService<DomainEventBus>());
+        services.AddSingleton<ProjectSelectionLoggingSubscriber>();
         return services;
     }
 }
