@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-10-29
+goal: "Reconnaissance for Proposal 1 remaining slices (IPersistenceService<T>, ICacheService) - delivered decision with evidence"
+skip_specs: true
+x-skip_specs_rationale: "Reconnaissance-only decision with no behavior change. The change rejects the slice with evidence and documents reopen triggers."
