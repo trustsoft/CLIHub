@@ -4,6 +4,28 @@ Parked findings and deferred work. Each item records evidence, severity, a propo
 trigger that should bring it back. The pipeline protocol (`pipeline-protocol` skill) reviews this
 file during `/pipe-resume`; do not re-derive parked work from conversation history.
 
+## Architecture and design
+
+### Architectural improvement proposals (2026-10-29 analysis)
+
+- Severity: Medium (strategic, not urgent; affects long-term maintainability and evolution)
+- Evidence: comprehensive architectural analysis completed 2026-10-29 (commit `e141732`), documented
+  in `docs/architecture-analysis-2026-10-29.md`, `docs/architecture-visualization.md`, and
+  `docs/architecture-improvement-summary.md`. Analysis identified 6 concrete improvement proposals:
+  (1) Extract cross-cutting services (logging, persistence, caching); (2) Introduce domain events;
+  (3) Capability-based service decomposition; **(4) Process domain model unification [APPROVED 2026-10-29]**;
+  (5) Plugin lifecycle management; (6) Configuration decomposition (internal). Health score: 8.5/10. Key
+  concerns: coordinator proliferation (5 coordinators), large role-based service interfaces,
+  UI-heavy orchestration, configuration coupling.
+- Proposed remedy: Three-phase evolution roadmap (Q1-Q3 2027): Phase 1 (foundation) — cross-cutting
+  services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [APPROVED]**,
+  plugin lifecycle; Phase 3 (configuration evolution) — internal decomposition. Immediate actions
+  (next 30 days): document architecture principles, extract `ILoggingContextProvider`, implement
+  first domain event POC (`ProjectSelected`). See `docs/architecture-analysis-index.md` for full
+  navigation. **Proposal 4 approved 2026-10-29; see ADR-0012 and detailed docs in `docs/proposals/`.**
+- Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
+  benefit from architectural clarity.
+
 ## Agent and process domain
 
 ### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus (resolved)
