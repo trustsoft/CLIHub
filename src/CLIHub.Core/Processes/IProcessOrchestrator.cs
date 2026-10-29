@@ -44,15 +44,4 @@ public interface IProcessOrchestrator
         IReadOnlyList<Plugin> plugins,
         AgentProcessMatchDetail detail);
 
-    /// <summary>
-    /// Resolves the available runtime executable for the specified kind.
-    /// </summary>
-    /// <param name="kind">The runtime kind to resolve.</param>
-    /// <param name="cancellationToken">A cancellation token for the operation.</param>
-    /// <returns>
-    /// The resolved runtime executable, or null if the runtime is not available.
-    /// </returns>
-    Task<RuntimeExecutable?> ResolveRuntimeAsync(
-        RuntimeKind kind,
-        CancellationToken cancellationToken = default);
 }

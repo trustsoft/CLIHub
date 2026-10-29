@@ -65,7 +65,9 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     /// <inheritdoc />
     public int TotalCount => this.Projects.Count;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Number of projects whose folder no longer exists.
+    /// </summary>
     public int MissingFolderCount => this.Projects.Count(item => !item.IsFolderAvailable);
 
     /// <inheritdoc />

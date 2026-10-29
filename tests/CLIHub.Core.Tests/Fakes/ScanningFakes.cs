@@ -12,8 +12,6 @@ internal sealed class FakeRepositoryWatcher : IRepositoryWatcher
 
     public void Start() => this.Started = true;
 
-    public void Stop() => this.Started = false;
-
     public void Dispose() => this.Disposed = true;
 
     public void RaiseChanged() => this.Changed?.Invoke(this, EventArgs.Empty);

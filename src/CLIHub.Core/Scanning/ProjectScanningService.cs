@@ -152,7 +152,9 @@ public sealed class ProjectScanningService : IProjectScanner
         _ = this.RescanRootAsync(root);
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Stops watching and clears the watching state. Idempotent.
+    /// </summary>
     public void Stop()
     {
         IRepositoryWatcher? watcher;

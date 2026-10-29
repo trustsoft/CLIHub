@@ -146,11 +146,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     public UpdateControlViewModel UpdateControl { get; }
 
     /// <summary>
-    ///   Window-level action commands: launch, settings, data folder, exit.
-    /// </summary>
-    public WindowActionCoordinator WindowActions => this.windowActions;
-
-    /// <summary>
     ///   The project row that provides the launch context.
     /// </summary>
     public ProjectModel? SelectedProject
@@ -278,24 +273,9 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     public RelayCommand ExitCommand => this.windowActions.ExitCommand;
 
     /// <summary>
-    ///   Launches the selected agent in the current project.
-    /// </summary>
-    public RelayCommand LaunchCommand => this.windowActions.LaunchCommand;
-
-    /// <summary>
-    ///   Resumes the selected agent in the current project.
-    /// </summary>
-    public RelayCommand ResumeCommand => this.windowActions.ResumeCommand;
-
-    /// <summary>
     ///   Updates the selected agent.
     /// </summary>
     public RelayCommand UpdateCommand => this.windowActions.UpdateCommand;
-
-    /// <summary>
-    ///   Reports the selected agent's version in the status line.
-    /// </summary>
-    public RelayCommand VersionCommand => this.windowActions.VersionCommand;
 
     /// <summary>
     ///   Launches the agent of the activated row.
@@ -381,9 +361,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// </summary>
     private Project? ResolveLaunchContext() =>
             this.selectedProject is null ? null : this.projectPane.FindProject(this.selectedProject.Id);
-
-    private void ShowWarning(string message) =>
-        this.notifications.ShowWarning(message);
 
     /// <summary>
     ///   Removes subscriptions owned by the launch-window composition model.

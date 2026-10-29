@@ -122,8 +122,7 @@ public static class ServiceRegistration
 
     /// <summary>
     ///   Registers the tray stack: the menu builder, state projection, command handlers, the
-    ///   <c> ITrayActions </c> port, and the tray icon controller with its <c> ITrayHost </c>
-    ///   forwarder.
+    ///   <c> ITrayActions </c> port and the tray icon controller.
     /// </summary>
     private static IServiceCollection AddTrayServices(this IServiceCollection services)
     {
@@ -132,7 +131,6 @@ public static class ServiceRegistration
         services.AddSingleton<TrayCommandHandlers>();
         services.AddSingleton<ITrayActions, TrayActions>();
         services.AddSingleton<TrayIconController>();
-        services.AddSingleton<ITrayHost>(sp => sp.GetRequiredService<TrayIconController>());
         return services;
     }
 

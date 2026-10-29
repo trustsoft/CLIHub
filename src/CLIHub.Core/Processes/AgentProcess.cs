@@ -38,14 +38,4 @@ public record AgentProcess
     /// </summary>
     public required DateTime StartTime { get; init; }
 
-    /// <summary>
-    /// Gets a value indicating whether this is a runtime-hosted process (Node.js or Python).
-    /// </summary>
-    /// <remarks>
-    /// Runtime-hosted processes run inside a shared interpreter host
-    /// (see <see cref="CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher.RuntimeHostProcessNames"/>).
-    /// </remarks>
-    public bool IsRuntimeHosted =>
-        CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher.RuntimeHostProcessNames
-            .Contains(Path.GetFileNameWithoutExtension(this.ExecutablePath));
 }

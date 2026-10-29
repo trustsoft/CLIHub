@@ -6,6 +6,19 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Architecture and design
 
+### `IStartupWindow` is an empty marker interface after the tier 2 cleanup
+
+- Severity: Low (structural; no user impact)
+- Evidence: `remove-unused-code-tier2` removed `ShowOnPointerMonitor` from
+  `src/CLIHub/Startup/IStartupWindow.cs`, leaving the interface with no members. It survives only as
+  the type of `IApplicationStartupUi.LaunchWindow` and the
+  `ApplicationStartupContext.SetMainWindow` delegate parameter, both of which always receive the
+  concrete `LaunchWindow`.
+- Proposed remedy: type those two members as `LaunchWindow` (or introduce a narrower window
+  abstraction if a second implementation appears), then delete `IStartupWindow`.
+- Trigger: the next change that touches startup composition or app bootstrapping, or a second
+  implementer of `IStartupWindow`.
+
 ### Architectural improvement proposals (2026-10-29 analysis)
 
 - Severity: Medium (strategic, not urgent; affects long-term maintainability and evolution)

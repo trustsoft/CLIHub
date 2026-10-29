@@ -21,11 +21,6 @@ public interface IAgentManagementSection : IDisposable
     int InstalledAgentCount { get; }
 
     /// <summary>
-    ///   The number of supported agent plugins.
-    /// </summary>
-    int SupportedAgentCount { get; }
-
-    /// <summary>
     ///   The supported/not-installed split shown under the installed count.
     /// </summary>
     string AvailabilitySummary { get; }
@@ -39,11 +34,6 @@ public interface IAgentManagementSection : IDisposable
     ///   The version or selection hint shown under the default agent name.
     /// </summary>
     string DefaultAgentDetail { get; }
-
-    /// <summary>
-    ///   Whether a default agent is selected.
-    /// </summary>
-    bool HasDefaultAgent { get; }
 
     /// <summary>
     ///   The tone of the default-agent summary value: <see cref="SummaryCardTone.Muted" /> while no

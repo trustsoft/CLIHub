@@ -294,29 +294,6 @@ public class ProjectServiceTests : IDisposable
     }
 
     [Fact]
-    public void AddDiscoveredProject_MarksDiscoveredSource()
-    {
-        var service = this.CreateService();
-
-        var project = service.AddDiscoveredProject(this.CreateTempDir());
-
-        Assert.Equal(ProjectSource.Discovered, project.Source);
-    }
-
-    [Fact]
-    public void AddDiscoveredProject_ExistingManual_DoesNotReclassify()
-    {
-        var folder = this.CreateTempDir();
-        var service = this.CreateService();
-        var manual = service.AddProject(folder);
-
-        var discovered = service.AddDiscoveredProject(folder);
-
-        Assert.Equal(manual.Id, discovered.Id);
-        Assert.Equal(ProjectSource.Manual, discovered.Source);
-    }
-
-    [Fact]
     public void ReconcileDiscoveredProjects_AddsDiscoveredAndNeverRemovesManual()
     {
         var manualFolder = this.CreateTempDir();

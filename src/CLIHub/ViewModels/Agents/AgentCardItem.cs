@@ -116,11 +116,6 @@ public sealed class AgentCardItem : ObservableObject
     public IReadOnlyList<string> CommandLabels { get; }
 
     /// <summary>
-    ///   Whether the agent declares any commands.
-    /// </summary>
-    public bool HasCommands => this.CommandLabels.Count > 0;
-
-    /// <summary>
     ///   The declared command kinds as a single line, or an em dash when none are declared.
     /// </summary>
     public string CommandsText => this.CommandLabels.Count > 0 ? string.Join(", ", this.CommandLabels) : "—";

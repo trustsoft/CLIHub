@@ -203,11 +203,4 @@ public class ProcessOrchestrator : IProcessOrchestrator
         return matches;
     }
 
-    /// <inheritdoc/>
-    public async Task<RuntimeExecutable?> ResolveRuntimeAsync(
-        RuntimeKind kind,
-        CancellationToken cancellationToken = default)
-    {
-        return await this.runtimeResolver.ResolveAsync(kind, cancellationToken);
-    }
 }

@@ -10,7 +10,7 @@ using H.NotifyIcon;
 /// <summary>
 ///   Owns the system tray icon, its context menu, and main-window visibility.
 /// </summary>
-public sealed class TrayIconController : ITrayHost, IDisposable
+public sealed class TrayIconController : IDisposable
 {
     private readonly ITrayActions actions;
     private readonly TrayMenuBuilder menuBuilder;

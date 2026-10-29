@@ -94,7 +94,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public int InstalledAgentCount => this.Cards.Count(card => card.IsInstalled);
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   The number of supported agent plugins.
+    /// </summary>
     public int SupportedAgentCount => this.Cards.Count;
 
     /// <summary>
@@ -113,7 +115,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public string DefaultAgentName => this.SelectedDefaultAgent.Name;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Whether a default agent is selected.
+    /// </summary>
     public bool HasDefaultAgent => this.CurrentDefaultAgentId is not null;
 
     /// <inheritdoc />
@@ -197,7 +201,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCardActionRunning;
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Whether an update-availability check pass is currently running.
+    /// </summary>
     public bool IsCheckingUpdates
     {
         get => this.isCheckingUpdates;

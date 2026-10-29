@@ -6,11 +6,6 @@ namespace CLIHub.Lifetime;
 public interface IApplicationOperationLifetime
 {
     /// <summary>
-    ///   Gets the token cancelled when application shutdown begins.
-    /// </summary>
-    CancellationToken Token { get; }
-
-    /// <summary>
     ///   Starts and tracks an application-scoped operation.
     /// </summary>
     /// <param name="operationName"> Name used when logging unexpected failures. </param>

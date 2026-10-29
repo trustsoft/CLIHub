@@ -35,11 +35,6 @@ public interface IProjectScanner : IDisposable
     void Start();
 
     /// <summary>
-    ///   Stops watching and clears the watching state. Idempotent.
-    /// </summary>
-    void Stop();
-
-    /// <summary>
     ///   Re-reads the scanning preferences, reconfigures the watcher,
     ///   and triggers a scan. Used after the user saves new scanning settings.
     /// </summary>

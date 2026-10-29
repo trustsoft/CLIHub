@@ -5,8 +5,4 @@ namespace CLIHub.Startup;
 /// </summary>
 public interface IStartupWindow
 {
-    /// <summary>
-    ///   Shows the window on the monitor containing the pointer.
-    /// </summary>
-    void ShowOnPointerMonitor();
 }

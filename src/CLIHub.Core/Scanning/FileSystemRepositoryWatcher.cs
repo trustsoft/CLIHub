@@ -86,15 +86,6 @@ public sealed class FileSystemRepositoryWatcher : IRepositoryWatcher
     }
 
     /// <inheritdoc />
-    public void Stop()
-    {
-        foreach (var watcher in this.watchers)
-        {
-            watcher.EnableRaisingEvents = false;
-        }
-    }
-
-    /// <inheritdoc />
     public void Dispose()
     {
         if (this.disposed)

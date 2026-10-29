@@ -36,7 +36,9 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Gets the token cancelled when application shutdown begins.
+    /// </summary>
     public CancellationToken Token => this.cancellation.Token;
 
     /// <inheritdoc />

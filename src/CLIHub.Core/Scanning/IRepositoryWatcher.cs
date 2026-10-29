@@ -20,10 +20,6 @@ public interface IRepositoryWatcher : IDisposable
     /// </summary>
     void Start();
 
-    /// <summary>
-    ///   Stops raising change events without releasing resources.
-    /// </summary>
-    void Stop();
 }
 
 /// <summary>

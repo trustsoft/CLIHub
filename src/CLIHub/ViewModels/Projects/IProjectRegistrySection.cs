@@ -30,11 +30,6 @@ public interface IProjectRegistrySection : IDisposable
     int TotalCount { get; }
 
     /// <summary>
-    ///   Number of projects whose folder no longer exists.
-    /// </summary>
-    int MissingFolderCount { get; }
-
-    /// <summary>
     ///   Whether any project folder is missing.
     /// </summary>
     bool HasMissingFolders { get; }

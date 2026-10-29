@@ -41,16 +41,6 @@ public interface IProjectService
     Project AddProject(string folderPath);
 
     /// <summary>
-    ///   Registers a discovered project folder. Returns the registered project as a detached
-    ///   copy; the existing project is returned if the folder is already registered
-    ///   (without reclassifying a manual project). Mutating a returned project changes neither
-    ///   later reads nor persisted state.
-    /// </summary>
-    /// <exception cref="ArgumentException"> The folder path is null/empty. </exception>
-    /// <exception cref="DirectoryNotFoundException"> The folder does not exist. </exception>
-    Project AddDiscoveredProject(string folderPath);
-
-    /// <summary>
     ///   Reconciles the discovered-project subset: adds each discovered folder that is not yet
     ///   registered and removes the listed discovered projects. Manually registered projects and
     ///   unrelated projects are left untouched.

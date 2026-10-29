@@ -314,21 +314,4 @@ public class ProcessOrchestratorTests
         Assert.Equal("plugin-1", result[0].Plugin.Id);
     }
 
-    [Fact]
-    public async Task ResolveRuntimeAsync_DelegatesToResolver()
-    {
-        // Arrange
-        var runtime = new RuntimeExecutable { ExecutablePath = "powershell.exe", Kind = RuntimeKind.PowerShell };
-
-        this.mockResolver.Setup(x => x.ResolveAsync(RuntimeKind.PowerShell, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(runtime);
-
-        // Act
-        var result = await this.orchestrator.ResolveRuntimeAsync(RuntimeKind.PowerShell);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("powershell.exe", result.ExecutablePath);
-    }
 }
-

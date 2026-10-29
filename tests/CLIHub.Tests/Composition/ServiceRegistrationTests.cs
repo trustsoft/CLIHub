@@ -155,7 +155,6 @@ public class ServiceRegistrationTests
             services, descriptor => descriptor.ServiceType == typeof(IApplicationStartupUi));
         var trayIconController = Assert.Single(
             services, descriptor => descriptor.ServiceType == typeof(TrayIconController));
-        var trayHost = Assert.Single(services, descriptor => descriptor.ServiceType == typeof(ITrayHost));
         var preferenceApplier = Assert.Single(
             services, descriptor => descriptor.ServiceType == typeof(IPreferenceApplier));
         var settingsApplication = Assert.Single(
@@ -177,8 +176,6 @@ public class ServiceRegistrationTests
         Assert.Equal(typeof(WpfApplicationStartupUi), startupUi.ImplementationType);
         Assert.Equal(ServiceLifetime.Singleton, trayIconController.Lifetime);
         Assert.Equal(typeof(TrayIconController), trayIconController.ImplementationType);
-        Assert.Equal(ServiceLifetime.Singleton, trayHost.Lifetime);
-        Assert.NotNull(trayHost.ImplementationFactory);
         Assert.Equal(ServiceLifetime.Singleton, preferenceApplier.Lifetime);
         Assert.Equal(typeof(PreferenceApplier), preferenceApplier.ImplementationType);
         Assert.Equal(ServiceLifetime.Singleton, settingsApplication.Lifetime);

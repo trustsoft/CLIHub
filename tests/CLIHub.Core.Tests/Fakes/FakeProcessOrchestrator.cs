@@ -33,7 +33,4 @@ public sealed class FakeProcessOrchestrator : IProcessOrchestrator
         AgentProcessMatchDetail detail)
         => Task.FromResult<IReadOnlyList<PluginAgentProcess>>(new List<PluginAgentProcess>());
 
-    /// <inheritdoc/>
-    public Task<RuntimeExecutable?> ResolveRuntimeAsync(RuntimeKind kind, CancellationToken cancellationToken = default) 
-        => Task.FromResult<RuntimeExecutable?>(null);
 }
