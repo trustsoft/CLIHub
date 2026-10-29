@@ -29,42 +29,61 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent and process domain
 
-### Process domain Phase 3: consumer migration (deferred)
+### Process domain Phase 3: consumer migration (resolved)
 
-- Severity: Low (architecture improvement, not blocking; Phase 1+2 complete and working)
-- Evidence: Process domain model unified via `IProcessOrchestrator` (commit `a64422c`, 2026-10-29).
-  Domain models (`RuntimeExecutable`, `AgentProcess`, `LaunchRequest`, `ProcessResult`) and orchestrator
-  implementation complete with adapters wrapping existing infrastructure. All 1,221 tests passing.
-  Change archived as `openspec/changes/archive/2026-10-29-process-domain-model/`. Four consumers still
-  use fragmented Infrastructure.Processes services directly:
-  - `src/CLIHub.Core/Workflows/AgentCommandService.cs` — injects 5 process services
-  - `src/CLIHub.Core/Workflows/LaunchCommandCoordinator.cs` — uses IInteractiveProcessRunner
-  - `src/CLIHub/Coordinators/WindowActionCoordinator.cs` — uses IInteractiveProcessRunner
-  - `src/CLIHub.Core/Infrastructure/Monitoring/AgentProcessMonitor.cs` — uses IAgentProcessInspector
-- Proposed remedy: Migrate consumers to `IProcessOrchestrator` (Phase 3 of Proposal 4). For each:
-  replace multiple service dependencies with single orchestrator dependency, adapt to domain types
-  (`LaunchRequest`, `ProcessResult`), verify behavior unchanged, update tests. Estimated 2-3 days.
-  See `docs/proposals/proposal-004-process-domain-model.md` (section "Phase 3: Consumer Migration").
-- Trigger: Next refactoring touching any of the four consumers, reducing test mock complexity, or
-  completing Phase 1 prerequisites (Proposal 1: cross-cutting services).
+- Status: Resolved by the `process-domain-phase3` change (2026-10-29, commit `37e3c46`, archived
+  as `openspec/changes/archive/2026-10-29-process-domain-phase3/`).
+- Resolved model: all five consumers now use the unified orchestrator — `AgentCommandService`
+  (`src/CLIHub.Core/Agents/AgentCommandService.cs`) and `AgentVersionService` inject
+  `IProcessOrchestrator` + `IPreferencesStore` (runtime read per call, no mutable `SetRuntime`
+  state); `ProcessRuntimePreferenceTarget` (`src/CLIHub/Settings/`) writes the runtime preference
+  to the store directly; `StartupPreferencesApplier` no longer touches process state;
+  `AgentProcessMonitor` matches through `FindRunningAgentsAsync` (batched catalog-wide overload
+  keeps one process enumeration). The migration also fixed two Phase 1+2 defects: `AgentProcess`
+  gained the required `ExecutablePath` (the finder previously discarded it), and orchestrator find
+  methods no longer swallow enumeration failures — the monitor owns the fail-open policy and error
+  logging, as pinned by spec. `ProcessLauncher` is `[Obsolete]` (`CLIHUB001`); removal is Phase 4.
+- Guarded by: `AgentProcessMonitorTests` (including the new `EnumeratesInspectorOnce` and
+  `PreservesExecutablePathInResult` pins), `AgentCommandServiceTests`, `AgentVersionServiceTests`,
+  `WindowActionCoordinatorTests` (tier semantics restored through the real finder + matcher),
+  `AgentManagementViewModelTests`, `StartupPreferencesApplierTests`, and
+  `ServiceCollectionExtensionsTests` — 1,223/1,223 green.
+- Trigger (reopen): a report that an agent command launches in the wrong runtime, a version probe
+  failing after the migration, or the update gate missing a running agent.
+
+### Process domain Phase 4: remove ProcessLauncher (open)
+
+- Severity: Low (dead code kept only for transition; 33 `CLIHUB001` obsolete warnings in tests)
+- Evidence: `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs` is `[Obsolete]` since
+  commit `37e3c46` (2026-10-29) and has zero production consumers. Remaining references: DI
+  registrations (`src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`,
+  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:57`) and legacy tests that pin the
+  old type — `tests/CLIHub.Core.Tests/Infrastructure/Processes/ProcessLauncherTests.cs`,
+  `tests/CLIHub.Core.Windows.Tests/ProcessLauncherCaptureOutputTests.cs`,
+  `WindowsInteractiveProcessRunnerTests.cs:137,177`,
+  `ServiceCollectionExtensionsTests.cs:27-28`, `WindowsServiceCollectionExtensionsTests.cs:22`.
+- Proposed remedy: delete `ProcessLauncher` and its registrations; delete or rewrite the legacy
+  tests against the runners/orchestrator they actually exercise; replace the behavioral pins lost
+  with `ProcessLauncherTests` (command-building passthrough, capture timeout → `Timeout`, exit-code
+  mapping, cancellation → `Cancelled`) with direct `ProcessOrchestrator` unit tests. Expected
+  result: zero `CLIHUB001` warnings.
+- Trigger: active — scheduled as the `process-domain-phase4` change.
 
 ### Process orchestrator unit tests (deferred)
 
-- Severity: Low (quality improvement; functionality covered by 1,221 existing integration tests)
-- Evidence: Process domain implementation (commit `a64422c`, 2026-10-29) includes orchestrator and
-  adapters but defers comprehensive unit test coverage. Test directory structure created at
-  `tests/CLIHub.Tests/Core/Processes/`, but planned test classes for `ProcessOrchestrator`,
-  `RuntimeResolver`, `CommandLineBuilderAdapter`, and `AgentProcessFinder` were not written due to
-  time/token budget constraints. All functionality verified through existing tests (build + 1,221
-  tests passing). See Stage 7 in `openspec/changes/archive/2026-10-29-process-domain-model/tasks.md`.
-- Proposed remedy: Add unit tests for:
-  - `ProcessOrchestratorTests.cs` — LaunchInteractive/CaptureOutput/FindRunningAgents/ResolveRuntime
-  - `RuntimeResolverTests.cs` — runtime resolution for all RuntimeKind values
-  - `CommandLineBuilderAdapterTests.cs` — command line building for all runtimes
-  - `AgentProcessFinderTests.cs` — process finding and Runtime mapping
-  Each test class should cover happy path, error cases, cancellation, and edge cases. Estimated 2-3 hours.
-- Trigger: Test coverage review, adding more orchestrator features, or during Phase 3 consumer migration
-  when orchestrator behavior changes become complex.
+- Severity: Low (quality improvement; launch/capture paths covered only transitively)
+- Evidence: the orchestrator's launch/capture paths (`LaunchInteractiveAsync`,
+  `CaptureOutputAsync`) have no direct unit tests — Phase 1+2 deferred them (Stage 7), and Phase 3
+  (commit `37e3c46`) added only the process-finding pins via `AgentProcessMonitorTests` (real
+  finder over a mocked inspector). The deferred behavioral pins from the legacy
+  `ProcessLauncherTests` (command-building passthrough, capture timeout → `Timeout`, exit-code
+  mapping, cancellation → `Cancelled`) are folded into the Phase 4 remedy.
+- Proposed remedy: `tests/CLIHub.Core.Tests/Processes/ProcessOrchestratorTests.cs` covering
+  LaunchInteractive/CaptureOutput happy paths, runtime-unavailable → `Failure`, timeout →
+  `Timeout`, cancellation → `Cancelled`, and runner-exception mapping; plus
+  `RuntimeResolverTests` / `CommandLineBuilderAdapterTests` for the adapters.
+- Trigger: the `process-domain-phase4` change (folded in), or any future edit to the
+  orchestrator's launch/capture paths.
 
 ### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus (resolved)
 
