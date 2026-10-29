@@ -63,10 +63,13 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   while `GetAllPlugins()` stays valid-only; `IPluginDescriptorSource` port with the local folder source
   as its only implementation; catalog load carries an operation scope. `plugin-seeding` gained two
   requirements (unsupported schema versions, invalid-entry exposure). 1,262 tests.
-- Change B (disabled-plugin UI surface) NOT STARTED: render invalid entries from `GetInvalidPlugins()`
-  as visible, disabled agents with the reason on the CLI Agents surface; needs a spec delta for the UI
-  contract and a manual smoke (plugin with a broken descriptor must appear disabled). Trigger: next UI
-  work on the agents page, or explicit request.
+- Change B (disabled-plugin UI surface) COMPLETE (2026-10-29, commit `9987403`, archived as
+  `2026-10-29-plugin-disabled-ui`): invalid entries render on the CLI Agents page as visible disabled
+  cards (single compact row, reason right-aligned in the action area with ellipsis plus tooltip,
+  danger "Invalid" chip, no actions); valid cards, order and counts unchanged; the launch selector
+  stays valid-only; reload refreshes both lists. `agent-ui` gained "Invalid plugin entry display".
+  Manual smoke confirmed (broken and schemaVersion-2 descriptors) after two layout iterations.
+  **Proposal 5 (plugin lifecycle) is now complete: A `a965d1f`, B `9987403`; 1,269 tests.**
 
 
 ### Configuration decomposition (Proposal 6) - first slice in progress
