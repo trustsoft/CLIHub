@@ -52,6 +52,12 @@ public static class ServiceRegistration
         services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-logo.png"));
         services.AddWindowsInfrastructure(guard);
 
+        // Process orchestrator and adapters
+        services.AddSingleton<CLIHub.Core.Processes.IRuntimeResolver, CLIHub.Core.Processes.RuntimeResolver>();
+        services.AddSingleton<CLIHub.Core.Processes.ICommandLineBuilder, CLIHub.Core.Processes.CommandLineBuilderAdapter>();
+        services.AddSingleton<CLIHub.Core.Processes.IAgentProcessFinder, CLIHub.Core.Processes.AgentProcessFinder>();
+        services.AddSingleton<CLIHub.Core.Processes.IProcessOrchestrator, CLIHub.Core.Processes.ProcessOrchestrator>();
+
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddStartupServices();
