@@ -47,10 +47,19 @@ public class AgentManagementViewModelTests
         Mock<IAgentUpdateAvailabilityService>? availability = null,
         IApplicationOperationLifetime? operationLifetime = null,
         ILogger<AgentManagementViewModel>? logger = null,
-        ILogger<AgentProcessMonitor>? processMonitorLogger = null)
+        ILogger<AgentProcessMonitor>? processMonitorLogger = null,
+        IReadOnlyList<InvalidPluginEntry>? invalidPlugins = null,
+        Mock<IPluginCatalog>? pluginCatalog = null)
     {
-        var catalog = new Mock<IPluginCatalog>();
-        catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
+        var catalog = pluginCatalog ?? new Mock<IPluginCatalog>();
+        if (pluginCatalog is null)
+        {
+            catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
+        }
+        if (pluginCatalog is null || invalidPlugins is not null)
+        {
+            catalog.Setup(x => x.GetInvalidPlugins()).Returns(invalidPlugins ?? []);
+        }
 
         if (processInspector is null)
         {
@@ -150,6 +159,72 @@ public class AgentManagementViewModelTests
         Assert.Contains(viewModel.DefaultAgentOptions, option => option.Id is null);
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
+    }
+
+    [Fact]
+    public void Load_WithInvalidPlugins_PopulatesInvalidCards()
+    {
+        var invalid = new InvalidPluginEntry("C:\\plugins\\broken", null, null,
+            new PluginValidationResult(["Missing id", "Bad command"]));
+        var viewModel = CreateViewModel([], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), invalidPlugins: [invalid]);
+        viewModel.Load(null);
+        Assert.Single(viewModel.InvalidCards);
+        Assert.Equal("Missing id; Bad command", viewModel.InvalidCards[0].Reason);
+        Assert.False(viewModel.InvalidCards[0].IsEnabled);
+    }
+
+    [Fact]
+    public void Load_WithValidAndInvalidPlugins_SeparatesCardSets()
+    {
+        var invalid = new InvalidPluginEntry("C:\\plugins\\broken", null, null,
+            new PluginValidationResult(["Missing id"]));
+        var viewModel = CreateViewModel([Launchable("valid")], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), invalidPlugins: [invalid]);
+
+        viewModel.Load(null);
+
+        Assert.Single(viewModel.Cards);
+        Assert.Equal("valid", viewModel.Cards[0].PluginId);
+        Assert.Single(viewModel.InvalidCards);
+        Assert.Equal("broken", viewModel.InvalidCards[0].Name);
+    }
+
+    [Fact]
+    public void Load_WithInvalidPlugins_ValidCountsUnchanged()
+    {
+        var invalid = new InvalidPluginEntry("C:\\plugins\\broken", null, null,
+            new PluginValidationResult(["Missing id"]));
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(false);
+        var viewModel = CreateViewModel([Launchable("valid")], detection, Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), invalidPlugins: [invalid]);
+
+        viewModel.Load(null);
+
+        Assert.Single(viewModel.InvalidCards);
+        Assert.Equal(1, viewModel.SupportedAgentCount);
+        Assert.Equal(0, viewModel.InstalledAgentCount);
+    }
+
+    [Fact]
+    public void Load_AfterReload_RefreshesBothSets()
+    {
+        var firstInvalid = new InvalidPluginEntry("C:\\plugins\\first", null, null,
+            new PluginValidationResult(["First error"]));
+        var secondInvalid = new InvalidPluginEntry("C:\\plugins\\second", null, null,
+            new PluginValidationResult(["Second error"]));
+        IReadOnlyList<InvalidPluginEntry> currentInvalid = [firstInvalid];
+        var catalog = new Mock<IPluginCatalog>();
+        catalog.Setup(x => x.GetAllPlugins()).Returns(() => [Launchable("valid")]);
+        catalog.Setup(x => x.GetInvalidPlugins()).Returns(() => currentInvalid);
+        var viewModel = CreateViewModel([], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), pluginCatalog: catalog);
+
+        viewModel.Load(null);
+        Assert.Equal("First error", Assert.Single(viewModel.InvalidCards).Reason);
+        currentInvalid = [secondInvalid];
+
+        catalog.Raise(x => x.PluginsChanged += null, EventArgs.Empty);
+
+        Assert.Equal("Second error", Assert.Single(viewModel.InvalidCards).Reason);
+        Assert.Single(viewModel.Cards);
     }
 
     [Fact]

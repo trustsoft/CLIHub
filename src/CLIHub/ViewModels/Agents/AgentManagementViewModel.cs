@@ -73,6 +73,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.catalog.PluginsChanged += this.OnPluginsChanged;
 
         this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), card => this.CanDetectCard(card));
         this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
@@ -84,6 +85,11 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <inheritdoc />
     public ObservableCollection<AgentCardItem> Cards { get; } = new();
+
+    /// <summary>
+    ///   Invalid plugin entries, rendered without actions.
+    /// </summary>
+    public ObservableCollection<InvalidAgentCardItem> InvalidCards { get; } = new();
 
     /// <inheritdoc />
     public int InstalledAgentCount => this.Cards.Count(card => card.IsInstalled);
@@ -289,8 +295,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         this.UpdateCheckSummary = null;
         this.Cards.Clear();
+        this.InvalidCards.Clear();
 
         var plugins = this.catalog.GetAllPlugins();
+        foreach (var entry in this.catalog.GetInvalidPlugins())
+        {
+            this.InvalidCards.Add(new InvalidAgentCardItem(entry));
+        }
 
         // Cards render with declarative availability (Update enabled exactly when the plugin
         // declares an update command); the running-agent blocked state populates afterwards
@@ -342,7 +353,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.blockedStateCts?.Cancel();
         this.blockedStateCts?.Dispose();
         this.blockedStateCts = null;
+        this.catalog.PluginsChanged -= this.OnPluginsChanged;
         this.disposed = true;
+    }
+
+    private void OnPluginsChanged(object? sender, EventArgs e)
+    {
+        this.Load(this.CurrentDefaultAgentId);
     }
 
     private void RebuildDefaultAgentOptions(string? defaultAgentId)

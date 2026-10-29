@@ -27,6 +27,15 @@
             </Style.Triggers>
         </Style>
 
+        <Style x:Key="InvalidAgentStateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <Style x:Key="InvalidAgentStateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
         <!-- Advisory update chip next to the state chip: accent-styled so it reads as
              informational rather than as an error; shown only when an update is available -->
         <Style x:Key="AgentUpdateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
@@ -280,6 +289,40 @@
                                            TextAlignment="Right"
                                            Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
                             </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <ItemsControl ItemsSource="{Binding AgentsState.InvalidCards}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,8"
+                            Padding="12"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
+                            Opacity="0.6">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Image Grid.Column="0" Width="32" Height="32" VerticalAlignment="Center"
+                                   Source="{Binding LogoPath, Converter={StaticResource PathToImage}}" Stretch="Uniform"/>
+                            <StackPanel Grid.Column="1" Margin="12,0,0,0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center" FontSize="{StaticResource Sizing.FontSize.Body}"
+                                           FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Text="{Binding Name}"/>
+                                <Border Margin="8,0,0,0" Style="{StaticResource InvalidAgentStateChip}">
+                                    <TextBlock Style="{StaticResource InvalidAgentStateChipText}" Text="Invalid"/>
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Grid.Column="2" Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                       Style="{StaticResource HintText}" Text="{Binding Reason}"
+                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding Reason}"/>
                         </Grid>
                     </Border>
                 </DataTemplate>
