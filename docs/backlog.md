@@ -40,6 +40,44 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
+### Proposal 5 (plugin lifecycle) is blocked on open questions (open, blocked)
+
+- Severity: Medium (blocks Proposal 5; no production impact while parked)
+- Evidence: user note of 2026-10-29 - Proposal 5 has a set of related questions that must be resolved
+  before implementation starts. This entry is the parking place so the questions are not lost between
+  sessions; the list below is a candidate set to confirm/extend, not an agreed scope.
+- Candidate questions to resolve (confirm and extend with the user):
+  1. Hot reload: should descriptor changes be picked up by a file watcher, a manual Reload action, or
+     both? Today the catalog exposes an explicit reload path with no watcher.
+  2. Descriptor schema versioning: is a plugin `schemaVersion` field needed, and what is the
+     compatibility policy for older descriptors (ADR-0004 pins catalog precedence and seeding)?
+  3. Invalid descriptor UX: hide the plugin, show it disabled with the error, or surface an aggregate
+     validation report? Today invalid descriptors are skipped with a log line.
+  4. Lifecycle states: does the product need explicit states (Discovered/Validated/Enabled/Disabled)
+     or is the current "catalog entry + validation result" model sufficient?
+  5. Seeding interaction: how do built-in seeds and user edits interact across a reload (today
+     precedence is pinned by ADR-0004 and seeding runs once)?
+  6. Remote catalog / marketplace: explicitly out of scope, or a future trigger to design for now?
+  7. Update-check metadata (`updateCheck`, npm package) - does it belong to lifecycle validation or
+     stay a runtime concern?
+- Proposed remedy: run a short resolution pass with the user (answers recorded here), then scope
+  Proposal 5 as an OpenSpec change against the agreed answers.
+- Trigger: an explicit decision to start Proposal 5, or any change to plugin discovery/validation/
+  seeding that would otherwise pre-empt these answers.
+
+### Configuration decomposition (Proposal 6) - first slice in progress
+
+- Severity: Low (structural, no user impact expected)
+- Evidence: analysis of 2026-10-29 flagged the single `AppConfig` as coupling unrelated concerns
+  (preferences, projects, scanning) while ADR-0002 pins one camelCase document with one atomic write.
+  The document layer already splits sections (`PreferencesDocument`, `ProjectStateDocument`, scanning
+  settings), so part of the intent may already be satisfied - the slice must prove real coupling
+  before restructuring anything.
+- Proposed remedy: `config-decomposition-slice` change - internal domain-aligned decomposition at the
+  snapshot/repository boundary only; external file format, migrations, and atomic write stay untouched.
+  Reject or shrink if reconnaissance shows the coupling is already contained.
+- Trigger: active - scheduled as the `config-decomposition-slice` change.
+
 ## Agent and process domain
 
 ### Lazy-singleton event subscribers never subscribed (resolved)
