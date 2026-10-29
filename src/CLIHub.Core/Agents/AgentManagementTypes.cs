@@ -1,7 +1,5 @@
 namespace CLIHub.Core.Agents;
 
-using CLIHub.Core.Models;
-
 /// <summary>
 ///   Result of an on-demand agent probe: host installation and the freshly probed version.
 /// </summary>
@@ -48,27 +46,4 @@ public sealed record AgentUpdateResult(AgentUpdateOutcome Outcome, string? Messa
     ///   Whether the update command was started.
     /// </summary>
     public bool Started => this.Outcome == AgentUpdateOutcome.Started;
-}
-
-/// <summary>
-///   On-demand agent operations for the management surface: probing and updating an agent.
-/// </summary>
-public interface IAgentManagementService
-{
-    /// <summary>
-    ///   Re-evaluates an agent's host installation and version, bypassing caches.
-    /// </summary>
-    /// <param name="plugin"> The agent to probe. </param>
-    /// <param name="cancellationToken"> Cancellation token. </param>
-    /// <returns> The freshly probed installation state and version. </returns>
-    Task<AgentProbeResult> ProbeAsync(Plugin plugin, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    ///   Runs an agent's update command interactively in the user profile directory,
-    ///   unless the agent does not support updates or a matching agent process is running.
-    /// </summary>
-    /// <param name="plugin"> The agent to update. </param>
-    /// <param name="cancellationToken"> Cancellation token. </param>
-    /// <returns> The update outcome. </returns>
-    Task<AgentUpdateResult> UpdateAsync(Plugin plugin, CancellationToken cancellationToken = default);
 }

@@ -115,7 +115,9 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentCommandService>>(),
             sp.GetRequiredService<IDomainEventPublisher>()));
-        services.AddSingleton<IAgentManagementService, AgentManagementService>();
+        services.AddSingleton<AgentManagementService>();
+        services.AddSingleton<IAgentProbeService>(sp => sp.GetRequiredService<AgentManagementService>());
+        services.AddSingleton<IAgentUpdateService>(sp => sp.GetRequiredService<AgentManagementService>());
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(

@@ -8,7 +8,7 @@ using CLIHub.Core.Models;
 ///   On-demand agent operations for the management surface,
 ///   composing detection, version, command, and running-agent services.
 /// </summary>
-public sealed class AgentManagementService : IAgentManagementService
+public sealed class AgentManagementService : IAgentProbeService, IAgentUpdateService
 {
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;

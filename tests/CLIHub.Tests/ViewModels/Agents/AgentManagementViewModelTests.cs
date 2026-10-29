@@ -40,7 +40,8 @@ public class AgentManagementViewModelTests
         Plugin[] plugins,
         Mock<IAgentDetectionService> detection,
         Mock<IAgentVersionService> version,
-        Mock<IAgentManagementService> management,
+        Mock<IAgentProbeService> probe,
+        Mock<IAgentUpdateService> update,
         Mock<IExternalLauncher> launcher,
         Mock<IAgentProcessInspector>? processInspector = null,
         Mock<IAgentUpdateAvailabilityService>? availability = null,
@@ -75,7 +76,8 @@ public class AgentManagementViewModelTests
             detection.Object,
             version.Object,
             (availability ?? new Mock<IAgentUpdateAvailabilityService>()).Object,
-            management.Object,
+            probe.Object,
+            update.Object,
             launcher.Object,
             processMonitor,
             operationLifetime ?? new InlineOperationLifetime(),
@@ -130,7 +132,7 @@ public class AgentManagementViewModelTests
         var b = Launchable("b");
         var detection = Detection();
         detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
-        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load("b");
 
@@ -153,7 +155,7 @@ public class AgentManagementViewModelTests
     [Fact]
     public void Load_WithNoDefaultAgent_ShowsNone()
     {
-        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -166,7 +168,7 @@ public class AgentManagementViewModelTests
     [Fact]
     public void Load_WithDefaultAgent_UsesNeutralValueTone()
     {
-        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load("a");
 
@@ -177,7 +179,7 @@ public class AgentManagementViewModelTests
     [Fact]
     public void Load_WithEveryAgentInstalled_ReportsAllInstalled()
     {
-        var viewModel = CreateViewModel([Launchable("a"), Launchable("b")], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([Launchable("a"), Launchable("b")], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -187,7 +189,7 @@ public class AgentManagementViewModelTests
     [Fact]
     public void Load_WithNoPlugins_ReportsNoAgentPlugins()
     {
-        var viewModel = CreateViewModel([], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -199,7 +201,7 @@ public class AgentManagementViewModelTests
     [Fact]
     public void Load_PopulatesVersions()
     {
-        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions("3.4.5"), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([Launchable("a")], Detection(), Versions("3.4.5"), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -224,7 +226,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             version,
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -262,7 +264,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             version,
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
 
@@ -292,7 +294,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             version,
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             logger: logger.Object);
 
@@ -318,7 +320,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33"));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
 
         viewModel.Load(null);
 
@@ -335,7 +337,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
 
         viewModel.Load(null);
 
@@ -353,7 +355,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "9.9.9"));
-        var viewModel = CreateViewModel([b], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([b], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
 
         viewModel.Load(null);
 
@@ -366,12 +368,13 @@ public class AgentManagementViewModelTests
     public void UpdateCommand_WhenStarted_InvalidatesCachedAvailability()
     {
         var a = Launchable("a", withUpdate: true);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        update
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Started, null));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
@@ -384,12 +387,13 @@ public class AgentManagementViewModelTests
     public void UpdateCommand_WhenNotStarted_KeepsCachedAvailability()
     {
         var a = Launchable("a", withUpdate: true);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        update
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Failed, "boom"));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
@@ -401,13 +405,14 @@ public class AgentManagementViewModelTests
     public void DetectCardCommand_UpdatesInstallationAndVersionWithoutAvailabilityCheck()
     {
         var a = Launchable("a");
-        var management = new Mock<IAgentManagementService>();
-        management.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "9.9"));
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "9.9"));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .Setup(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);
@@ -433,11 +438,12 @@ public class AgentManagementViewModelTests
     public void UpdateCommand_ReportsOutcome()
     {
         var a = Launchable("a", withUpdate: true);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        update
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Started, null));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>());
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
@@ -449,11 +455,12 @@ public class AgentManagementViewModelTests
     public void UpdateCommand_WhenServiceBlocks_SurfacesServiceMessage()
     {
         var a = Launchable("a", withUpdate: true);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        update
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Update blocked while running"));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>());
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
@@ -469,7 +476,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)));
 
@@ -490,7 +497,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             Processes(
                 @"C:\Program Files\nodejs\node.exe",
@@ -510,7 +517,7 @@ public class AgentManagementViewModelTests
             [b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             Processes(@"C:\Program Files\nodejs\node.exe", @"node.exe server.js"));
 
@@ -530,7 +537,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", DateTime.Now)));
 
@@ -548,7 +555,7 @@ public class AgentManagementViewModelTests
     {
         var a = Launchable("a", withUpdate: true);
         var b = Launchable("b");
-        var viewModel = CreateViewModel([a, b], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([a, b], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -569,7 +576,7 @@ public class AgentManagementViewModelTests
             [a, b, c],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             processInspector);
 
@@ -589,7 +596,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             processInspector);
 
@@ -607,7 +614,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)),
             operationLifetime: new DeferredOperationLifetime());
@@ -634,7 +641,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now)),
             operationLifetime: new DeferredOperationLifetime());
@@ -677,7 +684,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             inspector,
             operationLifetime: new DeferredOperationLifetime());
@@ -715,7 +722,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             inspector,
             processMonitorLogger: processMonitorLogger.Object);
@@ -739,7 +746,7 @@ public class AgentManagementViewModelTests
     {
         var a = Launchable("a");
         var launcher = new Mock<IExternalLauncher>();
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), launcher);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), launcher);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
 
@@ -756,7 +763,7 @@ public class AgentManagementViewModelTests
         var b = Launchable("b");
         var detection = Detection();
         detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
-        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>());
+        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>());
 
         viewModel.Load(null);
 
@@ -773,14 +780,15 @@ public class AgentManagementViewModelTests
         var b = Launchable("b");
         var detection = Detection();
         detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
-        var management = new Mock<IAgentManagementService>();
-        management.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "2.0"));
-        management.Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "0.5"));
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe.Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "2.0"));
+        probe.Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>())).ReturnsAsync(new AgentProbeResult(true, "0.5"));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a, b], detection, Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], detection, Versions(), probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         Assert.Equal("2 supported · 1 not installed", viewModel.AvailabilitySummary);
         Assert.Equal(AgentInstallState.NotInstalled, viewModel.DefaultAgentOptions.Single(o => o.Id == "b").InstallState);
@@ -793,7 +801,7 @@ public class AgentManagementViewModelTests
         Assert.Equal(AgentInstallState.Installed, viewModel.DefaultAgentOptions.Single(o => o.Id == "b").InstallState);
         Assert.True(viewModel.DefaultAgentOptions.Single(o => o.Id == "b").IsInstalled);
         Assert.True(viewModel.CanDetect);
-        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
+        probe.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
 
         // The Detect pass probes installation and version only: the Load pass's single check for
         // a (b was still not installed then) remains the only availability check of the run.
@@ -814,7 +822,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a, b], detection, version, new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], detection, version, new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
 
         viewModel.Load(null);
 
@@ -837,8 +845,9 @@ public class AgentManagementViewModelTests
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         var gateB = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a" ? gateA.Task : gateB.Task);
         var availability = new Mock<IAgentUpdateAvailabilityService>();
@@ -849,7 +858,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -889,15 +899,16 @@ public class AgentManagementViewModelTests
     public void DetectCardCommand_WhenProbeReportsNotInstalled_ClearsStaleAvailabilityWithoutCheck()
     {
         var a = Launchable("a");
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentProbeResult(false, null));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .Setup(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "9.9.9");
@@ -920,8 +931,9 @@ public class AgentManagementViewModelTests
     public void DetectCardCommand_WhenProbeThrows_RestoresPreviousCardState()
     {
         var a = Launchable("a");
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("probe failed"));
         var availability = new Mock<IAgentUpdateAvailabilityService>();
@@ -929,7 +941,8 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -951,18 +964,20 @@ public class AgentManagementViewModelTests
     {
         var a = Launchable("a");
         var b = Launchable("b");
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("probe failed"));
-        management
+        probe
             .Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentProbeResult(true, "0.5"));
         var viewModel = CreateViewModel(
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -977,7 +992,7 @@ public class AgentManagementViewModelTests
         Assert.Equal("1.0", cardA.Version);
         Assert.Equal("1.0", cardB.Version);
         Assert.True(viewModel.CanDetect);
-        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Once);
+        probe.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -997,7 +1012,7 @@ public class AgentManagementViewModelTests
                 order.Add($"check:{plugin.Id}");
                 return Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
             });
-        var viewModel = CreateViewModel([a, b], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         order.Clear(); // Discard the Load pass's checks; the forced pass is what is under test.
 
@@ -1019,14 +1034,15 @@ public class AgentManagementViewModelTests
         var b = Launchable("b");
         var detection = Detection();
         detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
-        var management = new Mock<IAgentManagementService>();
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
         var version = new Mock<IAgentVersionService>();
         version.Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>())).ReturnsAsync("1.0");
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a, b], detection, version, management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], detection, version, probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
         var cardB = viewModel.Cards.Single(c => c.PluginId == "b");
@@ -1044,7 +1060,7 @@ public class AgentManagementViewModelTests
 
         // The forced pass is availability-only: no probe and no extra version command at the
         // call site (a was versioned once, by the Load pass; b never at all).
-        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Never);
+        probe.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Never);
         version.Verify(x => x.GetVersionAsync(a, It.IsAny<CancellationToken>()), Times.Once);
         version.Verify(x => x.GetVersionAsync(b, It.IsAny<CancellationToken>()), Times.Never);
         Assert.Equal("1.0", cardA.Version);
@@ -1059,7 +1075,7 @@ public class AgentManagementViewModelTests
             .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
             .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // forced
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         Assert.False(card.HasUpdateAvailable);
@@ -1099,7 +1115,7 @@ public class AgentManagementViewModelTests
                     ? new AgentUpdateAvailability(status, "1.0.0", "2.0.0")
                     : new AgentUpdateAvailability(status));
             });
-        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], detection, Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
 
         viewModel.CheckUpdatesCommand.Execute(null);
@@ -1115,7 +1131,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
 
         viewModel.CheckUpdatesCommand.Execute(null);
@@ -1144,7 +1160,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1183,7 +1199,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1210,8 +1226,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -1220,7 +1237,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1246,8 +1264,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -1256,7 +1275,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1308,7 +1328,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1351,7 +1371,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
 
@@ -1371,7 +1391,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         card.InstallState = state;
@@ -1386,8 +1406,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -1396,7 +1417,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1436,7 +1458,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1477,7 +1499,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1523,8 +1545,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -1533,7 +1556,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1576,15 +1600,17 @@ public class AgentManagementViewModelTests
     {
         var a = Launchable("a");
         var gate = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((_, _) => gate.Task);
         var viewModel = CreateViewModel(
             [a],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1617,8 +1643,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -1627,7 +1654,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -1695,7 +1723,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1766,7 +1794,8 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var order = new List<string>();
-        var management = new Mock<IAgentManagementService>();
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
         var version = new Mock<IAgentVersionService>();
         version.Setup(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>())).ReturnsAsync("1.0");
         var availability = new Mock<IAgentUpdateAvailabilityService>();
@@ -1780,7 +1809,7 @@ public class AgentManagementViewModelTests
                 order.Add($"check:{plugin.Id}");
                 return Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
             });
-        var viewModel = CreateViewModel([a, b], Detection(), version, management, new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a, b], Detection(), version, probe, update, new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
         var cardB = viewModel.Cards.Single(c => c.PluginId == "b");
@@ -1803,7 +1832,7 @@ public class AgentManagementViewModelTests
 
         // The per-card action is availability-only: no probe and no version command at the call
         // site (each agent was versioned exactly once, by the Load pass).
-        management.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Never);
+        probe.Verify(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Never);
         version.Verify(x => x.GetVersionAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
@@ -1816,7 +1845,7 @@ public class AgentManagementViewModelTests
             .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
             .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
             .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // per-card
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         Assert.False(card.HasUpdateAvailable);
@@ -1848,7 +1877,7 @@ public class AgentManagementViewModelTests
                 1 => Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown)), // Load
                 _ => Task.FromResult(new AgentUpdateAvailability(status, installedVersion, latestVersion)) // per-card
             });
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
 
@@ -1865,7 +1894,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], Detection(), Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
 
         viewModel.CheckUpdatesCommand.Execute(null);
@@ -1887,7 +1916,7 @@ public class AgentManagementViewModelTests
         availability
             .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
-        var viewModel = CreateViewModel([a], detection, Versions(), new Mock<IAgentManagementService>(), new Mock<IExternalLauncher>(), availability: availability);
+        var viewModel = CreateViewModel([a], detection, Versions(), new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(), new Mock<IExternalLauncher>(), availability: availability);
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "0.1.0", "0.2.0");
@@ -1919,7 +1948,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -1961,7 +1990,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -2002,7 +2031,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -2061,7 +2090,7 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());
@@ -2116,8 +2145,9 @@ public class AgentManagementViewModelTests
         var a = Launchable("a");
         var b = Launchable("b");
         var gateA = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var management = new Mock<IAgentManagementService>();
-        management
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
             .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
             .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "a"
                 ? gateA.Task
@@ -2126,7 +2156,8 @@ public class AgentManagementViewModelTests
             [a, b],
             Detection(),
             Versions(),
-            management,
+            probe,
+            update,
             new Mock<IExternalLauncher>(),
             operationLifetime: new DeferredOperationLifetime());
         viewModel.Load(null);
@@ -2192,7 +2223,7 @@ public class AgentManagementViewModelTests
             [a],
             Detection(),
             Versions(),
-            new Mock<IAgentManagementService>(),
+            new Mock<IAgentProbeService>(), new Mock<IAgentUpdateService>(),
             new Mock<IExternalLauncher>(),
             availability: availability,
             operationLifetime: new DeferredOperationLifetime());

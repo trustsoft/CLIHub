@@ -23,7 +23,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;
     private readonly IAgentUpdateAvailabilityService availability;
-    private readonly IAgentManagementService management;
+    private readonly IAgentProbeService probe;
+    private readonly IAgentUpdateService update;
     private readonly IExternalLauncher launcher;
     private readonly AgentProcessMonitor processMonitor;
     private readonly IApplicationOperationLifetime operationLifetime;
@@ -45,7 +46,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="detection"> Host availability detection. </param>
     /// <param name="version"> Version probe service. </param>
     /// <param name="availability"> Advisory update availability service. </param>
-    /// <param name="management"> On-demand probe/update operations. </param>
+    /// <param name="probe"> On-demand probe operations. </param>
+    /// <param name="update"> On-demand update operations. </param>
     /// <param name="launcher"> Opens the agent's configuration file. </param>
     /// <param name="processMonitor"> Running-agent monitor used to gate card update availability. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked actions. </param>
@@ -54,7 +56,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IAgentDetectionService detection,
                                     IAgentVersionService version,
                                     IAgentUpdateAvailabilityService availability,
-                                    IAgentManagementService management,
+                                    IAgentProbeService probe,
+                                    IAgentUpdateService update,
                                     IExternalLauncher launcher,
                                     AgentProcessMonitor processMonitor,
                                     IApplicationOperationLifetime operationLifetime,
@@ -64,7 +67,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.detection = detection ?? throw new ArgumentNullException(nameof(detection));
         this.version = version ?? throw new ArgumentNullException(nameof(version));
         this.availability = availability ?? throw new ArgumentNullException(nameof(availability));
-        this.management = management ?? throw new ArgumentNullException(nameof(management));
+        this.probe = probe ?? throw new ArgumentNullException(nameof(probe));
+        this.update = update ?? throw new ArgumentNullException(nameof(update));
         this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
         this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
@@ -526,7 +530,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         card.InstallState = AgentInstallState.Detecting;
         try
         {
-            var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
+            var result = await this.probe.ProbeAsync(card.Plugin, cancellationToken);
             this.ApplyProbeResult(card, result);
             card.Message = (result.IsInstalled, result.Version) switch
             {
@@ -576,7 +580,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             {
                 foreach (var card in cards)
                 {
-                    var result = await this.management.ProbeAsync(card.Plugin, cancellationToken);
+                    var result = await this.probe.ProbeAsync(card.Plugin, cancellationToken);
                     if (this.disposed)
                     {
                         return;
@@ -757,7 +761,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private async Task UpdateAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
         card.Message = $"Updating {card.Name}…";
-        var result = await this.management.UpdateAsync(card.Plugin, cancellationToken);
+        var result = await this.update.UpdateAsync(card.Plugin, cancellationToken);
         card.Message = result.Outcome switch
         {
             AgentUpdateOutcome.Started => "Update started.",
