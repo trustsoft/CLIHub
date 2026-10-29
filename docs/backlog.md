@@ -96,8 +96,14 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   before restructuring anything.
 - Proposed remedy: `config-decomposition-slice` change - internal domain-aligned decomposition at the
   snapshot/repository boundary only; external file format, migrations, and atomic write stay untouched.
-  Reject or shrink if reconnaissance shows the coupling is already contained.
-- Trigger: active - scheduled as the `config-decomposition-slice` change.
+  Reject or shrink if reconnaissance shows the coupling is already contained. **Result (2026-10-29,
+  commit `de590e4`, archived as `2026-10-29-config-decomposition-slice`): `ScanningPreferences` value
+  object extracted (five flat `AppPreferences` properties composed as `Scanning`), document mapping
+  delegates the section but keeps the identical flat camelCase wire fields, snapshot copies via
+  `Scanning.Copy()`; census/round-trip/deep-copy pins in place; 1,249 tests. Deferred follow-ups:
+  Agent/Update/Appearance extraction and store narrowing, each with an evidence trigger.**
+- Trigger (reopen): a further cross-concern edit that still forces synchronized mapping changes, or
+  the `config-format-v2` decision below.
 
 ## Agent and process domain
 
