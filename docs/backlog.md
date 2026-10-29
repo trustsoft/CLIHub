@@ -30,11 +30,34 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).** **Proposal 2 POC
   complete: `domain-events-poc` (synchronous domain event bus + `ProjectSelected` event published from
   `ProjectService.SetCurrentProject` + logging subscriber using `ILoggingContextProvider`; zero
-  user-visible behavior change, 1,240 tests). Adoption catalogue pending Proposal 2 follow-up.**
+  user-visible behavior change, 1,240 tests). Adoption catalogue pending Proposal 2 follow-up.** **Proposal 2
+  catalogue complete: `domain-events-adoption` `49f6511` (`docs/architecture/domain-events.md` adoption
+  rules + candidate triggers; `AgentLaunched` on Launch/Resume with audit subscriber; lazy-singleton
+  subscriber activation fixed and pinned; 1,248 tests, smoke confirmed). Remaining proposals 3, 5, 6 open.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
 ## Agent and process domain
+
+### Lazy-singleton event subscribers never subscribed (resolved)
+
+- Status: Resolved by the `domain-events-adoption` change (2026-10-29, commit `49f6511`); found by
+  the manual smoke, not by the tests at the time.
+- Evidence: both `ProjectSelectionLoggingSubscriber` (POC `b9306e5`) and `AgentLaunchAuditSubscriber`
+  were registered with plain `AddSingleton<T>()` while nothing resolved them — DI creates singletons
+  lazily, so their constructors (which call `Subscribe`) never ran and every event was dispatched to
+  an empty handler list. The POC smoke had confirmed only that the app worked, not that the audit
+  line appeared.
+- Resolved model: the `IDomainEventPublisher` factory in `AddEventServices` resolves every subscriber
+  singleton before returning the bus, so subscriptions exist before the first event; every publisher
+  consumer (`ProjectService`, `AgentCommandService`) resolves the publisher at construction.
+- Guarded by: `EventSubscriberActivationTests` (real Core composition + recording log provider,
+  publishes `AgentLaunched` and `ProjectSelected` and asserts both audit lines) and
+  `EventCompositionTests` (full `AddClIHubServices` composition, including a real
+  `IAgentCommandService` from DI with a faked process boundary); manual smoke then confirmed both
+  `Project selected:` and `Agent launched:` lines.
+- Trigger (reopen): any new `IDomainEventSubscriber` implementation registered without activation, or
+  an audit line that stops appearing after an event is published.
 
 ### Process domain Phase 3: consumer migration (resolved)
 
