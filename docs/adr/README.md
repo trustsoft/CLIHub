@@ -28,3 +28,5 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 | 0004  | [Plugin catalog and precedence](0004-plugin-catalog-and-precedence.md) | Accepted |
 | 0005  | [UI dialog boundaries](0005-ui-dialog-boundaries.md)                   | Accepted |
 | 0006  | [Windows platform library](0006-windows-platform-library.md)           | Accepted |
+| 0012  | [Process domain unification](ADR-0012-process-domain-unification.md)    | Accepted |
+| 0013  | [No generic persistence or cache abstraction](0013-no-generic-persistence-cache.md) | Accepted |

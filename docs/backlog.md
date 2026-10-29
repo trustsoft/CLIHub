@@ -27,7 +27,13 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   slice complete: `logging-context-provider` `7d92bf3` (ILoggingContextProvider + OperationName/CorrelationId
   scopes on orchestrator, monitor, application lifetime, and scanning; behavior unchanged, 1,228 tests).
   Remaining Proposal 1 slices: `IPersistenceService<T>` and `ICacheService` (deferred; triggers: second
-  consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).** **Proposal 2 POC
+  consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).** **Proposal 1
+  remaining slices CLOSED BY DECISION (2026-10-29): no generic `IPersistenceService<T>` or
+  `ICacheService` - reconnaissance found the shared atomic-write code is two statements while the
+  surrounding policies diverge (config: debounced writer + locks + generation; logo cache: dispose-time
+  write + dirty flag), and the agent caches share only a two-line TTL check. Recorded as ADR-0013 with
+  reopen triggers (third matching consumer, a config-format-v2 need for a backend abstraction, or a
+  fourth same-shaped agent cache). Investigation archived as `2026-10-29-persistence-service-slice`.** **Proposal 2 POC
   complete: `domain-events-poc` (synchronous domain event bus + `ProjectSelected` event published from
   `ProjectService.SetCurrentProject` + logging subscriber using `ILoggingContextProvider`; zero
   user-visible behavior change, 1,240 tests). Adoption catalogue pending Proposal 2 follow-up.** **Proposal 2
