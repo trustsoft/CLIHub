@@ -18,12 +18,12 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   concerns: coordinator proliferation (5 coordinators), large role-based service interfaces,
   UI-heavy orchestration, configuration coupling.
 - Proposed remedy: Three-phase evolution roadmap (Q1-Q3 2027): Phase 1 (foundation) — cross-cutting
-  services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [Phase 1+2 COMPLETE]**,
+  services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [ALL PHASES COMPLETE 2026-10-29]**,
   plugin lifecycle; Phase 3 (configuration evolution) — internal decomposition. Immediate actions
   (next 30 days): document architecture principles, extract `ILoggingContextProvider`, implement
   first domain event POC (`ProjectSelected`). See `docs/architecture-analysis-index.md` for full
-  navigation. **Proposal 4 Phase 1+2 complete 2026-10-29 (commit a64422c); Phase 3 (consumer migration) deferred;
-  see ADR-0012, implementation report, and archived change.**
+  navigation. **Proposal 4 complete: Phase 1+2 `a64422c`, Phase 3 `37e3c46`, Phase 4 `f7c1495` (obsolete
+  type removed, 0 CLIHUB001, 1,222 tests); see ADR-0012 and the archived changes.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
@@ -51,39 +51,40 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger (reopen): a report that an agent command launches in the wrong runtime, a version probe
   failing after the migration, or the update gate missing a running agent.
 
-### Process domain Phase 4: remove ProcessLauncher (open)
+### Process domain Phase 4: remove ProcessLauncher (resolved)
 
-- Severity: Low (dead code kept only for transition; 33 `CLIHUB001` obsolete warnings in tests)
-- Evidence: `src/CLIHub.Core/Infrastructure/Processes/ProcessLauncher.cs` is `[Obsolete]` since
-  commit `37e3c46` (2026-10-29) and has zero production consumers. Remaining references: DI
-  registrations (`src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs`,
-  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:57`) and legacy tests that pin the
-  old type — `tests/CLIHub.Core.Tests/Infrastructure/Processes/ProcessLauncherTests.cs`,
-  `tests/CLIHub.Core.Windows.Tests/ProcessLauncherCaptureOutputTests.cs`,
-  `WindowsInteractiveProcessRunnerTests.cs:137,177`,
-  `ServiceCollectionExtensionsTests.cs:27-28`, `WindowsServiceCollectionExtensionsTests.cs:22`.
-- Proposed remedy: delete `ProcessLauncher` and its registrations; delete or rewrite the legacy
-  tests against the runners/orchestrator they actually exercise; replace the behavioral pins lost
-  with `ProcessLauncherTests` (command-building passthrough, capture timeout → `Timeout`, exit-code
-  mapping, cancellation → `Cancelled`) with direct `ProcessOrchestrator` unit tests. Expected
-  result: zero `CLIHUB001` warnings.
-- Trigger: active — scheduled as the `process-domain-phase4` change.
+- Status: Resolved by the `process-domain-phase4` change (2026-10-29, commit `f7c1495`, archived
+  as `openspec/changes/archive/2026-10-29-process-domain-phase4/`).
+- Resolved model: `ProcessLauncher` and its DI registrations are deleted; the whole solution builds
+  with zero `CLIHUB001` warnings (was 33). The legacy `ProcessLauncherTests` (23 tests) are gone —
+  their behavioral pins now live in direct unit tests (see the superseded "Process orchestrator
+  unit tests" entry below). `ProcessLauncherCaptureOutputTests` was rewritten against
+  `WindowsProcessOutputRunner` directly and renamed to
+  `tests/CLIHub.Core.Windows.Tests/WindowsProcessOutputRunnerIntegrationTests.cs`, keeping the
+  real-process coverage (stdout, missing executable, cancellation, timeout, PATHEXT shim);
+  `WindowsInteractiveProcessRunnerTests` builds commands via `WindowsCommandLineBuilder`
+  instead of the launcher. Zero `ProcessLauncher` references remain under `src/` or `tests/`.
+- Guarded by: the full suite — 1,222/1,222 green (523 UI + 60 Windows + 639 Core), the new
+  orchestrator/resolver/adapter pins, and the ported real-process capture integration tests.
+- Trigger (reopen): a report of an agent command launching or capturing output differently after
+  the removal; none expected — no production path changed.
 
 ### Process orchestrator unit tests (deferred)
 
-- Severity: Low (quality improvement; launch/capture paths covered only transitively)
-- Evidence: the orchestrator's launch/capture paths (`LaunchInteractiveAsync`,
-  `CaptureOutputAsync`) have no direct unit tests — Phase 1+2 deferred them (Stage 7), and Phase 3
-  (commit `37e3c46`) added only the process-finding pins via `AgentProcessMonitorTests` (real
-  finder over a mocked inspector). The deferred behavioral pins from the legacy
-  `ProcessLauncherTests` (command-building passthrough, capture timeout → `Timeout`, exit-code
-  mapping, cancellation → `Cancelled`) are folded into the Phase 4 remedy.
-- Proposed remedy: `tests/CLIHub.Core.Tests/Processes/ProcessOrchestratorTests.cs` covering
-  LaunchInteractive/CaptureOutput happy paths, runtime-unavailable → `Failure`, timeout →
-  `Timeout`, cancellation → `Cancelled`, and runner-exception mapping; plus
-  `RuntimeResolverTests` / `CommandLineBuilderAdapterTests` for the adapters.
-- Trigger: the `process-domain-phase4` change (folded in), or any future edit to the
-  orchestrator's launch/capture paths.
+### Process orchestrator unit tests (resolved)
+
+- Status: Resolved by the `process-domain-phase4` change (2026-10-29, commit `f7c1495`).
+- Resolved model: 22 direct unit tests added — `ProcessOrchestratorTests` (11: launch/capture
+  success, runtime unavailable → `Failure`, exception → `Failure`, timeout → `Timeout`,
+  cancellation → `Cancelled`, both `FindRunningAgentsAsync` overloads, `ResolveRuntimeAsync`
+  passthrough), `RuntimeResolverTests` (5), `CommandLineBuilderAdapterTests` (6) — under
+  `tests/CLIHub.Core.Tests/Processes/`. They replace the behavioral pins lost with the deleted
+  `ProcessLauncherTests`; the real-process capture coverage moved to
+  `WindowsProcessOutputRunnerIntegrationTests`.
+- Guarded by: those tests plus `AgentProcessMonitorTests` (finder-over-inspector wiring) —
+  1,222/1,222 green.
+- Trigger (reopen): a new orchestrator member without a direct test, or a coverage review that
+  finds an untested launch/capture branch.
 
 ### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus (resolved)
 
