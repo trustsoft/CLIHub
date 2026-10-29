@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-29
+goal: Isolate scanning preferences in a domain value object to reduce cross-concern mapping ripple
+skip_specs: true
