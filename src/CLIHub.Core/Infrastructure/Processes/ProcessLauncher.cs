@@ -11,6 +11,7 @@ using CLIHub.Core.Models;
 /// <summary>
 ///   Launches processes for AI agent CLI tools.
 /// </summary>
+[Obsolete("ProcessLauncher is obsolete. Use IProcessOrchestrator for new code.", DiagnosticId = "CLIHUB001")]
 public sealed class ProcessLauncher
 {
     private static readonly TimeSpan DefaultCaptureTimeout = TimeSpan.FromSeconds(10);

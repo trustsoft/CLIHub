@@ -10,6 +10,7 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.ViewModels;
 using CLIHub.Lifetime;
 using CLIHub.Launching;
@@ -56,8 +57,13 @@ public class AgentManagementViewModelTests
         }
 
         var processMonitor = new AgentProcessMonitor(
-            processInspector.Object,
-            new AgentProcessMatcher(),
+            new ProcessOrchestrator(
+                Mock.Of<IRuntimeResolver>(),
+                Mock.Of<ICommandLineBuilder>(),
+                Mock.Of<IInteractiveProcessRunner>(),
+                Mock.Of<IProcessOutputRunner>(),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), catalog.Object),
+                NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,
             processMonitorLogger ?? NullLogger<AgentProcessMonitor>.Instance);
 

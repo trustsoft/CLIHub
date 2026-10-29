@@ -6,7 +6,7 @@ using CLIHub.Core.Models;
 /// <summary>
 /// Adapts <see cref="WindowsCommandLineBuilder"/> to provide command line building.
 /// </summary>
-internal sealed class CommandLineBuilderAdapter : ICommandLineBuilder
+public sealed class CommandLineBuilderAdapter : ICommandLineBuilder
 {
     /// <inheritdoc/>
     public (string FileName, string Arguments) BuildInteractive(

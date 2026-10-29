@@ -9,6 +9,7 @@ using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
@@ -118,9 +119,16 @@ public class WindowActionCoordinatorTests
             .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
             .Returns(processes);
 
+        // The monitor matches through the real finder + matcher over the mocked inspector, so the
+        // tier semantics (executable-name vs command-line) stay in force.
         var monitor = new AgentProcessMonitor(
-            inspector.Object,
-            new AgentProcessMatcher(),
+            new ProcessOrchestrator(
+                Mock.Of<IRuntimeResolver>(),
+                Mock.Of<ICommandLineBuilder>(),
+                Mock.Of<IInteractiveProcessRunner>(),
+                Mock.Of<IProcessOutputRunner>(),
+                new AgentProcessFinder(inspector.Object, new AgentProcessMatcher(), catalog.Object),
+                NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
 

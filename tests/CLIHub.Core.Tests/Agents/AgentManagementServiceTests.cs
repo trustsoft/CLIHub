@@ -9,7 +9,10 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Tests.Fakes;
+
+using ProcessResult = CLIHub.Core.Processes.ProcessResult;
 
 public class AgentManagementServiceTests
 {
@@ -25,19 +28,35 @@ public class AgentManagementServiceTests
         }
     };
 
-    private static AgentProcessMonitor Monitor(Plugin[] plugins, params AgentProcessInstance[] processes)
+    private static AgentProcessMonitor Monitor(Plugin[] plugins, Mock<IAgentProcessInspector>? inspector = null)
     {
-        var inspector = new Mock<IAgentProcessInspector>();
-        inspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns(processes);
-
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(plugins);
 
+        inspector ??= new Mock<IAgentProcessInspector>();
+
         return new AgentProcessMonitor(
-            inspector.Object,
-            new AgentProcessMatcher(),
+            AgentProcessMonitorTests.CreateOrchestrator(inspector.Object),
             catalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
+    }
+
+    private static AgentProcessMonitor MonitorWithProcesses(Plugin[] plugins, params AgentProcessInstance[] processes)
+    {
+        var inspector = new Mock<IAgentProcessInspector>();
+        inspector
+            .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
+            .Returns(processes);
+        return Monitor(plugins, inspector);
+    }
+
+    private static AgentProcessInstance CreateAgentProcess(string executablePath, string? commandLine = null)
+    {
+        return new AgentProcessInstance(
+            ProcessId: 1234,
+            ExecutablePath: executablePath,
+            StartTime: DateTime.UtcNow,
+            CommandLine: commandLine);
     }
 
     private static AgentManagementService CreateService(
@@ -56,29 +75,23 @@ public class AgentManagementServiceTests
         IAgentUpdateAvailabilityService? availability = null) =>
         new(detection, version, availability ?? new Mock<IAgentUpdateAvailabilityService>().Object, commands, monitor, NullLogger<AgentManagementService>.Instance);
 
-    private static ProcessResult Output(string standardOutput) => new()
-    {
-        StandardOutput = standardOutput,
-        StandardError = string.Empty,
-        ExitCode = 0,
-        TimedOut = false
-    };
-
     private static (AgentManagementService Service,
                     AgentDetectionService Detection,
                     AgentVersionService Version,
-                    FakeProcessOutputRunner OutputRunner) CreateRealService()
+                    Mock<IProcessOrchestrator> Orchestrator) CreateRealService()
     {
         var preferences = new PreferencesStore(new FakeConfigurationRepository());
         var time = new FakeTimeProvider(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
-        var outputRunner = new FakeProcessOutputRunner { Result = Output("1.0.0") };
-        var launcher = new ProcessLauncher(
-            NullLogger<ProcessLauncher>.Instance,
-            new FakeInteractiveProcessRunner(),
-            outputRunner,
-            new FakeRuntimeExecutableLocator());
+        var orchestratorMock = new Mock<IProcessOrchestrator>();
+        orchestratorMock
+            .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(ProcessResult.Success(0, output: "1.0.0"));
         var detection = new AgentDetectionService(preferences, time);
-        var version = new AgentVersionService(launcher, preferences, NullLogger<AgentVersionService>.Instance, time);
+        var version = new AgentVersionService(
+            orchestratorMock.Object,
+            preferences,
+            NullLogger<AgentVersionService>.Instance,
+            time);
         var service = CreateService(
             detection,
             version,
@@ -86,7 +99,7 @@ public class AgentManagementServiceTests
             Monitor([]),
             new Mock<IAgentUpdateAvailabilityService>().Object);
 
-        return (service, detection, version, outputRunner);
+        return (service, detection, version, orchestratorMock);
     }
 
     [Fact]
@@ -125,7 +138,7 @@ public class AgentManagementServiceTests
             File.WriteAllText(markerA, string.Empty);
             File.WriteAllText(markerB, string.Empty);
 
-            var (service, detection, version, outputRunner) = CreateRealService();
+            var (service, detection, version, orchestrator) = CreateRealService();
             var pluginA = AgentPlugin("a");
             pluginA.Detection = new AgentDetection { SystemPaths = { markerA } };
             var pluginB = AgentPlugin("b");
@@ -138,7 +151,9 @@ public class AgentManagementServiceTests
 
             File.Delete(markerA);
             File.Delete(markerB);
-            outputRunner.Result = Output("2.0.0");
+            orchestrator
+                .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+                .ReturnsAsync(ProcessResult.Success(0, output: "2.0.0"));
 
             var result = await service.ProbeAsync(pluginA);
 
@@ -151,7 +166,7 @@ public class AgentManagementServiceTests
             // from cache even though its marker is gone and the fake output changed.
             Assert.True(detection.IsInstalledInSystem(pluginB));
             Assert.Equal("1.0.0", await version.GetVersionAsync(pluginB));
-            Assert.Equal(2, outputRunner.Runs.Count); // A primed, B primed; A's gated probe adds no run
+            orchestrator.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Exactly(2)); // A primed, B primed; A's gated probe adds no run
         }
         finally
         {
@@ -199,15 +214,22 @@ public class AgentManagementServiceTests
             File.WriteAllText(markerA, string.Empty);
             File.WriteAllText(markerB, string.Empty);
 
-            var (service, detection, version, outputRunner) = CreateRealService();
+            var (service, detection, version, orchestrator) = CreateRealService();
             var pluginA = AgentPlugin("a");
             pluginA.Detection = new AgentDetection { SystemPaths = { markerA } };
             var pluginB = AgentPlugin("b");
             pluginB.Detection = new AgentDetection { SystemPaths = { markerB } };
 
-            outputRunner.Result = Output("1.0.0");
+            int captureCallCount = 0;
+            orchestrator
+                .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+                .ReturnsAsync(() =>
+                {
+                    captureCallCount++;
+                    return ProcessResult.Success(0, output: captureCallCount == 1 ? "1.0.0" : "2.0.0");
+                });
+
             var resultA = await service.ProbeAsync(pluginA);
-            outputRunner.Result = Output("2.0.0");
             var resultB = await service.ProbeAsync(pluginB);
 
             Assert.True(resultA.IsInstalled);
@@ -215,7 +237,7 @@ public class AgentManagementServiceTests
             Assert.True(resultB.IsInstalled);
             Assert.Equal("2.0.0", resultB.Version);
 
-            var runsAfterDetect = outputRunner.Runs.Count;
+            var runsAfterDetect = captureCallCount;
             Assert.Equal(2, runsAfterDetect);
 
             File.Delete(markerA);
@@ -227,7 +249,7 @@ public class AgentManagementServiceTests
             Assert.True(detection.IsInstalledInSystem(pluginB));
             Assert.Equal("1.0.0", await version.GetVersionAsync(pluginA));
             Assert.Equal("2.0.0", await version.GetVersionAsync(pluginB));
-            Assert.Equal(runsAfterDetect, outputRunner.Runs.Count);
+            Assert.Equal(runsAfterDetect, captureCallCount);
         }
         finally
         {
@@ -288,13 +310,13 @@ public class AgentManagementServiceTests
     public async Task UpdateAsync_RunningAgent_IsBlocked()
     {
         var plugin = AgentPlugin();
-        var process = new AgentProcessInstance(1234, @"C:\tools\opencode.exe", DateTime.UtcNow);
+        var process = CreateAgentProcess(@"C:\tools\opencode.exe");
         var commands = new Mock<IAgentCommandService>(MockBehavior.Strict);
         var service = CreateService(
             new Mock<IAgentDetectionService>(),
             new Mock<IAgentVersionService>(),
             commands,
-            Monitor([plugin], process));
+            MonitorWithProcesses([plugin], process));
 
         var result = await service.UpdateAsync(plugin);
 
@@ -307,7 +329,7 @@ public class AgentManagementServiceTests
     {
         var plugin = AgentPlugin("opencode");
         var other = AgentPlugin("pi");
-        var otherProcess = new AgentProcessInstance(1234, @"C:\tools\pi.exe", DateTime.UtcNow);
+        var otherProcess = CreateAgentProcess(@"C:\tools\pi.exe");
         var commands = new Mock<IAgentCommandService>();
         commands
             .Setup(x => x.ExecuteAsync(plugin, AgentCommandKind.Update, It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -316,7 +338,7 @@ public class AgentManagementServiceTests
             new Mock<IAgentDetectionService>(),
             new Mock<IAgentVersionService>(),
             commands,
-            Monitor([plugin, other], otherProcess));
+            MonitorWithProcesses([plugin, other], otherProcess));
 
         var result = await service.UpdateAsync(plugin);
 
@@ -363,14 +385,14 @@ public class AgentManagementServiceTests
     public async Task UpdateAsync_Blocked_DoesNotInvalidateVersionOrAvailability()
     {
         var plugin = AgentPlugin();
-        var process = new AgentProcessInstance(1234, @"C:\tools\opencode.exe", DateTime.UtcNow);
+        var process = CreateAgentProcess(@"C:\tools\opencode.exe");
         var version = new Mock<IAgentVersionService>();
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         var service = CreateService(
             new Mock<IAgentDetectionService>(),
             version,
             new Mock<IAgentCommandService>(MockBehavior.Strict),
-            Monitor([plugin], process),
+            MonitorWithProcesses([plugin], process),
             availability);
 
         var result = await service.UpdateAsync(plugin);
@@ -385,17 +407,15 @@ public class AgentManagementServiceTests
     {
         var plugin = AgentPlugin();
         plugin.UpdateCheck = new PluginUpdateCheck("npm", "@opencode/cli");
-        var process = new AgentProcessInstance(
-            1234,
+        var process = CreateAgentProcess(
             @"C:\Program Files\nodejs\node.exe",
-            DateTime.UtcNow,
             @"node.exe C:\Users\Maxim\AppData\Roaming\npm\node_modules\@opencode\cli\bin\opencode.js run");
         var commands = new Mock<IAgentCommandService>(MockBehavior.Strict);
         var service = CreateService(
             new Mock<IAgentDetectionService>(),
             new Mock<IAgentVersionService>(),
             commands,
-            Monitor([plugin], process));
+            MonitorWithProcesses([plugin], process));
 
         var result = await service.UpdateAsync(plugin);
 
@@ -408,10 +428,8 @@ public class AgentManagementServiceTests
     public async Task UpdateAsync_UnrelatedNodeScript_StartsUpdate()
     {
         var plugin = AgentPlugin();
-        var process = new AgentProcessInstance(
-            1234,
+        var process = CreateAgentProcess(
             @"C:\Program Files\nodejs\node.exe",
-            DateTime.UtcNow,
             @"node.exe server.js");
         var commands = new Mock<IAgentCommandService>();
         commands
@@ -421,7 +439,7 @@ public class AgentManagementServiceTests
             new Mock<IAgentDetectionService>(),
             new Mock<IAgentVersionService>(),
             commands,
-            Monitor([plugin], process));
+            MonitorWithProcesses([plugin], process));
 
         var result = await service.UpdateAsync(plugin);
 

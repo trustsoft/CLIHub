@@ -10,6 +10,7 @@ using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
 using CLIHub.ViewModels;
 using CLIHub.Launching;
@@ -276,10 +277,14 @@ public class LaunchWindowViewModelBuilder
             userNotificationService.Object,
             NullLogger<LaunchCommandCoordinator>.Instance);
 
-        var matcher = new AgentProcessMatcher();
         var processMonitor = new AgentProcessMonitor(
-            processInspector.Object,
-            matcher,
+            new ProcessOrchestrator(
+                Mock.Of<IRuntimeResolver>(),
+                Mock.Of<ICommandLineBuilder>(),
+                Mock.Of<IInteractiveProcessRunner>(),
+                Mock.Of<IProcessOutputRunner>(),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
 
@@ -350,10 +355,14 @@ public class LaunchWindowViewModelBuilder
             userNotificationService.Object,
             NullLogger<LaunchCommandCoordinator>.Instance);
 
-        var matcher = new AgentProcessMatcher();
         var processMonitor = new AgentProcessMonitor(
-            processInspector.Object,
-            matcher,
+            new ProcessOrchestrator(
+                Mock.Of<IRuntimeResolver>(),
+                Mock.Of<ICommandLineBuilder>(),
+                Mock.Of<IInteractiveProcessRunner>(),
+                Mock.Of<IProcessOutputRunner>(),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
 

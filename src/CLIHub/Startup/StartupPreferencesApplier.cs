@@ -1,6 +1,6 @@
 namespace CLIHub.Startup;
 
-using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 
@@ -9,19 +9,19 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
 {
-    private readonly ProcessLauncher processLauncher;
+    private readonly IPreferencesStore preferencesStore;
     private readonly IStartupService startupService;
 
     /// <summary>
-    ///   Creates the applier with the process runtime and Windows startup boundaries.
+    ///   Creates the applier with the preferences store and Windows startup boundaries.
     /// </summary>
-    /// <param name="processLauncher"> Process launcher receiving the runtime selection. </param>
+    /// <param name="preferencesStore"> Preferences store for persisting runtime. </param>
     /// <param name="startupService"> Windows startup registration service. </param>
     public StartupPreferencesApplier(
-        ProcessLauncher processLauncher,
+        IPreferencesStore preferencesStore,
         IStartupService startupService)
     {
-        this.processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
     }
 
@@ -30,7 +30,8 @@ public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
     {
         ArgumentNullException.ThrowIfNull(preferences);
 
-        this.processLauncher.SetRuntime(preferences.DefaultRuntime);
+        // Runtime preference is already in the preferences store; no need to set it
+        // ProcessOrchestrator reads it directly at launch time
         this.startupService.SetEnabled(preferences.StartWithWindows);
     }
 }

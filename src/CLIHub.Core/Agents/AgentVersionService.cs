@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
+using CLIHub.Core.Processes;
 
 /// <summary>
 ///   Retrieves an agent's version by running its version command, with per-agent caching
@@ -27,7 +28,7 @@ public class AgentVersionService : IAgentVersionService
 
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 
-    private readonly ProcessLauncher processLauncher;
+    private readonly IProcessOrchestrator orchestrator;
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentVersionService> logger;
     private readonly TimeProvider timeProvider;
@@ -37,12 +38,13 @@ public class AgentVersionService : IAgentVersionService
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentVersionService(ProcessLauncher processLauncher,
-                               IPreferencesStore preferencesStore,
-                               ILogger<AgentVersionService> logger,
-                               TimeProvider? timeProvider = null)
+    public AgentVersionService(
+        IProcessOrchestrator orchestrator,
+        IPreferencesStore preferencesStore,
+        ILogger<AgentVersionService> logger,
+        TimeProvider? timeProvider = null)
     {
-        this.processLauncher = processLauncher;
+        this.orchestrator = orchestrator;
         this.preferencesStore = preferencesStore;
         this.logger = logger;
         this.timeProvider = timeProvider ?? TimeProvider.System;
@@ -86,17 +88,18 @@ public class AgentVersionService : IAgentVersionService
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        var result = await this.processLauncher.CaptureOutputAsync(
-            command.Executable, command.Arguments, workingDirectory, CancellationToken.None, this.ProbeTimeout);
+        var runtime = this.preferencesStore.Load().DefaultRuntime;
+        var request = LaunchRequest.Create(workingDirectory, command, runtime, CancellationToken.None);
+        var result = await this.orchestrator.CaptureOutputAsync(request);
 
         string? version = null;
-        if (result.Started && result.ExitCode == 0)
+        if (result.IsSuccess && result.ExitCode == 0)
         {
-            version = ExtractVersion(result.StdOut);
+            version = ExtractVersion(result.Output ?? string.Empty);
         }
         else
         {
-            this.logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.StdErr);
+            this.logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.Error);
         }
 
         this.cache[plugin.Id] = new CacheEntry(version, this.timeProvider.GetUtcNow());

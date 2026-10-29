@@ -20,6 +20,11 @@ public record AgentProcess
     public required string CommandLine { get; init; }
 
     /// <summary>
+    /// Gets the full path to the process executable.
+    /// </summary>
+    public required string ExecutablePath { get; init; }
+
+    /// <summary>
     /// Gets the runtime executable for shell-hosted processes, or null for runtime-hosted processes.
     /// </summary>
     /// <remarks>
@@ -37,7 +42,10 @@ public record AgentProcess
     /// Gets a value indicating whether this is a runtime-hosted process (Node.js or Python).
     /// </summary>
     /// <remarks>
-    /// Runtime-hosted processes have a null <see cref="Runtime"/> property.
+    /// Runtime-hosted processes run inside a shared interpreter host
+    /// (see <see cref="CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher.RuntimeHostProcessNames"/>).
     /// </remarks>
-    public bool IsRuntimeHosted => this.Runtime is null;
+    public bool IsRuntimeHosted =>
+        CLIHub.Core.Infrastructure.Processes.AgentProcessMatcher.RuntimeHostProcessNames
+            .Contains(Path.GetFileNameWithoutExtension(this.ExecutablePath));
 }

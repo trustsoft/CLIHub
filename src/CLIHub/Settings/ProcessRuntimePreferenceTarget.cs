@@ -1,24 +1,29 @@
 namespace CLIHub.Settings;
 
-using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Adapts the process runtime boundary to the narrow preference port.
+///   Adapts the preferences store to the narrow runtime preference port.
 /// </summary>
 public sealed class ProcessRuntimePreferenceTarget : IRuntimePreferenceTarget
 {
-    private readonly ProcessLauncher processLauncher;
+    private readonly IPreferencesStore preferencesStore;
 
     /// <summary>
     ///   Creates the runtime preference target.
     /// </summary>
-    /// <param name="processLauncher"> Process launcher receiving the runtime. </param>
-    public ProcessRuntimePreferenceTarget(ProcessLauncher processLauncher)
+    /// <param name="preferencesStore"> Preferences store for persisting the runtime. </param>
+    public ProcessRuntimePreferenceTarget(IPreferencesStore preferencesStore)
     {
-        this.processLauncher = processLauncher ?? throw new ArgumentNullException(nameof(processLauncher));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
     }
 
     /// <inheritdoc />
-    public void SetRuntime(RuntimeKind runtime) => this.processLauncher.SetRuntime(runtime);
+    public void SetRuntime(RuntimeKind runtime)
+    {
+        var preferences = this.preferencesStore.Load();
+        preferences.DefaultRuntime = runtime;
+        this.preferencesStore.Update(_ => _.DefaultRuntime = runtime);
+    }
 }

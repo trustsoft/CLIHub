@@ -1,5 +1,6 @@
 namespace CLIHub.Core.Processes;
 
+using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -28,6 +29,20 @@ public interface IProcessOrchestrator
     /// <returns>A read-only list of matching agent processes.</returns>
     Task<IReadOnlyList<AgentProcess>> FindRunningAgentsAsync(
         ProcessMatchCriteria criteria);
+
+    /// <summary>
+    /// Finds all running processes matching any of the specified plugins, with a single
+    /// process enumeration.
+    /// </summary>
+    /// <param name="plugins">The plugins to match against.</param>
+    /// <param name="detail">The matching fidelity level.</param>
+    /// <returns>
+    /// A read-only list of matched processes paired with the plugin they matched, at most one
+    /// entry per process.
+    /// </returns>
+    Task<IReadOnlyList<PluginAgentProcess>> FindRunningAgentsAsync(
+        IReadOnlyList<Plugin> plugins,
+        AgentProcessMatchDetail detail);
 
     /// <summary>
     /// Resolves the available runtime executable for the specified kind.

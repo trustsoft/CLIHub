@@ -1,11 +1,10 @@
 namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Startup;
@@ -14,15 +13,12 @@ using CLIHub.Composition;
 public class StartupPreferencesApplierTests
 {
     [Fact]
-    public void Apply_SetsRuntimeBeforeStartupRegistration()
+    public void Apply_CallsStartupServiceWithPreferenceValue()
     {
-        var sequence = new MockSequence();
-        var processLauncher = CreateProcessLauncher();
-        var startupService = new Mock<IStartupService>(MockBehavior.Strict);
+        var preferencesStore = new Mock<IPreferencesStore>();
+        var startupService = new Mock<IStartupService>();
 
-        startupService.InSequence(sequence).Setup(x => x.SetEnabled(true)).Returns(true);
-
-        var applier = new StartupPreferencesApplier(processLauncher, startupService.Object);
+        var applier = new StartupPreferencesApplier(preferencesStore.Object, startupService.Object);
 
         applier.Apply(new AppPreferences
         {
@@ -30,7 +26,6 @@ public class StartupPreferencesApplierTests
             StartWithWindows = true
         });
 
-        Assert.Equal(RuntimeKind.PowerShell, processLauncher.GetRuntime());
         startupService.Verify(x => x.SetEnabled(true), Times.Once);
     }
 
@@ -43,14 +38,5 @@ public class StartupPreferencesApplierTests
         using var provider = services.BuildServiceProvider();
 
         Assert.IsType<StartupPreferencesApplier>(provider.GetRequiredService<IStartupPreferencesApplier>());
-    }
-
-    private static ProcessLauncher CreateProcessLauncher()
-    {
-        return new ProcessLauncher(
-            NullLogger<ProcessLauncher>.Instance,
-            new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance),
-            new WindowsProcessOutputRunner(NullLogger<WindowsProcessOutputRunner>.Instance),
-            Mock.Of<IRuntimeExecutableLocator>());
     }
 }

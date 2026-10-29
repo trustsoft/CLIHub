@@ -6,7 +6,7 @@ using CLIHub.Core.Models;
 /// <summary>
 /// Adapts <see cref="IRuntimeExecutableLocator"/> to provide runtime resolution.
 /// </summary>
-internal sealed class RuntimeResolver : IRuntimeResolver
+public sealed class RuntimeResolver : IRuntimeResolver
 {
     private readonly IRuntimeExecutableLocator locator;
 

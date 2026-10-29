@@ -3,7 +3,10 @@ namespace CLIHub.Core.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 
 /// <summary>
 ///   Registers the Windows platform infrastructure: process runners, runtime executable resolution,
@@ -37,13 +40,21 @@ public static class WindowsServiceCollectionExtensions
 
         services.AddSingleton<IInteractiveProcessRunner, WindowsInteractiveProcessRunner>();
         services.AddSingleton<IProcessOutputRunner, WindowsProcessOutputRunner>();
-        services.AddSingleton<ProcessLauncher>();
         services.AddSingleton<IRuntimeExecutableLocator>(sp => new WindowsRuntimeLocator(
             new WindowsRuntimeEnvironment(),
             sp.GetRequiredService<ILogger<WindowsRuntimeLocator>>()));
+        services.AddSingleton<IRuntimeResolver>(sp => new RuntimeResolver(
+            sp.GetRequiredService<IRuntimeExecutableLocator>()));
+        services.AddSingleton<ICommandLineBuilder, CommandLineBuilderAdapter>();
         services.AddSingleton<IAgentProcessInspector>(sp => new WindowsAgentProcessInspector(
             sp.GetRequiredService<ILogger<WindowsAgentProcessInspector>>(),
             new WmiProcessCommandLineSource(sp.GetRequiredService<ILogger<WmiProcessCommandLineSource>>())));
+        services.AddSingleton<IAgentProcessFinder>(sp => new AgentProcessFinder(
+            sp.GetRequiredService<IAgentProcessInspector>(),
+            new AgentProcessMatcher(),
+            sp.GetRequiredService<IPluginCatalog>()));
+        services.AddSingleton<IProcessOrchestrator, ProcessOrchestrator>();
+        services.AddSingleton<ProcessLauncher>();
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));

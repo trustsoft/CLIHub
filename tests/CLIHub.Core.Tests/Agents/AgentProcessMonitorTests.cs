@@ -4,6 +4,7 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -12,20 +13,28 @@ public class AgentProcessMonitorTests
 {
     private readonly Mock<IAgentProcessInspector> mockInspector;
     private readonly Mock<IPluginCatalog> mockCatalog;
-    private readonly AgentProcessMatcher matcher;
     private readonly AgentProcessMonitor monitor;
 
     public AgentProcessMonitorTests()
     {
         this.mockInspector = new Mock<IAgentProcessInspector>();
         this.mockCatalog = new Mock<IPluginCatalog>();
-        this.matcher = new AgentProcessMatcher();
         this.monitor = new AgentProcessMonitor(
-            this.mockInspector.Object,
-            this.matcher,
+            CreateOrchestrator(this.mockInspector.Object),
             this.mockCatalog.Object,
             NullLogger<AgentProcessMonitor>.Instance);
     }
+
+    // The monitor delegates to the orchestrator, whose matching semantics live in the real
+    // AgentProcessFinder + AgentProcessMatcher over the mocked inspector.
+    internal static IProcessOrchestrator CreateOrchestrator(IAgentProcessInspector inspector)
+        => new ProcessOrchestrator(
+            Mock.Of<IRuntimeResolver>(),
+            Mock.Of<ICommandLineBuilder>(),
+            Mock.Of<IInteractiveProcessRunner>(),
+            Mock.Of<IProcessOutputRunner>(),
+            new AgentProcessFinder(inspector, new AgentProcessMatcher(), new Mock<IPluginCatalog>().Object),
+            NullLogger<ProcessOrchestrator>.Instance);
 
     [Fact]
     public void HasRunningAgents_NoProcesses_ReturnsFalse()
@@ -285,6 +294,46 @@ public class AgentProcessMonitorTests
         this.mockInspector.Verify(
             x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), AgentProcessMatchDetail.ExecutableName),
             Times.Once);
+    }
+
+    [Fact]
+    public void GetRunningAgents_MultiplePlugins_EnumeratesInspectorOnce()
+    {
+        // Arrange
+        var plugin1 = CreatePlugin("opencode", "opencode");
+        var plugin2 = CreatePlugin("cline", "cline");
+        var process1 = CreateProcess(@"C:\tools\opencode.exe");
+        var process2 = CreateProcess(@"C:\tools\cline.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([process1, process2]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin1, plugin2]);
+
+        // Act
+        var result = this.monitor.GetRunningAgents();
+
+        // Assert — the catalog-wide query enumerates processes once regardless of plugin count.
+        this.mockInspector.Verify(
+            x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()),
+            Times.Once);
+        Assert.Equal(2, result.Count);
+    }
+
+    [Fact]
+    public void GetRunningAgents_PreservesExecutablePathInResult()
+    {
+        // Arrange
+        var plugin = CreatePlugin("opencode", "opencode");
+        var process = CreateProcess(@"C:\tools\opencode.exe");
+
+        this.mockInspector.Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>())).Returns([process]);
+        this.mockCatalog.Setup(x => x.GetAllPlugins()).Returns([plugin]);
+
+        // Act
+        var result = this.monitor.GetRunningAgents();
+
+        // Assert — the domain mapping must not lose the executable path.
+        Assert.Single(result);
+        Assert.Equal(@"C:\tools\opencode.exe", result[0].Process.ExecutablePath);
     }
 
     private static Plugin CreatePlugin(string id, string executable)

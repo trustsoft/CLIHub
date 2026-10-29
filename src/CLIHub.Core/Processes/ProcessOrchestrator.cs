@@ -181,17 +181,21 @@ public class ProcessOrchestrator : IProcessOrchestrator
     {
         using var scope = this.logger.BeginScope("FindRunningAgents {PluginId}", criteria.Plugin.Id);
 
-        try
-        {
-            var processes = await this.processFinder.FindAsync(criteria, CancellationToken.None);
-            this.logger.LogInformation("Found {Count} running agent process(es)", processes.Count);
-            return processes;
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(ex, "Failed to find running agents for plugin {PluginId}", criteria.Plugin.Id);
-            return Array.Empty<AgentProcess>();
-        }
+        var processes = await this.processFinder.FindAsync(criteria, CancellationToken.None);
+        this.logger.LogInformation("Found {Count} running agent process(es)", processes.Count);
+        return processes;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<PluginAgentProcess>> FindRunningAgentsAsync(
+        IReadOnlyList<Plugin> plugins,
+        AgentProcessMatchDetail detail)
+    {
+        using var scope = this.logger.BeginScope("FindRunningAgents {PluginCount}", plugins.Count);
+
+        var matches = await this.processFinder.FindAllAsync(plugins, detail, CancellationToken.None);
+        this.logger.LogInformation("Found {Count} running agent process(es)", matches.Count);
+        return matches;
     }
 
     /// <inheritdoc/>

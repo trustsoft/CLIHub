@@ -8,6 +8,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
@@ -108,7 +109,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
         services.AddSingleton<IAgentVersionService>(sp => new AgentVersionService(
-            sp.GetRequiredService<ProcessLauncher>(),
+            sp.GetRequiredService<IProcessOrchestrator>(),
             sp.GetRequiredService<IPreferencesStore>(),
             sp.GetRequiredService<ILogger<AgentVersionService>>()));
         services.AddSingleton(_ =>

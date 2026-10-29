@@ -5,31 +5,29 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 
 /// <summary>
 ///   Monitors running agent processes for update safety checks.
 /// </summary>
 public sealed class AgentProcessMonitor
 {
-    private readonly IAgentProcessInspector processInspector;
-    private readonly AgentProcessMatcher processMatcher;
+    private readonly IProcessOrchestrator orchestrator;
     private readonly IPluginCatalog pluginCatalog;
     private readonly ILogger<AgentProcessMonitor> logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="AgentProcessMonitor" /> class.
     /// </summary>
-    /// <param name="processInspector"> The process inspector. </param>
-    /// <param name="processMatcher"> The process matcher. </param>
+    /// <param name="orchestrator"> The process orchestrator. </param>
     /// <param name="pluginCatalog"> The plugin catalog. </param>
     /// <param name="logger"> The logger instance. </param>
-    public AgentProcessMonitor(IAgentProcessInspector processInspector,
-                               AgentProcessMatcher processMatcher,
-                               IPluginCatalog pluginCatalog,
-                               ILogger<AgentProcessMonitor> logger)
+    public AgentProcessMonitor(
+        IProcessOrchestrator orchestrator,
+        IPluginCatalog pluginCatalog,
+        ILogger<AgentProcessMonitor> logger)
     {
-        this.processInspector = processInspector;
-        this.processMatcher = processMatcher;
+        this.orchestrator = orchestrator;
         this.pluginCatalog = pluginCatalog;
         this.logger = logger;
     }
@@ -83,19 +81,12 @@ public sealed class AgentProcessMonitor
         try
         {
             var plugins = this.pluginCatalog.GetAllPlugins();
-            var candidateProcessNames = this.processMatcher.GetCandidateProcessNames(plugins, detail);
-            var processes = this.processInspector.GetRunningProcesses(candidateProcessNames, detail);
+            var matches = this.orchestrator.FindRunningAgentsAsync(plugins, detail)
+                .GetAwaiter().GetResult();
 
-            foreach (var process in processes)
+            foreach (var match in matches)
             {
-                foreach (var plugin in plugins)
-                {
-                    if (this.processMatcher.IsMatch(process, plugin, detail))
-                    {
-                        runningAgents.Add(new RunningAgent(plugin, process));
-                        break; // One match per process
-                    }
-                }
+                runningAgents.Add(new RunningAgent(match.Plugin, MapToInstance(match.Process)));
             }
         }
         catch (Exception ex)
@@ -123,8 +114,28 @@ public sealed class AgentProcessMonitor
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        return this.GetRunningAgents(detail)
-            .Where(runningAgent => runningAgent.Plugin.Id == plugin.Id)
-            .ToList();
+        try
+        {
+            var criteria = ProcessMatchCriteria.Create(plugin, detail);
+            var processes = this.orchestrator.FindRunningAgentsAsync(criteria)
+                .GetAwaiter().GetResult();
+
+            return processes
+                .Select(p => new RunningAgent(plugin, MapToInstance(p)))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Failed to check for running agents for plugin {PluginId}", plugin.Id);
+            return Array.Empty<RunningAgent>();
+        }
     }
+
+    private static AgentProcessInstance MapToInstance(AgentProcess process)
+        => new(
+            ProcessId: process.ProcessId,
+            ExecutablePath: process.ExecutablePath,
+            StartTime: process.StartTime,
+            CommandLine: process.CommandLine
+        );
 }

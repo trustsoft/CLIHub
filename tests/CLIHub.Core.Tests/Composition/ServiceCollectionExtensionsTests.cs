@@ -9,6 +9,7 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Tests.Fakes;
 using CLIHub.Core.Updates;
@@ -28,6 +29,7 @@ public class ServiceCollectionExtensionsTests
             new FakeInteractiveProcessRunner(),
             new FakeProcessOutputRunner(),
             new FakeRuntimeExecutableLocator()));
+        services.AddSingleton<IProcessOrchestrator>(sp => new FakeProcessOrchestrator());
 
         using var provider = services.BuildServiceProvider();
 

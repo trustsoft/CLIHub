@@ -1,18 +1,18 @@
 namespace CLIHub.Core.Tests.Agents;
 
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
-using CLIHub.Core.Infrastructure.Processes;
-using CLIHub.Core.Tests.Fakes;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Processes;
 
 public class AgentCommandServiceTests : IDisposable
 {
     private readonly string projectDir;
-    private readonly FakeInteractiveProcessRunner interactiveRunner = new();
-    private readonly FakeProcessOutputRunner outputRunner = new();
-    private readonly ProcessLauncher launcher;
+    private readonly Mock<IProcessOrchestrator> orchestratorMock = new();
+    private readonly Mock<IPreferencesStore> preferencesStoreMock = new();
     private readonly AgentCommandService service;
 
     public AgentCommandServiceTests()
@@ -20,14 +20,21 @@ public class AgentCommandServiceTests : IDisposable
         this.projectDir = Path.Combine(Path.GetTempPath(), "clihub-agent-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(this.projectDir);
 
-        this.launcher = new ProcessLauncher(
-            NullLogger<ProcessLauncher>.Instance,
-            this.interactiveRunner,
-            this.outputRunner,
-            new FakeRuntimeExecutableLocator());
+        this.preferencesStoreMock
+            .Setup(x => x.Load())
+            .Returns(new AppPreferences { DefaultRuntime = RuntimeKind.PowerShell });
+
+        this.orchestratorMock
+            .Setup(x => x.LaunchInteractiveAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(ProcessResult.Success(0));
+
+        this.orchestratorMock
+            .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(ProcessResult.Success(0, output: "1.2.3"));
 
         this.service = new AgentCommandService(
-            this.launcher,
+            this.orchestratorMock.Object,
+            this.preferencesStoreMock.Object,
             NullLogger<AgentCommandService>.Instance);
     }
 
@@ -52,8 +59,8 @@ public class AgentCommandServiceTests : IDisposable
 
         Assert.True(result.Success);
         Assert.Equal("1.2.3", result.Output);
-        Assert.Single(this.outputRunner.Runs);
-        Assert.Empty(this.interactiveRunner.Launches);
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Once);
+        this.orchestratorMock.Verify(x => x.LaunchInteractiveAsync(It.IsAny<LaunchRequest>()), Times.Never);
     }
 
     [Theory]
@@ -72,8 +79,8 @@ public class AgentCommandServiceTests : IDisposable
         var result = await this.service.ExecuteAsync(plugin, kind, this.projectDir);
 
         Assert.True(result.Success);
-        Assert.Single(this.interactiveRunner.Launches);
-        Assert.Empty(this.outputRunner.Runs);
+        this.orchestratorMock.Verify(x => x.LaunchInteractiveAsync(It.IsAny<LaunchRequest>()), Times.Once);
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Never);
     }
 
     [Fact]
@@ -103,16 +110,13 @@ public class AgentCommandServiceTests : IDisposable
         Assert.False(result.Success);
         Assert.Contains("does not exist", result.Error);
     }
+
     [Fact]
     public async Task Version_NonZeroExitCode_ReturnsFailure()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            ExitCode = 1,
-            StandardOutput = string.Empty,
-            StandardError = "Command not found",
-            TimedOut = false
-        };
+        this.orchestratorMock
+            .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(ProcessResult.Success(1, output: "", duration: null));
 
         var plugin = PluginWith(new AgentCommands
         {
@@ -122,6 +126,6 @@ public class AgentCommandServiceTests : IDisposable
         var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Version, this.projectDir);
 
         Assert.False(result.Success);
-        Assert.Contains("Command not found", result.Error);
+        Assert.Contains("Failed to get version", result.Error);
     }
 }

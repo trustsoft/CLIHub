@@ -2,23 +2,30 @@ namespace CLIHub.Core.Agents;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
+using CLIHub.Core.Processes;
 
 /// <summary>
 ///   Executes named agent commands in a project folder.
 /// </summary>
 public class AgentCommandService : IAgentCommandService
 {
-    private readonly ProcessLauncher processLauncher;
+    private readonly IProcessOrchestrator orchestrator;
+    private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentCommandService> logger;
 
     /// <summary>
     ///   Creates the service.
     /// </summary>
-    public AgentCommandService(ProcessLauncher processLauncher, ILogger<AgentCommandService> logger)
+    public AgentCommandService(
+        IProcessOrchestrator orchestrator,
+        IPreferencesStore preferencesStore,
+        ILogger<AgentCommandService> logger)
     {
-        this.processLauncher = processLauncher;
+        this.orchestrator = orchestrator;
+        this.preferencesStore = preferencesStore;
         this.logger = logger;
     }
 
@@ -42,34 +49,29 @@ public class AgentCommandService : IAgentCommandService
             return new AgentCommandResult(false, null, "Project folder does not exist");
         }
 
+        var runtime = this.preferencesStore.Load().DefaultRuntime;
+        var request = LaunchRequest.Create(projectPath, command, runtime, cancellationToken);
+
         if (kind == AgentCommandKind.Version)
         {
-            return await this.RunVersionAsync(plugin, command, projectPath, cancellationToken);
+            var result = await this.orchestrator.CaptureOutputAsync(request);
+            if (result.IsSuccess && result.ExitCode == 0)
+            {
+                this.logger.LogInformation("Retrieved version for {PluginName}: {Version}", plugin.Name, result.Output);
+                return new AgentCommandResult(true, result.Output, null);
+            }
+            else
+            {
+                var error = !string.IsNullOrWhiteSpace(result.Error)
+                    ? result.Error
+                    : "Failed to get version";
+                return new AgentCommandResult(false, result.Output, error);
+            }
         }
 
-        var started = this.processLauncher.LaunchProcess(command, projectPath);
-        return started
+        var launchResult = await this.orchestrator.LaunchInteractiveAsync(request);
+        return launchResult.IsSuccess
             ? new AgentCommandResult(true, null, null)
-            : new AgentCommandResult(false, null, $"Failed to launch {plugin.Name}");
-    }
-
-    private async Task<AgentCommandResult> RunVersionAsync(Plugin plugin,
-                                                           PluginCommand command,
-                                                           string projectPath,
-                                                           CancellationToken cancellationToken)
-    {
-        var result = await this.processLauncher.CaptureOutputAsync(
-            command.Executable, command.Arguments, projectPath, cancellationToken);
-
-        if (!result.Started || result.ExitCode != 0)
-        {
-            var error = !string.IsNullOrWhiteSpace(result.StdErr)
-                ? result.StdErr
-                : $"Failed to get version for {plugin.Name}";
-            return new AgentCommandResult(false, result.StdOut, error);
-        }
-
-        this.logger.LogInformation("Retrieved version for {PluginName}: {Version}", plugin.Name, result.StdOut);
-        return new AgentCommandResult(true, result.StdOut, null);
+            : new AgentCommandResult(false, null, launchResult.Error ?? $"Failed to launch {plugin.Name}");
     }
 }

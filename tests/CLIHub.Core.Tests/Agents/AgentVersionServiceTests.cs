@@ -1,32 +1,31 @@
 namespace CLIHub.Core.Tests.Agents;
 
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Tests.Fakes;
 
 public class AgentVersionServiceTests
 {
-    private readonly FakeProcessOutputRunner outputRunner = new();
-    private readonly ProcessLauncher launcher;
+    private readonly Mock<IProcessOrchestrator> orchestratorMock = new();
     private readonly FakeConfigurationRepository config = new();
     private readonly FakeTimeProvider time = new(DateTimeOffset.Parse("2026-01-01T00:00:00Z"));
+    private ProcessResult outputResult = ProcessResult.Success(0, output: "1.2.3");
 
     public AgentVersionServiceTests()
     {
-        this.launcher = new ProcessLauncher(
-            NullLogger<ProcessLauncher>.Instance,
-            new FakeInteractiveProcessRunner(),
-            this.outputRunner,
-            new FakeRuntimeExecutableLocator());
+        this.orchestratorMock
+            .Setup(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(() => this.outputResult);
     }
 
     private AgentVersionService CreateService() =>
         new(
-            this.launcher,
+            this.orchestratorMock.Object,
             new PreferencesStore(this.config),
             NullLogger<AgentVersionService>.Instance,
             this.time);
@@ -48,19 +47,13 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_CommandDefined_ReturnsFirstLine()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.2.3\nsome banner",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.2.3\nsome banner");
         var service = this.CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
 
         Assert.Equal("1.2.3", version);
-        Assert.Single(this.outputRunner.Runs);
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Once);
     }
 
     [Theory]
@@ -70,13 +63,7 @@ public class AgentVersionServiceTests
     [InlineData("v2.5", "2.5")]
     public async Task GetVersion_ExtractsVersionNumber(string output, string expected)
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = output,
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: output);
         var service = this.CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -87,13 +74,7 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_NoVersionNumber_ReturnsLineAsIs()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "no digits here",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "no digits here");
         var service = this.CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -109,19 +90,13 @@ public class AgentVersionServiceTests
         var version = await service.GetVersionAsync(PluginWithVersion(false));
 
         Assert.Null(version);
-        Assert.Empty(this.outputRunner.Runs);
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Never);
     }
 
     [Fact]
     public async Task GetVersion_CaptureFailure_ReturnsNull()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = string.Empty,
-            StandardError = "Command not found",
-            ExitCode = 1,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(1, output: string.Empty);
         var service = this.CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -132,13 +107,7 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_Timeout_ReturnsNull()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = string.Empty,
-            StandardError = string.Empty,
-            ExitCode = -1,
-            TimedOut = true
-        };
+        this.outputResult = ProcessResult.Timeout();
         var service = this.CreateService();
 
         var version = await service.GetVersionAsync(PluginWithVersion(true));
@@ -149,13 +118,7 @@ public class AgentVersionServiceTests
     [Fact]
     public async Task GetVersion_WithinCacheTtl_ReturnsCachedVersionWithoutRunning()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.2.3",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.2.3");
         var service = this.CreateService();
         var plugin = PluginWithVersion(true);
 
@@ -164,79 +127,49 @@ public class AgentVersionServiceTests
         var cached = await service.GetVersionAsync(plugin);
 
         Assert.Equal("1.2.3", cached);
-        Assert.Single(this.outputRunner.Runs); // Only ran once
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Once);
     }
 
     [Fact]
     public async Task GetVersion_AfterCacheExpiry_RunsAgain()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.2.3",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.2.3");
         var service = this.CreateService();
         var plugin = PluginWithVersion(true);
 
         await service.GetVersionAsync(plugin);
         this.time.Advance(TimeSpan.FromMinutes(20)); // Default TTL is 15 minutes
 
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "2.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "2.0.0");
 
         var version = await service.GetVersionAsync(plugin);
 
         Assert.Equal("2.0.0", version);
-        Assert.Equal(2, this.outputRunner.Runs.Count); // Ran twice
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Exactly(2));
     }
 
     [Fact]
     public async Task Invalidate_ClearsCachedVersions()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.2.3",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.2.3");
         var service = this.CreateService();
         var plugin = PluginWithVersion(true);
 
         await service.GetVersionAsync(plugin);
         service.Invalidate();
 
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "2.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "2.0.0");
         
         var version = await service.GetVersionAsync(plugin);
 
         Assert.Equal("2.0.0", version);
-        Assert.Equal(2, this.outputRunner.Runs.Count); // Ran twice after invalidation
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Exactly(2));
     }
 
     [Fact]
     public async Task InvalidateFor_Plugin_RunsOnlyThatAgentsVersionCommandAgain()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.0.0");
         var service = this.CreateService();
         var pluginA = PluginWithVersion(true, "a");
         var pluginB = PluginWithVersion(true, "b");
@@ -244,45 +177,27 @@ public class AgentVersionServiceTests
         Assert.Equal("1.0.0", await service.GetVersionAsync(pluginA));
         Assert.Equal("1.0.0", await service.GetVersionAsync(pluginB));
 
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "2.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "2.0.0");
         service.InvalidateFor(pluginA);
 
         Assert.Equal("2.0.0", await service.GetVersionAsync(pluginA));
         Assert.Equal("1.0.0", await service.GetVersionAsync(pluginB));
-        Assert.Equal(3, this.outputRunner.Runs.Count); // A primed, B primed, A re-probed
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Exactly(3));
     }
 
     [Fact]
     public async Task InvalidateFor_UnknownPlugin_DoesNotClearExistingEntries()
     {
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "1.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "1.0.0");
         var service = this.CreateService();
         var plugin = PluginWithVersion(true, "a");
 
         Assert.Equal("1.0.0", await service.GetVersionAsync(plugin));
 
-        this.outputRunner.Result = new ProcessResult
-        {
-            StandardOutput = "2.0.0",
-            StandardError = string.Empty,
-            ExitCode = 0,
-            TimedOut = false
-        };
+        this.outputResult = ProcessResult.Success(0, output: "2.0.0");
         service.InvalidateFor(PluginWithVersion(true, "unknown"));
 
         Assert.Equal("1.0.0", await service.GetVersionAsync(plugin));
-        Assert.Single(this.outputRunner.Runs);
+        this.orchestratorMock.Verify(x => x.CaptureOutputAsync(It.IsAny<LaunchRequest>()), Times.Once);
     }
 }

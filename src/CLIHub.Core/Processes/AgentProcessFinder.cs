@@ -8,7 +8,7 @@ using CLIHub.Core.Plugins;
 /// Adapts <see cref="IAgentProcessInspector"/> and <see cref="AgentProcessMatcher"/> 
 /// to provide agent process finding.
 /// </summary>
-internal sealed class AgentProcessFinder : IAgentProcessFinder
+public sealed class AgentProcessFinder : IAgentProcessFinder
 {
     private readonly IAgentProcessInspector inspector;
     private readonly AgentProcessMatcher matcher;
@@ -58,24 +58,41 @@ internal sealed class AgentProcessFinder : IAgentProcessFinder
         return Task.FromResult<IReadOnlyList<AgentProcess>>(matches);
     }
 
+    /// <inheritdoc/>
+    public Task<IReadOnlyList<PluginAgentProcess>> FindAllAsync(
+        IReadOnlyList<Plugin> plugins,
+        AgentProcessMatchDetail detail,
+        CancellationToken cancellationToken = default)
+    {
+        var matches = new List<PluginAgentProcess>();
+
+        // One candidate-name set and one inspector enumeration cover every plugin,
+        // preserving the enumerate-once contract of the catalog-wide query.
+        var candidateNames = this.matcher.GetCandidateProcessNames(plugins, detail);
+        var instances = this.inspector.GetRunningProcesses(candidateNames, detail);
+
+        foreach (var instance in instances)
+        {
+            foreach (var plugin in plugins)
+            {
+                if (this.matcher.IsMatch(instance, plugin, detail))
+                {
+                    matches.Add(new PluginAgentProcess(plugin, MapToAgentProcess(instance)));
+                    break; // One match per process
+                }
+            }
+        }
+
+        return Task.FromResult<IReadOnlyList<PluginAgentProcess>>(matches);
+    }
+
     private static AgentProcess MapToAgentProcess(AgentProcessInstance instance)
     {
-        // Runtime is null for runtime-hosted processes (Node.js, Python)
-        // as RuntimeKind enum doesn't have corresponding values
-        RuntimeExecutable? runtime = null;
-
-        var executableName = Path.GetFileNameWithoutExtension(instance.ExecutablePath);
-        var isRuntimeHosted = AgentProcessMatcher.RuntimeHostProcessNames.Contains(executableName);
-
-        // For now, runtime-hosted processes have null Runtime
-        // Shell-hosted processes also have null Runtime in this phase
-        // (Phase 3 consumer migration will populate this properly)
-
         return new AgentProcess
         {
             ProcessId = instance.ProcessId,
             CommandLine = instance.CommandLine ?? string.Empty,
-            Runtime = runtime,
+            ExecutablePath = instance.ExecutablePath,
             StartTime = instance.StartTime
         };
     }
