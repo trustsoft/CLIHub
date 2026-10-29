@@ -110,7 +110,11 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddAgentServices(this IServiceCollection services)
     {
-        services.AddSingleton<IAgentCommandService, AgentCommandService>();
+        services.AddSingleton<IAgentCommandService>(sp => new AgentCommandService(
+            sp.GetRequiredService<IProcessOrchestrator>(),
+            sp.GetRequiredService<IPreferencesStore>(),
+            sp.GetRequiredService<ILogger<AgentCommandService>>(),
+            sp.GetRequiredService<IDomainEventPublisher>()));
         services.AddSingleton<IAgentManagementService, AgentManagementService>();
         services.AddSingleton<IAgentDetectionService>(sp => new AgentDetectionService(
             sp.GetRequiredService<IPreferencesStore>()));
@@ -148,9 +152,22 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddEventServices(this IServiceCollection services)
     {
         services.AddSingleton<DomainEventBus>();
-        services.AddSingleton<IDomainEventPublisher>(sp => sp.GetRequiredService<DomainEventBus>());
         services.AddSingleton<IDomainEventSubscriber>(sp => sp.GetRequiredService<DomainEventBus>());
         services.AddSingleton<ProjectSelectionLoggingSubscriber>();
+        services.AddSingleton<AgentLaunchAuditSubscriber>();
+
+        // Subscribers self-subscribe in their constructors, and DI creates singletons lazily —
+        // registering them alone would leave every subscriber unconstructed (and therefore
+        // unsubscribed) forever. Resolving the publisher activates the subscriber singletons
+        // exactly once; every publisher consumer (ProjectService, AgentCommandService) resolves
+        // it at construction, so subscriptions exist before the first event is published.
+        services.AddSingleton<IDomainEventPublisher>(sp =>
+        {
+            _ = sp.GetRequiredService<ProjectSelectionLoggingSubscriber>();
+            _ = sp.GetRequiredService<AgentLaunchAuditSubscriber>();
+            return sp.GetRequiredService<DomainEventBus>();
+        });
+
         return services;
     }
 }

@@ -3,6 +3,7 @@ namespace CLIHub.Core.Agents;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
@@ -15,6 +16,7 @@ public class AgentCommandService : IAgentCommandService
     private readonly IProcessOrchestrator orchestrator;
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentCommandService> logger;
+    private readonly IDomainEventPublisher eventPublisher;
 
     /// <summary>
     ///   Creates the service.
@@ -22,11 +24,13 @@ public class AgentCommandService : IAgentCommandService
     public AgentCommandService(
         IProcessOrchestrator orchestrator,
         IPreferencesStore preferencesStore,
-        ILogger<AgentCommandService> logger)
+        ILogger<AgentCommandService> logger,
+        IDomainEventPublisher eventPublisher)
     {
         this.orchestrator = orchestrator;
         this.preferencesStore = preferencesStore;
         this.logger = logger;
+        this.eventPublisher = eventPublisher;
     }
 
     /// <inheritdoc />
@@ -69,9 +73,31 @@ public class AgentCommandService : IAgentCommandService
             }
         }
 
+        return await this.LaunchInteractiveCommandAsync(plugin, projectPath, kind, request);
+    }
+
+    private async Task<AgentCommandResult> LaunchInteractiveCommandAsync(
+        Plugin plugin,
+        string projectPath,
+        AgentCommandKind kind,
+        LaunchRequest request)
+    {
         var launchResult = await this.orchestrator.LaunchInteractiveAsync(request);
-        return launchResult.IsSuccess
-            ? new AgentCommandResult(true, null, null)
-            : new AgentCommandResult(false, null, launchResult.Error ?? $"Failed to launch {plugin.Name}");
+        if (launchResult.IsSuccess)
+        {
+            // Only session-launching kinds publish AgentLaunched; Update is not a launch.
+            if (kind is AgentCommandKind.Launch or AgentCommandKind.Resume)
+            {
+                this.eventPublisher.Publish(new AgentLaunched(
+                    plugin.Id,
+                    projectPath,
+                    kind,
+                    DateTimeOffset.UtcNow));
+            }
+
+            return new AgentCommandResult(true, null, null);
+        }
+
+        return new AgentCommandResult(false, null, launchResult.Error ?? $"Failed to launch {plugin.Name}");
     }
 }

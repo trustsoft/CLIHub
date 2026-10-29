@@ -6,6 +6,7 @@ using Moq;
 using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Processes;
 
 public class AgentCommandServiceTests : IDisposable
@@ -13,6 +14,7 @@ public class AgentCommandServiceTests : IDisposable
     private readonly string projectDir;
     private readonly Mock<IProcessOrchestrator> orchestratorMock = new();
     private readonly Mock<IPreferencesStore> preferencesStoreMock = new();
+    private readonly Mock<IDomainEventPublisher> eventPublisherMock = new();
     private readonly AgentCommandService service;
 
     public AgentCommandServiceTests()
@@ -35,7 +37,8 @@ public class AgentCommandServiceTests : IDisposable
         this.service = new AgentCommandService(
             this.orchestratorMock.Object,
             this.preferencesStoreMock.Object,
-            NullLogger<AgentCommandService>.Instance);
+            NullLogger<AgentCommandService>.Instance,
+            this.eventPublisherMock.Object);
     }
 
     public void Dispose()
@@ -127,5 +130,78 @@ public class AgentCommandServiceTests : IDisposable
 
         Assert.False(result.Success);
         Assert.Contains("Failed to get version", result.Error);
+    }
+
+    [Fact]
+    public async Task AgentCommandService_SuccessfulLaunch_PublishesAgentLaunchedEvent()
+    {
+        var plugin = PluginWith(new AgentCommands
+        {
+            Launch = new PluginCommand { Name = "Launch", Executable = "test" }
+        });
+
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Launch, this.projectDir);
+
+        Assert.True(result.Success);
+        this.eventPublisherMock.Verify(
+            x => x.Publish(It.Is<AgentLaunched>(evt =>
+                evt.PluginId == plugin.Id &&
+                evt.ProjectPath == this.projectDir &&
+                evt.CommandKind == AgentCommandKind.Launch &&
+                evt.LaunchedAt <= DateTimeOffset.UtcNow &&
+                evt.LaunchedAt >= DateTimeOffset.UtcNow.AddSeconds(-5))),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AgentCommandService_FailedLaunch_DoesNotPublishEvent()
+    {
+        this.orchestratorMock
+            .Setup(x => x.LaunchInteractiveAsync(It.IsAny<LaunchRequest>()))
+            .ReturnsAsync(ProcessResult.Failure(error: "Launch failed"));
+
+        var plugin = PluginWith(new AgentCommands
+        {
+            Launch = new PluginCommand { Name = "Launch", Executable = "test" }
+        });
+
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Launch, this.projectDir);
+
+        Assert.False(result.Success);
+        this.eventPublisherMock.Verify(
+            x => x.Publish(It.IsAny<AgentLaunched>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AgentCommandService_UpdateCommand_DoesNotPublishAgentLaunchedEvent()
+    {
+        var plugin = PluginWith(new AgentCommands
+        {
+            Update = new PluginCommand { Name = "Update", Executable = "test" }
+        });
+
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Update, this.projectDir);
+
+        Assert.True(result.Success);
+        this.eventPublisherMock.Verify(
+            x => x.Publish(It.IsAny<AgentLaunched>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task AgentCommandService_VersionCommand_DoesNotPublishAgentLaunchedEvent()
+    {
+        var plugin = PluginWith(new AgentCommands
+        {
+            Version = new PluginCommand { Name = "Version", Executable = "test", Arguments = "--version" }
+        });
+
+        var result = await this.service.ExecuteAsync(plugin, AgentCommandKind.Version, this.projectDir);
+
+        Assert.True(result.Success);
+        this.eventPublisherMock.Verify(
+            x => x.Publish(It.IsAny<AgentLaunched>()),
+            Times.Never);
     }
 }

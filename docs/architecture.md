@@ -84,6 +84,7 @@ keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
 - [Project scanning](architecture/scanning.md)
 - [Process execution and agent safety](architecture/processes.md)
 - [WPF resources and theming](architecture/ui.md)
+- [Domain events](architecture/domain-events.md)
 - [Architecture decision records](adr/README.md)
 
 ## Technology and Operations
