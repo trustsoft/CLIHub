@@ -26,20 +26,6 @@ internal sealed class UpdateDownloader
     }
 
     /// <summary>
-    ///   Gets a value indicating whether a download is currently in progress.
-    /// </summary>
-    public bool IsDownloading
-    {
-        get
-        {
-            lock (this.downloadGate)
-            {
-                return this.isDownloading;
-            }
-        }
-    }
-
-    /// <summary>
     ///   Gets the most recently downloaded asset, or null if no download has completed.
     /// </summary>
     public VelopackAsset? DownloadedAsset

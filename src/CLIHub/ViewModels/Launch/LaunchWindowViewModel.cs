@@ -18,7 +18,6 @@ using CLIHub.Settings;
 /// </summary>
 public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleTarget, IDisposable
 {
-    private const string NoProjectSelectedMessage = "Select a project first.";
 
     private readonly ProjectPaneController projectPane;
     private readonly AgentPaneController agentPane;

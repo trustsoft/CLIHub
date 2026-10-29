@@ -128,7 +128,7 @@ public class WindowActionCoordinatorTests
                 Mock.Of<ICommandLineBuilder>(),
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
-                new AgentProcessFinder(inspector.Object, new AgentProcessMatcher(), catalog.Object),
+                new AgentProcessFinder(inspector.Object, new AgentProcessMatcher()),
                 new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,
@@ -174,22 +174,13 @@ public class WindowActionCoordinatorTests
             new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
-        var pluginCatalog = new Mock<IPluginCatalog>();
-        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
-        var agentPane = new AgentPaneController(
-            pluginCatalog.Object,
-            new Mock<IAgentDetectionService>().Object,
-            new Mock<IAgentVersionService>().Object,
-            new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object,
-            NullLogger<AgentPaneController>.Instance);
         var updates = new Mock<IUpdateWorkflow>();
         updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
         var updateControl = new UpdateControlViewModel(
             updates.Object,
             NullLogger<UpdateControlViewModel>.Instance,
             new Mock<IApplicationOperationLifetime>().Object);
-        return new StatusMessageCoordinator(projectPane, agentPane, updateControl);
+        return new StatusMessageCoordinator(projectPane, updateControl);
     }
 
     private static Plugin NpmAgentPlugin(string id)

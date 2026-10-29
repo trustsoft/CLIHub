@@ -29,7 +29,6 @@ public class UpdateService : IUpdateService
     private UpdateManager? cachedManager;
     private bool cachedManagerPrerelease;
     private bool managerCached;
-    private readonly UpdateChecker checker;
     private readonly UpdateDownloader downloader;
     private readonly UpdateInstaller installer;
     private readonly object downloadGate = new();
@@ -46,7 +45,6 @@ public class UpdateService : IUpdateService
         this.logger = logger;
         this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.checkTimeout = CheckTimeout;
-        this.checker = new UpdateChecker(logger);
         this.downloader = new UpdateDownloader(logger);
         this.installer = new UpdateInstaller(logger);
     }
@@ -59,7 +57,6 @@ public class UpdateService : IUpdateService
         this.logger = logger;
         this.checkTimeout = checkTimeout ?? CheckTimeout;
         this.Manager = manager;
-        this.checker = new UpdateChecker(logger);
         this.downloader = new UpdateDownloader(logger);
         this.installer = new UpdateInstaller(logger);
     }

@@ -4,10 +4,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
-using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
-using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
@@ -115,17 +113,8 @@ public class StatusMessageCoordinatorTests
             new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
-        var pluginCatalog = new Mock<IPluginCatalog>();
-        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
-        var agentPane = new AgentPaneController(
-            pluginCatalog.Object,
-            new Mock<IAgentDetectionService>().Object,
-            new Mock<IAgentVersionService>().Object,
-            new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object,
-            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
-        var coordinator = new StatusMessageCoordinator(projectPane, agentPane, updateControl);
+        var coordinator = new StatusMessageCoordinator(projectPane, updateControl);
 
         projectService.Raise(x => x.ProjectsChanged += null, EventArgs.Empty);
 
@@ -158,17 +147,8 @@ public class StatusMessageCoordinatorTests
             new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
-        var pluginCatalog = new Mock<IPluginCatalog>();
-        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
-        var agentPane = new AgentPaneController(
-            pluginCatalog.Object,
-            new Mock<IAgentDetectionService>().Object,
-            new Mock<IAgentVersionService>().Object,
-            new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object,
-            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
-        var coordinator = new StatusMessageCoordinator(projectPane, agentPane, updateControl);
+        var coordinator = new StatusMessageCoordinator(projectPane, updateControl);
 
         coordinator.ReportProjectSelected("BeforeDispose");
         coordinator.Dispose();
@@ -222,17 +202,8 @@ public class StatusMessageCoordinatorTests
             new ProjectModelCatalog(),
             new Mock<IProjectDialogService>().Object,
             new PromptState());
-        var pluginCatalog = new Mock<IPluginCatalog>();
-        pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
-        var agentPane = new AgentPaneController(
-            pluginCatalog.Object,
-            new Mock<IAgentDetectionService>().Object,
-            new Mock<IAgentVersionService>().Object,
-            new Mock<ILogoCacheService>().Object,
-            new Mock<IApplicationOperationLifetime>().Object,
-            NullLogger<AgentPaneController>.Instance);
         var updateControl = CreateUpdateControl();
-        return new StatusMessageCoordinator(projectPane, agentPane, updateControl);
+        return new StatusMessageCoordinator(projectPane, updateControl);
     }
 
     private static UpdateControlViewModel CreateUpdateControl()

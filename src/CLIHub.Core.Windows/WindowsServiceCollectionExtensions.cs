@@ -52,8 +52,7 @@ public static class WindowsServiceCollectionExtensions
             new WmiProcessCommandLineSource(sp.GetRequiredService<ILogger<WmiProcessCommandLineSource>>())));
         services.AddSingleton<IAgentProcessFinder>(sp => new AgentProcessFinder(
             sp.GetRequiredService<IAgentProcessInspector>(),
-            new AgentProcessMatcher(),
-            sp.GetRequiredService<IPluginCatalog>()));
+            new AgentProcessMatcher()));
         services.AddSingleton<IProcessOrchestrator>(sp => new ProcessOrchestrator(
             sp.GetRequiredService<IRuntimeResolver>(),
             sp.GetRequiredService<ICommandLineBuilder>(),

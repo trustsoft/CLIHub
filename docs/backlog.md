@@ -148,11 +148,28 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   (stopwatch-bounded wait loop). During the `scanning-flake-settle` fix (2026-10-24), the captured
   recurring flake was exactly `ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus`
   (see its resolved entry), making it the probable identity of this incident too; the
-  `UpdateCheckerTests`/`UpdateDownloaderTests` candidates stay unexcluded until a captured failure
-  names one of them.
+  `UpdateDownloaderTests` (100 ms cancellation window) candidate stays unexcluded until a captured
+  failure names it (`UpdateCheckerTests` was deleted with `remove-unused-code-tier1`).
 - Proposed remedy: on recurrence, re-run with `--logger trx`, capture the test name, and stabilize the
   offending timing window.
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
+
+### CheckCardUpdatesCommand test races the card-action reset (low, flaky)
+
+- Severity: Low (test-only race; not a product bug)
+- Evidence: `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs:1609`
+  (`Assert.False(viewModel.IsCardActionRunning)`) failed once on 2026-10-30 during verification of
+  `remove-unused-code-tier1` (Expected False, Actual True), then passed in isolation and in five
+  repeat runs. The `SpinWait` predicate (`AgentManagementViewModelTests.cs:1605`,
+  `CheckCardUpdatesCommand.CanExecute(cardA)`) becomes true at `AgentManagementViewModel.cs:725`
+  (`card.IsCheckingUpdates = false`) *before* `ExitCardAction()` clears `IsCardActionRunning` at
+  `:726`, so the assertion can observe that intermediate state under parallel load. Not caused by
+  that change: neither file is in its diff.
+- Proposed remedy: extend the `SpinUntil` predicate to also require `!viewModel.IsCardActionRunning`,
+  or spin on `IsCardActionRunning` before the final assertion.
+- Trigger: the next red run of
+  `CheckCardUpdatesCommand_WhilePerCardCheckRuns_DisablesOnlyTheActingCardAndGatesHeader`, or a CI
+  flake carrying that test name.
 
 ### ApplicationHost null-argument tests fail while the app is running
 

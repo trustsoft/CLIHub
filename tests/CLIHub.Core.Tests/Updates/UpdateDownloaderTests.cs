@@ -44,7 +44,6 @@ public class UpdateDownloaderTests : IDisposable
         // Assert
         Assert.Equal(UpdateDownloadStatus.Failed, result.Status);
         Assert.Null(result.AvailableVersion);
-        Assert.False(this.downloader.IsDownloading);
     }
 
     [Fact]
@@ -92,14 +91,6 @@ public class UpdateDownloaderTests : IDisposable
         // Assert
         Assert.Equal(UpdateDownloadStatus.Failed, result.Status);
         Assert.Equal("2.0.0", result.AvailableVersion);
-        Assert.False(this.downloader.IsDownloading);
-    }
-
-    [Fact]
-    public void IsDownloading_Initially_ReturnsFalse()
-    {
-        // Assert
-        Assert.False(this.downloader.IsDownloading);
     }
 
     [Fact]

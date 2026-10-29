@@ -2,7 +2,6 @@ namespace CLIHub.Core.Processes;
 
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
-using CLIHub.Core.Plugins;
 
 /// <summary>
 /// Adapts <see cref="IAgentProcessInspector"/> and <see cref="AgentProcessMatcher"/> 
@@ -12,22 +11,18 @@ public sealed class AgentProcessFinder : IAgentProcessFinder
 {
     private readonly IAgentProcessInspector inspector;
     private readonly AgentProcessMatcher matcher;
-    private readonly IPluginCatalog catalog;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AgentProcessFinder"/> class.
     /// </summary>
     /// <param name="inspector">The agent process inspector.</param>
     /// <param name="matcher">The agent process matcher.</param>
-    /// <param name="catalog">The plugin catalog.</param>
     public AgentProcessFinder(
         IAgentProcessInspector inspector,
-        AgentProcessMatcher matcher,
-        IPluginCatalog catalog)
+        AgentProcessMatcher matcher)
     {
         this.inspector = inspector;
         this.matcher = matcher;
-        this.catalog = catalog;
     }
 
     /// <inheritdoc/>

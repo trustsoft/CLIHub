@@ -135,21 +135,6 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <inheritdoc />
     public IReadOnlyList<InvalidPluginEntry> GetInvalidPlugins() => this.invalidPlugins;
 
-    private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
-    {
-        var result = this.descriptorValidator.Validate(plugin);
-        if (!result.IsValid)
-        {
-            this.logger.LogWarning(
-                "Invalid plugin in {Directory}: {Errors}",
-                pluginDirectory,
-                string.Join("; ", result.Errors));
-            return false;
-        }
-
-        return true;
-    }
-
     private static string? FindLoadedPluginDirectory(IReadOnlyList<Plugin> plugins,
                                                      string pluginId,
                                                      string currentPluginDirectory)

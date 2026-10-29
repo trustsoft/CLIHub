@@ -35,7 +35,7 @@ public class AgentProcessMonitorTests
             Mock.Of<ICommandLineBuilder>(),
             Mock.Of<IInteractiveProcessRunner>(),
             Mock.Of<IProcessOutputRunner>(),
-            new AgentProcessFinder(inspector, new AgentProcessMatcher(), new Mock<IPluginCatalog>().Object),
+            new AgentProcessFinder(inspector, new AgentProcessMatcher()),
             new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ProcessOrchestrator>.Instance);
 

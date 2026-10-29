@@ -73,7 +73,7 @@ public class AgentManagementViewModelTests
                 Mock.Of<ICommandLineBuilder>(),
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
-                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), catalog.Object),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher()),
                 new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,

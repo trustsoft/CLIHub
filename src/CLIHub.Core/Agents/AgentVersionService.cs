@@ -130,15 +130,6 @@ public class AgentVersionService : IAgentVersionService
         }
     }
 
-    private TimeSpan ProbeTimeout
-    {
-        get
-        {
-            var seconds = this.preferencesStore.Load().AgentProbeTimeoutSeconds;
-            return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : DefaultProbeTimeout;
-        }
-    }
-
     /// <summary>
     ///   Extracts the version number from command output (for example "1.0.88" from
     ///   "GitHub Copilot CLI 1.0.88."). Falls back to the first non-empty line.

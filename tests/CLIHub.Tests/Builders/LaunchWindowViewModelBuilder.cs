@@ -269,7 +269,6 @@ public class LaunchWindowViewModelBuilder
 
         var statusCoordinator = new StatusMessageCoordinator(
             projectPane,
-            agentPane,
             updateControl);
 
         var launchCoordinator = new LaunchCommandCoordinator(
@@ -284,7 +283,7 @@ public class LaunchWindowViewModelBuilder
                 Mock.Of<ICommandLineBuilder>(),
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
-                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher()),
                 new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,
@@ -349,7 +348,6 @@ public class LaunchWindowViewModelBuilder
 
         var statusCoordinator = new StatusMessageCoordinator(
             projectPane,
-            agentPane,
             updateControl);
 
         var launchCoordinator = new LaunchCommandCoordinator(
@@ -364,7 +362,7 @@ public class LaunchWindowViewModelBuilder
                 Mock.Of<ICommandLineBuilder>(),
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
-                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher()),
                 new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,

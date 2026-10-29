@@ -1,6 +1,5 @@
 namespace CLIHub.Startup;
 
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 
@@ -9,19 +8,14 @@ using CLIHub.Core.Models;
 /// </summary>
 public sealed class StartupPreferencesApplier : IStartupPreferencesApplier
 {
-    private readonly IPreferencesStore preferencesStore;
     private readonly IStartupService startupService;
 
     /// <summary>
-    ///   Creates the applier with the preferences store and Windows startup boundaries.
+    ///   Creates the applier with the Windows startup boundary.
     /// </summary>
-    /// <param name="preferencesStore"> Preferences store for persisting runtime. </param>
     /// <param name="startupService"> Windows startup registration service. </param>
-    public StartupPreferencesApplier(
-        IPreferencesStore preferencesStore,
-        IStartupService startupService)
+    public StartupPreferencesApplier(IStartupService startupService)
     {
-        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.startupService = startupService ?? throw new ArgumentNullException(nameof(startupService));
     }
 

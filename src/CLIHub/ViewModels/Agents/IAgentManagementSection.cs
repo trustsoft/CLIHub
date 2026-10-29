@@ -116,11 +116,6 @@ public interface IAgentManagementSection : IDisposable
     bool CanDetect { get; }
 
     /// <summary>
-    ///   Whether an update-availability check pass is currently running.
-    /// </summary>
-    bool IsCheckingUpdates { get; }
-
-    /// <summary>
     ///   Whether the check-updates action is available: true while neither the detection pass nor
     ///   the update-availability check pass is running, nor while any per-card action (Detect or
     ///   Check updates) is running.

@@ -7,7 +7,6 @@ namespace CLIHub.ViewModels;
 public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
 {
     private readonly ProjectPaneController projectPane;
-    private readonly AgentPaneController agentPane;
     private readonly UpdateControlViewModel updateControl;
     private bool disposed;
 
@@ -16,14 +15,11 @@ public sealed class StatusMessageCoordinator : ObservableObject, IDisposable
     ///   and the update control.
     /// </summary>
     /// <param name="projectPane"> Project pane controller for project change events. </param>
-    /// <param name="agentPane"> Agent pane controller (currently unused, reserved for future events). </param>
     /// <param name="updateControl"> Update control for outcome reporting. </param>
     public StatusMessageCoordinator(ProjectPaneController projectPane,
-                                    AgentPaneController agentPane,
                                     UpdateControlViewModel updateControl)
     {
         this.projectPane = projectPane ?? throw new ArgumentNullException(nameof(projectPane));
-        this.agentPane = agentPane ?? throw new ArgumentNullException(nameof(agentPane));
         this.updateControl = updateControl ?? throw new ArgumentNullException(nameof(updateControl));
 
         this.projectPane.ProjectsChanged += this.OnProjectsChanged;

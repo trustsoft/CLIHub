@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
 
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Startup;
@@ -15,10 +14,9 @@ public class StartupPreferencesApplierTests
     [Fact]
     public void Apply_CallsStartupServiceWithPreferenceValue()
     {
-        var preferencesStore = new Mock<IPreferencesStore>();
         var startupService = new Mock<IStartupService>();
 
-        var applier = new StartupPreferencesApplier(preferencesStore.Object, startupService.Object);
+        var applier = new StartupPreferencesApplier(startupService.Object);
 
         applier.Apply(new AppPreferences
         {
