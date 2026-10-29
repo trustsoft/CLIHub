@@ -40,51 +40,24 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
-### Proposal 5 (plugin lifecycle) is blocked on open questions (open, blocked)
+### Proposal 5 (plugin lifecycle) decisions (resolved)
 
-- Severity: Medium (blocks Proposal 5; no production impact while parked)
-- Evidence: user note of 2026-10-29 - Proposal 5 has a set of related questions that must be resolved
-  before implementation starts. This entry is the parking place so the questions are not lost between
-  sessions; the list below is a candidate set to confirm/extend, not an agreed scope.
-- Candidate questions to resolve (confirm and extend with the user):
-  1. Hot reload: should descriptor changes be picked up by a file watcher, a manual Reload action, or
-     both? Today the catalog exposes an explicit reload path with no watcher.
-  2. Descriptor schema versioning: is a plugin `schemaVersion` field needed, and what is the
-     compatibility policy for older descriptors (ADR-0004 pins catalog precedence and seeding)?
-  3. Invalid descriptor UX: hide the plugin, show it disabled with the error, or surface an aggregate
-     validation report? Today invalid descriptors are skipped with a log line.
-  4. Lifecycle states: does the product need explicit states (Discovered/Validated/Enabled/Disabled)
-     or is the current "catalog entry + validation result" model sufficient?
-  5. Seeding interaction: how do built-in seeds and user edits interact across a reload (today
-     precedence is pinned by ADR-0004 and seeding runs once)?
-  6. Remote catalog / marketplace: explicitly out of scope, or a future trigger to design for now?
-  7. Update-check metadata (`updateCheck`, npm package) - does it belong to lifecycle validation or
-     stay a runtime concern?
-- Proposed remedy: run a short resolution pass with the user (answers recorded here), then scope
-  Proposal 5 as an OpenSpec change against the agreed answers.
-- Trigger: an explicit decision to start Proposal 5, or any change to plugin discovery/validation/
-  seeding that would otherwise pre-empt these answers.
+- Status: Resolved (decisions taken 2026-10-29). Implementation split: change A
+  (`plugin-catalog-diagnostics`) now; change B (disabled-plugin UI surface) next.
+- Decisions:
+  1. Catalog refresh: manual Reload only; no file watcher.
+  2. Descriptor schema: optional `schemaVersion`, default 1; higher versions rejected with a clear
+     validation reason.
+  3. Invalid descriptor UX: plugin stays visible but disabled with the reason (UI in change B; the
+     catalog retains invalid entries with their errors in change A).
+  4. Lifecycle states: keep the current model (catalog entry + validation result); no new state enum.
+  5. Seeding: unchanged - seeds only when absent, precedence per ADR-0004; reload never overwrites
+     user edits.
+  6. Remote catalog: reserve a port now - a descriptor-source abstraction whose only implementation
+     is the local folder source (no dead code, real consumer).
+  7. `updateCheck`: runtime concern; not validated during load.
+- Guarding: these decisions; changes A and B will pin the observable parts in specs.
 
-### config.json format evolution (possible; decision pending)
-
-- Severity: Medium (product decision; unlocks a cleaner storage model, but carries migration risk)
-- Evidence: user note of 2026-10-29 - "with justification we may change the config.json format".
-  ADR-0002 currently pins ONE camelCase document with ONE atomic write boundary; changing the format
-  means superseding that ADR (ADR convention: new record, old marked Superseded) and migrating every
-  existing `%APPDATA%\CLIHub\config.json`.
-- Decision inputs needed before scoping:
-  1. Layout: split into per-concern files (preferences/projects/scanning) vs a single v2 document
-  2. Migration: one-time load-and-rewrite with a backup file; what happens when migration fails
-  3. Downgrade: can an older CLIHub read a v2 file, or must it refuse with a clear message
-  4. Versioning: explicit `schemaVersion` field and the compatibility policy across releases
-  5. Atomicity: per-file atomic writes vs a directory-swap transaction
-  6. Cache files (`logos.json`) - do they join the new layout or stay separate
-- Proposed remedy: after the format-neutral `config-decomposition-slice` lands, run a dedicated
-  OpenSpec change (`config-format-v2`) that supersedes ADR-0002, ships the migration with backup and
-  failure handling, and pins round-trip, downgrade-refusal and migration tests. Do not fold the
-  format change into the current slice.
-- Trigger: an explicit decision to change the format, or a second concrete coupling case that the
-  internal slice cannot contain.
 
 ### Configuration decomposition (Proposal 6) - first slice in progress
 
