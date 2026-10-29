@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-29
+goal: Domain events adoption catalogue + AgentLaunched event with real subscriber
+skip_specs: true
