@@ -1,7 +1,7 @@
 # launch-window-layout Specification
 
 ## Purpose
-Defines the launch window's two-pane layout — a Projects pane and an AI Agents pane — including how the user can resize their proportions and how the panes stay visually aligned. The launch window (`src/CLIHub/Views/LaunchWindow.xaml.cs`) is the application's active shell and the subject of this capability; the legacy `MainWindow` class is an unregistered build-only reference, not the subject of this capability.
+Defines the launch window's two-pane layout — a Projects pane and an AI Agents pane — including how the user can resize their proportions and how the panes stay visually aligned. The launch window (`src/CLIHub/Views/LaunchWindow.xaml.cs`) is the application's active shell and the subject of this capability.
 
 ## Requirements
 

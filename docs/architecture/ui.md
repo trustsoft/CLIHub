@@ -136,7 +136,7 @@ The static guards that keep those files coherent:
   (descriptor values and XAML `StaticResource`) exist in the application-level tree, and no declared
   preview key is orphaned.
 - `tests/CLIHub.Tests/Themes/ThemeColorLiteralTests.cs` — colour literals are rejected outside the
-  palettes, `ThemePickerData.xaml`, and the legacy `MainWindow.xaml`.
+  palettes and `ThemePickerData.xaml`.
 - `tests/CLIHub.Tests/Themes/ApplicationResourceKeyTests.cs` — palette keys are never referenced with
   `StaticResource`, and no `x:Key` is declared twice across the non-palette application-level merge
   tree.

@@ -737,9 +737,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 - Severity: Low (consistency)
 - Evidence: after the sizing sweep, the 9, 10, 13, and 15 pt glyph and text tiers and the 9, 13, 7,
-  and 0 px radii remain literals because each has one consumer and encodes no shared role; the
-  legacy `Views/MainWindow.xaml` also keeps its pre-palette colours (allowlisted by
-  `ThemeColorLiteralTests`).
+  and 0 px radii remain literals because each has one consumer and encodes no shared role.
 - Proposed remedy: promote a value to a `Sizing.*` token when a second consumer appears; leave a
   single-use literal alone until then.
 - Trigger: copy-pasting a view and reaching for the same literal.

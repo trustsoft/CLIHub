@@ -35,8 +35,7 @@ removes session subscriptions, stops tracked operations, disposes the provider, 
 logging, and releases single-instance resources.
 
 The launch window is the active shell. Its ViewModel composes project and agent pane controllers, command
-and action coordinators, update state, and application services. `MainWindow` is retained as an unregistered
-legacy reference.
+and action coordinators, update state, and application services.
 
 Application update entry points, including Settings, share `IUpdateWorkflow` in `src/CLIHub`. Core owns Velopack
 ports and update state; the application workflow owns cross-surface coordination and the existing apply policies.

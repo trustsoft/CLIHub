@@ -9,10 +9,9 @@ using System.Text.RegularExpressions;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     Three files are allowlisted by design: the palettes (<c>Themes/*Theme.xaml</c>, colours only),
-///     <c>Themes/ThemePickerData.xaml</c> (theme-identity preview swatches that must read the same
-///     under every theme), and <c>Views/MainWindow.xaml</c> (the dead legacy window documented in
-///     <c>docs/backlog.md</c>).
+///     Two kinds of file are allowlisted by design: the palettes (<c>Themes/*Theme.xaml</c>, colours only)
+///     and <c>Themes/ThemePickerData.xaml</c> (theme-identity preview swatches that must read the same
+///     under every theme).
 ///   </para>
 ///   <para>
 ///     The walk and the allowlisted literal count are asserted, so a broken glob or a renamed
@@ -46,7 +45,6 @@ public sealed class ThemeColorLiteralTests
             xamlFiles.Length >= 20,
             $"Expected the full XAML tree under '{appRoot}', but found only {xamlFiles.Length} files.");
         Assert.Contains(xamlFiles, path => IsFile(path, appRoot, "Themes", "ThemePickerData.xaml"));
-        Assert.Contains(xamlFiles, path => IsFile(path, appRoot, "Views", "MainWindow.xaml"));
 
         var failures = new List<string>();
         var allowlistedLiteralCount = 0;
@@ -100,8 +98,7 @@ public sealed class ThemeColorLiteralTests
     private static bool IsAllowlisted(string relativePath)
     {
         var normalized = relativePath.Replace('\\', '/');
-        if (string.Equals(normalized, "Themes/ThemePickerData.xaml", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(normalized, "Views/MainWindow.xaml", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(normalized, "Themes/ThemePickerData.xaml", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

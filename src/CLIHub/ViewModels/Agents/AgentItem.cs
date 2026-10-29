@@ -34,18 +34,6 @@ public sealed class AgentItem : INotifyPropertyChanged
     }
 
     /// <summary>
-    ///   Availability summary (host install and project usage).
-    ///   Legacy-window-only: bound only by MainWindow.xaml (the documented build-only exception).
-    ///   Intentionally not wired into <see cref="Apply" />, so the value freezes at construction on
-    ///   launch-window rows; do not add new bindings to this property.
-    /// </summary>
-    public string Status
-    {
-        get;
-        init => field = value;
-    } = string.Empty;
-
-    /// <summary>
     ///   Optional path to the agent's logo image.
     /// </summary>
     public string? LogoPath

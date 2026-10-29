@@ -74,13 +74,11 @@ public sealed class ArchitectureBoundaryTests
     {
         var root = FindRepositoryRoot();
         var registration = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "Composition", "ServiceRegistration.cs"));
-        var legacyWindow = File.ReadAllText(Path.Combine(root, "src", "CLIHub", "Views", "MainWindow.xaml.cs"));
 
         Assert.Contains("IApplicationSession, ApplicationSession", registration, StringComparison.Ordinal);
         Assert.Contains("TrayStateProjection", registration, StringComparison.Ordinal);
         Assert.Contains("TrayCommandHandlers", registration, StringComparison.Ordinal);
         Assert.DoesNotContain("MainWindow", registration, StringComparison.Ordinal);
-        Assert.Contains("Deprecated legacy reference window", legacyWindow, StringComparison.Ordinal);
     }
 
     [Fact]

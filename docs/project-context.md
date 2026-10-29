@@ -48,7 +48,7 @@ process inspection) behind ports declared in Core.
 - The Settings Projects page lists every registered project with its provenance, registers and removes
   manual projects, opens project folders, and flags missing folders; discovered projects are read-only
   there. Project changes apply immediately from that page.
-- The launch window is the active WPF shell. `MainWindow` is retained as an unregistered legacy reference.
+- The launch window is the active WPF shell.
 - Appearance is a Dark, Light, Blue, or System-synced palette plus one application-scoped accent color
   (Sky by default). Theme and accent changes apply immediately on a Settings save, and the accent is
   independent of the theme. With the System theme, a Windows personalization change is followed while
