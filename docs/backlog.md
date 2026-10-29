@@ -23,7 +23,11 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   (next 30 days): document architecture principles, extract `ILoggingContextProvider`, implement
   first domain event POC (`ProjectSelected`). See `docs/architecture-analysis-index.md` for full
   navigation. **Proposal 4 complete: Phase 1+2 `a64422c`, Phase 3 `37e3c46`, Phase 4 `f7c1495` (obsolete
-  type removed, 0 CLIHUB001, 1,222 tests); see ADR-0012 and the archived changes.**
+  type removed, 0 CLIHUB001, 1,222 tests); see ADR-0012 and the archived changes.** **Proposal 1 first
+  slice complete: `logging-context-provider` `7d92bf3` (ILoggingContextProvider + OperationName/CorrelationId
+  scopes on orchestrator, monitor, application lifetime, and scanning; behavior unchanged, 1,228 tests).
+  Remaining Proposal 1 slices: `IPersistenceService<T>` and `ICacheService` (deferred; triggers: second
+  consumer of a hand-rolled persistence/caching pattern, or a storage-backend change).**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
