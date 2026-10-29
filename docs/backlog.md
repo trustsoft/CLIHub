@@ -13,20 +13,58 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   in `docs/architecture-analysis-2026-10-29.md`, `docs/architecture-visualization.md`, and
   `docs/architecture-improvement-summary.md`. Analysis identified 6 concrete improvement proposals:
   (1) Extract cross-cutting services (logging, persistence, caching); (2) Introduce domain events;
-  (3) Capability-based service decomposition; **(4) Process domain model unification [APPROVED 2026-10-29]**;
+  (3) Capability-based service decomposition; **(4) Process domain model unification [IMPLEMENTED 2026-10-29]**;
   (5) Plugin lifecycle management; (6) Configuration decomposition (internal). Health score: 8.5/10. Key
   concerns: coordinator proliferation (5 coordinators), large role-based service interfaces,
   UI-heavy orchestration, configuration coupling.
 - Proposed remedy: Three-phase evolution roadmap (Q1-Q3 2027): Phase 1 (foundation) — cross-cutting
-  services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [APPROVED]**,
+  services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [Phase 1+2 COMPLETE]**,
   plugin lifecycle; Phase 3 (configuration evolution) — internal decomposition. Immediate actions
   (next 30 days): document architecture principles, extract `ILoggingContextProvider`, implement
   first domain event POC (`ProjectSelected`). See `docs/architecture-analysis-index.md` for full
-  navigation. **Proposal 4 approved 2026-10-29; see ADR-0012 and detailed docs in `docs/proposals/`.**
+  navigation. **Proposal 4 Phase 1+2 complete 2026-10-29 (commit a64422c); Phase 3 (consumer migration) deferred;
+  see ADR-0012, implementation report, and archived change.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
 ## Agent and process domain
+
+### Process domain Phase 3: consumer migration (deferred)
+
+- Severity: Low (architecture improvement, not blocking; Phase 1+2 complete and working)
+- Evidence: Process domain model unified via `IProcessOrchestrator` (commit `a64422c`, 2026-10-29).
+  Domain models (`RuntimeExecutable`, `AgentProcess`, `LaunchRequest`, `ProcessResult`) and orchestrator
+  implementation complete with adapters wrapping existing infrastructure. All 1,221 tests passing.
+  Change archived as `openspec/changes/archive/2026-10-29-process-domain-model/`. Four consumers still
+  use fragmented Infrastructure.Processes services directly:
+  - `src/CLIHub.Core/Workflows/AgentCommandService.cs` — injects 5 process services
+  - `src/CLIHub.Core/Workflows/LaunchCommandCoordinator.cs` — uses IInteractiveProcessRunner
+  - `src/CLIHub/Coordinators/WindowActionCoordinator.cs` — uses IInteractiveProcessRunner
+  - `src/CLIHub.Core/Infrastructure/Monitoring/AgentProcessMonitor.cs` — uses IAgentProcessInspector
+- Proposed remedy: Migrate consumers to `IProcessOrchestrator` (Phase 3 of Proposal 4). For each:
+  replace multiple service dependencies with single orchestrator dependency, adapt to domain types
+  (`LaunchRequest`, `ProcessResult`), verify behavior unchanged, update tests. Estimated 2-3 days.
+  See `docs/proposals/proposal-004-process-domain-model.md` (section "Phase 3: Consumer Migration").
+- Trigger: Next refactoring touching any of the four consumers, reducing test mock complexity, or
+  completing Phase 1 prerequisites (Proposal 1: cross-cutting services).
+
+### Process orchestrator unit tests (deferred)
+
+- Severity: Low (quality improvement; functionality covered by 1,221 existing integration tests)
+- Evidence: Process domain implementation (commit `a64422c`, 2026-10-29) includes orchestrator and
+  adapters but defers comprehensive unit test coverage. Test directory structure created at
+  `tests/CLIHub.Tests/Core/Processes/`, but planned test classes for `ProcessOrchestrator`,
+  `RuntimeResolver`, `CommandLineBuilderAdapter`, and `AgentProcessFinder` were not written due to
+  time/token budget constraints. All functionality verified through existing tests (build + 1,221
+  tests passing). See Stage 7 in `openspec/changes/archive/2026-10-29-process-domain-model/tasks.md`.
+- Proposed remedy: Add unit tests for:
+  - `ProcessOrchestratorTests.cs` — LaunchInteractive/CaptureOutput/FindRunningAgents/ResolveRuntime
+  - `RuntimeResolverTests.cs` — runtime resolution for all RuntimeKind values
+  - `CommandLineBuilderAdapterTests.cs` — command line building for all runtimes
+  - `AgentProcessFinderTests.cs` — process finding and Runtime mapping
+  Each test class should cover happy path, error cases, cancellation, and edge cases. Estimated 2-3 hours.
+- Trigger: Test coverage review, adding more orchestrator features, or during Phase 3 consumer migration
+  when orchestrator behavior changes become complex.
 
 ### Flaky ProjectScanningServiceTests.Stop_DisposesWatcherAndClearsStatus (resolved)
 
