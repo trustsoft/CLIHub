@@ -8,7 +8,7 @@ public class ProjectScanningOptionsTests
     [Fact]
     public void From_AbsentFields_UsesDefaults()
     {
-        var options = ProjectScanningOptions.From(new AppPreferences());
+        var options = ProjectScanningOptions.From(new ScanningPreferences());
 
         Assert.Empty(options.WatchedDirectories);
         Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, options.ScanDepth);
@@ -19,7 +19,7 @@ public class ProjectScanningOptionsTests
     [Fact]
     public void From_ExplicitEmptyPatterns_PreservesEmptyList()
     {
-        var options = ProjectScanningOptions.From(new AppPreferences { IgnoredPatterns = [] });
+        var options = ProjectScanningOptions.From(new ScanningPreferences { IgnoredPatterns = [] });
 
         Assert.Empty(options.IgnoredPatterns);
     }
@@ -31,7 +31,7 @@ public class ProjectScanningOptionsTests
     [InlineData(99, ProjectScanningDefaults.MaxScanDepth)]
     public void From_OutOfRangeDepth_IsNormalized(int stored, int expected)
     {
-        var options = ProjectScanningOptions.From(new AppPreferences { ScanDepth = stored });
+        var options = ProjectScanningOptions.From(new ScanningPreferences { ScanDepth = stored });
 
         Assert.Equal(expected, options.ScanDepth);
     }

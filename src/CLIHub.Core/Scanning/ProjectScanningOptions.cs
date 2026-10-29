@@ -22,18 +22,18 @@ public sealed record ProjectScanningOptions(IReadOnlyList<string> WatchedDirecto
     /// <summary>
     ///   Creates effective options from stored preferences, applying the scanning defaults.
     /// </summary>
-    /// <param name="preferences"> The stored preferences. </param>
+    /// <param name="scanning"> The stored scanning preferences. </param>
     /// <returns> The effective scanning options. </returns>
-    public static ProjectScanningOptions From(AppPreferences preferences)
+    public static ProjectScanningOptions From(ScanningPreferences scanning)
     {
-        ArgumentNullException.ThrowIfNull(preferences);
+        ArgumentNullException.ThrowIfNull(scanning);
 
         return new ProjectScanningOptions(
-            preferences.WatchedDirectories is { Count: > 0 } watched ? watched : Array.Empty<string>(),
-            ProjectScanningDefaults.NormalizeScanDepth(preferences.ScanDepth),
-            preferences.IgnoredPatterns ?? ProjectScanningDefaults.IgnoredPatterns,
-            preferences.DiscoveryMode,
-            preferences.WatchedDirectorySettings);
+            scanning.WatchedDirectories is { Count: > 0 } watched ? watched : Array.Empty<string>(),
+            ProjectScanningDefaults.NormalizeScanDepth(scanning.ScanDepth),
+            scanning.IgnoredPatterns ?? ProjectScanningDefaults.IgnoredPatterns,
+            scanning.DiscoveryMode,
+            scanning.WatchedDirectorySettings);
     }
 
     /// <summary>

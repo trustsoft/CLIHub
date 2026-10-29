@@ -207,7 +207,7 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private void Configure()
     {
-        var options = ProjectScanningOptions.From(this.preferences.Load());
+        var options = ProjectScanningOptions.From(this.preferences.Load().Scanning);
 
         IRepositoryWatcher? oldWatcher;
         IScanTimer? oldTimer;
@@ -380,7 +380,7 @@ public sealed class ProjectScanningService : IProjectScanner
     {
         using var scope = this.loggingContext.BeginOperation("ProjectScan");
 
-        var options = ProjectScanningOptions.From(this.preferences.Load());
+        var options = ProjectScanningOptions.From(this.preferences.Load().Scanning);
         var plugins = this.plugins.GetAllPlugins();
         var configured = options.WatchedDirectories.Count > 0;
 
@@ -457,7 +457,7 @@ public sealed class ProjectScanningService : IProjectScanner
     {
         using var scope = this.loggingContext.BeginOperation("ProjectScan");
 
-        var options = ProjectScanningOptions.From(this.preferences.Load());
+        var options = ProjectScanningOptions.From(this.preferences.Load().Scanning);
         var rootOptions = options.ForRoot(root) with { WatchedDirectories = new[] { root } };
         var plugins = this.plugins.GetAllPlugins();
 

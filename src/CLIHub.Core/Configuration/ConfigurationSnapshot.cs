@@ -82,15 +82,7 @@ public sealed class ConfigurationSnapshot
         AccentColor = preferences.AccentColor,
         PathDisplayStyle = preferences.PathDisplayStyle,
         LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
-        WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
-        WatchedDirectorySettings = preferences.WatchedDirectorySettings is null
-            ? new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase)
-            : new Dictionary<string, WatchedDirectoryScanSettings>(
-                preferences.WatchedDirectorySettings,
-                StringComparer.OrdinalIgnoreCase),
-        ScanDepth = preferences.ScanDepth,
-        IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
-        DiscoveryMode = preferences.DiscoveryMode,
+        Scanning = preferences.Scanning.Copy(),
         DefaultAgentId = preferences.DefaultAgentId
     };
 }

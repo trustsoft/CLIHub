@@ -104,9 +104,9 @@ public class ProjectScanningServiceTests : IDisposable
         var root = this.CreateTempDir();
         var repo = Path.Combine(root, "repo");
         Directory.CreateDirectory(Path.Combine(repo, ".git"));
-        this.preferences.WatchedDirectories = [root];
-        this.preferences.ScanDepth = 2;
-        this.preferences.DiscoveryMode = ProjectDiscoveryMode.Both;
+        this.preferences.Scanning.WatchedDirectories = [root];
+        this.preferences.Scanning.ScanDepth = 2;
+        this.preferences.Scanning.DiscoveryMode = ProjectDiscoveryMode.Both;
 
         var service = this.CreateService();
         service.Start();
@@ -123,7 +123,7 @@ public class ProjectScanningServiceTests : IDisposable
     {
         var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "repo", ".git"));
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
         var service = this.CreateService();
         service.Start();
         Assert.True(WaitFor(() => this.watcherFactory.Watchers.Count == 1
@@ -151,7 +151,7 @@ public class ProjectScanningServiceTests : IDisposable
             Path = manualRepo,
             Source = ProjectSource.Manual
         });
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
 
         var service = this.CreateService((discovered, removed) =>
         {
@@ -193,7 +193,7 @@ public class ProjectScanningServiceTests : IDisposable
         var rootA = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
         var rootB = this.CreateTempDir();
-        this.preferences.WatchedDirectories = [rootA, rootB];
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
 
         var service = this.CreateService();
         service.Start();
@@ -207,7 +207,7 @@ public class ProjectScanningServiceTests : IDisposable
     {
         var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "repo", ".git"));
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
         var service = this.CreateService();
         service.Start();
         Assert.True(WaitFor(() => service.Status.ScannedDirectoryCount == 2));
@@ -224,9 +224,9 @@ public class ProjectScanningServiceTests : IDisposable
         Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
         var rootB = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(rootB, "repo", ".git"));
-        this.preferences.WatchedDirectories = [rootA, rootB];
-        this.preferences.ScanDepth = 2;
-        this.preferences.DiscoveryMode = ProjectDiscoveryMode.Git;
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
+        this.preferences.Scanning.ScanDepth = 2;
+        this.preferences.Scanning.DiscoveryMode = ProjectDiscoveryMode.Git;
 
         var service = this.CreateService();
         service.Start();
@@ -247,13 +247,13 @@ public class ProjectScanningServiceTests : IDisposable
         var rootA = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
         var rootB = this.CreateTempDir();
-        this.preferences.WatchedDirectories = [rootA, rootB];
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
 
         var service = this.CreateService();
         service.Start();
         Assert.True(WaitFor(() => service.Status.ScannedDirectoryCount == 3));
 
-        this.preferences.WatchedDirectories = [rootA];
+        this.preferences.Scanning.WatchedDirectories = [rootA];
         service.Reload();
 
         Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
@@ -265,7 +265,7 @@ public class ProjectScanningServiceTests : IDisposable
     {
         var root = this.CreateTempDir();
         Directory.CreateDirectory(Path.Combine(root, "repo", ".git"));
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
         var service = this.CreateService();
         service.Start();
         Assert.True(WaitFor(() => this.watcherFactory.Watchers.Count == 1 && this.timerFactory.Timers.Count == 1));
@@ -286,14 +286,14 @@ public class ProjectScanningServiceTests : IDisposable
         var repo = Path.Combine(root, "repo");
         Directory.CreateDirectory(Path.Combine(repo, ".git"));
         this.projects.Add(new Project { Id = "p", Name = "repo", Path = repo, Source = ProjectSource.Discovered });
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
 
         var service = this.CreateService();
         service.Start();
         Assert.True(WaitFor(() => this.reconciliations.Count > 0));
         Assert.DoesNotContain("p", this.reconciliations[^1].Removed);
 
-        this.preferences.WatchedDirectories = null;
+        this.preferences.Scanning.WatchedDirectories = null;
         service.Reload();
 
         Assert.True(WaitFor(() => this.reconciliations.Any(r => r.Removed.Contains("p"))));
@@ -317,9 +317,9 @@ public class ProjectScanningServiceTests : IDisposable
     {
         var rootA = this.CreateTempDir();
         var rootB = this.CreateTempDir();
-        this.preferences.WatchedDirectories = [rootA, rootB];
-        this.preferences.ScanDepth = 2;
-        this.preferences.DiscoveryMode = ProjectDiscoveryMode.Git;
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
+        this.preferences.Scanning.ScanDepth = 2;
+        this.preferences.Scanning.DiscoveryMode = ProjectDiscoveryMode.Git;
 
         var service = this.CreateService();
         service.Start();
@@ -367,7 +367,7 @@ public class ProjectScanningServiceTests : IDisposable
     {
         var root = this.CreateTempDir();
         var missingRoot = Path.Combine(root, "missing");
-        this.preferences.WatchedDirectories = [root];
+        this.preferences.Scanning.WatchedDirectories = [root];
 
         var service = this.CreateService();
         service.Start();
@@ -394,7 +394,7 @@ public class ProjectScanningServiceTests : IDisposable
         var root = this.CreateTempDir();
         var nestedRoot = Path.Combine(root, "nested");
         Directory.CreateDirectory(nestedRoot);
-        this.preferences.WatchedDirectories = [root, nestedRoot];
+        this.preferences.Scanning.WatchedDirectories = [root, nestedRoot];
 
         var service = this.CreateService();
         service.Start();

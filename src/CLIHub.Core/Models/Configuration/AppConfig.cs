@@ -22,7 +22,8 @@ public class AppConfig
 }
 
 /// <summary>
-///   User preferences stored in configuration.
+///   User preferences stored in configuration, grouped by startup, runtime, logging, agents,
+///   updates, appearance, and scanning concerns.
 /// </summary>
 public class AppPreferences
 {
@@ -148,32 +149,9 @@ public class AppPreferences
     public string? LastSeenReleaseNotesVersion { get; set; }
 
     /// <summary>
-    ///   Root directories watched for repository discovery. Null or empty means nothing is watched.
+    ///   Preferences for repository discovery scanning.
     /// </summary>
-    public List<string>? WatchedDirectories { get; set; }
-
-    /// <summary>
-    ///   Per-directory scanning overrides keyed by normalized watched root path. A root without an
-    ///   entry uses <see cref="ScanDepth" /> and <see cref="DiscoveryMode" />.
-    /// </summary>
-    public IReadOnlyDictionary<string, WatchedDirectoryScanSettings> WatchedDirectorySettings { get; set; } =
-        new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    ///   How many directory levels below each watched root are scanned. Defaults to 2.
-    /// </summary>
-    public int ScanDepth { get; set; } = ProjectScanningDefaults.DefaultScanDepth;
-
-    /// <summary>
-    ///   Directory-name patterns skipped during scanning.
-    ///   Null means the built-in defaults are used; an empty list means no patterns are ignored.
-    /// </summary>
-    public List<string>? IgnoredPatterns { get; set; }
-
-    /// <summary>
-    ///   Which directories count as repositories during discovery. Defaults to <see cref="ProjectDiscoveryMode.Both" />.
-    /// </summary>
-    public ProjectDiscoveryMode DiscoveryMode { get; set; } = ProjectDiscoveryModes.Default;
+    public ScanningPreferences Scanning { get; set; } = new();
 
     /// <summary>
     ///   ID of the agent the launch window preselects, or null for none.

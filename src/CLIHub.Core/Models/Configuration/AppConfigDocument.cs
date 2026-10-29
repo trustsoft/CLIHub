@@ -172,9 +172,9 @@ internal sealed class AppConfigDocument
             AccentColor = AccentPalette.Normalize(preferences.AccentColor),
             PathDisplayStyle = preferences.PathDisplayStyle,
             LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
-            WatchedDirectories = preferences.WatchedDirectories is null ? null : new List<string>(preferences.WatchedDirectories),
-            WatchedDirectorySettings = preferences.WatchedDirectorySettings is { Count: > 0 }
-                ? preferences.WatchedDirectorySettings
+            WatchedDirectories = preferences.Scanning.WatchedDirectories is null ? null : new List<string>(preferences.Scanning.WatchedDirectories),
+            WatchedDirectorySettings = preferences.Scanning.WatchedDirectorySettings is { Count: > 0 }
+                ? preferences.Scanning.WatchedDirectorySettings
                     .Where(entry => !string.IsNullOrWhiteSpace(entry.Key))
                     .Select(entry => new WatchedDirectorySettingDocument
                     {
@@ -184,9 +184,9 @@ internal sealed class AppConfigDocument
                     })
                     .ToList()
                 : null,
-            ScanDepth = preferences.ScanDepth,
-            IgnoredPatterns = preferences.IgnoredPatterns is null ? null : new List<string>(preferences.IgnoredPatterns),
-            DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.DiscoveryMode),
+            ScanDepth = preferences.Scanning.ScanDepth,
+            IgnoredPatterns = preferences.Scanning.IgnoredPatterns is null ? null : new List<string>(preferences.Scanning.IgnoredPatterns),
+            DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.Scanning.DiscoveryMode),
             DefaultAgentId = preferences.DefaultAgentId
         };
 
@@ -214,11 +214,14 @@ internal sealed class AppConfigDocument
             AccentColor = AccentPalette.Normalize(this.AccentColor),
             PathDisplayStyle = this.PathDisplayStyle,
             LastSeenReleaseNotesVersion = this.LastSeenReleaseNotesVersion,
-            WatchedDirectories = this.WatchedDirectories is null ? null : new List<string>(this.WatchedDirectories),
-            WatchedDirectorySettings = BuildWatchedDirectorySettings(this.WatchedDirectorySettings, this.WatchedDirectories),
-            ScanDepth = this.ScanDepth,
-            IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
-            DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode),
+            Scanning = new ScanningPreferences
+            {
+                WatchedDirectories = this.WatchedDirectories is null ? null : new List<string>(this.WatchedDirectories),
+                WatchedDirectorySettings = BuildWatchedDirectorySettings(this.WatchedDirectorySettings, this.WatchedDirectories),
+                ScanDepth = this.ScanDepth,
+                IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
+                DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode)
+            },
             DefaultAgentId = this.DefaultAgentId
         };
 

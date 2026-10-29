@@ -199,13 +199,13 @@ public class SettingsApplicationServiceTests
             }));
 
         Assert.True(result.Success);
-        Assert.Equal([@"C:\repos"], captured.WatchedDirectories);
-        Assert.Equal(3, captured.ScanDepth);
-        Assert.Equal(["node_modules"], captured.IgnoredPatterns);
-        Assert.Equal(ProjectDiscoveryMode.Git, captured.DiscoveryMode);
-        Assert.Equal(4, captured.WatchedDirectorySettings[@"C:\repos"].ScanDepth);
-        Assert.Equal(ProjectDiscoveryMode.Agents, captured.WatchedDirectorySettings[@"C:\repos"].DiscoveryMode);
-        Assert.DoesNotContain(@"C:\other", captured.WatchedDirectorySettings.Keys);
+        Assert.Equal([@"C:\repos"], captured.Scanning.WatchedDirectories);
+        Assert.Equal(3, captured.Scanning.ScanDepth);
+        Assert.Equal(["node_modules"], captured.Scanning.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Git, captured.Scanning.DiscoveryMode);
+        Assert.Equal(4, captured.Scanning.WatchedDirectorySettings[@"C:\repos"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Agents, captured.Scanning.WatchedDirectorySettings[@"C:\repos"].DiscoveryMode);
+        Assert.DoesNotContain(@"C:\other", captured.Scanning.WatchedDirectorySettings.Keys);
         Assert.Equal(RuntimeKind.GitBash, captured.DefaultRuntime);
         scanner.Verify(x => x.Reload(), Times.Once);
     }

@@ -204,12 +204,12 @@ public sealed class SettingsApplicationService
             preferences.PopupScreenPosition,
             preferences.AppTheme,
             preferences.AccentColor,
-            preferences.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
-            ProjectScanningDefaults.NormalizeScanDepth(preferences.ScanDepth),
-            preferences.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
-            preferences.DiscoveryMode,
+            preferences.Scanning.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
+            ProjectScanningDefaults.NormalizeScanDepth(preferences.Scanning.ScanDepth),
+            preferences.Scanning.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
+            preferences.Scanning.DiscoveryMode,
             preferences.DefaultAgentId,
-            preferences.WatchedDirectorySettings);
+            preferences.Scanning.WatchedDirectorySettings);
     }
 
     /// <summary>
@@ -347,13 +347,13 @@ public sealed class SettingsApplicationService
         {
             this.preferencesStore.Update(preferences =>
             {
-                preferences.WatchedDirectories = watchedDirectories.ToList();
-                preferences.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>(
+                preferences.Scanning.WatchedDirectories = watchedDirectories.ToList();
+                preferences.Scanning.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>(
                     watchedDirectorySettings,
                     StringComparer.OrdinalIgnoreCase);
-                preferences.ScanDepth = input.ScanDepth;
-                preferences.IgnoredPatterns = ignoredPatterns.ToList();
-                preferences.DiscoveryMode = input.DiscoveryMode;
+                preferences.Scanning.ScanDepth = input.ScanDepth;
+                preferences.Scanning.IgnoredPatterns = ignoredPatterns.ToList();
+                preferences.Scanning.DiscoveryMode = input.DiscoveryMode;
             });
 
             // Reconfigure watching and rescan with the settings the page now shows.
@@ -485,15 +485,15 @@ public sealed class SettingsApplicationService
                 preferences.StartMinimized = draft.StartMinimized;
                 preferences.ShowWindowOnStartup = !draft.StartMinimized;
                 preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
-                preferences.WatchedDirectories = (draft.WatchedDirectories ?? Array.Empty<string>()).ToList();
-                preferences.WatchedDirectorySettings = draft.WatchedDirectorySettings is null
+                preferences.Scanning.WatchedDirectories = (draft.WatchedDirectories ?? Array.Empty<string>()).ToList();
+                preferences.Scanning.WatchedDirectorySettings = draft.WatchedDirectorySettings is null
                     ? new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase)
                     : new Dictionary<string, WatchedDirectoryScanSettings>(
                         draft.WatchedDirectorySettings,
                         StringComparer.OrdinalIgnoreCase);
-                preferences.ScanDepth = draft.ScanDepth;
-                preferences.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
-                preferences.DiscoveryMode = draft.DiscoveryMode;
+                preferences.Scanning.ScanDepth = draft.ScanDepth;
+                preferences.Scanning.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
+                preferences.Scanning.DiscoveryMode = draft.DiscoveryMode;
                 preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;
             });
 

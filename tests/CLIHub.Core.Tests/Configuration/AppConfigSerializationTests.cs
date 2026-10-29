@@ -170,27 +170,27 @@ public class AppConfigSerializationTests
     public void ProjectScanningPreferences_RoundTrip()
     {
         var config = new AppConfig();
-        config.Preferences.WatchedDirectories = ["C:\\Work"];
-        config.Preferences.ScanDepth = 4;
-        config.Preferences.IgnoredPatterns = ["node_modules", "*cache*"];
-        config.Preferences.DiscoveryMode = ProjectDiscoveryMode.Agents;
+        config.Preferences.Scanning.WatchedDirectories = ["C:\\Work"];
+        config.Preferences.Scanning.ScanDepth = 4;
+        config.Preferences.Scanning.IgnoredPatterns = ["node_modules", "*cache*"];
+        config.Preferences.Scanning.DiscoveryMode = ProjectDiscoveryMode.Agents;
 
         var restored = JsonSerializer.Deserialize<AppConfigDocument>(
             JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
             CoreJson.Options)!.ToAppConfig();
 
-        Assert.Equal(["C:\\Work"], restored.Preferences.WatchedDirectories);
-        Assert.Equal(4, restored.Preferences.ScanDepth);
-        Assert.Equal(["node_modules", "*cache*"], restored.Preferences.IgnoredPatterns);
-        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.DiscoveryMode);
+        Assert.Equal(["C:\\Work"], restored.Preferences.Scanning.WatchedDirectories);
+        Assert.Equal(4, restored.Preferences.Scanning.ScanDepth);
+        Assert.Equal(["node_modules", "*cache*"], restored.Preferences.Scanning.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.Scanning.DiscoveryMode);
     }
 
     [Fact]
     public void PerRootScanSettings_RoundTripAndIgnoreUnwatchedPaths()
     {
         var config = new AppConfig();
-        config.Preferences.WatchedDirectories = ["C:\\Work", "D:\\Deep"];
-        config.Preferences.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+        config.Preferences.Scanning.WatchedDirectories = ["C:\\Work", "D:\\Deep"];
+        config.Preferences.Scanning.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
         {
             ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git),
             ["D:\\Deep"] = new(7, ProjectDiscoveryMode.Agents),
@@ -201,11 +201,11 @@ public class AppConfigSerializationTests
             JsonSerializer.Serialize(AppConfigDocument.From(config), CoreJson.Options),
             CoreJson.Options)!.ToAppConfig();
 
-        Assert.Equal(4, restored.Preferences.WatchedDirectorySettings["C:\\Work"].ScanDepth);
-        Assert.Equal(ProjectDiscoveryMode.Git, restored.Preferences.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
-        Assert.Equal(7, restored.Preferences.WatchedDirectorySettings["D:\\Deep"].ScanDepth);
-        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.WatchedDirectorySettings["D:\\Deep"].DiscoveryMode);
-        Assert.False(restored.Preferences.WatchedDirectorySettings.ContainsKey("E:\\Gone"));
+        Assert.Equal(4, restored.Preferences.Scanning.WatchedDirectorySettings["C:\\Work"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, restored.Preferences.Scanning.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
+        Assert.Equal(7, restored.Preferences.Scanning.WatchedDirectorySettings["D:\\Deep"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Agents, restored.Preferences.Scanning.WatchedDirectorySettings["D:\\Deep"].DiscoveryMode);
+        Assert.False(restored.Preferences.Scanning.WatchedDirectorySettings.ContainsKey("E:\\Gone"));
     }
 
     [Fact]
@@ -217,10 +217,10 @@ public class AppConfigSerializationTests
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
 
-        Assert.Null(config.Preferences.WatchedDirectories);
-        Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, config.Preferences.ScanDepth);
-        Assert.Null(config.Preferences.IgnoredPatterns);
-        Assert.Equal(ProjectDiscoveryMode.Both, config.Preferences.DiscoveryMode);
+        Assert.Null(config.Preferences.Scanning.WatchedDirectories);
+        Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, config.Preferences.Scanning.ScanDepth);
+        Assert.Null(config.Preferences.Scanning.IgnoredPatterns);
+        Assert.Equal(ProjectDiscoveryMode.Both, config.Preferences.Scanning.DiscoveryMode);
     }
 
     [Fact]

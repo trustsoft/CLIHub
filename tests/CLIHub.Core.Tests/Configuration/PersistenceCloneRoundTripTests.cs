@@ -46,11 +46,7 @@ public class PersistenceCloneRoundTripTests
         nameof(AppPreferences.AccentColor),
         nameof(AppPreferences.PathDisplayStyle),
         nameof(AppPreferences.LastSeenReleaseNotesVersion),
-        nameof(AppPreferences.WatchedDirectories),
-        nameof(AppPreferences.WatchedDirectorySettings),
-        nameof(AppPreferences.ScanDepth),
-        nameof(AppPreferences.IgnoredPatterns),
-        nameof(AppPreferences.DiscoveryMode),
+        nameof(AppPreferences.Scanning),
         nameof(AppPreferences.DefaultAgentId)
     ];
 
@@ -108,20 +104,42 @@ public class PersistenceCloneRoundTripTests
         clone.Projects[0].Name = "Mutated";
         clone.Projects[0].IsFavorite = false;
         clone.Preferences.Hotkey = "Ctrl+Alt+M";
-        clone.Preferences.WatchedDirectories!.Add("E:\\New");
-        clone.Preferences.IgnoredPatterns!.Add("extra");
-        var cloneSettings = Assert.IsType<Dictionary<string, WatchedDirectoryScanSettings>>(clone.Preferences.WatchedDirectorySettings);
+        clone.Preferences.Scanning.WatchedDirectories!.Add("E:\\New");
+        clone.Preferences.Scanning.IgnoredPatterns!.Add("extra");
+        var cloneSettings = Assert.IsType<Dictionary<string, WatchedDirectoryScanSettings>>(clone.Preferences.Scanning.WatchedDirectorySettings);
         cloneSettings["C:\\Work"] = new WatchedDirectoryScanSettings(8, ProjectDiscoveryMode.Agents);
         cloneSettings["E:\\New"] = new WatchedDirectoryScanSettings(2, ProjectDiscoveryMode.Both);
 
         Assert.Equal("Project", snapshot.Projects[0].Name);
         Assert.True(snapshot.Projects[0].IsFavorite);
         Assert.Equal("Ctrl+Alt+P", snapshot.Preferences.Hotkey);
-        Assert.Equal(["C:\\Work", "D:\\Deep"], snapshot.Preferences.WatchedDirectories);
-        Assert.Equal(["node_modules", "*cache*"], snapshot.Preferences.IgnoredPatterns);
-        Assert.Equal(4, snapshot.Preferences.WatchedDirectorySettings["C:\\Work"].ScanDepth);
-        Assert.Equal(ProjectDiscoveryMode.Git, snapshot.Preferences.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
-        Assert.False(snapshot.Preferences.WatchedDirectorySettings.ContainsKey("E:\\New"));
+        Assert.Equal(["C:\\Work", "D:\\Deep"], snapshot.Preferences.Scanning.WatchedDirectories);
+        Assert.Equal(["node_modules", "*cache*"], snapshot.Preferences.Scanning.IgnoredPatterns);
+        Assert.Equal(4, snapshot.Preferences.Scanning.WatchedDirectorySettings["C:\\Work"].ScanDepth);
+        Assert.Equal(ProjectDiscoveryMode.Git, snapshot.Preferences.Scanning.WatchedDirectorySettings["C:\\Work"].DiscoveryMode);
+        Assert.False(snapshot.Preferences.Scanning.WatchedDirectorySettings.ContainsKey("E:\\New"));
+    }
+
+    [Fact]
+    public void ScanningPreferences_Copy_DetachesNestedCollections()
+    {
+        var source = new ScanningPreferences
+        {
+            WatchedDirectories = ["C:\\Work"],
+            WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+            {
+                ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git)
+            },
+            IgnoredPatterns = ["node_modules"]
+        };
+
+        var copy = source.Copy();
+        copy.WatchedDirectories!.Add("D:\\Deep");
+        var copiedSettings = Assert.IsType<Dictionary<string, WatchedDirectoryScanSettings>>(copy.WatchedDirectorySettings);
+        copiedSettings["D:\\Deep"] = new(2, ProjectDiscoveryMode.Both);
+
+        Assert.Equal(["C:\\Work"], source.WatchedDirectories);
+        Assert.False(source.WatchedDirectorySettings.ContainsKey("D:\\Deep"));
     }
 
     [Fact]
@@ -184,15 +202,18 @@ public class PersistenceCloneRoundTripTests
                 AccentColor = "#FFB900",
                 PathDisplayStyle = "middleEllipsis",
                 LastSeenReleaseNotesVersion = "1.2.3",
-                WatchedDirectories = ["C:\\Work", "D:\\Deep"],
-                WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+                Scanning = new ScanningPreferences
                 {
-                    ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git),
-                    ["D:\\Deep"] = new(7, ProjectDiscoveryMode.Agents)
+                    WatchedDirectories = ["C:\\Work", "D:\\Deep"],
+                    WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+                    {
+                        ["C:\\Work"] = new(4, ProjectDiscoveryMode.Git),
+                        ["D:\\Deep"] = new(7, ProjectDiscoveryMode.Agents)
+                    },
+                    ScanDepth = 5,
+                    IgnoredPatterns = ["node_modules", "*cache*"],
+                    DiscoveryMode = ProjectDiscoveryMode.Agents
                 },
-                ScanDepth = 5,
-                IgnoredPatterns = ["node_modules", "*cache*"],
-                DiscoveryMode = ProjectDiscoveryMode.Agents,
                 DefaultAgentId = "opencode"
             }
         };
@@ -242,17 +263,17 @@ public class PersistenceCloneRoundTripTests
         Assert.Equal(expected.AccentColor, actual.AccentColor);
         Assert.Equal(expected.PathDisplayStyle, actual.PathDisplayStyle);
         Assert.Equal(expected.LastSeenReleaseNotesVersion, actual.LastSeenReleaseNotesVersion);
-        Assert.Equal(expected.WatchedDirectories, actual.WatchedDirectories);
-        Assert.Equal(expected.WatchedDirectorySettings.Count, actual.WatchedDirectorySettings.Count);
-        foreach (var entry in expected.WatchedDirectorySettings)
+        Assert.Equal(expected.Scanning.WatchedDirectories, actual.Scanning.WatchedDirectories);
+        Assert.Equal(expected.Scanning.WatchedDirectorySettings.Count, actual.Scanning.WatchedDirectorySettings.Count);
+        foreach (var entry in expected.Scanning.WatchedDirectorySettings)
         {
-            Assert.True(actual.WatchedDirectorySettings.TryGetValue(entry.Key, out var actualSettings));
+            Assert.True(actual.Scanning.WatchedDirectorySettings.TryGetValue(entry.Key, out var actualSettings));
             Assert.Equal(entry.Value, actualSettings);
         }
 
-        Assert.Equal(expected.ScanDepth, actual.ScanDepth);
-        Assert.Equal(expected.IgnoredPatterns, actual.IgnoredPatterns);
-        Assert.Equal(expected.DiscoveryMode, actual.DiscoveryMode);
+        Assert.Equal(expected.Scanning.ScanDepth, actual.Scanning.ScanDepth);
+        Assert.Equal(expected.Scanning.IgnoredPatterns, actual.Scanning.IgnoredPatterns);
+        Assert.Equal(expected.Scanning.DiscoveryMode, actual.Scanning.DiscoveryMode);
         Assert.Equal(expected.DefaultAgentId, actual.DefaultAgentId);
     }
 }

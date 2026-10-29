@@ -397,8 +397,8 @@ public class SettingsViewModelApplicationTests
 
             fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
 
-            Assert.Equal([directory], fixture.CapturedPreferences.WatchedDirectories ?? []);
-            var settings = fixture.CapturedPreferences.WatchedDirectorySettings;
+            Assert.Equal([directory], fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
+            var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
             Assert.NotNull(settings);
             Assert.True(settings.ContainsKey(directory));
             fixture.Scanner.Verify(x => x.Reload(), Times.Once);
@@ -420,7 +420,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.RemoveWatchedDirectoryCommand.Execute(@"C:\repos\one");
 
         Assert.Empty(fixture.ViewModel.WatchedDirectories);
-        Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.WatchedDirectories ?? []);
+            Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -435,7 +435,7 @@ public class SettingsViewModelApplicationTests
 
         row.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 5);
 
-        var settings = fixture.CapturedPreferences.WatchedDirectorySettings;
+            var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
         Assert.NotNull(settings);
         Assert.Equal(5, settings[@"C:\repos\one"].ScanDepth);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
@@ -451,7 +451,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.AddIgnoredPatternCommand.Execute(null);
 
         Assert.Contains("custom-ignored-dir", fixture.ViewModel.IgnoredPatterns);
-        Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.IgnoredPatterns ?? []);
+            Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.Scanning.IgnoredPatterns ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -465,7 +465,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SelectedDiscoveryMode = fixture.ViewModel.DiscoveryModes
             .First(option => option.Mode == ProjectDiscoveryMode.Git);
 
-        Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.DiscoveryMode);
+            Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.Scanning.DiscoveryMode);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -479,7 +479,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SelectedScanDepth = fixture.ViewModel.ScanDepthOptions
             .First(option => option.Value == 4);
 
-        Assert.Equal(4, fixture.CapturedPreferences.ScanDepth);
+            Assert.Equal(4, fixture.CapturedPreferences.Scanning.ScanDepth);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -551,10 +551,13 @@ public class SettingsViewModelApplicationTests
             CheckForUpdatesOnStartup = true,
             StartMinimized = true,
             AccentColor = AccentPalette.DefaultHex,
-            WatchedDirectories = [first, second],
-            WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+            Scanning = new ScanningPreferences
             {
-                [first] = new(4, ProjectDiscoveryMode.Git)
+                WatchedDirectories = [first, second],
+                WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
+                {
+                    [first] = new(4, ProjectDiscoveryMode.Git)
+                }
             }
         });
 
@@ -752,7 +755,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SaveCommand.Execute(null);
 
         Assert.NotNull(saved);
-        Assert.True(saved!.WatchedDirectorySettings.TryGetValue(path, out var settings));
+        Assert.True(saved!.Scanning.WatchedDirectorySettings.TryGetValue(path, out var settings));
         Assert.Equal(4, settings!.ScanDepth);
         Assert.Equal(ProjectDiscoveryMode.Git, settings.DiscoveryMode);
     }
