@@ -65,6 +65,27 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: an explicit decision to start Proposal 5, or any change to plugin discovery/validation/
   seeding that would otherwise pre-empt these answers.
 
+### config.json format evolution (possible; decision pending)
+
+- Severity: Medium (product decision; unlocks a cleaner storage model, but carries migration risk)
+- Evidence: user note of 2026-10-29 - "with justification we may change the config.json format".
+  ADR-0002 currently pins ONE camelCase document with ONE atomic write boundary; changing the format
+  means superseding that ADR (ADR convention: new record, old marked Superseded) and migrating every
+  existing `%APPDATA%\CLIHub\config.json`.
+- Decision inputs needed before scoping:
+  1. Layout: split into per-concern files (preferences/projects/scanning) vs a single v2 document
+  2. Migration: one-time load-and-rewrite with a backup file; what happens when migration fails
+  3. Downgrade: can an older CLIHub read a v2 file, or must it refuse with a clear message
+  4. Versioning: explicit `schemaVersion` field and the compatibility policy across releases
+  5. Atomicity: per-file atomic writes vs a directory-swap transaction
+  6. Cache files (`logos.json`) - do they join the new layout or stay separate
+- Proposed remedy: after the format-neutral `config-decomposition-slice` lands, run a dedicated
+  OpenSpec change (`config-format-v2`) that supersedes ADR-0002, ships the migration with backup and
+  failure handling, and pins round-trip, downgrade-refusal and migration tests. Do not fold the
+  format change into the current slice.
+- Trigger: an explicit decision to change the format, or a second concrete coupling case that the
+  internal slice cannot contain.
+
 ### Configuration decomposition (Proposal 6) - first slice in progress
 
 - Severity: Low (structural, no user impact expected)
