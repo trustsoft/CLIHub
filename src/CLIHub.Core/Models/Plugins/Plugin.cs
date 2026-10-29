@@ -5,15 +5,38 @@ namespace CLIHub.Core.Models;
 /// </summary>
 public class Plugin
 {
+    private int? schemaVersion;
+    private bool schemaVersionSpecified;
+
+    /// <summary>
+    ///   The descriptor schema version, or <c> null </c> when the field is absent.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("schemaVersion")]
+    public int? SchemaVersion
+    {
+        get => this.schemaVersion;
+        set
+        {
+            this.schemaVersionSpecified = true;
+            this.schemaVersion = value;
+        }
+    }
+
+    /// <summary>
+    ///   Indicates whether the descriptor explicitly supplied the schema version field.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    internal bool SchemaVersionSpecified => this.schemaVersionSpecified;
+
     /// <summary>
     ///   Unique identifier for the plugin (matches subdirectory name).
     /// </summary>
-    public required string Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     /// <summary>
     ///   Display name of the plugin.
     /// </summary>
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     /// <summary>
     ///   Description of what the plugin does.
@@ -74,6 +97,11 @@ public class Plugin
                 ProjectIndicators = this.Detection?.ProjectIndicators is { } projectIndicators ? [.. projectIndicators] : []
             }
         };
+
+        if (this.schemaVersionSpecified)
+        {
+            copy.SchemaVersion = this.SchemaVersion;
+        }
 
         if (this.Commands is { } commands)
         {

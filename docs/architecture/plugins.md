@@ -4,6 +4,7 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 
 ```jsonc
 {
+  "schemaVersion": 1,
   "id": "opencode",
   "name": "OpenCode",
   "description": "AI coding agent CLI",
@@ -23,6 +24,9 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
   }
 }
 ```
+
+- `schemaVersion` is optional and defaults to 1. Values greater than 1 or non-integer values are invalid;
+  the supported maximum is currently 1.
 
 - `commands` is a named set; only `launch` is required.
 - `detection.systemPaths` are host install markers (env vars expanded); `detection.projectIndicators` are project-relative markers.

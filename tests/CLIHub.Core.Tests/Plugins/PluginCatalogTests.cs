@@ -99,6 +99,76 @@ public class PluginCatalogTests : IDisposable
     }
 
     [Fact]
+    public void LoadPlugins_MalformedJson_RetainsReadError()
+    {
+        this.WritePlugin("broken", "{ not valid json ");
+        var manager = this.CreateManager();
+
+        manager.LoadPlugins();
+
+        var entry = Assert.Single(manager.GetInvalidPlugins());
+        Assert.Equal(Path.Combine(this.root, "broken"), entry.PluginDirectory);
+        Assert.NotNull(entry.ReadResult?.Error);
+        Assert.Null(entry.ValidationResult);
+    }
+
+    [Fact]
+    public void LoadPlugins_MissingName_RetainsValidationErrors()
+    {
+        this.WritePlugin("noname", "{ \"id\": \"noname\", \"commands\": { \"launch\": { \"executable\": \"x\" } } }");
+        var manager = this.CreateManager();
+
+        manager.LoadPlugins();
+
+        var entry = Assert.Single(manager.GetInvalidPlugins());
+        Assert.Equal(["Plugin Name is required"], entry.ValidationResult!.Errors);
+        Assert.NotNull(entry.PartialPlugin);
+    }
+
+    [Fact]
+    public void LoadPlugins_UnsupportedSchemaVersion_RetainsValidationError()
+    {
+        this.WritePlugin("future", "{ \"schemaVersion\": 2, \"id\": \"future\", \"name\": \"Future\", \"commands\": { \"launch\": { \"executable\": \"x\" } } }");
+        var manager = this.CreateManager();
+
+        manager.LoadPlugins();
+
+        var entry = Assert.Single(manager.GetInvalidPlugins());
+        Assert.Equal(["Unsupported schema version 2; maximum supported is 1"], entry.ValidationResult!.Errors);
+        Assert.Empty(manager.GetAllPlugins());
+    }
+
+    [Theory]
+    [InlineData("\"1\"")]
+    [InlineData("null")]
+    [InlineData("1.5")]
+    public void LoadPlugins_NonIntegerSchemaVersion_RetainsTypeError(string schemaVersion)
+    {
+        this.WritePlugin("invalid", $"{{ \"schemaVersion\": {schemaVersion}, \"id\": \"invalid\", \"name\": \"Invalid\", \"commands\": {{ \"launch\": {{ \"executable\": \"x\" }} }} }}");
+        var manager = this.CreateManager();
+
+        manager.LoadPlugins();
+
+        var entry = Assert.Single(manager.GetInvalidPlugins());
+        Assert.Equal(["Schema version must be an integer"], entry.ValidationResult!.Errors);
+    }
+
+    [Fact]
+    public void ReloadPlugins_ReplacesInvalidEntries()
+    {
+        this.WritePlugin("plugin", "{ \"id\": \"plugin\", \"commands\": { \"launch\": { \"executable\": \"x\" } } }");
+        var manager = this.CreateManager();
+        manager.LoadPlugins();
+        Assert.Single(manager.GetInvalidPlugins());
+
+        this.WritePlugin("plugin", ValidJson);
+        manager.ReloadPlugins();
+
+        Assert.Empty(manager.GetInvalidPlugins());
+        Assert.Single(manager.GetAllPlugins());
+    }
+
+    [Fact]
     public void LoadPlugins_DuplicateId_LoadsOnlyOne()
     {
         this.WritePlugin("first", ValidJson);

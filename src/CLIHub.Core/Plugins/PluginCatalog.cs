@@ -1,8 +1,10 @@
 namespace CLIHub.Core.Plugins;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
 
 /// <summary>
@@ -14,8 +16,11 @@ public sealed class PluginCatalog : IPluginCatalog
     private readonly PluginLogoResolver logoResolver;
     private readonly IPluginDescriptorReader descriptorReader;
     private readonly IPluginDescriptorValidator descriptorValidator;
+    private readonly IPluginDescriptorSource source;
+    private readonly ILoggingContextProvider loggingContext;
     private readonly string pluginsPath;
     private IReadOnlyList<Plugin> plugins = Array.Empty<Plugin>();
+    private IReadOnlyList<InvalidPluginEntry> invalidPlugins = Array.Empty<InvalidPluginEntry>();
 
     /// <inheritdoc />
     public event EventHandler? PluginsChanged;
@@ -28,17 +33,23 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>. </param>
     /// <param name="descriptorReader"> The reader for plugin.json descriptors. </param>
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
+    /// <param name="source"> The source of plugin descriptors. </param>
+    /// <param name="loggingContext"> The provider for operation logging scopes. </param>
     public PluginCatalog(ILogger<PluginCatalog> logger,
                          PluginLogoResolver logoResolver,
                          string? pluginsPath = null,
                          IPluginDescriptorReader? descriptorReader = null,
-                         IPluginDescriptorValidator? descriptorValidator = null)
+                         IPluginDescriptorValidator? descriptorValidator = null,
+                         IPluginDescriptorSource? source = null,
+                         ILoggingContextProvider? loggingContext = null)
     {
         this.logger = logger;
         this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
         this.pluginsPath = pluginsPath ?? AppPaths.PluginsDirectory;
         this.descriptorReader = descriptorReader ?? new PluginDescriptorReader();
         this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
+        this.source = source ?? new LocalFolderPluginSource(this.pluginsPath, this.descriptorReader);
+        this.loggingContext = loggingContext ?? new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance);
     }
 
     /// <inheritdoc />
@@ -50,6 +61,7 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <inheritdoc />
     public void ReloadPlugins()
     {
+        using var scope = this.loggingContext.BeginOperation("PluginCatalogReload");
         this.plugins = this.LoadPluginsCore();
         this.PluginsChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -57,49 +69,49 @@ public sealed class PluginCatalog : IPluginCatalog
     private IReadOnlyList<Plugin> LoadPluginsCore()
     {
         var plugins = new List<Plugin>();
+        var invalidPlugins = new List<InvalidPluginEntry>();
+        using var scope = this.loggingContext.BeginOperation("PluginCatalogLoad");
 
-        var pluginsPath = this.pluginsPath;
-
-        if (!Directory.Exists(pluginsPath))
-        {
-            Directory.CreateDirectory(pluginsPath);
-            return plugins;
-        }
-
-        var pluginDirectories = Directory.GetDirectories(pluginsPath)
-            .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-        this.logger.LogDebug("Scanning {Count} plugin directories under {Path}", pluginDirectories.Length, pluginsPath);
-
-        foreach (var pluginDir in pluginDirectories)
+        foreach (var entry in this.source.EnumerateDescriptors())
         {
             try
             {
-                var descriptor = this.descriptorReader.Read(pluginDir);
-                if (descriptor.Error is not null)
+                if (entry.ReadError is not null)
                 {
-                    this.logger.LogWarning(descriptor.Error, "Failed to load plugin.json from {Directory}", pluginDir);
+                    var readResult = new PluginDescriptorReadResult(null, entry.ReadError);
+                    invalidPlugins.Add(new InvalidPluginEntry(entry.PluginDirectory, null, readResult, null));
+                    this.logger.LogWarning(entry.ReadError, "Failed to load plugin.json from {Directory}", entry.PluginDirectory);
                     continue;
                 }
 
-                var plugin = descriptor.Plugin;
+                var plugin = entry.Plugin;
 
-                if (plugin != null && this.ValidatePlugin(plugin, pluginDir))
+                if (plugin is not null)
                 {
-                    var loadedDirectory = FindLoadedPluginDirectory(plugins, plugin.Id, pluginDir);
+                    var validationResult = this.descriptorValidator.Validate(plugin);
+                    if (!validationResult.IsValid)
+                    {
+                        invalidPlugins.Add(new InvalidPluginEntry(entry.PluginDirectory, plugin, null, validationResult));
+                        this.logger.LogWarning(
+                            "Invalid plugin in {Directory}: {Errors}",
+                            entry.PluginDirectory,
+                            string.Join("; ", validationResult.Errors));
+                        continue;
+                    }
+
+                    var loadedDirectory = FindLoadedPluginDirectory(plugins, plugin.Id, entry.PluginDirectory);
                     if (loadedDirectory is not null)
                     {
                         this.logger.LogWarning(
                             "Duplicate plugin ID {PluginId} in {Directory}; skipped; loaded from {LoadedDirectory}",
                             plugin.Id,
-                            pluginDir,
+                            entry.PluginDirectory,
                             loadedDirectory);
                         continue;
                     }
 
-                    plugin.PluginDirectory = pluginDir;
-                    plugin.LogoPath = this.logoResolver.Resolve(plugin.Id, pluginDir);
+                    plugin.PluginDirectory = entry.PluginDirectory;
+                    plugin.LogoPath = this.logoResolver.Resolve(plugin.Id, entry.PluginDirectory);
 
                     plugins.Add(plugin);
                     this.logger.LogInformation("Loaded plugin {PluginId} ({PluginName})", plugin.Id, plugin.Name);
@@ -107,16 +119,21 @@ public sealed class PluginCatalog : IPluginCatalog
             }
             catch (Exception ex)
             {
-                this.logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", pluginDir);
+                invalidPlugins.Add(new InvalidPluginEntry(entry.PluginDirectory, entry.Plugin, new PluginDescriptorReadResult(entry.Plugin, ex), null));
+                this.logger.LogWarning(ex, "Failed to load plugin.json from {Directory}", entry.PluginDirectory);
             }
         }
 
         this.logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
+        this.invalidPlugins = invalidPlugins;
         return plugins;
     }
 
     /// <inheritdoc />
     public IReadOnlyList<Plugin> GetAllPlugins() => this.plugins.Select(plugin => plugin.Copy()).ToArray();
+
+    /// <inheritdoc />
+    public IReadOnlyList<InvalidPluginEntry> GetInvalidPlugins() => this.invalidPlugins;
 
     private bool ValidatePlugin(Plugin plugin, string pluginDirectory)
     {

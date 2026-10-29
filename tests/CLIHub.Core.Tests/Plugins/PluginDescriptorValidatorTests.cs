@@ -62,13 +62,68 @@ public class PluginDescriptorValidatorTests
             result.Errors);
     }
 
-    private static Plugin CreatePlugin() => new()
+    [Fact]
+    public void Validate_SchemaVersionAbsent_IsValid()
     {
-        Id = "plugin",
-        Name = "Plugin",
-        Commands = new AgentCommands
+        var result = new PluginDescriptorValidator().Validate(CreatePlugin());
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_SchemaVersionOne_IsValid()
+    {
+        var result = new PluginDescriptorValidator().Validate(CreatePlugin(1));
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void Validate_SchemaVersionTwo_IsUnsupported()
+    {
+        var result = new PluginDescriptorValidator().Validate(CreatePlugin(2));
+
+        Assert.Equal(["Unsupported schema version 2; maximum supported is 1"], result.Errors);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Validate_NonPositiveSchemaVersion_IsRejected(int schemaVersion)
+    {
+        var result = new PluginDescriptorValidator().Validate(CreatePlugin(schemaVersion));
+
+        Assert.Equal(["Schema version must be positive"], result.Errors);
+    }
+
+    [Fact]
+    public void Validate_NullSchemaVersionWhenExplicitlySpecified_IsRejectedAsTypeMismatch()
+    {
+        var plugin = CreatePlugin();
+        plugin.SchemaVersion = null;
+
+        var result = new PluginDescriptorValidator().Validate(plugin);
+
+        Assert.Equal(["Schema version must be an integer"], result.Errors);
+    }
+
+    private static Plugin CreatePlugin(int? schemaVersion = null)
+    {
+        var plugin = new Plugin
         {
-            Launch = new PluginCommand { Executable = "plugin" }
+            Id = "plugin",
+            Name = "Plugin",
+            Commands = new AgentCommands
+            {
+                Launch = new PluginCommand { Executable = "plugin" }
+            }
+        };
+
+        if (schemaVersion is not null)
+        {
+            plugin.SchemaVersion = schemaVersion;
         }
-    };
+
+        return plugin;
+    }
 }

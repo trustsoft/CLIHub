@@ -102,6 +102,9 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IPluginDescriptorReader, PluginDescriptorReader>();
         services.AddSingleton<IPluginDescriptorValidator, PluginDescriptorValidator>();
+        services.AddSingleton<IPluginDescriptorSource>(sp => new LocalFolderPluginSource(
+            Infrastructure.FileSystem.AppPaths.PluginsDirectory,
+            sp.GetRequiredService<IPluginDescriptorReader>()));
         services.AddSingleton<PluginCatalog>();
         services.AddSingleton<IPluginCatalog>(sp => sp.GetRequiredService<PluginCatalog>());
         services.AddSingleton<IPluginSeeder, PluginSeeder>();

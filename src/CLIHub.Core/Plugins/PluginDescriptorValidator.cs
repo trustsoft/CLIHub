@@ -14,6 +14,22 @@ public sealed class PluginDescriptorValidator : IPluginDescriptorValidator
 
         var errors = new List<string>();
 
+        if (plugin.SchemaVersionSpecified)
+        {
+            if (plugin.SchemaVersion is null)
+            {
+                errors.Add("Schema version must be an integer");
+            }
+            else if (plugin.SchemaVersion <= 0)
+            {
+                errors.Add("Schema version must be positive");
+            }
+            else if (plugin.SchemaVersion > 1)
+            {
+                errors.Add($"Unsupported schema version {plugin.SchemaVersion}; maximum supported is 1");
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(plugin.Id))
         {
             errors.Add("Plugin ID is required");

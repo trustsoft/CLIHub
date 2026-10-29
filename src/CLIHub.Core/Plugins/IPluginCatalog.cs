@@ -38,4 +38,10 @@ public interface IPluginCatalog
     /// </summary>
     /// <returns> The loaded plugins; safe to mutate or hold across asynchronous work. </returns>
     IReadOnlyList<Plugin> GetAllPlugins();
+
+    /// <summary>
+    ///   Gets invalid plugin entries retained from the last load.
+    /// </summary>
+    /// <returns> The invalid entries and their read or validation diagnostics. </returns>
+    IReadOnlyList<InvalidPluginEntry> GetInvalidPlugins();
 }

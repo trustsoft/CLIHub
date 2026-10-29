@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using CLIHub.Core;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
@@ -35,6 +36,8 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IPluginCatalog>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorReader>());
         Assert.NotNull(provider.GetRequiredService<IPluginDescriptorValidator>());
+        Assert.NotNull(provider.GetRequiredService<IPluginDescriptorSource>());
+        Assert.NotNull(provider.GetRequiredService<ILoggingContextProvider>());
         Assert.NotNull(provider.GetRequiredService<IAgentDetectionService>());
         Assert.NotNull(provider.GetRequiredService<IAgentReleaseClient>());
         Assert.NotNull(provider.GetRequiredService<IAgentUpdateAvailabilityService>());
