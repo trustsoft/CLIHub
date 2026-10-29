@@ -57,6 +57,16 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
      is the local folder source (no dead code, real consumer).
   7. `updateCheck`: runtime concern; not validated during load.
 - Guarding: these decisions; changes A and B will pin the observable parts in specs.
+- Change A (`plugin-catalog-diagnostics`) COMPLETE (2026-10-29, commit `a965d1f`, archived as
+  `2026-10-29-plugin-catalog-diagnostics`): optional `schemaVersion` (default 1) with a validation
+  matrix; catalog retains invalid entries with stage-specific diagnostics behind `GetInvalidPlugins()`
+  while `GetAllPlugins()` stays valid-only; `IPluginDescriptorSource` port with the local folder source
+  as its only implementation; catalog load carries an operation scope. `plugin-seeding` gained two
+  requirements (unsupported schema versions, invalid-entry exposure). 1,262 tests.
+- Change B (disabled-plugin UI surface) NOT STARTED: render invalid entries from `GetInvalidPlugins()`
+  as visible, disabled agents with the reason on the CLI Agents surface; needs a spec delta for the UI
+  contract and a manual smoke (plugin with a broken descriptor must appear disabled). Trigger: next UI
+  work on the agents page, or explicit request.
 
 
 ### Configuration decomposition (Proposal 6) - first slice in progress
