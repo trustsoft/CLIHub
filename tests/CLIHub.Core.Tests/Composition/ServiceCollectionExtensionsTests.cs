@@ -21,14 +21,6 @@ public class ServiceCollectionExtensionsTests
     {
         var services = new ServiceCollection();
         services.AddClIHubCoreServices();
-        // The version probe resolves ProcessLauncher, which the Windows module normally
-        // registers; stand in the runner fakes so the Core-only container can resolve the
-        // agent chain under test here.
-        services.AddSingleton<ProcessLauncher>(sp => new ProcessLauncher(
-            sp.GetRequiredService<ILogger<ProcessLauncher>>(),
-            new FakeInteractiveProcessRunner(),
-            new FakeProcessOutputRunner(),
-            new FakeRuntimeExecutableLocator()));
         services.AddSingleton<IProcessOrchestrator>(sp => new FakeProcessOrchestrator());
 
         using var provider = services.BuildServiceProvider();

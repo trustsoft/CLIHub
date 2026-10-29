@@ -54,7 +54,6 @@ public static class WindowsServiceCollectionExtensions
             new AgentProcessMatcher(),
             sp.GetRequiredService<IPluginCatalog>()));
         services.AddSingleton<IProcessOrchestrator, ProcessOrchestrator>();
-        services.AddSingleton<ProcessLauncher>();
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));

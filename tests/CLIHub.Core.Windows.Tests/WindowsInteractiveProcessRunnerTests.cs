@@ -134,7 +134,7 @@ public class WindowsInteractiveProcessRunnerTests
         try
         {
             var command = new PluginCommand { Name = "resume", Executable = "probe-agent", Arguments = "--continue" };
-            var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            var (_, arguments) = WindowsCommandLineBuilder.BuildInteractive(
                 RuntimeKind.PowerShell, command, shimDir, gitBashExecutable: null, powerShell7Executable: null);
             arguments = arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal);
 
@@ -174,7 +174,7 @@ public class WindowsInteractiveProcessRunnerTests
             await File.WriteAllTextAsync(scriptPath, "@cd>\"%~dp0cwd-report.txt\"");
             var command = new PluginCommand { Name = "launch", Executable = scriptPath };
 
-            var (_, arguments) = ProcessLauncher.BuildStartInfo(
+            var (_, arguments) = WindowsCommandLineBuilder.BuildInteractive(
                 runtimeKind, command, workingDirectory, gitBashExecutable: null, powerShell7Executable);
             arguments = makeHeadless(arguments);
 
