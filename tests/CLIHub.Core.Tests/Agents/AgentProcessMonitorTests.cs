@@ -1,6 +1,7 @@
 namespace CLIHub.Core.Tests.Agents;
 
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -22,6 +23,7 @@ public class AgentProcessMonitorTests
         this.monitor = new AgentProcessMonitor(
             CreateOrchestrator(this.mockInspector.Object),
             this.mockCatalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<AgentProcessMonitor>.Instance);
     }
 
@@ -34,6 +36,7 @@ public class AgentProcessMonitorTests
             Mock.Of<IInteractiveProcessRunner>(),
             Mock.Of<IProcessOutputRunner>(),
             new AgentProcessFinder(inspector, new AgentProcessMatcher(), new Mock<IPluginCatalog>().Object),
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ProcessOrchestrator>.Instance);
 
     [Fact]

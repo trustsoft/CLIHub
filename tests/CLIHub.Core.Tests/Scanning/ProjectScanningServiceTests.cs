@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
@@ -64,6 +65,7 @@ public class ProjectScanningServiceTests : IDisposable
             plugins.Object,
             this.watcherFactory,
             this.timerFactory,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ProjectScanningService>.Instance,
             new FakeTimeProvider(new DateTimeOffset(2026, 10, 11, 12, 0, 0, TimeSpan.Zero)),
             new InlineSynchronizationContext());

@@ -6,6 +6,7 @@ using Moq;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -284,8 +285,10 @@ public class LaunchWindowViewModelBuilder
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
                 new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<AgentProcessMonitor>.Instance);
 
         return new LaunchWindowViewModel(
@@ -362,8 +365,10 @@ public class LaunchWindowViewModelBuilder
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
                 new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), pluginCatalog.Object),
+                new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             pluginCatalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<AgentProcessMonitor>.Instance);
 
         var viewModel = new LaunchWindowViewModel(

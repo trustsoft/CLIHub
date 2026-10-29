@@ -2,6 +2,7 @@ namespace CLIHub.Core.Agents;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -14,6 +15,7 @@ public sealed class AgentProcessMonitor
 {
     private readonly IProcessOrchestrator orchestrator;
     private readonly IPluginCatalog pluginCatalog;
+    private readonly ILoggingContextProvider loggingContext;
     private readonly ILogger<AgentProcessMonitor> logger;
 
     /// <summary>
@@ -21,14 +23,17 @@ public sealed class AgentProcessMonitor
     /// </summary>
     /// <param name="orchestrator"> The process orchestrator. </param>
     /// <param name="pluginCatalog"> The plugin catalog. </param>
+    /// <param name="loggingContext"> The logging context provider. </param>
     /// <param name="logger"> The logger instance. </param>
     public AgentProcessMonitor(
         IProcessOrchestrator orchestrator,
         IPluginCatalog pluginCatalog,
+        ILoggingContextProvider loggingContext,
         ILogger<AgentProcessMonitor> logger)
     {
         this.orchestrator = orchestrator;
         this.pluginCatalog = pluginCatalog;
+        this.loggingContext = loggingContext;
         this.logger = logger;
     }
 
@@ -76,6 +81,7 @@ public sealed class AgentProcessMonitor
     public IReadOnlyList<RunningAgent> GetRunningAgents(
         AgentProcessMatchDetail detail = AgentProcessMatchDetail.CommandLine)
     {
+        using var scope = this.loggingContext.BeginOperation("EnumerateAgentProcesses");
         var runningAgents = new List<RunningAgent>();
 
         try
@@ -113,6 +119,8 @@ public sealed class AgentProcessMonitor
         AgentProcessMatchDetail detail = AgentProcessMatchDetail.CommandLine)
     {
         ArgumentNullException.ThrowIfNull(plugin);
+
+        using var scope = this.loggingContext.BeginOperation("EnumerateAgentProcesses");
 
         try
         {

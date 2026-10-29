@@ -2,6 +2,8 @@ namespace CLIHub.Lifetime;
 
 using Microsoft.Extensions.Logging;
 
+using CLIHub.Core.Infrastructure.Logging;
+
 /// <summary>
 ///   Tracks application-scoped asynchronous work and provides a bounded shutdown barrier.
 /// </summary>
@@ -13,6 +15,7 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     public static readonly TimeSpan DefaultShutdownTimeout = TimeSpan.FromSeconds(2);
 
     private readonly CancellationTokenSource cancellation = new();
+    private readonly ILoggingContextProvider loggingContext;
     private readonly ILogger<ApplicationOperationLifetime> logger;
     private readonly object sync = new();
     private readonly HashSet<Task> operations = [];
@@ -23,9 +26,13 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     /// <summary>
     ///   Creates the application operation lifetime.
     /// </summary>
+    /// <param name="loggingContext"> Logging context provider. </param>
     /// <param name="logger"> Logger for operation failures, cancellation, and timeouts. </param>
-    public ApplicationOperationLifetime(ILogger<ApplicationOperationLifetime> logger)
+    public ApplicationOperationLifetime(
+        ILoggingContextProvider loggingContext,
+        ILogger<ApplicationOperationLifetime> logger)
     {
+        this.loggingContext = loggingContext ?? throw new ArgumentNullException(nameof(loggingContext));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -91,6 +98,8 @@ public sealed class ApplicationOperationLifetime : IApplicationOperationLifetime
     private async Task RunObservedAsync(string operationName,
                                         Func<CancellationToken, Task> operation)
     {
+        using var scope = this.loggingContext.BeginOperation(operationName);
+
         try
         {
             await operation(this.cancellation.Token);

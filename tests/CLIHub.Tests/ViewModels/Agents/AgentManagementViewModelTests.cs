@@ -7,6 +7,7 @@ using Moq;
 
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -63,8 +64,10 @@ public class AgentManagementViewModelTests
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
                 new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher(), catalog.Object),
+                new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             processMonitorLogger ?? NullLogger<AgentProcessMonitor>.Instance);
 
         return new AgentManagementViewModel(

@@ -1,5 +1,6 @@
 namespace CLIHub.Core.Processes;
 
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
     private readonly IInteractiveProcessRunner interactiveRunner;
     private readonly IProcessOutputRunner outputRunner;
     private readonly IAgentProcessFinder processFinder;
+    private readonly ILoggingContextProvider loggingContext;
     private readonly ILogger<ProcessOrchestrator> logger;
 
     /// <summary>
@@ -24,6 +26,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
     /// <param name="interactiveRunner">The interactive process runner.</param>
     /// <param name="outputRunner">The process output runner.</param>
     /// <param name="processFinder">The agent process finder.</param>
+    /// <param name="loggingContext">The logging context provider.</param>
     /// <param name="logger">The logger.</param>
     public ProcessOrchestrator(
         IRuntimeResolver runtimeResolver,
@@ -31,6 +34,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
         IInteractiveProcessRunner interactiveRunner,
         IProcessOutputRunner outputRunner,
         IAgentProcessFinder processFinder,
+        ILoggingContextProvider loggingContext,
         ILogger<ProcessOrchestrator> logger)
     {
         this.runtimeResolver = runtimeResolver;
@@ -38,14 +42,15 @@ public class ProcessOrchestrator : IProcessOrchestrator
         this.interactiveRunner = interactiveRunner;
         this.outputRunner = outputRunner;
         this.processFinder = processFinder;
+        this.loggingContext = loggingContext;
         this.logger = logger;
     }
 
     /// <inheritdoc/>
     public async Task<ProcessResult> LaunchInteractiveAsync(LaunchRequest request)
     {
-        using var scope = this.logger.BeginScope("LaunchInteractive {Runtime} {Executable}",
-            request.RuntimeKind, request.Command.Executable);
+        using var scope = this.loggingContext.BeginOperation("LaunchInteractive");
+        this.logger.LogInformation("Launching {Runtime} {Executable}", request.RuntimeKind, request.Command.Executable);
 
         try
         {
@@ -108,8 +113,8 @@ public class ProcessOrchestrator : IProcessOrchestrator
     /// <inheritdoc/>
     public async Task<ProcessResult> CaptureOutputAsync(LaunchRequest request)
     {
-        using var scope = this.logger.BeginScope("CaptureOutput {Runtime} {Executable}",
-            request.RuntimeKind, request.Command.Executable);
+        using var scope = this.loggingContext.BeginOperation("CaptureOutput");
+        this.logger.LogInformation("Capturing output from {Runtime} {Executable}", request.RuntimeKind, request.Command.Executable);
 
         try
         {
@@ -179,10 +184,10 @@ public class ProcessOrchestrator : IProcessOrchestrator
     public async Task<IReadOnlyList<AgentProcess>> FindRunningAgentsAsync(
         ProcessMatchCriteria criteria)
     {
-        using var scope = this.logger.BeginScope("FindRunningAgents {PluginId}", criteria.Plugin.Id);
+        using var scope = this.loggingContext.BeginOperation("FindRunningAgents");
 
         var processes = await this.processFinder.FindAsync(criteria, CancellationToken.None);
-        this.logger.LogInformation("Found {Count} running agent process(es)", processes.Count);
+        this.logger.LogInformation("Found {Count} running agent process(es) for plugin {PluginId}", processes.Count, criteria.Plugin.Id);
         return processes;
     }
 
@@ -191,10 +196,10 @@ public class ProcessOrchestrator : IProcessOrchestrator
         IReadOnlyList<Plugin> plugins,
         AgentProcessMatchDetail detail)
     {
-        using var scope = this.logger.BeginScope("FindRunningAgents {PluginCount}", plugins.Count);
+        using var scope = this.loggingContext.BeginOperation("FindRunningAgents");
 
         var matches = await this.processFinder.FindAllAsync(plugins, detail, CancellationToken.None);
-        this.logger.LogInformation("Found {Count} running agent process(es)", matches.Count);
+        this.logger.LogInformation("Found {Count} running agent process(es) across {PluginCount} plugins", matches.Count, plugins.Count);
         return matches;
     }
 

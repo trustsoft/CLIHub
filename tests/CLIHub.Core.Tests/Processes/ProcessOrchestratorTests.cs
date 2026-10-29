@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
@@ -27,12 +28,14 @@ public class ProcessOrchestratorTests
         this.mockInteractiveRunner = new Mock<IInteractiveProcessRunner>();
         this.mockOutputRunner = new Mock<IProcessOutputRunner>();
         this.mockFinder = new Mock<IAgentProcessFinder>();
+        var loggingContext = new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance);
         this.orchestrator = new ProcessOrchestrator(
             this.mockResolver.Object,
             this.mockBuilder.Object,
             this.mockInteractiveRunner.Object,
             this.mockOutputRunner.Object,
             this.mockFinder.Object,
+            loggingContext,
             NullLogger<ProcessOrchestrator>.Instance);
     }
 

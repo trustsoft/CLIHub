@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
@@ -53,7 +54,14 @@ public static class WindowsServiceCollectionExtensions
             sp.GetRequiredService<IAgentProcessInspector>(),
             new AgentProcessMatcher(),
             sp.GetRequiredService<IPluginCatalog>()));
-        services.AddSingleton<IProcessOrchestrator, ProcessOrchestrator>();
+        services.AddSingleton<IProcessOrchestrator>(sp => new ProcessOrchestrator(
+            sp.GetRequiredService<IRuntimeResolver>(),
+            sp.GetRequiredService<ICommandLineBuilder>(),
+            sp.GetRequiredService<IInteractiveProcessRunner>(),
+            sp.GetRequiredService<IProcessOutputRunner>(),
+            sp.GetRequiredService<IAgentProcessFinder>(),
+            sp.GetRequiredService<ILoggingContextProvider>(),
+            sp.GetRequiredService<ILogger<ProcessOrchestrator>>()));
         services.AddSingleton<IStartupService>(sp => new StartupService(
             new CurrentUserRegistryStartup(),
             sp.GetRequiredService<ILogger<StartupService>>()));

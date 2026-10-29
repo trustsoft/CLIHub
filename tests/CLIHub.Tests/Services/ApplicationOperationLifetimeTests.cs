@@ -2,6 +2,7 @@ namespace CLIHub.Tests.Services;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Lifetime;
 
 public class ApplicationOperationLifetimeTests
@@ -10,6 +11,7 @@ public class ApplicationOperationLifetimeTests
     public async Task RunAsync_PassesApplicationTokenAndCompletes()
     {
         using var lifetime = new ApplicationOperationLifetime(
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ApplicationOperationLifetime>.Instance);
         CancellationToken receivedToken = default;
 
@@ -29,6 +31,7 @@ public class ApplicationOperationLifetimeTests
     public async Task StopAsync_CancelsAndAwaitsTrackedOperation()
     {
         using var lifetime = new ApplicationOperationLifetime(
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ApplicationOperationLifetime>.Instance);
         var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var cancelled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -60,6 +63,7 @@ public class ApplicationOperationLifetimeTests
     public async Task RunAsync_ObservesUnexpectedException()
     {
         using var lifetime = new ApplicationOperationLifetime(
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ApplicationOperationLifetime>.Instance);
 
         var exception = await Record.ExceptionAsync(
@@ -75,6 +79,7 @@ public class ApplicationOperationLifetimeTests
     public async Task StopAsync_IsIdempotentAndBoundsCancellationWait()
     {
         using var lifetime = new ApplicationOperationLifetime(
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<ApplicationOperationLifetime>.Instance);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var operation = lifetime.RunAsync("test", _ => release.Task);

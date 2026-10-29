@@ -3,6 +3,7 @@ namespace CLIHub.Core.Scanning;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
@@ -21,6 +22,7 @@ public sealed class ProjectScanningService : IProjectScanner
     private readonly IPluginCatalog plugins;
     private readonly IRepositoryWatcherFactory watcherFactory;
     private readonly IScanTimerFactory timerFactory;
+    private readonly ILoggingContextProvider loggingContext;
     private readonly ILogger<ProjectScanningService> logger;
     private readonly TimeProvider time;
 
@@ -44,6 +46,7 @@ public sealed class ProjectScanningService : IProjectScanner
     /// <param name="plugins"> Plugin catalog supplying agent project indicators. </param>
     /// <param name="watcherFactory"> Factory for the file-system watcher. </param>
     /// <param name="timerFactory"> Factory for the debounce timer. </param>
+    /// <param name="loggingContext"> Logging context provider. </param>
     /// <param name="logger"> Logger. </param>
     /// <param name="timeProvider"> Optional time source for scan timestamps. </param>
     /// <param name="synchronizationContext"> Optional owner context for tests; otherwise captured at start. </param>
@@ -52,6 +55,7 @@ public sealed class ProjectScanningService : IProjectScanner
                                   IPluginCatalog plugins,
                                   IRepositoryWatcherFactory watcherFactory,
                                   IScanTimerFactory timerFactory,
+                                  ILoggingContextProvider loggingContext,
                                   ILogger<ProjectScanningService> logger,
                                   TimeProvider? timeProvider = null,
                                   SynchronizationContext? synchronizationContext = null)
@@ -61,6 +65,7 @@ public sealed class ProjectScanningService : IProjectScanner
         this.plugins = plugins ?? throw new ArgumentNullException(nameof(plugins));
         this.watcherFactory = watcherFactory ?? throw new ArgumentNullException(nameof(watcherFactory));
         this.timerFactory = timerFactory ?? throw new ArgumentNullException(nameof(timerFactory));
+        this.loggingContext = loggingContext ?? throw new ArgumentNullException(nameof(loggingContext));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.time = timeProvider ?? TimeProvider.System;
         this.context = synchronizationContext;
@@ -373,6 +378,8 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private async Task RunScanAsync()
     {
+        using var scope = this.loggingContext.BeginOperation("ProjectScan");
+
         var options = ProjectScanningOptions.From(this.preferences.Load());
         var plugins = this.plugins.GetAllPlugins();
         var configured = options.WatchedDirectories.Count > 0;
@@ -448,6 +455,8 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private async Task RunRootScanAsync(string root)
     {
+        using var scope = this.loggingContext.BeginOperation("ProjectScan");
+
         var options = ProjectScanningOptions.From(this.preferences.Load());
         var rootOptions = options.ForRoot(root) with { WatchedDirectories = new[] { root } };
         var plugins = this.plugins.GetAllPlugins();

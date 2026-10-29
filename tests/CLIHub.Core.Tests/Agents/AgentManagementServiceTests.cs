@@ -6,6 +6,7 @@ using Moq;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -38,6 +39,7 @@ public class AgentManagementServiceTests
         return new AgentProcessMonitor(
             AgentProcessMonitorTests.CreateOrchestrator(inspector.Object),
             catalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<AgentProcessMonitor>.Instance);
     }
 

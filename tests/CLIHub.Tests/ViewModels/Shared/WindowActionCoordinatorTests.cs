@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Agents;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -128,8 +129,10 @@ public class WindowActionCoordinatorTests
                 Mock.Of<IInteractiveProcessRunner>(),
                 Mock.Of<IProcessOutputRunner>(),
                 new AgentProcessFinder(inspector.Object, new AgentProcessMatcher(), catalog.Object),
+                new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
                 NullLogger<ProcessOrchestrator>.Instance),
             catalog.Object,
+            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
             NullLogger<AgentProcessMonitor>.Instance);
 
         workflow = new Mock<IAgentCommandWorkflow>();

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
@@ -31,6 +32,7 @@ public static class ServiceCollectionExtensions
                                                            string? defaultLogoPath = null)
     {
         services.AddLogging();
+        services.AddSingleton<ILoggingContextProvider, LoggingContextProvider>();
 
         services.AddConfigurationServices();
         services.AddLogoServices(defaultLogoPath);
@@ -53,6 +55,7 @@ public static class ServiceCollectionExtensions
             sp.GetRequiredService<IPluginCatalog>(),
             sp.GetRequiredService<IRepositoryWatcherFactory>(),
             sp.GetRequiredService<IScanTimerFactory>(),
+            sp.GetRequiredService<ILoggingContextProvider>(),
             sp.GetRequiredService<ILogger<ProjectScanningService>>()));
         return services;
     }
