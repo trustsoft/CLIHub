@@ -1,6 +1,5 @@
 namespace CLIHub.Tests.Views;
 
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -135,20 +134,7 @@ public sealed class SettingsPageMetadataTests
         }
     }
 
-    private static SettingsPage[] ReadAllPages()
-    {
-        var field = typeof(SettingsViewModel).GetField("AllPages", BindingFlags.Static | BindingFlags.NonPublic);
-        Assert.True(
-            field is not null,
-            "SettingsViewModel.AllPages was not found by reflection: page metadata moved; update this guard.");
-
-        var pages = field!.GetValue(null) as SettingsPage[];
-        Assert.True(
-            pages is not null,
-            "SettingsViewModel.AllPages did not hold a SettingsPage[]: page metadata moved; update this guard.");
-
-        return pages!;
-    }
+    private static SettingsPage[] ReadAllPages() => SettingsPageCatalog.AllPages.ToArray();
 
     private static XDocument LoadDocument(string path)
     {

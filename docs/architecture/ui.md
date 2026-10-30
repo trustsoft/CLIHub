@@ -72,7 +72,7 @@ literal margins. The Settings version chip adds `Sizing.Footer.VersionChipMargin
 1. Add a `views:Settings<Name>Page` `UserControl` containing only its scrolling settings content,
    and declare it in the page host grid in `SettingsWindow.xaml`:
    `Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=<key>}"`.
-2. Add the `SettingsPage` entry to `SettingsViewModel.AllPages` with the key, title, description,
+2. Add the `SettingsPage` entry to `SettingsPageCatalog.AllPages` with the key, title, description,
    group, `IsImplemented`, icon, and the optional `HeaderTitleExtraKey`, `HeaderActionKey`, and
    `SummaryRowKey`. The sidebar groups and the page order derive from that array.
 3. If the page needs a header or summary slot, declare the `DataTemplate` in

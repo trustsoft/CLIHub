@@ -153,11 +153,10 @@ public static class ServiceRegistration
     }
 
     /// <summary>
-    ///   Registers the settings window stack (application service, section view models, the
-    ///   settings view model with its thirteen dependencies, and the window with its accessor)
-    ///   plus the runtime preference-application chain (<c> PreferenceApplier </c> with its process,
-    ///   accent, and theme preference targets, and the shared palette switcher they use) consumed at
-    ///   startup and on preference change.
+    ///   Registers the settings window stack (application service, section view models, the settings
+    ///   view model, and the window with its accessor) plus the runtime preference-application chain
+    ///   (<c> PreferenceApplier </c> with its process, accent, and theme preference targets, and the shared
+    ///   palette switcher they use) consumed at startup and on preference change.
     /// </summary>
     private static IServiceCollection AddSettingsServices(this IServiceCollection services)
     {
@@ -170,20 +169,7 @@ public static class ServiceRegistration
         services.AddTransient<IProjectRegistrySection, ProjectRegistryViewModel>();
         services.AddSingleton<SettingsApplicationService>();
         services.AddSingleton<AccentSelectionMemory>();
-        services.AddTransient<SettingsViewModel>(sp => new SettingsViewModel(
-            sp.GetRequiredService<SettingsApplicationService>(),
-            sp.GetRequiredService<IUpdateVersionProvider>(),
-            sp.GetRequiredService<IUpdateWorkflow>(),
-            sp.GetRequiredService<IReleaseNotesLauncher>(),
-            sp.GetRequiredService<IApplicationOperationLifetime>(),
-            sp.GetRequiredService<IExternalLauncher>(),
-            sp.GetRequiredService<IProjectDialogService>(),
-            sp.GetRequiredService<IProjectScanner>(),
-            sp.GetRequiredService<IAgentManagementSection>(),
-            sp.GetRequiredService<IProjectRegistrySection>(),
-            sp.GetRequiredService<AccentSelectionMemory>(),
-            sp.GetRequiredService<IRuntimeExecutableLocator>(),
-            sp.GetRequiredService<ILogger<SettingsViewModel>>()));
+        services.AddTransient<SettingsViewModel>();
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();

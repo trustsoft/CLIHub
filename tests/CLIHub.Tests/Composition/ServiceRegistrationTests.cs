@@ -181,7 +181,7 @@ public class ServiceRegistrationTests
         Assert.Equal(ServiceLifetime.Singleton, settingsApplication.Lifetime);
         Assert.Equal(typeof(SettingsApplicationService), settingsApplication.ImplementationType);
         Assert.Equal(ServiceLifetime.Transient, settingsViewModel.Lifetime);
-        Assert.NotNull(settingsViewModel.ImplementationFactory);
+        Assert.Equal(typeof(SettingsViewModel), settingsViewModel.ImplementationType);
     }
 
     [Fact]

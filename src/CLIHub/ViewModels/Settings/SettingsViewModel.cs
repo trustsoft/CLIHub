@@ -24,241 +24,6 @@ using CLIHub.Updates;
 using CLIHub.Settings;
 
 /// <summary>
-///   A selectable default runtime with a friendly label and an icon.
-/// </summary>
-/// <param name="Kind"> The runtime kind. </param>
-/// <param name="Name"> Display name shown in the combo box and diagnostics. </param>
-/// <param name="Icon"> Pack URI of the icon rendered beside the name. </param>
-/// <param name="IsInstalled">
-///   Whether the runtime executable was found. An unavailable option stays selectable so the stored
-///   selection remains visible and re-selectable.
-/// </param>
-public sealed record RuntimeOption(RuntimeKind Kind, string Name, string Icon, bool IsInstalled = true)
-{
-    /// <summary>
-    ///   The label shown in the selector; unavailable runtimes are marked as not installed.
-    /// </summary>
-    public string DisplayName => this.IsInstalled ? this.Name : $"{this.Name} (not installed)";
-}
-
-/// <summary>
-///   A selectable path display style with a friendly label.
-/// </summary>
-/// <param name="Style"> The path display style. </param>
-/// <param name="Name"> Display name shown in the combo box and tooltips. </param>
-public sealed record PathDisplayOption(PathDisplayStyle Style, string Name);
-
-/// <summary>
-///   A selectable repository scan depth.
-/// </summary>
-/// <param name="Value"> The depth in directory levels. </param>
-/// <param name="Name"> Display name. </param>
-public sealed record ScanDepthOption(int Value, string Name);
-
-/// <summary>
-///   A selectable log level.
-/// </summary>
-/// <param name="Value"> The stored level name. </param>
-/// <param name="Name"> Display name. </param>
-public sealed record LogLevelOption(string Value, string Name);
-
-/// <summary>
-///   A selectable popup screen position.
-/// </summary>
-/// <param name="Position"> The position. </param>
-/// <param name="Name"> Display name. </param>
-public sealed record PopupPositionOption(PopupScreenPosition Position, string Name);
-
-/// <summary>
-///   A selectable application theme.
-/// </summary>
-/// <param name="Theme"> The theme. </param>
-/// <param name="Name"> Display name. </param>
-/// <param name="Description"> One-line explanation shown under the name in the theme picker. </param>
-/// <param name="PreviewCardBrush"> Resource key of the preview card background brush. </param>
-/// <param name="PreviewBarBrush"> Resource key of the preview bar brush. </param>
-/// <param name="UsesAccentPreviewDot">
-///   Whether the preview dot follows the live accent brush instead of the fixed muted swatch.
-/// </param>
-public sealed record AppThemeOption(
-    AppTheme Theme,
-    string Name,
-    string Description,
-    string PreviewCardBrush,
-    string PreviewBarBrush,
-    bool UsesAccentPreviewDot);
-
-/// <summary>
-///   A selectable accent color: a palette preset or the custom hex entry.
-/// </summary>
-/// <param name="Name"> Display name. </param>
-/// <param name="Hex"> The swatch color, or <c> Transparent </c> for the custom entry. </param>
-/// <param name="Hint"> The muted line under the name: the hex value or the custom-field hint. </param>
-/// <param name="IsCustom"> True for the custom hex entry. </param>
-public sealed record AccentChoice(string Name, string Hex, string Hint, bool IsCustom)
-{
-    /// <summary>
-    ///   The accessible name combining the label with the color value or hint.
-    /// </summary>
-    public string AccessibleName => $"{this.Name} {this.Hint}";
-}
-
-/// <summary>
-///   A selectable repository discovery mode.
-/// </summary>
-/// <param name="Mode"> The discovery mode. </param>
-/// <param name="Name"> Display name. </param>
-public sealed record DiscoveryModeOption(ProjectDiscoveryMode Mode, string Name);
-
-/// <summary>
-///   One watched-directory row: its path, the per-directory scan settings, and the number of
-///   repositories found beneath it.
-/// </summary>
-public sealed class WatchedDirectoryRow : ObservableObject
-{
-    private ScanDepthOption selectedDepth;
-    private DiscoveryModeOption selectedDiscovery;
-    private int discoveredCount;
-
-    /// <summary>
-    ///   Creates a row.
-    /// </summary>
-    /// <param name="path"> The normalized watched root path. </param>
-    /// <param name="depthOptions"> The allowed scan depths. </param>
-    /// <param name="discoveryOptions"> The allowed discovery modes. </param>
-    /// <param name="selectedDepth"> The row's scan depth. </param>
-    /// <param name="selectedDiscovery"> The row's discovery mode. </param>
-    public WatchedDirectoryRow(string path,
-                               IReadOnlyList<ScanDepthOption> depthOptions,
-                               IReadOnlyList<DiscoveryModeOption> discoveryOptions,
-                               ScanDepthOption selectedDepth,
-                               DiscoveryModeOption selectedDiscovery)
-    {
-        this.Path = path;
-        this.DepthOptions = depthOptions;
-        this.DiscoveryOptions = discoveryOptions;
-        this.selectedDepth = selectedDepth;
-        this.selectedDiscovery = selectedDiscovery;
-    }
-
-    /// <summary>
-    ///   The normalized watched root path.
-    /// </summary>
-    public string Path { get; }
-
-    /// <summary>
-    ///   The scan depths offered by the depth chip.
-    /// </summary>
-    public IReadOnlyList<ScanDepthOption> DepthOptions { get; }
-
-    /// <summary>
-    ///   The discovery modes offered by the discovery chip.
-    /// </summary>
-    public IReadOnlyList<DiscoveryModeOption> DiscoveryOptions { get; }
-
-    /// <summary>
-    ///   The row's scan depth.
-    /// </summary>
-    public ScanDepthOption SelectedDepth
-    {
-        get => this.selectedDepth;
-        set
-        {
-            if (value is not null && this.SetProperty(ref this.selectedDepth, value))
-            {
-                this.OnPropertyChanged(nameof(this.DepthChipLabel));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The row's discovery mode.
-    /// </summary>
-    public DiscoveryModeOption SelectedDiscovery
-    {
-        get => this.selectedDiscovery;
-        set
-        {
-            if (value is not null && this.SetProperty(ref this.selectedDiscovery, value))
-            {
-                this.OnPropertyChanged(nameof(this.DiscoveryChipLabel));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The text shown on the depth chip.
-    /// </summary>
-    public string DepthChipLabel => $"Depth {this.selectedDepth.Value}";
-
-    /// <summary>
-    ///   The text shown on the discovery chip.
-    /// </summary>
-    public string DiscoveryChipLabel => this.selectedDiscovery.Name;
-
-    /// <summary>
-    ///   The number of discovered repositories beneath this root.
-    /// </summary>
-    public int DiscoveredCount
-    {
-        get => this.discoveredCount;
-        set
-        {
-            if (this.SetProperty(ref this.discoveredCount, value))
-            {
-                this.OnPropertyChanged(nameof(this.DiscoveredSummary));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The repository count in singular/plural wording.
-    /// </summary>
-    public string DiscoveredSummary => this.discoveredCount == 1 ? "1 repository" : $"{this.discoveredCount} repositories";
-}
-
-/// <summary>
-///   A Settings navigation page: a stable key, a display title, the group it belongs to, whether
-///   its settings are implemented yet, and the resource keys of the page-specific header and
-///   summary templates it uses.
-/// </summary>
-/// <param name="Key"> Stable page key used to route the page view. </param>
-/// <param name="Title"> Display title shown in the sidebar and page header. </param>
-/// <param name="Description"> One-line description shown under the page title in the page header. </param>
-/// <param name="Group"> The navigation group the page belongs to. </param>
-/// <param name="IsImplemented"> Whether the page has implemented settings. </param>
-/// <param name="Icon"> The Segoe MDL2 glyph shown before the page title in the sidebar. </param>
-/// <param name="HeaderTitleExtraKey">
-///   Resource key of the template rendered beside the page title, or null when the page has no
-///   extra title content.
-/// </param>
-/// <param name="HeaderActionKey">
-///   Resource key of the template rendered in the header action column, or null when the page has
-///   no header actions.
-/// </param>
-/// <param name="SummaryRowKey">
-///   Resource key of the template rendered in the header summary row, or null when the page has no
-///   summary cards.
-/// </param>
-public sealed record SettingsPage(
-    string Key,
-    string Title,
-    string Description,
-    string Group,
-    bool IsImplemented,
-    string Icon,
-    string? HeaderTitleExtraKey = null,
-    string? HeaderActionKey = null,
-    string? SummaryRowKey = null);
-
-/// <summary>
-///   A Settings navigation group: an uppercase label and its pages.
-/// </summary>
-/// <param name="Title"> The group label. </param>
-/// <param name="Pages"> The pages in the group, in display order. </param>
-public sealed record SettingsGroup(string Title, IReadOnlyList<SettingsPage> Pages);
-
-/// <summary>
 ///   View model for the Settings window: loads preferences,
 ///   validates input, and applies changes on save.
 /// </summary>
@@ -277,80 +42,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path"),
         new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends")
     };
-
-    private static readonly SettingsPage[] AllPages =
-    {
-        new(
-            "general",
-            "General & Startup",
-            "Startup behavior and how the window opens.",
-            "General",
-            true,
-            IconGlyphs.Settings),
-        new(
-            "hotkeys",
-            "Hotkeys & Quick Launcher",
-            "The global hotkey and where the launcher appears.",
-            "General",
-            true,
-            IconGlyphs.Keyboard),
-        new(
-            "projects-registry",
-            "Projects",
-            "Registered projects, their provenance, and manually added entries.",
-            "Engines & Repos",
-            true,
-            IconGlyphs.BulletedList,
-            SummaryRowKey: "RegistrySummaryCards"),
-        new(
-            "projects",
-            "Project Scanning",
-            "Watched directories, scanning rules, and the background watcher.",
-            "Engines & Repos",
-            true,
-            IconGlyphs.FolderOpen,
-            HeaderActionKey: "ProjectsHeaderAction",
-            SummaryRowKey: "ProjectsSummaryCards"),
-        new(
-            "agents",
-            "CLI Agents",
-            "Installed CLI agents, the default agent, and detection settings.",
-            "Engines & Repos",
-            true,
-            IconGlyphs.Robot,
-            SummaryRowKey: "AgentsSummaryCards"),
-        new(
-            "terminal",
-            "Terminal Profiles",
-            "The shell used to open interactive agent commands.",
-            "Engines & Repos",
-            true,
-            IconGlyphs.Terminal),
-        new(
-            "appearance",
-            "Appearance",
-            "Theme, accent color, and how project paths are shown.",
-            "System",
-            true,
-            IconGlyphs.Palette),
-        new(
-            "telemetry",
-            "Logs",
-            "Log level, retention, and the log file.",
-            "System",
-            true,
-            IconGlyphs.History),
-        new(
-            "updates",
-            "Updates",
-            "Check for new CLIHub builds, configure update preferences, and view release notes.",
-            "System",
-            true,
-            IconGlyphs.Sync,
-            HeaderTitleExtraKey: "UpdatesHeaderTitleExtra",
-            HeaderActionKey: "UpdatesHeaderAction")
-    };
-
     private static readonly LogLevelOption[] LogLevelOptions =
     {
         new("Verbose", "Verbose"),
@@ -403,12 +94,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
                 ? $"{depth} levels (default)"
                 : depth == 1 ? "1 level" : $"{depth} levels"))
         .ToArray();
-
-    private static readonly SettingsGroup[] PagesByGroup = AllPages
-        .GroupBy(page => page.Group)
-        .Select(group => new SettingsGroup(group.Key, group.ToArray()))
-        .ToArray();
-
     private readonly SettingsApplicationService settingsApplication;
     private readonly IUpdateVersionProvider versionProvider;
     private readonly IUpdateWorkflow updateWorkflow;
@@ -441,7 +126,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string updateStatusGlyph = IconGlyphs.Info;
     private SettingBadgeTone updateStatusBadgeTone = SettingBadgeTone.Neutral;
     private string? validationError;
-    private SettingsPage selectedPage = AllPages[0];
+    private SettingsPage selectedPage = SettingsPageCatalog.AllPages[0];
     private readonly IExternalLauncher externalLauncher;
     private LogLevelOption selectedLogLevel = LogLevelOptions[2];
     private string logRetentionDaysText = "7";
@@ -550,12 +235,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   The navigation pages, in display order.
     /// </summary>
-    public IReadOnlyList<SettingsPage> Pages => AllPages;
+    public IReadOnlyList<SettingsPage> Pages => SettingsPageCatalog.AllPages;
 
     /// <summary>
     ///   The navigation groups and their pages, in display order.
     /// </summary>
-    public IReadOnlyList<SettingsGroup> PageGroups => PagesByGroup;
+    public IReadOnlyList<SettingsGroup> PageGroups => SettingsPageCatalog.PageGroups;
 
     /// <summary>
     ///   The agent-management section shown on the CLI Agents page.
@@ -1380,7 +1065,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.ResetUpdateStatus();
         this.validationError = null;
-        this.selectedPage = AllPages[0];
+        this.selectedPage = SettingsPageCatalog.AllPages[0];
 
         this.OnPropertyChanged(nameof(this.StartWithWindows));
         this.OnPropertyChanged(nameof(this.StartMinimized));
