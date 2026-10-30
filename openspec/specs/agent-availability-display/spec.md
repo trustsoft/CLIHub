@@ -82,6 +82,12 @@ The system SHALL support an optional mode that hides agents not available in the
 - **WHEN** the filter is enabled
 - **THEN** unavailable agents are hidden rather than dimmed
 
+#### Scenario: Launch window toggle applies filter immediately
+- **WHEN** the user toggles "Only agents available in project" in the launch window's Agents-menu
+- **THEN** the agent list is refreshed with the new filter value
+- **AND** the preference is persisted
+- **AND** toggling the filter does not cause a property-change loop
+
 ### Requirement: Filter preference persists
 
 The system SHALL persist the filter preference across sessions.
