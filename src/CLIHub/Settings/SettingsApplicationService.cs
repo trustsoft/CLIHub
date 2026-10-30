@@ -295,6 +295,10 @@ public sealed class SettingsApplicationService
     /// </summary>
     /// <param name="input"> Scanning values from the page. </param>
     /// <returns> Application result with a user-facing error when unsuccessful. </returns>
+    /// <remarks>
+    ///   The scanner reload is best-effort: once the change is written, a reload failure is logged
+    ///   and the result still reports success, so the stored values are never rolled back.
+    /// </remarks>
     public SettingsApplicationResult ApplyScanning(ScanningSettingsInput input)
     {
         ArgumentNullException.ThrowIfNull(input);
@@ -309,7 +313,17 @@ public sealed class SettingsApplicationService
             this.preferencesStore.Update(preferences => WriteScanning(preferences, normalized));
 
             // Reconfigure watching and rescan with the settings the page now shows.
-            this.projectScanner.Reload();
+            // The scanner reload is best-effort: the write already succeeded, so a reload failure
+            // must not report an apply failure or undo the stored values.
+            try
+            {
+                this.projectScanner.Reload();
+            }
+            catch (Exception reloadEx)
+            {
+                this.logger.LogWarning(reloadEx, "Settings saved but the project scanner could not reload with the new configuration");
+            }
+
             return SettingsApplicationResult.Applied;
         }
         catch (Exception ex)
@@ -441,6 +455,11 @@ public sealed class SettingsApplicationService
     /// </summary>
     /// <param name="draft"> Validated Settings draft. </param>
     /// <returns> Application result with a user-facing error when unsuccessful. </returns>
+    /// <remarks>
+    ///   Apply and persistence failures before the write roll back the system preferences.
+    ///   The scanner reload after a successful write is best-effort: a reload failure is logged and
+    ///   the save still reports success, so the persisted values are kept.
+    /// </remarks>
     public SettingsApplicationResult Save(SettingsDraft draft)
     {
         ArgumentNullException.ThrowIfNull(draft);
@@ -514,7 +533,17 @@ public sealed class SettingsApplicationService
             this.applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
 
             // Reconfigure watching and rescan with the newly saved scanning settings.
-            this.projectScanner.Reload();
+            // The scanner reload is best-effort: the configuration is already persisted, so a
+            // reload failure must not roll back the system preferences applied above.
+            try
+            {
+                this.projectScanner.Reload();
+            }
+            catch (Exception reloadEx)
+            {
+                this.logger.LogWarning(reloadEx, "Settings saved but the project scanner could not reload with the new configuration");
+            }
+
             return SettingsApplicationResult.Applied;
         }
         catch (Exception ex)

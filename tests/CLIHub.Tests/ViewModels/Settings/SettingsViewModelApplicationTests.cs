@@ -1,5 +1,6 @@
 namespace CLIHub.ViewModels;
 
+using System.ComponentModel;
 using System.IO;
 
 using Microsoft.Extensions.Logging.Abstractions;
@@ -332,6 +333,32 @@ public class SettingsViewModelApplicationTests
 
         Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
         Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
+    }
+
+    [Fact]
+    public void AddWatchedDirectory_ApplyFailure_ReportsErrorAndKeepsInput()
+    {
+        var directory = CreateTempDirectory();
+        try
+        {
+            var fixture = new Fixture();
+            fixture.Preferences
+                .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+                .Throws(new IOException("configuration is read-only"));
+            fixture.ViewModel.Load();
+            fixture.ViewModel.Scanning.NewWatchedDirectoryText = directory;
+
+            fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
+
+            Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
+            Assert.NotNull(fixture.ViewModel.ValidationError);
+            Assert.Contains("Could not apply scanning settings", fixture.ViewModel.ValidationError);
+            Assert.Equal(directory, fixture.ViewModel.Scanning.NewWatchedDirectoryText);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
@@ -869,6 +896,31 @@ public class SettingsViewModelApplicationTests
         fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
     }
 
+    [Fact]
+    public void AgentSummary_DetectUpdatesInstalledCount_RaisesPropertyChanged()
+    {
+        var agents = new Mock<IAgentManagementSection>();
+        agents.SetupGet(section => section.InstalledAgentCount).Returns(2);
+        agents.SetupGet(section => section.SupportedAgentCount).Returns(5);
+        var fixture = new Fixture(agentsState: agents);
+        var raised = new List<string?>();
+        fixture.ViewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        agents.Raise(
+            section => section.PropertyChanged += null,
+            new PropertyChangedEventArgs(nameof(IAgentManagementSection.InstalledAgentCount)));
+        agents.Raise(
+            section => section.PropertyChanged += null,
+            new PropertyChangedEventArgs(nameof(IAgentManagementSection.SupportedAgentCount)));
+
+        Assert.Equal(2, fixture.ViewModel.AgentsInstalledCount);
+        Assert.Equal(5, fixture.ViewModel.AgentsSupportedCount);
+        Assert.Equal("5 supported", fixture.ViewModel.AgentsSupportSummary);
+        Assert.Contains(nameof(SettingsViewModel.AgentsInstalledCount), raised);
+        Assert.Contains(nameof(SettingsViewModel.AgentsSupportedCount), raised);
+        Assert.Contains(nameof(SettingsViewModel.AgentsSupportSummary), raised);
+    }
+
     private static WatchedDirectoryRow CreateRow(Fixture fixture, string path) =>
         new(path,
             fixture.ViewModel.Scanning.ScanDepthOptions,
@@ -893,12 +945,16 @@ public class SettingsViewModelApplicationTests
         public Mock<IRuntimeExecutableLocator> RuntimeExecutables { get; } = new();
         public Mock<Core.Scanning.IProjectScanner> Scanner { get; } = new();
         public Mock<IProjectDialogService> Dialogs { get; } = new();
+        public Mock<IAgentManagementSection> Agents { get; }
         public AccentSelectionMemory AccentMemory { get; }
         public AppPreferences CapturedPreferences { get; } = new();
         public SettingsViewModel ViewModel { get; }
 
-        public Fixture(string accentColor = AccentPalette.DefaultHex, AccentSelectionMemory? accentMemory = null)
+        public Fixture(string accentColor = AccentPalette.DefaultHex,
+                       AccentSelectionMemory? accentMemory = null,
+                       Mock<IAgentManagementSection>? agentsState = null)
         {
+            this.Agents = agentsState ?? new Mock<IAgentManagementSection>();
             this.AccentMemory = accentMemory ?? new AccentSelectionMemory();
             this.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
             {
@@ -936,7 +992,7 @@ public class SettingsViewModelApplicationTests
                 new Mock<IExternalLauncher>().Object,
                 this.Dialogs.Object,
                 this.Scanner.Object,
-                Mock.Of<IAgentManagementSection>(),
+                this.Agents.Object,
                 Mock.Of<IProjectRegistrySection>(),
                 this.AccentMemory,
                 this.RuntimeExecutables.Object,

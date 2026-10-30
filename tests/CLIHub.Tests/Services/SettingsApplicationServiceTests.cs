@@ -1,5 +1,6 @@
 namespace CLIHub.Tests.Services;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
@@ -137,6 +138,63 @@ public class SettingsApplicationServiceTests
     }
 
     [Fact]
+    public void Save_ReloadFails_ReturnsSuccessAfterPersist()
+    {
+        var previous = PreviousPreferences();
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        preferencesStore.Setup(x => x.Load()).Returns(previous);
+        preferencesStore.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
+        var startup = new Mock<IStartupService>(MockBehavior.Strict);
+        startup.Setup(x => x.IsEnabled()).Returns(false);
+        var applier = CreateApplier();
+        applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
+        applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
+        applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
+        applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
+        applier.Setup(x => x.ApplyStartupUpdateCheck(false));
+        applier.Setup(x => x.ApplyAccent("#4CC2FF"));
+        var scanner = new Mock<Core.Scanning.IProjectScanner>();
+        scanner.Setup(x => x.Reload()).Throws(new InvalidOperationException("scanner unavailable"));
+        var logger = new Mock<ILogger<SettingsApplicationService>>();
+        var service = CreateService(preferencesStore.Object, startup.Object, applier.Object, scanner.Object, logger.Object);
+
+        var result = service.Save(new SettingsDraft(
+            RuntimeKind.PowerShell,
+            PathDisplayStyle.MiddleEllipsis,
+            HotkeyParser.Default,
+            15,
+            30,
+            true,
+            false,
+            false,
+            true,
+            true,
+            false,
+            "Information",
+            7,
+            0,
+            PopupScreenPosition.Center,
+            AppTheme.Dark,
+            "#4CC2FF",
+            new ScanningSettingsInput(
+                null,
+                ProjectScanningDefaults.DefaultScanDepth,
+                null,
+                ProjectDiscoveryMode.Both,
+                null)));
+
+        Assert.True(result.Success);
+        Assert.Null(result.Error);
+        preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Once);
+        scanner.Verify(x => x.Reload(), Times.Once);
+
+        // No rollback: the previous runtime and startup state are only restored by it.
+        applier.Verify(x => x.ApplyRuntime(RuntimeKind.GitBash), Times.Never);
+        applier.Verify(x => x.ApplyStartWithWindows(false), Times.Never);
+        VerifyReloadWarning(logger);
+    }
+
+    [Fact]
     public void Save_DefaultAgentId_PersistsValue()
     {
         var captured = new AppPreferences();
@@ -229,6 +287,39 @@ public class SettingsApplicationServiceTests
     }
 
     [Fact]
+    public void ApplyScanning_ReloadFails_ReturnsSuccessAfterPersist()
+    {
+        var captured = new AppPreferences();
+        var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
+        preferencesStore
+            .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
+            .Callback<Action<AppPreferences>>(update => update(captured));
+        var scanner = new Mock<Core.Scanning.IProjectScanner>();
+        scanner.Setup(x => x.Reload()).Throws(new InvalidOperationException("scanner unavailable"));
+        var logger = new Mock<ILogger<SettingsApplicationService>>();
+        var service = CreateService(
+            preferencesStore.Object,
+            new Mock<IStartupService>().Object,
+            new Mock<IPreferenceApplier>().Object,
+            scanner.Object,
+            logger.Object);
+
+        var result = service.ApplyScanning(new ScanningSettingsInput(
+            [@"C:\repos"],
+            3,
+            ["node_modules"],
+            ProjectDiscoveryMode.Git,
+            null));
+
+        Assert.True(result.Success);
+        Assert.Null(result.Error);
+        preferencesStore.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Once);
+        Assert.Equal([@"C:\repos"], captured.Scanning.WatchedDirectories);
+        Assert.Equal(3, captured.Scanning.ScanDepth);
+        VerifyReloadWarning(logger);
+    }
+
+    [Fact]
     public void ApplyScanning_OutOfRangeDepth_ReturnsErrorWithoutSideEffects()
     {
         var preferencesStore = new Mock<IPreferencesStore>(MockBehavior.Strict);
@@ -283,13 +374,26 @@ public class SettingsApplicationServiceTests
         IPreferencesStore preferencesStore,
         IStartupService startupService,
         IPreferenceApplier applier,
-        Core.Scanning.IProjectScanner? projectScanner = null) =>
+        Core.Scanning.IProjectScanner? projectScanner = null,
+        ILogger<SettingsApplicationService>? logger = null) =>
         new(
             preferencesStore,
             startupService,
             applier,
             projectScanner ?? new Mock<Core.Scanning.IProjectScanner>().Object,
-            NullLogger<SettingsApplicationService>.Instance);
+            logger ?? NullLogger<SettingsApplicationService>.Instance);
+
+    private static void VerifyReloadWarning(Mock<ILogger<SettingsApplicationService>> logger) =>
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state!.ToString()!.Contains(
+                    "could not reload with the new configuration",
+                    StringComparison.Ordinal)),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
 
     private static Mock<IPreferenceApplier> CreateApplier()
     {

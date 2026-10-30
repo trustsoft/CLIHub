@@ -1,5 +1,6 @@
 namespace CLIHub.ViewModels;
 
+using System.ComponentModel;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
@@ -98,8 +99,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string logFileSizeLimitText = "0";
     private PopupPositionOption selectedPopupPosition = PopupPositionOptions[0];
     private AppThemeOption selectedAppTheme = AppThemeOptions[0];
-    private int agentsInstalledCount;
-    private int agentsSupportedCount;
     private bool disposed;
 
     /// <summary>
@@ -139,6 +138,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.operationLifetime = operationLifetime;
         this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
         this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
+        this.AgentsState.PropertyChanged += this.OnAgentsStatePropertyChanged;
         this.ProjectRegistry = projectRegistry ?? throw new ArgumentNullException(nameof(projectRegistry));
         this.runtimeExecutables = runtimeExecutables ?? throw new ArgumentNullException(nameof(runtimeExecutables));
         this.logger = logger;
@@ -487,28 +487,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public WatchedDirectoryEditor Scanning => this.scanning;
 
     /// <summary>
-    ///   The number of agents installed on this machine.
+    ///   The number of agents installed on this machine, mirroring the agent section's current count.
     /// </summary>
-    public int AgentsInstalledCount
-    {
-        get => this.agentsInstalledCount;
-        private set => this.SetProperty(ref this.agentsInstalledCount, value);
-    }
+    public int AgentsInstalledCount => this.AgentsState.InstalledAgentCount;
 
     /// <summary>
-    ///   The number of supported agent plugins.
+    ///   The number of supported agent plugins, mirroring the agent section's current count.
     /// </summary>
-    public int AgentsSupportedCount
-    {
-        get => this.agentsSupportedCount;
-        private set
-        {
-            if (this.SetProperty(ref this.agentsSupportedCount, value))
-            {
-                this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
-            }
-        }
-    }
+    public int AgentsSupportedCount => this.AgentsState.SupportedAgentCount;
 
     /// <summary>
     ///   The supported-agent count shown under the installed count.
@@ -630,7 +616,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.scanning.Load(draft);
 
         this.AgentsState.Load(draft.DefaultAgentId);
-        this.RefreshAgentSummary();
         this.ProjectRegistry.Load();
 
         this.ResetUpdateStatus();
@@ -657,9 +642,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.LogFileSizeLimitText));
         this.OnPropertyChanged(nameof(this.SelectedPopupPosition));
         this.OnPropertyChanged(nameof(this.SelectedAppTheme));
-        this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
-        this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
-        this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
         this.OnPropertyChanged(nameof(this.SelectedPage));
@@ -685,11 +667,17 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Cancel() => this.RequestClose?.Invoke(this, EventArgs.Empty);
 
-    private void RefreshAgentSummary()
+    private void OnAgentsStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        var cards = this.AgentsState.Cards;
-        this.AgentsInstalledCount = cards?.Count(card => card.IsInstalled) ?? 0;
-        this.AgentsSupportedCount = cards?.Count ?? 0;
+        if (e.PropertyName is not (nameof(IAgentManagementSection.InstalledAgentCount)
+            or nameof(IAgentManagementSection.SupportedAgentCount)))
+        {
+            return;
+        }
+
+        this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
+        this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
+        this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
     }
 
     /// <summary>
@@ -704,6 +692,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.disposed = true;
         this.Scanning.Dispose();
+        this.AgentsState.PropertyChanged -= this.OnAgentsStatePropertyChanged;
         this.AgentsState.Dispose();
         this.ProjectRegistry.Dispose();
     }

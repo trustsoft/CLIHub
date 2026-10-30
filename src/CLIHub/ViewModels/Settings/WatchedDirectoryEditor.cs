@@ -504,6 +504,7 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
 
             // A failed apply must not leave an unpersisted root in the live list.
             this.WatchedDirectories.Remove(row);
+            return false;
         }
 
         return true;

@@ -1,6 +1,7 @@
 namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 using CLIHub.Controls;
 
@@ -8,7 +9,7 @@ using CLIHub.Controls;
 ///   The agent-management section of the Settings window: cards,
 ///   supported/installed counts, the default-agent selection, and the per-card actions.
 /// </summary>
-public interface IAgentManagementSection : IDisposable
+public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
 {
     /// <summary>
     ///   One card per loaded agent.
@@ -19,6 +20,11 @@ public interface IAgentManagementSection : IDisposable
     ///   The number of agents installed on this machine.
     /// </summary>
     int InstalledAgentCount { get; }
+
+    /// <summary>
+    ///   The number of supported agent plugins.
+    /// </summary>
+    int SupportedAgentCount { get; }
 
     /// <summary>
     ///   The supported/not-installed split shown under the installed count.
