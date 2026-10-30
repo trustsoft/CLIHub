@@ -3,6 +3,19 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.3 — 2026-10-31
+
+### New
+
+- Invalid plugin descriptors now appear as disabled cards on the CLI Agents page, with the reason they failed, instead of disappearing silently; descriptors can also declare a schema version, and unsupported versions are shown as disabled entries.
+
+### Fixed
+
+- The launch window's "Only agents available in project" filter works again: toggling it immediately filters the agent list and persists the preference.
+- Adding a watched directory that fails to save now reports the error and keeps the entered path, instead of silently discarding the row.
+- The Project Scanning page's AGENTS summary updates immediately after Detect, without closing and reopening Settings.
+- A project-scanner reload failure after saving no longer rolls back settings that were already written; the save succeeds and the scanner retries on the next scan or restart.
+
 ## 1.0.2 — 2026-10-27
 
 ### New

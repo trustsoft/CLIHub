@@ -8,6 +8,30 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.0.3 — 2026-10-31
+
+### Added
+
+- Plugin descriptors accept an optional `schemaVersion`; invalid descriptors are retained with their diagnostics and rendered as disabled agent cards with the failure reason, while `GetAllPlugins()` and the launch window stay valid-only (`plugin-catalog-diagnostics`, `plugin-disabled-ui`, `agent-ui`).
+
+### Changed
+
+- Internal architecture: the process domain model is unified across its phases, a synchronous domain event bus carries `ProjectSelected`/`AgentLaunched`, logging uses `ILoggingContextProvider` scopes, agent management is split into probe/update capabilities, and the configuration snapshot exposes scanning preferences as a value object without changing the JSON shape (`process-domain-*`, `domain-events-*`, `logging-context-provider`, `capability-service-slice`, `config-decomposition-slice`).
+- Internal refactors: the Settings view model is decomposed into focused files and collaborators with a unified save pipeline, the launch window moves show/hide policy into its view model, scanning/runtime probes share one pass/probe/policy shape, the agent view model shares restartable-pass and card-action primitives, and the test suite shares helpers/builders (`settings-viewmodel-*`, `settings-sections-extraction`, `settings-save-pipeline-unification`, `launch-window-composition`, `scanning-and-runtime-probe-unification`, `agent-management-pass-consolidation`, `test-support-consolidation`).
+- Specs no longer describe the removed placeholder page and defensive instance path (`align-specs-with-dead-path-cleanup`).
+
+### Fixed
+
+- The launch window's "Only agents available in project" toggle again filters the agent list, persists the preference, and does not loop (`fix-launch-agent-filter`, `agent-availability-display`).
+- Adding a watched directory whose immediate apply fails now reports the error and keeps the input; the agent summary mirrors live section counts; scanner reload failures after a successful write are logged without rolling back the saved settings (`fix-settings-state-sync`, `preferences-ui`).
+- Saving no longer logs the applied theme twice (`fix-duplicate-theme-log`).
+
+### Removed
+
+- The dead legacy `MainWindow` shell and its test allowlists (`remove-legacy-main-window`).
+- Unused code tiers 1 and 2, including duplicate update-checker/persistence helpers and dead interface members (`remove-unused-code-tier1`, `remove-unused-code-tier2`).
+- Dead paths and duplicate composition: the Settings placeholder page, `PageGroups`, `ApplyStartupUpdateCheck`, the tray action relay, `AgentProcess.Runtime`, the unreachable `InstanceCoordinator` check, and duplicate process registrations (`composition-and-dead-path-cleanup`).
+
 ## 1.0.2 — 2026-10-27
 
 ### Added
