@@ -79,7 +79,7 @@ public class PreferenceApplierTests
     public void ApplyTheme_ForwardsToThemeTargetAndLogsTheAppliedTheme()
     {
         var theme = new Mock<IThemePreferenceTarget>(MockBehavior.Strict);
-        theme.Setup(x => x.SetTheme(AppTheme.Blue));
+        theme.Setup(x => x.SetTheme(AppTheme.Blue)).Returns(true);
         var logger = new Mock<ILogger<PreferenceApplier>>();
         var applier = CreateApplier(theme: theme.Object, logger: logger.Object);
 
@@ -94,6 +94,38 @@ public class PreferenceApplierTests
                 It.IsAny<Exception?>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+    }
+
+    [Fact]
+    public void ApplyTheme_LogsWarning_WhenTargetReturnsFalse()
+    {
+        var theme = new Mock<IThemePreferenceTarget>(MockBehavior.Strict);
+        theme.Setup(x => x.SetTheme(AppTheme.Blue)).Returns(false);
+        var logger = new Mock<ILogger<PreferenceApplier>>();
+        var applier = CreateApplier(theme: theme.Object, logger: logger.Object);
+
+        applier.ApplyTheme(AppTheme.Blue);
+
+        theme.Verify(x => x.SetTheme(AppTheme.Blue), Times.Once);
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>(
+                    (state, _) =>
+                        state != null
+                        && state.ToString() == "Could not apply theme Blue; the previous palette was kept"),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+        logger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.IsAny<It.IsAnyType>(),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Never);
     }
 
     [Fact]

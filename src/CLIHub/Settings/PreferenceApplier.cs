@@ -111,7 +111,13 @@ public sealed class PreferenceApplier : IPreferenceApplier
     /// <inheritdoc />
     public void ApplyTheme(AppTheme theme)
     {
-        this.theme.SetTheme(theme);
-        this.logger.LogInformation("Theme set to {Theme}", theme);
+        if (this.theme.SetTheme(theme))
+        {
+            this.logger.LogInformation("Theme set to {Theme}", theme);
+        }
+        else
+        {
+            this.logger.LogWarning("Could not apply theme {Theme}; the previous palette was kept", theme);
+        }
     }
 }
