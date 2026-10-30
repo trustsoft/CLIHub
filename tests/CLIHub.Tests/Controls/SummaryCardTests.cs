@@ -3,6 +3,7 @@ namespace CLIHub.Tests.Controls;
 using System.Threading;
 
 using CLIHub.Controls;
+using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class SummaryCardTests
 {
@@ -14,7 +15,7 @@ public sealed class SummaryCardTests
             var card = new SummaryCard();
 
             Assert.Equal(SummaryCardTone.Neutral, card.ValueTone);
-        });
+        }, "STA control test failed.");
     }
 
     [Fact]
@@ -25,31 +26,6 @@ public sealed class SummaryCardTests
             var card = new SummaryCard();
 
             Assert.False(card.IsAlertVisible);
-        });
-    }
-
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA control test failed.", exception);
-        }
+        }, "STA control test failed.");
     }
 }

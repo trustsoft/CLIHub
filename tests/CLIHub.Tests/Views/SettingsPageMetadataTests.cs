@@ -7,6 +7,8 @@ using System.Xml.Linq;
 
 using CLIHub.ViewModels;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Guards the string-key wiring of the Settings page host: the page metadata records template keys
 ///   and page keys as strings, so a rename on either side yields an empty header slot or a page that
@@ -156,16 +158,5 @@ public sealed class SettingsPageMetadataTests
     {
         var ordered = keys.OrderBy(key => key, StringComparer.Ordinal).ToArray();
         return "[" + string.Join(", ", ordered) + "]";
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CLIHub.sln")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 }

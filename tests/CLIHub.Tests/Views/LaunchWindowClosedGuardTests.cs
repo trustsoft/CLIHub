@@ -4,6 +4,8 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Interop;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Regression proof for the launch window closed guard (change
 ///   <c>launch-window-closed-guard</c>), on the narrowest seam that works in this suite.
@@ -38,7 +40,7 @@ public sealed class LaunchWindowClosedGuardTests
             var exception = Record.Exception(() => new WindowInteropHelper(window).EnsureHandle());
 
             Assert.IsType<InvalidOperationException>(exception);
-        });
+        }, "STA launch window test failed.");
     }
 
     [Fact]
@@ -55,7 +57,7 @@ public sealed class LaunchWindowClosedGuardTests
             // Closed runs exactly once for a real close, which is why LaunchWindow.OnClosed is
             // the single funnel that can mark the window as no longer showable.
             Assert.Equal(1, closedCount);
-        });
+        }, "STA launch window test failed.");
     }
 
     /// <summary>
@@ -65,33 +67,4 @@ public sealed class LaunchWindowClosedGuardTests
     /// </summary>
     /// <param name="window"> The window to close. </param>
     private static void CloseForReal(Window window) => window.Close();
-
-    /// <summary>
-    ///   Runs the action on a dedicated STA thread and rethrows its exception on the caller.
-    /// </summary>
-    /// <param name="action"> The action to run. </param>
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA launch window test failed.", exception);
-        }
-    }
 }

@@ -1,0 +1,23 @@
+<Project>
+
+  <!-- Central Package Management for the test projects only. NuGet resolves the nearest
+       Directory.Packages.props walking up from each project, and there is no root-level file,
+       so this applies to tests/CLIHub.Core.Tests, tests/CLIHub.Core.Windows.Tests, and
+       tests/CLIHub.Tests while leaving the production projects on inline versions.
+       The root Directory.Build.props is unaffected: it is a different file name and is still
+       imported normally, so BaseOutputPath/BaseIntermediateOutputPath keep routing to artifacts/
+       and obj/. -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="10.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.12" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
+    <PackageVersion Include="Moq" Version="4.21.0" />
+    <PackageVersion Include="xunit" Version="2.9.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
+  </ItemGroup>
+
+</Project>

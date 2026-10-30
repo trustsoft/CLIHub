@@ -4,6 +4,8 @@ using System.Text.RegularExpressions;
 
 using CLIHub.Themes;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Guards the theme preview swatch keys that are referenced <em>by name</em> rather than through a
 ///   XAML resource expression: the card and bar keys live on <see cref="ThemeDescriptor" /> as strings,
@@ -123,16 +125,5 @@ public sealed class ThemePreviewResourceKeyTests
             StringSplitOptions.RemoveEmptyEntries);
         return segments.Contains("bin", StringComparer.OrdinalIgnoreCase)
             || segments.Contains("obj", StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CLIHub.sln")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 }

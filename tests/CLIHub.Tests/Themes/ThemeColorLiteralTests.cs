@@ -3,6 +3,8 @@ namespace CLIHub.Tests.Themes;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Guards the palette as the single source of application colour: a colour literal outside the
 ///   palette dictionaries silently escapes theming and breaks the next theme change.
@@ -124,16 +126,5 @@ public sealed class ThemeColorLiteralTests
             StringSplitOptions.RemoveEmptyEntries);
         return segments.Contains("bin", StringComparer.OrdinalIgnoreCase)
             || segments.Contains("obj", StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CLIHub.sln")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 }

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 using CLIHub.Controls;
+using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class SpacedPanelTests
 {
@@ -24,7 +25,7 @@ public sealed class SpacedPanelTests
             Assert.Equal(new Size(100, double.PositiveInfinity), first.LastMeasureConstraint);
             Assert.Equal(new Rect(0, 0, 100, 10), GetLayoutRect(first, panel));
             Assert.Equal(new Rect(0, 15, 100, 20), GetLayoutRect(second, panel));
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -43,7 +44,7 @@ public sealed class SpacedPanelTests
             Assert.Equal(new Size(double.PositiveInfinity, 50), first.LastMeasureConstraint);
             Assert.Equal(new Rect(0, 0, 10, 50), GetLayoutRect(first, panel));
             Assert.Equal(new Rect(14, 0, 30, 50), GetLayoutRect(second, panel));
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -64,7 +65,7 @@ public sealed class SpacedPanelTests
             Assert.Equal(new Rect(0, 0, 104, 100), GetLayoutRect(first, panel));
             Assert.Equal(new Rect(112, 0, 104, 100), GetLayoutRect(second, panel));
             Assert.Equal(new Rect(224, 0, 104, 100), GetLayoutRect(third, panel));
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -85,7 +86,7 @@ public sealed class SpacedPanelTests
             Assert.Equal(new Rect(0, 0, 100, 104), GetLayoutRect(first, panel));
             Assert.Equal(new Rect(0, 112, 100, 104), GetLayoutRect(second, panel));
             Assert.Equal(new Rect(0, 224, 100, 104), GetLayoutRect(third, panel));
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -103,7 +104,7 @@ public sealed class SpacedPanelTests
 
             Assert.Equal(new Size(10, 26), panel.DesiredSize);
             Assert.Equal(new Rect(0, 16, 100, 10), GetLayoutRect(last, panel));
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -119,7 +120,7 @@ public sealed class SpacedPanelTests
             panel.Arrange(new Rect(0, 0, 100, 100));
 
             Assert.Equal(new Size(), panel.DesiredSize);
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -136,7 +137,7 @@ public sealed class SpacedPanelTests
 
             panel.Spacing = double.PositiveInfinity;
             Assert.Equal(0, panel.Spacing);
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -150,7 +151,7 @@ public sealed class SpacedPanelTests
             Assert.True(panel.IsMeasureValid);
             panel.Spacing = 8;
             Assert.False(panel.IsMeasureValid);
-        });
+        }, "STA layout test failed.");
     }
 
     [Fact]
@@ -167,33 +168,10 @@ public sealed class SpacedPanelTests
 
             Assert.Equal(new Rect(0, 0, 20, 20), GetLayoutRect(first, panel));
             Assert.Equal(new Rect(0, 25, 20, 20), GetLayoutRect(second, panel));
-        });
+        }, "STA layout test failed.");
     }
 
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
 
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA layout test failed.", exception);
-        }
-    }
 
     private static Rect GetLayoutRect(FrameworkElement child, FrameworkElement parent)
     {

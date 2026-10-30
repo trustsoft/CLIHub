@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Statically verifies that every <c>StaticResource</c> and <c>DynamicResource</c> reference in
 ///   the application's XAML resolves against the keys reachable from the file that contains it.
@@ -327,16 +329,5 @@ public sealed class XamlResourceReferenceTests
     {
         var ordered = keys.OrderBy(key => key, StringComparer.Ordinal).ToArray();
         return "[" + string.Join(", ", ordered) + "]";
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CLIHub.sln")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not locate the repository root.");
     }
 }

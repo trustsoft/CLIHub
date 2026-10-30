@@ -55,8 +55,11 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   6. `composition-and-dead-path-cleanup` - **[done 2026-10-30: `composition-and-dead-path-cleanup`]**
      single process-registration home, remove the unreachable instance check and tray relay, and
      tier-3 dead members.
-  7. `test-support-consolidation` - shared `RunOnSta`/repository-root helpers and view-model
-     builders; split the 2,347-line agent test file.
+  7. `test-support-consolidation` - **[done 2026-10-30]** shared `RunOnSta`/repository-root
+     helpers, `InlineOperationLifetime` fake, `AgentManagementViewModelBuilder`, and
+     `SettingsViewModelFixture`; the 2,347-line agent test file is split into six partial-class
+     files by concern (69 methods, 28/12/22/4/3); test project package versions centralized in
+     `tests/Directory.Packages.props`.
 - Trigger: the next refactoring cycle; adopt one change at a time, smallest first, with the existing
   suite as the safety net.
 
@@ -235,20 +238,38 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Test suite
 
-### Duplicated test helpers and no shared view-model builders
+### Duplicated test helpers and no shared view-model builders - **[done 2026-10-30]**
 
 - Severity: Low (test-only maintenance)
-- Evidence: `FindRepositoryRoot` has seven byte-identical copies and `RunOnSta` seven copies
-  (e.g. `tests/CLIHub.Tests/Architecture/ArchitectureBoundaryTests.cs:170`,
-  `tests/CLIHub.Tests/Views/SettingsPageMetadataTests.cs:175`,
-  `tests/CLIHub.Tests/Views/LaunchWindowClosedGuardTests.cs:73`); `InlineOperationLifetime` is
-  defined twice (`AgentManagementViewModelTests.cs:2324`, `WindowActionCoordinatorTests.cs:210`).
-  `AgentManagementViewModelTests.cs` is 2,347 lines with 71 `CreateViewModel(...)` calls and 70
-  `new Mock<IExternalLauncher>()`; there is no shared builder for `AgentManagementViewModel` or
-  `SettingsViewModel`, although `LaunchWindowViewModelBuilder` exists.
-- Proposed remedy: add `tests/CLIHub.Tests/Support/` helpers and builders, split the agent test file
-  by concern, and add a registration-uniqueness test over the composed collection.
-- Trigger: the next change touching a duplicated helper or one of the two large test files.
+- Status: resolved by `test-support-consolidation`. `tests/CLIHub.Tests/Support/TestHelpers.cs` now
+  owns `RunOnSta(Action, string message)`, a cached `Lazy<string>` repository-root lookup, and
+  `InlineOperationLifetime` (17 duplicate copies deleted, all 33 `RunOnSta` call sites keep their
+  original message text). `Builders/AgentManagementViewModelBuilder.cs` replaces the 70
+  `CreateViewModel(...)` call sites, and `Builders/SettingsViewModelFixture.cs` replaces the
+  51-site nested fixture. The 2,347-line agent test file is split into six partial-class files
+  (69 methods; one test class preserved so the timing-gated tests stay serial). The registration
+  uniqueness guard was already present at `Composition/ServiceRegistrationTests.cs:77-80` and was
+  verified rather than duplicated.
+- Residual evidence: none. Test project package versions now live in `tests/Directory.Packages.props`.
+
+### Test project global usings are duplicated across the three csproj files
+
+- Severity: Low (6 duplicated lines, test-only build metadata)
+- Evidence: `<Using Include="Xunit" />` and `<Using Include="System.IO" />` are repeated in
+  `tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj`, `tests/CLIHub.Core.Windows.Tests/CLIHub.Core.Windows.Tests.csproj`,
+  and `tests/CLIHub.Tests/CLIHub.Tests.csproj`. They were **not** centralized by
+  `test-support-consolidation`: package versions moved to `tests/Directory.Packages.props`, but
+  `<Using>` items are MSBuild properties, so the natural home would be a `tests/Directory.Build.props`.
+  That file would **shadow** the repository-root `Directory.Build.props` — MSBuild stops at the
+  nearest one while walking up — silently dropping `BaseOutputPath`, `BaseIntermediateOutputPath`,
+  `Version`, `LangVersion`, and `EnforceCodeStyleInBuild` for all three test projects unless the
+  test-level file explicitly re-imports the root one:
+  `<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />`.
+  The shadowing risk outweighs saving 6 lines.
+- Proposed remedy: add `tests/Directory.Build.props` with the explicit root re-import, move the two
+  `<Using>` items there, and verify build output still lands under `artifacts\<Project>\`.
+- Trigger: the next `Directory.Build.props` restructuring, a third duplicated `<Using>` across all
+  test projects, or a proposal for hierarchical `Directory.Build.props` inheritance.
 
 ### Single unexplained test failure (not reproduced)
 

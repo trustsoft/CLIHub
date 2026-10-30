@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using CLIHub.Converters;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Imaging;
+using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class PathToImageConverterTests : IDisposable
 {
@@ -39,7 +40,7 @@ public sealed class PathToImageConverterTests : IDisposable
 
             Assert.Same(cache.GetOrLoad(path), converted);
             Assert.True(converted is BitmapImage image && image.IsFrozen);
-        });
+        }, "STA converter test failed.");
     }
 
     [Fact]
@@ -56,7 +57,7 @@ public sealed class PathToImageConverterTests : IDisposable
 
             Assert.Same(cache.GetOrLoad(null), fromNull);
             Assert.Same(fromNull, fromMissing);
-        });
+        }, "STA converter test failed.");
     }
 
     [Fact]
@@ -87,30 +88,5 @@ public sealed class PathToImageConverterTests : IDisposable
         encoder.Save(stream);
         File.WriteAllBytes(path, stream.ToArray());
         return path;
-    }
-
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA converter test failed.", exception);
-        }
     }
 }

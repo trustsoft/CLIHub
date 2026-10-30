@@ -9,6 +9,8 @@ using System.Windows.Media.Imaging;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Imaging;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 public sealed class LogoImageSourceCacheTests : IDisposable
 {
     private readonly string tempDir;
@@ -47,7 +49,7 @@ public sealed class LogoImageSourceCacheTests : IDisposable
 
             Assert.Same(first, second);
             Assert.True(first is BitmapImage image && image.IsFrozen);
-        });
+        }, "STA image test failed.");
     }
 
     [Fact]
@@ -65,7 +67,7 @@ public sealed class LogoImageSourceCacheTests : IDisposable
             Assert.Same(fromNull, fromEmpty);
             Assert.Same(fromNull, fromWhitespace);
             Assert.True(fromNull is BitmapImage image && image.IsFrozen);
-        });
+        }, "STA image test failed.");
     }
 
     [Fact]
@@ -84,7 +86,7 @@ public sealed class LogoImageSourceCacheTests : IDisposable
 
             Assert.Same(cache.GetOrLoad(null), missing);
             Assert.Same(missing, afterDelete);
-        });
+        }, "STA image test failed.");
     }
 
     [Fact]
@@ -101,7 +103,7 @@ public sealed class LogoImageSourceCacheTests : IDisposable
             var result = cache.GetOrLoad(notAnImage);
 
             Assert.Same(cache.GetOrLoad(null), result);
-        });
+        }, "STA image test failed.");
     }
 
     [Fact]
@@ -121,7 +123,7 @@ public sealed class LogoImageSourceCacheTests : IDisposable
             Assert.Same(viaNull, viaMissing);
             Assert.Same(viaNull, cache.GetOrLoad(viaUndecodable));
             Assert.NotSame(viaNull, cache.GetOrLoad(logoPath));
-        });
+        }, "STA image test failed.");
     }
 
     /// <summary>
@@ -144,30 +146,5 @@ public sealed class LogoImageSourceCacheTests : IDisposable
         using var stream = new MemoryStream();
         encoder.Save(stream);
         return stream.ToArray();
-    }
-
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA image test failed.", exception);
-        }
     }
 }

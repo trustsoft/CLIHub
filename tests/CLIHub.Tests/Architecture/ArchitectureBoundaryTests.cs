@@ -1,5 +1,7 @@
 namespace CLIHub.Tests.Architecture;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 public sealed class ArchitectureBoundaryTests
 {
     private static readonly string[] WpfAllowedApplicationFiles =
@@ -166,15 +168,4 @@ public sealed class ArchitectureBoundaryTests
         Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories)
             .Where(path => !path.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             .Where(path => !path.Contains(Path.DirectorySeparatorChar + "artifacts" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "CLIHub.sln")))
-        {
-            directory = directory.Parent;
-        }
-
-        return directory?.FullName ?? throw new DirectoryNotFoundException("Could not locate the repository root.");
-    }
 }

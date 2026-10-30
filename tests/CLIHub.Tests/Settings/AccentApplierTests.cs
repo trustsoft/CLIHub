@@ -6,6 +6,8 @@ using System.Windows.Media;
 
 using CLIHub.Settings;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 /// <summary>
 ///   Covers <see cref="AccentApplier" />: the accent brushes are written into the supplied
 ///   application resources, independent of any merged palette.
@@ -33,7 +35,7 @@ public sealed class AccentApplierTests
 
         AssertBrush(resources, "AccentBrush", "#FF4CC2FF");
         AssertBrush(resources, "AccentSelectionBrush", "#1F4CC2FF");
-    });
+    }, "STA accent applier test failed.");
 
     [Fact]
     public void Apply_CustomAccent_WritesThatColorAndItsTint() => RunOnSta(() =>
@@ -44,7 +46,7 @@ public sealed class AccentApplierTests
 
         AssertBrush(resources, "AccentBrush", "#FF0D9488");
         AssertBrush(resources, "AccentSelectionBrush", "#1F0D9488");
-    });
+    }, "STA accent applier test failed.");
 
     [Fact]
     public void Apply_CalledTwice_ReplacesBothEntries() => RunOnSta(() =>
@@ -59,7 +61,7 @@ public sealed class AccentApplierTests
         Assert.Equal(
             2,
             resources.Keys.Cast<object>().Count(key => key is "AccentBrush" or "AccentSelectionBrush"));
-    });
+    }, "STA accent applier test failed.");
 
     [Fact]
     public void Apply_EmptyResourceDictionary_DoesNotThrow() => RunOnSta(() =>
@@ -71,7 +73,7 @@ public sealed class AccentApplierTests
 
         Assert.Null(exception);
         Assert.Equal(2, resources.Count);
-    });
+    }, "STA accent applier test failed.");
 
     [Fact]
     public void Apply_ThenPaletteSwap_LeavesBothAccentEntriesUntouched() => RunOnSta(() =>
@@ -95,7 +97,7 @@ public sealed class AccentApplierTests
         Assert.Empty(resources.MergedDictionaries);
         Assert.Same(accent, resources["AccentBrush"]);
         Assert.Same(tint, resources["AccentSelectionBrush"]);
-    });
+    }, "STA accent applier test failed.");
 
     [Fact]
     public void Apply_WithBrushFactory_ReceivesOpaqueAndTintValues() => RunOnSta(() =>
@@ -115,7 +117,7 @@ public sealed class AccentApplierTests
         Assert.Equal(new[] { "#FF3B82F6", "#1F3B82F6" }, requested);
         AssertBrush(resources, "AccentBrush", "#FF3B82F6");
         AssertBrush(resources, "AccentSelectionBrush", "#1F3B82F6");
-    });
+    }, "STA accent applier test failed.");
 
     private static void AssertBrush(ResourceDictionary resources, string key, string expectedArgbHex)
     {
@@ -128,30 +130,5 @@ public sealed class AccentApplierTests
         var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(argbHex));
         brush.Freeze();
         return brush;
-    }
-
-    private static void RunOnSta(Action action)
-    {
-        Exception? exception = null;
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-        });
-
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        if (exception is not null)
-        {
-            throw new Xunit.Sdk.XunitException("STA accent applier test failed.", exception);
-        }
     }
 }

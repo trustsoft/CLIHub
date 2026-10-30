@@ -12,17 +12,18 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
-using CLIHub.Updates;
-using CLIHub.Settings;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
+using CLIHub.Settings;
+using CLIHub.Tests.Builders;
+using CLIHub.Updates;
 
 public class SettingsViewModelApplicationTests
 {
     [Fact]
     public void Cancel_DoesNotPersistAndRequestsClose()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         var closeRequested = false;
         fixture.ViewModel.RequestClose += (_, _) => closeRequested = true;
 
@@ -35,7 +36,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_DefaultAccent_SelectsSkyPreset()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         Assert.Equal("Sky", fixture.ViewModel.Accent.SelectedAccent.Name);
@@ -46,7 +47,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_GitBashUnresolved_MarksGitBashNotInstalled()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.PowerShell7))
@@ -66,7 +67,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_GitBashResolved_LeavesAllRuntimesInstalled()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe");
@@ -85,16 +86,8 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_GitBashStoredButUnavailable_PreservesSelectionAndSaves()
     {
-        var fixture = new Fixture();
-        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
-        {
-            DefaultRuntime = RuntimeKind.GitBash,
-            Hotkey = "Ctrl+Shift+A",
-            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-            CheckForUpdatesOnStartup = true,
-            StartMinimized = true,
-            AccentColor = AccentPalette.DefaultHex
-        });
+        var fixture = new SettingsViewModelFixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(SettingsViewModelFixture.CreatePreferences(defaultRuntime: RuntimeKind.GitBash));
         fixture.RuntimeExecutables.Setup(x => x.Locate(RuntimeKind.GitBash)).Returns((string?)null);
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.PowerShell7))
@@ -116,7 +109,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_PowerShell7Unresolved_MarksPowerShell7NotInstalled()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe");
@@ -136,16 +129,8 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_PowerShell7StoredButUnavailable_PreservesSelectionAndSaves()
     {
-        var fixture = new Fixture();
-        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
-        {
-            DefaultRuntime = RuntimeKind.PowerShell7,
-            Hotkey = "Ctrl+Shift+A",
-            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-            CheckForUpdatesOnStartup = true,
-            StartMinimized = true,
-            AccentColor = AccentPalette.DefaultHex
-        });
+        var fixture = new SettingsViewModelFixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(SettingsViewModelFixture.CreatePreferences(defaultRuntime: RuntimeKind.PowerShell7));
         fixture.RuntimeExecutables
             .Setup(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe");
@@ -167,16 +152,8 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_GitBashAvailabilityChanges_ReevaluatesAndPreservesSelection()
     {
-        var fixture = new Fixture();
-        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
-        {
-            DefaultRuntime = RuntimeKind.GitBash,
-            Hotkey = "Ctrl+Shift+A",
-            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-            CheckForUpdatesOnStartup = true,
-            StartMinimized = true,
-            AccentColor = AccentPalette.DefaultHex
-        });
+        var fixture = new SettingsViewModelFixture();
+        fixture.Preferences.Setup(x => x.Load()).Returns(SettingsViewModelFixture.CreatePreferences(defaultRuntime: RuntimeKind.GitBash));
         fixture.RuntimeExecutables
             .SetupSequence(x => x.Locate(RuntimeKind.GitBash))
             .Returns(@"C:\Program Files\Git\bin\bash.exe")
@@ -206,7 +183,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_CustomStoredAccent_SelectsCustomEntry()
     {
-        var fixture = new Fixture("#123456");
+        var fixture = new SettingsViewModelFixture("#123456");
         fixture.ViewModel.Load();
 
         Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
@@ -217,7 +194,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedAccent_Preset_UpdatesTextAndLabel()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Emerald");
@@ -229,7 +206,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void AccentText_CustomValue_SelectsCustomEntry()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.ViewModel.Accent.AccentText = "#123456";
@@ -241,7 +218,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void AccentText_PartialValue_SelectsCustomEntry()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.ViewModel.Accent.AccentText = "#12";
@@ -252,7 +229,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedAccent_CustomEntry_KeepsCurrentColor()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
@@ -265,7 +242,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedAccent_CustomAfterPreset_RestoresLastCustomValue()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.ViewModel.Accent.AccentText = "#123456";
 
@@ -281,12 +258,12 @@ public class SettingsViewModelApplicationTests
     public void SelectedAccent_CustomEntry_RestoresCustomAcrossSettingsWindows()
     {
         var memory = new AccentSelectionMemory();
-        var first = new Fixture(accentMemory: memory);
+        var first = new SettingsViewModelFixture(accentMemory: memory);
         first.ViewModel.Load();
         first.ViewModel.Accent.AccentText = "#123456";
         first.ViewModel.Accent.SelectedAccent = first.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Teal");
 
-        var second = new Fixture(accentMemory: memory);
+        var second = new SettingsViewModelFixture(accentMemory: memory);
         second.ViewModel.Load();
         second.ViewModel.Accent.SelectedAccent = second.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
 
@@ -296,7 +273,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_CustomStoredAccent_RestoresWhenCustomReselected()
     {
-        var fixture = new Fixture("#123456");
+        var fixture = new SettingsViewModelFixture("#123456");
         fixture.ViewModel.Load();
 
         fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Emerald");
@@ -308,7 +285,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void AddWatchedDirectory_ExistingAbsolutePath_AddsRootAndClearsInput()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
         fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
@@ -324,7 +301,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void AddWatchedDirectory_MissingFolder_ReportsError()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing");
         fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
@@ -341,7 +318,7 @@ public class SettingsViewModelApplicationTests
         var directory = CreateTempDirectory();
         try
         {
-            var fixture = new Fixture();
+            var fixture = new SettingsViewModelFixture();
             fixture.Preferences
                 .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
                 .Throws(new IOException("configuration is read-only"));
@@ -364,7 +341,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void RemoveWatchedDirectoryCommand_RemovesRoot()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
         fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
@@ -379,7 +356,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void RemoveIgnoredPatternCommand_RemovesPattern()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.ViewModel.Scanning.NewIgnoredPatternText = "custom-ignored-dir";
         fixture.ViewModel.Scanning.AddIgnoredPatternCommand.Execute(null);
@@ -392,7 +369,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedScanDepth_SetOption_UpdatesText()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var option = fixture.ViewModel.Scanning.ScanDepthOptions.First(item => item.Value == 4);
 
@@ -404,7 +381,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_DoesNotApplyScanningOrReloadScanner()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
 
         fixture.ViewModel.Load();
 
@@ -418,7 +395,7 @@ public class SettingsViewModelApplicationTests
         var directory = CreateTempDirectory();
         try
         {
-            var fixture = new Fixture();
+            var fixture = new SettingsViewModelFixture();
             fixture.ViewModel.Load();
             fixture.ViewModel.Scanning.NewWatchedDirectoryText = directory;
 
@@ -439,7 +416,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void RemoveWatchedDirectory_AppliesImmediatelyAndReloadsScanner()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.ViewModel.Scanning.WatchedDirectories.Add(CreateRow(fixture, @"C:\repos\one"));
         fixture.Scanner.Invocations.Clear();
@@ -454,7 +431,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void RowDepthChange_AppliesImmediatelyAndReloadsScanner()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var row = CreateRow(fixture, @"C:\repos\one");
         fixture.ViewModel.Scanning.WatchedDirectories.Add(row);
@@ -471,7 +448,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void IgnoredPatternAdd_AppliesImmediatelyAndReloadsScanner()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.ViewModel.Scanning.NewIgnoredPatternText = "custom-ignored-dir";
 
@@ -485,7 +462,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedDiscoveryMode_Change_AppliesImmediately()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.Scanner.Invocations.Clear();
 
@@ -499,7 +476,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void SelectedScanDepth_Change_AppliesImmediately()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.Scanner.Invocations.Clear();
 
@@ -514,7 +491,7 @@ public class SettingsViewModelApplicationTests
     public void WatchedDirectoryRow_DiscoveredCount_RefreshesOnScannerStatus()
     {
         const string directory = @"C:\repos\one";
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         fixture.Scanner.Setup(scanner => scanner.CountDiscoveredProjects(directory)).Returns(2);
         var row = new WatchedDirectoryRow(
@@ -549,7 +526,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void WatchedDirectoryRow_Edit_DoesNotChangeAnotherRow()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var first = CreateRow(fixture, @"C:\repos\one");
         var second = CreateRow(fixture, @"C:\repos\two");
@@ -569,24 +546,17 @@ public class SettingsViewModelApplicationTests
     {
         const string first = @"C:\repos\one";
         const string second = @"C:\repos\two";
-        var fixture = new Fixture();
-        fixture.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
+        var fixture = new SettingsViewModelFixture();
+        var preferences = SettingsViewModelFixture.CreatePreferences();
+        preferences.Scanning = new ScanningPreferences
         {
-            DefaultRuntime = RuntimeKind.PowerShell,
-            Hotkey = "Ctrl+Shift+A",
-            PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-            CheckForUpdatesOnStartup = true,
-            StartMinimized = true,
-            AccentColor = AccentPalette.DefaultHex,
-            Scanning = new ScanningPreferences
+            WatchedDirectories = [first, second],
+            WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
             {
-                WatchedDirectories = [first, second],
-                WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>
-                {
-                    [first] = new(4, ProjectDiscoveryMode.Git)
-                }
+                [first] = new(4, ProjectDiscoveryMode.Git)
             }
-        });
+        };
+        fixture.Preferences.Setup(x => x.Load()).Returns(preferences);
 
         fixture.ViewModel.Load();
 
@@ -602,7 +572,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void ScanDepthOptions_UsePlainLevelLabels()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
 
         Assert.Equal(
             new[]
@@ -622,7 +592,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_ScannerStatus_PopulatesSummary()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.Scanner.Setup(scanner => scanner.CountManualProjects()).Returns(4);
         fixture.Scanner.SetupGet(scanner => scanner.Status).Returns(
             new Core.Scanning.ProjectScanStatus(
@@ -657,7 +627,7 @@ public class SettingsViewModelApplicationTests
         bool isWatching,
         string expectedLabel)
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.Scanner.Raise(
@@ -681,7 +651,7 @@ public class SettingsViewModelApplicationTests
     [InlineData(412, "· 412 folders")]
     public void WatcherDetail_AppendsExaminedFolderCount(int count, string? expectedEnding)
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.Scanner.Raise(
@@ -711,7 +681,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void ScanNowCommand_Execute_ReloadsScanner()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
 
         fixture.ViewModel.Scanning.ScanNowCommand.Execute(null);
 
@@ -721,7 +691,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void ScanWatchedDirectoryCommand_Execute_RescansThatRootOnly()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         var directory = @"C:\repos\one";
 
         fixture.ViewModel.Scanning.ScanWatchedDirectoryCommand.Execute(directory);
@@ -733,7 +703,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void AddWatchedDirectoryFromPicker_SelectedFolder_AddsRoot()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
         fixture.Dialogs.Setup(dialogs => dialogs.SelectFolder(It.IsAny<string>())).Returns(path);
@@ -746,7 +716,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Save_ValidDraft_PersistsAndRequestsClose()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         var closeRequested = false;
         fixture.ViewModel.RequestClose += (_, _) => closeRequested = true;
         fixture.ViewModel.Load();
@@ -761,7 +731,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Save_PerRowSettings_PersistsWithTheWatchedDirectory()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         AppPreferences? saved = null;
         fixture.Preferences
             .Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
@@ -790,7 +760,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void ShowReleaseNotesCommand_Execute_OpensReleaseNotes()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
 
         fixture.ViewModel.ShowReleaseNotesCommand.Execute(null);
 
@@ -800,7 +770,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public async Task CheckForUpdatesAsync_UpToDate_SetsCurrentStatus()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.Updates
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpToDate, "1.0.0", null));
@@ -815,7 +785,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public async Task CheckForUpdatesAsync_UpdateAvailable_IncludesAvailableVersion()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.Updates
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0"));
@@ -831,7 +801,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public async Task CheckForUpdatesAsync_NotInstalled_SetsUnavailableStatus()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.Updates
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.NotInstalled, "1.0.0", null));
@@ -845,7 +815,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public async Task CheckForUpdatesAsync_Failed_SetsFailureStatus()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.Updates
             .Setup(x => x.CheckForUpdatesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UpdateCheckResult(UpdateStatus.Failed, "1.0.0", null));
@@ -859,7 +829,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Load_EmptyProbeFields_ShowsBuiltInDefaults()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
 
         fixture.ViewModel.Load();
 
@@ -870,7 +840,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void ProbeFields_PositiveValues_ShowCustomEffectivePolicy()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         fixture.ViewModel.Load();
 
         fixture.ViewModel.ProbeTtlText = "30";
@@ -883,7 +853,7 @@ public class SettingsViewModelApplicationTests
     [Fact]
     public void Save_InvalidDraft_DoesNotPersistOrClose()
     {
-        var fixture = new Fixture();
+        var fixture = new SettingsViewModelFixture();
         var closeRequested = false;
         fixture.ViewModel.RequestClose += (_, _) => closeRequested = true;
         fixture.ViewModel.Load();
@@ -902,7 +872,7 @@ public class SettingsViewModelApplicationTests
         var agents = new Mock<IAgentManagementSection>();
         agents.SetupGet(section => section.InstalledAgentCount).Returns(2);
         agents.SetupGet(section => section.SupportedAgentCount).Returns(5);
-        var fixture = new Fixture(agentsState: agents);
+        var fixture = new SettingsViewModelFixture(agentsState: agents);
         var raised = new List<string?>();
         fixture.ViewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
 
@@ -921,7 +891,7 @@ public class SettingsViewModelApplicationTests
         Assert.Contains(nameof(SettingsViewModel.AgentsSupportSummary), raised);
     }
 
-    private static WatchedDirectoryRow CreateRow(Fixture fixture, string path) =>
+    private static WatchedDirectoryRow CreateRow(SettingsViewModelFixture fixture, string path) =>
         new(path,
             fixture.ViewModel.Scanning.ScanDepthOptions,
             fixture.ViewModel.Scanning.DiscoveryModes,
@@ -933,69 +903,5 @@ public class SettingsViewModelApplicationTests
         var path = Path.Combine(Path.GetTempPath(), "clihub-settings-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
-    }
-
-    private sealed class Fixture
-    {
-        public Mock<IPreferencesStore> Preferences { get; } = new(MockBehavior.Strict);
-        public Mock<IStartupService> Startup { get; } = new(MockBehavior.Strict);
-        public Mock<IPreferenceApplier> Applier { get; } = new(MockBehavior.Strict);
-        public Mock<IUpdateWorkflow> Updates { get; } = new();
-        public Mock<IReleaseNotesLauncher> ReleaseNotes { get; } = new();
-        public Mock<IRuntimeExecutableLocator> RuntimeExecutables { get; } = new();
-        public Mock<Core.Scanning.IProjectScanner> Scanner { get; } = new();
-        public Mock<IProjectDialogService> Dialogs { get; } = new();
-        public Mock<IAgentManagementSection> Agents { get; }
-        public AccentSelectionMemory AccentMemory { get; }
-        public AppPreferences CapturedPreferences { get; } = new();
-        public SettingsViewModel ViewModel { get; }
-
-        public Fixture(string accentColor = AccentPalette.DefaultHex,
-                       AccentSelectionMemory? accentMemory = null,
-                       Mock<IAgentManagementSection>? agentsState = null)
-        {
-            this.Agents = agentsState ?? new Mock<IAgentManagementSection>();
-            this.AccentMemory = accentMemory ?? new AccentSelectionMemory();
-            this.Preferences.Setup(x => x.Load()).Returns(new AppPreferences
-            {
-                DefaultRuntime = RuntimeKind.PowerShell,
-                Hotkey = "Ctrl+Shift+A",
-                PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-                CheckForUpdatesOnStartup = true,
-                StartMinimized = true,
-                AccentColor = accentColor
-            });
-            this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()))
-                .Callback<Action<AppPreferences>>(update => update(this.CapturedPreferences));
-            this.Startup.Setup(x => x.IsEnabled()).Returns(false);
-            this.Applier.Setup(x => x.ApplyStartWithWindows(false)).Returns(true);
-            this.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
-            this.Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
-            this.Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
-            this.Applier.Setup(x => x.ApplyAccent(It.IsAny<string>()));
-            this.Applier.Setup(x => x.ApplyTheme(It.IsAny<AppTheme>()));
-            this.Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
-
-            var application = new SettingsApplicationService(
-                this.Preferences.Object,
-                this.Startup.Object,
-                this.Applier.Object,
-                this.Scanner.Object,
-                NullLogger<SettingsApplicationService>.Instance);
-            this.ViewModel = new SettingsViewModel(
-                application,
-                this.Updates.Object,
-                this.Updates.Object,
-                this.ReleaseNotes.Object,
-                new Mock<IApplicationOperationLifetime>().Object,
-                new Mock<IExternalLauncher>().Object,
-                this.Dialogs.Object,
-                this.Scanner.Object,
-                this.Agents.Object,
-                Mock.Of<IProjectRegistrySection>(),
-                this.AccentMemory,
-                this.RuntimeExecutables.Object,
-                NullLogger<SettingsViewModel>.Instance);
-        }
     }
 }

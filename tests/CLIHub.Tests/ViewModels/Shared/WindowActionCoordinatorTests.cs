@@ -18,6 +18,8 @@ using CLIHub.Settings;
 using CLIHub.Updates;
 using CLIHub.ViewModels;
 
+using static CLIHub.Tests.Support.TestHelpers;
+
 using Xunit;
 
 public class WindowActionCoordinatorTests
@@ -205,19 +207,5 @@ public class WindowActionCoordinatorTests
             ExecutablePath: executablePath,
             StartTime: DateTime.UtcNow,
             CommandLine: commandLine);
-    }
-
-    private sealed class InlineOperationLifetime : IApplicationOperationLifetime
-    {
-        public CancellationToken Token => CancellationToken.None;
-
-        public Task RunAsync(string operationName, Func<CancellationToken, Task> operation)
-        {
-            var task = operation(CancellationToken.None);
-            task.GetAwaiter().GetResult();
-            return task;
-        }
-
-        public Task StopAsync(TimeSpan timeout) => Task.CompletedTask;
     }
 }
