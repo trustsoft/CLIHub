@@ -13,7 +13,7 @@ Cost: duplication complicates changes to scan coverage, runtime lookup order, pr
 
 This change consolidates the duplication into shared helpers and policies while preserving every existing behavior. It is behavior-preserving and does not touch OpenSpec specs (thus `skip_specs: true`).
 
-## What
+## What Changes
 
 Four independent unifications (each isolated, reviewable, and testable):
 
