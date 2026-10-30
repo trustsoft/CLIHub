@@ -328,28 +328,28 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
     public void Load(SettingsDraft draft)
     {
         this.WatchedDirectories.Clear();
-        var defaultScanDepth = ProjectScanningDefaults.NormalizeScanDepth(draft.ScanDepth);
-        foreach (var directory in draft.WatchedDirectories ?? Array.Empty<string>())
+        var defaultScanDepth = ProjectScanningDefaults.NormalizeScanDepth(draft.Scanning.ScanDepth);
+        foreach (var directory in draft.Scanning.WatchedDirectories ?? Array.Empty<string>())
         {
-            var settings = draft.WatchedDirectorySettings is not null
-                && draft.WatchedDirectorySettings.TryGetValue(directory, out var stored)
+            var settings = draft.Scanning.WatchedDirectorySettings is not null
+                && draft.Scanning.WatchedDirectorySettings.TryGetValue(directory, out var stored)
                     ? stored
                     : null;
 
             this.WatchedDirectories.Add(this.CreateWatchedDirectoryRow(
                 directory,
                 settings?.ScanDepth ?? defaultScanDepth,
-                settings?.DiscoveryMode ?? draft.DiscoveryMode));
+                settings?.DiscoveryMode ?? draft.Scanning.DiscoveryMode));
         }
 
         this.IgnoredPatterns.Clear();
-        foreach (var pattern in draft.IgnoredPatterns ?? Array.Empty<string>())
+        foreach (var pattern in draft.Scanning.IgnoredPatterns ?? Array.Empty<string>())
         {
             this.IgnoredPatterns.Add(pattern);
         }
 
-        this.scanDepthText = draft.ScanDepth.ToString();
-        this.selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
+        this.scanDepthText = draft.Scanning.ScanDepth.ToString();
+        this.selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.Scanning.DiscoveryMode)
             ?? DiscoveryModeOptions[2];
         this.newIgnoredPatternText = string.Empty;
         this.newWatchedDirectoryText = string.Empty;

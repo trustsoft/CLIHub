@@ -1,6 +1,5 @@
 namespace CLIHub.ViewModels;
 
-using System.Globalization;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
@@ -828,12 +827,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             this.SelectedPopupPosition.Position,
             this.SelectedAppTheme.Theme,
             this.Accent.AccentText,
-            scanning.WatchedDirectories,
-            scanning.ScanDepth.ToString(CultureInfo.InvariantCulture),
-            scanning.IgnoredPatterns,
-            scanning.DiscoveryMode,
-            this.AgentsState.CurrentDefaultAgentId,
-            scanning.WatchedDirectorySettings);
+            scanning,
+            this.AgentsState.CurrentDefaultAgentId);
 
         if (!this.settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

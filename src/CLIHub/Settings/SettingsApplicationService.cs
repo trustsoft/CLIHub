@@ -28,12 +28,8 @@ using CLIHub.Core.Scanning;
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
 /// <param name="AccentColor"> The accent color as text. </param>
-/// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
-/// <param name="ScanDepthText"> Repository scan depth as text. </param>
-/// <param name="IgnoredPatterns"> Ignored directory-name patterns. </param>
-/// <param name="DiscoveryMode"> Which directories count as repositories. </param>
+/// <param name="Scanning"> Scanning settings edited on the Project Scanning page. </param>
 /// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
-/// <param name="WatchedDirectorySettings"> Per-directory scan settings keyed by watched root path. </param>
 public sealed record SettingsInput(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -52,12 +48,8 @@ public sealed record SettingsInput(
     PopupScreenPosition PopupScreenPosition,
     AppTheme AppTheme,
     string AccentColor,
-    IReadOnlyList<string>? WatchedDirectories = null,
-    string ScanDepthText = "2",
-    IReadOnlyList<string>? IgnoredPatterns = null,
-    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
-    string? DefaultAgentId = null,
-    IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? WatchedDirectorySettings = null);
+    ScanningSettingsInput Scanning,
+    string? DefaultAgentId = null);
 
 /// <summary>
 ///   Validated, typed settings ready for persistence and application.
@@ -79,12 +71,8 @@ public sealed record SettingsInput(
 /// <param name="PopupScreenPosition"> Where the launch window is placed when shown. </param>
 /// <param name="AppTheme"> The application-wide visual theme. </param>
 /// <param name="AccentColor"> The normalized accent color (#RRGGBB). </param>
-/// <param name="WatchedDirectories"> Watched root directories for repository scanning. </param>
-/// <param name="ScanDepth"> Repository scan depth, within the allowed range. </param>
-/// <param name="IgnoredPatterns"> Ignored directory-name patterns (normalized). </param>
-/// <param name="DiscoveryMode"> Which directories count as repositories. </param>
+/// <param name="Scanning"> Normalized scanning settings ready for persistence. </param>
 /// <param name="DefaultAgentId"> Identifier of the agent preselected for launches, or null for none. </param>
-/// <param name="WatchedDirectorySettings"> Normalized per-directory scan settings keyed by watched root path. </param>
 public sealed record SettingsDraft(
     RuntimeKind Runtime,
     PathDisplayStyle PathDisplayStyle,
@@ -103,12 +91,8 @@ public sealed record SettingsDraft(
     PopupScreenPosition PopupScreenPosition,
     AppTheme AppTheme,
     string AccentColor,
-    IReadOnlyList<string>? WatchedDirectories = null,
-    int ScanDepth = ProjectScanningDefaults.DefaultScanDepth,
-    IReadOnlyList<string>? IgnoredPatterns = null,
-    ProjectDiscoveryMode DiscoveryMode = ProjectDiscoveryMode.Both,
-    string? DefaultAgentId = null,
-    IReadOnlyDictionary<string, WatchedDirectoryScanSettings>? WatchedDirectorySettings = null);
+    ScanningSettingsInput Scanning,
+    string? DefaultAgentId = null);
 
 /// <summary>
 ///   Outcome of applying a settings draft.
@@ -176,6 +160,20 @@ public sealed class SettingsApplicationService
     }
 
     /// <summary>
+    ///   One system preference applied during a Settings save, with its rollback action.
+    /// </summary>
+    /// <param name="Name"> Setting name used in rollback diagnostics. </param>
+    /// <param name="Apply"> Applies the new value and reports whether it took effect. </param>
+    /// <param name="Rollback"> Restores the previous value. </param>
+    /// <param name="RollbackOrder"> Position of this entry in the rollback sequence. </param>
+    /// <param name="FailureMessage"> User-facing message when applying returns false. </param>
+    private sealed record AppliedPreference(string Name,
+                                            Func<bool> Apply,
+                                            Action Rollback,
+                                            int RollbackOrder,
+                                            string FailureMessage);
+
+    /// <summary>
     ///   Loads the current persisted preferences and system startup state as a typed draft.
     /// </summary>
     /// <returns> The current Settings draft. </returns>
@@ -185,6 +183,12 @@ public sealed class SettingsApplicationService
         var hotkey = HotkeyParser.TryParse(preferences.Hotkey, out var parsedHotkey) && parsedHotkey is not null
             ? parsedHotkey
             : HotkeyParser.Default;
+        var scanning = new ScanningSettingsInput(
+            preferences.Scanning.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
+            ProjectScanningDefaults.NormalizeScanDepth(preferences.Scanning.ScanDepth),
+            preferences.Scanning.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
+            preferences.Scanning.DiscoveryMode,
+            preferences.Scanning.WatchedDirectorySettings);
 
         return new SettingsDraft(
             preferences.DefaultRuntime,
@@ -204,12 +208,8 @@ public sealed class SettingsApplicationService
             preferences.PopupScreenPosition,
             preferences.AppTheme,
             preferences.AccentColor,
-            preferences.Scanning.WatchedDirectories is { } watched ? watched : Array.Empty<string>(),
-            ProjectScanningDefaults.NormalizeScanDepth(preferences.Scanning.ScanDepth),
-            preferences.Scanning.IgnoredPatterns is { } ignored ? ignored : ProjectScanningDefaults.IgnoredPatterns,
-            preferences.Scanning.DiscoveryMode,
-            preferences.DefaultAgentId,
-            preferences.Scanning.WatchedDirectorySettings);
+            scanning,
+            preferences.DefaultAgentId);
     }
 
     /// <summary>
@@ -261,28 +261,10 @@ public sealed class SettingsApplicationService
             return false;
         }
 
-        if (!int.TryParse(input.ScanDepthText?.Trim(), out var scanDepth) || !IsScanDepthInRange(scanDepth))
+        if (!TryNormalizeScanning(input.Scanning, out var normalizedScanning, out error))
         {
-            error = ScanDepthError;
             return false;
         }
-
-        if (input.WatchedDirectorySettings is not null)
-        {
-            foreach (var entry in input.WatchedDirectorySettings)
-            {
-                if (!IsScanDepthInRange(entry.Value.ScanDepth))
-                {
-                    error = WatchedDirectoryScanDepthError(entry.Key);
-                    return false;
-                }
-            }
-        }
-
-        var watchedDirectories = NormalizeList(input.WatchedDirectories);
-        var watchedDirectorySettings = NormalizeWatchedDirectorySettings(
-            input.WatchedDirectorySettings,
-            watchedDirectories);
 
         draft = new SettingsDraft(
             input.Runtime,
@@ -302,12 +284,8 @@ public sealed class SettingsApplicationService
             input.PopupScreenPosition,
             input.AppTheme,
             accentColor,
-            watchedDirectories,
-            scanDepth,
-            NormalizeList(input.IgnoredPatterns),
-            input.DiscoveryMode,
-            string.IsNullOrWhiteSpace(input.DefaultAgentId) ? null : input.DefaultAgentId,
-            watchedDirectorySettings);
+            normalizedScanning,
+            string.IsNullOrWhiteSpace(input.DefaultAgentId) ? null : input.DefaultAgentId);
         return true;
     }
 
@@ -321,40 +299,14 @@ public sealed class SettingsApplicationService
     {
         ArgumentNullException.ThrowIfNull(input);
 
-        if (!IsScanDepthInRange(input.ScanDepth))
+        if (!TryNormalizeScanning(input, out var normalized, out var error))
         {
-            return SettingsApplicationResult.Failed(ScanDepthError);
+            return SettingsApplicationResult.Failed(error!);
         }
-
-        if (input.WatchedDirectorySettings is not null)
-        {
-            foreach (var entry in input.WatchedDirectorySettings)
-            {
-                if (!IsScanDepthInRange(entry.Value.ScanDepth))
-                {
-                    return SettingsApplicationResult.Failed(WatchedDirectoryScanDepthError(entry.Key));
-                }
-            }
-        }
-
-        var watchedDirectories = NormalizeList(input.WatchedDirectories);
-        var watchedDirectorySettings = NormalizeWatchedDirectorySettings(
-            input.WatchedDirectorySettings,
-            watchedDirectories);
-        var ignoredPatterns = NormalizeList(input.IgnoredPatterns);
 
         try
         {
-            this.preferencesStore.Update(preferences =>
-            {
-                preferences.Scanning.WatchedDirectories = watchedDirectories.ToList();
-                preferences.Scanning.WatchedDirectorySettings = new Dictionary<string, WatchedDirectoryScanSettings>(
-                    watchedDirectorySettings,
-                    StringComparer.OrdinalIgnoreCase);
-                preferences.Scanning.ScanDepth = input.ScanDepth;
-                preferences.Scanning.IgnoredPatterns = ignoredPatterns.ToList();
-                preferences.Scanning.DiscoveryMode = input.DiscoveryMode;
-            });
+            this.preferencesStore.Update(preferences => WriteScanning(preferences, normalized));
 
             // Reconfigure watching and rescan with the settings the page now shows.
             this.projectScanner.Reload();
@@ -431,6 +383,59 @@ public sealed class SettingsApplicationService
         return result;
     }
 
+    private static bool TryNormalizeScanning(
+        ScanningSettingsInput input,
+        out ScanningSettingsInput normalized,
+        out string? error)
+    {
+        normalized = input;
+        error = null;
+
+        if (!IsScanDepthInRange(input.ScanDepth))
+        {
+            error = ScanDepthError;
+            return false;
+        }
+
+        if (input.WatchedDirectorySettings is not null)
+        {
+            foreach (var entry in input.WatchedDirectorySettings)
+            {
+                if (!IsScanDepthInRange(entry.Value.ScanDepth))
+                {
+                    error = WatchedDirectoryScanDepthError(entry.Key);
+                    return false;
+                }
+            }
+        }
+
+        var watchedDirectories = NormalizeList(input.WatchedDirectories);
+        var watchedDirectorySettings = NormalizeWatchedDirectorySettings(
+            input.WatchedDirectorySettings,
+            watchedDirectories);
+
+        normalized = new ScanningSettingsInput(
+            watchedDirectories,
+            input.ScanDepth,
+            NormalizeList(input.IgnoredPatterns),
+            input.DiscoveryMode,
+            watchedDirectorySettings);
+        return true;
+    }
+
+    private static void WriteScanning(AppPreferences preferences, ScanningSettingsInput scanning)
+    {
+        preferences.Scanning.WatchedDirectories = (scanning.WatchedDirectories ?? Array.Empty<string>()).ToList();
+        preferences.Scanning.WatchedDirectorySettings = scanning.WatchedDirectorySettings is null
+            ? new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, WatchedDirectoryScanSettings>(
+                scanning.WatchedDirectorySettings,
+                StringComparer.OrdinalIgnoreCase);
+        preferences.Scanning.ScanDepth = scanning.ScanDepth;
+        preferences.Scanning.IgnoredPatterns = (scanning.IgnoredPatterns ?? Array.Empty<string>()).ToList();
+        preferences.Scanning.DiscoveryMode = scanning.DiscoveryMode;
+    }
+
     /// <summary>
     ///   Applies and persists a validated draft, rolling back system changes on failure.
     /// </summary>
@@ -443,59 +448,68 @@ public sealed class SettingsApplicationService
         var previousPreferences = this.preferencesStore.Load();
         var previousStartupState = this.startupService.IsEnabled();
         var previousHotkey = ParseHotkey(previousPreferences.Hotkey);
+        var items = new List<AppliedPreference>
+        {
+            new("Windows startup",
+                () => this.applier.ApplyStartWithWindows(draft.StartWithWindows),
+                () => this.applier.ApplyStartWithWindows(previousStartupState),
+                6,
+                "Could not update the Windows startup registration. Changes were not saved."),
+            new("runtime",
+                () =>
+                {
+                    this.applier.ApplyRuntime(draft.Runtime);
+                    return true;
+                },
+                () => this.applier.ApplyRuntime(previousPreferences.DefaultRuntime),
+                1,
+                string.Empty),
+            new("path display style",
+                () =>
+                {
+                    this.applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
+                    return true;
+                },
+                () => this.applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previousPreferences.PathDisplayStyle)),
+                2,
+                string.Empty),
+            new("accent",
+                () =>
+                {
+                    this.applier.ApplyAccent(draft.AccentColor);
+                    return true;
+                },
+                () => this.applier.ApplyAccent(previousPreferences.AccentColor),
+                3,
+                string.Empty),
+            new("theme",
+                () =>
+                {
+                    this.applier.ApplyTheme(draft.AppTheme);
+                    return true;
+                },
+                () => this.applier.ApplyTheme(previousPreferences.AppTheme),
+                4,
+                string.Empty),
+            new("hotkey",
+                () => this.applier.ApplyHotkey(draft.Hotkey),
+                () => this.applier.ApplyHotkey(previousHotkey),
+                5,
+                "Could not register the global hotkey. Changes were not saved.")
+        };
 
         try
         {
-            if (!this.applier.ApplyStartWithWindows(draft.StartWithWindows))
+            foreach (var item in items)
             {
-                this.Rollback(previousPreferences, previousStartupState, previousHotkey);
-                return SettingsApplicationResult.Failed(
-                    "Could not update the Windows startup registration. Changes were not saved.");
+                if (!item.Apply())
+                {
+                    this.Rollback(items);
+                    return SettingsApplicationResult.Failed(item.FailureMessage);
+                }
             }
 
-            this.applier.ApplyRuntime(draft.Runtime);
-            this.applier.ApplyPathDisplayStyle(draft.PathDisplayStyle);
-            this.applier.ApplyAccent(draft.AccentColor);
-            this.applier.ApplyTheme(draft.AppTheme);
-
-            if (!this.applier.ApplyHotkey(draft.Hotkey))
-            {
-                this.Rollback(previousPreferences, previousStartupState, previousHotkey);
-                return SettingsApplicationResult.Failed(
-                    "Could not register the global hotkey. Changes were not saved.");
-            }
-
-            this.preferencesStore.Update(preferences =>
-            {
-                preferences.DefaultRuntime = draft.Runtime;
-                preferences.Hotkey = HotkeyParser.Format(draft.Hotkey);
-                preferences.AgentProbeTtlMinutes = draft.ProbeTtlMinutes;
-                preferences.AgentProbeTimeoutSeconds = draft.ProbeTimeoutSeconds;
-                preferences.CheckForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
-                preferences.AutoDownloadUpdates = draft.AutoDownloadUpdates;
-                preferences.NotifyStableUpdates = draft.NotifyStableUpdates;
-                preferences.NotifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
-                preferences.LogLevel = draft.LogLevel;
-                preferences.LogRetentionDays = draft.LogRetentionDays;
-                preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
-                preferences.PopupScreenPosition = draft.PopupScreenPosition;
-                preferences.AppTheme = draft.AppTheme;
-                preferences.AccentColor = draft.AccentColor;
-                preferences.StartWithWindows = draft.StartWithWindows;
-                preferences.StartMinimized = draft.StartMinimized;
-                preferences.ShowWindowOnStartup = !draft.StartMinimized;
-                preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
-                preferences.Scanning.WatchedDirectories = (draft.WatchedDirectories ?? Array.Empty<string>()).ToList();
-                preferences.Scanning.WatchedDirectorySettings = draft.WatchedDirectorySettings is null
-                    ? new Dictionary<string, WatchedDirectoryScanSettings>(StringComparer.OrdinalIgnoreCase)
-                    : new Dictionary<string, WatchedDirectoryScanSettings>(
-                        draft.WatchedDirectorySettings,
-                        StringComparer.OrdinalIgnoreCase);
-                preferences.Scanning.ScanDepth = draft.ScanDepth;
-                preferences.Scanning.IgnoredPatterns = (draft.IgnoredPatterns ?? Array.Empty<string>()).ToList();
-                preferences.Scanning.DiscoveryMode = draft.DiscoveryMode;
-                preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;
-            });
+            this.preferencesStore.Update(preferences => WritePreferences(preferences, draft));
 
             this.applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
 
@@ -506,19 +520,41 @@ public sealed class SettingsApplicationService
         catch (Exception ex)
         {
             this.logger.LogWarning(ex, "Applying Settings failed; rolling back system preferences");
-            this.Rollback(previousPreferences, previousStartupState, previousHotkey);
+            this.Rollback(items);
             return SettingsApplicationResult.Failed($"Could not save settings: {ex.Message}");
         }
     }
 
-    private void Rollback(AppPreferences previous, bool previousStartupState, HotkeyDefinition previousHotkey)
+    private static void WritePreferences(AppPreferences preferences, SettingsDraft draft)
     {
-        this.TryRollback("runtime", () => this.applier.ApplyRuntime(previous.DefaultRuntime));
-        this.TryRollback("path display style", () => this.applier.ApplyPathDisplayStyle(PathDisplayStyles.Parse(previous.PathDisplayStyle)));
-        this.TryRollback("accent", () => this.applier.ApplyAccent(previous.AccentColor));
-        this.TryRollback("theme", () => this.applier.ApplyTheme(previous.AppTheme));
-        this.TryRollback("hotkey", () => this.applier.ApplyHotkey(previousHotkey));
-        this.TryRollback("Windows startup", () => this.applier.ApplyStartWithWindows(previousStartupState));
+        preferences.DefaultRuntime = draft.Runtime;
+        preferences.Hotkey = HotkeyParser.Format(draft.Hotkey);
+        preferences.AgentProbeTtlMinutes = draft.ProbeTtlMinutes;
+        preferences.AgentProbeTimeoutSeconds = draft.ProbeTimeoutSeconds;
+        preferences.CheckForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
+        preferences.AutoDownloadUpdates = draft.AutoDownloadUpdates;
+        preferences.NotifyStableUpdates = draft.NotifyStableUpdates;
+        preferences.NotifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
+        preferences.LogLevel = draft.LogLevel;
+        preferences.LogRetentionDays = draft.LogRetentionDays;
+        preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;
+        preferences.PopupScreenPosition = draft.PopupScreenPosition;
+        preferences.AppTheme = draft.AppTheme;
+        preferences.AccentColor = draft.AccentColor;
+        preferences.StartWithWindows = draft.StartWithWindows;
+        preferences.StartMinimized = draft.StartMinimized;
+        preferences.ShowWindowOnStartup = !draft.StartMinimized;
+        preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
+        WriteScanning(preferences, draft.Scanning);
+        preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;
+    }
+
+    private void Rollback(IReadOnlyList<AppliedPreference> items)
+    {
+        foreach (var item in items.OrderBy(x => x.RollbackOrder))
+        {
+            this.TryRollback(item.Name, item.Rollback);
+        }
     }
 
     private void TryRollback(string setting, Action rollback)

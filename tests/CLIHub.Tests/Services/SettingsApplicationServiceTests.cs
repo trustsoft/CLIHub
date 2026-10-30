@@ -56,7 +56,13 @@ public class SettingsApplicationServiceTests
             0,
             PopupScreenPosition.Center,
             AppTheme.Dark,
-            "#4CC2FF");
+            "#4CC2FF",
+            new ScanningSettingsInput(
+                null,
+                ProjectScanningDefaults.DefaultScanDepth,
+                null,
+                ProjectDiscoveryMode.Both,
+                null));
         applier.Setup(x => x.ApplyStartWithWindows(true)).Returns(true);
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
@@ -112,7 +118,13 @@ public class SettingsApplicationServiceTests
             0,
             PopupScreenPosition.Center,
             AppTheme.Dark,
-            "#4CC2FF"));
+            "#4CC2FF",
+            new ScanningSettingsInput(
+                null,
+                ProjectScanningDefaults.DefaultScanDepth,
+                null,
+                ProjectDiscoveryMode.Both,
+                null)));
 
         Assert.False(result.Success);
         Assert.Contains("global hotkey", result.Error, StringComparison.OrdinalIgnoreCase);
@@ -162,6 +174,12 @@ public class SettingsApplicationServiceTests
             PopupScreenPosition.Center,
             AppTheme.Dark,
             "#4CC2FF",
+            new ScanningSettingsInput(
+                null,
+                ProjectScanningDefaults.DefaultScanDepth,
+                null,
+                ProjectDiscoveryMode.Both,
+                null),
             DefaultAgentId: "opencode"));
 
         Assert.True(result.Success);
@@ -297,7 +315,13 @@ public class SettingsApplicationServiceTests
         "0",
         PopupScreenPosition.Center,
         AppTheme.Dark,
-        "#4CC2FF");
+        "#4CC2FF",
+        new ScanningSettingsInput(
+            null,
+            ProjectScanningDefaults.DefaultScanDepth,
+            null,
+            ProjectDiscoveryMode.Both,
+            null));
 
     private static AppPreferences PreviousPreferences() => new()
     {
