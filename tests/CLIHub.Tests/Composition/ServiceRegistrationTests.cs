@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CLIHub.Composition;
 using CLIHub.Converters;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Processes;
 using CLIHub.Core.Updates;
 using CLIHub.Hotkeys;
 using CLIHub.Imaging;
@@ -30,7 +32,6 @@ public class ServiceRegistrationTests
 
         Assert.NotNull(provider.GetRequiredService<IApplicationLifetime>());
         Assert.NotNull(provider.GetRequiredService<IApplicationOperationLifetime>());
-        Assert.NotNull(provider.GetRequiredService<IInstanceCoordinator>());
         Assert.NotNull(provider.GetRequiredService<IStartupStateLoader>());
         Assert.NotNull(provider.GetRequiredService<IOptionalStartupCoordinator>());
         Assert.NotNull(provider.GetRequiredService<IApplicationSession>());
@@ -67,6 +68,57 @@ public class ServiceRegistrationTests
     }
 
     [Fact]
+    public void AddClIHubServices_ProcessPorts_HaveExactlyOneDescriptor()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubServices();
+        services.ReplaceGuardWithUniqueNames();
+
+        Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IRuntimeResolver));
+        Assert.Single(services, descriptor => descriptor.ServiceType == typeof(ICommandLineBuilder));
+        Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IAgentProcessFinder));
+        Assert.Single(services, descriptor => descriptor.ServiceType == typeof(IProcessOrchestrator));
+    }
+
+    [Fact]
+    public void AddClIHubServices_ProcessPorts_ResolveToExpectedImplementations()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubServices();
+        services.ReplaceGuardWithUniqueNames();
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.IsType<RuntimeResolver>(provider.GetRequiredService<IRuntimeResolver>());
+        Assert.IsType<CommandLineBuilderAdapter>(provider.GetRequiredService<ICommandLineBuilder>());
+        Assert.IsType<AgentProcessFinder>(provider.GetRequiredService<IAgentProcessFinder>());
+        Assert.IsType<ProcessOrchestrator>(provider.GetRequiredService<IProcessOrchestrator>());
+    }
+
+    [Fact]
+    public void AddClIHubServices_AgentProcessFinder_UsesTheSingletonMatcher()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubServices();
+        services.ReplaceGuardWithUniqueNames();
+
+        var matcherDescriptor = Assert.Single(
+            services, descriptor => descriptor.ServiceType == typeof(AgentProcessMatcher));
+        var finderDescriptor = Assert.Single(
+            services, descriptor => descriptor.ServiceType == typeof(IAgentProcessFinder));
+
+        Assert.Equal(ServiceLifetime.Singleton, matcherDescriptor.Lifetime);
+        Assert.Equal(typeof(AgentProcessMatcher), matcherDescriptor.ImplementationType);
+        Assert.Equal(typeof(AgentProcessFinder), finderDescriptor.ImplementationType);
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Same(
+            provider.GetRequiredService<AgentProcessMatcher>(),
+            provider.GetRequiredService<AgentProcessMatcher>());
+    }
+
+    [Fact]
     public void AddClIHubServices_MapsPathDisplayStyleTargetToLaunchWindowViewModel()
     {
         var services = new ServiceCollection();
@@ -91,9 +143,6 @@ public class ServiceRegistrationTests
         Assert.Same(
             provider.GetRequiredService<IUpdateWorkflow>(),
             provider.GetRequiredService<IUpdateWorkflow>());
-        Assert.Same(
-            provider.GetRequiredService<IInstanceCoordinator>(),
-            provider.GetRequiredService<IInstanceCoordinator>());
         Assert.Same(
             provider.GetRequiredService<IApplicationSession>(),
             provider.GetRequiredService<IApplicationSession>());

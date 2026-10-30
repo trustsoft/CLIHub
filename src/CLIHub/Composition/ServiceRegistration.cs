@@ -52,12 +52,6 @@ public static class ServiceRegistration
         services.AddClIHubCoreServices(Path.Combine(AppContext.BaseDirectory, "default-logo.png"));
         services.AddWindowsInfrastructure(guard);
 
-        // Process orchestrator and adapters
-        services.AddSingleton<CLIHub.Core.Processes.IRuntimeResolver, CLIHub.Core.Processes.RuntimeResolver>();
-        services.AddSingleton<CLIHub.Core.Processes.ICommandLineBuilder, CLIHub.Core.Processes.CommandLineBuilderAdapter>();
-        services.AddSingleton<CLIHub.Core.Processes.IAgentProcessFinder, CLIHub.Core.Processes.AgentProcessFinder>();
-        services.AddSingleton<CLIHub.Core.Processes.IProcessOrchestrator, CLIHub.Core.Processes.ProcessOrchestrator>();
-
         services.AddLogging(builder => builder.AddSerilog(Log.Logger, dispose: true));
 
         services.AddStartupServices();
@@ -72,8 +66,8 @@ public static class ServiceRegistration
     }
 
     /// <summary>
-    ///   Registers the boot and shutdown pipeline: application lifetime and single-instance
-    ///   coordination, startup state loading, the session and bootstrapper, the session-owned
+    ///   Registers the boot and shutdown pipeline: application and operation lifetimes,
+    ///   startup state loading, the session and bootstrapper, the session-owned
     ///   Windows personalization theme follower, startup UI, plugin initialization, startup
     ///   preferences, and the optional startup coordinators executed during boot.
     /// </summary>
@@ -81,7 +75,6 @@ public static class ServiceRegistration
     {
         services.AddSingleton<IApplicationLifetime, WpfApplicationLifetime>();
         services.AddSingleton<IApplicationOperationLifetime, ApplicationOperationLifetime>();
-        services.AddSingleton<IInstanceCoordinator, InstanceCoordinator>();
         services.AddSingleton<IStartupStateLoader, StartupStateLoader>();
         services.AddSingleton<IOptionalStartupCoordinator, OptionalStartupCoordinator>();
         services.AddSingleton<IApplicationSession, ApplicationSession>();

@@ -10,7 +10,6 @@ using CLIHub.Lifetime;
 /// </summary>
 public sealed class ApplicationBootstrapper : IApplicationBootstrapper
 {
-    private readonly IInstanceCoordinator instanceCoordinator;
     private readonly IStartupStateLoader startupStateLoader;
     private readonly IApplicationSession session;
     private readonly Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory;
@@ -21,22 +20,19 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <summary>
     ///   Creates the application startup orchestrator.
     /// </summary>
-    /// <param name="instanceCoordinator"> Single-instance coordinator. </param>
     /// <param name="startupStateLoader"> Startup state loader. </param>
     /// <param name="session"> First-instance session and application event owner. </param>
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="optionalStartup"> Optional startup operations coordinator. </param>
     /// <param name="projectScanner"> Background repository scanner. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
-    public ApplicationBootstrapper(IInstanceCoordinator instanceCoordinator,
-                                   IStartupStateLoader startupStateLoader,
+    public ApplicationBootstrapper(IStartupStateLoader startupStateLoader,
                                    IApplicationSession session,
                                    Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
                                    IOptionalStartupCoordinator optionalStartup,
                                    IProjectScanner projectScanner,
                                    ILogger<ApplicationBootstrapper> logger)
     {
-        this.instanceCoordinator = instanceCoordinator ?? throw new ArgumentNullException(nameof(instanceCoordinator));
         this.startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));
         this.session = session ?? throw new ArgumentNullException(nameof(session));
         this.hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
@@ -51,12 +47,6 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(context.Dispatch);
         ArgumentNullException.ThrowIfNull(context.SetMainWindow);
-
-        var instanceStatus = this.instanceCoordinator.Coordinate();
-        if (instanceStatus == InstanceStatus.SecondInstance)
-        {
-            return;
-        }
 
         try
         {

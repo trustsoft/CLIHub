@@ -81,10 +81,6 @@ public sealed class PreferenceApplier : IPreferenceApplier
     }
 
     /// <inheritdoc />
-    public void ApplyStartupUpdateCheck(bool enabled) =>
-        this.logger.LogInformation("Startup update check set to {Enabled} (applies on next start)", enabled);
-
-    /// <inheritdoc />
     public bool ApplyStartWithWindows(bool enabled)
     {
         var updated = this.startupService.SetEnabled(enabled);

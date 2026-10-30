@@ -52,8 +52,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
      constructor injection circular, and the context/factory alternatives had only one consumer.
   5. `scanning-and-runtime-probe-unification` - **[done 2026-10-30: `76aac1d`/`5b429a2`]** one scan
      pass shape, one executable probe helper, shared `AgentProbePolicy`/`UpdateCheckSource` policy.
-  6. `composition-and-dead-path-cleanup` - single process-registration home, remove the unreachable
-     instance check and tray relay, and tier-3 dead members.
+  6. `composition-and-dead-path-cleanup` - **[done 2026-10-30: `composition-and-dead-path-cleanup`]**
+     single process-registration home, remove the unreachable instance check and tray relay, and
+     tier-3 dead members.
   7. `test-support-consolidation` - shared `RunOnSta`/repository-root helpers and view-model
      builders; split the 2,347-line agent test file.
 - Trigger: the next refactoring cycle; adopt one change at a time, smallest first, with the existing
@@ -204,6 +205,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: register Core-owned process services once in Core, leave platform adapters in
   `AddWindowsInfrastructure`, and add `Assert.Single` uniqueness guards for the four types.
 - Trigger: the next change to process composition, or a Windows factory change that has no effect.
+- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the four registrations moved to Core
+  `AddProcessServices`, both duplicate sets were deleted, and `Assert.Single` guards plus resolution
+  tests were added.
 
 ### Second single-instance check is unreachable in the shipping app
 
@@ -217,6 +221,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: let the host own the decision and delete the coordinator, or keep the defensive
   check and document it as test-only; do not leave it looking like a live second path.
 - Trigger: the next startup-composition change.
+- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the bootstrapper's defensive
+  coordinator check was deleted; `ApplicationHost` remains the only single-instance decision point.
 
 ### Transient IDisposable chain retained by the root provider
 
@@ -418,6 +424,27 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: remove the unreachable paths in one change; keep the placeholder page only if a
   page is actually planned.
 - Trigger: the next dead-code sweep or composition change.
+- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the placeholder page, `PageGroups`,
+  `ApplyStartupUpdateCheck`, the tray relay, and `AgentProcess.Runtime` were removed.
+
+### Spec text still describes the removed placeholder and defensive instance paths
+
+- Severity: Low (documentation drift; no runtime behavior)
+- Evidence: the code paths these statements describe were deleted by
+  `composition-and-dead-path-cleanup`, so the scenarios can no longer be reached:
+  - `openspec/specs/app-lifecycle/spec.md`, scenario "Second instance exits through the provider
+    lifecycle" — the defensive `InstanceCoordinator` check is gone; `ApplicationHost` exits a
+    duplicate before the service provider is built.
+  - `openspec/specs/preferences-ui/spec.md`, Requirement "Settings sections" ("A page whose settings
+    are not yet implemented SHALL show a neutral empty state") and scenario "Page without implemented
+    settings" — every production Settings page is implemented, and `IsImplemented` and
+    `SettingsPlaceholderPage` were removed.
+  - `openspec/specs/settings-theme/spec.md`, scenario "Placeholder page readable" — the placeholder
+    page and the `EmptyStateText` style it used were removed.
+- Proposed remedy: amend or delete those scenarios in a later spec change; do not restore the removed
+  code to match the text.
+- Trigger: the next change that touches Settings page metadata or startup instance handling, or a
+  request to amend the app-lifecycle/preferences-ui/settings-theme specs.
 
 ### Resolver role override ignores exhaustedUntil
 

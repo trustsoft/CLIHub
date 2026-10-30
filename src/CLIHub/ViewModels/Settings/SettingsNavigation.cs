@@ -3,15 +3,13 @@ namespace CLIHub.ViewModels;
 using CLIHub.Themes;
 
 /// <summary>
-///   A Settings navigation page: a stable key, a display title, the group it belongs to, whether
-///   its settings are implemented yet, and the resource keys of the page-specific header and
-///   summary templates it uses.
+///   A Settings navigation page: a stable key, a display title, the group it belongs to, and the
+///   resource keys of the page-specific header and summary templates it uses.
 /// </summary>
 /// <param name="Key"> Stable page key used to route the page view. </param>
 /// <param name="Title"> Display title shown in the sidebar and page header. </param>
 /// <param name="Description"> One-line description shown under the page title in the page header. </param>
 /// <param name="Group"> The navigation group the page belongs to. </param>
-/// <param name="IsImplemented"> Whether the page has implemented settings. </param>
 /// <param name="Icon"> The Segoe MDL2 glyph shown before the page title in the sidebar. </param>
 /// <param name="HeaderTitleExtraKey">
 ///   Resource key of the template rendered beside the page title, or null when the page has no
@@ -30,21 +28,13 @@ public sealed record SettingsPage(
     string Title,
     string Description,
     string Group,
-    bool IsImplemented,
     string Icon,
     string? HeaderTitleExtraKey = null,
     string? HeaderActionKey = null,
     string? SummaryRowKey = null);
 
 /// <summary>
-///   A Settings navigation group: an uppercase label and its pages.
-/// </summary>
-/// <param name="Title"> The group label. </param>
-/// <param name="Pages"> The pages in the group, in display order. </param>
-public sealed record SettingsGroup(string Title, IReadOnlyList<SettingsPage> Pages);
-
-/// <summary>
-///   The static Settings navigation catalog: page metadata and the grouped sidebar projection.
+///   The static Settings navigation catalog: the page metadata in sidebar display order.
 /// </summary>
 internal static class SettingsPageCatalog
 {
@@ -55,21 +45,18 @@ internal static class SettingsPageCatalog
             "General & Startup",
             "Startup behavior and how the window opens.",
             "General",
-            true,
             IconGlyphs.Settings),
         new(
             "hotkeys",
             "Hotkeys & Quick Launcher",
             "The global hotkey and where the launcher appears.",
             "General",
-            true,
             IconGlyphs.Keyboard),
         new(
             "projects-registry",
             "Projects",
             "Registered projects, their provenance, and manually added entries.",
             "Engines & Repos",
-            true,
             IconGlyphs.BulletedList,
             SummaryRowKey: "RegistrySummaryCards"),
         new(
@@ -77,7 +64,6 @@ internal static class SettingsPageCatalog
             "Project Scanning",
             "Watched directories, scanning rules, and the background watcher.",
             "Engines & Repos",
-            true,
             IconGlyphs.FolderOpen,
             HeaderActionKey: "ProjectsHeaderAction",
             SummaryRowKey: "ProjectsSummaryCards"),
@@ -86,7 +72,6 @@ internal static class SettingsPageCatalog
             "CLI Agents",
             "Installed CLI agents, the default agent, and detection settings.",
             "Engines & Repos",
-            true,
             IconGlyphs.Robot,
             SummaryRowKey: "AgentsSummaryCards"),
         new(
@@ -94,45 +79,31 @@ internal static class SettingsPageCatalog
             "Terminal Profiles",
             "The shell used to open interactive agent commands.",
             "Engines & Repos",
-            true,
             IconGlyphs.Terminal),
         new(
             "appearance",
             "Appearance",
             "Theme, accent color, and how project paths are shown.",
             "System",
-            true,
             IconGlyphs.Palette),
         new(
             "telemetry",
             "Logs",
             "Log level, retention, and the log file.",
             "System",
-            true,
             IconGlyphs.History),
         new(
             "updates",
             "Updates",
             "Check for new CLIHub builds, configure update preferences, and view release notes.",
             "System",
-            true,
             IconGlyphs.Sync,
             HeaderTitleExtraKey: "UpdatesHeaderTitleExtra",
             HeaderActionKey: "UpdatesHeaderAction")
     };
 
-    private static readonly SettingsGroup[] PageGroupsData = AllPagesData
-        .GroupBy(page => page.Group)
-        .Select(group => new SettingsGroup(group.Key, group.ToArray()))
-        .ToArray();
-
     /// <summary>
     ///   All Settings pages, in sidebar display order.
     /// </summary>
     public static IReadOnlyList<SettingsPage> AllPages => AllPagesData;
-
-    /// <summary>
-    ///   The Settings pages grouped by navigation group.
-    /// </summary>
-    public static IReadOnlyList<SettingsGroup> PageGroups => PageGroupsData;
 }

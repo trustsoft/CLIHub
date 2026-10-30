@@ -41,6 +41,7 @@ public static class ServiceCollectionExtensions
         services.AddProjectServices();
         services.AddPluginServices();
         services.AddAgentServices();
+        services.AddProcessServices();
         services.AddScanningServices();
         services.AddUpdateServices();
 
@@ -139,6 +140,21 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAgentUpdateAvailabilityService, AgentUpdateAvailabilityService>();
         services.AddSingleton<AgentProcessMatcher>();
         services.AddSingleton<AgentProcessMonitor>();
+        return services;
+    }
+
+    /// <summary>
+    ///   Registers the platform-neutral process ports as singletons. Their implementations are
+    ///   constructed by the container so they receive the shared <see cref="AgentProcessMatcher" />
+    ///   singleton; the Windows adapters they depend on are registered separately via
+    ///   <c> AddWindowsInfrastructure </c>.
+    /// </summary>
+    private static IServiceCollection AddProcessServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IRuntimeResolver, RuntimeResolver>();
+        services.AddSingleton<ICommandLineBuilder, CommandLineBuilderAdapter>();
+        services.AddSingleton<IAgentProcessFinder, AgentProcessFinder>();
+        services.AddSingleton<IProcessOrchestrator, ProcessOrchestrator>();
         return services;
     }
 

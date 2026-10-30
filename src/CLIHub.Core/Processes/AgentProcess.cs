@@ -3,10 +3,6 @@ namespace CLIHub.Core.Processes;
 /// <summary>
 /// Represents a running agent process with its execution context.
 /// </summary>
-/// <remarks>
-/// The <see cref="Runtime"/> property is null for runtime-hosted processes
-/// (Node.js, Python) where the agent runs inside a shared runtime host.
-/// </remarks>
 public record AgentProcess
 {
     /// <summary>
@@ -23,15 +19,6 @@ public record AgentProcess
     /// Gets the full path to the process executable.
     /// </summary>
     public required string ExecutablePath { get; init; }
-
-    /// <summary>
-    /// Gets the runtime executable for shell-hosted processes, or null for runtime-hosted processes.
-    /// </summary>
-    /// <remarks>
-    /// This is null for processes hosted inside Node.js or Python runtimes.
-    /// For shell-hosted processes, this identifies the terminal or interpreter.
-    /// </remarks>
-    public RuntimeExecutable? Runtime { get; init; }
 
     /// <summary>
     /// Gets when the process was started.

@@ -11,11 +11,6 @@ public interface ITrayActions
     event EventHandler? StateChanged;
 
     /// <summary>
-    ///   Raised when the tray requests downloading an available update.
-    /// </summary>
-    event EventHandler? UpdateDownloadRequested;
-
-    /// <summary>
     ///   Gets the current menu state.
     /// </summary>
     TrayMenuState GetState();

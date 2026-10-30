@@ -37,7 +37,6 @@ public sealed class TrayIconController : IDisposable
         this.launchWindow = launchWindow ?? throw new ArgumentNullException(nameof(launchWindow));
 
         this.actions.StateChanged += this.OnStateChanged;
-        this.actions.UpdateDownloadRequested += this.OnUpdateDownloadRequested;
 
         this.taskbarIcon = new TaskbarIcon
         {
@@ -141,7 +140,6 @@ public sealed class TrayIconController : IDisposable
     public void Dispose()
     {
         this.actions.StateChanged -= this.OnStateChanged;
-        this.actions.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
         this.taskbarIcon.Dispose();
     }
 
@@ -155,7 +153,5 @@ public sealed class TrayIconController : IDisposable
 
         this.RefreshMenu();
     }
-
-    private void OnUpdateDownloadRequested(object? sender, EventArgs e) => this.UpdateDownloadRequested?.Invoke(this, e);
 }
 

@@ -530,8 +530,6 @@ public sealed class SettingsApplicationService
 
             this.preferencesStore.Update(preferences => WritePreferences(preferences, draft));
 
-            this.applier.ApplyStartupUpdateCheck(draft.CheckForUpdatesOnStartup);
-
             // Reconfigure watching and rescan with the newly saved scanning settings.
             // The scanner reload is best-effort: the configuration is already persisted, so a
             // reload failure must not roll back the system preferences applied above.

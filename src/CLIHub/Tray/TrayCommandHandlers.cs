@@ -20,12 +20,6 @@ public sealed class TrayCommandHandlers
     private readonly IUserNotificationService notifications;
     private readonly ISettingsLauncher settingsLauncher;
     private readonly IReleaseNotesLauncher releaseNotesLauncher;
-    private readonly IApplicationLifetime applicationLifetime;
-
-    /// <summary>
-    ///   Raised when the user requests the existing update download workflow.
-    /// </summary>
-    public event EventHandler? UpdateDownloadRequested;
 
     /// <summary>
     ///   Creates the tray command handlers over application workflows and user-facing ports.
@@ -38,7 +32,6 @@ public sealed class TrayCommandHandlers
     /// <param name="notifications"> User-facing warning notifications. </param>
     /// <param name="settingsLauncher"> Settings launcher. </param>
     /// <param name="releaseNotesLauncher"> What's New launcher. </param>
-    /// <param name="applicationLifetime"> Application shutdown port. </param>
     public TrayCommandHandlers(IProjectService projects,
                                IAgentCommandWorkflow agentCommandWorkflow,
                                IUpdateWorkflow updateWorkflow,
@@ -46,8 +39,7 @@ public sealed class TrayCommandHandlers
                                IProjectDialogService projectDialog,
                                IUserNotificationService notifications,
                                ISettingsLauncher settingsLauncher,
-                               IReleaseNotesLauncher releaseNotesLauncher,
-                               IApplicationLifetime applicationLifetime)
+                               IReleaseNotesLauncher releaseNotesLauncher)
     {
         this.projects = projects ?? throw new ArgumentNullException(nameof(projects));
         this.agentCommandWorkflow = agentCommandWorkflow ?? throw new ArgumentNullException(nameof(agentCommandWorkflow));
@@ -57,25 +49,25 @@ public sealed class TrayCommandHandlers
         this.notifications = notifications ?? throw new ArgumentNullException(nameof(notifications));
         this.settingsLauncher = settingsLauncher ?? throw new ArgumentNullException(nameof(settingsLauncher));
         this.releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
-        this.applicationLifetime = applicationLifetime ?? throw new ArgumentNullException(nameof(applicationLifetime));
     }
 
     /// <summary>
-    ///   Creates the action set projected into the tray menu.
+    ///   Creates the action set projected into the tray menu. The update-download, show-launch-window,
+    ///   and exit delegates are inert defaults: the tray icon controller owns the final behavior for
+    ///   those slots and replaces them when it builds the menu.
     /// </summary>
     /// <param name="selectProject"> Selects a registered project. </param>
-    /// <param name="showLaunchWindow"> Shows the launch window. </param>
     /// <returns> Tray menu action delegates. </returns>
-    public TrayMenuCommands CreateCommands(Action<string> selectProject, Action showLaunchWindow) => new(
+    public TrayMenuCommands CreateCommands(Action<string> selectProject) => new(
         selectProject,
         this.LaunchAgentAsync,
         this.AddProject,
         this.settingsLauncher.ShowSettings,
         this.releaseNotesLauncher.ShowReleaseNotes,
         this.CheckForUpdates,
-        () => this.UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
-        showLaunchWindow,
-        this.applicationLifetime.Shutdown);
+        static () => { },
+        static () => { },
+        static () => { });
 
     private void AddProject()
     {

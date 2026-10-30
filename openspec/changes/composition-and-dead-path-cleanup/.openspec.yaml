@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-30
+goal: Single process-registration home, remove unreachable instance check and tray relay, tier-3 dead members
+skip_specs: true

@@ -68,7 +68,6 @@ public class SettingsApplicationServiceTests
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
         applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
-        applier.Setup(x => x.ApplyStartupUpdateCheck(false));
         applier.Setup(x => x.ApplyAccent("#4CC2FF"));
         var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
 
@@ -151,7 +150,6 @@ public class SettingsApplicationServiceTests
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
         applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
-        applier.Setup(x => x.ApplyStartupUpdateCheck(false));
         applier.Setup(x => x.ApplyAccent("#4CC2FF"));
         var scanner = new Mock<Core.Scanning.IProjectScanner>();
         scanner.Setup(x => x.Reload()).Throws(new InvalidOperationException("scanner unavailable"));
@@ -210,7 +208,6 @@ public class SettingsApplicationServiceTests
         applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
         applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.MiddleEllipsis));
         applier.Setup(x => x.ApplyHotkey(HotkeyParser.Default)).Returns(true);
-        applier.Setup(x => x.ApplyStartupUpdateCheck(false));
         applier.Setup(x => x.ApplyAccent("#4CC2FF"));
         var service = CreateService(preferencesStore.Object, startup.Object, applier.Object);
 

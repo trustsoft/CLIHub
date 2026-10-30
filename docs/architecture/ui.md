@@ -73,16 +73,15 @@ literal margins. The Settings version chip adds `Sizing.Footer.VersionChipMargin
    and declare it in the page host grid in `SettingsWindow.xaml`:
    `Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=<key>}"`.
 2. Add the `SettingsPage` entry to `SettingsPageCatalog.AllPages` with the key, title, description,
-   group, `IsImplemented`, icon, and the optional `HeaderTitleExtraKey`, `HeaderActionKey`, and
+   group, icon, and the optional `HeaderTitleExtraKey`, `HeaderActionKey`, and
    `SummaryRowKey`. The sidebar groups and the page order derive from that array.
 3. If the page needs a header or summary slot, declare the `DataTemplate` in
    `SettingsWindow.Resources` and name it in the matching metadata property.
 4. `tests/CLIHub.Tests/Views/SettingsPageMetadataTests.cs` fails when the two sides disagree: a page
    key missing from or duplicated in the page host, a slot key that names no declared template, or a
    host `ConverterParameter` with no metadata entry.
-5. Smoke-test the page and its slots: navigate to it, confirm only that page is visible and its
-   header title/actions and summary row appear only there, then check a not-yet-implemented page
-   still falls back to the placeholder.
+5. Smoke-test the page and its slots: navigate to it and confirm only that page is visible and its
+   header title/actions and summary row appear only there.
 
 ## Settings Numeric Fields
 

@@ -17,33 +17,27 @@ Before the host starts, `App.OnStartup` calls the WPF base implementation, appli
    - Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services; the pre-acquired guard is registered into the composition so the provider owns guard disposal.
    - Delegates to `ApplicationBootstrapper.Start`.
 
-2. **InstanceCoordinator** (single-instance confirmation):
-   - Resolves the single-instance guard from the service provider. The guard was already acquired during host startup, so this stage confirms first-instance status.
-   - If the resolved guard reports another first instance, sends it a best-effort activation signal, shuts down this process, and returns `InstanceStatus.SecondInstance`. This is a defensive path; normal duplicates already exited during host startup.
-   - If this is the first instance, returns `InstanceStatus.FirstInstance` and startup continues.
-   - The provider owns guard disposal.
-
-3. **StartupStateLoader** (required state initialization):
+2. **StartupStateLoader** (required state initialization):
    - Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
    - Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
    - Returns immutable `StartupState` containing the loaded preferences.
 
-4. **ApplicationBootstrapper** (session and hotkey setup):
+3. **ApplicationBootstrapper** (session and hotkey setup):
    - Starts `ApplicationSession`, which delegates shell creation to `ShellCoordinator`. The coordinator creates the startup UI (tray and launch window) and wires workflow-state, download-outcome, update-request, and second-instance activation subscriptions. Download requests use the singleton `IUpdateWorkflow`; downloaded/failed outcomes are dispatched to the startup UI for tray notifications. The session owns the coordinator's disposal lifecycle.
    - Assigns the session's launch window to `Application.MainWindow`.
    - Shows the launch window when `startMinimized` is disabled; otherwise keeps the application in the tray.
    - Parses and registers the configured global hotkey, falling back to the default combination for an invalid configured value.
    - Delegates optional operations to `OptionalStartupCoordinator`.
 
-5. **OptionalStartupCoordinator** (best-effort operations):
+4. **OptionalStartupCoordinator** (best-effort operations):
    - Evaluates whether release notes should be shown or recorded for the current version.
    - Starts the update check without blocking startup when `CheckForUpdatesOnStartup` is enabled. `UpdateStartupCoordinator` calls the shared workflow, so a concurrent manual check joins the same operation.
    - Logs warnings on failure; does not throw.
 
-6. **ApplicationBootstrapper** (background scanning):
+5. **ApplicationBootstrapper** (background scanning):
    - Starts the project scanner (`IProjectScanner.Start`), which applies the scanning preferences loaded by `StartupStateLoader`; the DI container disposes it on shutdown.
 
-7. ApplicationBootstrapper logs that startup is complete.
+6. ApplicationBootstrapper logs that startup is complete.
 
 Because theme and accent application happens before the host acquires the single-instance guard, a duplicate launch applies them to its own in-memory resources; it still creates no data directories, logging, services, tray icon, or window, and writes nothing to `%APPDATA%`.
 
@@ -52,7 +46,6 @@ The implementation is in:
 - `src/CLIHub/App.xaml.cs` — WPF lifecycle delegation to `ApplicationHost`
 - `src/CLIHub/Startup/ApplicationHost.cs` — environment setup and DI composition
 - `src/CLIHub/Startup/ApplicationBootstrapper.cs` — startup orchestration
-- `src/CLIHub/Lifetime/InstanceCoordinator.cs` — single-instance coordination
 - `src/CLIHub/Startup/StartupStateLoader.cs` — plugin and preferences initialization
 - `src/CLIHub/Startup/OptionalStartupCoordinator.cs` — release notes and update check
 - `src/CLIHub/Lifetime/ApplicationSession.cs` — session lifecycle and coordinator ownership
@@ -69,7 +62,6 @@ Core registrations are grouped in `src/CLIHub.Core/Composition/ServiceCollection
 |---|---|---|
 | Acquiring the single-instance guard at host startup | ApplicationHost | A duplicate launch signals activation best-effort and exits silently; logging is not configured before guard acquisition, so the duplicate produces no log entries and no AppData artifacts. An exception after acquisition but before service-provider construction disposes the guard and propagates. |
 | Velopack bootstrap, directory creation, logger setup, service-provider creation/resolution | ApplicationHost | No application-level recovery boundary is present; an unhandled failure can prevent normal startup. |
-| Signaling the first instance defensively during bootstrapper startup | InstanceCoordinator | Connection attempts are best-effort; failures are swallowed and the second process proceeds to shut down. |
 | Plugin seeding | StartupStateLoader | The seeder logs a warning and returns; startup continues to plugin loading. |
 | Loading an individual plugin descriptor | StartupStateLoader | The manager logs a warning and skips the descriptor that failed to load. |
 | Applying the Windows Run registration during startup | StartupStateLoader | The startup service reports failure without throwing; startup continues. |

@@ -13,9 +13,6 @@ public sealed class TrayActions : ITrayActions, IDisposable
     public event EventHandler? StateChanged;
 
     /// <inheritdoc />
-    public event EventHandler? UpdateDownloadRequested;
-
-    /// <inheritdoc />
     public TrayMenuCommands Commands { get; }
 
     /// <summary>
@@ -28,8 +25,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
         this.projection = projection ?? throw new ArgumentNullException(nameof(projection));
         this.handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
         this.projection.StateChanged += this.OnStateChanged;
-        this.handlers.UpdateDownloadRequested += this.OnUpdateDownloadRequested;
-        this.Commands = this.handlers.CreateCommands(this.projection.SetCurrentProject, static () => { });
+        this.Commands = this.handlers.CreateCommands(this.projection.SetCurrentProject);
     }
 
     /// <inheritdoc />
@@ -47,10 +43,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
 
         this.disposed = true;
         this.projection.StateChanged -= this.OnStateChanged;
-        this.handlers.UpdateDownloadRequested -= this.OnUpdateDownloadRequested;
     }
 
     private void OnStateChanged(object? sender, EventArgs e) => this.StateChanged?.Invoke(this, e);
-
-    private void OnUpdateDownloadRequested(object? sender, EventArgs e) => this.UpdateDownloadRequested?.Invoke(this, e);
 }

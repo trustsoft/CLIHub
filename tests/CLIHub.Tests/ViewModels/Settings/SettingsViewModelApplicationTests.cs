@@ -972,7 +972,6 @@ public class SettingsViewModelApplicationTests
             this.Applier.Setup(x => x.ApplyRuntime(RuntimeKind.PowerShell));
             this.Applier.Setup(x => x.ApplyPathDisplayStyle(PathDisplayStyle.LeftTrim));
             this.Applier.Setup(x => x.ApplyHotkey(It.IsAny<CLIHub.Core.Hotkeys.HotkeyDefinition>())).Returns(true);
-            this.Applier.Setup(x => x.ApplyStartupUpdateCheck(true));
             this.Applier.Setup(x => x.ApplyAccent(It.IsAny<string>()));
             this.Applier.Setup(x => x.ApplyTheme(It.IsAny<AppTheme>()));
             this.Updates.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");

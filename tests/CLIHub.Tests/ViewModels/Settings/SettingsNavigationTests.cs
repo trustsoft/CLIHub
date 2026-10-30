@@ -22,7 +22,7 @@ public class SettingsNavigationTests
 
         Assert.Equal(
             new[] { "General", "Engines & Repos", "System" },
-            viewModel.PageGroups.Select(group => group.Title));
+            viewModel.Pages.Select(page => page.Group).Distinct());
         Assert.Equal(9, viewModel.Pages.Count);
 
         Assert.Equal(
@@ -61,15 +61,6 @@ public class SettingsNavigationTests
         var viewModel = new Fixture().ViewModel;
 
         Assert.All(viewModel.Pages, page => Assert.False(string.IsNullOrWhiteSpace(page.Description)));
-    }
-
-    [Fact]
-    public void Catalog_MarksAllPagesAsImplemented()
-    {
-        var viewModel = new Fixture().ViewModel;
-
-        Assert.True(viewModel.Pages.Single(page => page.Key == "projects").IsImplemented);
-        Assert.All(viewModel.Pages, page => Assert.True(page.IsImplemented));
     }
 
     [Fact]
@@ -114,56 +105,6 @@ public class SettingsNavigationTests
 
         Assert.Contains(nameof(SettingsViewModel.SelectedPage), changed);
         Assert.Equal("updates", viewModel.SelectedPage.Key);
-    }
-
-    [Fact]
-    public void SelectingPlaceholderPage_ShowsPlaceholderAndRaisesPropertyChanged()
-    {
-        var viewModel = new Fixture().ViewModel;
-        var changed = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        Assert.False(viewModel.IsPlaceholderPageVisible);
-
-        viewModel.SelectedPage = new SettingsPage(
-            "future",
-            "Future",
-            "Not implemented yet.",
-            "System",
-            false,
-            "glyph");
-
-        Assert.True(viewModel.IsPlaceholderPageVisible);
-        Assert.Contains(nameof(SettingsViewModel.IsPlaceholderPageVisible), changed);
-    }
-
-    [Fact]
-    public void SelectingImplementedPageAfterPlaceholder_HidesPlaceholderAndRaisesPropertyChanged()
-    {
-        var viewModel = new Fixture().ViewModel;
-        viewModel.SelectedPage = new SettingsPage("future", "Future", "Not implemented yet.", "System", false, "glyph");
-        var changed = new List<string?>();
-        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        viewModel.SelectedPage = viewModel.Pages.Single(page => page.Key == "general");
-
-        Assert.False(viewModel.IsPlaceholderPageVisible);
-        Assert.Contains(nameof(SettingsViewModel.IsPlaceholderPageVisible), changed);
-    }
-
-    [Fact]
-    public void Load_AfterSelectingPlaceholderPage_ResetsPlaceholderVisibilityAndRaisesPropertyChanged()
-    {
-        var fixture = new Fixture();
-        fixture.ViewModel.Load();
-        fixture.ViewModel.SelectedPage = new SettingsPage("future", "Future", "Not implemented yet.", "System", false, "glyph");
-        var changed = new List<string?>();
-        fixture.ViewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
-
-        fixture.ViewModel.Load();
-
-        Assert.False(fixture.ViewModel.IsPlaceholderPageVisible);
-        Assert.Contains(nameof(SettingsViewModel.IsPlaceholderPageVisible), changed);
     }
 
     private sealed class Fixture

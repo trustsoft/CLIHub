@@ -104,6 +104,32 @@ public class TrayActionsTests
         Assert.Equal(0, changed);
     }
 
+    [Fact]
+    public void CreateCommands_ControllerOwnedSlots_AreInertDefaults()
+    {
+        var projects = new Mock<IProjectService>(MockBehavior.Strict);
+        var updateWorkflow = new Mock<IUpdateWorkflow>(MockBehavior.Strict);
+        var handlers = new TrayCommandHandlers(
+            projects.Object,
+            new Mock<IAgentCommandWorkflow>(MockBehavior.Strict).Object,
+            updateWorkflow.Object,
+            new Mock<IApplicationOperationLifetime>(MockBehavior.Strict).Object,
+            new Mock<IProjectDialogService>(MockBehavior.Strict).Object,
+            new Mock<IUserNotificationService>(MockBehavior.Strict).Object,
+            new Mock<ISettingsLauncher>(MockBehavior.Strict).Object,
+            new Mock<IReleaseNotesLauncher>(MockBehavior.Strict).Object);
+        var selectedProject = false;
+        var commands = handlers.CreateCommands(_ => selectedProject = true);
+
+        commands.RequestUpdateDownload();
+        commands.ShowLaunchWindow();
+        commands.Exit();
+
+        Assert.False(selectedProject);
+        projects.VerifyNoOtherCalls();
+        updateWorkflow.VerifyNoOtherCalls();
+    }
+
     private static TrayActions CreateActions(
         IProjectService projects,
         IPluginCatalog catalog,
@@ -120,8 +146,7 @@ public class TrayActionsTests
             new Mock<IProjectDialogService>().Object,
             new Mock<IUserNotificationService>().Object,
             new Mock<ISettingsLauncher>().Object,
-            new Mock<IReleaseNotesLauncher>().Object,
-            new Mock<IApplicationLifetime>().Object);
+            new Mock<IReleaseNotesLauncher>().Object);
         return new TrayActions(projection, handlers);
     }
 

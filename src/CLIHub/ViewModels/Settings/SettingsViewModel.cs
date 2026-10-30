@@ -182,11 +182,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public IReadOnlyList<SettingsPage> Pages => SettingsPageCatalog.AllPages;
 
     /// <summary>
-    ///   The navigation groups and their pages, in display order.
-    /// </summary>
-    public IReadOnlyList<SettingsGroup> PageGroups => SettingsPageCatalog.PageGroups;
-
-    /// <summary>
     ///   The agent-management section shown on the CLI Agents page.
     /// </summary>
     public IAgentManagementSection AgentsState { get; }
@@ -202,20 +197,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public SettingsPage SelectedPage
     {
         get => this.selectedPage;
-        set
-        {
-            if (this.SetProperty(ref this.selectedPage, value))
-            {
-                this.OnPropertyChanged(nameof(this.IsPlaceholderPageVisible));
-            }
-        }
+        set => this.SetProperty(ref this.selectedPage, value);
     }
-
-    /// <summary>
-    ///   Whether the placeholder page is shown because the selected page has no implemented
-    ///   settings yet.
-    /// </summary>
-    public bool IsPlaceholderPageVisible => !this.SelectedPage.IsImplemented;
 
     /// <summary>
     ///   The selected path display style.
@@ -645,7 +628,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
         this.OnPropertyChanged(nameof(this.SelectedPage));
-        this.OnPropertyChanged(nameof(this.IsPlaceholderPageVisible));
     }
 
     /// <summary>

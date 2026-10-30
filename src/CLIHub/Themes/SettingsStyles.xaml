@@ -151,12 +151,6 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
-    <Style x:Key="EmptyStateText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
-        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-        <Setter Property="TextWrapping" Value="Wrap"/>
-    </Style>
-
     <!-- Section header: uppercase muted label with an optional accent marker -->
     <Style TargetType="{x:Type controls:SectionHeader}">
         <Setter Property="Margin" Value="0,18,0,8"/>

@@ -24,7 +24,6 @@ public class ApplicationBootstrapperTests
             CheckForUpdatesOnStartup = true
         });
 
-        fixture.InstanceCoordinator.InSequence(sequence).Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.StartupStateLoader.InSequence(sequence).Setup(x => x.Load()).Returns(startupState);
         fixture.Session.InSequence(sequence).Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Hotkey.Object);
@@ -39,22 +38,9 @@ public class ApplicationBootstrapperTests
     }
 
     [Fact]
-    public void Start_SecondInstance_ReturnsEarlyBeforeCreatingUi()
-    {
-        var fixture = new BootstrapperFixture();
-        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.SecondInstance);
-
-        fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
-
-        fixture.StartupStateLoader.Verify(x => x.Load(), Times.Never);
-        fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
-    }
-
-    [Fact]
     public void Start_RequiredStartupFailure_LogsAndThrows()
     {
         var fixture = new BootstrapperFixture();
-        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.StartupStateLoader.Setup(x => x.Load()).Throws(new InvalidOperationException("test"));
 
         Assert.Throws<InvalidOperationException>(() =>
@@ -73,7 +59,6 @@ public class ApplicationBootstrapperTests
             CheckForUpdatesOnStartup = false
         });
 
-        fixture.InstanceCoordinator.Setup(x => x.Coordinate()).Returns(InstanceStatus.FirstInstance);
         fixture.StartupStateLoader.Setup(x => x.Load()).Returns(startupState);
         fixture.Session.Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.Setup(x => x()).Returns(fixture.Hotkey.Object);
@@ -111,7 +96,6 @@ public class ApplicationBootstrapperTests
 
     private sealed class BootstrapperFixture
     {
-        public Mock<IInstanceCoordinator> InstanceCoordinator { get; } = new(MockBehavior.Strict);
         public Mock<IStartupStateLoader> StartupStateLoader { get; } = new(MockBehavior.Strict);
         public Mock<IApplicationSession> Session { get; } = new(MockBehavior.Strict);
         public Mock<IHotkeyStartupRegistrar> Hotkey { get; } = new(MockBehavior.Strict);
@@ -126,7 +110,6 @@ public class ApplicationBootstrapperTests
         public BootstrapperFixture()
         {
             this.Bootstrapper = new ApplicationBootstrapper(
-                this.InstanceCoordinator.Object,
                 this.StartupStateLoader.Object,
                 this.Session.Object,
                 this.HotkeyFactory.Object,

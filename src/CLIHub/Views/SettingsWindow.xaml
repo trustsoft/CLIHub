@@ -472,9 +472,6 @@
                             <views:SettingsUpdatesPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=updates}"/>
 
                             <views:SettingsLogsPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=telemetry}"/>
-
-                            <!-- Shown for a page whose settings are not implemented yet. -->
-                            <views:SettingsPlaceholderPage Visibility="{Binding IsPlaceholderPageVisible, Converter={StaticResource BoolToVisibility}}"/>
                         </Grid>
                     </ScrollViewer>
 
