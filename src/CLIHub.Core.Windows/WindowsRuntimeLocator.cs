@@ -8,6 +8,7 @@ using Microsoft.Win32;
 
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
+using CLIHub.Core.Projects;
 
 /// <summary>
 ///   Thin seam over the operating system, so Windows runtime resolution is testable without touching
@@ -292,40 +293,10 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         }
 
         var windowsDirectory = this.environment.GetWindowsDirectory();
-        foreach (var directory in this.environment.GetPathDirectories())
+        var pathCandidate = this.LocateOnPath("Git Bash", BashExecutableName, windowsDirectory, "Windows");
+        if (pathCandidate is not null)
         {
-            if (IsUnderDirectory(directory, windowsDirectory))
-            {
-                this.logger.LogDebug(
-                    "Rejected PATH entry {Directory} because it is under the Windows directory {WindowsDirectory}",
-                    directory, windowsDirectory);
-                continue;
-            }
-
-            string candidate;
-            try
-            {
-                candidate = Path.Combine(directory, BashExecutableName);
-            }
-            catch (ArgumentException)
-            {
-                this.logger.LogDebug("Rejected PATH entry {Directory} because it is not a valid path", directory);
-                continue;
-            }
-
-            if (!this.environment.FileExists(candidate))
-            {
-                this.logger.LogDebug("Rejected PATH candidate {Candidate} because the file does not exist", candidate);
-                continue;
-            }
-
-            var resolved = ToAbsolutePath(candidate);
-            if (resolved is not null)
-            {
-                this.logger.LogInformation(
-                    "Resolved Git Bash to {ExecutablePath} from the PATH entry {Directory}", resolved, directory);
-                return resolved;
-            }
+            return pathCandidate;
         }
 
         this.logger.LogWarning(
@@ -366,32 +337,10 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         // No Windows-directory exclusion here: unlike bash.exe, pwsh.exe has no WSL-launcher-shaped
         // namesake in the Windows directory. A PATH hit is also how Microsoft Store installs surface,
         // through the app-execution alias in %LOCALAPPDATA%\Microsoft\WindowsApps.
-        foreach (var directory in this.environment.GetPathDirectories())
+        var pathCandidate = this.LocateOnPath("PowerShell 7", PwshExecutableName, null, null);
+        if (pathCandidate is not null)
         {
-            string candidate;
-            try
-            {
-                candidate = Path.Combine(directory, PwshExecutableName);
-            }
-            catch (ArgumentException)
-            {
-                this.logger.LogDebug("Rejected PATH entry {Directory} because it is not a valid path", directory);
-                continue;
-            }
-
-            if (!this.environment.FileExists(candidate))
-            {
-                this.logger.LogDebug("Rejected PATH candidate {Candidate} because the file does not exist", candidate);
-                continue;
-            }
-
-            var resolved = ToAbsolutePath(candidate);
-            if (resolved is not null)
-            {
-                this.logger.LogInformation(
-                    "Resolved PowerShell 7 to {ExecutablePath} from the PATH entry {Directory}", resolved, directory);
-                return resolved;
-            }
+            return pathCandidate;
         }
 
         this.logger.LogWarning(
@@ -443,9 +392,16 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         }
     }
 
-    private string? TryGitCandidate(string installRoot)
+    private string? TryGitCandidate(string installRoot) =>
+        this.TryExecutable(installRoot, ["bin", BashExecutableName], "install root");
+
+    private string? TryPowerShellCandidate(string installDirectory) =>
+        // The PowerShell Core InstallPath value is the directory that contains pwsh.exe.
+        this.TryExecutable(installDirectory, [PwshExecutableName], "install directory");
+
+    private string? TryExecutable(string container, IReadOnlyList<string> segments, string label)
     {
-        if (string.IsNullOrWhiteSpace(installRoot))
+        if (string.IsNullOrWhiteSpace(container))
         {
             return null;
         }
@@ -453,51 +409,67 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         string candidate;
         try
         {
-            candidate = Path.Combine(installRoot, "bin", BashExecutableName);
+            candidate = Path.Combine([container, .. segments]);
         }
         catch (ArgumentException)
         {
-            this.logger.LogDebug("Rejected install root {InstallRoot} because it is not a valid path", installRoot);
-            return null;
-        }
-
-        if (!this.environment.FileExists(candidate))
-        {
-            this.logger.LogDebug("Rejected install root {InstallRoot} because {Candidate} does not exist", installRoot, candidate);
-            return null;
-        }
-
-        return ToAbsolutePath(candidate);
-    }
-
-    private string? TryPowerShellCandidate(string installDirectory)
-    {
-        if (string.IsNullOrWhiteSpace(installDirectory))
-        {
-            return null;
-        }
-
-        string candidate;
-        try
-        {
-            // The PowerShell Core InstallPath value is the directory that contains pwsh.exe.
-            candidate = Path.Combine(installDirectory, PwshExecutableName);
-        }
-        catch (ArgumentException)
-        {
-            this.logger.LogDebug("Rejected install directory {InstallDirectory} because it is not a valid path", installDirectory);
+            this.logger.LogDebug("Rejected {Label} {Container} because it is not a valid path", label, container);
             return null;
         }
 
         if (!this.environment.FileExists(candidate))
         {
             this.logger.LogDebug(
-                "Rejected install directory {InstallDirectory} because {Candidate} does not exist",
-                installDirectory, candidate);
+                "Rejected {Label} {Container} because {Candidate} does not exist", label, container, candidate);
             return null;
         }
 
         return ToAbsolutePath(candidate);
+    }
+
+    private string? LocateOnPath(string displayName,
+                                 string executableName,
+                                 string? excludedRoot,
+                                 string? excludedRootLabel)
+    {
+        foreach (var directory in this.environment.GetPathDirectories())
+        {
+            if (excludedRoot is not null && IsUnderDirectoryGuarded(directory, excludedRoot))
+            {
+                this.logger.LogDebug(
+                    "Rejected PATH entry {Directory} because it is under the {ExcludedRootLabel} directory {ExcludedRoot}",
+                    directory, excludedRootLabel, excludedRoot);
+                continue;
+            }
+
+            string candidate;
+            try
+            {
+                candidate = Path.Combine(directory, executableName);
+            }
+            catch (ArgumentException)
+            {
+                this.logger.LogDebug("Rejected PATH entry {Directory} because it is not a valid path", directory);
+                continue;
+            }
+
+            if (!this.environment.FileExists(candidate))
+            {
+                this.logger.LogDebug("Rejected PATH candidate {Candidate} because the file does not exist", candidate);
+                continue;
+            }
+
+            var resolved = ToAbsolutePath(candidate);
+            if (resolved is not null)
+            {
+                this.logger.LogInformation(
+                    "Resolved {DisplayName} to {ExecutablePath} from the PATH entry {Directory}",
+                    displayName, resolved, directory);
+                return resolved;
+            }
+        }
+
+        return null;
     }
 
     private static string? ToAbsolutePath(string path)
@@ -512,33 +484,21 @@ public sealed class WindowsRuntimeLocator : IRuntimeExecutableLocator
         }
     }
 
-    private static bool IsUnderDirectory(string path, string directory)
+    private static bool IsUnderDirectoryGuarded(string path, string directory)
     {
         if (string.IsNullOrWhiteSpace(directory))
         {
             return false;
         }
 
-        string fullPath;
-        string fullDirectory;
+        // PATH entries can be blank or malformed at runtime, so a bad entry is a miss, not an error.
         try
         {
-            fullPath = Path.GetFullPath(path)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            fullDirectory = Path.GetFullPath(directory)
-                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return ProjectPathPolicy.IsUnder(path, directory);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
             return false;
         }
-
-        if (fullPath.Equals(fullDirectory, StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        return fullPath.StartsWith(
-            fullDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
 }

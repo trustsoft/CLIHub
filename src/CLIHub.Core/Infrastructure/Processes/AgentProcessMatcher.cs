@@ -1,6 +1,7 @@
 namespace CLIHub.Core.Infrastructure.Processes;
 
 using CLIHub.Core.Models;
+using CLIHub.Core.Models.Plugins;
 
 /// <summary>
 ///   Matches running processes to registered agent plugins by the launch executable's file name
@@ -140,14 +141,9 @@ public sealed class AgentProcessMatcher
     /// </summary>
     /// <param name="plugin"> The plugin to inspect. </param>
     /// <returns> True when the plugin declares an npm update check with a package name. </returns>
-    private static bool DeclaresNpmUpdateCheck(Plugin plugin)
-    {
-        var updateCheck = plugin.UpdateCheck;
-
-        return updateCheck is not null
-            && string.Equals(updateCheck.Source, "npm", StringComparison.OrdinalIgnoreCase)
-            && !string.IsNullOrWhiteSpace(updateCheck.Package);
-    }
+    private static bool DeclaresNpmUpdateCheck(Plugin plugin) =>
+        UpdateCheckSource.TryResolve(plugin.UpdateCheck, out var kind, out _)
+        && kind == UpdateCheckSource.SourceKind.Npm;
 
     /// <summary>
     ///   Applies the runtime-host command-line rule of design D5 against the process command line.

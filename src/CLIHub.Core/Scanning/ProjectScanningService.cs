@@ -169,17 +169,7 @@ public sealed class ProjectScanningService : IProjectScanner
         }
 
         this.Detach(watcher, timer);
-        this.Post(() =>
-        {
-            this.scannedDirectoryCounts.Clear();
-            this.Publish(this.status with
-            {
-                State = ProjectScanState.NotConfigured,
-                IsWatching = false,
-                IsScanning = false,
-                ScannedDirectoryCount = 0
-            });
-        });
+        this.PublishNotConfiguredAndClearCoverage();
     }
 
     /// <inheritdoc />
@@ -230,17 +220,7 @@ public sealed class ProjectScanningService : IProjectScanner
 
         if (options.WatchedDirectories.Count == 0)
         {
-            this.Post(() =>
-            {
-                this.scannedDirectoryCounts.Clear();
-                this.Publish(this.status with
-                {
-                    State = ProjectScanState.NotConfigured,
-                    IsWatching = false,
-                    IsScanning = false,
-                    ScannedDirectoryCount = 0
-                });
-            });
+            this.PublishNotConfiguredAndClearCoverage();
 
             // Still reconcile so discovered projects under removed roots are cleaned up.
             this.RequestScan();
@@ -380,53 +360,10 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private async Task RunScanAsync()
     {
-        using var scope = this.loggingContext.BeginOperation("ProjectScan");
-
         var options = ProjectScanningOptions.From(this.preferences.Load().Scanning);
-        var plugins = this.plugins.GetAllPlugins();
-        var configured = options.WatchedDirectories.Count > 0;
+        var pass = new ScanPass(options, options.WatchedDirectories, IsSingleRoot: false, TargetRoot: null);
 
-        this.Publish(this.status with
-        {
-            State = configured ? ProjectScanState.Scanning : ProjectScanState.NotConfigured,
-            IsWatching = configured,
-            IsScanning = configured,
-            Error = null
-        });
-
-        var result = await Task.Run(() => RepositoryDiscovery.Enumerate(
-            options,
-            plugins,
-            (root, ex) => this.logger.LogWarning(ex, "Could not scan watched directory {Root}", root))).ConfigureAwait(false);
-
-        this.Post(() =>
-        {
-            var removed = this.ComputeRemovals(result.DiscoveredPaths, options.WatchedDirectories, result.ScannedRoots);
-            this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
-
-            this.scannedDirectoryCounts.Clear();
-            foreach (var (scannedRoot, examined) in result.ScannedDirectoryCounts)
-            {
-                this.scannedDirectoryCounts[scannedRoot] = examined;
-            }
-
-            // Count registered discovered projects, not this pass's paths: repositories that were
-            // already registered manually keep their provenance and must not inflate the count, and
-            // a single-root pass uses the same definition.
-            var discoveredCount = this.projects.GetAllProjects()
-                .Count(project => project.Source == ProjectSource.Discovered);
-
-            this.Publish(this.status with
-            {
-                State = configured ? ProjectScanState.Idle : ProjectScanState.NotConfigured,
-                IsWatching = configured,
-                IsScanning = false,
-                LastScanUtc = this.time.GetUtcNow(),
-                DiscoveredCount = discoveredCount,
-                ScannedDirectoryCount = this.scannedDirectoryCounts.Values.Sum(),
-                Error = null
-            });
-        });
+        await this.RunPassAsync(pass).ConfigureAwait(false);
     }
 
     private async Task RescanRootAsync(string root)
@@ -457,40 +394,61 @@ public sealed class ProjectScanningService : IProjectScanner
 
     private async Task RunRootScanAsync(string root)
     {
-        using var scope = this.loggingContext.BeginOperation("ProjectScan");
-
         var options = ProjectScanningOptions.From(this.preferences.Load().Scanning);
         var rootOptions = options.ForRoot(root) with { WatchedDirectories = new[] { root } };
+        var pass = new ScanPass(rootOptions, options.WatchedDirectories, IsSingleRoot: true, TargetRoot: root);
+
+        await this.RunPassAsync(pass).ConfigureAwait(false);
+    }
+
+    private async Task RunPassAsync(ScanPass pass)
+    {
+        using var scope = this.loggingContext.BeginOperation("ProjectScan");
+
         var plugins = this.plugins.GetAllPlugins();
+        var configured = pass.AllWatchedRoots.Count > 0;
 
         this.Publish(this.status with
         {
-            State = ProjectScanState.Scanning,
-            IsScanning = true,
+            State = pass.IsSingleRoot || configured ? ProjectScanState.Scanning : ProjectScanState.NotConfigured,
+            IsWatching = pass.IsSingleRoot ? this.status.IsWatching : configured,
+            IsScanning = pass.IsSingleRoot || configured,
             Error = null
         });
 
         var result = await Task.Run(() => RepositoryDiscovery.Enumerate(
-            rootOptions,
+            pass.Options,
             plugins,
-            (candidate, ex) => this.logger.LogWarning(ex, "Could not scan watched directory {Root}", candidate))).ConfigureAwait(false);
+            (root, ex) => this.logger.LogWarning(ex, "Could not scan watched directory {Root}", root))).ConfigureAwait(false);
 
         this.Post(() =>
         {
-            var removed = this.ComputeRootRemovals(root, result.DiscoveredPaths, result.ScannedRoots, options.WatchedDirectories);
+            var removed = this.ComputePassRemovals(pass, result.DiscoveredPaths, result.ScannedRoots);
             this.projects.ReconcileDiscoveredProjects(result.DiscoveredPaths, removed);
+
+            // A full pass replaces the coverage; a single-root pass only overwrites the roots it scanned.
+            if (!pass.IsSingleRoot)
+            {
+                this.scannedDirectoryCounts.Clear();
+            }
 
             foreach (var (scannedRoot, examined) in result.ScannedDirectoryCounts)
             {
                 this.scannedDirectoryCounts[scannedRoot] = examined;
             }
 
+            // Count registered discovered projects, not this pass's paths: repositories that were
+            // already registered manually keep their provenance and must not inflate the count, and
+            // a single-root pass uses the same definition.
             var discoveredCount = this.projects.GetAllProjects()
                 .Count(project => project.Source == ProjectSource.Discovered);
 
             this.Publish(this.status with
             {
-                State = this.status.IsWatching ? ProjectScanState.Idle : ProjectScanState.NotConfigured,
+                State = pass.IsSingleRoot
+                    ? (this.status.IsWatching ? ProjectScanState.Idle : ProjectScanState.NotConfigured)
+                    : (configured ? ProjectScanState.Idle : ProjectScanState.NotConfigured),
+                IsWatching = pass.IsSingleRoot ? this.status.IsWatching : configured,
                 IsScanning = false,
                 LastScanUtc = this.time.GetUtcNow(),
                 DiscoveredCount = discoveredCount,
@@ -500,13 +458,13 @@ public sealed class ProjectScanningService : IProjectScanner
         });
     }
 
-    private IReadOnlyList<string> ComputeRootRemovals(string root,
+    private IReadOnlyList<string> ComputePassRemovals(ScanPass pass,
                                                       IReadOnlyList<string> discoveredPaths,
-                                                      IReadOnlyList<string> scannedRoots,
-                                                      IReadOnlyList<string> watchedRoots)
+                                                      IReadOnlyList<string> scannedRoots)
     {
-        // A missing or unreadable root scans nothing, so it must not be treated as "all projects vanished".
-        if (scannedRoots.Count == 0)
+        // A missing or unreadable root scans nothing, so a single-root pass must not be treated
+        // as "all projects vanished".
+        if (pass.IsSingleRoot && scannedRoots.Count == 0)
         {
             return Array.Empty<string>();
         }
@@ -514,11 +472,23 @@ public sealed class ProjectScanningService : IProjectScanner
         var discovered = new HashSet<string>(
             discoveredPaths.Select(ProjectPathPolicy.Normalize),
             StringComparer.OrdinalIgnoreCase);
-        var otherRoots = watchedRoots
-            .Where(candidate => !string.IsNullOrWhiteSpace(candidate))
-            .Where(candidate => !ProjectPathPolicy.AreEqual(candidate, root))
-            .Select(ProjectPathPolicy.Normalize)
-            .ToArray();
+        var targetRoot = pass.TargetRoot;
+        var otherRoots = pass.IsSingleRoot && targetRoot is not null
+            ? pass.AllWatchedRoots
+                .Where(candidate => !string.IsNullOrWhiteSpace(candidate))
+                .Where(candidate => !ProjectPathPolicy.AreEqual(candidate, targetRoot))
+                .Select(ProjectPathPolicy.Normalize)
+                .ToArray()
+            : Array.Empty<string>();
+        var roots = pass.IsSingleRoot
+            ? Array.Empty<string>()
+            : pass.AllWatchedRoots
+                .Where(root => !string.IsNullOrWhiteSpace(root))
+                .Select(ProjectPathPolicy.Normalize)
+                .ToArray();
+        var scanned = pass.IsSingleRoot
+            ? Array.Empty<string>()
+            : scannedRoots.Select(ProjectPathPolicy.Normalize).ToArray();
 
         var removals = new List<string>();
 
@@ -531,14 +501,26 @@ public sealed class ProjectScanningService : IProjectScanner
 
             var path = ProjectPathPolicy.Normalize(project.Path);
 
-            if (!ProjectPathPolicy.IsUnder(path, root))
+            if (pass.IsSingleRoot)
             {
+                // Only projects under the rescanned root are candidates, and a project another
+                // watched root still owns is kept because that root was not part of this pass.
+                if (targetRoot is null
+                    || !ProjectPathPolicy.IsUnder(path, targetRoot)
+                    || otherRoots.Any(other => ProjectPathPolicy.IsUnder(path, other)))
+                {
+                    continue;
+                }
+            }
+            else if (!roots.Any(root => ProjectPathPolicy.IsUnder(path, root)))
+            {
+                // A full pass owns every configured root, so a project under none of them is gone.
+                removals.Add(project.Id);
                 continue;
             }
-
-            // The other root was not part of this pass, so it may still contain the project.
-            if (otherRoots.Any(other => ProjectPathPolicy.IsUnder(path, other)))
+            else if (!scanned.Any(root => ProjectPathPolicy.IsUnder(path, root)))
             {
+                // A root that could not be scanned this pass cannot prove its projects vanished.
                 continue;
             }
 
@@ -551,43 +533,17 @@ public sealed class ProjectScanningService : IProjectScanner
         return removals;
     }
 
-    private IReadOnlyList<string> ComputeRemovals(IReadOnlyList<string> discoveredPaths,
-                                                  IReadOnlyList<string> watchedRoots,
-                                                  IReadOnlyList<string> scannedRoots)
+    private void PublishNotConfiguredAndClearCoverage() => this.Post(() =>
     {
-        var existing = this.projects.GetAllProjects();
-        var discovered = new HashSet<string>(discoveredPaths.Select(ProjectPathPolicy.Normalize), StringComparer.OrdinalIgnoreCase);
-        var roots = watchedRoots
-            .Where(root => !string.IsNullOrWhiteSpace(root))
-            .Select(ProjectPathPolicy.Normalize)
-            .ToArray();
-        var scanned = scannedRoots.Select(ProjectPathPolicy.Normalize).ToArray();
-
-        var removals = new List<string>();
-
-        foreach (var project in existing)
+        this.scannedDirectoryCounts.Clear();
+        this.Publish(this.status with
         {
-            if (project.Source != ProjectSource.Discovered)
-            {
-                continue;
-            }
-
-            var path = ProjectPathPolicy.Normalize(project.Path);
-
-            if (!roots.Any(root => ProjectPathPolicy.IsUnder(path, root)))
-            {
-                removals.Add(project.Id);
-                continue;
-            }
-
-            if (scanned.Any(root => ProjectPathPolicy.IsUnder(path, root)) && !discovered.Contains(path))
-            {
-                removals.Add(project.Id);
-            }
-        }
-
-        return removals;
-    }
+            State = ProjectScanState.NotConfigured,
+            IsWatching = false,
+            IsScanning = false,
+            ScannedDirectoryCount = 0
+        });
+    });
 
     private void Publish(ProjectScanStatus status) => this.Post(() =>
     {
@@ -607,4 +563,17 @@ public sealed class ProjectScanningService : IProjectScanner
 
         context.Post(_ => action(), null);
     }
+
+    /// <summary>
+    ///   One scan pass: the options to walk, the configured roots that define "owner" and
+    ///   "configured", and whether the pass is limited to a single watched root.
+    /// </summary>
+    /// <param name="Options"> The options to enumerate, narrowed to the target root for a root pass. </param>
+    /// <param name="AllWatchedRoots"> Every configured watched root, regardless of the pass scope. </param>
+    /// <param name="IsSingleRoot"> True for a root pass, false for a full pass. </param>
+    /// <param name="TargetRoot"> The root a single-root pass rescans, or null for a full pass. </param>
+    private sealed record ScanPass(ProjectScanningOptions Options,
+                                   IReadOnlyList<string> AllWatchedRoots,
+                                   bool IsSingleRoot,
+                                   string? TargetRoot);
 }

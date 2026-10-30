@@ -135,6 +135,34 @@ public class WindowsRuntimeLocatorTests
     }
 
     [Fact]
+    public void Locate_GitBash_BlankInstallRoot_ReturnsNull()
+    {
+        var environment = new FakeWindowsRuntimeEnvironment();
+        environment.InstallPaths.Add(string.Empty);
+
+        var locator = CreateLocator(environment);
+
+        var resolved = locator.Locate(RuntimeKind.GitBash);
+
+        Assert.Null(resolved);
+    }
+
+    [Fact]
+    public void Locate_GitBash_InvalidPathEntry_ReturnsNullOrResolvesFromOtherSource()
+    {
+        var environment = new FakeWindowsRuntimeEnvironment();
+        environment.PathDirectories.Add(string.Empty);
+        environment.PathDirectories.Add(@"C:\Tools\Git\bin");
+        environment.AddExistingFile(@"C:\Tools\Git\bin\bash.exe");
+
+        var locator = CreateLocator(environment);
+
+        var resolved = locator.Locate(RuntimeKind.GitBash);
+
+        Assert.Equal(@"C:\Tools\Git\bin\bash.exe", resolved, ignoreCase: true);
+    }
+
+    [Fact]
     public void Locate_GitBash_RegistryThrows_FallsThroughToPath()
     {
         var environment = new FakeWindowsRuntimeEnvironment { ThrowOnRegistryRead = true };
@@ -226,6 +254,18 @@ public class WindowsRuntimeLocatorTests
         };
         environment.PathDirectories.Add(@"C:\Tools");
         environment.PathDirectories.Add(@"C:\Windows\System32");
+
+        var locator = CreateLocator(environment);
+
+        var resolved = locator.Locate(RuntimeKind.PowerShell7);
+
+        Assert.Null(resolved);
+    }
+
+    [Fact]
+    public void Locate_PowerShell7_BlankInstallDirectory_ReturnsNull()
+    {
+        var environment = new FakeWindowsRuntimeEnvironment { PowerShellInstallPath = "   " };
 
         var locator = CreateLocator(environment);
 

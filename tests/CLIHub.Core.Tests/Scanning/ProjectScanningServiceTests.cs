@@ -242,6 +242,54 @@ public class ProjectScanningServiceTests : IDisposable
     }
 
     [Fact]
+    public void Reload_FullScan_ClearsCoverageBeforeFilling()
+    {
+        var rootA = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
+        var rootB = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootB, "repo", ".git"));
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 4));
+
+        // A full pass replaces coverage: a root that is still configured but no longer scannable
+        // must not keep its previous count.
+        Directory.Delete(rootB, recursive: true);
+        service.Reload();
+
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 2));
+    }
+
+    [Fact]
+    public void Rescan_SingleRoot_OverwritesOnlyScannedRoot()
+    {
+        var rootA = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootA, "repo", ".git"));
+        var rootB = this.CreateTempDir();
+        Directory.CreateDirectory(Path.Combine(rootB, "repo", ".git"));
+        this.preferences.Scanning.WatchedDirectories = [rootA, rootB];
+        this.preferences.Scanning.ScanDepth = 2;
+        this.preferences.Scanning.DiscoveryMode = ProjectDiscoveryMode.Git;
+
+        var service = this.CreateService();
+        service.Start();
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 4));
+
+        // The other root keeps its last coverage: a single-root pass only overwrites the root it scanned.
+        Directory.Delete(rootB, recursive: true);
+        Directory.CreateDirectory(Path.Combine(rootA, "second", ".git"));
+        service.Rescan(rootA);
+
+        Assert.True(WaitFor(() => service.Status.State == ProjectScanState.Idle
+                                 && service.Status.ScannedDirectoryCount == 5));
+    }
+
+    [Fact]
     public void Reload_RemovedRoot_DropsItsScannedFolders()
     {
         var rootA = this.CreateTempDir();

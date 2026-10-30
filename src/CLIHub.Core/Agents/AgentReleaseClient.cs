@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
+using CLIHub.Core.Models.Plugins;
 
 /// <summary>
 ///   Reads the latest published version from the npm registry or from GitHub releases over a
@@ -91,36 +92,32 @@ public class AgentReleaseClient : IAgentReleaseClient
 
     private bool TryBuildRequest(PluginUpdateCheck updateCheck, out HttpRequestMessage request)
     {
-        string url;
-        if (string.Equals(updateCheck.Source, "npm", StringComparison.OrdinalIgnoreCase))
+        if (!UpdateCheckSource.TryResolve(updateCheck, out var kind, out var problem))
         {
-            if (string.IsNullOrWhiteSpace(updateCheck.Package))
+            switch (problem)
             {
-                this.logger.LogWarning("Update check source npm has no package for {Source} block", updateCheck.Source);
-                request = null!;
-                return false;
+                case UpdateCheckSource.Problem.MissingPackage:
+                    this.logger.LogWarning("Update check source npm has no package for {Source} block", updateCheck.Source);
+                    break;
+
+                case UpdateCheckSource.Problem.MissingRepo:
+                    this.logger.LogWarning("Update check source githubReleases has no repo");
+                    break;
+
+                case UpdateCheckSource.Problem.UnknownSource:
+                    this.logger.LogWarning(
+                        "Ignoring update check with unknown source kind {Source}", updateCheck.Source);
+                    break;
             }
 
-            url = string.Format(CultureInfo.InvariantCulture, NpmLatestUrl, Uri.EscapeDataString(updateCheck.Package));
-        }
-        else if (string.Equals(updateCheck.Source, "githubReleases", StringComparison.OrdinalIgnoreCase))
-        {
-            if (string.IsNullOrWhiteSpace(updateCheck.Repo))
-            {
-                this.logger.LogWarning("Update check source githubReleases has no repo");
-                request = null!;
-                return false;
-            }
-
-            url = string.Format(CultureInfo.InvariantCulture, GitHubLatestUrl, updateCheck.Repo);
-        }
-        else
-        {
-            this.logger.LogWarning(
-                "Ignoring update check with unknown source kind {Source}", updateCheck.Source);
             request = null!;
             return false;
         }
+
+        // The resolver only succeeds for a kind whose address field is present.
+        var url = kind == UpdateCheckSource.SourceKind.Npm
+            ? string.Format(CultureInfo.InvariantCulture, NpmLatestUrl, Uri.EscapeDataString(updateCheck.Package!))
+            : string.Format(CultureInfo.InvariantCulture, GitHubLatestUrl, updateCheck.Repo!);
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {
@@ -160,12 +157,6 @@ public class AgentReleaseClient : IAgentReleaseClient
         }
     }
 
-    private TimeSpan ProbeTimeout
-    {
-        get
-        {
-            var seconds = this.preferencesStore.Load().AgentProbeTimeoutSeconds;
-            return seconds is > 0 ? TimeSpan.FromSeconds(seconds.Value) : AgentVersionService.DefaultProbeTimeout;
-        }
-    }
+    private TimeSpan ProbeTimeout =>
+        AgentProbePolicy.ResolveTimeout(this.preferencesStore.Load().AgentProbeTimeoutSeconds);
 }

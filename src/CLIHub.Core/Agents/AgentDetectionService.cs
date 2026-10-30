@@ -11,7 +11,7 @@ using CLIHub.Core.Models;
 /// </summary>
 public class AgentDetectionService : IAgentDetectionService
 {
-    internal static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
+    internal static TimeSpan DefaultTtl => AgentProbePolicy.DefaultTtl;
 
     private readonly IPreferencesStore preferencesStore;
     private readonly TimeProvider timeProvider;
@@ -74,14 +74,7 @@ public class AgentDetectionService : IAgentDetectionService
         return value;
     }
 
-    private TimeSpan Ttl
-    {
-        get
-        {
-            var minutes = this.preferencesStore.Load().AgentProbeTtlMinutes;
-            return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
-        }
-    }
+    private TimeSpan Ttl => AgentProbePolicy.ResolveTtl(this.preferencesStore.Load().AgentProbeTtlMinutes);
 
     private static bool CheckSystem(Plugin plugin)
     {

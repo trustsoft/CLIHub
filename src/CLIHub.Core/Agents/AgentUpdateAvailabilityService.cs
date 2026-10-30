@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
+using CLIHub.Core.Models.Plugins;
 
 /// <summary>
 ///   Compares an agent's installed version with the version published by its declared source,
@@ -159,47 +160,37 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
 
     private bool IsSupportedBlock(Plugin plugin, PluginUpdateCheck updateCheck)
     {
-        if (string.Equals(updateCheck.Source, "npm", StringComparison.OrdinalIgnoreCase))
+        if (UpdateCheckSource.TryResolve(updateCheck, out _, out var problem))
         {
-            if (string.IsNullOrWhiteSpace(updateCheck.Package))
-            {
+            return true;
+        }
+
+        switch (problem)
+        {
+            case UpdateCheckSource.Problem.MissingPackage:
                 this.logger.LogWarning(
                     "Agent {PluginId} declares an npm update check without a package; ignoring it",
                     plugin.Id);
-                return false;
-            }
+                break;
 
-            return true;
-        }
-
-        if (string.Equals(updateCheck.Source, "githubReleases", StringComparison.OrdinalIgnoreCase))
-        {
-            if (string.IsNullOrWhiteSpace(updateCheck.Repo))
-            {
+            case UpdateCheckSource.Problem.MissingRepo:
                 this.logger.LogWarning(
                     "Agent {PluginId} declares a githubReleases update check without a repo; ignoring it",
                     plugin.Id);
-                return false;
-            }
+                break;
 
-            return true;
+            case UpdateCheckSource.Problem.UnknownSource:
+                this.logger.LogWarning(
+                    "Agent {PluginId} declares an unknown update check source {Source}; ignoring it",
+                    plugin.Id,
+                    updateCheck.Source);
+                break;
         }
 
-        this.logger.LogWarning(
-            "Agent {PluginId} declares an unknown update check source {Source}; ignoring it",
-            plugin.Id,
-            updateCheck.Source);
         return false;
     }
 
-    private TimeSpan Ttl
-    {
-        get
-        {
-            var minutes = this.preferencesStore.Load().AgentProbeTtlMinutes;
-            return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : AgentVersionService.DefaultTtl;
-        }
-    }
+    private TimeSpan Ttl => AgentProbePolicy.ResolveTtl(this.preferencesStore.Load().AgentProbeTtlMinutes);
 
     private readonly record struct CacheEntry(AgentUpdateAvailability Value, DateTimeOffset Timestamp);
 }

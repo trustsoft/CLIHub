@@ -19,12 +19,12 @@ public class AgentVersionService : IAgentVersionService
     /// <summary>
     ///   The probe time-to-live used when the TTL preference is not set.
     /// </summary>
-    public static readonly TimeSpan DefaultTtl = TimeSpan.FromMinutes(15);
+    public static TimeSpan DefaultTtl => AgentProbePolicy.DefaultTtl;
 
     /// <summary>
     ///   The probe timeout used when the timeout preference is not set.
     /// </summary>
-    public static readonly TimeSpan DefaultProbeTimeout = TimeSpan.FromSeconds(10);
+    public static TimeSpan DefaultProbeTimeout => AgentProbePolicy.DefaultProbeTimeout;
 
     private static readonly Regex VersionPattern = new(@"\d+(?:\.\d+)+", RegexOptions.Compiled);
 
@@ -121,14 +121,7 @@ public class AgentVersionService : IAgentVersionService
         this.cache.TryRemove(plugin.Id, out _);
     }
 
-    private TimeSpan Ttl
-    {
-        get
-        {
-            var minutes = this.preferencesStore.Load().AgentProbeTtlMinutes;
-            return minutes is > 0 ? TimeSpan.FromMinutes(minutes.Value) : DefaultTtl;
-        }
-    }
+    private TimeSpan Ttl => AgentProbePolicy.ResolveTtl(this.preferencesStore.Load().AgentProbeTtlMinutes);
 
     /// <summary>
     ///   Extracts the version number from command output (for example "1.0.88" from
