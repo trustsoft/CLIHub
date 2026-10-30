@@ -23,7 +23,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private readonly AgentPaneController agentPane;
     private readonly IPreferencesStore preferencesStore;
     private readonly LaunchWindowActionBuilder actionBuilder;
-    private readonly IUserNotificationService notifications;
     private readonly LaunchWindowActions actions;
     private readonly StatusMessageCoordinator statusCoordinator;
     private readonly WindowActionCoordinator windowActions;
@@ -34,7 +33,21 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private PathDisplayStyle displayStyle = PathDisplayStyles.Default;
     private bool suppressSelectionChange;
     private bool suppressFilterChange;
+    private long shownAt;
     private bool disposed;
+
+    /// <summary>
+    ///   Window during which a deactivation right after showing is ignored: when Windows denies
+    ///   foreground activation (showing from the tray or the hotkey), the freshly shown window would
+    ///   otherwise hide itself immediately.
+    /// </summary>
+    private const long DeactivationGraceMilliseconds = 400;
+
+    /// <summary>
+    ///   Tick source for the deactivation grace policy. Overridable so the policy is testable
+    ///   without sleeping; production uses <see cref="Environment.TickCount64" />.
+    /// </summary>
+    internal Func<long> TickCountProvider { get; set; } = () => Environment.TickCount64;
 
     /// <summary>
     ///   Creates the view model with its services and loads projects and agents.
@@ -46,7 +59,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <param name="actionBuilder"> Action builder for menu construction. </param>
     /// <param name="updateControl"> Shared update control for this launch window. </param>
     /// <param name="settingsLauncher"> Settings window launcher. </param>
-    /// <param name="notifications"> Information and warning notifications. </param>
     /// <param name="applicationLifetime"> Application lifetime control. </param>
     /// <param name="externalLauncher"> Operating-system path launcher. </param>
     /// <param name="statusCoordinator"> Status message coordinator for the footer. </param>
@@ -58,7 +70,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
                                  LaunchWindowActionBuilder actionBuilder,
                                  UpdateControlViewModel updateControl,
                                  ISettingsLauncher settingsLauncher,
-                                 IUserNotificationService notifications,
                                  IApplicationLifetime applicationLifetime,
                                  IExternalLauncher externalLauncher,
                                  StatusMessageCoordinator statusCoordinator,
@@ -68,7 +79,6 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         this.agentPane = agentPane;
         this.preferencesStore = preferencesStore;
         this.actionBuilder = actionBuilder;
-        this.notifications = notifications;
         this.statusCoordinator = statusCoordinator;
 
         this.statusCoordinator.PropertyChanged += this.OnStatusCoordinatorPropertyChanged;
@@ -366,6 +376,54 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         {
             this.statusCoordinator.ReportNoAgentsFound();
         }
+    }
+
+    /// <summary>
+    ///   Prepares the window for display by refreshing both panes and applying the default agent
+    ///   selection. Version re-population is served by the version cache within its TTL. The
+    ///   default-agent lookup runs against the fresh agent rows.
+    /// </summary>
+    public void PrepareForShow()
+    {
+        this.RefreshProjects();
+        this.RefreshAgents();
+        this.ApplyDefaultAgentSelection();
+    }
+
+    /// <summary>
+    ///   Refreshes both panes when the window is activated. Version re-population is cache-served
+    ///   within the TTL.
+    /// </summary>
+    public void PrepareForActivation()
+    {
+        this.RefreshProjects();
+        this.RefreshAgents();
+    }
+
+    /// <summary>
+    ///   Records the time the window was shown, resetting the deactivation grace period.
+    /// </summary>
+    public void MarkShown() => this.shownAt = this.TickCountProvider();
+
+    /// <summary>
+    ///   Determines whether the window should hide on deactivation. Returns false if the window is
+    ///   pinned, a modal prompt is open, or the deactivation grace period has not elapsed.
+    /// </summary>
+    /// <param name="isPromptOpen"> Whether a modal prompt is currently open. </param>
+    /// <returns> True when the window should hide; false when it must stay visible. </returns>
+    public bool ShouldHideOnDeactivate(bool isPromptOpen)
+    {
+        if (this.IsPinned || isPromptOpen)
+        {
+            return false;
+        }
+
+        if (this.TickCountProvider() - this.shownAt < DeactivationGraceMilliseconds)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>

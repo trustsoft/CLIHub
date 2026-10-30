@@ -45,6 +45,7 @@ public class LaunchWindowViewModelBuilder
     private Plugin[]? plugins;
     private AppPreferences? preferences;
     private string? currentVersion;
+    private Func<long>? tickCount;
 
     /// <summary>
     ///   Configures the project service with specific projects.
@@ -227,88 +228,32 @@ public class LaunchWindowViewModelBuilder
     }
 
     /// <summary>
+    ///   Overrides the tick source the deactivation grace policy reads.
+    /// </summary>
+    public LaunchWindowViewModelBuilder WithTickCount(Func<long> tickCount)
+    {
+        this.tickCount = tickCount;
+        return this;
+    }
+
+    /// <summary>
     ///   Builds a LaunchWindowViewModel instance with all dependencies configured.
     /// </summary>
     public LaunchWindowViewModel Build()
     {
-        var projectService = this.projectService ?? this.CreateDefaultProjectService();
-        var pluginCatalog = this.pluginCatalog ?? this.CreateDefaultPluginCatalog();
-        var agentDetectionService = this.agentDetectionService ?? new Mock<IAgentDetectionService>();
-        var agentVersionService = this.agentVersionService ?? new Mock<IAgentVersionService>();
-        var logoCacheService = this.logoCacheService ?? new Mock<ILogoCacheService>();
-        var preferencesStore = this.preferencesStore ?? this.CreateDefaultPreferencesStore();
-        var projectDialogService = this.projectDialogService ?? new Mock<IProjectDialogService>();
-        var agentCommandWorkflow = this.agentCommandWorkflow ?? new Mock<IAgentCommandWorkflow>();
-        var updateWorkflow = this.updateWorkflow ?? this.CreateDefaultUpdateWorkflow();
-        var userNotificationService = this.userNotificationService ?? new Mock<IUserNotificationService>();
-        var applicationLifetime = this.applicationLifetime ?? this.CreateDefaultApplicationLifetime();
-        var operationLifetime = this.operationLifetime ?? new Mock<IApplicationOperationLifetime>();
-        var settingsLauncher = this.settingsLauncher ?? new Mock<ISettingsLauncher>();
-        var externalLauncher = this.externalLauncher ?? new Mock<IExternalLauncher>();
-        var processInspector = this.processInspector ?? this.CreateDefaultProcessInspector();
-
-        var projectPane = new ProjectPaneController(
-            projectService.Object,
-            this.CreateProjectEnricher(logoCacheService),
-            new ProjectModelCatalog(),
-            projectDialogService.Object,
-            new PromptState());
-
-        var agentPane = new AgentPaneController(
-            pluginCatalog.Object,
-            agentDetectionService.Object,
-            agentVersionService.Object,
-            logoCacheService.Object,
-            operationLifetime.Object,
-            NullLogger<AgentPaneController>.Instance);
-
-        var updateControl = new UpdateControlViewModel(
-            updateWorkflow.Object,
-            NullLogger<UpdateControlViewModel>.Instance,
-            operationLifetime.Object);
-
-        var statusCoordinator = new StatusMessageCoordinator(
-            projectPane,
-            updateControl);
-
-        var launchCoordinator = new LaunchCommandCoordinator(
-            agentCommandWorkflow.Object,
-            operationLifetime.Object,
-            userNotificationService.Object,
-            NullLogger<LaunchCommandCoordinator>.Instance);
-
-        var processMonitor = new AgentProcessMonitor(
-            new ProcessOrchestrator(
-                Mock.Of<IRuntimeResolver>(),
-                Mock.Of<ICommandLineBuilder>(),
-                Mock.Of<IInteractiveProcessRunner>(),
-                Mock.Of<IProcessOutputRunner>(),
-                new AgentProcessFinder(processInspector.Object, new AgentProcessMatcher()),
-                new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
-                NullLogger<ProcessOrchestrator>.Instance),
-            pluginCatalog.Object,
-            new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance),
-            NullLogger<AgentProcessMonitor>.Instance);
-
-        return new LaunchWindowViewModel(
-            projectPane,
-            agentPane,
-            launchCoordinator,
-            preferencesStore.Object,
-            new LaunchWindowActionBuilder(),
-            updateControl,
-            settingsLauncher.Object,
-            userNotificationService.Object,
-            applicationLifetime.Object,
-            externalLauncher.Object,
-            statusCoordinator,
-            processMonitor);
+        var (viewModel, _) = this.Compose();
+        return viewModel;
     }
 
     /// <summary>
     ///   Builds the ViewModel and returns it along with all mock services for verification.
     /// </summary>
-    public (LaunchWindowViewModel ViewModel, TestMocks Mocks) BuildWithMocks()
+    public (LaunchWindowViewModel ViewModel, TestMocks Mocks) BuildWithMocks() => this.Compose();
+
+    /// <summary>
+    ///   Constructs the view model and its mock services once for both public build methods.
+    /// </summary>
+    private (LaunchWindowViewModel ViewModel, TestMocks Mocks) Compose()
     {
         var projectService = this.projectService ?? this.CreateDefaultProjectService();
         var pluginCatalog = this.pluginCatalog ?? this.CreateDefaultPluginCatalog();
@@ -377,11 +322,15 @@ public class LaunchWindowViewModelBuilder
             new LaunchWindowActionBuilder(),
             updateControl,
             settingsLauncher.Object,
-            userNotificationService.Object,
             applicationLifetime.Object,
             externalLauncher.Object,
             statusCoordinator,
             processMonitor);
+
+        if (this.tickCount is not null)
+        {
+            viewModel.TickCountProvider = this.tickCount;
+        }
 
         var mocks = new TestMocks
         {

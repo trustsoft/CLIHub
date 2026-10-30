@@ -20,19 +20,11 @@ using CLIHub.Startup;
 /// </summary>
 public partial class LaunchWindow : Window, IStartupWindow
 {
-    /// <summary>
-    ///   Window during which a deactivation right after showing is ignored: when Windows denies
-    ///   foreground activation (showing from the tray or the hotkey), the freshly shown window would
-    ///   otherwise hide itself immediately.
-    /// </summary>
-    private const long DeactivationGraceMilliseconds = 400;
-
     private readonly LaunchWindowViewModel viewModel;
     private readonly PromptState promptState;
     private readonly IPreferencesStore preferencesStore;
     private const double SplitterHitTolerance = 6d;
 
-    private long shownAt;
     private bool draggingSplitter;
     private double dragStartX;
     private double dragStartProjectsWidth;
@@ -72,13 +64,7 @@ public partial class LaunchWindow : Window, IStartupWindow
         var position = this.preferencesStore.Load().PopupScreenPosition;
 
         WindowPositioner.Place(this, position);
-        this.viewModel.RefreshProjects();
-
-        // Refresh the agent pane too, so installation state, availability, and logos are current
-        // while the window is visible; version re-population is served by the version cache
-        // within its TTL. The default-agent lookup must run against the fresh rows.
-        this.viewModel.RefreshAgents();
-        this.viewModel.ApplyDefaultAgentSelection();
+        this.viewModel.PrepareForShow();
         this.Show();
 
         if (this.WindowState == WindowState.Minimized)
@@ -86,7 +72,7 @@ public partial class LaunchWindow : Window, IStartupWindow
             this.WindowState = WindowState.Normal;
         }
 
-        this.shownAt = Environment.TickCount64;
+        this.viewModel.MarkShown();
         this.Activate();
 
         // SizeToContent settles during the first layout pass, so place again once the real
@@ -117,22 +103,11 @@ public partial class LaunchWindow : Window, IStartupWindow
     private void OnSourceInitialized(object? sender, EventArgs e) =>
         DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
 
-    private void OnWindowActivated(object? sender, EventArgs e)
-    {
-        this.viewModel.RefreshProjects();
-
-        // Version re-population on this refresh is cache-served within the probe TTL.
-        this.viewModel.RefreshAgents();
-    }
+    private void OnWindowActivated(object? sender, EventArgs e) => this.viewModel.PrepareForActivation();
 
     private void OnDeactivated(object? sender, EventArgs e)
     {
-        if (this.viewModel.IsPinned || this.promptState.IsPromptOpen)
-        {
-            return;
-        }
-
-        if (Environment.TickCount64 - this.shownAt < DeactivationGraceMilliseconds)
+        if (!this.viewModel.ShouldHideOnDeactivate(this.promptState.IsPromptOpen))
         {
             return;
         }
