@@ -102,30 +102,6 @@ Validation and error messages SHALL remain clearly readable on the active palett
 - **WHEN** the window shows a validation or save error
 - **THEN** the message is rendered in the error tone on the active palette's surface and remains fully readable
 
-### Requirement: Sidebar navigation styling
-
-The Settings window SHALL render a sidebar navigation region in the application palette: an uppercase muted label per group, one navigable item per page with a leading icon, and the active page highlighted with the accent. The active page's content SHALL be shown in the content area under a page header, and the sidebar SHALL remain readable on the active palette's surface.
-
-#### Scenario: Group labels and items
-- **WHEN** the sidebar is rendered
-- **THEN** each group ("General", "Engines & Repos", "System") has an uppercase muted label and its pages appear as navigable items
-
-#### Scenario: Each item shows a leading icon
-- **WHEN** the sidebar is rendered
-- **THEN** every page item shows a leading icon before its title
-
-#### Scenario: Active page highlighted
-- **WHEN** a page is active
-- **THEN** its sidebar item is highlighted with the accent while the other items stay neutral
-
-#### Scenario: Page header
-- **WHEN** a page is shown
-- **THEN** its content appears under a page header on the themed content surface
-
-#### Scenario: Placeholder page readable
-- **WHEN** a page without implemented settings is shown
-- **THEN** its empty state is rendered in the muted style and remains readable on the active palette's surface
-
 ### Requirement: Setting cards
 
 Each setting SHALL be presented as a card: a surface carrying the setting's leading icon, title, an optional inline badge, and a short hint, with the setting's control shown inline. A compact control (a checkbox, a short segmented selector, or a numeric field) SHALL be aligned on the trailing edge of the card; a wide or compound control SHALL be shown stacked below the title and hint, spanning the card width.
@@ -393,3 +369,23 @@ The Settings window SHALL show three summary cards under the "CLI Agents" page h
 
 - **WHEN** a detection pass changes an agent's installed state, the default agent is changed, or a detection field is edited
 - **THEN** the affected summary card refreshes without reopening the window
+
+### Requirement: Sidebar navigation and page styling
+
+The Settings window SHALL render a sidebar navigation region in the application palette: an uppercase muted label per group, one navigable item per page with a leading icon, and the active page highlighted with the accent. The active page's content SHALL be shown in the content area under a page header, and the sidebar SHALL remain readable on the active palette's surface.
+
+#### Scenario: Group labels and items
+- **WHEN** the sidebar is rendered
+- **THEN** each group ("General", "Engines & Repos", "System") has an uppercase muted label and its pages appear as navigable items
+
+#### Scenario: Each item shows a leading icon
+- **WHEN** the sidebar is rendered
+- **THEN** every page item shows a leading icon before its title
+
+#### Scenario: Active page highlighted
+- **WHEN** a page is active
+- **THEN** its sidebar item is highlighted with the accent while the other items stay neutral
+
+#### Scenario: Page header
+- **WHEN** a page is shown
+- **THEN** its content appears under a page header on the themed content surface

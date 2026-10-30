@@ -156,35 +156,6 @@ exception SHALL escape the request, and the application SHALL continue its shutd
 - **AND** the deferred placement that was queued before the window closed is also ignored
 - **AND** the application completes its shutdown without an unhandled exception
 
-### Requirement: Single instance resource ownership
-
-The application SHALL acquire the single-instance guard at the beginning of host startup, before data-directory creation, log configuration, and service-provider construction. The application SHALL register exactly one `SingleInstanceGuard` singleton instance through the application composition root, and the service provider SHALL own disposal of the guard and its named mutex and activation-pipe resources.
-
-#### Scenario: Production registration has one owner
-
-- **WHEN** the WPF service collection is built and the guard is resolved more than once
-- **THEN** every resolution returns the same pre-acquired `SingleInstanceGuard` instance
-- **AND** the startup path after guard acquisition does not construct or dispose a separate guard instance
-
-#### Scenario: Duplicate launch exits before environment setup
-
-- **WHEN** host startup acquires the guard and another instance already owns the mutex
-- **THEN** the process signals the running instance to activate and exits
-- **AND** the duplicate process does not create AppData directories, does not configure logging, does not build the service provider, and does not run application initialization
-- **AND** the duplicate process shows no tray icon or application window
-
-#### Scenario: Second instance exits through the provider lifecycle
-
-- **WHEN** startup resolves a guard that is not the first instance
-- **THEN** the application signals the first instance and requests shutdown
-- **AND** the service provider disposes the guard during normal application exit
-
-#### Scenario: First instance releases the mutex through provider disposal
-
-- **WHEN** the provider owning a first-instance guard is disposed
-- **THEN** the guard releases its named mutex and signal resources
-- **AND** a subsequent guard can acquire the mutex as the first instance
-
 ### Requirement: Application startup orchestration
 
 The application SHALL execute first-instance startup through one application bootstrapper boundary after WPF initialization. The bootstrapper SHALL preserve the existing startup order: initialize plugins, load and apply preferences, create the tray host, connect update notifications and activation handling, resolve and optionally show the launch window, register the global hotkey, evaluate release notes, and start the optional update check.
@@ -286,3 +257,26 @@ The application SHALL cancel application-scoped operations when shutdown begins 
 - **WHEN** a tracked operation ignores cancellation beyond the shutdown bound
 - **THEN** the application logs the timeout
 - **AND** disposes the service provider and completes process shutdown without waiting indefinitely
+
+### Requirement: Single instance ownership and disposal
+
+The application SHALL acquire the single-instance guard at the beginning of host startup, before data-directory creation, log configuration, and service-provider construction. The application SHALL register exactly one `SingleInstanceGuard` singleton instance through the application composition root, and the service provider SHALL own disposal of the guard and its named mutex and activation-pipe resources.
+
+#### Scenario: Production registration has one owner
+
+- **WHEN** the WPF service collection is built and the guard is resolved more than once
+- **THEN** every resolution returns the same pre-acquired `SingleInstanceGuard` instance
+- **AND** the startup path after guard acquisition does not construct or dispose a separate guard instance
+
+#### Scenario: Duplicate launch exits before environment setup
+
+- **WHEN** host startup acquires the guard and another instance already owns the mutex
+- **THEN** the process signals the running instance to activate and exits
+- **AND** the duplicate process does not create AppData directories, does not configure logging, does not build the service provider, and does not run application initialization
+- **AND** the duplicate process shows no tray icon or application window
+
+#### Scenario: First instance releases the mutex through provider disposal
+
+- **WHEN** the provider owning a first-instance guard is disposed
+- **THEN** the guard releases its named mutex and signal resources
+- **AND** a subsequent guard can acquire the mutex as the first instance
