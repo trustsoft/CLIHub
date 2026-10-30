@@ -445,6 +445,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   code to match the text.
 - Trigger: the next change that touches Settings page metadata or startup instance handling, or a
   request to amend the app-lifecycle/preferences-ui/settings-theme specs.
+- Resolved (2026-10-30) by `align-specs-with-dead-path-cleanup` (commit `e35be6f`/archive `575ff89`):
+  the three scenarios were removed; the requirements were replaced under slightly broader names with
+  every other scenario unchanged.
 
 ### Resolver role override ignores exhaustedUntil
 

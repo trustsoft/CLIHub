@@ -14,6 +14,6 @@
 
 ## Stage 3: Archive and close-out (needs explicit user approval)
 
-- [ ] 3.1 Run `openspec archive align-specs-with-dead-path-cleanup --yes` and confirm the three scenarios are gone from `openspec/specs/` and the change moved under `openspec/changes/archive/`.
-- [ ] 3.2 Mark the "Spec text still describes the removed placeholder and defensive instance paths" entry in `docs/backlog.md` resolved, with the change id and commit shas.
-- [ ] 3.3 Commit the archive move and the backlog close-out separately, only with explicit approval.
+- [x] 3.1 Run `openspec archive align-specs-with-dead-path-cleanup --yes` and confirm the three scenarios are gone from `openspec/specs/` and the change moved under `openspec/changes/archive/`.
+- [x] 3.2 Mark the "Spec text still describes the removed placeholder and defensive instance paths" entry in `docs/backlog.md` resolved, with the change id and commit shas.
+- [x] 3.3 Commit the archive move and the backlog close-out separately, only with explicit approval.
