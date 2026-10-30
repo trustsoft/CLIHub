@@ -6,6 +6,59 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Architecture and design
 
+### Refactoring and simplification portfolio (2026-10-30 analysis)
+
+- Severity: Medium (maintainability; no direct user impact except the linked defect entries)
+- Evidence: read-only analysis of 486 C#/XAML files (54,954 lines) with build/test/validate green
+  (1,259 tests). Exact eight-line duplication in `src/` is negligible; cost is concentrated in a few
+  god classes and repeated policy:
+  - `SettingsViewModel` is 1,925 lines with ~72 public members and a 13-parameter constructor;
+    `Load()` is 128 lines with ~30 direct field writes plus 44 manual notifications
+    (`src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:1302-1429`), and the option records,
+    `WatchedDirectoryRow`, scanning editor, accent state, update card, and persistence mapping all
+    live in the same class (`:26-259`, `:858-925`, `:1466-1736`, `:1800-1924`).
+  - `SettingsApplicationService` is 558 lines; `SettingsInput`/`SettingsDraft` flatten the same five
+    scanning fields (`:55-60`, `:106-111`) while `ScanningSettingsInput` already exists (`:140-144`);
+    validation and the persistence block are written twice (`:270-344`, `:348-357` vs `:488-496`);
+    `Save` maintains three hand-written apply/rollback/persist lists (`:449-498`, `:516-521`).
+  - `AgentManagementViewModel` is 823 lines and repeats the CTS + generation + linked-token guard
+    three times and the per-card busy prologue/finally twice (`:413-419`, `:484-490`, `:548-584`,
+    `:702-735`; also `AgentPaneController.cs:92-96`).
+  - `LaunchWindowViewModel` had a 12-parameter constructor (`:54-65`), a dead
+    `IUserNotificationService` dependency (`:26,71`), and constructed its action coordinator
+    itself (`:78-106`). Resolved by slice 4 on 2026-10-30: 11 parameters, no dead dependency, and
+    one deliberately inline coordinator.
+  - `ProjectScanningService` is 610 lines and implements the full pass and single-root pass twice
+    (`:381-429` vs `:458-500`) with two removal algorithms (`:503-590`).
+  - `WindowsRuntimeLocator` is 544 lines and repeats the PATH scan and candidate probe per runtime
+    (`:295-329`/`:369-395`, `:446-501`).
+- Proposed remedy: sequence into independent, behavior-preserving OpenSpec changes:
+  1. `settings-viewmodel-decomposition` - **[done 2026-10-30: slice 1 `0d9b217`/`72fda1c`, slice 2 `531a1ed`/`473df0a`]**
+     option/navigation types moved to `SettingsOptions.cs`, `WatchedDirectoryRow.cs`, and
+     `SettingsNavigation.cs`; `SettingsPageCatalog` extracted; the 13-arg DI factory replaced with
+     `AddTransient<SettingsViewModel>()`; then `SettingsUpdateCard`, `AccentSelection`, and
+     `WatchedDirectoryEditor` extracted with the XAML binding moves. The view model dropped from 1,925
+     to 1,616, then 853 lines. The parked `TryAddWatchedDirectory` quirk remains out of scope.
+  2. `agent-management-pass-consolidation` - **[done 2026-10-30: `5627010`/`c0ecb09`]** one
+     restartable-pass primitive and one card-action scope; the duplicated busy-state raisers are merged.
+  3. `settings-save-pipeline-unification` - **[done 2026-10-30: `8e1b647`/`0053f13`]**
+     `ScanningSettingsInput` nested in the input/draft records, one normalization, one
+     `WriteScanning`, one `WritePreferences`, and one apply/rollback table.
+  4. `launch-window-composition` - **[done 2026-10-30: `da80c4f`/`732c9af`]** the dead
+     `IUserNotificationService` dependency is gone (11-parameter constructor); show/activate/hide
+     policy moved into the view model (`PrepareForShow`, `PrepareForActivation`, `MarkShown`,
+     `ShouldHideOnDeactivate`); `LaunchWindowViewModelBuilder` collapses to one `Compose()` helper.
+     `WindowActionCoordinator` stays inline-constructed: its three view-model delegates make
+     constructor injection circular, and the context/factory alternatives had only one consumer.
+  5. `scanning-and-runtime-probe-unification` - one scan pass shape, one executable probe helper,
+     shared `AgentProbePolicy`/`UpdateCheckSource` policy.
+  6. `composition-and-dead-path-cleanup` - single process-registration home, remove the unreachable
+     instance check and tray relay, and tier-3 dead members.
+  7. `test-support-consolidation` - shared `RunOnSta`/repository-root helpers and view-model
+     builders; split the 2,347-line agent test file.
+- Trigger: the next refactoring cycle; adopt one change at a time, smallest first, with the existing
+  suite as the safety net.
+
 ### `IStartupWindow` is an empty marker interface after the tier 2 cleanup
 
 - Severity: Low (structural; no user impact)
@@ -22,9 +75,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 ### Architectural improvement proposals (2026-10-29 analysis)
 
 - Severity: Medium (strategic, not urgent; affects long-term maintainability and evolution)
-- Evidence: comprehensive architectural analysis completed 2026-10-29 (commit `e141732`), documented
-  in `docs/architecture-analysis-2026-10-29.md`, `docs/architecture-visualization.md`, and
-  `docs/architecture-improvement-summary.md`. Analysis identified 6 concrete improvement proposals:
+- Evidence: comprehensive architectural analysis completed 2026-10-29 (commit `e141732`); the
+  analysis documents were since removed, so the full text lives in git history at that commit. The
+  analysis identified 6 concrete improvement proposals:
   (1) Extract cross-cutting services (logging, persistence, caching); (2) Introduce domain events;
   (3) Capability-based service decomposition; **(4) Process domain model unification [IMPLEMENTED 2026-10-29]**;
   (5) Plugin lifecycle management; (6) Configuration decomposition (internal). Health score: 8.5/10. Key
@@ -34,8 +87,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   services and domain events; Phase 2 (domain refinement) — service decomposition, **process domain [ALL PHASES COMPLETE 2026-10-29]**,
   plugin lifecycle; Phase 3 (configuration evolution) — internal decomposition. Immediate actions
   (next 30 days): document architecture principles, extract `ILoggingContextProvider`, implement
-  first domain event POC (`ProjectSelected`). See `docs/architecture-analysis-index.md` for full
-  navigation. **Proposal 4 complete: Phase 1+2 `a64422c`, Phase 3 `37e3c46`, Phase 4 `f7c1495` (obsolete
+  first domain event POC (`ProjectSelected`). See the 2026-10-29 analysis in git history at
+  `e141732` for full navigation. **Proposal 4 complete: Phase 1+2 `a64422c`, Phase 3 `37e3c46`, Phase 4 `f7c1495` (obsolete
   type removed, 0 CLIHUB001, 1,222 tests); see ADR-0012 and the archived changes.** **Proposal 1 first
   slice complete: `logging-context-provider` `7d92bf3` (ILoggingContextProvider + OperationName/CorrelationId
   scopes on orchestrator, monitor, application lifetime, and scanning; behavior unchanged, 1,228 tests).
@@ -139,6 +192,32 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## DI and lifetime
 
+### Process composition has two registration owners
+
+- Severity: Low (latent; the shipping graph is correct today)
+- Evidence: four process services are registered in
+  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:47-63` and again in
+  `src/CLIHub/Composition/ServiceRegistration.cs:55-59`. MS.DI keeps the last descriptor, so the
+  Windows factories never run in the app but do run in the adapter tests; `AgentProcessMatcher` is
+  resolvable only because Core registers it at
+  `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs:140`.
+- Proposed remedy: register Core-owned process services once in Core, leave platform adapters in
+  `AddWindowsInfrastructure`, and add `Assert.Single` uniqueness guards for the four types.
+- Trigger: the next change to process composition, or a Windows factory change that has no effect.
+
+### Second single-instance check is unreachable in the shipping app
+
+- Severity: Low (defensive duplication)
+- Evidence: `ApplicationHost.Start` exits a duplicate before building the provider
+  (`src/CLIHub/Startup/ApplicationHost.cs:49-56`); the provider then owns the same guard, whose
+  `IsFirstInstance` is captured in its constructor
+  (`src/CLIHub.Core.Windows/SingleInstanceGuard.cs:16,57`). `ApplicationBootstrapper` repeats the
+  check plus signal/shutdown (`:55-59`), and `InstanceCoordinator.Coordinate` can therefore only
+  return `FirstInstance` in production.
+- Proposed remedy: let the host own the decision and delete the coordinator, or keep the defensive
+  check and document it as test-only; do not leave it looking like a live second path.
+- Trigger: the next startup-composition change.
+
 ### Transient IDisposable chain retained by the root provider
 
 - Severity: Low
@@ -149,6 +228,21 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a memory-growth report.
 
 ## Test suite
+
+### Duplicated test helpers and no shared view-model builders
+
+- Severity: Low (test-only maintenance)
+- Evidence: `FindRepositoryRoot` has seven byte-identical copies and `RunOnSta` seven copies
+  (e.g. `tests/CLIHub.Tests/Architecture/ArchitectureBoundaryTests.cs:170`,
+  `tests/CLIHub.Tests/Views/SettingsPageMetadataTests.cs:175`,
+  `tests/CLIHub.Tests/Views/LaunchWindowClosedGuardTests.cs:73`); `InlineOperationLifetime` is
+  defined twice (`AgentManagementViewModelTests.cs:2324`, `WindowActionCoordinatorTests.cs:210`).
+  `AgentManagementViewModelTests.cs` is 2,347 lines with 71 `CreateViewModel(...)` calls and 70
+  `new Mock<IExternalLauncher>()`; there is no shared builder for `AgentManagementViewModel` or
+  `SettingsViewModel`, although `LaunchWindowViewModelBuilder` exists.
+- Proposed remedy: add `tests/CLIHub.Tests/Support/` helpers and builders, split the agent test file
+  by concern, and add a registration-uniqueness test over the composed collection.
+- Trigger: the next change touching a duplicated helper or one of the two large test files.
 
 ### Single unexplained test failure (not reproduced)
 
@@ -309,6 +403,21 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `pipeline-state.mjs` check path.
 
 ## UI and theming
+
+### Dead-path residue after tier 2
+
+- Severity: Low
+- Evidence: the placeholder settings page is unreachable because every `SettingsPage` entry passes
+  `IsImplemented: true` (`SettingsViewModel.cs:281-352`; only tests construct `false`), and
+  `PagesByGroup`/`PageGroups` are test-only (`:407-410`, `:558`). `ApplyStartupUpdateCheck` only logs
+  (`src/CLIHub/Settings/PreferenceApplier.cs:84-85`). The tray handler's
+  `UpdateDownloadRequested`/`ShowLaunchWindow`/`Exit` slots are overwritten by
+  `TrayIconController.RefreshMenu` (`src/CLIHub/Tray/TrayIconController.cs:129-134`), making the
+  handler-to-actions relay unreachable. `AgentProcess.Runtime` is never assigned
+  (`src/CLIHub.Core/Processes/AgentProcess.cs:34`; no `Runtime =` in `src`/`tests`).
+- Proposed remedy: remove the unreachable paths in one change; keep the placeholder page only if a
+  page is actually planned.
+- Trigger: the next dead-code sweep or composition change.
 
 ### Resolver role override ignores exhaustedUntil
 
