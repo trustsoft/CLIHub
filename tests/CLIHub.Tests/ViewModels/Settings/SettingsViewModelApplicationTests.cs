@@ -37,9 +37,9 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
 
-        Assert.Equal("Sky", fixture.ViewModel.SelectedAccent.Name);
-        Assert.False(fixture.ViewModel.SelectedAccent.IsCustom);
-        Assert.Equal("Active: Sky", fixture.ViewModel.ActiveAccentLabel);
+        Assert.Equal("Sky", fixture.ViewModel.Accent.SelectedAccent.Name);
+        Assert.False(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Sky", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -208,9 +208,9 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture("#123456");
         fixture.ViewModel.Load();
 
-        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
-        Assert.Equal("#123456", fixture.ViewModel.AccentText);
-        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+        Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
+        Assert.Equal("#123456", fixture.ViewModel.Accent.AccentText);
+        Assert.Equal("Active: Custom", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -219,10 +219,10 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
 
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Emerald");
 
-        Assert.Equal("#10B981", fixture.ViewModel.AccentText);
-        Assert.Equal("Active: Emerald", fixture.ViewModel.ActiveAccentLabel);
+        Assert.Equal("#10B981", fixture.ViewModel.Accent.AccentText);
+        Assert.Equal("Active: Emerald", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -231,10 +231,10 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
 
-        fixture.ViewModel.AccentText = "#123456";
+        fixture.ViewModel.Accent.AccentText = "#123456";
 
-        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
-        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+        Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Custom", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -243,9 +243,9 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
 
-        fixture.ViewModel.AccentText = "#12";
+        fixture.ViewModel.Accent.AccentText = "#12";
 
-        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
+        Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
     }
 
     [Fact]
@@ -254,11 +254,11 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
 
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
 
-        Assert.Equal("#4CC2FF", fixture.ViewModel.AccentText);
-        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
-        Assert.Equal("Active: Sky", fixture.ViewModel.ActiveAccentLabel);
+        Assert.Equal("#4CC2FF", fixture.ViewModel.Accent.AccentText);
+        Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Sky", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -266,14 +266,14 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
-        fixture.ViewModel.AccentText = "#123456";
+        fixture.ViewModel.Accent.AccentText = "#123456";
 
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Emerald");
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
 
-        Assert.Equal("#123456", fixture.ViewModel.AccentText);
-        Assert.True(fixture.ViewModel.SelectedAccent.IsCustom);
-        Assert.Equal("Active: Custom", fixture.ViewModel.ActiveAccentLabel);
+        Assert.Equal("#123456", fixture.ViewModel.Accent.AccentText);
+        Assert.True(fixture.ViewModel.Accent.SelectedAccent.IsCustom);
+        Assert.Equal("Active: Custom", fixture.ViewModel.Accent.ActiveAccentLabel);
     }
 
     [Fact]
@@ -282,14 +282,14 @@ public class SettingsViewModelApplicationTests
         var memory = new AccentSelectionMemory();
         var first = new Fixture(accentMemory: memory);
         first.ViewModel.Load();
-        first.ViewModel.AccentText = "#123456";
-        first.ViewModel.SelectedAccent = first.ViewModel.AccentOptions.First(choice => choice.Name == "Teal");
+        first.ViewModel.Accent.AccentText = "#123456";
+        first.ViewModel.Accent.SelectedAccent = first.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Teal");
 
         var second = new Fixture(accentMemory: memory);
         second.ViewModel.Load();
-        second.ViewModel.SelectedAccent = second.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+        second.ViewModel.Accent.SelectedAccent = second.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
 
-        Assert.Equal("#123456", second.ViewModel.AccentText);
+        Assert.Equal("#123456", second.ViewModel.Accent.AccentText);
     }
 
     [Fact]
@@ -298,10 +298,10 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture("#123456");
         fixture.ViewModel.Load();
 
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.Name == "Emerald");
-        fixture.ViewModel.SelectedAccent = fixture.ViewModel.AccentOptions.First(choice => choice.IsCustom);
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.Name == "Emerald");
+        fixture.ViewModel.Accent.SelectedAccent = fixture.ViewModel.Accent.AccentOptions.First(choice => choice.IsCustom);
 
-        Assert.Equal("#123456", fixture.ViewModel.AccentText);
+        Assert.Equal("#123456", fixture.ViewModel.Accent.AccentText);
     }
 
     [Fact]
@@ -310,14 +310,14 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
-        fixture.ViewModel.NewWatchedDirectoryText = path;
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
 
-        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
 
-        Assert.Contains(fixture.ViewModel.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
-        Assert.Equal(string.Empty, fixture.ViewModel.NewWatchedDirectoryText);
-        Assert.False(fixture.ViewModel.HasWatchedDirectoryError);
-        Assert.Equal("1 root monitored", fixture.ViewModel.WatchedRootsSummary);
+        Assert.Contains(fixture.ViewModel.Scanning.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(string.Empty, fixture.ViewModel.Scanning.NewWatchedDirectoryText);
+        Assert.False(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
+        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -326,12 +326,12 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"), "missing");
-        fixture.ViewModel.NewWatchedDirectoryText = path;
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
 
-        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
 
-        Assert.Empty(fixture.ViewModel.WatchedDirectories);
-        Assert.True(fixture.ViewModel.HasWatchedDirectoryError);
+        Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
+        Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
     }
 
     [Fact]
@@ -340,13 +340,13 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
-        fixture.ViewModel.NewWatchedDirectoryText = path;
-        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
 
-        fixture.ViewModel.RemoveWatchedDirectoryCommand.Execute(path);
+        fixture.ViewModel.Scanning.RemoveWatchedDirectoryCommand.Execute(path);
 
-        Assert.Empty(fixture.ViewModel.WatchedDirectories);
-        Assert.Equal("No roots monitored", fixture.ViewModel.WatchedRootsSummary);
+        Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
+        Assert.Equal("No roots monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -354,12 +354,12 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
-        fixture.ViewModel.NewIgnoredPatternText = "custom-ignored-dir";
-        fixture.ViewModel.AddIgnoredPatternCommand.Execute(null);
+        fixture.ViewModel.Scanning.NewIgnoredPatternText = "custom-ignored-dir";
+        fixture.ViewModel.Scanning.AddIgnoredPatternCommand.Execute(null);
 
-        fixture.ViewModel.RemoveIgnoredPatternCommand.Execute("custom-ignored-dir");
+        fixture.ViewModel.Scanning.RemoveIgnoredPatternCommand.Execute("custom-ignored-dir");
 
-        Assert.DoesNotContain("custom-ignored-dir", fixture.ViewModel.IgnoredPatterns);
+        Assert.DoesNotContain("custom-ignored-dir", fixture.ViewModel.Scanning.IgnoredPatterns);
     }
 
     [Fact]
@@ -367,11 +367,11 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
-        var option = fixture.ViewModel.ScanDepthOptions.First(item => item.Value == 4);
+        var option = fixture.ViewModel.Scanning.ScanDepthOptions.First(item => item.Value == 4);
 
-        fixture.ViewModel.SelectedScanDepth = option;
+        fixture.ViewModel.Scanning.SelectedScanDepth = option;
 
-        Assert.Equal("4", fixture.ViewModel.ScanDepthText);
+        Assert.Equal("4", fixture.ViewModel.Scanning.ScanDepthText);
     }
 
     [Fact]
@@ -393,9 +393,9 @@ public class SettingsViewModelApplicationTests
         {
             var fixture = new Fixture();
             fixture.ViewModel.Load();
-            fixture.ViewModel.NewWatchedDirectoryText = directory;
+            fixture.ViewModel.Scanning.NewWatchedDirectoryText = directory;
 
-            fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
+            fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
 
             Assert.Equal([directory], fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
             var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
@@ -414,12 +414,12 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
-        fixture.ViewModel.WatchedDirectories.Add(CreateRow(fixture, @"C:\repos\one"));
+        fixture.ViewModel.Scanning.WatchedDirectories.Add(CreateRow(fixture, @"C:\repos\one"));
         fixture.Scanner.Invocations.Clear();
 
-        fixture.ViewModel.RemoveWatchedDirectoryCommand.Execute(@"C:\repos\one");
+        fixture.ViewModel.Scanning.RemoveWatchedDirectoryCommand.Execute(@"C:\repos\one");
 
-        Assert.Empty(fixture.ViewModel.WatchedDirectories);
+        Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
             Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
@@ -430,10 +430,10 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         fixture.ViewModel.Load();
         var row = CreateRow(fixture, @"C:\repos\one");
-        fixture.ViewModel.WatchedDirectories.Add(row);
+        fixture.ViewModel.Scanning.WatchedDirectories.Add(row);
         fixture.Scanner.Invocations.Clear();
 
-        row.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 5);
+        row.SelectedDepth = fixture.ViewModel.Scanning.ScanDepthOptions.First(option => option.Value == 5);
 
             var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
         Assert.NotNull(settings);
@@ -446,11 +446,11 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
         fixture.ViewModel.Load();
-        fixture.ViewModel.NewIgnoredPatternText = "custom-ignored-dir";
+        fixture.ViewModel.Scanning.NewIgnoredPatternText = "custom-ignored-dir";
 
-        fixture.ViewModel.AddIgnoredPatternCommand.Execute(null);
+        fixture.ViewModel.Scanning.AddIgnoredPatternCommand.Execute(null);
 
-        Assert.Contains("custom-ignored-dir", fixture.ViewModel.IgnoredPatterns);
+        Assert.Contains("custom-ignored-dir", fixture.ViewModel.Scanning.IgnoredPatterns);
             Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.Scanning.IgnoredPatterns ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
@@ -462,7 +462,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Load();
         fixture.Scanner.Invocations.Clear();
 
-        fixture.ViewModel.SelectedDiscoveryMode = fixture.ViewModel.DiscoveryModes
+        fixture.ViewModel.Scanning.SelectedDiscoveryMode = fixture.ViewModel.Scanning.DiscoveryModes
             .First(option => option.Mode == ProjectDiscoveryMode.Git);
 
             Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.Scanning.DiscoveryMode);
@@ -476,7 +476,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Load();
         fixture.Scanner.Invocations.Clear();
 
-        fixture.ViewModel.SelectedScanDepth = fixture.ViewModel.ScanDepthOptions
+        fixture.ViewModel.Scanning.SelectedScanDepth = fixture.ViewModel.Scanning.ScanDepthOptions
             .First(option => option.Value == 4);
 
             Assert.Equal(4, fixture.CapturedPreferences.Scanning.ScanDepth);
@@ -492,12 +492,12 @@ public class SettingsViewModelApplicationTests
         fixture.Scanner.Setup(scanner => scanner.CountDiscoveredProjects(directory)).Returns(2);
         var row = new WatchedDirectoryRow(
             directory,
-            fixture.ViewModel.ScanDepthOptions,
-            fixture.ViewModel.DiscoveryModes,
-            fixture.ViewModel.SelectedScanDepth,
-            fixture.ViewModel.SelectedDiscoveryMode);
+            fixture.ViewModel.Scanning.ScanDepthOptions,
+            fixture.ViewModel.Scanning.DiscoveryModes,
+            fixture.ViewModel.Scanning.SelectedScanDepth,
+            fixture.ViewModel.Scanning.SelectedDiscoveryMode);
 
-        fixture.ViewModel.WatchedDirectories.Add(row);
+        fixture.ViewModel.Scanning.WatchedDirectories.Add(row);
 
         Assert.Equal(2, row.DiscoveredCount);
         Assert.Equal("2 repositories", row.DiscoveredSummary);
@@ -526,11 +526,11 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Load();
         var first = CreateRow(fixture, @"C:\repos\one");
         var second = CreateRow(fixture, @"C:\repos\two");
-        fixture.ViewModel.WatchedDirectories.Add(first);
-        fixture.ViewModel.WatchedDirectories.Add(second);
+        fixture.ViewModel.Scanning.WatchedDirectories.Add(first);
+        fixture.ViewModel.Scanning.WatchedDirectories.Add(second);
 
-        first.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 5);
-        first.SelectedDiscovery = fixture.ViewModel.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
+        first.SelectedDepth = fixture.ViewModel.Scanning.ScanDepthOptions.First(option => option.Value == 5);
+        first.SelectedDiscovery = fixture.ViewModel.Scanning.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
 
         Assert.Equal(5, first.SelectedDepth.Value);
         Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, second.SelectedDepth.Value);
@@ -563,11 +563,11 @@ public class SettingsViewModelApplicationTests
 
         fixture.ViewModel.Load();
 
-        var stored = fixture.ViewModel.WatchedDirectories.First(row => row.Path == first);
+        var stored = fixture.ViewModel.Scanning.WatchedDirectories.First(row => row.Path == first);
         Assert.Equal(4, stored.SelectedDepth.Value);
         Assert.Equal(ProjectDiscoveryMode.Git, stored.SelectedDiscovery.Mode);
 
-        var fallback = fixture.ViewModel.WatchedDirectories.First(row => row.Path == second);
+        var fallback = fixture.ViewModel.Scanning.WatchedDirectories.First(row => row.Path == second);
         Assert.Equal(ProjectScanningDefaults.DefaultScanDepth, fallback.SelectedDepth.Value);
         Assert.Equal(ProjectDiscoveryMode.Both, fallback.SelectedDiscovery.Mode);
     }
@@ -589,7 +589,7 @@ public class SettingsViewModelApplicationTests
                 "7 levels",
                 "8 levels"
             },
-            fixture.ViewModel.ScanDepthOptions.Select(option => option.Name));
+            fixture.ViewModel.Scanning.ScanDepthOptions.Select(option => option.Name));
     }
 
     [Fact]
@@ -609,14 +609,14 @@ public class SettingsViewModelApplicationTests
 
         fixture.ViewModel.Load();
 
-        Assert.Equal(7, fixture.ViewModel.DiscoveredProjectCount);
-        Assert.Equal(4, fixture.ViewModel.ManualProjectCount);
-        Assert.Equal(11, fixture.ViewModel.TotalProjectCount);
-        Assert.Equal("7 discovered · 4 manual", fixture.ViewModel.ProjectMixSummary);
-        Assert.Equal(42, fixture.ViewModel.ScannedDirectoryCount);
-        Assert.Equal("Watching", fixture.ViewModel.WatcherStateLabel);
-        Assert.StartsWith("Last scan", fixture.ViewModel.WatcherDetailText);
-        Assert.EndsWith("· 42 folders", fixture.ViewModel.WatcherDetailText);
+        Assert.Equal(7, fixture.ViewModel.Scanning.DiscoveredProjectCount);
+        Assert.Equal(4, fixture.ViewModel.Scanning.ManualProjectCount);
+        Assert.Equal(11, fixture.ViewModel.Scanning.TotalProjectCount);
+        Assert.Equal("7 discovered · 4 manual", fixture.ViewModel.Scanning.ProjectMixSummary);
+        Assert.Equal(42, fixture.ViewModel.Scanning.ScannedDirectoryCount);
+        Assert.Equal("Watching", fixture.ViewModel.Scanning.WatcherStateLabel);
+        Assert.StartsWith("Last scan", fixture.ViewModel.Scanning.WatcherDetailText);
+        Assert.EndsWith("· 42 folders", fixture.ViewModel.Scanning.WatcherDetailText);
     }
 
     [Theory]
@@ -645,7 +645,7 @@ public class SettingsViewModelApplicationTests
                 0,
                 state == Core.Scanning.ProjectScanState.Error ? "Scan failed" : null));
 
-        Assert.Equal(expectedLabel, fixture.ViewModel.WatcherStateLabel);
+        Assert.Equal(expectedLabel, fixture.ViewModel.Scanning.WatcherStateLabel);
     }
 
     [Theory]
@@ -669,16 +669,16 @@ public class SettingsViewModelApplicationTests
                 count,
                 null));
 
-        Assert.Equal(count, fixture.ViewModel.ScannedDirectoryCount);
+        Assert.Equal(count, fixture.ViewModel.Scanning.ScannedDirectoryCount);
 
         if (expectedEnding is null)
         {
-            Assert.StartsWith("Last scan", fixture.ViewModel.WatcherDetailText);
-            Assert.DoesNotContain("·", fixture.ViewModel.WatcherDetailText);
+            Assert.StartsWith("Last scan", fixture.ViewModel.Scanning.WatcherDetailText);
+            Assert.DoesNotContain("·", fixture.ViewModel.Scanning.WatcherDetailText);
             return;
         }
 
-        Assert.EndsWith(expectedEnding, fixture.ViewModel.WatcherDetailText);
+        Assert.EndsWith(expectedEnding, fixture.ViewModel.Scanning.WatcherDetailText);
     }
 
     [Fact]
@@ -686,7 +686,7 @@ public class SettingsViewModelApplicationTests
     {
         var fixture = new Fixture();
 
-        fixture.ViewModel.ScanNowCommand.Execute(null);
+        fixture.ViewModel.Scanning.ScanNowCommand.Execute(null);
 
         fixture.Scanner.Verify(scanner => scanner.Reload(), Times.Once);
     }
@@ -697,7 +697,7 @@ public class SettingsViewModelApplicationTests
         var fixture = new Fixture();
         var directory = @"C:\repos\one";
 
-        fixture.ViewModel.ScanWatchedDirectoryCommand.Execute(directory);
+        fixture.ViewModel.Scanning.ScanWatchedDirectoryCommand.Execute(directory);
 
         fixture.Scanner.Verify(scanner => scanner.Rescan(directory), Times.Once);
         fixture.Scanner.Verify(scanner => scanner.Reload(), Times.Never);
@@ -711,9 +711,9 @@ public class SettingsViewModelApplicationTests
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
         fixture.Dialogs.Setup(dialogs => dialogs.SelectFolder(It.IsAny<string>())).Returns(path);
 
-        fixture.ViewModel.AddWatchedDirectoryFromPickerCommand.Execute(null);
+        fixture.ViewModel.Scanning.AddWatchedDirectoryFromPickerCommand.Execute(null);
 
-        Assert.Contains(fixture.ViewModel.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(fixture.ViewModel.Scanning.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -746,11 +746,11 @@ public class SettingsViewModelApplicationTests
             });
         fixture.ViewModel.Load();
         var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
-        fixture.ViewModel.NewWatchedDirectoryText = path;
-        fixture.ViewModel.AddWatchedDirectoryCommand.Execute(null);
-        var row = fixture.ViewModel.WatchedDirectories.Single(candidate => candidate.Path == path);
-        row.SelectedDepth = fixture.ViewModel.ScanDepthOptions.First(option => option.Value == 4);
-        row.SelectedDiscovery = fixture.ViewModel.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
+        var row = fixture.ViewModel.Scanning.WatchedDirectories.Single(candidate => candidate.Path == path);
+        row.SelectedDepth = fixture.ViewModel.Scanning.ScanDepthOptions.First(option => option.Value == 4);
+        row.SelectedDiscovery = fixture.ViewModel.Scanning.DiscoveryModes.First(option => option.Mode == ProjectDiscoveryMode.Git);
 
         fixture.ViewModel.SaveCommand.Execute(null);
 
@@ -780,9 +780,9 @@ public class SettingsViewModelApplicationTests
 
         await fixture.ViewModel.CheckForUpdatesAsync();
 
-        Assert.Equal("CLIHub is up to date", fixture.ViewModel.UpdateStatusTitle);
-        Assert.Equal("Up to date", fixture.ViewModel.UpdateStatusBadge);
-        Assert.Equal(SettingBadgeTone.Success, fixture.ViewModel.UpdateStatusBadgeTone);
+        Assert.Equal("CLIHub is up to date", fixture.ViewModel.UpdateCard.Title);
+        Assert.Equal("Up to date", fixture.ViewModel.UpdateCard.Badge);
+        Assert.Equal(SettingBadgeTone.Success, fixture.ViewModel.UpdateCard.Tone);
     }
 
     [Fact]
@@ -795,10 +795,10 @@ public class SettingsViewModelApplicationTests
 
         await fixture.ViewModel.CheckForUpdatesAsync();
 
-        Assert.Equal("Update available", fixture.ViewModel.UpdateStatusTitle);
-        Assert.Equal("Update available", fixture.ViewModel.UpdateStatusBadge);
-        Assert.Equal(SettingBadgeTone.Accent, fixture.ViewModel.UpdateStatusBadgeTone);
-        Assert.Contains("1.1.0", fixture.ViewModel.UpdateStatusDetail);
+        Assert.Equal("Update available", fixture.ViewModel.UpdateCard.Title);
+        Assert.Equal("Update available", fixture.ViewModel.UpdateCard.Badge);
+        Assert.Equal(SettingBadgeTone.Accent, fixture.ViewModel.UpdateCard.Tone);
+        Assert.Contains("1.1.0", fixture.ViewModel.UpdateCard.Detail);
     }
 
     [Fact]
@@ -811,8 +811,8 @@ public class SettingsViewModelApplicationTests
 
         await fixture.ViewModel.CheckForUpdatesAsync();
 
-        Assert.Equal("Updates unavailable", fixture.ViewModel.UpdateStatusTitle);
-        Assert.Equal("Not installed", fixture.ViewModel.UpdateStatusBadge);
+        Assert.Equal("Updates unavailable", fixture.ViewModel.UpdateCard.Title);
+        Assert.Equal("Not installed", fixture.ViewModel.UpdateCard.Badge);
     }
 
     [Fact]
@@ -825,8 +825,8 @@ public class SettingsViewModelApplicationTests
 
         await fixture.ViewModel.CheckForUpdatesAsync();
 
-        Assert.Equal("Update check failed", fixture.ViewModel.UpdateStatusTitle);
-        Assert.Equal("Failed", fixture.ViewModel.UpdateStatusBadge);
+        Assert.Equal("Update check failed", fixture.ViewModel.UpdateCard.Title);
+        Assert.Equal("Failed", fixture.ViewModel.UpdateCard.Badge);
     }
 
     [Fact]
@@ -871,10 +871,10 @@ public class SettingsViewModelApplicationTests
 
     private static WatchedDirectoryRow CreateRow(Fixture fixture, string path) =>
         new(path,
-            fixture.ViewModel.ScanDepthOptions,
-            fixture.ViewModel.DiscoveryModes,
-            fixture.ViewModel.SelectedScanDepth,
-            fixture.ViewModel.SelectedDiscoveryMode);
+            fixture.ViewModel.Scanning.ScanDepthOptions,
+            fixture.ViewModel.Scanning.DiscoveryModes,
+            fixture.ViewModel.Scanning.SelectedScanDepth,
+            fixture.ViewModel.Scanning.SelectedDiscoveryMode);
 
     private static string CreateTempDirectory()
     {

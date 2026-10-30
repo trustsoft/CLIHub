@@ -94,14 +94,14 @@ internal static class ReadmeImageCapture
 
             await CapturePageAsync(settingsWindow, settingsViewModel, "appearance", directory, "settings-appearance.png");
             await WaitUntilAsync(
-                () => settingsViewModel.WatchedDirectories.Count > 0,
+                () => settingsViewModel.Scanning.WatchedDirectories.Count > 0,
                 TimeSpan.FromSeconds(15),
                 "watched directories");
 
             try
             {
                 await WaitUntilAsync(
-                    () => settingsViewModel.WatcherStateLabel == "Watching",
+                    () => settingsViewModel.Scanning.WatcherStateLabel == "Watching",
                     TimeSpan.FromSeconds(15),
                     "watcher state");
             }

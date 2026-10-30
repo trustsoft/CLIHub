@@ -104,14 +104,14 @@
 
         <controls:SettingCard Title="Accent color"
                            Hint="Applied to active states, focus rings, toggles, and primary actions. Applies immediately on save."
-                           Badge="{Binding ActiveAccentLabel}"
+                           Badge="{Binding Accent.ActiveAccentLabel}"
                            BadgeTone="Accent"
                            Icon="{x:Static themes:IconGlyphs.Palette}"
                            Placement="Stacked">
             <StackPanel>
                 <ListBox Margin="0,0,-8,-8"
-                         ItemsSource="{Binding AccentOptions}"
-                         SelectedItem="{Binding SelectedAccent, Mode=TwoWay}"
+                         ItemsSource="{Binding Accent.AccentOptions}"
+                         SelectedItem="{Binding Accent.SelectedAccent, Mode=TwoWay}"
                          Style="{StaticResource AccentOptionGroup}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -187,7 +187,7 @@
                         <Style TargetType="StackPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding SelectedAccent.IsCustom}" Value="True">
+                                <DataTrigger Binding="{Binding Accent.SelectedAccent.IsCustom}" Value="True">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -200,7 +200,7 @@
                              Margin="10,0,0,0"
                              Style="{StaticResource SettingsInput}"
                              Tag="#RRGGBB"
-                             Text="{Binding AccentText, UpdateSourceTrigger=PropertyChanged}"
+                             Text="{Binding Accent.AccentText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Custom accent color as #RRGGBB"/>
                 </StackPanel>
             </StackPanel>

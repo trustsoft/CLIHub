@@ -1,9 +1,6 @@
 namespace CLIHub.ViewModels;
 
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.IO;
+using System.Globalization;
 using System.Windows;
 
 using Microsoft.Extensions.Logging;
@@ -15,9 +12,9 @@ using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Logging;
+using CLIHub.Core.Models;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
-using CLIHub.Core.Models;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
@@ -69,42 +66,15 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             descriptor.Theme != AppTheme.System))
         .ToArray();
 
-    private static readonly AccentChoice CustomAccentChoice =
-        new("Custom...", "Transparent", "RGB / Hex", true);
-
-    private static readonly AccentChoice[] AccentChoices = AccentPalette.Presets
-        .Select(preset => new AccentChoice(preset.Name, preset.Hex, preset.Hex, false))
-        .Append(CustomAccentChoice)
-        .ToArray();
-
-    private static readonly DiscoveryModeOption[] DiscoveryModeOptions =
-    {
-        new(ProjectDiscoveryMode.Git, "Git only"),
-        new(ProjectDiscoveryMode.Agents, "Agents only"),
-        new(ProjectDiscoveryMode.Both, "Git and agents")
-    };
-
-    private static readonly ScanDepthOption[] ScanDepthChoices = Enumerable
-        .Range(
-            ProjectScanningDefaults.MinScanDepth,
-            ProjectScanningDefaults.MaxScanDepth - ProjectScanningDefaults.MinScanDepth + 1)
-        .Select(depth => new ScanDepthOption(
-            depth,
-            depth == ProjectScanningDefaults.DefaultScanDepth
-                ? $"{depth} levels (default)"
-                : depth == 1 ? "1 level" : $"{depth} levels"))
-        .ToArray();
     private readonly SettingsApplicationService settingsApplication;
     private readonly IUpdateVersionProvider versionProvider;
     private readonly IUpdateWorkflow updateWorkflow;
     private readonly IReleaseNotesLauncher releaseNotesLauncher;
     private readonly IApplicationOperationLifetime operationLifetime;
-    private readonly IProjectDialogService dialogs;
-    private readonly IProjectScanner projectScanner;
-    private readonly AccentSelectionMemory accentMemory;
     private readonly IRuntimeExecutableLocator runtimeExecutables;
     private readonly ILogger<SettingsViewModel> logger;
-    private readonly List<WatchedDirectoryRow> observedWatchedDirectoryRows = new();
+    private readonly AccentSelection accent;
+    private readonly WatchedDirectoryEditor scanning;
 
     private RuntimeOption[] runtimes = RuntimeOptions;
     private bool startWithWindows;
@@ -120,11 +90,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private bool notifyStableUpdates = true;
     private bool notifyPrereleaseUpdates;
     private string updateMessage = string.Empty;
-    private string updateStatusTitle = string.Empty;
-    private string updateStatusDetail = string.Empty;
-    private string updateStatusBadge = string.Empty;
-    private string updateStatusGlyph = IconGlyphs.Info;
-    private SettingBadgeTone updateStatusBadgeTone = SettingBadgeTone.Neutral;
+    private SettingsUpdateCard updateCard = new("Check for updates", string.Empty, "Not checked", SettingBadgeTone.Neutral);
     private string? validationError;
     private SettingsPage selectedPage = SettingsPageCatalog.AllPages[0];
     private readonly IExternalLauncher externalLauncher;
@@ -133,20 +99,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private string logFileSizeLimitText = "0";
     private PopupPositionOption selectedPopupPosition = PopupPositionOptions[0];
     private AppThemeOption selectedAppTheme = AppThemeOptions[0];
-    private string accentText = AccentPalette.DefaultHex;
-    private bool customAccentSelected;
-    private string scanDepthText = ProjectScanningDefaults.DefaultScanDepth.ToString();
-    private DiscoveryModeOption selectedDiscoveryMode = DiscoveryModeOptions[2];
-    private string newIgnoredPatternText = string.Empty;
-    private string newWatchedDirectoryText = string.Empty;
-    private string? watchedDirectoryError;
-    private int discoveredProjectCount;
-    private int manualProjectCount;
-    private int scannedDirectoryCount;
     private int agentsInstalledCount;
     private int agentsSupportedCount;
-    private string watcherStateLabel = "Off";
-    private string watcherDetailText = "No watched roots configured";
     private bool disposed;
 
     /// <summary>
@@ -185,13 +139,16 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.releaseNotesLauncher = releaseNotesLauncher ?? throw new ArgumentNullException(nameof(releaseNotesLauncher));
         this.operationLifetime = operationLifetime;
         this.externalLauncher = externalLauncher ?? throw new ArgumentNullException(nameof(externalLauncher));
-        this.dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
-        this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
         this.AgentsState = agentsState ?? throw new ArgumentNullException(nameof(agentsState));
         this.ProjectRegistry = projectRegistry ?? throw new ArgumentNullException(nameof(projectRegistry));
-        this.accentMemory = accentMemory ?? throw new ArgumentNullException(nameof(accentMemory));
         this.runtimeExecutables = runtimeExecutables ?? throw new ArgumentNullException(nameof(runtimeExecutables));
         this.logger = logger;
+        this.accent = new AccentSelection(accentMemory);
+        this.scanning = new WatchedDirectoryEditor(
+            this.settingsApplication,
+            projectScanner,
+            dialogs,
+            error => this.ValidationError = error);
 
         this.Version = this.versionProvider.GetCurrentVersion();
         this.ResetUpdateStatus();
@@ -203,18 +160,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.ShowReleaseNotesCommand = new RelayCommand(this.releaseNotesLauncher.ShowReleaseNotes);
         this.CopyLogPathCommand = new RelayCommand(() => Clipboard.SetText(this.LogFilePath));
         this.OpenLogFolderCommand = new RelayCommand(() => this.externalLauncher.Open(AppPaths.LogsDirectory));
-        this.BrowseWatchedDirectoryCommand = new RelayCommand(this.BrowseWatchedDirectory);
-        this.AddWatchedDirectoryFromPickerCommand = new RelayCommand(this.AddWatchedDirectoryFromPicker);
-        this.AddWatchedDirectoryCommand = new RelayCommand(this.AddWatchedDirectory);
-        this.RemoveWatchedDirectoryCommand = new RelayCommand<string>(this.RemoveWatchedDirectory);
-        this.ScanWatchedDirectoryCommand = new RelayCommand<string>(this.ScanWatchedDirectory);
-        this.AddIgnoredPatternCommand = new RelayCommand(this.AddIgnoredPattern);
-        this.RemoveIgnoredPatternCommand = new RelayCommand<string>(this.RemoveIgnoredPattern);
-        this.ScanNowCommand = new RelayCommand(() => this.projectScanner.Reload());
-
-        this.WatchedDirectories.CollectionChanged += this.OnWatchedDirectoriesChanged;
-        this.projectScanner.StatusChanged += this.OnScannerStatusChanged;
-        this.ApplyScannerStatus(this.projectScanner.Status);
     }
 
     /// <summary>
@@ -533,266 +478,14 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   The accent color choices offered by the selector: the presets and the custom entry.
+    ///   The accent color selection section shown on the Appearance page.
     /// </summary>
-    public IReadOnlyList<AccentChoice> AccentOptions => AccentChoices;
+    public AccentSelection Accent => this.accent;
 
     /// <summary>
-    ///   The accent color text as <c> #RRGGBB </c>.
+    ///   The watched directory and scanning section shown on the Project Scanning page.
     /// </summary>
-    public string AccentText
-    {
-        get => this.accentText;
-        set
-        {
-            if (this.SetProperty(ref this.accentText, value))
-            {
-                var preset = this.FindAccentPreset(value);
-                this.customAccentSelected = preset is null;
-                if (preset is null && AccentPalette.TryNormalize(value, out var normalized))
-                {
-                    this.accentMemory.LastCustomAccent = normalized;
-                }
-
-                this.OnPropertyChanged(nameof(this.SelectedAccent));
-                this.OnPropertyChanged(nameof(this.ActiveAccentLabel));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The selected accent choice: the matching preset, or the custom entry for any other value.
-    /// </summary>
-    public AccentChoice SelectedAccent
-    {
-        get => this.customAccentSelected
-            ? CustomAccentChoice
-            : this.FindAccentPreset(this.accentText) ?? CustomAccentChoice;
-        set
-        {
-            if (value is null)
-            {
-                return;
-            }
-
-            if (value.IsCustom)
-            {
-                if (this.accentMemory.LastCustomAccent is { } customAccent)
-                {
-                    this.AccentText = customAccent;
-                    return;
-                }
-
-                if (this.customAccentSelected)
-                {
-                    return;
-                }
-
-                this.customAccentSelected = true;
-                this.OnPropertyChanged(nameof(this.SelectedAccent));
-                return;
-            }
-
-            this.AccentText = value.Hex;
-        }
-    }
-
-    /// <summary>
-    ///   The accent shown next to the selector title, e.g. "Active: Blue".
-    /// </summary>
-    public string ActiveAccentLabel
-    {
-        get
-        {
-            var preset = this.FindAccentPreset(this.accentText);
-            return preset is null ? "Active: Custom" : $"Active: {preset.Name}";
-        }
-    }
-
-    /// <summary>
-    ///   Watched root directories edited on the Project Scanning page.
-    /// </summary>
-    public ObservableCollection<WatchedDirectoryRow> WatchedDirectories { get; } = new();
-
-    /// <summary>
-    ///   The absolute directory path pending registration.
-    /// </summary>
-    public string NewWatchedDirectoryText
-    {
-        get => this.newWatchedDirectoryText;
-        set
-        {
-            if (this.SetProperty(ref this.newWatchedDirectoryText, value))
-            {
-                this.WatchedDirectoryError = null;
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The validation error shown under the watched-directory entry, or null.
-    /// </summary>
-    public string? WatchedDirectoryError
-    {
-        get => this.watchedDirectoryError;
-        private set
-        {
-            if (this.SetProperty(ref this.watchedDirectoryError, value))
-            {
-                this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   True when <see cref="WatchedDirectoryError" /> has a message.
-    /// </summary>
-    public bool HasWatchedDirectoryError => !string.IsNullOrEmpty(this.watchedDirectoryError);
-
-    /// <summary>
-    ///   The watched-root count shown next to the section header.
-    /// </summary>
-    public string WatchedRootsSummary => this.WatchedDirectories.Count switch
-    {
-        0 => "No roots monitored",
-        1 => "1 root monitored",
-        var count => $"{count} roots monitored"
-    };
-
-    /// <summary>
-    ///   The ignored directory-name patterns edited on the Project Scanning page.
-    /// </summary>
-    public ObservableCollection<string> IgnoredPatterns { get; } = new();
-
-    /// <summary>
-    ///   The ignored pattern pending to be added.
-    /// </summary>
-    public string NewIgnoredPatternText
-    {
-        get => this.newIgnoredPatternText;
-        set => this.SetProperty(ref this.newIgnoredPatternText, value);
-    }
-
-    /// <summary>
-    ///   The repository scan depth as text.
-    /// </summary>
-    public string ScanDepthText
-    {
-        get => this.scanDepthText;
-        set
-        {
-            if (this.SetProperty(ref this.scanDepthText, value))
-            {
-                this.OnPropertyChanged(nameof(this.SelectedScanDepth));
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The scan depth options offered by the selector.
-    /// </summary>
-    public IReadOnlyList<ScanDepthOption> ScanDepthOptions => ScanDepthChoices;
-
-    /// <summary>
-    ///   The selected scan depth option.
-    /// </summary>
-    public ScanDepthOption SelectedScanDepth
-    {
-        get => ScanDepthChoices.FirstOrDefault(option =>
-                   string.Equals(option.Value.ToString(), this.scanDepthText, StringComparison.Ordinal))
-               ?? ScanDepthChoices.First(option => option.Value == ProjectScanningDefaults.DefaultScanDepth);
-        set
-        {
-            if (value is not null && !string.Equals(this.scanDepthText, value.Value.ToString(), StringComparison.Ordinal))
-            {
-                this.ScanDepthText = value.Value.ToString();
-                this.ApplyScanningSettings();
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The repository discovery mode options offered by the selector.
-    /// </summary>
-    public IReadOnlyList<DiscoveryModeOption> DiscoveryModes => DiscoveryModeOptions;
-
-    /// <summary>
-    ///   The selected repository discovery mode.
-    /// </summary>
-    public DiscoveryModeOption SelectedDiscoveryMode
-    {
-        get => this.selectedDiscoveryMode;
-        set
-        {
-            if (value is not null && this.SetProperty(ref this.selectedDiscoveryMode, value))
-            {
-                this.ApplyScanningSettings();
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The number of discovered projects registered from the last scan.
-    /// </summary>
-    public int DiscoveredProjectCount
-    {
-        get => this.discoveredProjectCount;
-        private set
-        {
-            if (this.SetProperty(ref this.discoveredProjectCount, value))
-            {
-                this.OnProjectTotalsChanged();
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The number of projects that were added manually rather than discovered.
-    /// </summary>
-    public int ManualProjectCount
-    {
-        get => this.manualProjectCount;
-        private set
-        {
-            if (this.SetProperty(ref this.manualProjectCount, value))
-            {
-                this.OnProjectTotalsChanged();
-            }
-        }
-    }
-
-    /// <summary>
-    ///   The total number of registered projects: discovered plus manually added.
-    /// </summary>
-    public int TotalProjectCount => this.DiscoveredProjectCount + this.ManualProjectCount;
-
-    /// <summary>
-    ///   The provenance split shown under the total project count, e.g. "31 discovered · 4 manual".
-    /// </summary>
-    public string ProjectMixSummary =>
-        $"{this.DiscoveredProjectCount} discovered · {this.ManualProjectCount} manual";
-
-    /// <summary>
-    ///   The number of folders the last scan examined across the watched roots.
-    /// </summary>
-    public int ScannedDirectoryCount
-    {
-        get => this.scannedDirectoryCount;
-        private set => this.SetProperty(ref this.scannedDirectoryCount, value);
-    }
-
-    private string ScannedCoverageSuffix => this.ScannedDirectoryCount switch
-    {
-        0 => string.Empty,
-        1 => " · 1 folder",
-        var count => $" · {count} folders"
-    };
-
-    private void OnProjectTotalsChanged()
-    {
-        this.OnPropertyChanged(nameof(this.TotalProjectCount));
-        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
-    }
+    public WatchedDirectoryEditor Scanning => this.scanning;
 
     /// <summary>
     ///   The number of agents installed on this machine.
@@ -824,64 +517,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string AgentsSupportSummary => $"{this.AgentsSupportedCount} supported";
 
     /// <summary>
-    ///   The short watcher state shown in the summary card: Off, Idle, Scanning, Watching, or Error.
-    /// </summary>
-    public string WatcherStateLabel
-    {
-        get => this.watcherStateLabel;
-        private set => this.SetProperty(ref this.watcherStateLabel, value);
-    }
-
-    /// <summary>
-    ///   The watcher detail shown under the state, e.g. the last scan time.
-    /// </summary>
-    public string WatcherDetailText
-    {
-        get => this.watcherDetailText;
-        private set => this.SetProperty(ref this.watcherDetailText, value);
-    }
-
-    /// <summary>
-    ///   Opens the folder picker and fills the watched-directory entry.
-    /// </summary>
-    public RelayCommand BrowseWatchedDirectoryCommand { get; }
-
-    /// <summary>
-    ///   Opens the folder picker and registers the selected folder as a watched root.
-    /// </summary>
-    public RelayCommand AddWatchedDirectoryFromPickerCommand { get; }
-
-    /// <summary>
-    ///   Registers the entered absolute folder path as a watched root.
-    /// </summary>
-    public RelayCommand AddWatchedDirectoryCommand { get; }
-
-    /// <summary>
-    ///   Removes the watched root passed as the command parameter.
-    /// </summary>
-    public RelayCommand<string> RemoveWatchedDirectoryCommand { get; }
-
-    /// <summary>
-    ///   Rescans only the watched root passed as the command parameter.
-    /// </summary>
-    public RelayCommand<string> ScanWatchedDirectoryCommand { get; }
-
-    /// <summary>
-    ///   Adds the entered ignored pattern.
-    /// </summary>
-    public RelayCommand AddIgnoredPatternCommand { get; }
-
-    /// <summary>
-    ///   Removes the ignored pattern passed as the command parameter.
-    /// </summary>
-    public RelayCommand<string> RemoveIgnoredPatternCommand { get; }
-
-    /// <summary>
-    ///   Re-scans the saved watched roots.
-    /// </summary>
-    public RelayCommand ScanNowCommand { get; }
-
-    /// <summary>
     ///   The status line of the update check.
     /// </summary>
     public string UpdateMessage
@@ -891,48 +526,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   The heading of the update status card.
+    ///   The update status card shown in the page header.
     /// </summary>
-    public string UpdateStatusTitle
+    public SettingsUpdateCard UpdateCard
     {
-        get => this.updateStatusTitle;
-        private set => this.SetProperty(ref this.updateStatusTitle, value);
-    }
-
-    /// <summary>
-    ///   The version and last-check detail shown under the update status card heading.
-    /// </summary>
-    public string UpdateStatusDetail
-    {
-        get => this.updateStatusDetail;
-        private set => this.SetProperty(ref this.updateStatusDetail, value);
-    }
-
-    /// <summary>
-    ///   The status badge text; empty hides the badge.
-    /// </summary>
-    public string UpdateStatusBadge
-    {
-        get => this.updateStatusBadge;
-        private set => this.SetProperty(ref this.updateStatusBadge, value);
-    }
-
-    /// <summary>
-    ///   The tone of the update status badge.
-    /// </summary>
-    public SettingBadgeTone UpdateStatusBadgeTone
-    {
-        get => this.updateStatusBadgeTone;
-        private set => this.SetProperty(ref this.updateStatusBadgeTone, value);
-    }
-
-    /// <summary>
-    ///   The glyph shown in the update status card's leading icon block.
-    /// </summary>
-    public string UpdateStatusGlyph
-    {
-        get => this.updateStatusGlyph;
-        private set => this.SetProperty(ref this.updateStatusGlyph, value);
+        get => this.updateCard;
+        private set => this.SetProperty(ref this.updateCard, value);
     }
 
     /// <summary>
@@ -977,7 +576,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             message =>
             {
                 this.UpdateMessage = message;
-                this.SetUpdateStatus("Update check failed", message, "Failed", SettingBadgeTone.Neutral);
+                this.UpdateCard = new SettingsUpdateCard(
+                    "Update check failed",
+                    message,
+                    "Failed",
+                    SettingBadgeTone.Neutral);
             },
             cancellationToken);
 
@@ -1021,43 +624,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.selectedPopupPosition = PopupPositionOptions.FirstOrDefault(o => o.Position == draft.PopupScreenPosition)
             ?? PopupPositionOptions[0];
         this.selectedAppTheme = AppThemeOptions.FirstOrDefault(o => o.Theme == draft.AppTheme) ?? AppThemeOptions[0];
-        this.accentText = AccentPalette.Normalize(draft.AccentColor);
-        this.customAccentSelected = this.FindAccentPreset(this.accentText) is null;
-        if (this.customAccentSelected && this.accentMemory.LastCustomAccent is null)
-        {
-            this.accentMemory.LastCustomAccent = this.accentText;
-        }
+        this.accent.Load(draft.AccentColor);
         this.startWithWindows = draft.StartWithWindows;
         this.startMinimized = draft.StartMinimized;
 
-        this.WatchedDirectories.Clear();
-        var defaultScanDepth = ProjectScanningDefaults.NormalizeScanDepth(draft.ScanDepth);
-        foreach (var directory in draft.WatchedDirectories ?? Array.Empty<string>())
-        {
-            var settings = draft.WatchedDirectorySettings is not null
-                && draft.WatchedDirectorySettings.TryGetValue(directory, out var stored)
-                    ? stored
-                    : null;
-
-            this.WatchedDirectories.Add(this.CreateWatchedDirectoryRow(
-                directory,
-                settings?.ScanDepth ?? defaultScanDepth,
-                settings?.DiscoveryMode ?? draft.DiscoveryMode));
-        }
-
-        this.IgnoredPatterns.Clear();
-        foreach (var pattern in draft.IgnoredPatterns ?? Array.Empty<string>())
-        {
-            this.IgnoredPatterns.Add(pattern);
-        }
-
-        this.scanDepthText = draft.ScanDepth.ToString();
-        this.selectedDiscoveryMode = DiscoveryModeOptions.FirstOrDefault(o => o.Mode == draft.DiscoveryMode)
-            ?? DiscoveryModeOptions[2];
-        this.newIgnoredPatternText = string.Empty;
-        this.newWatchedDirectoryText = string.Empty;
-        this.watchedDirectoryError = null;
-        this.ApplyScannerStatus(this.projectScanner.Status);
+        this.scanning.Load(draft);
 
         this.AgentsState.Load(draft.DefaultAgentId);
         this.RefreshAgentSummary();
@@ -1087,26 +658,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.LogFileSizeLimitText));
         this.OnPropertyChanged(nameof(this.SelectedPopupPosition));
         this.OnPropertyChanged(nameof(this.SelectedAppTheme));
-        this.OnPropertyChanged(nameof(this.AccentText));
-        this.OnPropertyChanged(nameof(this.SelectedAccent));
-        this.OnPropertyChanged(nameof(this.ActiveAccentLabel));
-        this.OnPropertyChanged(nameof(this.ScanDepthText));
-        this.OnPropertyChanged(nameof(this.SelectedScanDepth));
-        this.OnPropertyChanged(nameof(this.SelectedDiscoveryMode));
-        this.OnPropertyChanged(nameof(this.NewIgnoredPatternText));
-        this.OnPropertyChanged(nameof(this.NewWatchedDirectoryText));
-        this.OnPropertyChanged(nameof(this.WatchedDirectoryError));
-        this.OnPropertyChanged(nameof(this.HasWatchedDirectoryError));
-        this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
-        this.OnPropertyChanged(nameof(this.DiscoveredProjectCount));
-        this.OnPropertyChanged(nameof(this.ManualProjectCount));
-        this.OnPropertyChanged(nameof(this.TotalProjectCount));
-        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
         this.OnPropertyChanged(nameof(this.AgentsInstalledCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportedCount));
         this.OnPropertyChanged(nameof(this.AgentsSupportSummary));
-        this.OnPropertyChanged(nameof(this.WatcherStateLabel));
-        this.OnPropertyChanged(nameof(this.WatcherDetailText));
         this.OnPropertyChanged(nameof(this.UpdateMessage));
         this.OnPropertyChanged(nameof(this.ValidationError));
         this.OnPropertyChanged(nameof(this.SelectedPage));
@@ -1132,294 +686,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// </summary>
     public void Cancel() => this.RequestClose?.Invoke(this, EventArgs.Empty);
 
-    /// <summary>
-    ///   Finds the preset matching a color value, ignoring the custom entry. Invalid or partial
-    ///   values match nothing, so the selector shows the custom entry while the user types.
-    /// </summary>
-    private AccentChoice? FindAccentPreset(string value)
-    {
-        if (!AccentPalette.TryNormalize(value, out var normalized))
-        {
-            return null;
-        }
-
-        return AccentChoices.FirstOrDefault(choice =>
-            !choice.IsCustom &&
-            string.Equals(AccentPalette.Normalize(choice.Hex), normalized, StringComparison.Ordinal));
-    }
-
-    private void BrowseWatchedDirectory()
-    {
-        var folder = this.dialogs.SelectFolder("Add Watched Directory");
-        if (!string.IsNullOrWhiteSpace(folder))
-        {
-            this.NewWatchedDirectoryText = folder;
-        }
-    }
-
-    private void AddWatchedDirectoryFromPicker()
-    {
-        var folder = this.dialogs.SelectFolder("Add Watched Directory");
-        if (string.IsNullOrWhiteSpace(folder))
-        {
-            return;
-        }
-
-        if (this.TryAddWatchedDirectory(folder))
-        {
-            this.WatchedDirectoryError = null;
-            this.ValidationError = null;
-        }
-    }
-
-    private void AddWatchedDirectory()
-    {
-        if (this.TryAddWatchedDirectory(this.NewWatchedDirectoryText))
-        {
-            this.NewWatchedDirectoryText = string.Empty;
-            this.ValidationError = null;
-        }
-    }
-
-    private bool TryAddWatchedDirectory(string value)
-    {
-        var text = value.Trim();
-        if (text.Length == 0)
-        {
-            this.WatchedDirectoryError = "Enter a folder path or browse for one.";
-            return false;
-        }
-
-        if (!Path.IsPathFullyQualified(text) || !Directory.Exists(text))
-        {
-            this.WatchedDirectoryError = "Enter an existing absolute folder path.";
-            return false;
-        }
-
-        string path;
-        try
-        {
-            path = Path.TrimEndingDirectorySeparator(Path.GetFullPath(text));
-        }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
-        {
-            this.WatchedDirectoryError = "Enter a valid absolute folder path.";
-            return false;
-        }
-
-        if (!this.WatchedDirectories.Any(existing => string.Equals(existing.Path, path, StringComparison.OrdinalIgnoreCase)))
-        {
-            var row = this.CreateWatchedDirectoryRow(
-                path,
-                this.SelectedScanDepth.Value,
-                this.SelectedDiscoveryMode.Mode);
-
-            this.WatchedDirectories.Add(row);
-
-            if (this.ApplyScanningSettings())
-            {
-                return true;
-            }
-
-            // A failed apply must not leave an unpersisted root in the live list.
-            this.WatchedDirectories.Remove(row);
-        }
-
-        return true;
-    }
-
-    private WatchedDirectoryRow CreateWatchedDirectoryRow(string path, int scanDepth, ProjectDiscoveryMode discoveryMode)
-    {
-        var normalizedDepth = ProjectScanningDefaults.NormalizeScanDepth(scanDepth);
-        var depth = ScanDepthChoices.First(option => option.Value == normalizedDepth);
-        var discovery = DiscoveryModeOptions.FirstOrDefault(option => option.Mode == discoveryMode) ?? DiscoveryModeOptions[2];
-
-        return new WatchedDirectoryRow(path, ScanDepthChoices, DiscoveryModeOptions, depth, discovery);
-    }
-
-    private void RemoveWatchedDirectory(string directory)
-    {
-        var row = this.WatchedDirectories.FirstOrDefault(
-            candidate => string.Equals(candidate.Path, directory, StringComparison.OrdinalIgnoreCase));
-
-        if (row is null)
-        {
-            return;
-        }
-
-        var index = this.WatchedDirectories.IndexOf(row);
-        this.WatchedDirectories.RemoveAt(index);
-
-        if (!this.ApplyScanningSettings())
-        {
-            this.WatchedDirectories.Insert(index, row);
-        }
-    }
-
-    private void ScanWatchedDirectory(string directory) => this.projectScanner.Rescan(directory);
-
-    private void OnWatchedDirectoriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        this.SyncObservedWatchedDirectoryRows(e);
-        this.OnPropertyChanged(nameof(this.WatchedRootsSummary));
-        this.RefreshWatchedDirectoryCounts();
-    }
-
-    private void SyncObservedWatchedDirectoryRows(NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Reset)
-        {
-            foreach (var row in this.observedWatchedDirectoryRows)
-            {
-                row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
-            }
-
-            this.observedWatchedDirectoryRows.Clear();
-            return;
-        }
-
-        if (e.OldItems is not null)
-        {
-            foreach (WatchedDirectoryRow row in e.OldItems)
-            {
-                row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
-                this.observedWatchedDirectoryRows.Remove(row);
-            }
-        }
-
-        if (e.NewItems is not null)
-        {
-            foreach (WatchedDirectoryRow row in e.NewItems)
-            {
-                row.PropertyChanged += this.OnWatchedDirectoryRowChanged;
-                this.observedWatchedDirectoryRows.Add(row);
-            }
-        }
-    }
-
-    private void OnWatchedDirectoryRowChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(WatchedDirectoryRow.SelectedDepth) or nameof(WatchedDirectoryRow.SelectedDiscovery))
-        {
-            this.ApplyScanningSettings();
-        }
-    }
-
-    /// <summary>
-    ///   Applies the scanning settings currently shown on the page and rescans in the background.
-    ///   The remaining settings still go through Save/Cancel.
-    /// </summary>
-    /// <returns> True when the settings were persisted and the scanner was reconfigured. </returns>
-    private bool ApplyScanningSettings()
-    {
-        if (this.disposed)
-        {
-            return true;
-        }
-
-        var input = new ScanningSettingsInput(
-            this.WatchedDirectories.Select(row => row.Path).ToList(),
-            this.SelectedScanDepth.Value,
-            this.IgnoredPatterns.ToList(),
-            this.SelectedDiscoveryMode.Mode,
-            this.WatchedDirectories.ToDictionary(
-                row => row.Path,
-                row => new WatchedDirectoryScanSettings(row.SelectedDepth.Value, row.SelectedDiscovery.Mode),
-                StringComparer.OrdinalIgnoreCase));
-
-        var result = this.settingsApplication.ApplyScanning(input);
-        if (result.Success)
-        {
-            return true;
-        }
-
-        this.ValidationError = result.Error;
-        return false;
-    }
-
-    private void RefreshWatchedDirectoryCounts()
-    {
-        foreach (var row in this.WatchedDirectories)
-        {
-            row.DiscoveredCount = this.projectScanner.CountDiscoveredProjects(row.Path);
-        }
-    }
-
-    private void AddIgnoredPattern()
-    {
-        var pattern = this.NewIgnoredPatternText.Trim();
-        if (pattern.Length == 0)
-        {
-            return;
-        }
-
-        if (!this.IgnoredPatterns.Any(existing => string.Equals(existing, pattern, StringComparison.OrdinalIgnoreCase)))
-        {
-            this.IgnoredPatterns.Add(pattern);
-
-            if (!this.ApplyScanningSettings())
-            {
-                this.IgnoredPatterns.Remove(pattern);
-            }
-        }
-
-        this.NewIgnoredPatternText = string.Empty;
-    }
-
-    private void RemoveIgnoredPattern(string pattern)
-    {
-        var index = this.IgnoredPatterns.IndexOf(pattern);
-        if (index < 0)
-        {
-            return;
-        }
-
-        this.IgnoredPatterns.RemoveAt(index);
-
-        if (!this.ApplyScanningSettings())
-        {
-            this.IgnoredPatterns.Insert(index, pattern);
-        }
-    }
-
-    private void OnScannerStatusChanged(object? sender, ProjectScanStatus status)
-    {
-        var dispatcher = Application.Current?.Dispatcher;
-        if (dispatcher is not null && !dispatcher.CheckAccess())
-        {
-            dispatcher.BeginInvoke(() => this.ApplyScannerStatus(status));
-            return;
-        }
-
-        this.ApplyScannerStatus(status);
-    }
-
-    private void ApplyScannerStatus(ProjectScanStatus? status)
-    {
-        var current = status ?? ProjectScanStatus.NotConfigured;
-        this.DiscoveredProjectCount = current.DiscoveredCount;
-        this.ManualProjectCount = this.projectScanner.CountManualProjects();
-        this.ScannedDirectoryCount = current.ScannedDirectoryCount;
-        this.WatcherStateLabel = current.State switch
-        {
-            ProjectScanState.NotConfigured => "Off",
-            ProjectScanState.Scanning => "Scanning",
-            ProjectScanState.Error => "Error",
-            _ => current.IsWatching ? "Watching" : "Idle"
-        };
-        this.WatcherDetailText = current.State switch
-        {
-            ProjectScanState.NotConfigured => "No watched roots configured",
-            ProjectScanState.Scanning => "Scan in progress",
-            ProjectScanState.Error => current.Error ?? "Scan failed",
-            _ => current.LastScanUtc is { } last
-                ? $"Last scan {last.ToLocalTime():HH:mm:ss}{this.ScannedCoverageSuffix}"
-                : "Not scanned yet"
-        };
-
-        this.RefreshWatchedDirectoryCounts();
-    }
-
     private void RefreshAgentSummary()
     {
         var cards = this.AgentsState.Cards;
@@ -1428,7 +694,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Detaches the scanner status subscription.
+    ///   Detaches the scanning section and the section subscriptions.
     /// </summary>
     public void Dispose()
     {
@@ -1438,14 +704,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
 
         this.disposed = true;
-        this.projectScanner.StatusChanged -= this.OnScannerStatusChanged;
-
-        foreach (var row in this.observedWatchedDirectoryRows)
-        {
-            row.PropertyChanged -= this.OnWatchedDirectoryRowChanged;
-        }
-
-        this.observedWatchedDirectoryRows.Clear();
+        this.Scanning.Dispose();
         this.AgentsState.Dispose();
         this.ProjectRegistry.Dispose();
     }
@@ -1456,7 +715,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <returns> A task that completes when the check finishes. </returns>
     public async Task CheckForUpdatesAsync(CancellationToken cancellationToken = default)
     {
-        this.SetUpdateStatus(
+        this.UpdateCard = new SettingsUpdateCard(
             "Checking for updates",
             "Looking for a newer CLIHub version.",
             "Checking",
@@ -1470,7 +729,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            this.SetUpdateStatus(
+            this.UpdateCard = new SettingsUpdateCard(
                 "Update check cancelled",
                 "The check did not complete.",
                 "Cancelled",
@@ -1486,7 +745,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         if (this.updateWorkflow.LastKnownAvailableVersion is { Length: > 0 } available)
         {
-            this.SetUpdateStatus(
+            this.UpdateCard = new SettingsUpdateCard(
                 "Update available",
                 $"Version {this.Version} → {available}",
                 "Update available",
@@ -1495,7 +754,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.SetUpdateStatus(
+        this.UpdateCard = new SettingsUpdateCard(
             "Check for updates",
             $"Current version: {this.Version}",
             "Not checked",
@@ -1518,28 +777,28 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         switch (result.Status)
         {
             case UpdateStatus.UpdateAvailable:
-                this.SetUpdateStatus(
+                this.UpdateCard = new SettingsUpdateCard(
                     "Update available",
                     $"Version {result.CurrentVersion} → {result.AvailableVersion} · Last checked {lastChecked}",
                     "Update available",
                     SettingBadgeTone.Accent);
                 break;
             case UpdateStatus.UpToDate:
-                this.SetUpdateStatus(
+                this.UpdateCard = new SettingsUpdateCard(
                     "CLIHub is up to date",
                     $"Version {result.CurrentVersion} · Last checked {lastChecked}",
                     "Up to date",
                     SettingBadgeTone.Success);
                 break;
             case UpdateStatus.NotInstalled:
-                this.SetUpdateStatus(
+                this.UpdateCard = new SettingsUpdateCard(
                     "Updates unavailable",
                     "Updates apply to installed builds only.",
                     "Not installed",
                     SettingBadgeTone.Neutral);
                 break;
             default:
-                this.SetUpdateStatus(
+                this.UpdateCard = new SettingsUpdateCard(
                     "Update check failed",
                     "Could not check for updates. Try again.",
                     "Failed",
@@ -1548,22 +807,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void SetUpdateStatus(string title, string detail, string badge, SettingBadgeTone tone)
-    {
-        this.UpdateStatusTitle = title;
-        this.UpdateStatusDetail = detail;
-        this.UpdateStatusBadge = badge;
-        this.UpdateStatusBadgeTone = tone;
-        this.UpdateStatusGlyph = tone switch
-        {
-            SettingBadgeTone.Success => IconGlyphs.Checkmark,
-            SettingBadgeTone.Accent => IconGlyphs.Refresh,
-            _ => IconGlyphs.Info
-        };
-    }
-
     private void Save()
     {
+        var scanning = this.Scanning.CreateInput();
         var input = new SettingsInput(
             this.SelectedRuntime.Kind,
             this.SelectedPathDisplay.Style,
@@ -1581,16 +827,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             this.LogFileSizeLimitText,
             this.SelectedPopupPosition.Position,
             this.SelectedAppTheme.Theme,
-            this.AccentText,
-            this.WatchedDirectories.Select(row => row.Path).ToList(),
-            this.ScanDepthText,
-            this.IgnoredPatterns.ToList(),
-            this.SelectedDiscoveryMode.Mode,
+            this.Accent.AccentText,
+            scanning.WatchedDirectories,
+            scanning.ScanDepth.ToString(CultureInfo.InvariantCulture),
+            scanning.IgnoredPatterns,
+            scanning.DiscoveryMode,
             this.AgentsState.CurrentDefaultAgentId,
-            this.WatchedDirectories.ToDictionary(
-                row => row.Path,
-                row => new WatchedDirectoryScanSettings(row.SelectedDepth.Value, row.SelectedDiscovery.Mode),
-                StringComparer.OrdinalIgnoreCase));
+            scanning.WatchedDirectorySettings);
 
         if (!this.settingsApplication.TryCreateDraft(input, out var draft, out var validationError))
         {

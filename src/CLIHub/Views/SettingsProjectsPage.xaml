@@ -14,7 +14,7 @@
                        HorizontalAlignment="Right"
                        VerticalAlignment="Center"
                        Style="{StaticResource HintText}"
-                       Text="{Binding WatchedRootsSummary}"
+                       Text="{Binding Scanning.WatchedRootsSummary}"
                        TextWrapping="NoWrap"/>
         </Grid>
 
@@ -23,7 +23,7 @@
                    Text="Scanning changes apply immediately. Save and Cancel only affect the other settings."
                    TextWrapping="Wrap"/>
 
-        <ItemsControl ItemsSource="{Binding WatchedDirectories}">
+        <ItemsControl ItemsSource="{Binding Scanning.WatchedDirectories}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Border Margin="0,0,0,8"
@@ -89,7 +89,7 @@
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
                                         AutomationProperties.Name="Rescan this watched root"
-                                        Command="{Binding DataContext.ScanWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        Command="{Binding DataContext.Scanning.ScanWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding Path}"
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Rescan this folder only">
@@ -101,7 +101,7 @@
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
                                         AutomationProperties.Name="Remove watched root"
-                                        Command="{Binding DataContext.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        Command="{Binding DataContext.Scanning.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding Path}"
                                         Style="{StaticResource ChipRemoveButton}"
                                         ToolTip="Remove watched root">
@@ -144,18 +144,18 @@
                          BorderThickness="0"
                          Style="{StaticResource SettingsInput}"
                          Tag="Enter absolute directory path (e.g., C:\repos)…"
-                         Text="{Binding NewWatchedDirectoryText, UpdateSourceTrigger=PropertyChanged}"/>
+                         Text="{Binding Scanning.NewWatchedDirectoryText, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <Button Grid.Column="2"
                         VerticalAlignment="Center"
-                        Command="{Binding BrowseWatchedDirectoryCommand}"
+                        Command="{Binding Scanning.BrowseWatchedDirectoryCommand}"
                         Content="Browse…"
                         Style="{StaticResource NeutralButton}"/>
 
                 <Button Grid.Column="3"
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Command="{Binding AddWatchedDirectoryCommand}"
+                        Command="{Binding Scanning.AddWatchedDirectoryCommand}"
                         Content="Register"
                         Style="{StaticResource AccentButton}"/>
             </Grid>
@@ -163,8 +163,8 @@
 
         <TextBlock Margin="0,6,0,0"
                    Style="{StaticResource ErrorText}"
-                   Text="{Binding WatchedDirectoryError}"
-                   Visibility="{Binding HasWatchedDirectoryError, Converter={StaticResource BoolToVisibility}}"/>
+                   Text="{Binding Scanning.WatchedDirectoryError}"
+                   Visibility="{Binding Scanning.HasWatchedDirectoryError, Converter={StaticResource BoolToVisibility}}"/>
 
         <controls:SectionHeader Text="DISCOVERY &amp; SCANNING RULES"/>
         <controls:SettingsGroup>
@@ -173,8 +173,8 @@
                            Icon="{x:Static themes:IconGlyphs.Zoom}"
                            Grouped="True">
             <ComboBox HorizontalAlignment="Right"
-                      ItemsSource="{Binding ScanDepthOptions}"
-                      SelectedItem="{Binding SelectedScanDepth, Mode=TwoWay}"
+                      ItemsSource="{Binding Scanning.ScanDepthOptions}"
+                      SelectedItem="{Binding Scanning.SelectedScanDepth, Mode=TwoWay}"
                       Style="{StaticResource SettingsComboBox}"
                       behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
                 <ComboBox.ItemTemplate>
@@ -190,8 +190,8 @@
                            Icon="{x:Static themes:IconGlyphs.Filter}"
                            Grouped="True">
             <ComboBox HorizontalAlignment="Right"
-                      ItemsSource="{Binding DiscoveryModes}"
-                      SelectedItem="{Binding SelectedDiscoveryMode, Mode=TwoWay}"
+                      ItemsSource="{Binding Scanning.DiscoveryModes}"
+                      SelectedItem="{Binding Scanning.SelectedDiscoveryMode, Mode=TwoWay}"
                       Style="{StaticResource SettingsComboBox}"
                       behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
                 <ComboBox.ItemTemplate>
@@ -209,7 +209,7 @@
                            Grouped="True"
                            Placement="Stacked">
             <StackPanel>
-                <ItemsControl ItemsSource="{Binding IgnoredPatterns}">
+                <ItemsControl ItemsSource="{Binding Scanning.IgnoredPatterns}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel/>
@@ -230,7 +230,7 @@
                                                Text="{Binding}"/>
                                     <Button Margin="4,0,0,0"
                                             AutomationProperties.Name="Remove pattern"
-                                            Command="{Binding DataContext.RemoveIgnoredPatternCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            Command="{Binding DataContext.Scanning.RemoveIgnoredPatternCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource ChipRemoveButton}"
                                             ToolTip="Remove pattern">
@@ -263,10 +263,10 @@
                                  BorderThickness="0"
                                  Style="{StaticResource SettingsInput}"
                                  Tag="Add pattern"
-                                 Text="{Binding NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
+                                 Text="{Binding Scanning.NewIgnoredPatternText, UpdateSourceTrigger=PropertyChanged}"/>
                         <Button VerticalAlignment="Center"
                                 Padding="12,5"
-                                Command="{Binding AddIgnoredPatternCommand}"
+                                Command="{Binding Scanning.AddIgnoredPatternCommand}"
                                 Content="Add"
                                 Style="{StaticResource NeutralButton}"/>
                     </StackPanel>
