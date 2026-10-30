@@ -1,0 +1,13 @@
+<Project>
+
+  <!-- Nearest Directory.Build.props for the three test projects. MSBuild stops at this file while
+       walking up, so the repository-root Directory.Build.props is imported explicitly to keep
+       BaseOutputPath, BaseIntermediateOutputPath, Version, LangVersion, and EnforceCodeStyleInBuild.
+       System.IO is implicit for Microsoft.NET.Sdk projects; only the WPF test project keeps it explicit. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

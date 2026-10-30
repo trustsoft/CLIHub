@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <!-- The WindowsDesktop SDK (UseWPF) does not add System.IO to its implicit usings. -->
     <Using Include="System.IO" />
   </ItemGroup>
 
