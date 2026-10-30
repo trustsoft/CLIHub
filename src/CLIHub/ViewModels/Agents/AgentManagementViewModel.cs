@@ -31,10 +31,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly ILogger<AgentManagementViewModel> logger;
 
     private bool disposed;
-    private CancellationTokenSource? versionPopulationCts;
-    private int versionPopulationGeneration;
-    private CancellationTokenSource? blockedStateCts;
-    private int blockedStateGeneration;
+    private readonly RestartablePass versionPopulationPass = new();
+    private readonly RestartablePass blockedStatePass = new();
     private bool isDetecting;
     private bool isCheckingUpdates;
     private int runningCardActionCount;
@@ -199,7 +197,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanDetect => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCardActionRunning;
+    public bool CanDetect => !this.IsAnyPassRunning;
 
     /// <summary>
     ///   Whether an update-availability check pass is currently running.
@@ -217,7 +215,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
-    public bool CanCheckUpdates => !this.IsDetecting && !this.IsCheckingUpdates && !this.IsCardActionRunning;
+    public bool CanCheckUpdates => !this.IsAnyPassRunning;
 
     /// <summary>
     ///   Whether any per-card Detect or Check updates action is currently running: true while at
@@ -230,12 +228,17 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public bool IsCardActionRunning => this.runningCardActionCount > 0;
 
     /// <summary>
+    ///   Whether any pass or per-card action is currently running: true while Detect, Check updates, or a per-card action runs.
+    /// </summary>
+    private bool IsAnyPassRunning => this.IsDetecting || this.IsCheckingUpdates || this.IsCardActionRunning;
+
+    /// <summary>
     ///   Enters a per-card action: increments the running-action counter and reports the change
     ///   so the header actions re-query while any card action runs. Raises on every mutation,
     ///   not only on 0↔1 transitions — a raise when the value did not change is a harmless
     ///   re-query. A plain <see cref="int" /> counter is safe here: increments happen
-    ///   synchronously in the command execute delegates and decrements in <c>finally</c>
-    ///   continuations, both on the UI thread.
+    ///   synchronously in the command execute delegates and decrements in the per-card
+    ///   action scope's disposal, both on the UI thread.
     /// </summary>
     private void EnterCardAction()
     {
@@ -245,7 +248,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <summary>
     ///   Exits a per-card action: decrements the running-action counter and reports the change.
-    ///   Called from a <c>finally</c>, so the counter resets on every path, including failures.
+    ///   Called from the per-card action scope's disposal, so the counter resets on every path,
+    ///   including failures.
     /// </summary>
     private void ExitCardAction()
     {
@@ -256,10 +260,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private void RaiseCardActionCountChanges()
     {
         this.OnPropertyChanged(nameof(this.IsCardActionRunning));
-        this.OnPropertyChanged(nameof(this.CanDetect));
-        this.OnPropertyChanged(nameof(this.CanCheckUpdates));
-        this.DetectCommand.RaiseCanExecuteChanged();
-        this.CheckUpdatesCommand.RaiseCanExecuteChanged();
+        this.RaiseHeaderGateChanges();
     }
 
     /// <summary>
@@ -351,14 +352,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public void Dispose()
     {
-        this.versionPopulationGeneration++;
-        this.versionPopulationCts?.Cancel();
-        this.versionPopulationCts?.Dispose();
-        this.versionPopulationCts = null;
-        this.blockedStateGeneration++;
-        this.blockedStateCts?.Cancel();
-        this.blockedStateCts?.Dispose();
-        this.blockedStateCts = null;
+        this.versionPopulationPass.Dispose();
+        this.blockedStatePass.Dispose();
         this.catalog.PluginsChanged -= this.OnPluginsChanged;
         this.disposed = true;
     }
@@ -394,12 +389,20 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// </summary>
     private void RaiseBusyStateChanges()
     {
+        this.RaiseHeaderGateChanges();
+        this.DetectCardCommand.RaiseCanExecuteChanged();
+        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
+    }
+
+    /// <summary>
+    ///   Raises property-changed and command-changed notifications for the header-wide gates.
+    /// </summary>
+    private void RaiseHeaderGateChanges()
+    {
         this.OnPropertyChanged(nameof(this.CanDetect));
         this.OnPropertyChanged(nameof(this.CanCheckUpdates));
         this.DetectCommand.RaiseCanExecuteChanged();
         this.CheckUpdatesCommand.RaiseCanExecuteChanged();
-        this.DetectCardCommand.RaiseCanExecuteChanged();
-        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
     }
 
     private void RaiseDefaultAgentChanges()
@@ -412,17 +415,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private void PopulateVersions()
     {
-        this.versionPopulationCts?.Cancel();
-        this.versionPopulationCts?.Dispose();
-        this.versionPopulationCts = new CancellationTokenSource();
-        var generation = ++this.versionPopulationGeneration;
-        var refreshCancellationToken = this.versionPopulationCts.Token;
+        var lease = this.versionPopulationPass.Begin();
 
         var cards = this.Cards.ToList();
 
         _ = this.RunAsync(
             "Agent version population",
-            applicationToken => this.PopulateVersionsAsync(cards, generation, refreshCancellationToken, applicationToken));
+            applicationToken => this.PopulateVersionsAsync(cards, lease.Generation, lease.RefreshToken, applicationToken));
     }
 
     private async Task PopulateVersionsAsync(
@@ -444,7 +443,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 {
                     // A missing CLI has no version to probe and no update source to check; clear
                     // any stale advisory indicator so it cannot survive an uninstall.
-                    if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+                    if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
                     {
                         card.UpdateAvailability = null;
                     }
@@ -453,7 +452,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 }
 
                 var ver = await this.version.GetVersionAsync(card.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+                if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
                 {
                     card.Version = ver;
                 }
@@ -461,13 +460,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 // The availability check reuses the just-probed version through the version
                 // service's cache, so this adds no extra process launch per card.
                 var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+                if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
                 {
                     card.UpdateAvailability = availability;
                 }
             }));
 
-            if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+            if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
             {
                 this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
@@ -483,17 +482,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private void PopulateBlockedState()
     {
-        this.blockedStateCts?.Cancel();
-        this.blockedStateCts?.Dispose();
-        this.blockedStateCts = new CancellationTokenSource();
-        var generation = ++this.blockedStateGeneration;
-        var refreshCancellationToken = this.blockedStateCts.Token;
+        var lease = this.blockedStatePass.Begin();
 
         var cards = this.Cards.ToList();
 
         _ = this.RunAsync(
             "Agent blocked-state population",
-            applicationToken => this.PopulateBlockedStateAsync(cards, generation, refreshCancellationToken, applicationToken));
+            applicationToken => this.PopulateBlockedStateAsync(cards, lease.Generation, lease.RefreshToken, applicationToken));
     }
 
     private async Task PopulateBlockedStateAsync(
@@ -521,7 +516,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 var declaresUpdate = card.Plugin.Commands?.Get(AgentCommandKind.Update) is not null;
                 var running = runningByPlugin[card.Plugin.Id].ToList();
 
-                if (!cancellationToken.IsCancellationRequested && generation == this.blockedStateGeneration)
+                if (this.blockedStatePass.IsCurrent(generation, cancellationToken))
                 {
                     card.CanUpdate = declaresUpdate && running.Count == 0;
 
@@ -545,10 +540,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private async Task DetectCardAsync(AgentCardItem card, CancellationToken cancellationToken)
     {
-        card.IsDetecting = true;
-        this.EnterCardAction();
-        this.DetectCardCommand.RaiseCanExecuteChanged();
-        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
+        using var scope = new CardActionScope(this, busy => card.IsDetecting = busy);
         var previousState = card.InstallState;
         card.InstallState = AgentInstallState.Detecting;
         try
@@ -570,17 +562,6 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // operation logging observe the failure. Version and availability stay untouched.
             card.InstallState = previousState;
             throw;
-        }
-        finally
-        {
-            // Clear the card's busy flag BEFORE the completion raises: WPF caches the
-            // CanExecute result it queries during CanExecuteChanged, so a raise that still
-            // sees the card busy would cache false and leave the button disabled until an
-            // unrelated input event re-queries it.
-            card.IsDetecting = false;
-            this.ExitCardAction();
-            this.DetectCardCommand.RaiseCanExecuteChanged();
-            this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
         }
     }
 
@@ -699,39 +680,22 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             return;
         }
 
-        card.IsCheckingUpdates = true;
-        this.EnterCardAction();
-        this.DetectCardCommand.RaiseCanExecuteChanged();
-        this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
-        try
+        using var scope = new CardActionScope(this, busy => card.IsCheckingUpdates = busy);
+        // Invalidate first so the check below bypasses the cached result and its TTL.
+        this.availability.InvalidateFor(card.Plugin);
+        var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+        if (!this.disposed)
         {
-            // Invalidate first so the check below bypasses the cached result and its TTL.
-            this.availability.InvalidateFor(card.Plugin);
-            var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
-            if (!this.disposed)
+            card.UpdateAvailability = availability;
+            card.Message = availability.Status switch
             {
-                card.UpdateAvailability = availability;
-                card.Message = availability.Status switch
-                {
-                    AgentUpdateStatus.UpdateAvailable when availability.InstalledVersion is { } installed
-                                                     && availability.LatestVersion is { } latest
-                        => $"Update available · {installed} → {latest}",
-                    AgentUpdateStatus.UpdateAvailable => "Update available",
-                    AgentUpdateStatus.UpToDate => "Up to date",
-                    _ => "Update availability unknown"
-                };
-            }
-        }
-        finally
-        {
-            // Clear the card's busy flag BEFORE the completion raises: WPF caches the
-            // CanExecute result it queries during CanExecuteChanged, so a raise that still
-            // sees the card busy would cache false and leave the button disabled until an
-            // unrelated input event re-queries it.
-            card.IsCheckingUpdates = false;
-            this.ExitCardAction();
-            this.DetectCardCommand.RaiseCanExecuteChanged();
-            this.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
+                AgentUpdateStatus.UpdateAvailable when availability.InstalledVersion is { } installed
+                                                 && availability.LatestVersion is { } latest
+                    => $"Update available · {installed} → {latest}",
+                AgentUpdateStatus.UpdateAvailable => "Update available",
+                AgentUpdateStatus.UpToDate => "Up to date",
+                _ => "Update availability unknown"
+            };
         }
     }
 
@@ -820,4 +784,39 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     private Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>
         this.operationLifetime.RunAsync(operationName, operation);
+
+    private sealed class CardActionScope : IDisposable
+    {
+        private readonly AgentManagementViewModel owner;
+        private readonly Action<bool> setBusy;
+        private bool disposed;
+
+        public CardActionScope(AgentManagementViewModel owner, Action<bool> setBusy)
+        {
+            this.owner = owner;
+            this.setBusy = setBusy;
+            setBusy(true);
+            owner.EnterCardAction();
+            owner.DetectCardCommand.RaiseCanExecuteChanged();
+            owner.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
+        }
+
+        public void Dispose()
+        {
+            if (this.disposed)
+            {
+                return;
+            }
+
+            this.disposed = true;
+            // Clear the card's busy flag BEFORE the completion raises: WPF caches the
+            // CanExecute result it queries during CanExecuteChanged, so a raise that still
+            // sees the card busy would cache false and leave the button disabled until an
+            // unrelated input event re-queries it.
+            this.setBusy(false);
+            this.owner.ExitCardAction();
+            this.owner.DetectCardCommand.RaiseCanExecuteChanged();
+            this.owner.CheckCardUpdatesCommand.RaiseCanExecuteChanged();
+        }
+    }
 }

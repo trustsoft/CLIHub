@@ -20,8 +20,7 @@ public sealed class AgentPaneController : IDisposable
     private readonly ILogoCacheService logoCacheService;
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly ILogger<AgentPaneController> logger;
-    private CancellationTokenSource? versionPopulationCts;
-    private int versionPopulationGeneration;
+    private readonly RestartablePass versionPopulationPass = new();
     private string? currentProjectPath;
     private bool showOnlyProjectAgents;
     private bool disposed;
@@ -89,11 +88,7 @@ public sealed class AgentPaneController : IDisposable
 
         this.currentProjectPath = currentProjectPath;
         this.showOnlyProjectAgents = showOnlyProjectAgents;
-        this.versionPopulationCts?.Cancel();
-        this.versionPopulationCts?.Dispose();
-        this.versionPopulationCts = new CancellationTokenSource();
-        var generation = ++this.versionPopulationGeneration;
-        var refreshCancellationToken = this.versionPopulationCts.Token;
+        var lease = this.versionPopulationPass.Begin();
 
         var entries = AgentListComposer.Compose(
             this.pluginCatalog.GetAllPlugins(),
@@ -113,8 +108,8 @@ public sealed class AgentPaneController : IDisposable
                 "Agent version population",
                 applicationToken => this.PopulateVersionsAsync(
                     this.Agents.ToList(),
-                    generation,
-                    refreshCancellationToken,
+                    lease.Generation,
+                    lease.RefreshToken,
                     applicationToken));
         }
 
@@ -154,10 +149,7 @@ public sealed class AgentPaneController : IDisposable
         }
 
         this.disposed = true;
-        this.versionPopulationGeneration++;
-        this.versionPopulationCts?.Cancel();
-        this.versionPopulationCts?.Dispose();
-        this.versionPopulationCts = null;
+        this.versionPopulationPass.Dispose();
         this.pluginCatalog.PluginsChanged -= this.OnPluginsChanged;
     }
 
@@ -177,7 +169,7 @@ public sealed class AgentPaneController : IDisposable
             await Task.WhenAll(items.Select(async item =>
             {
                 var version = await this.agentVersionService.GetVersionAsync(item.Plugin, cancellationToken);
-                if (!cancellationToken.IsCancellationRequested && generation == this.versionPopulationGeneration)
+                if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
                 {
                     item.Version = version;
                 }
