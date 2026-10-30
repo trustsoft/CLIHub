@@ -252,24 +252,19 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   verified rather than duplicated.
 - Residual evidence: none. Test project package versions now live in `tests/Directory.Packages.props`.
 
-### Test project global usings are duplicated across the three csproj files
+### Test project global usings are duplicated across the three csproj files - **[done 2026-10-31]**
 
 - Severity: Low (6 duplicated lines, test-only build metadata)
-- Evidence: `<Using Include="Xunit" />` and `<Using Include="System.IO" />` are repeated in
-  `tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj`, `tests/CLIHub.Core.Windows.Tests/CLIHub.Core.Windows.Tests.csproj`,
-  and `tests/CLIHub.Tests/CLIHub.Tests.csproj`. They were **not** centralized by
-  `test-support-consolidation`: package versions moved to `tests/Directory.Packages.props`, but
-  `<Using>` items are MSBuild properties, so the natural home would be a `tests/Directory.Build.props`.
-  That file would **shadow** the repository-root `Directory.Build.props` — MSBuild stops at the
-  nearest one while walking up — silently dropping `BaseOutputPath`, `BaseIntermediateOutputPath`,
-  `Version`, `LangVersion`, and `EnforceCodeStyleInBuild` for all three test projects unless the
-  test-level file explicitly re-imports the root one:
-  `<Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />`.
-  The shadowing risk outweighs saving 6 lines.
-- Proposed remedy: add `tests/Directory.Build.props` with the explicit root re-import, move the two
-  `<Using>` items there, and verify build output still lands under `artifacts\<Project>\`.
-- Trigger: the next `Directory.Build.props` restructuring, a third duplicated `<Using>` across all
-  test projects, or a proposal for hierarchical `Directory.Build.props` inheritance.
+- Status: resolved. `tests/Directory.Build.props` now owns `<Using Include="Xunit" />` and explicitly
+  re-imports the repository-root `Directory.Build.props`, so `BaseOutputPath`,
+  `BaseIntermediateOutputPath`, `Version`, `LangVersion`, and `EnforceCodeStyleInBuild` still apply to
+  all three test projects (verified for each project with `dotnet msbuild -getProperty`:
+  `artifacts\<Project>\`, `obj\<Project>\`, `1.0.3`, `14.0`, `true`). `<Using Include="System.IO" />`
+  was deleted from `CLIHub.Core.Tests` and `CLIHub.Core.Windows.Tests`, where it is implicit for
+  `Microsoft.NET.Sdk`, but kept in `CLIHub.Tests`: that project sets `UseWPF=true`, and the
+  WindowsDesktop SDK's implicit usings do not include `System.IO`, so removing it failed the build
+  with 148 errors.
+- Residual evidence: none.
 
 ### Single unexplained test failure (not reproduced)
 
