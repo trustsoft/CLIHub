@@ -63,6 +63,8 @@ The Settings window SHALL present a sidebar with the groups "General", "Engines 
 
 Saving SHALL validate a typed settings draft, apply all required system preferences, persist the draft only after required application succeeds, and close the window only after persistence succeeds. If any required application or persistence step fails, the stored preferences SHALL remain unchanged and the user SHALL receive an error without the window closing. Any system changes made before a failure SHALL be rolled back to their previous values where the platform boundary supports rollback.
 
+If the project scanner cannot reload with the newly saved scanning configuration after a successful write, the save SHALL still succeed and the scanner SHALL retry the reload on the next scan or application restart. A scanner reload failure SHALL NOT roll back system preferences that were already applied and persisted.
+
 #### Scenario: Persist on save
 
 - **WHEN** the user changes one or more settings and chooses "Save" with a valid draft
@@ -109,6 +111,13 @@ Saving SHALL validate a typed settings draft, apply all required system preferen
 - **THEN** previously applied system changes are rolled back where supported
 - **AND** the stored preferences remain unchanged
 - **AND** the window remains open with an error
+
+#### Scenario: Scanner reload failure after successful write does not roll back
+
+- **WHEN** the user saves settings including scanning configuration and the project scanner fails to reload after the write
+- **THEN** the settings are saved, system preferences are applied, and the window closes
+- **AND** the scanner will retry the reload on the next scan or application restart
+- **AND** previously applied system changes are not rolled back
 
 ### Requirement: Discard changes
 
@@ -382,6 +391,20 @@ Changes to the scanning settings SHALL apply immediately, without requiring the 
 - **AND** the repository count for the new row and the summary card coverage include it without choosing Save
 - **AND** the page-header scan action now rescans it too
 
+#### Scenario: Adding a watched directory with apply failure reports error
+
+- **WHEN** the user adds a watched directory and the immediate apply fails (persistence or scanner reconfiguration error)
+- **THEN** the directory is not added to the list
+- **AND** the validation error describes the failure
+- **AND** the input text is not cleared so the user can retry or correct
+
+#### Scenario: Scanner reload failure after a successful scanning apply
+
+- **WHEN** the user changes a scanning setting and the project scanner fails to reload after the write
+- **THEN** the change remains stored
+- **AND** the page does not report an apply failure
+- **AND** the scanner retries the reload on the next scan or application restart
+
 #### Scenario: Removing a watched directory applies immediately
 
 - **WHEN** the user removes a watched directory
@@ -473,6 +496,8 @@ Saving the scanning preferences SHALL persist them and take effect without resta
 
 The CLI Agents page SHALL present one card per loaded agent, the page-header summary cards defined by the `settings-theme` capability, and a "Default agent" selector, in addition to the existing agent detection fields. It SHALL show the stored default agent when opened. The "Default agent" selector SHALL offer every loaded agent plus a "None" option, SHALL mark agents that are not installed on the host as disabled entries that cannot be selected, and SHALL refresh the option availability when agent detection runs. The page SHALL offer an agent detection action labelled "Detect" above the agent cards that re-detects every supported agent's installed state and version, and refreshes the agent cards, the availability summary, and the option availability.
 
+The summary cards showing supported and installed agent counts SHALL update immediately when agent detection completes, without requiring the Settings window to be closed and reopened.
+
 #### Scenario: Options offered
 
 - **WHEN** the Settings window opens on "CLI Agents"
@@ -487,6 +512,11 @@ The CLI Agents page SHALL present one card per loaded agent, the page-header sum
 
 - **WHEN** the page opens
 - **THEN** the supported count is the number of loaded agents and the installed count is the number installed on the host
+
+#### Scenario: Metrics update when Detect completes
+
+- **WHEN** agent detection completes while the Settings window is open (from the Detect action or a per-card test)
+- **THEN** the supported and installed counts on the Project Scanning page summary cards update immediately without reopening the window
 
 #### Scenario: Stored default agent loaded
 
