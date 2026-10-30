@@ -5,9 +5,10 @@ This document describes the testing infrastructure and patterns used in the CLIH
 ## Overview
 
 The CLIHub test suite consists of:
-- **425 Core tests** - Testing UI-independent logic in `CLIHub.Core`
-- **184 WPF tests** - Testing WPF-specific ViewModel and UI integration in `CLIHub`
-- **Total: 609 tests**
+- **667 Core tests** - Testing UI-independent logic in `CLIHub.Core`
+- **60 Windows adapter tests** - Testing Windows-specific adapters in `CLIHub.Core.Windows`
+- **555 WPF/application tests** - Testing WPF ViewModels, composition, and UI integration in `CLIHub`
+- **Total: 1,282 tests** (counts as of 2026-10-30; they drift with each change)
 
 ## Test Builders
 
@@ -17,86 +18,19 @@ Test builders provide fluent, readable APIs for creating complex test objects wi
 
 Located in `tests/CLIHub.Tests/Builders/LaunchWindowViewModelBuilder.cs`
 
-The `LaunchWindowViewModel` requires 12+ dependencies. The builder provides:
+The `LaunchWindowViewModel` takes eleven constructor dependencies (services, pane controllers, and coordinators). The builder provides:
 - **Sensible defaults** - All dependencies are auto-mocked with reasonable behavior
 - **Fluent configuration** - Override only what matters for your test
 - **Two build modes**:
   - `Build()` - Returns just the ViewModel
   - `BuildWithMocks()` - Returns ViewModel + all mocks for verification
 
-#### Example: Before and After
+#### Example: Builder vs hand-wired setup
 
-**Before** (verbose setup):
-
-```csharp
-[Fact]
-public void AddProject_WhenFolderSelectionIsCancelled_UsesDialogService()
-{
-    var projectService = new Mock<IProjectService>();
-    projectService.Setup(x => x.GetAllProjects()).Returns(Array.Empty<Project>());
-    projectService.Setup(x => x.GetCurrentProject()).Returns((Project?)null);
-
-    var pluginCatalog = new Mock<IPluginCatalog>();
-    pluginCatalog.Setup(x => x.GetAllPlugins()).Returns(Array.Empty<Plugin>());
-
-    var preferences = new Mock<IPreferencesStore>();
-    preferences.Setup(x => x.Load()).Returns(new AppPreferences());
-
-    var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
-    dialogs.Setup(x => x.SelectProjectFolder()).Returns((string?)null);
-
-    var notifications = new Mock<IUserNotificationService>(MockBehavior.Strict);
-    var lifetime = new Mock<IApplicationLifetime>(MockBehavior.Strict);
-    lifetime.Setup(x => x.Shutdown());
-    var operationLifetime = new Mock<IApplicationOperationLifetime>();
-    
-    var projectPane = new ProjectPaneController(
-        projectService.Object, dialogs.Object, new PromptState());
-    var agentPane = new AgentPaneController(
-        pluginCatalog.Object,
-        new Mock<IAgentDetectionService>().Object,
-        new Mock<IAgentVersionService>().Object,
-        new Mock<ILogoCacheService>().Object,
-        NullLogger<AgentPaneController>.Instance,
-        operationLifetime.Object);
-    var updateControl = new UpdateControlViewModel(
-        new Mock<IUpdateWorkflow>().Object,
-        NullLogger<UpdateControlViewModel>.Instance,
-        operationLifetime.Object);
-    var statusCoordinator = new StatusMessageCoordinator(
-        projectPane, agentPane, updateControl);
-    var launchCoordinator = new LaunchCommandCoordinator(
-        new Mock<IAgentCommandWorkflow>().Object,
-        operationLifetime.Object,
-        notifications.Object,
-        NullLogger<LaunchCommandCoordinator>.Instance);
-    var matcher = new AgentProcessMatcher(NullLogger<AgentProcessMatcher>.Instance);
-    var processMonitor = new AgentProcessMonitor(
-        new Mock<IAgentProcessInspector>().Object,
-        matcher,
-        pluginCatalog.Object,
-        NullLogger<AgentProcessMonitor>.Instance);
-    
-    var viewModel = new LaunchWindowViewModel(
-        projectPane,
-        agentPane,
-        launchCoordinator,
-        preferences.Object,
-        new LaunchWindowActionBuilder(),
-        updateControl,
-        new Mock<ISettingsLauncher>().Object,
-        notifications.Object,
-        lifetime.Object,
-        new Mock<IExternalLauncher>().Object,
-        statusCoordinator,
-        processMonitor);
-
-    viewModel.AddProjectCommand.Execute(null);
-
-    dialogs.Verify(x => x.SelectProjectFolder(), Times.Once);
-    projectService.Verify(x => x.AddProject(It.IsAny<string>()), Times.Never);
-}
-```
+Before the builder existed, every test hand-wired the project pane, agent pane, update control, status
+coordinator, command coordinator, process monitor, and finally `LaunchWindowViewModel` - roughly sixty
+lines of setup repeated verbatim in each test, and it broke whenever a constructor changed. That
+hand-wired shape is intentionally not reproduced here because it no longer matches the constructors.
 
 **After** (focused and readable):
 
@@ -165,7 +99,7 @@ mocks.ProjectDialogService.Verify(x => x.SelectProjectFolder(), Times.Once);
 
 ```
 tests/
-├── CLIHub.Core.Tests/          # Core logic tests (425 tests)
+├── CLIHub.Core.Tests/          # Core logic tests (667 tests)
 │   ├── Agents/                 # Agent subsystem tests
 │   ├── Configuration/          # Config serialization tests
 │   ├── Infrastructure/         # Process, persistence, hotkey tests
@@ -175,7 +109,9 @@ tests/
 │   ├── Services/               # Service layer tests
 │   └── Updates/                # Update workflow tests
 │
-└── CLIHub.Tests/               # WPF/ViewModel tests (184 tests)
+├── CLIHub.Core.Windows.Tests/  # Windows adapter tests (60 tests)
+│
+└── CLIHub.Tests/               # WPF/ViewModel tests (555 tests)
     ├── Builders/               # Test builder infrastructure
     │   ├── LaunchWindowViewModelBuilder.cs
     │   └── LaunchWindowViewModelBuilderTests.cs
