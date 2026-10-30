@@ -1,0 +1,2 @@
+schema: "https://openspec.dev/schema/1.0"
+goal: "Restore the launch-window 'Only agents available in project' toggle, which no longer updates the agent list"

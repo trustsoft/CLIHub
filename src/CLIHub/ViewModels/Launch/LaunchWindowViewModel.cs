@@ -24,7 +24,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     private readonly IPreferencesStore preferencesStore;
     private readonly LaunchWindowActionBuilder actionBuilder;
     private readonly IUserNotificationService notifications;
-    private readonly MenuActionCoordinator menuCoordinator;
+    private readonly LaunchWindowActions actions;
     private readonly StatusMessageCoordinator statusCoordinator;
     private readonly WindowActionCoordinator windowActions;
 
@@ -93,7 +93,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         var preferences = this.preferencesStore.Load();
 
-        this.menuCoordinator = new MenuActionCoordinator(
+        this.actions = this.actionBuilder.Build(
             this.AddProjectCommand,
             this.RemoveProjectCommand,
             this.ToggleFavoriteCommand,
@@ -102,8 +102,8 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
             this.windowActions.ResumeCommand,
             this.windowActions.UpdateCommand,
             this.windowActions.VersionCommand,
-            this.actionBuilder,
             preferences.ShowOnlyProjectAgents);
+        this.actions.FilterAction.PropertyChanged += this.OnFilterActionChanged;
 
         this.projectPane.ProjectsChanged += this.OnProjectsChanged;
 
@@ -132,12 +132,12 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
     /// <summary>
     ///   Entries of the Projects pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> ProjectsActions => this.menuCoordinator.ProjectsActions;
+    public IReadOnlyList<MenuAction> ProjectsActions => this.actions.Projects;
 
     /// <summary>
     ///   Entries of the Agents pane's actions menu.
     /// </summary>
-    public IReadOnlyList<MenuAction> AgentsActions => this.menuCoordinator.AgentsActions;
+    public IReadOnlyList<MenuAction> AgentsActions => this.actions.Agents;
 
     /// <summary>
     ///   The shared update control: current version when idle, update and restart actions when
@@ -199,6 +199,11 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
                 this.preferencesStore,
                 preferences => preferences.ShowOnlyProjectAgents = value,
                 this.RefreshAgents);
+
+            if (this.actions.FilterAction.IsChecked != value)
+            {
+                this.actions.FilterAction.IsChecked = value;
+            }
         }
     }
 
@@ -300,6 +305,15 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
         }
     }
 
+    private void OnFilterActionChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MenuAction.IsChecked)
+            && this.actions.FilterAction.IsChecked != this.ShowOnlyProjectAgents)
+        {
+            this.ShowOnlyProjectAgents = this.actions.FilterAction.IsChecked;
+        }
+    }
+
     /// <summary>
     ///   Re-reads and re-enriches the project pane and restores the selection by project ID.
     ///   Also the enrichment trigger for the launch window being shown or activated, so folder
@@ -374,6 +388,7 @@ public sealed class LaunchWindowViewModel : ObservableObject, IPathDisplayStyleT
 
         this.disposed = true;
         this.projectPane.ProjectsChanged -= this.OnProjectsChanged;
+        this.actions.FilterAction.PropertyChanged -= this.OnFilterActionChanged;
         this.statusCoordinator.PropertyChanged -= this.OnStatusCoordinatorPropertyChanged;
     }
 
