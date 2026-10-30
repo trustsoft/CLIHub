@@ -415,7 +415,11 @@ public partial class AgentManagementViewModelTests
         Assert.True(cardB.CanCheckUpdates);
 
         gate.SetResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
-        Assert.True(SpinWait.SpinUntil(() => viewModel.CheckCardUpdatesCommand.CanExecute(cardA), TimeSpan.FromSeconds(5)));
+        // The card's busy flag clears before the running-action counter, so wait for both:
+        // otherwise CanExecute can flip true while IsCardActionRunning is still true.
+        Assert.True(SpinWait.SpinUntil(
+            () => viewModel.CheckCardUpdatesCommand.CanExecute(cardA) && !viewModel.IsCardActionRunning,
+            TimeSpan.FromSeconds(5)));
         Assert.True(viewModel.DetectCardCommand.CanExecute(cardA));
         Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(cardB));
         Assert.True(viewModel.DetectCardCommand.CanExecute(cardB));

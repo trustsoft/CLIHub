@@ -20,8 +20,8 @@ public sealed class ApplicationHostTests
     [Fact]
     public void Start_WithNullDispatch_ThrowsArgumentNullException()
     {
-        // Arrange
-        var host = new ApplicationHost();
+        // Arrange: a unique guard keeps this host the first instance, so the null check is always reached.
+        var host = CreateHostWithUniqueGuard();
 
         // Act & Assert
         var ex = Assert.Throws<ArgumentNullException>(() =>
@@ -33,8 +33,8 @@ public sealed class ApplicationHostTests
     [Fact]
     public void Start_WithNullSetMainWindow_ThrowsArgumentNullException()
     {
-        // Arrange
-        var host = new ApplicationHost();
+        // Arrange: a unique guard keeps this host the first instance, so the null check is always reached.
+        var host = CreateHostWithUniqueGuard();
 
         // Act & Assert
         var ex = Assert.Throws<ArgumentNullException>(() =>
@@ -78,16 +78,9 @@ public sealed class ApplicationHostTests
     [Fact]
     public void Start_WithNullSetMainWindow_DisposesGuardAcquiredBeforeTheFailure()
     {
-        // Arrange
+        // Arrange: a unique guard keeps this host the first instance, so the null check is always reached.
         var createdGuards = new List<SingleInstanceGuard>();
-        var host = new ApplicationHost(() =>
-        {
-            var guard = new SingleInstanceGuard(
-                $@"Local\CLIHub.Tests.{Guid.NewGuid():N}",
-                $"CLIHub.Tests.{Guid.NewGuid():N}");
-            createdGuards.Add(guard);
-            return guard;
-        });
+        var host = CreateHostWithUniqueGuard(createdGuards);
 
         // Act & Assert: the pre-provider failure releases the guard this host acquired.
         var ex = Assert.Throws<ArgumentNullException>(() =>
@@ -101,4 +94,22 @@ public sealed class ApplicationHostTests
     // Note: Full integration tests for Start() and Shutdown() with real WPF components
     // require STA threading and are covered by manual testing and the existing
     // ApplicationBootstrapper integration tests.
+
+    /// <summary>
+    /// Creates a host whose single-instance guard uses unique mutex and pipe names, so the host is
+    /// always the first instance and the production single-instance shortcut never masks a test outcome.
+    /// </summary>
+    /// <param name="createdGuards">When supplied, receives every guard the host creates.</param>
+    /// <returns>A host with an isolated single-instance guard.</returns>
+    private static ApplicationHost CreateHostWithUniqueGuard(List<SingleInstanceGuard>? createdGuards = null)
+    {
+        return new ApplicationHost(() =>
+        {
+            var guard = new SingleInstanceGuard(
+                $@"Local\CLIHub.Tests.{Guid.NewGuid():N}",
+                $"CLIHub.Tests.{Guid.NewGuid():N}");
+            createdGuards?.Add(guard);
+            return guard;
+        });
+    }
 }
