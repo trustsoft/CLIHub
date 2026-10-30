@@ -50,8 +50,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
      `ShouldHideOnDeactivate`); `LaunchWindowViewModelBuilder` collapses to one `Compose()` helper.
      `WindowActionCoordinator` stays inline-constructed: its three view-model delegates make
      constructor injection circular, and the context/factory alternatives had only one consumer.
-  5. `scanning-and-runtime-probe-unification` - one scan pass shape, one executable probe helper,
-     shared `AgentProbePolicy`/`UpdateCheckSource` policy.
+  5. `scanning-and-runtime-probe-unification` - **[done 2026-10-30: `76aac1d`/`5b429a2`]** one scan
+     pass shape, one executable probe helper, shared `AgentProbePolicy`/`UpdateCheckSource` policy.
   6. `composition-and-dead-path-cleanup` - single process-registration home, remove the unreachable
      instance check and tray relay, and tier-3 dead members.
   7. `test-support-consolidation` - shared `RunOnSta`/repository-root helpers and view-model
