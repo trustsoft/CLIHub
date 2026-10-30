@@ -282,8 +282,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: on recurrence, re-run with `--logger trx`, capture the test name, and stabilize the
   offending timing window.
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
+- Re-checked (2026-10-31, HEAD `6f898f0`): a full `dotnet test CLIHub.sln` run was green
+  (550 + 63 + 692 = 1,305, 0 failed), so the incident did not reproduce. Stays a watch item; not closed.
 
-### CheckCardUpdatesCommand test races the card-action reset (low, flaky)
+### CheckCardUpdatesCommand test races the card-action reset (low, flaky) - **[done 2026-10-31]**
 
 - Severity: Low (test-only race; not a product bug)
 - Evidence: `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs:1609`
@@ -299,8 +301,14 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the next red run of
   `CheckCardUpdatesCommand_WhilePerCardCheckRuns_DisablesOnlyTheActingCardAndGatesHeader`, or a CI
   flake carrying that test name.
+- Resolved (2026-10-31, `test-stability-hardening`): the `SpinUntil` predicate at
+  `AgentManagementViewModelTests.UpdateAvailability.cs:420` now also requires
+  `!viewModel.IsCardActionRunning`, so it covers both `setBusy(false)` and `ExitCardAction()`.
+  The same intermediate-state race existed in the sibling `DetectCardCommand_WhilePerCardDetectRuns`
+  predicate (`AgentManagementViewModelTests.Detection.cs:352`) and was fixed the same way. No
+  assertion was relaxed; targeted runs were 5/5 green.
 
-### ApplicationHost null-argument tests fail while the app is running
+### ApplicationHost null-argument tests fail while the app is running - **[done 2026-10-31]**
 
 - Severity: Low (test isolation; the suite result depends on machine state, not on the code under test)
 - Evidence: `tests/CLIHub.Tests/ApplicationHostTests.cs:27` (`Start_WithNullDispatch_ThrowsArgumentNullException`)
@@ -315,6 +323,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   the null-argument exceptions and the ownership path explicitly.
 - Trigger: the next red `CLIHub.Tests` run that coincides with the application being open, or any CI job
   that runs the suite on a machine where CLIHub autostarts.
+- Resolved (2026-10-31, `test-stability-hardening`): both null-argument tests now build the host
+  through `CreateHostWithUniqueGuard`, which injects unique mutex/pipe names. The host is therefore
+  always the first instance, so the production single-instance shortcut can no longer mask the
+  argument checks; the `ParamName` assertions are unchanged.
 
 ### ApplicationHost second-instance activation test times out on CI (low, deferred)
 
@@ -390,7 +402,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
   mechanism to project level is a later, separate decision.
 
-### Concurrent writers can clobber `.opencode/pipeline.json`
+### Concurrent writers can clobber `.opencode/pipeline.json` - **[done 2026-10-31]**
 
 - Severity: Medium (silent loss of pipeline state, no error surfaces)
 - Evidence: the sidebar plugin only reads the file, but every orchestrator session rewrites it
@@ -407,6 +419,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   attempts); this entry stays open until every writer uses it.
 - Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
   that run pipeline work in the same project at the same time.
+- Closed by policy (2026-10-31): the only state-file writer in the repository is
+  `.opencode/scripts/pipeline-state.mjs`; `AGENTS.md` pins the sidebar plugin to read-only, and
+  `pipeline-state check` reports 10 ok / 0 warnings. Reopen if a second writer is introduced.
 
 ### `pipeline-state check` cannot validate commit shas from foreign repositories
 
@@ -423,6 +438,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   repo hint — so out-of-repo tooling commits stay traceable without a standing warning.
 - Trigger: the next state entry that records a sha from a non-CLIHub repository, or any edit of the
   `pipeline-state.mjs` check path.
+- Re-checked (2026-10-31): the foreign-sha entry is no longer in `.opencode/pipeline.json`;
+  `pipeline-state check` reports 10 ok / 0 warnings, so the standing symptom is gone. The check path
+  still validates shas against a single repo root, so the item stays open latently until the first
+  foreign-repo sha returns.
 
 ## UI and theming
 
@@ -489,6 +508,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: one registration point, for example a page factory carried on the metadata.
   Deliberately not done now because it moves view creation into the view model.
 - Trigger: a fifth page group or a fifteenth page.
+- Re-checked (2026-10-31): `SettingsPageCatalog.AllPages` has 9 pages in 3 groups, so neither
+  threshold is close; remains deferred.
 
 ### Single-use FontSize and CornerRadius literals stay untokenized
 
