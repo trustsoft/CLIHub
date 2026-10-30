@@ -12,7 +12,7 @@ size and complexity through a pure mechanical refactor: moving secondary types i
 extracting the static page catalog, and replacing the hand-written DI factory with a conventional
 transient registration. **No behavior changes, no XAML changes, no public API changes.**
 
-## What
+## What Changes
 
 Split the file into four focused files, all in `src/CLIHub/ViewModels/Settings/` under the
 `CLIHub.ViewModels` namespace:
