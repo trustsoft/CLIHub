@@ -8,7 +8,7 @@ Both log sites were introduced in commit `1308a4a feat(theme): apply theme chang
 
 A second defect: `PreferenceApplier.ApplyTheme` logs the success line unconditionally after calling `SetTheme`, even when the palette fails to load. In that failure case, the target logs a warning `"Could not apply theme {Theme}; the previous palette was kept"` (line 45-47), yet the applier still logs the misleading success message.
 
-## What
+## What Changes
 
 Align theme logging with the existing patterns used by `ApplyHotkey` and `ApplyStartWithWindows` (bool-returning applier methods that log success or failure based on the result) and with `WpfAccentPreferenceTarget` (which has no logger dependency):
 
