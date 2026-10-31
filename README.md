@@ -39,9 +39,9 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 *Settings → Project Scanning: watched roots, scan depth and scanning rules, and the background watcher.*
 
-<img src="docs/images/settings-agents.png" alt="CLIHub Settings: installed CLI agents and probe settings" width="880">
+<img src="docs/images/settings-agents.png" alt="CLIHub Settings: installed CLI agents and the default agent" width="880">
 
-*Settings → CLI Agents: installed agents, the default agent, and probe settings.*
+*Settings → CLI Agents: installed agents and the default agent.*
 
 ## Features
 

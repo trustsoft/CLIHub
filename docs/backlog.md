@@ -591,3 +591,26 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: promote a value to a `Sizing.*` token when a second consumer appears; leave a
   single-use literal alone until then.
 - Trigger: copy-pasting a view and reaching for the same literal.
+
+### Agent Detection page is not captured for the README
+
+- Severity: Low (documentation gap; the page works, but the README image set is incomplete)
+- Evidence: `src/CLIHub/Views/ReadmeImageCapture.cs` captures only the appearance (`:95`), projects
+  (`:113`), and agents (`:114`) Settings pages; no `agent-detection` capture or matching README image
+  exists, so the new page is absent from the screenshot set.
+- Proposed remedy: add an `agent-detection` capture to `src/CLIHub/Views/ReadmeImageCapture.cs` and
+  list the resulting image in the README screenshot section and `docs/images/README.md`.
+- Trigger: the next README image refresh.
+
+### `ProbePolicySummary` and `ProbePolicyDetail` are display-unused after the Agent Detection split
+
+- Severity: Low (dead display code; no runtime behavior)
+- Evidence: `ProbePolicySummary` (`src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:312`) and
+  `ProbePolicyDetail` (`:318`) have no XAML binding after the DETECTION card was removed from the CLI
+  Agents summary row; they are still asserted in
+  `tests/CLIHub.Tests/ViewModels/Settings/SettingsViewModelApplicationTests.cs:836-837,849-850`. The
+  per-field `ProbePolicyCacheTtlSummary/Detail` and `ProbePolicyTimeoutSummary/Detail` properties drive
+  the Agent Detection page cards instead.
+- Proposed remedy: remove the two properties, their notification calls, and their four test
+  assertions, or rebind them if a combined detection view returns.
+- Trigger: the next Settings cleanup change.

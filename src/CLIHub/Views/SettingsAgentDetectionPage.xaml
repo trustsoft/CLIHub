@@ -1,0 +1,59 @@
+<UserControl x:Class="CLIHub.Views.SettingsAgentDetectionPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:CLIHub.Controls"
+             xmlns:themes="clr-namespace:CLIHub.Themes"
+             mc:Ignorable="d">
+    <StackPanel>
+        <Grid>
+            <controls:SectionHeader Text="DETECTION"/>
+            <controls:SpacedPanel Margin="0,18,0,8"
+                                  HorizontalAlignment="Right"
+                                  VerticalAlignment="Center"
+                                  Orientation="Horizontal"
+                                  Spacing="8">
+                <Button AutomationProperties.Name="Restore the built-in defaults"
+                        Command="{Binding ResetProbePolicyCommand}"
+                        IsEnabled="{Binding CanResetProbePolicy}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Restore the built-in defaults">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Reset"/>
+                    </StackPanel>
+                </Button>
+            </controls:SpacedPanel>
+        </Grid>
+        <controls:SettingsGroup>
+            <controls:SettingCard Title="Cache TTL"
+                               Hint="How long detection and version results are cached. Empty — use defaults."
+                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="110"
+                                       Minimum="1"
+                                       Placeholder="{Binding ProbeTtlWatermark}"
+                                       Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="min"/>
+            </controls:SettingCard>
+
+            <controls:SettingCard Title="Version check timeout"
+                               Hint="How long a single version check may take. Empty — use defaults."
+                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Grouped="True">
+                <controls:NumericField MinWidth="110"
+                                       Minimum="1"
+                                       Placeholder="{Binding ProbeTimeoutWatermark}"
+                                       Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
+                                       Unit="sec"/>
+            </controls:SettingCard>
+        </controls:SettingsGroup>
+    </StackPanel>
+</UserControl>

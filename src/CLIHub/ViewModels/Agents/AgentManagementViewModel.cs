@@ -293,6 +293,50 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <inheritdoc />
+    public int UpdatesAvailableCount => this.Cards.Count(card => card.HasUpdateAvailable);
+
+    /// <inheritdoc />
+    public string UpdatesValue => this.UpdatesAvailableCount > 0
+        ? this.UpdatesAvailableCount.ToString()
+        : this.AllInstalledAgentsUpToDate ? "None" : "Unknown";
+
+    /// <inheritdoc />
+    public string UpdatesDetail
+    {
+        get
+        {
+            if (this.UpdatesAvailableCount > 0)
+            {
+                var installed = this.InstalledAgentCount;
+                var noun = installed == 1 ? "agent" : "agents";
+                return $"{this.UpdatesAvailableCount} of {installed} installed {noun}";
+            }
+
+            if (this.InstalledAgentCount == 0)
+            {
+                return "No installed agents";
+            }
+
+            return this.AllInstalledAgentsUpToDate ? "All installed agents up to date" : "Run Check updates";
+        }
+    }
+
+    /// <inheritdoc />
+    public SummaryCardTone UpdatesValueTone => this.UpdatesAvailableCount > 0
+        ? SummaryCardTone.Accent
+        : this.AllInstalledAgentsUpToDate ? SummaryCardTone.Success : SummaryCardTone.Muted;
+
+    /// <summary>
+    ///   Whether every installed agent's last update-availability check reported
+    ///   <see cref="AgentUpdateStatus.UpToDate" />. Vacuously true when no agent is installed, so
+    ///   the UPDATES card reads "None" rather than "Unknown" in that case.
+    /// </summary>
+    private bool AllInstalledAgentsUpToDate =>
+        this.Cards
+            .Where(card => card.IsInstalled)
+            .All(card => card.UpdateAvailability?.Status == AgentUpdateStatus.UpToDate);
+
+    /// <inheritdoc />
     public void Load(string? defaultAgentId)
     {
         if (this.disposed)
@@ -379,6 +423,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.OnPropertyChanged(nameof(this.NotInstalledAgentCount));
         this.OnPropertyChanged(nameof(this.AvailabilitySummary));
         this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
+        this.OnPropertyChanged(nameof(this.UpdatesAvailableCount));
+        this.OnPropertyChanged(nameof(this.UpdatesValue));
+        this.OnPropertyChanged(nameof(this.UpdatesDetail));
+        this.OnPropertyChanged(nameof(this.UpdatesValueTone));
     }
 
     /// <summary>
@@ -468,6 +516,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
             if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
             {
+                this.RefreshAvailabilitySummary();
                 this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
         }
@@ -653,6 +702,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 this.UpdateCheckSummary = BuildUpdateCheckSummary(
                     checkedCount,
                     cards.Count(card => card.HasUpdateAvailable));
+                this.RefreshAvailabilitySummary();
             }
         }
         finally
@@ -677,6 +727,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // CLI has no update source to check; clear any stale advisory indicator.
             card.UpdateAvailability = null;
             card.Message = "Not installed on the host";
+            this.RefreshAvailabilitySummary();
             return;
         }
 
@@ -696,6 +747,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 AgentUpdateStatus.UpToDate => "Up to date",
                 _ => "Update availability unknown"
             };
+            this.RefreshAvailabilitySummary();
         }
     }
 

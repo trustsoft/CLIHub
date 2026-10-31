@@ -53,7 +53,8 @@ The Settings window renders the active page's title, description, and hairline d
 header row of the content area. A page may add a summary row above the divider: on Project Scanning, the
 projects, agents, and watcher summary cards sit between the description and the hairline; on Projects, the
 total, manual, and discovered summary cards use the same row; on CLI Agents, the agents, default-agent, and
-detection summary cards use it. The terms are defined in the [glossary](../glossary.md#settings-ui). Only the
+updates summary cards use it; on Agent Detection, the cache TTL, timeout, and defaults summary cards use it.
+The terms are defined in the [glossary](../glossary.md#settings-ui). Only the
 content below the divider is hosted by the vertical `ScrollViewer`, so the page header, summary row,
 sidebar, drawn window chrome, validation message, and footer stay visible while long pages scroll. Page
 views (`Settings*Page.xaml`) contain only their scrolling settings content; the title and description live

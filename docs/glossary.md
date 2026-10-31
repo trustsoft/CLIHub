@@ -109,9 +109,10 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
   the [version](#agents-and-plugins) lookup. `agentProbeTtlMinutes` bounds how long detection
   and version results are cached; `agentProbeTimeoutSeconds` bounds how long a version probe may
   run before the process is terminated and the version is reported as `unknown`. The Settings UI
-  labels this area "DETECTION" (the section header and the page-header summary card) with the
+  labels this area "DETECTION" (the Agent Detection page section header and summary cards) with the
   "Cache TTL" and "Version check timeout" fields, while the configuration keys keep their
-  `agentProbe*` names.
+  `agentProbe*` names. The detection settings appear on the Agent Detection Settings page,
+  positioned immediately after CLI Agents in the sidebar.
 
 ## Application
 
@@ -141,7 +142,7 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
   the state of that page, for example PROJECTS, AGENTS, and DAEMON on Project Scanning. A summary
   card sits between the page description and the hairline and does not scroll with the page content.
   In XAML, a page's cards are one `...SummaryCards` data template (`ProjectsSummaryCards`,
-  `RegistrySummaryCards`, `AgentsSummaryCards`). Russian: «сводная карточка».
+  `RegistrySummaryCards`, `AgentsSummaryCards`, `AgentDetectionSummaryCards`). Russian: «сводная карточка».
 - **Summary row** — the horizontal row that holds a page's summary cards. Russian: «ряд сводных
   карточек»; the whole header block is also called «сводка страницы». Use "summary cards" for the
   individual blocks and "summary row" for the group. Prefer these terms over "metrics line",

@@ -3,7 +3,7 @@ namespace CLIHub.Views;
 using System.Windows.Controls;
 
 /// <summary>
-///   Settings page for CLI agents: the agent probe caching and timeout fields.
+///   Settings page for CLI agents: the default agent selector and the per-agent management cards.
 /// </summary>
 public partial class SettingsAgentsPage : UserControl
 {

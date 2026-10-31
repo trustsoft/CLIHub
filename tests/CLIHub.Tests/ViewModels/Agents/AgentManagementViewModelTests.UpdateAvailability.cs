@@ -851,4 +851,201 @@ public partial class AgentManagementViewModelTests
         Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
     }
 
+    [Fact]
+    public void UpdatesAggregation_WhenAvailabilityUnknown_ShowsUnknownMutedState()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+
+        viewModel.Load(null);
+
+        Assert.Equal(0, viewModel.UpdatesAvailableCount);
+        Assert.Equal("Unknown", viewModel.UpdatesValue);
+        Assert.Equal("Run Check updates", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Muted, viewModel.UpdatesValueTone);
+    }
+
+    [Fact]
+    public void UpdatesAggregation_WhenAllInstalledAgentsAreUpToDate_ShowsNoneSuccessState()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+
+        viewModel.Load(null);
+
+        Assert.Equal(0, viewModel.UpdatesAvailableCount);
+        Assert.Equal("None", viewModel.UpdatesValue);
+        Assert.Equal("All installed agents up to date", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Success, viewModel.UpdatesValueTone);
+    }
+
+    [Theory]
+    [InlineData(1, "1 of 3 installed agents")]
+    [InlineData(2, "2 of 3 installed agents")]
+    public void UpdatesAggregation_WhenUpdatesAvailable_ReportsCountAgainstInstalledAgents(
+        int updateCount,
+        string expectedDetail)
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var c = Launchable("c");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => Task.FromResult(
+                plugin.Id == "a" || (plugin.Id == "b" && updateCount > 1)
+                    ? new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0")
+                    : new AgentUpdateAvailability(AgentUpdateStatus.UpToDate)));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b, c])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+
+        viewModel.Load(null);
+
+        Assert.Equal(updateCount, viewModel.UpdatesAvailableCount);
+        Assert.Equal(updateCount.ToString(), viewModel.UpdatesValue);
+        Assert.Equal(expectedDetail, viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
+    }
+
+    [Fact]
+    public void UpdatesAggregation_WhenOneInstalledAgentHasAnUpdate_UsesSingularAgentNoun()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+
+        viewModel.Load(null);
+
+        Assert.Equal(1, viewModel.UpdatesAvailableCount);
+        Assert.Equal("1", viewModel.UpdatesValue);
+        Assert.Equal("1 of 1 installed agent", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
+    }
+
+    [Fact]
+    public void UpdatesAggregation_WhenNoInstalledAgents_ShowsNoneWithNoInstalledDetail()
+    {
+        var a = Launchable("a");
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(a)).Returns(false);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a])
+            .WithDetection(detection)
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+
+        viewModel.Load(null);
+
+        Assert.Equal(0, viewModel.UpdatesAvailableCount);
+        Assert.Equal("None", viewModel.UpdatesValue);
+        Assert.Equal("No installed agents", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Success, viewModel.UpdatesValueTone);
+    }
+
+    [Fact]
+    public void CheckCardUpdatesCommand_WhenPerCardResultArrives_RefreshesUpdatesAggregation()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // per-card
+        availability
+            .Setup(x => x.CheckAsync(b, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+        viewModel.Load(null);
+        var cardA = viewModel.Cards.Single(card => card.PluginId == "a");
+        Assert.Equal("Unknown", viewModel.UpdatesValue);
+
+        var raised = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.CheckCardUpdatesCommand.Execute(cardA);
+
+        Assert.True(SpinWait.SpinUntil(() => viewModel.UpdatesAvailableCount == 1, TimeSpan.FromSeconds(5)));
+        Assert.Equal("1", viewModel.UpdatesValue);
+        Assert.Equal("1 of 2 installed agents", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
+        Assert.Contains(nameof(AgentManagementViewModel.UpdatesValue), raised);
+        Assert.Contains(nameof(AgentManagementViewModel.UpdatesDetail), raised);
+        Assert.Contains(nameof(AgentManagementViewModel.UpdatesValueTone), raised);
+    }
+
+    [Fact]
+    public void CheckUpdatesCommand_WhenHeaderCheckCompletes_RefreshesUpdatesAggregation()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // header check
+        availability
+            .Setup(x => x.CheckAsync(b, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithAvailability(availability)
+            .Build();
+        viewModel.Load(null);
+        Assert.Equal("Unknown", viewModel.UpdatesValue);
+
+        var raised = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.CheckUpdatesCommand.Execute(null);
+
+        Assert.Equal(1, viewModel.UpdatesAvailableCount);
+        Assert.Equal("1", viewModel.UpdatesValue);
+        Assert.Equal("1 of 2 installed agents", viewModel.UpdatesDetail);
+        Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
+        Assert.Contains(nameof(AgentManagementViewModel.UpdatesValue), raised);
+    }
 }

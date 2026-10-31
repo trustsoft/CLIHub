@@ -851,6 +851,51 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void ResetProbePolicy_ClearsBothFields()
+    {
+        var fixture = new SettingsViewModelFixture();
+        fixture.ViewModel.Load();
+
+        Assert.Equal("15 min · 10 sec", fixture.ViewModel.ProbePolicyDefaults);
+        Assert.Equal("Used when a field is empty", fixture.ViewModel.ProbePolicyDefaultsDetail);
+        Assert.False(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
+
+        fixture.ViewModel.ProbeTtlText = "25";
+        fixture.ViewModel.ProbeTimeoutText = "20";
+        Assert.True(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
+
+        var raised = new List<string?>();
+        fixture.ViewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        fixture.ViewModel.ResetProbePolicyCommand.Execute(null);
+
+        Assert.Equal(string.Empty, fixture.ViewModel.ProbeTtlText);
+        Assert.Equal(string.Empty, fixture.ViewModel.ProbeTimeoutText);
+        Assert.Contains(nameof(SettingsViewModel.ProbePolicyCacheTtlSummary), raised);
+        Assert.Contains(nameof(SettingsViewModel.ProbePolicyCacheTtlDetail), raised);
+        Assert.Contains(nameof(SettingsViewModel.ProbePolicyTimeoutSummary), raised);
+        Assert.Contains(nameof(SettingsViewModel.ProbePolicyTimeoutDetail), raised);
+        Assert.Contains(nameof(SettingsViewModel.CanResetProbePolicy), raised);
+        Assert.False(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void ResetProbePolicy_WhenOnlyTimeoutIsCustom_IsEnabled()
+    {
+        var fixture = new SettingsViewModelFixture();
+        fixture.ViewModel.Load();
+
+        fixture.ViewModel.ProbeTimeoutText = "5";
+
+        Assert.True(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
+
+        fixture.ViewModel.ResetProbePolicyCommand.Execute(null);
+
+        Assert.Equal(string.Empty, fixture.ViewModel.ProbeTimeoutText);
+        Assert.False(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
+    }
+
+    [Fact]
     public void Save_InvalidDraft_DoesNotPersistOrClose()
     {
         var fixture = new SettingsViewModelFixture();

@@ -11,7 +11,7 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `launch-window.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | The launch window with the Projects and Agents panes. |
 | `settings-appearance.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Appearance (theme, accent color, and path display). |
 | `settings-discovery.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
-| `settings-agents.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → CLI Agents (installed agents, default agent, detection settings). |
+| `settings-agents.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → CLI Agents (installed agents and the default agent). |
 
 ## Regenerate all README images
 

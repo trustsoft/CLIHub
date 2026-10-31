@@ -70,10 +70,17 @@ internal static class SettingsPageCatalog
         new(
             "agents",
             "CLI Agents",
-            "Installed CLI agents, the default agent, and detection settings.",
+            "Installed CLI agents and the default agent.",
             "Engines & Repos",
             IconGlyphs.Robot,
             SummaryRowKey: "AgentsSummaryCards"),
+        new(
+            "agent-detection",
+            "Agent Detection",
+            "Caching and timeout behavior for agent detection.",
+            "Engines & Repos",
+            IconGlyphs.Diagnostic,
+            SummaryRowKey: "AgentDetectionSummaryCards"),
         new(
             "terminal",
             "Terminal Profiles",

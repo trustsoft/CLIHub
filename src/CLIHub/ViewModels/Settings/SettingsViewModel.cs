@@ -154,6 +154,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
         this.SaveCommand = new RelayCommand(this.Save);
         this.CancelCommand = new RelayCommand(this.Cancel);
+        this.ResetProbePolicyCommand = new RelayCommand(this.ResetProbePolicy, () => this.CanResetProbePolicy);
         this.CheckForUpdatesCommand = new RelayCommand(() =>
             _ = this.operationLifetime.RunAsync("Settings update check", this.RunUpdateCheckAsync));
         this.ShowReleaseNotesCommand = new RelayCommand(this.releaseNotesLauncher.ShowReleaseNotes);
@@ -336,6 +337,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         this.OnPropertyChanged(nameof(this.ProbePolicySummary));
         this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
+        this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlSummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlDetail));
+        this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutSummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutDetail));
+        this.OnPropertyChanged(nameof(this.CanResetProbePolicy));
+        this.ResetProbePolicyCommand.RaiseCanExecuteChanged();
     }
 
     /// <summary>
@@ -347,6 +354,51 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Watermark for the timeout field: the built-in default shown while the field is empty.
     /// </summary>
     public string ProbeTimeoutWatermark => ((int)AgentVersionService.DefaultProbeTimeout.TotalSeconds).ToString();
+
+    /// <summary>
+    ///   The effective detection cache TTL shown in the Agent Detection page header, e.g. "25 min".
+    /// </summary>
+    public string ProbePolicyCacheTtlSummary => $"{this.ResolveProbeTtlMinutes()} min";
+
+    /// <summary>
+    ///   Whether the cache TTL card reflects a custom value or the built-in default.
+    /// </summary>
+    public string ProbePolicyCacheTtlDetail => this.HasCustomProbeTtl
+        ? $"Custom (default: {this.ProbeTtlWatermark} min)"
+        : "Built-in default";
+
+    /// <summary>
+    ///   The effective version check timeout shown in the Agent Detection page header, e.g. "15 sec".
+    /// </summary>
+    public string ProbePolicyTimeoutSummary => $"{this.ResolveProbeTimeoutSeconds()} sec";
+
+    /// <summary>
+    ///   Whether the timeout card reflects a custom value or the built-in default.
+    /// </summary>
+    public string ProbePolicyTimeoutDetail => this.HasCustomProbeTimeout
+        ? $"Custom (default: {this.ProbeTimeoutWatermark} sec)"
+        : "Built-in default";
+
+    private bool HasCustomProbeTtl => !string.IsNullOrWhiteSpace(this.probeTtlText);
+
+    private bool HasCustomProbeTimeout => !string.IsNullOrWhiteSpace(this.probeTimeoutText);
+
+    /// <summary>
+    ///   The built-in default detection policy shown in the DEFAULTS summary card, e.g.
+    ///   "15 min · 10 sec".
+    /// </summary>
+    public string ProbePolicyDefaults => $"{this.ProbeTtlWatermark} min · {this.ProbeTimeoutWatermark} sec";
+
+    /// <summary>
+    ///   The DEFAULTS summary-card detail: when the built-in values apply.
+    /// </summary>
+    public string ProbePolicyDefaultsDetail => "Used when a field is empty";
+
+    /// <summary>
+    ///   Whether either detection field holds a value, so <see cref="ResetProbePolicyCommand" />
+    ///   is available.
+    /// </summary>
+    public bool CanResetProbePolicy => this.HasCustomProbeTtl || this.HasCustomProbeTimeout;
 
     /// <summary>
     ///   Whether updates are checked on startup.
@@ -527,6 +579,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public RelayCommand CancelCommand { get; }
 
     /// <summary>
+    ///   Restores both detection fields to the built-in defaults in the draft.
+    /// </summary>
+    public RelayCommand ResetProbePolicyCommand { get; }
+
+    /// <summary>
     ///   Runs an update check and reports the outcome in <see cref="UpdateMessage" />.
     /// </summary>
     public RelayCommand CheckForUpdatesCommand { get; }
@@ -616,6 +673,12 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.ProbeTimeoutText));
         this.OnPropertyChanged(nameof(this.ProbePolicySummary));
         this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
+        this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlSummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlDetail));
+        this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutSummary));
+        this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutDetail));
+        this.OnPropertyChanged(nameof(this.CanResetProbePolicy));
+        this.ResetProbePolicyCommand.RaiseCanExecuteChanged();
         this.OnPropertyChanged(nameof(this.CheckForUpdatesOnStartup));
         this.OnPropertyChanged(nameof(this.AutoDownloadUpdates));
         this.OnPropertyChanged(nameof(this.NotifyStableUpdates));
@@ -648,6 +711,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     ///   Closes the window without saving.
     /// </summary>
     public void Cancel() => this.RequestClose?.Invoke(this, EventArgs.Empty);
+
+    private void ResetProbePolicy()
+    {
+        // The property setters raise the probe-policy notifications themselves.
+        this.ProbeTtlText = string.Empty;
+        this.ProbeTimeoutText = string.Empty;
+    }
 
     private void OnAgentsStatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

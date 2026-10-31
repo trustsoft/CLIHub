@@ -16,17 +16,17 @@ using CLIHub.Lifetime;
 public class SettingsNavigationTests
 {
     [Fact]
-    public void Catalog_HasThreeGroupsAndNinePagesInOrder()
+    public void Catalog_HasThreeGroupsAndTenPagesInOrder()
     {
         var viewModel = new Fixture().ViewModel;
 
         Assert.Equal(
             new[] { "General", "Engines & Repos", "System" },
             viewModel.Pages.Select(page => page.Group).Distinct());
-        Assert.Equal(9, viewModel.Pages.Count);
+        Assert.Equal(10, viewModel.Pages.Count);
 
         Assert.Equal(
-            new[] { "general", "hotkeys", "projects-registry", "projects", "agents", "terminal", "appearance", "telemetry", "updates" },
+            new[] { "general", "hotkeys", "projects-registry", "projects", "agents", "agent-detection", "terminal", "appearance", "telemetry", "updates" },
             viewModel.Pages.Select(page => page.Key));
     }
 
@@ -76,6 +76,7 @@ public class SettingsNavigationTests
                 ("projects-registry", null, null, "RegistrySummaryCards"),
                 ("projects", null, "ProjectsHeaderAction", "ProjectsSummaryCards"),
                 ("agents", null, null, "AgentsSummaryCards"),
+                ("agent-detection", null, null, "AgentDetectionSummaryCards"),
                 ("terminal", null, null, null),
                 ("appearance", null, null, null),
                 ("telemetry", null, null, null),

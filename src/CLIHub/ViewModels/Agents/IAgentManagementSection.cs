@@ -125,6 +125,33 @@ public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
     string? UpdateCheckSummary { get; }
 
     /// <summary>
+    ///   The number of agents whose last update-availability check found a newer version.
+    /// </summary>
+    int UpdatesAvailableCount { get; }
+
+    /// <summary>
+    ///   The UPDATES card value: the number of agents with an available update as text, "None"
+    ///   when every installed agent is up to date (or none is installed), or "Unknown" while any
+    ///   installed agent's update availability has not been determined.
+    /// </summary>
+    string UpdatesValue { get; }
+
+    /// <summary>
+    ///   The UPDATES card detail: the update count against the installed count when updates exist,
+    ///   an all-up-to-date statement when none do, a prompt to run the check while availability is
+    ///   unknown, or the no-installed-agents notice.
+    /// </summary>
+    string UpdatesDetail { get; }
+
+    /// <summary>
+    ///   The tone of the UPDATES card value: <see cref="SummaryCardTone.Accent" /> while updates
+    ///   exist, <see cref="SummaryCardTone.Success" /> when every installed agent is up to date
+    ///   (or none is installed), and <see cref="SummaryCardTone.Muted" /> while availability is
+    ///   unknown.
+    /// </summary>
+    SummaryCardTone UpdatesValueTone { get; }
+
+    /// <summary>
     ///   Rebuilds the cards and the default-agent options for the stored default agent.
     /// </summary>
     /// <param name="defaultAgentId"> The stored default agent id, or null. </param>

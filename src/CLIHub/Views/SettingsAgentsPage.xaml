@@ -45,34 +45,6 @@
         <Style x:Key="AgentUpdateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
         </Style>
-
-        <!-- Ghost chip with the launcher footer behavior: hover/pressed overlays, dimmed when disabled -->
-        <Style x:Key="AgentsHeaderChipButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Padding="{TemplateBinding Padding}"
-                                Background="Transparent"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
     </UserControl.Resources>
     <StackPanel>
         <controls:SectionHeader Text="MANAGEMENT"/>
@@ -102,31 +74,6 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <controls:SectionHeader Text="DETECTION"/>
-        <controls:SettingsGroup>
-            <controls:SettingCard Title="Cache TTL"
-                               Hint="How long detection and version results are cached. Empty — use defaults."
-                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
-                               Grouped="True">
-                <controls:NumericField MinWidth="110"
-                                       Minimum="1"
-                                       Placeholder="{Binding ProbeTtlWatermark}"
-                                       Text="{Binding ProbeTtlText, UpdateSourceTrigger=PropertyChanged}"
-                                       Unit="min"/>
-            </controls:SettingCard>
-
-            <controls:SettingCard Title="Version check timeout"
-                               Hint="How long a single version check may take. Empty — use defaults."
-                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
-                               Grouped="True">
-                <controls:NumericField MinWidth="110"
-                                       Minimum="1"
-                                       Placeholder="{Binding ProbeTimeoutWatermark}"
-                                       Text="{Binding ProbeTimeoutText, UpdateSourceTrigger=PropertyChanged}"
-                                       Unit="sec"/>
-            </controls:SettingCard>
-        </controls:SettingsGroup>
-
         <Grid>
             <controls:SectionHeader Text="AGENTS"/>
             <controls:SpacedPanel Margin="0,18,0,8"
@@ -143,7 +90,7 @@
                 <Button AutomationProperties.Name="Detect installed agents and versions"
                         Command="{Binding AgentsState.DetectCommand}"
                         IsEnabled="{Binding AgentsState.CanDetect}"
-                        Style="{StaticResource AgentsHeaderChipButton}"
+                        Style="{StaticResource SectionHeaderChipButton}"
                         ToolTip="Detect installed agents and versions">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
@@ -159,7 +106,7 @@
                 <Button AutomationProperties.Name="Check for agent updates"
                         Command="{Binding AgentsState.CheckUpdatesCommand}"
                         IsEnabled="{Binding AgentsState.CanCheckUpdates}"
-                        Style="{StaticResource AgentsHeaderChipButton}"
+                        Style="{StaticResource SectionHeaderChipButton}"
                         ToolTip="Check for agent updates">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
