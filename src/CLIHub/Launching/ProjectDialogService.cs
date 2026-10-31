@@ -20,7 +20,7 @@ public sealed class ProjectDialogService : IProjectDialogService
             Title = title
         };
 
-        return dialog.ShowDialog(Application.Current?.MainWindow) == true
+        return dialog.ShowDialog(ResolveOwner()) == true
             ? dialog.FolderName
             : null;
     }
@@ -39,10 +39,34 @@ public sealed class ProjectDialogService : IProjectDialogService
                                          MessageBoxButton buttons,
                                          MessageBoxImage image)
     {
-        var owner = Application.Current?.MainWindow;
+        var owner = ResolveOwner();
 
         return owner is null
             ? MessageBox.Show(message, title, buttons, image)
             : MessageBox.Show(owner, message, title, buttons, image);
+    }
+
+    /// <summary>
+    ///   Resolves the window that owns the next dialog: the currently active application window
+    ///   (so a prompt triggered from the Settings window is modal to Settings), then the
+    ///   application main window, then none.
+    /// </summary>
+    /// <returns> The owner window, or null when no application window is available. </returns>
+    private static Window? ResolveOwner()
+    {
+        if (Application.Current is not { } application)
+        {
+            return null;
+        }
+
+        foreach (Window window in application.Windows)
+        {
+            if (window.IsActive)
+            {
+                return window;
+            }
+        }
+
+        return application.MainWindow;
     }
 }
