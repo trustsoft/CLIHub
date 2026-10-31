@@ -37,19 +37,23 @@ Two paths:
 The launch-window project row has this structure (`:163-229`):
 - Grid with 4 columns: logo (Auto), fixed gap (Sizing.ProjectRow.TextGap), text (Star), favorite star (Auto).
 - The text column (Grid.Column="2") is a StackPanel named `TextHost` containing the name TextBlock and the path TextBlock with its width-aware trimming.
-- The favorite star is Grid.Column="3" with left margin 8, vertically centered.
+- The favorite star is Grid.Column="3" with left margin 8, vertically centered; it is not aligned with the name line.
 
-Placement options for the provenance mark:
+The user reviewed the first implementation and rejected the two-marker composition: the provenance mark sat at the trailing edge of the text column while the star occupied a separate column, so they read as two competing badges. The chosen fix is a single right-side marker rail, one marker per text line (R1).
 
-1. **After the name, inside a horizontal StackPanel** — name and mark in one row inside the text StackPanel. Rejected: a horizontal StackPanel measures its children with unbounded width, so the name TextBlock's `TextTrimming` stops working and a long project name can overflow the row. The Settings page avoids this with a fixed `MaxWidth` (`Sizing.SettingsProjectRow.NameMaxWidth` = 360), but that value does not adapt to the launch window's narrower pane.
+Placement options considered:
 
-2. **Two-column Grid in the name row** — name in a `*` column, mark in an `Auto` column inside the text StackPanel. The name receives the remaining width and keeps its adaptive `CharacterEllipsis` trimming; the mark keeps its constant width and sits at the trailing edge of the text column, immediately before the favorite-star column. The path TextBlock and its `TextHost.ActualWidth` multibinding stay unchanged below.
+1. **Two-column Grid in the name row** (first implementation) — name in a `*` column, mark in an `Auto` column. Rejected by visual review: the mark still sits at the far right of the text column and the star is a separate trailing column, so the two markers compete on the same line.
 
-3. **Grid.Column="3" before the favorite star** — provenance mark in the last column, with the star pushed further right. Clean separation, no text-layout impact. Rejected as unnecessary once the two-column Grid keeps the mark in the name row; also splits the row's trailing metadata into two groups.
+2. **Single horizontal right cluster** — `M  ★` in one StackPanel. Simpler, but still two badges on one line; without a separator the star can read as part of the provenance mark.
 
-**Chosen:** Two-column Grid (option 2). Rationale: it preserves the name's adaptive trimming (the pre-existing behavior), keeps the path trimming untouched, and places the mark in the name row as a trailing badge. The mark is one letter with modest font size and an 8 DIP left margin; its constant width reduces the name's available width by ~16 DIP, which the `*` column absorbs.
+3. **Unified capsule** — `[ M  ★ ]` in one chip. Visually strong, but adds chrome and theming work for little gain in a compact list.
 
-Implementation: replace the standalone name TextBlock in the text StackPanel with a `Grid` containing `ColumnDefinition Width="*"` (name TextBlock, unchanged bindings, `Grid.Column="0"`) and `ColumnDefinition Width="Auto"` (provenance mark TextBlock, `Grid.Column="1"`, `Margin="8,0,0,0"`, bindings from the Settings page: `Style=ProjectProvenanceMark`, `Text=SourceMark`, `ToolTip=SourceLabel`, `AutomationProperties.Name=SourceLabel`). Do not change the path TextBlock or the `TextHost` name.
+4. **Right rail, one marker per text line** (R1, chosen) — the name and path share a two-column/two-row Grid inside `TextHost`; the text column is `*` and a fixed-width marker rail is `Auto`-sized. The favorite star sits in the rail on the name row, the provenance mark on the path row, both centered. This keeps both markers on the right, gives each its own line, and removes the competition.
+
+**Chosen:** Option 4. Rationale: the row already has two lines (name, path); assigning one marker to each line is the calmest composition, preserves both markers on the right, and avoids extra chrome. A fixed rail width (`Sizing.ProjectRow.MarkerRailWidth` = 30) prevents row jitter when the favorite star is hidden and gives the markers a consistent right edge. The text column remains `*`, so the name keeps adaptive trimming. The path's `PathDisplay` MultiBinding now measures `NameText.ActualWidth` (the text column) rather than `TextHost.ActualWidth`, because `TextHost` includes the rail.
+
+Implementation: inside the project-row `TextHost`, replace the name-row Grid and the separate path TextBlock with a Grid that has two rows (Auto, Auto) and two columns (`*` text, `Sizing.ProjectRow.MarkerRailWidth` rail). Put the name TextBlock in row 0/column 0 (`x:Name="NameText"`), the path TextBlock in row 1/column 0, the favorite star in row 0/column 1, and the `ProjectProvenanceMark` TextBlock in row 1/column 1. Both markers use `HorizontalAlignment=Center` and `VerticalAlignment=Center`. The outer row Grid drops its fourth (star) column. Do not change the logo, row padding, or the `ProjectProvenanceMark` style values.
 
 ## Decision 3: accessibility and tooltips
 

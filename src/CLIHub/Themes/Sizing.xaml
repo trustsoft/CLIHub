@@ -92,6 +92,10 @@
     <!-- Gap between a project row's thumbnail and its texts: a fixed grid column, so the text
          column's measured width is exactly the space the path may fill. -->
     <GridLength x:Key="Sizing.ProjectRow.TextGap">15</GridLength>
+    <!-- Fixed width of the launch-window project row's right marker rail: the favorite star
+         sits on the name line and the provenance mark on the path line, so hiding the star
+         never shifts the provenance mark or the text. -->
+    <GridLength x:Key="Sizing.ProjectRow.MarkerRailWidth">30</GridLength>
     <!-- Upper bound for a project name on the Settings Projects page, so the provenance mark
          sits right after the name and a long name cannot push it away. -->
     <sys:Double x:Key="Sizing.SettingsProjectRow.NameMaxWidth">360</sys:Double>

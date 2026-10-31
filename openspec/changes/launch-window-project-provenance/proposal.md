@@ -14,15 +14,16 @@ Making provenance visible in both surfaces unifies the display of this stable me
 
 - The launch window project row `DataTemplate` adds a provenance mark binding: the compact "M"/"D" text with tooltip and accessible name from `ProjectModel.SourceMark` and `SourceLabel`.
 - Visual presentation: an equivalent `ProjectProvenanceMark` style in `LaunchWindowStyles.xaml` with the same token-based values as the Settings page (decision recorded in `design.md`; the Settings page is not edited, so the two findings stay independently committable).
-- Layout: the mark is placed to preserve the compact row (verified with the width-aware path-trimming logic), most likely after the name TextBlock in the launch row's text StackPanel.
+- Layout (R1, chosen after visual review): one fixed-width right-side marker rail; the favorite star sits on the name line and the provenance mark on the path line. This keeps both markers on the right without making them compete on one line.
 - Spec delta: MODIFIED the existing `project-management` "Project provenance" requirement, preserving its five original scenarios and adding one scenario confirming the launch window shows the mark.
 
 ## Impact
 
 - Affected specs: `project-management` (MODIFIED "Project provenance" requirement, one added scenario).
 - Affected code:
-  - `src/CLIHub/Views/LaunchWindow.xaml` — add provenance mark binding in the project-row DataTemplate.
+  - `src/CLIHub/Views/LaunchWindow.xaml` — restructure the project-row text into a right marker rail (star on the name line, provenance on the path line).
   - `src/CLIHub/Themes/LaunchWindowStyles.xaml` — add the launch-window `ProjectProvenanceMark` style.
+  - `src/CLIHub/Themes/Sizing.xaml` — add `Sizing.ProjectRow.MarkerRailWidth` for the fixed rail.
   - No ViewModel, model, service, or configuration changes — `ProjectModel` already exposes `SourceMark` and `SourceLabel`.
   - No new tests — the data path is unit-tested (`tests/CLIHub.Tests/ViewModels/Projects/ProjectModelCatalogTests.cs:93-111`); the visual binding is verified by manual smoke.
 - Non-goals:

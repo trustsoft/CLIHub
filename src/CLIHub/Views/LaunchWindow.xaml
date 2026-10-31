@@ -167,10 +167,10 @@
                                                  exactly the space the path may fill, with no chrome arithmetic
                                                  in the converter. -->
                                             <ColumnDefinition Width="{StaticResource Sizing.ProjectRow.TextGap}"/>
-                                            <!-- Star column so the row fills the list width, while the
-                                                 item's own desired width stays content driven. -->
+                                            <!-- Text plus the right marker rail: the rail's fixed width keeps
+                                                 the markers aligned across rows and prevents row jitter when the
+                                                 favorite star is hidden. -->
                                             <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
                                         <Border Width="{StaticResource Sizing.ProjectLogo.Width}"
@@ -187,47 +187,47 @@
                                             </Border>
                                         </Border>
 
-                                        <StackPanel
+                                        <Grid
                                                     x:Name="TextHost"
                                                     Grid.Column="2"
                                                     VerticalAlignment="Center">
-                                            <!-- Name and provenance sharing one row: a Grid so the name
-                                                 column stays bounded (TextTrimming needs a width cap)
-                                                 while the mark takes its natural width. -->
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <TextBlock Grid.Column="0"
-                                                           FontSize="{StaticResource Sizing.FontSize.Name}"
-                                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                                           Text="{Binding Name}"
-                                                           TextTrimming="CharacterEllipsis"/>
-                                                <!-- Provenance: the compact "M"/"D" mark after the name, with
-                                                     the full label as its tooltip and accessible name. -->
-                                                <TextBlock Grid.Column="1"
-                                                           Margin="8,0,0,0"
-                                                           Style="{StaticResource ProjectProvenanceMark}"
-                                                           AutomationProperties.Name="{Binding SourceLabel}"
-                                                           Text="{Binding SourceMark}"
-                                                           ToolTip="{Binding SourceLabel}"/>
-                                            </Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <!-- Fixed right rail: the star sits on the name line and the
+                                                     provenance mark on the path line, so the two markers never
+                                                     compete on one line and hiding the star shifts nothing. -->
+                                                <ColumnDefinition Width="{StaticResource Sizing.ProjectRow.MarkerRailWidth}"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock x:Name="NameText"
+                                                       Grid.Row="0"
+                                                       Grid.Column="0"
+                                                       FontSize="{StaticResource Sizing.FontSize.Name}"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis"/>
+
                                             <!-- TextTrimming is only a transient fallback while the converter catches
                                                  up after a width change (one layout pass, e.g. mid-splitter-drag);
                                                  the authoritative trimming is the converter's. -->
-                                            <TextBlock Margin="0,3,0,0"
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="0"
+                                                       Margin="0,3,0,0"
                                                        FontSize="{StaticResource Sizing.FontSize.Body}"
                                                        Foreground="{DynamicResource TextMutedBrush}"
                                                        TextTrimming="CharacterEllipsis">
                                                 <TextBlock.Text>
                                                     <MultiBinding Converter="{StaticResource PathDisplay}">
                                                         <Binding Path="Path"/>
-                                                        <!-- The text host's measured width: it stretches over the text column,
-                                                             so it equals exactly the space the path may fill. The row is stretched
-                                                             to the list, so the width follows the pane's width and the path is
-                                                             re-trimmed on every change of it. -->
-                                                        <Binding ElementName="TextHost" Path="ActualWidth"/>
+                                                        <!-- The name text's measured width: it stretches over the
+                                                             text column, so it equals exactly the space the path
+                                                             may fill. The rail lives in the other column and is
+                                                             therefore excluded. -->
+                                                        <Binding ElementName="NameText" Path="ActualWidth"/>
                                                         <Binding Path="DataContext.DisplayStyle"
                                                                  RelativeSource="{RelativeSource AncestorType={x:Type Window}}"/>
                                                         <!-- The TextBlock measures the text. -->
@@ -235,15 +235,26 @@
                                                     </MultiBinding>
                                                 </TextBlock.Text>
                                             </TextBlock>
-                                        </StackPanel>
 
-                                        <TextBlock Grid.Column="3"
-                                                   Margin="8,0,0,0"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13"
-                                                   Foreground="{DynamicResource AccentBrush}"
-                                                   Text="★"
-                                                   Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}"/>
+                                            <TextBlock Grid.Row="0"
+                                                       Grid.Column="1"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource AccentBrush}"
+                                                       Text="★"
+                                                       Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}"/>
+
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="1"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       Style="{StaticResource ProjectProvenanceMark}"
+                                                       AutomationProperties.Name="{Binding SourceLabel}"
+                                                       Text="{Binding SourceMark}"
+                                                       ToolTip="{Binding SourceLabel}"/>
+                                        </Grid>
+
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

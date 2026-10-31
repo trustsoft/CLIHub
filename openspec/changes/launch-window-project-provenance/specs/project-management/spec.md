@@ -34,6 +34,7 @@ The system SHALL record whether each project was registered manually or discover
 #### Scenario: Launch window shows provenance mark
 
 - **WHEN** a project is displayed in the launch window
-- **THEN** the provenance mark ("M" for manual, "D" for discovered) is shown after the project name
+- **THEN** the provenance mark ("M" for manual, "D" for discovered) is shown in the project row's right-side marker rail, aligned with the project path line
+- **AND** the favorite marker, when present, occupies the same rail on the project name line
 - **AND** the full label ("Manual" or "Discovered") is displayed as the mark's tooltip and accessible name
-- **AND** the mark uses the shared ProjectProvenanceMark style for consistent appearance with the Settings Projects page
+- **AND** the mark uses the ProjectProvenanceMark style for consistent appearance with the Settings Projects page
