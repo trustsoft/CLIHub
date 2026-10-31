@@ -191,10 +191,28 @@
                                                     x:Name="TextHost"
                                                     Grid.Column="2"
                                                     VerticalAlignment="Center">
-                                            <TextBlock FontSize="{StaticResource Sizing.FontSize.Name}"
-                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                       Text="{Binding Name}"
-                                                       TextTrimming="CharacterEllipsis"/>
+                                            <!-- Name and provenance sharing one row: a Grid so the name
+                                                 column stays bounded (TextTrimming needs a width cap)
+                                                 while the mark takes its natural width. -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           FontSize="{StaticResource Sizing.FontSize.Name}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           Text="{Binding Name}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <!-- Provenance: the compact "M"/"D" mark after the name, with
+                                                     the full label as its tooltip and accessible name. -->
+                                                <TextBlock Grid.Column="1"
+                                                           Margin="8,0,0,0"
+                                                           Style="{StaticResource ProjectProvenanceMark}"
+                                                           AutomationProperties.Name="{Binding SourceLabel}"
+                                                           Text="{Binding SourceMark}"
+                                                           ToolTip="{Binding SourceLabel}"/>
+                                            </Grid>
                                             <!-- TextTrimming is only a transient fallback while the converter catches
                                                  up after a width change (one layout pass, e.g. mid-splitter-drag);
                                                  the authoritative trimming is the converter's. -->

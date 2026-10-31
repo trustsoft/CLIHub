@@ -248,6 +248,23 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Project row provenance mark: the compact "M"/"D" source indicator, matching the style with
+         the same key defined in SettingsProjectRegistryPage.xaml (the sibling definition). Kept
+         local to each surface so both stay independently owned; the visual values must stay equal. -->
+    <Style x:Key="ProjectProvenanceMark" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Style.Triggers>
+            <!-- Manual provenance colors the mark; CanRemove is true exactly for manual
+                 projects (discovered projects are read-only). -->
+            <DataTrigger Binding="{Binding CanRemove}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource AccentSelectionBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Project row: selected rows get a soft accent fill -->
     <Style x:Key="ProjectRowContainer" TargetType="ListBoxItem">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
