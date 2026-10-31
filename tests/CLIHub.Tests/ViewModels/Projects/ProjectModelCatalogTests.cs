@@ -126,6 +126,30 @@ public class ProjectModelCatalogTests
     }
 
     [Fact]
+    public void ProjectModel_PathChanged_RaisesDisplayPathChanged()
+    {
+        var row = new ProjectModel(Snapshot("manual", "Manual", path: "C:\\old"));
+        var raised = new List<string?>();
+        row.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        row.Update(Snapshot("manual", "Manual", path: "C:\\new"));
+
+        Assert.Contains(nameof(ProjectModel.Path), raised);
+        Assert.Contains(nameof(ProjectModel.DisplayPath), raised);
+    }
+
+    [Fact]
+    public void ProjectModel_PathChanged_DisplayPathReturnsNewPath()
+    {
+        var row = new ProjectModel(Snapshot("manual", "Manual", path: "C:\\old"));
+
+        row.Update(Snapshot("manual", "Manual", path: "C:\\new"));
+
+        Assert.Equal("C:\\new", row.Path);
+        Assert.Equal("C:\\new", row.DisplayPath);
+    }
+
+    [Fact]
     public void Update_UnchangedValues_RaisesNothing()
     {
         var row = new ProjectModel(Snapshot("a", "A"));

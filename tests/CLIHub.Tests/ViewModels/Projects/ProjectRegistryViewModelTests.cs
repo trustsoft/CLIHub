@@ -313,12 +313,17 @@ public class ProjectRegistryViewModelTests : IDisposable
         dialogs.Setup(x => x.SelectFolder("Change Project Folder")).Returns(newFolder);
         var section = this.CreateSection(service, dialogs: dialogs);
         section.Load();
-
-        section.ChangePathCommand.Execute(section.Projects.Single());
-
         var row = section.Projects.Single();
+        var raised = new List<string?>();
+        row.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        section.ChangePathCommand.Execute(row);
+
+        Assert.Same(row, section.Projects.Single());
         Assert.Equal(newFolder, row.Path);
         Assert.Equal(Path.GetFileName(newFolder), row.Name);
+        Assert.Equal(newFolder, row.DisplayPath);
+        Assert.Contains(nameof(ProjectModel.DisplayPath), raised);
         Assert.True(row.IsFolderAvailable);
         Assert.False(section.HasError);
         service.Verify(x => x.ChangeProjectPath("manual", newFolder), Times.Once);

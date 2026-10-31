@@ -63,7 +63,13 @@ public sealed class ProjectModel : INotifyPropertyChanged
     public string Path
     {
         get => this.path;
-        private set => this.SetValue(ref this.path, value);
+        private set
+        {
+            if (this.SetValue(ref this.path, value))
+            {
+                this.OnPropertyChanged(nameof(this.DisplayPath));
+            }
+        }
     }
 
     /// <summary>
