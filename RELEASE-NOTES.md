@@ -3,6 +3,23 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.4 — 2026-10-31
+
+### New
+
+- You can change a manual project's folder from Settings → Projects when the project moves or is renamed. CLIHub keeps the project's identity, favorite state, and recency, updates its name and logo, and applies the change immediately.
+- The launch window now shows whether each project was added manually or discovered by scanning, in a compact marker on the right side of the project row.
+
+### Improved
+
+- Project provenance markers are readable in the Light, Dark, and Blue themes.
+
+### Fixed
+
+- Removing a project from Settings shows the confirmation above the Settings window and blocks Settings until you answer.
+- Changing a project's folder updates the displayed path immediately, without restarting CLIHub.
+- Project path errors are shown as plain messages instead of developer parameter text.
+
 ## 1.0.3 — 2026-10-31
 
 ### New

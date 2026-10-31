@@ -45,10 +45,11 @@ process inspection) behind ports declared in Core.
   detection markers. Plugins do not load DLLs or execute code in-process.
 - Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
   manually added projects untouched. Scanning settings apply immediately from the Project Scanning page.
-- The Settings Projects page lists every registered project with its provenance, registers and removes
-  manual projects, opens project folders, and flags missing folders; discovered projects are read-only
-  there. Project changes apply immediately from that page.
-- The launch window is the active WPF shell.
+- The Settings Projects page lists every registered project with its provenance, registers, removes, and
+  changes the folder of manual projects, opens project folders, and flags missing folders; discovered
+  projects are read-only there. Project changes apply immediately from that page.
+- The launch window is the active WPF shell; project rows show favorite and provenance markers in a
+  right-side rail.
 - Appearance is a Dark, Light, Blue, or System-synced palette plus one application-scoped accent color
   (Sky by default). Theme and accent changes apply immediately on a Settings save, and the accent is
   independent of the theme. With the System theme, a Windows personalization change is followed while

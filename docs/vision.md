@@ -26,6 +26,6 @@ a duplicated feature inventory in this document. User-facing behavior is summari
 
 Remaining product directions are deliberately small and exploratory:
 
-- richer per-agent project filtering and configuration;
+- per-project agent configuration (for example a per-project default agent or launch options);
 - notifications for background agent activity;
 - graceful handling of running agents during operations that currently require all matching processes to be closed.

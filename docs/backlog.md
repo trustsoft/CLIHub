@@ -201,13 +201,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Severity: Medium (product behavior; triage only)
 - Evidence: audited at HEAD `ccf4285` against the archived scanning/project-management designs, the
   live specs, source, and tests. Findings A (launch-window provenance), F (change a manual project's
-  folder), and E (removal-confirmation ownership) were accepted and now have OpenSpec changes:
-  `openspec/changes/launch-window-project-provenance/`,
-  `openspec/changes/project-path-correction/`, and
-  `openspec/changes/project-removal-dialog-ownership/`. Findings B, C, D, G, and H are recorded in
-  the entries below (B resolved, C/D deferred pending a product discussion, G a watch item, H already
+  folder), and E (removal-confirmation ownership) were implemented and archived:
+  `2026-10-31-launch-window-project-provenance` (`c579511`/`d6d9ca2`/`1d33add`, archive `d67d95c`),
+  `2026-10-31-project-path-correction` (`d17bb92`/`a205edb`, archive `bd94040`), and
+  `2026-10-31-project-removal-dialog-ownership` (`2bf240d`/`72b1f25`, archive `be19281`). Smoke
+  follow-ups: `2026-10-31-project-path-refresh` (`7b8bde0`/`eda2421`/`205c157`) and
+  `2026-10-31-provenance-mark-contrast` (`f0ae96e`/`6207e95`/`3cd52aa`). Findings B, C, D, G, and H
+  are recorded below (B resolved, C/D deferred pending a product discussion, G a watch item, H already
   done). No live folder monitoring and no config-format redesign are in scope.
-- Proposed remedy: execute the three changes one at a time, each with its own commit and verification.
+- Status: the accepted work is complete and archived; the remaining product items are C/D.
 - Trigger: none; this is the audit trail for the 2026-10-31 workstream.
 
 ### Explicit "Rescan now" action - **[done 2026-10-31]**
@@ -224,21 +226,21 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Status: resolved by the shipped scanning UI; nothing was re-implemented.
 - Residual evidence: none.
 
-### Per-project / per-agent filtering remains a vision item
+### Per-project / per-agent filtering - **[closed 2026-10-31]**
 
 - Severity: Low (exploratory product direction)
 - Evidence: per-project agent filtering was deferred in
-  `openspec/changes/archive/2026-09-27-project-management/design.md:128`, and
-  `docs/vision.md:29` still lists "richer per-agent project filtering and configuration". Shipped
-  behavior is one global preference: `showOnlyProjectAgents` hides agents not available in the
-  selected project (`src/CLIHub/ViewModels/Launch/LaunchWindowViewModel.cs:198-218`,
+  `openspec/changes/archive/2026-09-27-project-management/design.md:128`. Shipped behavior is one
+  global preference: `showOnlyProjectAgents` hides agents not detected in the selected project
+  (`src/CLIHub/ViewModels/Launch/LaunchWindowViewModel.cs:198-218`,
   `src/CLIHub/ViewModels/Agents/AgentPaneController.cs:82-103`; the action is
   "Only agents available in project" at `src/CLIHub/ViewModels/Launch/LaunchWindowActionBuilder.cs:44-50`).
-- Proposed remedy: settle the intended behavior first (per-project allowlist versus per-agent
-  visibility), then plan an OpenSpec change with persisted fields, defaults, and round-trip tests
-  before implementation.
-- Trigger: a product decision to implement richer filtering. The user asked to discuss this
-  separately in Russian (2026-10-31).
+  Detection is marker-based through each plugin's `projectIndicators`, not a theoretical
+  "launchable in any project" check.
+- Decision (2026-10-31): the global detection-based filter is the intended behavior. No per-project
+  allowlist or manual override is needed; no case of a used-but-undetected agent was reported.
+  Reopen only if such a case appears, or if per-project filter state is explicitly requested.
+- Residual evidence: none.
 
 ### Provenance-mark style is duplicated across two project surfaces - **[done 2026-10-31]**
 
@@ -250,16 +252,15 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Resolved (2026-10-31) by `provenance-mark-contrast`: promoted to `Controls.xaml` with the contrast-safe brush rule (manual `TextPrimaryBrush`, discovered `TextMutedBrush`).
 - Trigger: a third surface needs the mark, or the mark's visual values change.
 
-### Recent-projects limit is hardcoded to 10
+### Recent-projects limit is hardcoded to 10 - **[closed 2026-10-31]**
 
 - Severity: Low (no reported pain)
 - Evidence: `src/CLIHub/Tray/TrayStateProjection.cs:51` calls `GetRecentProjects(10)`; the service
   API already accepts a limit (`src/CLIHub.Core/Projects/IProjectService.cs:21-25`). The deferred
   note is `openspec/changes/archive/2026-09-27-project-management/design.md:129`.
-- Proposed remedy: expose a persisted preference with validation and config round-trip tests only if
-  users ask; the service layer needs no change.
-- Trigger: a user request or a settings-surface review. The user asked to discuss this separately in
-  Russian (2026-10-31).
+- Decision (2026-10-31): keep the tray recent-projects cap at 10. No user request or reported pain;
+  a future preference needs no service change because the limit is already a parameter.
+- Reopen trigger: a user request for a different recent-projects count. Residual evidence: none.
 
 ## DI and lifetime
 

@@ -45,11 +45,11 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 ## Features
 
-- Project folders with current, recent, favorite, and logo-aware state.
+- Project folders with current, recent, favorite, logo-aware, and provenance state.
 - Automatic project discovery: watch folders, scan them with per-folder depth and rules, and keep new
   repositories in the project list.
 - A Settings → Projects registry that shows manual versus discovered provenance, flags folders that no longer
-  exist, and manages manual entries.
+  exist, and manages manual entries, including changing a manual project's folder when it moves.
 - Agent commands for launch, resume, version, and update, with a configurable default agent.
 - Host/project availability detection, version display, installed-versus-latest hints, and capability-aware actions.
 - Global hotkey (`Ctrl+Shift+Space` by default) and a single-instance tray application.

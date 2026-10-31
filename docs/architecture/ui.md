@@ -105,6 +105,13 @@ catalog owns long-lived row instances. The snapshot (not live) semantics and the
 split are rationale-level detail: see the `introduce-project-model` change's `design.md` under
 `openspec/changes/archive/2026-10-19-introduce-project-model/`.
 
+The launch-window project row uses a fixed-width right marker rail inside the text column: the favorite
+star occupies the name row and the provenance mark the path row. The name and path share the `*` text
+column, and the path display converter measures the name text's width so the rail never eats into the
+trimmed path. The `ProjectProvenanceMark` style lives in `Controls.xaml` (manual uses
+`TextPrimaryBrush`, discovered `TextMutedBrush`), so the Settings registry and the launch window render
+the same mark; the mark's tooltip and accessible name carry the full `Manual`/`Discovered` label.
+
 The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
 
 The accent is application-scoped and independent of the theme. The palettes declare chrome and surface brushes only — neither `AccentBrush` nor `AccentSelectionBrush` is a palette key — and `AccentApplier` writes both brushes into `Application.Resources` for the startup call in `App` and the Settings-save call in `WpfAccentPreferenceTarget`. A theme switch therefore leaves the accent untouched, and an accent save never changes the palette. The stored accent is always applied, the default Sky included; an invalid or missing value normalizes back to Sky.

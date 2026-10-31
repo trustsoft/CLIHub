@@ -8,6 +8,23 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.0.4 — 2026-10-31
+
+### Added
+
+- Manual projects can change their folder from Settings → Projects; the project keeps its identity, favorite flag, last-used timestamp, and current selection, re-derives its name from the new folder, invalidates its logo cache entry, and persists immediately (`project-path-correction`, `project-management`).
+- The launch window shows each project's provenance as a compact `M`/`D` mark in a right-side marker rail on the path line; the existing favorite marker stays on the name line (`launch-window-project-provenance`, `project-management`).
+
+### Changed
+
+- The `ProjectProvenanceMark` style is shared from `Controls.xaml` and uses the primary text brush for manual projects and the muted brush for discovered projects, so the mark is readable in the Light, Dark, and Blue themes (`provenance-mark-contrast`).
+
+### Fixed
+
+- Changing a project's folder updates the Settings row's path text and tooltip immediately, without a restart (`project-path-refresh`, `project-management`).
+- Project path validation errors no longer expose the `ArgumentException` parameter suffix in the Settings error line (`project-path-correction`).
+- Project removal confirmations are owned by the window that triggered them, so removing a project from Settings shows the prompt above Settings and blocks Settings until it is answered (`project-removal-dialog-ownership`, `project-management`).
+
 ## 1.0.3 — 2026-10-31
 
 ### Added
