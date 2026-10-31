@@ -833,8 +833,10 @@ public class SettingsViewModelApplicationTests
 
         fixture.ViewModel.Load();
 
-        Assert.Equal("15 min · 10 s", fixture.ViewModel.ProbePolicySummary);
-        Assert.Equal("Built-in defaults", fixture.ViewModel.ProbePolicyDetail);
+        Assert.Equal("15 min", fixture.ViewModel.ProbePolicyCacheTtlSummary);
+        Assert.Equal("Built-in default", fixture.ViewModel.ProbePolicyCacheTtlDetail);
+        Assert.Equal("10 sec", fixture.ViewModel.ProbePolicyTimeoutSummary);
+        Assert.Equal("Built-in default", fixture.ViewModel.ProbePolicyTimeoutDetail);
     }
 
     [Fact]
@@ -846,8 +848,10 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.ProbeTtlText = "30";
         fixture.ViewModel.ProbeTimeoutText = "5";
 
-        Assert.Equal("30 min · 5 s", fixture.ViewModel.ProbePolicySummary);
-        Assert.Equal("Custom detection settings", fixture.ViewModel.ProbePolicyDetail);
+        Assert.Equal("30 min", fixture.ViewModel.ProbePolicyCacheTtlSummary);
+        Assert.Contains("Custom", fixture.ViewModel.ProbePolicyCacheTtlDetail);
+        Assert.Equal("5 sec", fixture.ViewModel.ProbePolicyTimeoutSummary);
+        Assert.Contains("Custom", fixture.ViewModel.ProbePolicyTimeoutDetail);
     }
 
     [Fact]

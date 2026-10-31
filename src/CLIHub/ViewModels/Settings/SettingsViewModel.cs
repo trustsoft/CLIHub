@@ -307,22 +307,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>
-    ///   The effective probe policy shown in the page header, e.g. "15 min · 10 s".
-    /// </summary>
-    public string ProbePolicySummary =>
-        $"{this.ResolveProbeTtlMinutes()} min · {this.ResolveProbeTimeoutSeconds()} s";
-
-    /// <summary>
-    ///   Whether the probe card reflects built-in defaults or custom values.
-    /// </summary>
-    public string ProbePolicyDetail => this.HasCustomProbePolicy
-        ? "Custom detection settings"
-        : "Built-in defaults";
-
-    private bool HasCustomProbePolicy =>
-        !string.IsNullOrWhiteSpace(this.probeTtlText) || !string.IsNullOrWhiteSpace(this.probeTimeoutText);
-
     private int ResolveProbeTtlMinutes() =>
         int.TryParse(this.probeTtlText.Trim(), out var minutes) && minutes > 0
             ? minutes
@@ -335,8 +319,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private void RaiseProbePolicyChanges()
     {
-        this.OnPropertyChanged(nameof(this.ProbePolicySummary));
-        this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
         this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlSummary));
         this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlDetail));
         this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutSummary));
@@ -671,8 +653,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.HotkeyParts));
         this.OnPropertyChanged(nameof(this.ProbeTtlText));
         this.OnPropertyChanged(nameof(this.ProbeTimeoutText));
-        this.OnPropertyChanged(nameof(this.ProbePolicySummary));
-        this.OnPropertyChanged(nameof(this.ProbePolicyDetail));
         this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlSummary));
         this.OnPropertyChanged(nameof(this.ProbePolicyCacheTtlDetail));
         this.OnPropertyChanged(nameof(this.ProbePolicyTimeoutSummary));

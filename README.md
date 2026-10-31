@@ -43,6 +43,10 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 *Settings → CLI Agents: installed agents and the default agent.*
 
+<img src="docs/images/settings-agent-detection.png" alt="CLIHub Settings: agent detection cache TTL and version check timeout" width="880">
+
+*Settings → Agent Detection: detection cache TTL, version check timeout, effective values in the header cards, and the Reset action to restore built-in defaults.*
+
 ## Features
 
 - Project folders with current, recent, favorite, logo-aware, and provenance state.

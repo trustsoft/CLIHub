@@ -12,6 +12,7 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `settings-appearance.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Appearance (theme, accent color, and path display). |
 | `settings-discovery.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
 | `settings-agents.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → CLI Agents (installed agents and the default agent). |
+| `settings-agent-detection.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Agent Detection (detection cache TTL, version check timeout, DEFAULTS card, and Reset action). |
 
 ## Regenerate all README images
 

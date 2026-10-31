@@ -112,6 +112,7 @@ internal static class ReadmeImageCapture
 
             await CapturePageAsync(settingsWindow, settingsViewModel, "projects", directory, "settings-discovery.png");
             await CapturePageAsync(settingsWindow, settingsViewModel, "agents", directory, "settings-agents.png");
+            await CapturePageAsync(settingsWindow, settingsViewModel, "agent-detection", directory, "settings-agent-detection.png");
         }
         catch (Exception exception)
         {

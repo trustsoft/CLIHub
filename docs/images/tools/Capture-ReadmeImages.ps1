@@ -494,7 +494,8 @@ try {
         'launch-window.png',
         'settings-appearance.png',
         'settings-discovery.png',
-        'settings-agents.png'
+        'settings-agents.png',
+        'settings-agent-detection.png'
     )
 
     foreach ($capture in $captures) {
@@ -511,6 +512,7 @@ try {
     Assert-ImageSize (Join-Path $OutputDirectory 'settings-appearance.png') -Width 1200 -Height 900
     Assert-ImageSize (Join-Path $OutputDirectory 'settings-discovery.png') -Width 1200 -Height 900
     Assert-ImageSize (Join-Path $OutputDirectory 'settings-agents.png') -Width 1200 -Height 900
+    Assert-ImageSize (Join-Path $OutputDirectory 'settings-agent-detection.png') -Width 1200 -Height 900
 
     if (-not $SkipWebImages) {
         $chromeCandidates = @(
