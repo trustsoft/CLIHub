@@ -104,61 +104,61 @@
 
 ### Increment 1
 
-- [ ] 10.1 Launch the application and open Settings. Navigate to the new "Agent Detection" page via the sidebar. Verify:
+- [x] 10.1 Launch the application and open Settings. Navigate to the new "Agent Detection" page via the sidebar. Verify:
   - The page appears under "Engines & Repos" immediately after "CLI Agents"
   - The page header shows two summary cards: CACHE TTL (effective value + detail) and TIMEOUT (effective value + detail)
   - The page body shows the DETECTION section with "Cache TTL" and "Version check timeout" fields
   - The fields show the stored values or empty (watermark visible)
   - The fields accept numeric input and reject invalid input (non-numeric, zero, negative)
 
-- [ ] 10.2 From the Agent Detection page, enter a custom cache TTL (e.g., 25) and a custom timeout (e.g., 20). Observe that the summary cards update immediately (if implemented as getters) or remain at their loaded values (if computed in Load). Do not save yet.
+- [x] 10.2 From the Agent Detection page, enter a custom cache TTL (e.g., 25) and a custom timeout (e.g., 20). Observe that the summary cards update immediately (if implemented as getters) or remain at their loaded values (if computed in Load). Do not save yet.
 
-- [ ] 10.3 Navigate to the CLI Agents page. Verify:
+- [x] 10.3 Navigate to the CLI Agents page. Verify:
   - The DETECTION section is gone
   - The MANAGEMENT section (default agent selector) is at the top
   - The AGENTS section header and cards immediately follow MANAGEMENT with no gap
   - The summary row shows two cards: AGENTS and DEFAULT (no DETECTION card)
 
-- [ ] 10.4 Return to Agent Detection. Choose "Save" with valid custom values. Verify the Settings window closes and no validation error appears.
+- [x] 10.4 Return to Agent Detection. Choose "Save" with valid custom values. Verify the Settings window closes and no validation error appears.
 
-- [ ] 10.5 Reopen Settings → Agent Detection. Verify the custom values are loaded into the fields and the summary cards show "Custom" or similar detail distinguishing them from defaults.
+- [x] 10.5 Reopen Settings → Agent Detection. Verify the custom values are loaded into the fields and the summary cards show "Custom" or similar detail distinguishing them from defaults.
 
-- [ ] 10.6 Clear both fields (empty = use defaults). Choose "Save". Reopen Settings → Agent Detection. Verify the fields are empty (watermarks visible) and the summary cards show "Built-in default" or the default numeric values with appropriate detail.
+- [x] 10.6 Clear both fields (empty = use defaults). Choose "Save". Reopen Settings → Agent Detection. Verify the fields are empty (watermarks visible) and the summary cards show "Built-in default" or the default numeric values with appropriate detail.
 
-- [ ] 10.7 Enter an invalid value (e.g., "abc" or "0") in either field and choose "Save". Verify a validation error appears, the window remains open, and the stored preferences are unchanged.
+- [x] 10.7 Enter an invalid value (e.g., "abc" or "0") in either field and choose "Save". Verify a validation error appears, the window remains open, and the stored preferences are unchanged.
 
-- [ ] 10.8 Choose "Cancel" after entering unsaved values. Reopen Settings → Agent Detection. Verify the fields show the last saved values (changes were discarded).
+- [x] 10.8 Choose "Cancel" after entering unsaved values. Reopen Settings → Agent Detection. Verify the fields show the last saved values (changes were discarded).
 
 ### Increment 2
 
-- [ ] 10.9 Open Settings → Agent Detection. Verify:
+- [x] 10.9 Open Settings → Agent Detection. Verify:
   - The page header now shows three summary cards: CACHE TTL, TIMEOUT, DEFAULTS (left to right)
   - The DEFAULTS card shows the built-in default values (e.g., "15 min · 10 sec") and detail "Used when a field is empty" (or equivalent)
   - The DETECTION section header has a right-aligned "Reset" chip button with the Refresh icon
 
-- [ ] 10.10 With both fields empty (at defaults), verify the Reset button is disabled (dimmed).
+- [x] 10.10 With both fields empty (at defaults), verify the Reset button is disabled (dimmed).
 
-- [ ] 10.11 Enter a custom value in either field. Verify the Reset button becomes enabled. Click Reset. Verify both fields are cleared to empty (watermarks visible), the CACHE TTL and TIMEOUT cards update to show "Built-in default", and the Reset button becomes disabled again. Do not save yet.
+- [x] 10.11 Enter a custom value in either field. Verify the Reset button becomes enabled. Click Reset. Verify both fields are cleared to empty (watermarks visible), the CACHE TTL and TIMEOUT cards update to show "Built-in default", and the Reset button becomes disabled again. Do not save yet.
 
-- [ ] 10.12 Enter custom values in both fields. Click Reset. Verify both fields are cleared. Choose "Cancel". Reopen Settings → Agent Detection. Verify the stored custom values are reloaded (Reset edits the draft; Cancel discarded the draft).
+- [x] 10.12 Enter custom values in both fields. Click Reset. Verify both fields are cleared. Choose "Cancel". Reopen Settings → Agent Detection. Verify the stored custom values are reloaded (Reset edits the draft; Cancel discarded the draft).
 
-- [ ] 10.13 Navigate to CLI Agents. Verify:
+- [x] 10.13 Navigate to CLI Agents. Verify:
   - The page header now shows three summary cards: AGENTS, DEFAULT, UPDATES (left to right)
   - The UPDATES card shows "Unknown" (or similar) before the first update check, with detail "Run Check updates" (or similar)
   - The UPDATES card uses a muted tone while unknown
 
-- [ ] 10.14 Click "Check updates" in the AGENTS section header. After the check completes, verify:
+- [x] 10.14 Click "Check updates" in the AGENTS section header. After the check completes, verify:
   - If no updates are available: the UPDATES card shows "None" with detail "All installed agents up to date" and uses a success tone (green)
   - If updates are available: the UPDATES card shows the count (e.g., "2") with detail "2 of 5 installed agents" (or singular "1 of 3 installed agent") and uses an accent tone
   - Per-card update indicators also appear on individual agent cards
 
-- [ ] 10.15 Click "Detect" in the AGENTS section header. After the detection completes, verify the UPDATES card updates to reflect the new agent availability state (stale availability cleared).
+- [x] 10.15 Click "Detect" in the AGENTS section header. After the detection completes, verify the UPDATES card updates to reflect the new agent availability state (stale availability cleared).
 
-- [ ] 10.16 For an agent card with an available update, click its per-card "Check updates" action. Verify the UPDATES card aggregation updates after the per-card check completes.
+- [x] 10.16 For an agent card with an available update, click its per-card "Check updates" action. Verify the UPDATES card aggregation updates after the per-card check completes.
 
-- [ ] 10.17 Verify the Detect and Check updates chip buttons in the CLI Agents header use the shared ghost-chip style (hover overlay, pressed overlay, dimmed when disabled, consistent with the Reset button on Agent Detection).
+- [x] 10.17 Verify the Detect and Check updates chip buttons in the CLI Agents header use the shared ghost-chip style (hover overlay, pressed overlay, dimmed when disabled, consistent with the Reset button on Agent Detection).
 
-- [ ] 10.18 Verify the Reset button on Agent Detection uses the same style as the CLI Agents header chip buttons.
+- [x] 10.18 Verify the Reset button on Agent Detection uses the same style as the CLI Agents header chip buttons.
 
 ## 11. Validation
 

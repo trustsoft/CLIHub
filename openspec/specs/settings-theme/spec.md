@@ -240,7 +240,7 @@ A numeric setting SHALL render as an editable number on the themed input surface
 
 ### Requirement: Persistent page header
 
-The Settings window SHALL keep the active page's header visible while page content scrolls. The header SHALL show the active page's title and its one-line description above the content, separated from the content by a hairline. A page MAY add a summary row of summary cards between its description and the hairline: the "Project Scanning" page shows the projects, agents, and watcher cards, the "Projects" page shows the total, manual, and discovered cards, and the "CLI Agents" page shows the agents, default-agent, and detection cards. On the "Project Scanning" page the projects card SHALL show the total number of registered projects with the number of discovered and manually added projects beneath it, and both numbers SHALL refresh whenever the scanner status changes. The watcher card SHALL report the number of folders examined by the last scan after its last scan time, using the singular "folder" for one and the plural "folders" otherwise. The vertical scrollbar SHALL belong to the content region below the header, so the drawn title bar, sidebar, page header, summary row, validation message, and footer remain in place while the content scrolls.
+The Settings window SHALL keep the active page's header visible while page content scrolls. The header SHALL show the active page's title and its one-line description above the content, separated from the content by a hairline. A page MAY add a summary row of summary cards between its description and the hairline: the "Project Scanning" page shows the projects, agents, and watcher cards, the "Projects" page shows the total, manual, and discovered cards, the "CLI Agents" page shows the agents, default-agent, and updates cards, and the "Agent Detection" page shows the cache TTL, timeout, and defaults cards. On the "Project Scanning" page the projects card SHALL show the total number of registered projects with the number of discovered and manually added projects beneath it, and both numbers SHALL refresh whenever the scanner status changes. The watcher card SHALL report the number of folders examined by the last scan after its last scan time, using the singular "folder" for one and the plural "folders" otherwise. The vertical scrollbar SHALL belong to the content region below the header, so the drawn title bar, sidebar, page header, summary row, validation message, and footer remain in place while the content scrolls.
 
 #### Scenario: Content taller than the window
 
@@ -332,12 +332,12 @@ The Settings window SHALL show three summary cards under the "Projects" page hea
 
 ### Requirement: CLI Agents page summary cards
 
-The Settings window SHALL show three summary cards under the "CLI Agents" page header: installed agents, the selected default agent, and the effective detection policy. The agents card SHALL show the number of installed agents with the supported count and the number of agents that are not installed. The default card SHALL show the selected default agent name, or "None" when no default is selected, and SHALL show the detected version beneath it when the version is known. The detection card SHALL show the effective detection cache TTL in minutes and version-check timeout in seconds, resolving empty values to the built-in defaults, and SHALL state whether the values are built-in defaults or custom. The cards SHALL refresh when the agent cards are rebuilt or a detection pass re-runs, when the default agent changes, and when the detection fields are edited.
+The Settings window SHALL show three summary cards under the "CLI Agents" page header: installed agents, the selected default agent, and agent update availability. The agents card SHALL show the number of installed agents with the supported count and the number of agents that are not installed. The default card SHALL show the selected default agent name, or "None" when no default is selected, and SHALL show the detected version beneath it when the version is known. The updates card SHALL show the number of installed agents with available updates when known, "None" when every installed agent is up to date (or no agents are installed), or "Unknown" while update availability has not been checked, and SHALL show appropriate detail and tone (accent when updates exist, success when all up to date, muted otherwise). The cards SHALL refresh when the agent cards are rebuilt or a detection pass re-runs, when the default agent changes, and when update availability is checked (load-time pass, header check, per-card checks). The detection card is no longer part of this page; the probe scenarios below record that relocated behavior, which the "Agent Detection page summary cards" requirement provides.
 
 #### Scenario: Cards shown
 
 - **WHEN** the CLI Agents page is shown
-- **THEN** the page header shows the "AGENTS", "DEFAULT", and "DETECTION" cards
+- **THEN** the page header shows the "AGENTS", "DEFAULT", and "UPDATES" cards
 
 #### Scenario: Agents card shows the availability split
 
@@ -357,18 +357,78 @@ The Settings window SHALL show three summary cards under the "CLI Agents" page h
 
 #### Scenario: Probe card shows the effective policy
 
-- **WHEN** the detection cache TTL and version-check timeout fields are empty
-- **THEN** the detection card shows the built-in default values and states that they are built-in defaults
+- **WHEN** the Agent Detection page detection cache TTL and version-check timeout fields are empty
+- **THEN** the Agent Detection page's detection cards show the built-in default values and state that they are built-in defaults
 
 #### Scenario: Custom probe values
 
-- **WHEN** the detection cache TTL or version-check timeout field contains a positive value
-- **THEN** the detection card shows that value and states that the detection settings are custom
+- **WHEN** the Agent Detection page detection cache TTL or version-check timeout field contains a positive value
+- **THEN** the Agent Detection page's detection cards show that value and state that the detection settings are custom
 
 #### Scenario: Cards follow live changes
 
-- **WHEN** a detection pass changes an agent's installed state, the default agent is changed, or a detection field is edited
+- **WHEN** a detection pass changes an agent's installed state or the default agent is changed or update availability is checked
 - **THEN** the affected summary card refreshes without reopening the window
+
+#### Scenario: Updates card shown
+
+- **WHEN** the CLI Agents page is shown
+- **THEN** the updates card uses the Update icon and shows the agent update availability aggregation
+
+#### Scenario: Updates card value while unknown
+
+- **WHEN** update availability has not been checked for any installed agent (on page load, before the first check)
+- **THEN** the updates card shows "Unknown" and a muted tone
+
+#### Scenario: Updates card value when all up to date
+
+- **WHEN** every installed agent has been checked and has status UpToDate (or no agents are installed)
+- **THEN** the updates card shows "None" and a success tone
+
+#### Scenario: Updates card value when updates available
+
+- **WHEN** N installed agents (N > 0) have status UpdateAvailable
+- **THEN** the updates card shows the count as a string (e.g., "3") and an accent tone
+
+#### Scenario: Updates card detail while unknown
+
+- **WHEN** the updates card value is "Unknown"
+- **THEN** the detail line shows "Run Check updates" or equivalent
+
+#### Scenario: Updates card detail when all up to date
+
+- **WHEN** the updates card value is "None"
+- **THEN** the detail line shows "All installed agents up to date" or equivalent
+
+#### Scenario: Updates card detail when updates available
+
+- **WHEN** the updates card value is a count N
+- **THEN** the detail line shows "N of M installed agents" with singular/plural handling (e.g., "1 of 3 installed agents" or "3 of 5 installed agents")
+
+#### Scenario: Updates card detail when no installed agents
+
+- **WHEN** no agents are installed
+- **THEN** the detail line shows "No installed agents" or equivalent
+
+#### Scenario: Updates card refreshes after load-time availability pass
+
+- **WHEN** the Settings window opens on CLI Agents and the load-time availability pass completes
+- **THEN** the updates card updates to show the aggregated update status without reopening the window
+
+#### Scenario: Updates card refreshes after header update check
+
+- **WHEN** the user invokes the "Check updates" action above the agent cards and the check completes
+- **THEN** the updates card updates to show the fresh aggregated update status
+
+#### Scenario: Updates card refreshes after per-card update check
+
+- **WHEN** the user invokes a per-card "Check updates" action on one agent card and the check completes
+- **THEN** the updates card updates to reflect the fresh availability for that agent
+
+#### Scenario: Updates card refreshes after detection pass
+
+- **WHEN** the user invokes the "Detect" action above the agent cards and the detection completes
+- **THEN** the updates card updates to reflect the cleared stale availability
 
 ### Requirement: Sidebar navigation and page styling
 
@@ -389,3 +449,54 @@ The Settings window SHALL render a sidebar navigation region in the application 
 #### Scenario: Page header
 - **WHEN** a page is shown
 - **THEN** its content appears under a page header on the themed content surface
+
+### Requirement: Agent Detection page summary cards
+
+The Settings window SHALL show three summary cards under the "Agent Detection" page header: cache TTL, timeout, and defaults. The cache TTL card SHALL show the effective detection cache time-to-live in minutes with the "min" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The timeout card SHALL show the effective version-check timeout in seconds with the "sec" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The defaults card SHALL show the built-in default values for both detection parameters in the format "N min · M sec" (e.g., "15 min · 10 sec") and SHALL state that these values are used when a field is empty. All three cards SHALL use the Diagnostic icon. The cache TTL and timeout cards SHALL refresh when either detection field is edited.
+
+#### Scenario: Cards shown
+
+- **WHEN** the Agent Detection page is shown
+- **THEN** the page header shows the "CACHE TTL", "TIMEOUT", and "DEFAULTS" cards using the Diagnostic icon
+
+#### Scenario: Cache TTL card shows the effective value
+
+- **WHEN** the Agent Detection page is shown
+- **THEN** the cache TTL card shows the effective cache time-to-live with the "min" unit
+- **AND** the card resolves an empty field value to the built-in default
+
+#### Scenario: Timeout card shows the effective value
+
+- **WHEN** the Agent Detection page is shown
+- **THEN** the timeout card shows the effective version-check timeout with the "sec" unit
+- **AND** the card resolves an empty field value to the built-in default
+
+#### Scenario: Built-in default detail
+
+- **WHEN** either detection field is empty (using the built-in default)
+- **THEN** the corresponding card's detail line states "Built-in default"
+
+#### Scenario: Custom value detail
+
+- **WHEN** either detection field contains a positive custom value
+- **THEN** the corresponding card's detail line states "Custom (default: N min|sec)" with the built-in default numeric value for comparison
+
+#### Scenario: Cards follow live changes
+
+- **WHEN** a detection field is edited
+- **THEN** the corresponding summary card refreshes without reopening the window
+
+#### Scenario: Defaults card shown
+
+- **WHEN** the Agent Detection page is shown
+- **THEN** the defaults card uses the Diagnostic icon and shows the built-in default values for both detection parameters
+
+#### Scenario: Defaults card value
+
+- **WHEN** the defaults card is visible
+- **THEN** the value line shows the built-in defaults formatted as "N min · M sec" (e.g., "15 min · 10 sec") where N is the TTL default and M is the timeout default
+
+#### Scenario: Defaults card detail
+
+- **WHEN** the defaults card is visible
+- **THEN** the detail line shows "Used when a field is empty" or equivalent
