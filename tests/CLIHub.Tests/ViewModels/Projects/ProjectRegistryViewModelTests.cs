@@ -297,6 +297,109 @@ public class ProjectRegistryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void ChangePath_ManualProject_CallsServiceAndReloads()
+    {
+        var newFolder = this.CreateTempDir();
+        var manual = Project("manual", "Manual", ProjectSource.Manual);
+        var projects = new List<Project> { manual };
+        var service = CreateService(projects);
+        service.Setup(x => x.ChangeProjectPath("manual", newFolder))
+            .Callback(() =>
+            {
+                manual.Path = newFolder;
+                manual.Name = Path.GetFileName(newFolder);
+            });
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.SelectFolder("Change Project Folder")).Returns(newFolder);
+        var section = this.CreateSection(service, dialogs: dialogs);
+        section.Load();
+
+        section.ChangePathCommand.Execute(section.Projects.Single());
+
+        var row = section.Projects.Single();
+        Assert.Equal(newFolder, row.Path);
+        Assert.Equal(Path.GetFileName(newFolder), row.Name);
+        Assert.True(row.IsFolderAvailable);
+        Assert.False(section.HasError);
+        service.Verify(x => x.ChangeProjectPath("manual", newFolder), Times.Once);
+    }
+
+    [Fact]
+    public void ChangePath_UserCancelsDialog_NoServiceCall()
+    {
+        var manual = Project("manual", "Manual", ProjectSource.Manual);
+        var service = CreateService([manual]);
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.SelectFolder("Change Project Folder")).Returns((string?)null);
+        var section = this.CreateSection(service, dialogs: dialogs);
+        section.Load();
+
+        section.ChangePathCommand.Execute(section.Projects.Single());
+
+        Assert.False(section.HasError);
+        service.Verify(x => x.ChangeProjectPath(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public void ChangePath_ServiceThrowsDirectoryNotFound_DisplaysError()
+    {
+        var newFolder = this.CreateTempDir();
+        var manual = Project("manual", "Manual", ProjectSource.Manual);
+        var service = CreateService([manual]);
+        service.Setup(x => x.ChangeProjectPath("manual", newFolder))
+            .Throws(new DirectoryNotFoundException($"Folder does not exist: {newFolder}"));
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.SelectFolder("Change Project Folder")).Returns(newFolder);
+        var section = this.CreateSection(service, dialogs: dialogs);
+        section.Load();
+
+        section.ChangePathCommand.Execute(section.Projects.Single());
+
+        Assert.True(section.HasError);
+        Assert.Equal($"The selected folder does not exist: Folder does not exist: {newFolder}", section.ErrorText);
+    }
+
+    [Fact]
+    public void ChangePath_ServiceThrowsArgumentException_DisplaysError()
+    {
+        var newFolder = this.CreateTempDir();
+        var manual = Project("manual", "Manual", ProjectSource.Manual);
+        var service = CreateService([manual]);
+        service.Setup(x => x.ChangeProjectPath("manual", newFolder))
+            .Throws(new ArgumentException("The selected folder is already registered to a different project."));
+        var dialogs = new Mock<IProjectDialogService>(MockBehavior.Strict);
+        dialogs.Setup(x => x.SelectFolder("Change Project Folder")).Returns(newFolder);
+        var section = this.CreateSection(service, dialogs: dialogs);
+        section.Load();
+
+        section.ChangePathCommand.Execute(section.Projects.Single());
+
+        Assert.True(section.HasError);
+        Assert.StartsWith("Could not change project path:", section.ErrorText);
+        Assert.Contains("already registered to a different project", section.ErrorText);
+    }
+
+    [Fact]
+    public void ChangePath_DiscoveredProject_CommandDisabled()
+    {
+        var discovered = Project("discovered", "Discovered", ProjectSource.Discovered);
+        var section = this.CreateSection(CreateService([discovered]));
+        section.Load();
+
+        Assert.False(section.ChangePathCommand.CanExecute(section.Projects.Single()));
+    }
+
+    [Fact]
+    public void ChangePath_ManualProject_CommandEnabled()
+    {
+        var manual = Project("manual", "Manual", ProjectSource.Manual);
+        var section = this.CreateSection(CreateService([manual]));
+        section.Load();
+
+        Assert.True(section.ChangePathCommand.CanExecute(section.Projects.Single()));
+    }
+
+    [Fact]
     public void ProjectsChanged_UpdatesRowsInPlace()
     {
         var projects = new List<Project> { Project("manual", "Manual", ProjectSource.Manual) };

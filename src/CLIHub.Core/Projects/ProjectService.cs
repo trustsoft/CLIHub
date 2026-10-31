@@ -96,6 +96,50 @@ public class ProjectService : IProjectService
     }
 
     /// <inheritdoc />
+    public void ChangeProjectPath(string projectId, string newFolderPath)
+    {
+        var project = this.projectState.Projects.FirstOrDefault(p => p.Id == projectId);
+        if (project == null)
+        {
+            throw new ArgumentException($"Unknown project: {projectId}");
+        }
+
+        if (project.Source != ProjectSource.Manual)
+        {
+            throw new ArgumentException("Only manually registered projects can change folder.");
+        }
+
+        if (string.IsNullOrWhiteSpace(newFolderPath))
+        {
+            throw new ArgumentException("Folder path is required.");
+        }
+
+        var normalized = ProjectPathPolicy.Normalize(newFolderPath);
+
+        if (!Directory.Exists(normalized))
+        {
+            throw new DirectoryNotFoundException($"Folder does not exist: {normalized}");
+        }
+
+        var existing = this.projectState.Projects.FirstOrDefault(p => ProjectPathPolicy.AreEqual(p.Path, normalized));
+        if (existing != null)
+        {
+            if (existing.Id == projectId)
+            {
+                return;
+            }
+
+            throw new ArgumentException("The selected folder is already registered to a different project.");
+        }
+
+        project.Path = normalized;
+        project.Name = DeriveName(normalized);
+        this.logoResolver.Remove(projectId);
+        this.logger.LogInformation("Changed project {ProjectName} path to {Path}", project.Name, project.Path);
+        this.Persist();
+    }
+
+    /// <inheritdoc />
     public bool ReconcileDiscoveredProjects(IReadOnlyCollection<string> discoveredPaths,
                                             IReadOnlyCollection<string> removedProjectIds)
     {
@@ -160,24 +204,27 @@ public class ProjectService : IProjectService
     /// <summary>
     ///   Creates a project entry for a normalized folder path without adding it to the state.
     /// </summary>
-    private Project CreateProject(string normalized, ProjectSource source)
-    {
-        var project = new Project
+    private Project CreateProject(string normalized, ProjectSource source) =>
+        new()
         {
             Id = Guid.NewGuid().ToString("N"),
-            Name = Path.GetFileName(normalized.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)),
+            Name = DeriveName(normalized),
             Path = normalized,
             Source = source,
             IsFavorite = false,
             LastUsed = DateTime.UtcNow
         };
 
-        if (string.IsNullOrEmpty(project.Name))
-        {
-            project.Name = normalized;
-        }
+    /// <summary>
+    ///   Derives a project display name from a normalized folder path, falling back to the
+    ///   full path when the folder name is empty (for example, a drive root).
+    /// </summary>
+    private static string DeriveName(string normalized)
+    {
+        var name = Path.GetFileName(
+            normalized.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
 
-        return project;
+        return string.IsNullOrEmpty(name) ? normalized : name;
     }
 
     /// <inheritdoc />

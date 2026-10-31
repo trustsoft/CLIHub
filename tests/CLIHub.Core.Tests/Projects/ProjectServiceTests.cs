@@ -284,6 +284,216 @@ public class ProjectServiceTests : IDisposable
     }
 
     [Fact]
+    public void ChangeProjectPath_ValidPath_UpdatesPathAndName()
+    {
+        var newFolder = this.CreateTempDir();
+        var lastUsed = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects =
+            {
+                new Project
+                {
+                    Id = "manual",
+                    Name = "Old Name",
+                    Path = this.CreateTempDir(),
+                    Source = ProjectSource.Manual,
+                    IsFavorite = true,
+                    LastUsed = lastUsed
+                }
+            }
+        });
+        var service = this.CreateService(config);
+
+        service.ChangeProjectPath("manual", newFolder + Path.DirectorySeparatorChar);
+
+        var project = service.GetAllProjects().Single();
+        Assert.Equal(ProjectPathPolicy.Normalize(newFolder), project.Path);
+        Assert.Equal(Path.GetFileName(newFolder), project.Name);
+        Assert.Equal("manual", project.Id);
+        Assert.Equal(ProjectSource.Manual, project.Source);
+        Assert.True(project.IsFavorite);
+        Assert.Equal(lastUsed, project.LastUsed);
+    }
+
+    [Fact]
+    public void ChangeProjectPath_SameProjectPath_NoOp()
+    {
+        var folder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects =
+            {
+                new Project
+                {
+                    Id = "manual",
+                    Name = Path.GetFileName(folder),
+                    Path = folder,
+                    Source = ProjectSource.Manual
+                }
+            }
+        });
+        var service = this.CreateService(config);
+        var raised = false;
+        service.ProjectsChanged += (_, _) => raised = true;
+
+        service.ChangeProjectPath("manual", folder + Path.DirectorySeparatorChar);
+
+        Assert.False(raised);
+        Assert.Equal(0, config.UpdateCount);
+    }
+
+    [Fact]
+    public void ChangeProjectPath_DifferentProjectPath_ThrowsArgumentException()
+    {
+        var firstFolder = this.CreateTempDir();
+        var secondFolder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects =
+            {
+                new Project { Id = "first", Name = "First", Path = firstFolder, Source = ProjectSource.Manual },
+                new Project { Id = "second", Name = "Second", Path = secondFolder, Source = ProjectSource.Manual }
+            }
+        });
+        var service = this.CreateService(config);
+
+        var error = Assert.Throws<ArgumentException>(() => service.ChangeProjectPath("first", secondFolder));
+
+        Assert.Contains("already registered to a different project", error.Message);
+        Assert.DoesNotContain("Parameter", error.Message);
+        Assert.Null(error.ParamName);
+        Assert.Equal(firstFolder, service.GetAllProjects().Single(p => p.Id == "first").Path);
+    }
+
+    [Fact]
+    public void ChangeProjectPath_DiscoveredProject_ThrowsArgumentException()
+    {
+        var discoveredFolder = this.CreateTempDir();
+        var newFolder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects =
+            {
+                new Project
+                {
+                    Id = "discovered",
+                    Name = "Discovered",
+                    Path = discoveredFolder,
+                    Source = ProjectSource.Discovered
+                }
+            }
+        });
+        var service = this.CreateService(config);
+
+        Assert.Throws<ArgumentException>(() => service.ChangeProjectPath("discovered", newFolder));
+        Assert.Equal(discoveredFolder, service.GetAllProjects().Single().Path);
+    }
+
+    [Fact]
+    public void ChangeProjectPath_NonExistentProject_ThrowsArgumentException()
+    {
+        var service = this.CreateService();
+
+        Assert.Throws<ArgumentException>(() => service.ChangeProjectPath("missing", this.CreateTempDir()));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ChangeProjectPath_BlankPath_ThrowsArgumentException(string newFolderPath)
+    {
+        var folder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects = { new Project { Id = "manual", Name = "Manual", Path = folder, Source = ProjectSource.Manual } }
+        });
+        var service = this.CreateService(config);
+
+        Assert.Throws<ArgumentException>(() => service.ChangeProjectPath("manual", newFolderPath));
+    }
+
+    [Fact]
+    public void ChangeProjectPath_MissingFolder_ThrowsDirectoryNotFoundException()
+    {
+        var folder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects = { new Project { Id = "manual", Name = "Manual", Path = folder, Source = ProjectSource.Manual } }
+        });
+        var service = this.CreateService(config);
+        var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+
+        Assert.Throws<DirectoryNotFoundException>(() => service.ChangeProjectPath("manual", missing));
+    }
+
+    [Fact]
+    public void ChangeProjectPath_InvalidatesLogoCache()
+    {
+        var oldFolder = this.CreateTempDir();
+        var newFolder = this.CreateTempDir();
+        File.WriteAllText(Path.Combine(oldFolder, "logo.png"), "old");
+        File.WriteAllText(Path.Combine(newFolder, "logo.png"), "new");
+        var cache = new LogoCacheService(
+            NullLogger<LogoCacheService>.Instance,
+            Path.Combine(this.CreateTempDir(), "logos.json"));
+        var resolver = new ProjectLogoResolver(cache, new LogoOptions(null));
+        var service = new ProjectService(
+            new ProjectStateStore(new FakeConfigurationRepository()),
+            resolver,
+            NullLogger<ProjectService>.Instance,
+            new FakeDomainEventPublisher());
+        var project = service.AddProject(oldFolder);
+        Assert.Equal(Path.Combine(oldFolder, "logo.png"), resolver.Resolve(project));
+
+        service.ChangeProjectPath(project.Id, newFolder);
+
+        Assert.Equal(Path.Combine(newFolder, "logo.png"), resolver.Resolve(service.GetAllProjects().Single()));
+    }
+
+    [Fact]
+    public void ChangeProjectPath_PersistsImmediately()
+    {
+        var newFolder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            Projects =
+            {
+                new Project { Id = "manual", Name = "Old", Path = this.CreateTempDir(), Source = ProjectSource.Manual }
+            }
+        });
+        var service = this.CreateService(config);
+
+        service.ChangeProjectPath("manual", newFolder);
+
+        var persisted = config.Read().Projects.Single();
+        Assert.Equal(ProjectPathPolicy.Normalize(newFolder), persisted.Path);
+        Assert.Equal(Path.GetFileName(newFolder), persisted.Name);
+        Assert.Equal(1, config.UpdateCount);
+    }
+
+    [Fact]
+    public void ChangeProjectPath_PreservesCurrentSelection()
+    {
+        var firstFolder = this.CreateTempDir();
+        var newFolder = this.CreateTempDir();
+        var config = new FakeConfigurationRepository(new AppConfig
+        {
+            CurrentProjectId = "manual",
+            Projects =
+            {
+                new Project { Id = "manual", Name = "Manual", Path = firstFolder, Source = ProjectSource.Manual }
+            }
+        });
+        var service = this.CreateService(config);
+
+        service.ChangeProjectPath("manual", newFolder);
+
+        Assert.Equal("manual", service.GetCurrentProject()?.Id);
+        Assert.Equal("manual", config.Read().CurrentProjectId);
+    }
+
+    [Fact]
     public void AddProject_MarksManualSource()
     {
         var service = this.CreateService();

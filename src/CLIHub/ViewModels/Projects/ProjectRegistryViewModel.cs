@@ -8,9 +8,9 @@ using CLIHub.Launching;
 
 /// <summary>
 ///   Owns the Settings Projects page: the registered-project list, the path field and
-///   add actions, the manual remove action, and the section error line. Rows are the shared
-///   <see cref="ProjectModel" /> catalog instances, re-enriched on every load; discovered
-///   projects are shown read-only.
+///   add actions, the manual remove and change-folder actions, and the section error line.
+///   Rows are the shared <see cref="ProjectModel" /> catalog instances, re-enriched on every
+///   load; discovered projects are shown read-only.
 /// </summary>
 public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistrySection
 {
@@ -50,6 +50,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         this.OpenFolderCommand = new RelayCommand<ProjectModel>(
             this.OpenFolder,
             item => item.CanOpen);
+        this.ChangePathCommand = new RelayCommand<ProjectModel>(this.ChangePath, item => item.IsManual);
         this.projects.ProjectsChanged += this.OnProjectsChanged;
     }
 
@@ -118,6 +119,13 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
 
     /// <inheritdoc />
     public RelayCommand<ProjectModel> OpenFolderCommand { get; }
+
+    /// <summary>
+    ///   Changes the folder of a manual project: opens the folder picker, applies the new path
+    ///   through the project service, and re-loads the enriched rows. Unavailable for discovered
+    ///   projects, which Project Scanning manages.
+    /// </summary>
+    public RelayCommand<ProjectModel> ChangePathCommand { get; }
 
     /// <inheritdoc />
     public void Load()
@@ -228,6 +236,40 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         catch (Exception ex)
         {
             this.ErrorText = $"Could not open folder: {ex.Message}";
+        }
+    }
+
+    private void ChangePath(ProjectModel item)
+    {
+        if (item is null || !item.IsManual)
+        {
+            return;
+        }
+
+        this.ErrorText = null;
+
+        var folder = this.dialogs.SelectFolder("Change Project Folder");
+        if (string.IsNullOrWhiteSpace(folder))
+        {
+            return;
+        }
+
+        try
+        {
+            this.projects.ChangeProjectPath(item.Id, folder);
+            this.Load();
+        }
+        catch (DirectoryNotFoundException ex)
+        {
+            this.ErrorText = $"The selected folder does not exist: {ex.Message}";
+        }
+        catch (ArgumentException ex)
+        {
+            this.ErrorText = $"Could not change project path: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            this.ErrorText = $"Could not change project path: {ex.Message}";
         }
     }
 

@@ -41,6 +41,21 @@ public interface IProjectService
     Project AddProject(string folderPath);
 
     /// <summary>
+    ///   Changes the folder path for a manually registered project. The project keeps its
+    ///   identity, provenance, favorite flag, and last-used timestamp, but gets the new path
+    ///   and a name re-derived from the new folder name. The project's logo cache entry is
+    ///   invalidated and the change is persisted immediately.
+    /// </summary>
+    /// <param name="projectId"> The project identifier. </param>
+    /// <param name="newFolderPath"> The new folder path. </param>
+    /// <exception cref="ArgumentException">
+    ///   The project ID does not exist, the project is not manual, the folder path is
+    ///   blank/invalid, or the new path is already registered to a different project.
+    /// </exception>
+    /// <exception cref="DirectoryNotFoundException"> The new folder does not exist. </exception>
+    void ChangeProjectPath(string projectId, string newFolderPath);
+
+    /// <summary>
     ///   Reconciles the discovered-project subset: adds each discovered folder that is not yet
     ///   registered and removes the listed discovered projects. Manually registered projects and
     ///   unrelated projects are left untouched.

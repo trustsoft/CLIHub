@@ -176,6 +176,19 @@
                                                   Spacing="2">
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Change project folder"
+                                        Command="{Binding DataContext.ProjectRegistry.ChangePathCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Change project folder"
+                                        Visibility="{Binding IsManual, Converter={StaticResource BoolToVisibility}}">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                               Text="{x:Static themes:IconGlyphs.Edit}"/>
+                                </Button>
+
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
                                         AutomationProperties.Name="Open project folder"
                                         Command="{Binding DataContext.ProjectRegistry.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding}"
