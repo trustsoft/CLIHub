@@ -1,0 +1,9 @@
+schema: spec-driven
+created: 2026-10-31
+skip_specs: true
+
+# Justification for skip_specs:
+# This is a defect fix. The spec already requires path changes to apply immediately and
+# every surface to reflect them without a restart (spec.md:198, :264-267). The Settings
+# XAML binds to DisplayPath, which returns Path but does not raise PropertyChanged when
+# Path changes. The fix makes the existing specified behavior work correctly.
