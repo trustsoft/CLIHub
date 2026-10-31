@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-10-31
+goal: Make provenance mark readable in all themes and remove style duplication by promoting to Controls.xaml
+skip_specs: true
