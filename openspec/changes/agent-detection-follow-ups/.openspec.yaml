@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-01
+goal: Close two deferred items from agent-detection-settings-page - remove display-unused probe policy properties and add Agent Detection page to README screenshot set
+skip_specs: true
