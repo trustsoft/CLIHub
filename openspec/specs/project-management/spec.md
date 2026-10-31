@@ -195,7 +195,7 @@ The system SHALL treat discovered projects as ordinary projects for selection, r
 
 ### Requirement: Settings project registry page
 
-The Settings window SHALL provide a Projects page that lists every registered project with its name, full folder path, provenance, and whether its folder currently exists. The page SHALL allow adding a manual project by entering or selecting an existing folder path and registering it, and removing a manual project after confirmation. Adding from the page SHALL NOT change the current project. Discovered projects SHALL be listed read-only. Project changes made on the page SHALL apply immediately, independently of the Settings footer Save and Cancel, and every other surface SHALL reflect them without a restart.
+The Settings window SHALL provide a Projects page that lists every registered project with its name, full folder path, provenance, and whether its folder currently exists. The page SHALL allow adding a manual project by entering or selecting an existing folder path and registering it, removing a manual project after confirmation, **and changing a manual project's folder path while preserving its identity**. Adding from the page SHALL NOT change the current project. Discovered projects SHALL be listed read-only. Project changes made on the page SHALL apply immediately, independently of the Settings footer Save and Cancel, and every other surface SHALL reflect them without a restart.
 
 #### Scenario: Registry lists every project
 
@@ -207,6 +207,7 @@ The Settings window SHALL provide a Projects page that lists every registered pr
 
 - **WHEN** a manually registered project is listed
 - **THEN** the row offers a remove action
+- **AND** the row offers a change-folder action
 - **AND** the page offers an add action
 
 #### Scenario: Discovered project is read-only
@@ -257,13 +258,54 @@ The Settings window SHALL provide a Projects page that lists every registered pr
 
 #### Scenario: Settings footer does not govern project changes
 
-- **WHEN** the user adds or removes a project and then closes the Settings window with Cancel
+- **WHEN** the user adds, removes, or changes the folder of a project and then closes the Settings window with Cancel
 - **THEN** the project change remains applied
 
 #### Scenario: Other surfaces follow the registry
 
-- **WHEN** a project is added or removed on the Projects page
+- **WHEN** a project is added, removed, or has its folder changed on the Projects page
 - **THEN** the Launch Window project list and the tray reflect the change without restarting the application
+
+#### Scenario: Change a manual project's folder path
+
+- **WHEN** the user activates the change-folder action on a manual project row, selects an existing folder that is not registered to a different project, and confirms
+- **THEN** the project's folder path is updated to the selected folder
+- **AND** the project's name is re-derived from the selected folder's name
+- **AND** the project's identity, provenance, favorite flag, and last-used timestamp are preserved
+- **AND** the project's logo cache entry is invalidated and the row re-enriches immediately
+- **AND** the change is persisted immediately
+- **AND** the project folder's contents on disk are left untouched
+
+#### Scenario: Change folder to the same path
+
+- **WHEN** the user selects the project's current folder path (normalized)
+- **THEN** the project remains unchanged and no error is reported
+
+#### Scenario: Change folder to a non-existent path
+
+- **WHEN** the user selects a folder that does not exist
+- **THEN** the change is rejected with an error and the project remains unchanged
+
+#### Scenario: Change folder to a path already registered to a different project
+
+- **WHEN** the user selects a folder that is already registered to a different project
+- **THEN** the change is rejected with an error and the project remains unchanged
+
+#### Scenario: Change folder action unavailable for discovered projects
+
+- **WHEN** a discovered project is listed
+- **THEN** the change-folder action is not available on that row
+
+#### Scenario: Change folder preserves current selection
+
+- **WHEN** the current project's folder is changed
+- **THEN** the project remains the current selection after the change
+
+#### Scenario: Project name always derived from folder
+
+- **WHEN** a project's folder is changed
+- **THEN** the project's display name is derived from the new folder name
+- **AND** no separate rename or manual name-editing action is required
 
 ### Requirement: Enriched project display models
 
