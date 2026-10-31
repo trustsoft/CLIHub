@@ -240,15 +240,14 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a product decision to implement richer filtering. The user asked to discuss this
   separately in Russian (2026-10-31).
 
-### Provenance-mark style is duplicated across two project surfaces
+### Provenance-mark style is duplicated across two project surfaces - **[done 2026-10-31]**
 
 - Severity: Low (maintainability; both definitions currently use identical tokens)
 - Evidence: `SettingsProjectRegistryPage.xaml:10-24` holds the local `ProjectProvenanceMark` style;
   `launch-window-project-provenance` adds an equivalent style in `LaunchWindowStyles.xaml` rather
   than editing the Settings page, so the two findings can be committed independently. Both use
   `Sizing.FontSize.Section`, `TextMutedBrush`, `AccentSelectionBrush`, and a `CanRemove` trigger.
-- Proposed remedy: promote the style into `Controls.xaml` (or a `ProjectStyles.xaml`) and delete both
-  local copies in one focused change.
+- Resolved (2026-10-31) by `provenance-mark-contrast`: promoted to `Controls.xaml` with the contrast-safe brush rule (manual `TextPrimaryBrush`, discovered `TextMutedBrush`).
 - Trigger: a third surface needs the mark, or the mark's visual values change.
 
 ### Recent-projects limit is hardcoded to 10

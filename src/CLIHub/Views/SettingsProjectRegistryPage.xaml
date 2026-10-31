@@ -7,22 +7,6 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <Style x:Key="ProjectProvenanceMark" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-            <Style.Triggers>
-                <!-- Manual provenance colors the mark; CanRemove is true exactly for manual
-                     projects (discovered projects are read-only). -->
-                <DataTrigger Binding="{Binding CanRemove}" Value="True">
-                    <!-- Same brush as the selected Settings sidebar item: the accent color
-                         with that selection's alpha channel. -->
-                    <Setter Property="Foreground" Value="{DynamicResource AccentSelectionBrush}"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
         <!-- The "Folder not found" chip: visible while the row's enriched snapshot reports the
              folder unavailable, so no inverted converter is needed. -->
         <Style x:Key="ProjectMissingChip" TargetType="Border" BasedOn="{StaticResource HeaderChip}">
