@@ -194,6 +194,74 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   "not run" from "passed".
 - Trigger: a CI coverage review or a hidden-regression investigation.
 
+## Projects and scanning
+
+### Project acquisition and correction triage (2026-10-31)
+
+- Severity: Medium (product behavior; triage only)
+- Evidence: audited at HEAD `ccf4285` against the archived scanning/project-management designs, the
+  live specs, source, and tests. Findings A (launch-window provenance), F (change a manual project's
+  folder), and E (removal-confirmation ownership) were accepted and now have OpenSpec changes:
+  `openspec/changes/launch-window-project-provenance/`,
+  `openspec/changes/project-path-correction/`, and
+  `openspec/changes/project-removal-dialog-ownership/`. Findings B, C, D, G, and H are recorded in
+  the entries below (B resolved, C/D deferred pending a product discussion, G a watch item, H already
+  done). No live folder monitoring and no config-format redesign are in scope.
+- Proposed remedy: execute the three changes one at a time, each with its own commit and verification.
+- Trigger: none; this is the audit trail for the 2026-10-31 workstream.
+
+### Explicit "Rescan now" action - **[done 2026-10-31]**
+
+- Severity: Low (stale deferred item)
+- Evidence: the archived design deferred an explicit rescan
+  (`openspec/changes/archive/2026-10-11-settings-projects-scanning/design.md:74`) while the status
+  stayed read-only. At HEAD `ccf4285` the controls already exist:
+  `WatchedDirectoryEditor.ScanNowCommand` performs the full pass through `IProjectScanner.Reload()`
+  (`src/CLIHub/ViewModels/Settings/WatchedDirectoryEditor.cs:80,315`); per-root rescan uses
+  `ScanWatchedDirectoryCommand` and `IProjectScanner.Rescan(root)` (`:77,300,541`,
+  `src/CLIHub/Views/SettingsProjectsPage.xaml:91-95`); the page header exposes "Scan Now" with the
+  tooltip "Rescan every watched root" (`src/CLIHub/Views/SettingsWindow.xaml:174-181`).
+- Status: resolved by the shipped scanning UI; nothing was re-implemented.
+- Residual evidence: none.
+
+### Per-project / per-agent filtering remains a vision item
+
+- Severity: Low (exploratory product direction)
+- Evidence: per-project agent filtering was deferred in
+  `openspec/changes/archive/2026-09-27-project-management/design.md:128`, and
+  `docs/vision.md:29` still lists "richer per-agent project filtering and configuration". Shipped
+  behavior is one global preference: `showOnlyProjectAgents` hides agents not available in the
+  selected project (`src/CLIHub/ViewModels/Launch/LaunchWindowViewModel.cs:198-218`,
+  `src/CLIHub/ViewModels/Agents/AgentPaneController.cs:82-103`; the action is
+  "Only agents available in project" at `src/CLIHub/ViewModels/Launch/LaunchWindowActionBuilder.cs:44-50`).
+- Proposed remedy: settle the intended behavior first (per-project allowlist versus per-agent
+  visibility), then plan an OpenSpec change with persisted fields, defaults, and round-trip tests
+  before implementation.
+- Trigger: a product decision to implement richer filtering. The user asked to discuss this
+  separately in Russian (2026-10-31).
+
+### Provenance-mark style is duplicated across two project surfaces
+
+- Severity: Low (maintainability; both definitions currently use identical tokens)
+- Evidence: `SettingsProjectRegistryPage.xaml:10-24` holds the local `ProjectProvenanceMark` style;
+  `launch-window-project-provenance` adds an equivalent style in `LaunchWindowStyles.xaml` rather
+  than editing the Settings page, so the two findings can be committed independently. Both use
+  `Sizing.FontSize.Section`, `TextMutedBrush`, `AccentSelectionBrush`, and a `CanRemove` trigger.
+- Proposed remedy: promote the style into `Controls.xaml` (or a `ProjectStyles.xaml`) and delete both
+  local copies in one focused change.
+- Trigger: a third surface needs the mark, or the mark's visual values change.
+
+### Recent-projects limit is hardcoded to 10
+
+- Severity: Low (no reported pain)
+- Evidence: `src/CLIHub/Tray/TrayStateProjection.cs:51` calls `GetRecentProjects(10)`; the service
+  API already accepts a limit (`src/CLIHub.Core/Projects/IProjectService.cs:21-25`). The deferred
+  note is `openspec/changes/archive/2026-09-27-project-management/design.md:129`.
+- Proposed remedy: expose a persisted preference with validation and config round-trip tests only if
+  users ask; the service layer needs no change.
+- Trigger: a user request or a settings-surface review. The user asked to discuss this separately in
+  Russian (2026-10-31).
+
 ## DI and lifetime
 
 ### Process composition has two registration owners
@@ -284,6 +352,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: any red `dotnet test CLIHub.sln` without a matching code change.
 - Re-checked (2026-10-31, HEAD `6f898f0`): a full `dotnet test CLIHub.sln` run was green
   (550 + 63 + 692 = 1,305, 0 failed), so the incident did not reproduce. Stays a watch item; not closed.
+- Re-checked again (2026-10-31, HEAD `ccf4285`): full suite green (550 + 63 + 692 = 1,305, 0 failed,
+  TRX captured under the ignored `artifacts/testlogs/`), plus 10/10 consecutive green runs of
+  `--filter "FullyQualifiedName~ProjectScanningServiceTests"`. No failure name to capture; the
+  assertion was not changed. Stays a watch item.
 
 ### CheckCardUpdatesCommand test races the card-action reset (low, flaky) - **[done 2026-10-31]**
 
