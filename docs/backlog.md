@@ -479,6 +479,25 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a second CI occurrence, or a user report that launching the app while it is already open
   does not bring the window forward.
 
+### Speculative test-infrastructure ideas from `tests/CLIHub.Tests/README.md`
+
+- Severity: Low (speculative; the current suite works without any of them)
+- Evidence: the "Future Improvements" section at `tests/CLIHub.Tests/README.md:252-267` (commit `1c27693`)
+  listed five enhancements that were never planned, and the section was deleted when that file was
+  trimmed to the `LaunchWindowViewModelBuilder` walkthrough (`testing-conventions-doc`, 2026-11-01).
+  Five ideas are preserved here: builders for `ProjectPaneController` and `AgentPaneController`;
+  AutoFixture integration for automatic test data generation; snapshot testing for complex UI state;
+  BenchmarkDotNet performance benchmarks for critical paths; and cross-layer end-to-end integration
+  tests. The third builder the section named, `SettingsViewModelBuilder`, is deliberately **not** carried
+  forward: `tests/CLIHub.Tests/Builders/SettingsViewModelFixture.cs` already constructs
+  `SettingsViewModel` with sensible mock defaults and exposes the mocks for configuration and assertions,
+  so parking it as missing would misstate the current suite.
+- Proposed remedy: none until a concrete need appears. If one does, add the specific builder to
+  `tests/CLIHub.Tests/Builders/` first; treat AutoFixture, snapshot testing, and BenchmarkDotNet as
+  separate decisions, each needing its own change and its own dependency review.
+- Trigger: a contributor wants a builder, UI-state verification, or performance measurement that the
+  current suite does not provide.
+
 ## Agent tooling
 
 ### Two sessions in one working tree can revert each other's OpenSpec files

@@ -75,6 +75,7 @@ Read only the documents relevant to the task:
 | Subagent model policy (which model per child task) | [`docs/agent-model-policy.md`](agent-model-policy.md) + [`docs/agent-model-policy.json`](agent-model-policy.json) |
 | Process execution and agent safety | [`docs/architecture/processes.md`](architecture/processes.md) |
 | WPF resources and theming | [`docs/architecture/ui.md`](architecture/ui.md) |
+| Testing conventions and gates | [`docs/testing.md`](testing.md) |
 | Behavior contract | The relevant file under [`openspec/specs/`](../openspec/specs/) |
 | Architectural rationale | [`docs/adr/`](adr/) |
 | Parked findings and deferred work | [`docs/backlog.md`](backlog.md) |

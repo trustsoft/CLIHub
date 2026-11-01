@@ -187,6 +187,7 @@ Six OpenSpec changes. Each is independently shippable and independently verifiab
 - **Content:** the project→test-project mapping; the `Method_Condition_ExpectedResult` naming rule; AAA and one-behavior-per-test; strict mocks and when to prefer a hand-written fake; the `FakeTimeProvider` and temp-directory patterns; the shared STA harness; how to add a test for a new spec scenario; how to add a spec scenario for new behavior; the gate commands.
 - **Spec delta:** `skip_specs: true` — documentation only, no durable repository behavior.
 - **Dependency:** last, so it documents the end state.
+- **Delivered:** `testing-conventions-doc` (2026-11-01) — `docs/testing.md`; roadmap items C1–C5 remain open.
 
 ## 6. Sequencing
 

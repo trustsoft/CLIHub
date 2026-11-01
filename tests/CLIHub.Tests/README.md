@@ -1,14 +1,8 @@
-# CLIHub Test Infrastructure
+# CLIHub.Tests Test Infrastructure
 
-This document describes the testing infrastructure and patterns used in the CLIHub test suite.
-
-## Overview
-
-The CLIHub test suite consists of:
-- **667 Core tests** - Testing UI-independent logic in `CLIHub.Core`
-- **60 Windows adapter tests** - Testing Windows-specific adapters in `CLIHub.Core.Windows`
-- **555 WPF/application tests** - Testing WPF ViewModels, composition, and UI integration in `CLIHub`
-- **Total: 1,282 tests** (counts as of 2026-10-30; they drift with each change)
+This file documents the `tests/CLIHub.Tests` project only. Repo-wide testing conventions — the naming rule,
+Arrange/Act/Assert, mock strictness, hand-written fakes, time and temp-directory patterns, shared helpers, skip
+semantics, architecture-boundary tests, and the gate commands — are in [`docs/testing.md`](../../docs/testing.md).
 
 ## Test Builders
 
@@ -99,172 +93,26 @@ mocks.ProjectDialogService.Verify(x => x.SelectProjectFolder(), Times.Once);
 
 ```
 tests/
-├── CLIHub.Core.Tests/          # Core logic tests (667 tests)
+├── CLIHub.Core.Tests/          # Core logic tests, one folder per subsystem
 │   ├── Agents/                 # Agent subsystem tests
 │   ├── Configuration/          # Config serialization tests
+│   ├── Fakes/                  # Shared fakes (FakeTimeProvider, FakeConfigurationRepository, ...)
 │   ├── Infrastructure/         # Process, persistence, hotkey tests
 │   ├── Models/                 # Domain model tests
 │   ├── Plugins/                # Plugin loading tests
 │   ├── Projects/               # Project management tests
-│   ├── Services/               # Service layer tests
 │   └── Updates/                # Update workflow tests
 │
-├── CLIHub.Core.Windows.Tests/  # Windows adapter tests (60 tests)
+├── CLIHub.Core.Windows.Tests/  # Windows adapter tests, flat layout with Fake*.cs doubles
 │
-└── CLIHub.Tests/               # WPF/ViewModel tests (555 tests)
+└── CLIHub.Tests/               # WPF/ViewModel tests
+    ├── Architecture/           # Architecture-boundary tests
     ├── Builders/               # Test builder infrastructure
     │   ├── LaunchWindowViewModelBuilder.cs
     │   └── LaunchWindowViewModelBuilderTests.cs
-    ├── Fakes/                  # Fake implementations for testing
+    ├── Support/                # TestHelpers (STA runner, repository root, operation lifetime)
     └── ViewModels/             # ViewModel behavior tests
 ```
-
-### Naming Conventions
-
-Test methods follow the pattern: `MethodOrScenario_Condition_ExpectedResult`
-
-Examples:
-- `AddProject_WhenFolderSelectionIsCancelled_UsesDialogServiceAndDoesNotMutateProjects`
-- `Build_WithDefaultConfiguration_CreatesValidViewModel`
-- `BuildWithMocks_ReturnsViewModelAndAllMocks`
-
-## Best Practices
-
-### 1. Use Builders for Complex Objects
-
-**Do:**
-```csharp
-var viewModel = new LaunchWindowViewModelBuilder()
-    .WithProjects(project)
-    .Build();
-```
-
-**Don't:**
-```csharp
-var viewModel = new LaunchWindowViewModel(
-    new ProjectPaneController(...),
-    new AgentPaneController(...),
-    // ... 10 more dependencies
-);
-```
-
-### 2. Only Mock What You Verify
-
-**Do:**
-```csharp
-var dialogs = new Mock<IProjectDialogService>();
-dialogs.Setup(x => x.SelectProjectFolder()).Returns(path);
-
-var viewModel = new LaunchWindowViewModelBuilder()
-    .WithProjectDialogService(dialogs)  // Only override this one
-    .Build();
-```
-
-**Don't:**
-```csharp
-// Don't manually create all mocks when you only care about one
-var projectService = new Mock<IProjectService>();
-var pluginCatalog = new Mock<IPluginCatalog>();
-var preferences = new Mock<IPreferencesStore>();
-// ... etc
-```
-
-### 3. Use Fakes for Reusable Behavior
-
-For test doubles needed across many tests, create a fake implementation in `tests/CLIHub.Tests/Fakes/`.
-
-```csharp
-public class FakeProjectService : IProjectService
-{
-    private readonly List<Project> _projects = new();
-    
-    public IReadOnlyList<Project> GetAllProjects() => _projects;
-    // ... implement interface
-}
-```
-
-Use handwritten fakes when the system under test accepts the interface directly. Use the builder's
-`With...` methods with Moq objects when the test needs interaction verification; the builder's service
-override methods intentionally accept `Mock<T>` instances.
-
-### 4. Test One Behavior Per Test
-
-**Do:**
-```csharp
-[Fact]
-public void AddProject_CallsDialogService() { /* ... */ }
-
-[Fact]
-public void AddProject_AddsProjectWhenPathProvided() { /* ... */ }
-
-[Fact]
-public void AddProject_DoesNotAddProjectWhenCancelled() { /* ... */ }
-```
-
-**Don't:**
-```csharp
-[Fact]
-public void AddProject_DoesEverything()
-{
-    // Tests 5 different behaviors in one test
-}
-```
-
-## Running Tests
-
-### All Tests
-```powershell
-dotnet test
-```
-
-### Specific Project
-```powershell
-dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj
-dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj
-```
-
-### Specific Test Class
-```powershell
-dotnet test --filter "FullyQualifiedName~LaunchWindowViewModelDialogTests"
-```
-
-### Specific Test Method
-```powershell
-dotnet test --filter "FullyQualifiedName~LaunchWindowViewModelDialogTests.AddProject_WhenFolderSelectionIsCancelled"
-```
-
-## Adding New Tests
-
-### For Core Logic
-
-1. Create test class in appropriate namespace under `tests/CLIHub.Core.Tests/`
-2. Follow naming: `{ClassName}Tests.cs`
-3. Use xUnit facts and theories
-4. Keep tests isolated and fast
-
-### For ViewModels
-
-1. Create test class under `tests/CLIHub.Tests/ViewModels/`
-2. Use the appropriate builder from `tests/CLIHub.Tests/Builders/`
-3. Follow the existing patterns for mock verification
-4. Test commands, property changes, and event subscriptions
-
-## Future Improvements
-
-Potential enhancements to the test infrastructure:
-
-1. **More builders** - Create builders for other complex types:
-   - `ProjectPaneControllerBuilder`
-   - `AgentPaneControllerBuilder`
-   - `SettingsViewModelBuilder`
-
-2. **AutoFixture integration** - Consider using AutoFixture for automatic test data generation
-
-3. **Snapshot testing** - For complex UI state verification
-
-4. **Performance benchmarks** - Add BenchmarkDotNet for critical paths
-
-5. **Integration tests** - End-to-end tests that exercise multiple layers together
 
 ## References
 
