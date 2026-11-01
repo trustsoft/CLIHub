@@ -325,9 +325,9 @@ The Settings window SHALL keep the active page's header visible while page conte
 
 #### Scenario: Title chip still wraps with the title
 
-- **WHEN** the "Updates" page is active, which shows an extra title chip beside its title
-- **THEN** the chip wraps together with the title text as it does without the emblem
-- **AND** the emblem never moves to a second line with the title or the chip
+- **WHEN** the "Updates" page is active, which shows two metadata chips and a "View release notes" link beside its title
+- **THEN** the chips and link wrap together with the title text as they do without the emblem
+- **AND** the emblem never moves to a second line with the title, chips, or link
 
 #### Scenario: Emblem is not an interactive element
 
