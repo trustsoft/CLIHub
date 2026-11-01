@@ -104,49 +104,39 @@
                             <TextBlock Style="{StaticResource HeaderChipValue}" Text="Stable"/>
                         </StackPanel>
                     </Border>
+                    <Button VerticalAlignment="Center"
+                            Margin="8,0,0,0"
+                            Command="{Binding ShowReleaseNotesCommand}"
+                            Content="View release notes  →"
+                            Style="{StaticResource LinkButton}"
+                            ToolTip="Open What's New"/>
                 </StackPanel>
             </DataTemplate>
 
             <!-- Page-specific actions and status rendered in the fixed page header. -->
             <DataTemplate x:Key="UpdatesHeaderAction">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0"
-                                HorizontalAlignment="Right"
-                                Orientation="Horizontal">
-                        <Border Style="{StaticResource StatusChip}" ToolTip="{Binding UpdateCard.Detail}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource StatusChipGlyph}" Text="{Binding UpdateCard.Glyph}"/>
-                                <TextBlock Margin="4,0,0,0"
-                                           Style="{StaticResource StatusChipText}"
-                                           Text="{Binding UpdateCard.Badge}"/>
-                            </StackPanel>
-                        </Border>
-                        <Button AutomationProperties.Name="Check for updates"
-                                Command="{Binding CheckForUpdatesCommand}"
-                                Margin="8,0,0,0"
-                                Padding="9,7"
-                                Style="{StaticResource AccentButton}"
-                                ToolTip="Check for updates">
-                            <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                       FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
-                                       Text="{x:Static themes:IconGlyphs.Refresh}"/>
-                        </Button>
-                    </StackPanel>
-
-                    <Button Grid.Row="1"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Bottom"
-                            Margin="0,4,0,0"
-                            Command="{Binding ShowReleaseNotesCommand}"
-                            Content="View release notes  →"
-                            Style="{StaticResource LinkButton}"
-                            ToolTip="Open What's New"/>
-                </Grid>
+                <StackPanel HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal">
+                    <Border Style="{StaticResource StatusChip}" ToolTip="{Binding UpdateCard.Detail}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource StatusChipGlyph}" Text="{Binding UpdateCard.Glyph}"/>
+                            <TextBlock Margin="4,0,0,0"
+                                       Style="{StaticResource StatusChipText}"
+                                       Text="{Binding UpdateCard.Badge}"/>
+                        </StackPanel>
+                    </Border>
+                    <Button AutomationProperties.Name="Check for updates"
+                            Command="{Binding CheckForUpdatesCommand}"
+                            Margin="8,0,0,0"
+                            Padding="9,7"
+                            Style="{StaticResource AccentButton}"
+                            ToolTip="Check for updates">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
+                                   Text="{x:Static themes:IconGlyphs.Refresh}"/>
+                    </Button>
+                </StackPanel>
             </DataTemplate>
 
             <!-- Project Scanning actions: add a root or rescan the saved configuration. -->

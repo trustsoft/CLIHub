@@ -15,6 +15,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - A release-preparation sequence now starts with the README screenshots: `docs/images/tools/Capture-ReadmeImages.ps1` runs, and its output is committed, before any other release-preparation commit, so the tagged tree shows the UI that ships; `docs/releasing.md` states the step and `AGENTS.md` repeats the rule (`release-prep-screenshot-refresh`).
 - The `launch-window-layout` spec no longer contradicts itself about the launch window's width; the "Window chrome" requirement now states that the window's height follows its content and its size is never user-adjustable, without claiming the width stays constant (`launch-window-width-spec-reconciliation`, `launch-window-layout`).
 - The Settings page header now shows the active page's icon as a plain muted glyph before the title, reusing `SettingsPage.Icon` with no tile, border, or accent, in its own column so the Updates title chip keeps wrapping with the title (`settings-page-header-emblem`, `settings-theme`).
+- The "View release notes" link in the Settings Updates page header moved from the bottom-right of the header onto the title row, immediately after the "Channel: Stable" chip, so the header reads as one line of metadata (title, version chip, channel chip, release-notes link) and one line of actions (status chip and check button) (`updates-release-notes-link-placement`, `preferences-ui`, `settings-theme`).
 
 ### Fixed
 
