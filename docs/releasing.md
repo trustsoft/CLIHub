@@ -1,14 +1,39 @@
 # Release Runbook
 
 How to cut a CLIHub release. The pipeline (the `ci-build` and `release-pipeline` specs) does the
-building, packaging, and publishing; your job is the notes, the development version, and the tag. The
-durable pipeline contract is
+building, packaging, and publishing; your job is the README screenshots, the notes, the development
+version, and the tag. The durable pipeline contract is
 [`openspec/specs/release-pipeline/spec.md`](../openspec/specs/release-pipeline/spec.md).
 
 ## Before you start
 
 - All work is merged to `master` with green CI.
 - The version is decided and follows SemVer (`MAJOR.MINOR.PATCH`).
+
+## 0. Refresh the README screenshots
+
+Do this before the first release-preparation commit. The tag points at a commit, so the screenshots in
+the tree when you tag are the ones every installer and every GitHub visitor sees — refreshing them
+afterwards leaves the release showing the previous UI.
+
+Close CLIHub first, then regenerate the image set:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File docs\images\tools\Capture-ReadmeImages.ps1
+```
+
+The harness builds the Debug app, seeds a mock workspace (`-MockWorkspaceRoot`, default
+`D:\Projects\Acme`), temporarily replaces and then restores `%APPDATA%\CLIHub\config.json` and
+`cache\logos.json`, renders the launch window plus the Appearance, Project Scanning, CLI Agents, and
+Agent Detection pages at 1.5×, and applies the 12 px rounded-corner mask. Unless you pass
+`-SkipWebImages`, it also re-renders `banner.png`, `workflow.png`, and `social-preview.png` with headless
+Chrome — a missing Chrome fails the run. The harness refuses to run while CLIHub is running, and a
+failed capture stops with the contents of `capture-error.txt` instead of writing new images.
+
+Open the regenerated PNGs in `docs\images\` and look at them before committing: they must show the UI of
+the version being released, with the seeded demo project names rather than your own. Commit the refreshed
+set as the first release-preparation commit, for example
+`docs(images): refresh the README screenshots for <version>`.
 
 ## 1. Write the release notes
 
@@ -83,6 +108,7 @@ The `Release` workflow (Actions tab) runs two jobs, about 4–6 minutes total:
 ## 5. Verify
 
 - The workflow run is green.
+- The README screenshots in `docs\images\` show the released UI (refreshed in step 0).
 - `https://github.com/trustsoft/CLIHub/releases/tag/vX.Y.Z` exists, is not a draft, and has
   `CLIHub-win-Setup.exe`, `CLIHub-win-Portable.zip`, `CLIHub-X.Y.Z-full.nupkg`, `releases.win.json`,
   and the body matching the notes section.

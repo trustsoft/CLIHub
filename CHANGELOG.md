@@ -12,6 +12,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 
 ### Changed
 
+- A release-preparation sequence now starts with the README screenshots: `docs/images/tools/Capture-ReadmeImages.ps1` runs, and its output is committed, before any other release-preparation commit, so the tagged tree shows the UI that ships; `docs/releasing.md` states the step and `AGENTS.md` repeats the rule (`release-prep-screenshot-refresh`).
 - The `launch-window-layout` spec no longer contradicts itself about the launch window's width; the "Window chrome" requirement now states that the window's height follows its content and its size is never user-adjustable, without claiming the width stays constant (`launch-window-width-spec-reconciliation`, `launch-window-layout`).
 
 ### Fixed

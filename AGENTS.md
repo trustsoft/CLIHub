@@ -69,6 +69,10 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
 - For a change with a manual smoke task, `git commit` and `openspec archive` MUST wait until the user
   completes and confirms the smoke: run gates, verify, report, wait for the smoke result, then ask for
   commit/archive approval.
+- A release-preparation sequence starts with the README screenshots: run
+  `docs/images/tools/Capture-ReadmeImages.ps1` (with CLIHub closed) and commit the refreshed images before
+  any other release-preparation commit, so the tagged tree shows the UI that ships (`docs/releasing.md`,
+  step 0).
 - A commit MUST contain only the files that belong to the approved change; leave unrelated working-tree edits
   and untracked files untouched.
 - Pipeline state transitions MUST go through `node .opencode/scripts/pipeline-state.mjs`

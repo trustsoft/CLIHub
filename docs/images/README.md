@@ -26,6 +26,9 @@ Chrome, then restores the original configuration and logo cache.
 powershell -NoProfile -ExecutionPolicy Bypass -File docs\images\tools\Capture-ReadmeImages.ps1
 ```
 
+The release runbook runs this refresh as its first step, before any release-preparation commit, so the
+images always match the tagged build — see [`docs/releasing.md`](../releasing.md), step 0.
+
 The script refuses to run while CLIHub is running. Useful parameters:
 
 - `-MockWorkspaceRoot` — illustrative workspace used by the projects and the watched root
