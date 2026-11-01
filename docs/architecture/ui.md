@@ -107,9 +107,11 @@ split are rationale-level detail: see the `introduce-project-model` change's `de
 `openspec/changes/archive/2026-10-19-introduce-project-model/`.
 
 The launch-window project row uses a fixed-width right marker rail inside the text column: the favorite
-star occupies the name row and the provenance mark the path row. The name and path share the `*` text
-column, and the path display converter measures the name text's width so the rail never eats into the
-trimmed path. The `ProjectProvenanceMark` style lives in `Controls.xaml` (manual uses
+star occupies the name row and the provenance mark the path row. Both rail markers right-align to the
+rail's trailing edge, so the project row's leading and trailing content insets are symmetric (12 DIP
+each), and the rail stays fixed-width so hiding the star does not shift the path text. The name and path
+share the `*` text column, and the path display converter measures the name text's width so the rail
+never eats into the trimmed path. The `ProjectProvenanceMark` style lives in `Controls.xaml` (manual uses
 `TextPrimaryBrush`, discovered `TextMutedBrush`), so the Settings registry and the launch window render
 the same mark; the mark's tooltip and accessible name carry the full `Manual`/`Discovered` label.
 

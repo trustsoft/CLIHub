@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-01
+goal: Equalize project row trailing inset to match leading inset of 12 DIP
+skip_specs: true

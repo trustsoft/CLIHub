@@ -28,6 +28,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - Changing a project's folder updates the Settings row's path text and tooltip immediately, without a restart (`project-path-refresh`, `project-management`).
 - Project path validation errors no longer expose the `ArgumentException` parameter suffix in the Settings error line (`project-path-correction`).
 - Project removal confirmations are owned by the window that triggered them, so removing a project from Settings shows the prompt above Settings and blocks Settings until it is answered (`project-removal-dialog-ownership`, `project-management`).
+- The launch-window project row's trailing inset now matches its leading 12 DIP inset because the favorite star and the provenance mark right-align in the marker rail (`project-row-trailing-inset`, `launch-window-layout`).
 
 ### Removed
 

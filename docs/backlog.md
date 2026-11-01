@@ -583,6 +583,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Re-checked (2026-10-31): `SettingsPageCatalog.AllPages` has 9 pages in 3 groups, so neither
   threshold is close; remains deferred.
 
+### Project and agent rows no longer end symmetrically about the pane divider
+
+- Severity: Low (cosmetic; 2 DIP, ~1.3 px at 100% scaling)
+- Evidence: `project-row-trailing-inset` set `Sizing.ProjectRow.Padding` to `12,9,12,9` so the project
+  row's own leading and trailing content insets match. That row now ends 22 DIP from the pane
+  divider (`src/CLIHub/Themes/Sizing.xaml:92` right 12 + `Sizing.Pane.Margin` 10 at `:63`), while the
+  agent row still ends 20 DIP from it (`Sizing.AgentRow.Padding` `10,0,10,0` at `:76` + the same pane
+  margin). Before the change both were 20 DIP, which is what the old padding comment claimed.
+- Proposed remedy: set `Sizing.AgentRow.Padding` to `10,0,12,0` so both rows end 22 DIP from the
+  divider, or accept the 2 DIP difference. Do not restore the project row's trailing padding to 10:
+  the row's symmetric 12 DIP inset is the behavior the change established.
+- Trigger: the next change that touches agent row padding, or a report of the divider-side gap
+  looking uneven at a wide Projects pane.
+
 ### Single-use FontSize and CornerRadius literals stay untokenized
 
 - Severity: Low (consistency)
