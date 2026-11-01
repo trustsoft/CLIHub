@@ -357,6 +357,13 @@ Changes to the scanning settings SHALL apply immediately, without requiring the 
 - **AND** the validation error describes the failure
 - **AND** the input text is not cleared so the user can retry or correct
 
+#### Scenario: Adding a duplicate watched directory reports a message
+
+- **WHEN** the user adds a folder that is already in the watched-directories list (by normalized path), whether by typing the path or by browsing to it
+- **THEN** no new row is added and the watched-root count is unchanged
+- **AND** an explicit message states that the folder is already monitored
+- **AND** the input the user entered or selected is not cleared
+
 #### Scenario: Scanner reload failure after a successful scanning apply
 
 - **WHEN** the user changes a scanning setting and the project scanner fails to reload after the write
