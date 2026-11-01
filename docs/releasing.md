@@ -24,7 +24,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File docs\images\tools\Capture-Re
 
 The harness builds the Debug app, seeds a mock workspace (`-MockWorkspaceRoot`, default
 `D:\Projects\Acme`), temporarily replaces and then restores `%APPDATA%\CLIHub\config.json` and
-`cache\logos.json`, renders the launch window plus the Appearance, Project Scanning, CLI Agents, and
+`cache\logos.json`, renders the launch window plus the Theme & Accent, Project Scanning, CLI Agents, and
 Agent Detection pages at 1.5×, and applies the 12 px rounded-corner mask. Unless you pass
 `-SkipWebImages`, it also re-renders `banner.png`, `workflow.png`, and `social-preview.png` with headless
 Chrome — a missing Chrome fails the run. The harness refuses to run while CLIHub is running, and a

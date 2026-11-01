@@ -3,7 +3,7 @@ namespace CLIHub.Views;
 using System.Windows.Controls;
 
 /// <summary>
-///   Settings page for appearance: how project paths are shortened in the launch window.
+///   Settings page for appearance: the application theme and accent color.
 /// </summary>
 public partial class SettingsAppearancePage : UserControl
 {

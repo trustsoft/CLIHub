@@ -504,6 +504,8 @@
 
                             <views:SettingsHotkeysPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=hotkeys}"/>
 
+                            <views:SettingsLaunchWindowPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=launch-window}"/>
+
                             <views:SettingsTerminalPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=terminal}"/>
 
                             <views:SettingsAgentsPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=agents}"/>

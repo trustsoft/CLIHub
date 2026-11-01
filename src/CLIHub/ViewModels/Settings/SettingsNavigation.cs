@@ -48,10 +48,16 @@ internal static class SettingsPageCatalog
             IconGlyphs.Settings),
         new(
             "hotkeys",
-            "Hotkeys & Quick Launcher",
-            "The global hotkey and where the launcher appears.",
+            "Global Hotkey",
+            "The global hotkey used to show the launcher.",
             "General",
             IconGlyphs.Keyboard),
+        new(
+            "launch-window",
+            "Launch Window",
+            "Where the launch window appears and how project paths are shortened in it.",
+            "General",
+            IconGlyphs.Equalizer),
         new(
             "projects-registry",
             "Projects",
@@ -89,8 +95,8 @@ internal static class SettingsPageCatalog
             IconGlyphs.Terminal),
         new(
             "appearance",
-            "Appearance",
-            "Theme, accent color, and how project paths are shown.",
+            "Theme & Accent",
+            "Theme and accent color.",
             "System",
             IconGlyphs.Palette),
         new(

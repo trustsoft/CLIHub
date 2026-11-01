@@ -16,17 +16,17 @@ using CLIHub.Lifetime;
 public class SettingsNavigationTests
 {
     [Fact]
-    public void Catalog_HasThreeGroupsAndTenPagesInOrder()
+    public void Catalog_HasThreeGroupsAndElevenPagesInOrder()
     {
         var viewModel = new Fixture().ViewModel;
 
         Assert.Equal(
             new[] { "General", "Engines & Repos", "System" },
             viewModel.Pages.Select(page => page.Group).Distinct());
-        Assert.Equal(10, viewModel.Pages.Count);
+        Assert.Equal(11, viewModel.Pages.Count);
 
         Assert.Equal(
-            new[] { "general", "hotkeys", "projects-registry", "projects", "agents", "agent-detection", "terminal", "appearance", "telemetry", "updates" },
+            new[] { "general", "hotkeys", "launch-window", "projects-registry", "projects", "agents", "agent-detection", "terminal", "appearance", "telemetry", "updates" },
             viewModel.Pages.Select(page => page.Key));
     }
 
@@ -36,7 +36,7 @@ public class SettingsNavigationTests
         var viewModel = new Fixture().ViewModel;
 
         Assert.All(viewModel.Pages, page => Assert.False(string.IsNullOrEmpty(page.Icon)));
-        Assert.Equal("Hotkeys & Quick Launcher", viewModel.Pages.Single(page => page.Key == "hotkeys").Title);
+        Assert.Equal("Global Hotkey", viewModel.Pages.Single(page => page.Key == "hotkeys").Title);
     }
 
     [Fact]
@@ -73,6 +73,7 @@ public class SettingsNavigationTests
             {
                 ("general", null, null, null),
                 ("hotkeys", null, null, null),
+                ("launch-window", null, null, null),
                 ("projects-registry", null, null, "RegistrySummaryCards"),
                 ("projects", null, "ProjectsHeaderAction", "ProjectsSummaryCards"),
                 ("agents", null, null, "AgentsSummaryCards"),
