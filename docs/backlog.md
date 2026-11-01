@@ -604,7 +604,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   window's outer borders.
 - Residual evidence: none.
 
-### `launch-window-layout` spec contradicts itself about the window width
+### `launch-window-layout` spec contradicts itself about the window width - **[done 2026-11-01: launch-window-width-spec-reconciliation]**
 
 - Severity: Low (documentation drift; no runtime behavior)
 - Evidence: `openspec/specs/launch-window-layout/spec.md:252-254` (scenario "Fixed width and content
@@ -620,6 +620,11 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   match the text: `Auto` pane columns plus `SizeToContent` are the established behavior.
 - Trigger: the next change that touches launch-window sizing, pane widths, or the
   `launch-window-layout` spec.
+- Status: fixed by `launch-window-width-spec-reconciliation` (2026-11-01), which corrected the
+  "Fixed width and content height" scenario's body (the scenario's name is unchanged — OpenSpec's
+  MODIFIED delta mechanism does not support a scenario-level rename) to state the window's
+  height-follows-content and non-user-resizable facts without claiming the width is constant.
+- Residual evidence: none.
 
 ### Single-use FontSize and CornerRadius literals stay untokenized
 

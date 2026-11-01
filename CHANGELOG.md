@@ -10,6 +10,10 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 
 ## Unreleased
 
+### Changed
+
+- The `launch-window-layout` spec no longer contradicts itself about the launch window's width; the "Window chrome" requirement now states that the window's height follows its content and its size is never user-adjustable, without claiming the width stays constant (`launch-window-width-spec-reconciliation`, `launch-window-layout`).
+
 ### Fixed
 
 - The launch-window project row's trailing inset now matches its leading 12 DIP inset because the favorite star and the provenance mark right-align in the marker rail (`project-row-trailing-inset`, `launch-window-layout`).
