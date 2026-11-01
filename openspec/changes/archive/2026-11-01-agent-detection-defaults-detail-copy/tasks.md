@@ -91,8 +91,12 @@ control-type, or other-card edit, stop and report instead.
 
 ## 6. Reporting and approval
 
-- [ ] 6.1 Report the result and wait for explicit user approval before any
+- [x] 6.1 Report the result and wait for explicit user approval before any
       `git commit` or `openspec archive agent-detection-defaults-detail-copy` — this
       change has no manual-smoke requirement beyond visually confirming the two new
       strings in a running Settings window if the user wants that; approval for build
-      verification never implies approval to commit or archive.
+      verification never implies approval to commit or archive. (Approved: `a3c2ebf`,
+      archive `c8a13b2`.)
+- [x] 6.2 Manual smoke: user confirmed the running Settings window shows the DEFAULTS
+      card detail `Cache TTL · Checking timeout` and the updated hover tooltip
+      (2026-11-01).
