@@ -343,10 +343,14 @@
                        VerticalAlignment="Bottom"
                        Fill="{DynamicResource HairlineBrush}"/>
 
-            <!-- Body: sidebar navigation + active page -->
+            <!--
+                Body: sidebar navigation + active page. The sidebar column is Auto width, so the
+                navigation is exactly as wide as its widest item needs and the divider sits next to
+                the list instead of leaving a gap, matching the launch window's content-sized panes.
+            -->
             <Grid Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
