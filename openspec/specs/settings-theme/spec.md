@@ -452,7 +452,7 @@ The Settings window SHALL render a sidebar navigation region in the application 
 
 ### Requirement: Agent Detection page summary cards
 
-The Settings window SHALL show three summary cards under the "Agent Detection" page header: cache TTL, timeout, and defaults. The cache TTL card SHALL show the effective detection cache time-to-live in minutes with the "min" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The timeout card SHALL show the effective version-check timeout in seconds with the "sec" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The defaults card SHALL show the built-in default values for both detection parameters in the format "N min · M sec" (e.g., "15 min · 10 sec") and SHALL state that these values are used when a field is empty. All three cards SHALL use the Diagnostic icon. The cache TTL and timeout cards SHALL refresh when either detection field is edited.
+The Settings window SHALL show three summary cards under the "Agent Detection" page header: cache TTL, timeout, and defaults. The cache TTL card SHALL show the effective detection cache time-to-live in minutes with the "min" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The timeout card SHALL show the effective version-check timeout in seconds with the "sec" unit, resolving an empty field value to the built-in default, and SHALL state whether the value is a built-in default or custom with the default numeric value for comparison. The defaults card SHALL show the built-in default values for both detection parameters in the format "N min · M sec" (e.g., "15 min · 10 sec") and SHALL name the two detection parameters those default values apply to. All three cards SHALL use the Diagnostic icon. The cache TTL and timeout cards SHALL refresh when either detection field is edited.
 
 #### Scenario: Cards shown
 
@@ -499,4 +499,4 @@ The Settings window SHALL show three summary cards under the "Agent Detection" p
 #### Scenario: Defaults card detail
 
 - **WHEN** the defaults card is visible
-- **THEN** the detail line shows "Used when a field is empty" or equivalent
+- **THEN** the detail line shows "Cache TTL · Checking timeout"
