@@ -26,6 +26,8 @@
     <sys:Double x:Key="Sizing.FontSize.Chip">11</sys:Double>
     <!-- Icon glyphs in row and header action buttons -->
     <sys:Double x:Key="Sizing.FontSize.Glyph">16</sys:Double>
+    <!-- Large decorative glyph, e.g. the Settings page-header emblem -->
+    <sys:Double x:Key="Sizing.FontSize.GlyphLarge">20</sys:Double>
     <!-- Icon glyphs in menu items, window-chrome buttons, and secondary card actions -->
     <sys:Double x:Key="Sizing.FontSize.GlyphSmall">14</sys:Double>
     <sys:Double x:Key="Sizing.FontSize.GlyphTiny">12</sys:Double>

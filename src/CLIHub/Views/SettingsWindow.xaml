@@ -413,34 +413,61 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Row="0" Grid.Column="0">
-                            <WrapPanel Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource PageHeader}" Text="{Binding SelectedPage.Title}"/>
-                                <ContentControl Margin="10,0,0,0"
-                                                VerticalAlignment="Center"
-                                                Content="{Binding}"
-                                                Visibility="{Binding SelectedPage.HeaderTitleExtraKey, Converter={StaticResource EmptyToCollapsedVisibility}}">
-                                    <ContentControl.ContentTemplate>
-                                        <MultiBinding Converter="{StaticResource ResourceKeyToTemplate}">
-                                            <Binding Path="SelectedPage.HeaderTitleExtraKey"/>
-                                            <!-- The slot element resolves the key, so the window-scoped template is reachable. -->
-                                            <Binding RelativeSource="{RelativeSource Self}"/>
-                                        </MultiBinding>
-                                    </ContentControl.ContentTemplate>
-                                </ContentControl>
-                            </WrapPanel>
-                            <TextBlock Margin="0,6,0,0" Text="{Binding SelectedPage.Description}">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SelectedPage.Description}" Value="">
-                                                <Setter Property="Visibility" Value="Collapsed"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
+                        <!--
+                            The title block is its own Grid with the emblem in column 0, so the emblem centers
+                            against the title+description height alone, never against a row the header-action
+                            column can make taller.
+                        -->
+                        <Grid Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!--
+                                Decorative and not focusable. WPF has no per-element accessibility-view switch
+                                (AutomationProperties.AccessibilityView is a WinUI/UWP API), so the glyph surfaces
+                                as a text element like the window's other icon glyphs. It sits in the title
+                                block's own Grid, not the outer header Grid, so the header-action column's
+                                height can never move it.
+                            -->
+                            <TextBlock Grid.Column="0"
+                                       Margin="0,0,12,0"
+                                       VerticalAlignment="Center"
+                                       FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                       FontSize="{StaticResource Sizing.FontSize.GlyphLarge}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
+                                       Text="{Binding SelectedPage.Icon}"/>
+
+                            <StackPanel Grid.Column="1">
+                                <WrapPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource PageHeader}" Text="{Binding SelectedPage.Title}"/>
+                                    <ContentControl Margin="10,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Content="{Binding}"
+                                                    Visibility="{Binding SelectedPage.HeaderTitleExtraKey, Converter={StaticResource EmptyToCollapsedVisibility}}">
+                                        <ContentControl.ContentTemplate>
+                                            <MultiBinding Converter="{StaticResource ResourceKeyToTemplate}">
+                                                <Binding Path="SelectedPage.HeaderTitleExtraKey"/>
+                                                <!-- The slot element resolves the key, so the window-scoped template is reachable. -->
+                                                <Binding RelativeSource="{RelativeSource Self}"/>
+                                            </MultiBinding>
+                                        </ContentControl.ContentTemplate>
+                                    </ContentControl>
+                                </WrapPanel>
+                                <TextBlock Margin="0,6,0,0" Text="{Binding SelectedPage.Description}">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedPage.Description}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
 
                         <ContentControl Grid.Row="0"
                                         Grid.Column="1"

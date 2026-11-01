@@ -748,3 +748,23 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: promote a value to a `Sizing.*` token when a second consumer appears; leave a
   single-use literal alone until then.
 - Trigger: copy-pasting a view and reaching for the same literal.
+
+### Decorative icon glyphs are exposed to assistive technology across the windows
+
+- Severity: Low (no interactive control is affected; the glyphs are non-focusable text)
+- Evidence: every decorative icon `TextBlock` carries its private-use glyph as text, and WPF exposes an
+  undecorated `TextBlock` in the automation tree with that text as its accessible name —
+  `FrameworkElementAutomationPeer.GetNameCore()` falls back to `GetPlainText()`, and
+  `TextBlockAutomationPeer.IsControlElementCore()` keeps it in the Content view. A probe against the
+  .NET 10 reference assemblies confirmed it:
+  `TextBlockAutomationPeer: Name='\uE713' CtrlType=Text IsContent=True`. Sites: the Settings
+  page-header emblem (`src/CLIHub/Views/SettingsWindow.xaml:434-440`, this change's added `TextBlock`),
+  the sidebar page glyph (`src/CLIHub/Views/SettingsWindow.xaml:372-377`), and the `SettingCard` icon
+  box (`src/CLIHub/Themes/SettingsStyles.xaml:214-230`, glyph `TextBlock` at `:224-229`). There is no
+  per-element opt-out: `AutomationProperties.Name=""` is ignored (the peer falls back to the text) and
+  `AutomationProperties.AccessibilityView` does not exist in WPF.
+- Proposed remedy: one shared decorative-glyph element whose `OnCreateAutomationPeer()` returns `null`
+  (or a peer reporting `IsContentElement`/`IsControlElement` false), applied consistently wherever an
+  icon duplicates adjacent text, in one pass across the windows rather than one glyph at a time.
+- Trigger: an accessibility requirement or audit, or the next change that adds icons to a
+  screen-reader-facing surface.

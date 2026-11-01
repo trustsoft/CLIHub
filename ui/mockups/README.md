@@ -2,7 +2,7 @@
 
 Reference images for UI work. The descriptions below are a snapshot of each image; the images are the source of truth and may be updated.
 
-Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` with the current dark theme. `settings-target.html` is the **target** design for the Settings window — it is not implemented yet and supersedes `settings.png` as the design direction for future Settings work.
+Status: `popup-split.png` is delivered — dark theme and layout by the `launch-window-ui` change, chromeless popup shell and reference metrics by the `launch-window-chrome` change; `settings.png` is delivered by `preferences-ui` with the current dark theme. `settings-target.html` is the **target** design for the Settings window — it is not implemented yet and supersedes `settings.png` as the design direction for future Settings work. `settings-page-emblem.html` is delivered by the `settings-page-header-emblem` change with variant B — the bare page-header glyph, no tile.
 
 ## `popup-split.png` — launch window (Popup)
 
@@ -41,6 +41,31 @@ Rendered from the running application (v0.9.0, 630×806):
 - **UPDATES:** checkbox "Check for updates on startup"; button "Check for updates".
 - **Footer:** `CLIHub` + version pill; **Save** and **Cancel**.
 
+## `settings-page-emblem.html` — Settings page-header emblem (delivered, variant B)
+
+An interactive HTML comparison of an optional section emblem to the left of the Settings page title —
+the empty left part of the page header. It reproduces the current window on the real palette
+(`Themes/DarkTheme.xaml`) and metrics (`Themes/Sizing.xaml`: window 888×687, title bar 40, sidebar 208,
+header insets 24/16, `SettingCard` 28×28 icon box, footer 50), so a chosen variant can be ported to XAML
+without re-measuring.
+
+Four variants, switchable in the live window and shown again as 1:1 header crops:
+
+- **A** — 40×40 tile, radius 8, `ThumbBgBrush` + `ControlStrokeBrush`, 18 px glyph in `TextMutedBrush`.
+  The tile height equals the title+description block (measured 40.4), so the header keeps its height.
+- **B** — the same glyph at 20 px with no tile; the title shifts 32 instead of 54 DIP.
+- **C** — accent-tinted tile (`AccentSelectionBrush` + accent stroke, accent glyph).
+- **D** — the current header, with no emblem.
+
+The page also shows A in the light palette (the emblem is built from palette brushes and needs no
+per-theme values), a 40×40 tile per page glyph to compare the optical weight of the MDL2 glyphs, and a
+640-wide window (the `MinWidth`) to see how long titles and wrapping descriptions behave at that
+minimum width.
+
+Variant B ships: the glyph at 20 px in `TextMutedBrush`, in its own header column before the title, so
+the Updates title chip keeps wrapping with the title. The title shift against the content below the
+divider that the mockup flags — 32 DIP for B, not A's 54 — is accepted as part of that choice.
+
 ## Elements/settings implied for implementation
 
 New or extended preferences:
@@ -70,3 +95,4 @@ Launch window and Settings elements:
 - `launch-window-ui` (delivered) — the dark two-pane launch window: pane headers with Actions menus, project and agent rows, inline launch/resume, footer with version pill, update check and add-project/settings/exit actions, scrolling, and the `LaunchWindowViewModel` behind it.
 - `launch-window-layout` (delivered, redesigned) — resizable Projects/Agents panes and aligned pane layout, now expressed in the launch window as aligned pane headers and pane bodies ending at the footer.
 - `preferences-ui` (delivered) — the Settings window, default-runtime `cmd`/`ps`/`wt` selection, hotkey capture, agent probe TTL/timeout, and the startup update toggle.
+- `settings-page-header-emblem` (delivered) — variant B of the page-header emblem: the active page's `SettingsPage.Icon` as a 20 DIP muted glyph in its own header column, with a 12 DIP gap to the title and no tile.

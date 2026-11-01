@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>CLIHub — эмблема раздела в шапке Settings (мокап)</title>
+<!--
+    МОКАП, НЕ РЕАЛИЗОВАНО.
+
+    Воспроизводит текущее окно Settings на реальной палитре (Themes/DarkTheme.xaml) и реальных
+    метриках (Themes/Sizing.xaml, SettingsWindow.xaml, SettingsStyles.xaml): окно 888x687,
+    заголовок окна 40, сайдбар 208, шапка страницы с отступами 24/16, карточки SettingCard
+    28x28/13 глиф, футер 50.
+
+    Цель: сравнить варианты эмблемы раздела слева от заголовка страницы.
+    Переключатель вверху меняет вариант в живом окне; ниже — 1:1 кропы всех вариантов,
+    набор всех иконок страниц в плашке, узкое окно (MinWidth 640) и светлая тема.
+-->
+<style>
+:root {
+    /* Themes/DarkTheme.xaml */
+    --chrome-bg: #26262C;
+    --strip-bg: rgba(0, 0, 0, .141);        /* #24000000 */
+    --popover: #2B2B31;
+    --hairline: rgba(255, 255, 255, .059);  /* #0FFFFFFF */
+    --field-stroke: rgba(255, 255, 255, .102); /* #1AFFFFFF */
+    --control-stroke: rgba(255, 255, 255, .122); /* #1FFFFFFF */
+    --thumb-bg: rgba(255, 255, 255, .102);  /* #1AFFFFFF */
+    --chip-bg: rgba(255, 255, 255, .051);   /* #0DFFFFFF */
+    --chip-stroke: rgba(255, 255, 255, .078); /* #14FFFFFF */
+    --top-highlight: rgba(255, 255, 255, .051);
+    --text: #E9E9E9;
+    --muted: #9A9A9A;
+    --brand: #B0B0B0;
+    --accent: #4CC2FF;                      /* AccentApplier default */
+    --accent-sel: rgba(76, 194, 255, .122); /* #1F4CC2FF */
+    --font-text: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    --font-icon: "Segoe MDL2 Assets";
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 28px 32px 48px;
+    background: #151518;
+    color: #D6D6DA;
+    font: 13px/1.45 var(--font-text);
+}
+
+h1 { margin: 0 0 6px; font-size: 19px; font-weight: 600; color: #F0F0F2; }
+h2 { margin: 34px 0 10px; font-size: 14px; font-weight: 600; color: #E4E4E8; }
+p.lead { margin: 0 0 4px; max-width: 980px; color: #A9A9B2; }
+p.note { margin: 10px 0 0; max-width: 980px; color: #8E8E97; font-size: 12px; }
+
+.badge-mock {
+    display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 4px;
+    background: rgba(217, 123, 123, .16); border: 1px solid rgba(217, 123, 123, .5);
+    color: #D97B7B; font-size: 11px; font-weight: 600; vertical-align: 3px;
+}
+
+/* ---------- Переключатель вариантов ---------- */
+
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; }
+
+.switcher label {
+    display: flex; align-items: center; gap: 8px; padding: 7px 12px;
+    border-radius: 6px; border: 1px solid rgba(255, 255, 255, .12);
+    background: #232328; color: #B6B6BE; cursor: pointer; user-select: none;
+    font-size: 12.5px;
+}
+
+.switcher label:hover { background: #2A2A30; }
+.switcher input { accent-color: #4CC2FF; margin: 0; }
+.switcher label:has(input:checked) {
+    border-color: rgba(76, 194, 255, .55); background: rgba(76, 194, 255, .12); color: #E9F6FF;
+}
+
+/* ---------- Окно ---------- */
+
+.stage { display: flex; gap: 26px; align-items: flex-start; flex-wrap: wrap; }
+
+.window {
+    width: 888px; height: 687px; flex: none;
+    display: flex; flex-direction: column;
+    background: var(--chrome-bg);
+    border: 1px solid var(--field-stroke);
+    overflow: hidden;
+}
+
+.window.narrow { width: 640px; height: 480px; }
+
+.top-highlight { height: 1px; flex: none; background: var(--top-highlight); }
+
+.titlebar {
+    height: 40px; flex: none; background: var(--strip-bg);
+    border-bottom: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: space-between;
+}
+
+.title-left { display: flex; align-items: center; gap: 8px; margin-left: 12px; }
+.appicon { width: 16px; height: 16px; display: block; }
+.title-text { font-size: 13px; font-weight: 500; color: var(--text); }
+
+.winbtns { display: flex; }
+.winbtn {
+    width: 44px; height: 40px; display: grid; place-items: center;
+    font-family: var(--font-icon); font-size: 14px; color: var(--text);
+}
+.winbtn.max { font-size: 10px; }
+
+.body { flex: 1; display: flex; min-height: 0; }
+
+.sidebar {
+    width: 208px; flex: none; padding: 0 10px 12px;
+    background: var(--popover); border-right: 1px solid var(--hairline);
+}
+
+.group-label { margin: 12px 0 4px 10px; font-size: 11px; color: var(--muted); }
+
+.nav-item {
+    display: flex; align-items: center; padding: 7px 10px; margin: 1px 0;
+    border-radius: 5px; font-size: 12px; color: var(--muted);
+}
+.nav-item .glyph {
+    width: 18px; flex: none; font-family: var(--font-icon);
+    font-size: 13px; color: var(--muted);
+}
+.nav-item.active { background: var(--accent-sel); color: var(--text); }
+.nav-item.active .glyph { color: var(--text); }
+
+.content { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.page-header { margin: 16px 24px 0; }
+
+.header-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
+
+.page-title { font-size: 14.5px; font-weight: 600; line-height: 1.35; color: var(--text); }
+.page-desc { margin-top: 6px; font-size: 11px; line-height: 1.35; color: var(--muted); }
+.header-rule { height: 1px; margin-top: 14px; background: var(--hairline); }
+
+.scroll { flex: 1; min-height: 0; padding: 0 24px 24px; overflow: hidden; }
+
+/* ---------- Эмблема: варианты ---------- */
+
+.emblem { display: none; }
+.emblem-glyph { font-family: var(--font-icon); line-height: 1; }
+
+/* A — нейтральная плашка 40x40: тот же рецепт, что IconBox карточки (28x28) и тайл проекта (42x42) */
+[data-variant="a"] .emblem,
+[data-variant="c"] .emblem {
+    width: 40px; height: 40px; margin-right: 14px; flex: none;
+    display: grid; place-items: center; border-radius: 8px;
+}
+[data-variant="a"] .emblem { background: var(--thumb-bg); border: 1px solid var(--control-stroke); }
+[data-variant="a"] .emblem-glyph { font-size: 18px; color: var(--muted); }
+
+/* B — крупный глиф без плашки */
+[data-variant="b"] .emblem { display: block; margin-right: 12px; }
+[data-variant="b"] .emblem-glyph { font-size: 20px; color: var(--muted); }
+
+/* C — accent-плашка */
+[data-variant="c"] .emblem { background: var(--accent-sel); border: 1px solid rgba(76, 194, 255, .42); }
+[data-variant="c"] .emblem-glyph { font-size: 18px; color: var(--accent); }
+
+/* D — текущее состояние: эмблемы нет */
+[data-variant="d"] .emblem { display: none; }
+
+/* ---------- Карточки настроек ---------- */
+
+.card {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center;
+    padding: 12px; margin: 0 0 8px;
+    background: var(--popover);
+    border: 1px solid var(--field-stroke); border-radius: 6px;
+}
+.card:first-child { margin-top: 16px; }
+
+.card-head { display: grid; grid-template-columns: auto minmax(0, 1fr); }
+.card-icon {
+    width: 28px; height: 28px; margin-right: 12px; align-self: start;
+    display: grid; place-items: center; border-radius: 6px;
+    background: var(--thumb-bg); border: 1px solid var(--control-stroke);
+    font-family: var(--font-icon); font-size: 13px; color: var(--muted);
+}
+.card-title { font-size: 12px; font-weight: 500; color: var(--text); }
+.card-hint { margin-top: 3px; font-size: 11px; color: var(--muted); }
+
+.toggle {
+    width: 36px; height: 20px; border-radius: 10px;
+    background: var(--thumb-bg); border: 1px solid var(--control-stroke);
+    display: flex; align-items: center; padding-left: 3px;
+}
+.toggle i { width: 14px; height: 14px; border-radius: 50%; background: #8A8A91; display: block; }
+
+/* ---------- Футер ---------- */
+
+.footer {
+    height: 50px; flex: none; padding: 0 8px 0 12px;
+    background: var(--strip-bg); border-top: 1px solid var(--hairline);
+    display: flex; align-items: center; justify-content: space-between;
+}
+.brand { font-size: 15px; font-weight: 500; color: var(--brand); }
+.chip {
+    margin-left: 8px; padding: 2px 6px; border-radius: 6px;
+    background: var(--chip-bg); border: 1px solid var(--chip-stroke);
+    font-size: 11px; color: var(--muted); position: relative; top: 2px;
+}
+.actions { display: flex; gap: 10px; }
+.btn { padding: 7px 18px; border-radius: 6px; font-size: 12px; }
+.btn.save { background: var(--accent); color: var(--chrome-bg); font-weight: 600; }
+.btn.cancel { background: var(--chip-bg); border: 1px solid var(--chip-stroke); color: var(--text); }
+
+/* ---------- Кропы для сравнения ---------- */
+
+.crops { display: flex; flex-direction: column; gap: 14px; max-width: 700px; }
+
+.crop {
+    padding: 16px 24px 18px; background: var(--chrome-bg);
+    border: 1px solid rgba(255, 255, 255, .08); border-radius: 4px;
+}
+.crop.light {
+    --chrome-bg: #F3F3F5; --text: #1B1B1F; --muted: #5F5F66;
+    --thumb-bg: rgba(0, 0, 0, .102); --control-stroke: rgba(0, 0, 0, .141);
+    --hairline: rgba(0, 0, 0, .078);
+}
+.crop-caption {
+    margin: 8px 2px 0; font-size: 11.5px; color: #8E8E97;
+    font-variant-numeric: tabular-nums;
+}
+.crop-caption b { color: #C8C8D0; font-weight: 600; }
+
+/* ---------- Набор иконок ---------- */
+
+.glyph-grid { display: flex; flex-wrap: wrap; gap: 14px; max-width: 980px; }
+
+.glyph-cell { width: 92px; text-align: center; }
+.glyph-tile {
+    width: 40px; height: 40px; margin: 0 auto 6px;
+    display: grid; place-items: center; border-radius: 8px;
+    background: var(--thumb-bg); border: 1px solid var(--control-stroke);
+    font-family: var(--font-icon); font-size: 18px; color: var(--muted);
+    background-color: #26262C;
+}
+.glyph-cell.acc .glyph-tile {
+    background: var(--accent-sel); border-color: rgba(76, 194, 255, .42); color: var(--accent);
+}
+.glyph-name { font-size: 10.5px; color: #8E8E97; line-height: 1.3; }
+
+.bottom-note {
+    margin-top: 34px; padding: 14px 16px; max-width: 980px;
+    border-left: 3px solid var(--accent); background: rgba(255, 255, 255, .03);
+    border-radius: 0 6px 6px 0; color: #B4B4BD; font-size: 12.5px;
+}
+.bottom-note b { color: #E4E4E8; }
+.bottom-note ul { margin: 8px 0 0; padding-left: 18px; }
+.bottom-note li { margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<h1>Эмблема раздела в шапке Settings <span class="badge-mock">МОКАП</span></h1>
+<p class="lead">
+    Слева от заголовка страницы (область, отмеченная на скриншоте) предлагается эмблема раздела:
+    иконка текущей страницы, увеличенная до размера блока «заголовок + описание».
+    Палитра и метрики взяты из приложения, ничего не реализовано.
+</p>
+<p class="note">
+    Иконка — та же, что уже работает в сайдбаре (<code>SettingsPage.Icon</code> / <code>IconGlyphs</code>).
+    Плашка 40×40 повторяет рецепт <code>SettingCard</code> IconBox (28×28, <code>ThumbBgBrush</code> +
+    <code>ControlStrokeBrush</code>, радиус 6) и тайла проекта (42×42, радиус 9).
+</p>
+
+<div class="switcher">
+    <label><input type="radio" name="variant" value="a" checked> A — плашка 40×40, нейтральная</label>
+    <label><input type="radio" name="variant" value="b"> B — крупный глиф 20 без плашки</label>
+    <label><input type="radio" name="variant" value="c"> C — accent-плашка</label>
+    <label><input type="radio" name="variant" value="d"> D — как сейчас, без эмблемы</label>
+</div>
+
+<div class="stage">
+
+    <!-- ======================= Живое окно ======================= -->
+    <div class="window" data-variant="a" id="win">
+        <div class="top-highlight"></div>
+
+        <div class="titlebar">
+            <div class="title-left">
+                <svg class="appicon" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect width="16" height="16" rx="3.2" fill="#4CC2FF"/>
+                    <path d="M5.8 4.4 L10.2 8 L5.8 11.6" fill="none" stroke="#0F2431"
+                          stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="title-text">CLIHub - Settings</span>
+            </div>
+            <div class="winbtns">
+                <span class="winbtn max">&#xE922;</span>
+                <span class="winbtn">&#xE711;</span>
+            </div>
+        </div>
+
+        <div class="body">
+            <div class="sidebar">
+                <div class="group-label">GENERAL</div>
+                <div class="nav-item active"><span class="glyph">&#xE713;</span>General &amp; Startup</div>
+                <div class="nav-item"><span class="glyph">&#xE765;</span>Hotkeys &amp; Quick Launcher</div>
+
+                <div class="group-label">ENGINES &amp; REPOS</div>
+                <div class="nav-item"><span class="glyph">&#xE8FD;</span>Projects</div>
+                <div class="nav-item"><span class="glyph">&#xE8B7;</span>Project Scanning</div>
+                <div class="nav-item"><span class="glyph">&#xE99A;</span>CLI Agents</div>
+                <div class="nav-item"><span class="glyph">&#xE9D9;</span>Agent Detection</div>
+                <div class="nav-item"><span class="glyph">&#xE756;</span>Terminal Profiles</div>
+
+                <div class="group-label">SYSTEM</div>
+                <div class="nav-item"><span class="glyph">&#xE790;</span>Appearance</div>
+                <div class="nav-item"><span class="glyph">&#xE81C;</span>Logs</div>
+                <div class="nav-item"><span class="glyph">&#xE895;</span>Updates</div>
+            </div>
+
+            <div class="content">
+                <div class="page-header">
+                    <div class="header-row">
+                        <div class="emblem"><span class="emblem-glyph">&#xE713;</span></div>
+                        <div class="header-text">
+                            <div class="page-title">General &amp; Startup</div>
+                            <div class="page-desc">Startup behavior and how the window opens.</div>
+                        </div>
+                    </div>
+                    <div class="header-rule"></div>
+                </div>
+
+                <div class="scroll">
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-icon">&#xE7E8;</div>
+                            <div>
+                                <div class="card-title">Start with Windows</div>
+                                <div class="card-hint">Launch CLIHub automatically when you sign in to Windows.</div>
+                            </div>
+                        </div>
+                        <div class="toggle"><i></i></div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-icon">&#xE70D;</div>
+                            <div>
+                                <div class="card-title">Start minimized to tray</div>
+                                <div class="card-hint">Start CLIHub minimized in the system tray instead of showing the window.</div>
+                            </div>
+                        </div>
+                        <div class="toggle"><i></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div><span class="brand">CLIHub</span><span class="chip">1.0.4</span></div>
+            <div class="actions">
+                <span class="btn save">Save</span>
+                <span class="btn cancel">Cancel</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ======================= 1:1 кропы шапок ======================= -->
+<h2>Шапки 1:1 — что меняется</h2>
+<div class="crops">
+
+    <div class="crop" data-variant="d">
+        <div class="header-row">
+            <div class="emblem"><span class="emblem-glyph">&#xE713;</span></div>
+            <div class="header-text">
+                <div class="page-title">General &amp; Startup</div>
+                <div class="page-desc">Startup behavior and how the window opens.</div>
+            </div>
+        </div>
+        <div class="header-rule"></div>
+    </div>
+    <p class="crop-caption"><b>D — сейчас.</b> Левый край шапки пуст; на страницах без summary-cards
+        (General, Hotkeys, Terminal, Appearance, Logs) заголовок ни к чему не привязан. Высота блока ≈ 40 px.</p>
+
+    <div class="crop" data-variant="a">
+        <div class="header-row">
+            <div class="emblem"><span class="emblem-glyph">&#xE713;</span></div>
+            <div class="header-text">
+                <div class="page-title">General &amp; Startup</div>
+                <div class="page-desc">Startup behavior and how the window opens.</div>
+            </div>
+        </div>
+        <div class="header-rule"></div>
+    </div>
+    <p class="crop-caption"><b>A — плашка 40×40, нейтральная.</b> Высота плашки совпадает с высотой
+        «заголовок + описание», поэтому шапка не становится выше. Рамка и фон — как у IconBox карточки,
+        глиф 18 в muted-тоне.</p>
+
+    <div class="crop" data-variant="b">
+        <div class="header-row">
+            <div class="emblem"><span class="emblem-glyph">&#xE713;</span></div>
+            <div class="header-text">
+                <div class="page-title">General &amp; Startup</div>
+                <div class="page-desc">Startup behavior and how the window opens.</div>
+            </div>
+        </div>
+        <div class="header-rule"></div>
+    </div>
+    <p class="crop-caption"><b>B — крупный глиф 20 без плашки.</b> Тише и без «кнопочной» аффорданс-рамки;
+        текст сдвигается меньше. Некоторые глифы MDL2 без плашки читаются легче, некоторые — наоборот размыто.</p>
+
+    <div class="crop" data-variant="c">
+        <div class="header-row">
+            <div class="emblem"><span class="emblem-glyph">&#xE713;</span></div>
+            <div class="header-text">
+                <div class="page-title">General &amp; Startup</div>
+                <div class="page-desc">Startup behavior and how the window opens.</div>
+            </div>
+        </div>
+        <div class="header-rule"></div>
+    </div>
+    <p class="crop-caption"><b>C — accent-плашка.</b> Самый заметный вариант. Риск: на странице Updates
+        в шапке уже стоит accent-кнопка «Check for updates» — два акцента будут конкурировать.</p>
+
+    <div class="crop light" data-variant="a">
+        <div class="header-row">
+            <div class="emblem"><span class="emblem-glyph">&#xE790;</span></div>
+            <div class="header-text">
+                <div class="page-title">Appearance</div>
+                <div class="page-desc">Theme, accent color, and how project paths are shown.</div>
+            </div>
+        </div>
+        <div class="header-rule"></div>
+    </div>
+    <p class="crop-caption"><b>A в светлой теме.</b> Эмблема собрана из палитровых кистей
+        (<code>ThumbBgBrush</code>, <code>ControlStrokeBrush</code>, <code>TextMutedBrush</code>), поэтому
+        перекрашивается вместе с темой — отдельных значений не нужно.</p>
+
+</div>
+
+<!-- ======================= Набор иконок ======================= -->
+<h2>Все иконки страниц в плашке 40×40</h2>
+<p class="note">Проверка оптического веса: часть глифов MDL2 плотнее других, и в плашке это заметнее,
+    чем в сайдбаре на 13 px.</p>
+
+<div class="glyph-grid" style="margin-top:14px">
+    <div class="glyph-cell"><div class="glyph-tile">&#xE713;</div><div class="glyph-name">General &amp; Startup</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE765;</div><div class="glyph-name">Hotkeys</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE8FD;</div><div class="glyph-name">Projects</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE8B7;</div><div class="glyph-name">Project Scanning</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE99A;</div><div class="glyph-name">CLI Agents</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE9D9;</div><div class="glyph-name">Agent Detection</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE756;</div><div class="glyph-name">Terminal</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE790;</div><div class="glyph-name">Appearance</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE81C;</div><div class="glyph-name">Logs</div></div>
+    <div class="glyph-cell"><div class="glyph-tile">&#xE895;</div><div class="glyph-name">Updates</div></div>
+</div>
+
+<!-- ======================= Узкое окно ======================= -->
+<h2>Максимальная теснота: окно 640 (MinWidth)</h2>
+<p class="note">Сайдбар фиксирован контентом (≈208), контент — 430. Заголовок и описание остаются в одну строку.</p>
+
+<div class="stage" style="margin-top:14px">
+    <div class="window narrow" data-variant="a">
+        <div class="top-highlight"></div>
+        <div class="titlebar">
+            <div class="title-left">
+                <svg class="appicon" viewBox="0 0 16 16" aria-hidden="true">
+                    <rect width="16" height="16" rx="3.2" fill="#4CC2FF"/>
+                    <path d="M5.8 4.4 L10.2 8 L5.8 11.6" fill="none" stroke="#0F2431"
+                          stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+                <span class="title-text">CLIHub - Settings</span>
+            </div>
+            <div class="winbtns">
+                <span class="winbtn max">&#xE922;</span>
+                <span class="winbtn">&#xE711;</span>
+            </div>
+        </div>
+        <div class="body">
+            <div class="sidebar">
+                <div class="group-label">GENERAL</div>
+                <div class="nav-item"><span class="glyph">&#xE713;</span>General &amp; Startup</div>
+                <div class="nav-item active"><span class="glyph">&#xE765;</span>Hotkeys &amp; Quick Launcher</div>
+                <div class="group-label">ENGINES &amp; REPOS</div>
+                <div class="nav-item"><span class="glyph">&#xE8FD;</span>Projects</div>
+                <div class="nav-item"><span class="glyph">&#xE8B7;</span>Project Scanning</div>
+                <div class="nav-item"><span class="glyph">&#xE99A;</span>CLI Agents</div>
+                <div class="nav-item"><span class="glyph">&#xE9D9;</span>Agent Detection</div>
+                <div class="nav-item"><span class="glyph">&#xE756;</span>Terminal Profiles</div>
+                <div class="group-label">SYSTEM</div>
+                <div class="nav-item"><span class="glyph">&#xE790;</span>Appearance</div>
+                <div class="nav-item"><span class="glyph">&#xE81C;</span>Logs</div>
+                <div class="nav-item"><span class="glyph">&#xE895;</span>Updates</div>
+            </div>
+            <div class="content">
+                <div class="page-header">
+                    <div class="header-row">
+                        <div class="emblem"><span class="emblem-glyph">&#xE765;</span></div>
+                        <div class="header-text">
+                            <div class="page-title">Hotkeys &amp; Quick Launcher</div>
+                            <div class="page-desc">The global hotkey and where the launcher appears.</div>
+                        </div>
+                    </div>
+                    <div class="header-rule"></div>
+                </div>
+                <div class="scroll">
+                    <div class="card">
+                        <div class="card-head">
+                            <div class="card-icon">&#xE765;</div>
+                            <div>
+                                <div class="card-title">Global hotkey</div>
+                                <div class="card-hint">Press a combination in the field.</div>
+                            </div>
+                        </div>
+                        <div class="toggle"><i></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer">
+            <div><span class="brand">CLIHub</span><span class="chip">1.0.4</span></div>
+            <div class="actions">
+                <span class="btn save">Save</span>
+                <span class="btn cancel">Cancel</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-note">
+    <b>На что смотреть</b>
+    <ul>
+        <li>Читается ли раздел по плашке быстрее, чем по одному заголовку (варианты A и C против D)?</li>
+        <li>Не спорит ли рамка плашки с рамками карточек под ней — вариант A и есть тот же рецепт, поэтому
+            «спорить» не должен; вариант B полностью убирает рамку.</li>
+        <li>Не перетягивает ли accent-плашка (C) внимание с кнопок в шапке и с активного пункта сайдбара?</li>
+        <li>Смущает ли сдвиг заголовка на ≈54 px вправо относительно контента, который остаётся на 24 px?</li>
+    </ul>
+    <div style="margin-top:10px">
+        Решение по варианту → OpenSpec change с дельтой <code>settings-theme</code>
+        (requirement «Persistent page header»), правкой <code>SettingsWindow.xaml</code>,
+        токенами в <code>Sizing.xaml</code> и разделом «Settings Page Layout» в <code>docs/architecture/ui.md</code>.
+    </div>
+</div>
+
+<script>
+    const win = document.getElementById('win');
+    for (const radio of document.querySelectorAll('input[name="variant"]')) {
+        radio.addEventListener('change', () => {
+            win.dataset.variant = radio.value;
+        });
+    }
+</script>
+
+</body>
+</html>
