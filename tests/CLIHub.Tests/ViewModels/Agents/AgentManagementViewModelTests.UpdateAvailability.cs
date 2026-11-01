@@ -189,6 +189,90 @@ public partial class AgentManagementViewModelTests
 
 
     [Fact]
+    public void CheckUpdatesCommand_WhenCheckThrowsMidPass_ReportsExplicitFailureSummary()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var gateB = new TaskCompletionSource<AgentUpdateAvailability>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate))) // Load
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"))); // forced
+        availability
+            .SetupSequence(x => x.CheckAsync(b, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.Unknown))) // Load
+            .Returns(gateB.Task); // forced check: failed below
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithOperationLifetime(new DeferredOperationLifetime()).Build();
+        viewModel.Load(null);
+        var cardA = viewModel.Cards.Single(card => card.PluginId == "a");
+        var cardB = viewModel.Cards.Single(card => card.PluginId == "b");
+        var bBeforeFailure = cardB.UpdateAvailability;
+
+        var raised = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.CheckUpdatesCommand.Execute(null);
+
+        // Mid-pass: the new pass cleared the summary, a's branch already settled its fresh
+        // result, and b's branch is still in flight.
+        Assert.Null(viewModel.UpdateCheckSummary);
+        Assert.True(cardA.HasUpdateAvailable);
+
+        gateB.SetException(new InvalidOperationException("source unreachable"));
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CanCheckUpdates, TimeSpan.FromSeconds(5)));
+
+        // The cleared line is replaced with an explicit failure — never a "checked everything"
+        // wording that could be read as "no updates found" — and the UPDATES aggregation is
+        // refreshed against the results that did settle.
+        Assert.Equal("Update check failed", viewModel.UpdateCheckSummary);
+        Assert.DoesNotContain("Checked", viewModel.UpdateCheckSummary!, StringComparison.Ordinal);
+        Assert.Contains(nameof(AgentManagementViewModel.UpdatesDetail), raised);
+
+        // The pass is over and both header actions are available again.
+        Assert.False(viewModel.IsCheckingUpdates);
+        Assert.True(viewModel.CanDetect);
+        Assert.True(viewModel.CanCheckUpdates);
+
+        // The card that settled before the failure keeps its fresh result; the unreached card
+        // keeps its pre-pass indicator, and its dropped cache entry lets the next check re-fetch.
+        Assert.Equal("1.0.0 → 2.0.0", cardA.UpdateAvailabilityText);
+        Assert.Same(bBeforeFailure, cardB.UpdateAvailability);
+        availability.Verify(x => x.InvalidateFor(b), Times.Once);
+    }
+
+
+    [Fact]
+    public void CheckUpdatesCommand_WhenCheckIsCancelled_LeavesNoFailureSummary()
+    {
+        var a = Launchable("a");
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
+            .Returns(Task.FromResult(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate))) // Load
+            .Returns(Task.FromException<AgentUpdateAvailability>(new OperationCanceledException())); // forced: cancelled
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithOperationLifetime(new DeferredOperationLifetime()).Build();
+        viewModel.Load(null);
+        var card = viewModel.Cards[0];
+        var summaryBefore = viewModel.UpdateCheckSummary;
+        Assert.Null(summaryBefore);
+
+        viewModel.CheckUpdatesCommand.Execute(null);
+
+        // Cancellation is not a failure: the pass leaves the summary exactly as it found it
+        // instead of reporting a check failure, while the gates still recover.
+        Assert.True(SpinWait.SpinUntil(
+            () => !viewModel.IsCheckingUpdates && viewModel.CanDetect && viewModel.CanCheckUpdates,
+            TimeSpan.FromSeconds(5)));
+        Assert.Equal(summaryBefore, viewModel.UpdateCheckSummary);
+        Assert.NotEqual("Update check failed", viewModel.UpdateCheckSummary);
+        Assert.True(viewModel.DetectCommand.CanExecute(null));
+        Assert.True(viewModel.CheckUpdatesCommand.CanExecute(null));
+        Assert.False(card.HasUpdateAvailable);
+    }
+
+
+    [Fact]
     public void CheckUpdatesCommand_WhileChecking_GatesDetectAndRestoresAfter()
     {
         var a = Launchable("a");

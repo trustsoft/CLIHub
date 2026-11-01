@@ -232,6 +232,153 @@ public partial class AgentManagementViewModelTests
 
 
     [Fact]
+    public void DetectCommand_WhenProbeThrowsAfterACardSettled_KeepsThatCardAndRestoresTheRest()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var c = Launchable("c");
+        var detection = Detection();
+        detection.Setup(x => x.IsInstalledInSystem(a)).Returns(false);
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => Task.FromResult(plugin.Id == "c"
+                ? new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0")
+                : new AgentUpdateAvailability(AgentUpdateStatus.UpToDate)));
+        probe
+            .Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentProbeResult(true, "2.0"));
+        probe
+            .Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("probe failed"));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b, c])
+            .WithDetection(detection)
+            .WithVersions(Versions())
+            .WithProbe(probe)
+            .WithUpdate(update)
+            .WithAvailability(availability)
+            .WithOperationLifetime(new DeferredOperationLifetime())
+            .Build();
+        viewModel.Load("a");
+        var cardA = viewModel.Cards.Single(card => card.PluginId == "a");
+        var cardB = viewModel.Cards.Single(card => card.PluginId == "b");
+        var cardC = viewModel.Cards.Single(card => card.PluginId == "c");
+        Assert.Equal(AgentInstallState.NotInstalled, cardA.InstallState);
+
+        // b and c carry the settled pre-pass state the Load pass resolved; the pass reaches b
+        // and throws before c.
+        var bAvailability = cardB.UpdateAvailability;
+        var cAvailability = cardC.UpdateAvailability;
+        Assert.NotNull(bAvailability);
+        Assert.NotNull(cAvailability);
+
+        var raised = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
+
+        viewModel.DetectCommand.Execute(null);
+
+        // a's probe settled before b's threw: the fresh result is self-consistent and survives,
+        // so the default-agent summary can never show a version beside an agent the card state
+        // calls not installed.
+        Assert.Equal(AgentInstallState.Installed, cardA.InstallState);
+        Assert.Equal("2.0", cardA.Version);
+        Assert.True(cardA.IsInstalled);
+        Assert.Equal("Version 2.0", viewModel.DefaultAgentDetail);
+
+        // The derived surfaces are rebuilt after the abort as well: the selector option agrees
+        // with the card instead of keeping the Load-time "(Not installed)" snapshot, and the
+        // header counts are re-raised.
+        var optionA = viewModel.DefaultAgentOptions.Single(option => option.Id == "a");
+        Assert.Equal(cardA.InstallState, optionA.InstallState);
+        Assert.Equal(cardA.Version, optionA.Version);
+        Assert.True(optionA.IsInstalled);
+        Assert.Equal("a (2.0)", optionA.DisplayName);
+        Assert.Contains(nameof(AgentManagementViewModel.AvailabilitySummary), raised);
+
+        // b threw and c was never probed: both restore to their complete pre-pass state.
+        Assert.Equal(AgentInstallState.Installed, cardB.InstallState);
+        Assert.Equal("1.0", cardB.Version);
+        Assert.Same(bAvailability, cardB.UpdateAvailability);
+        Assert.Equal(AgentInstallState.Installed, cardC.InstallState);
+        Assert.Equal("1.0", cardC.Version);
+        Assert.Same(cAvailability, cardC.UpdateAvailability);
+        Assert.DoesNotContain(viewModel.Cards, card => card.InstallState == AgentInstallState.Detecting);
+        Assert.True(viewModel.CanDetect);
+        probe.Verify(x => x.ProbeAsync(c, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+
+    [Fact]
+    public void DetectCommand_WhenDisposedMidPass_SettlesEveryUnresolvedCardOutOfDetecting()
+    {
+        var a = Launchable("a");
+        var b = Launchable("b");
+        var c = Launchable("c");
+        var gateB = new TaskCompletionSource<AgentProbeResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var probe = new Mock<IAgentProbeService>();
+        var update = new Mock<IAgentUpdateService>();
+        probe
+            .Setup(x => x.ProbeAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => plugin.Id == "b"
+                ? gateB.Task
+                : Task.FromResult(new AgentProbeResult(true, plugin.Id == "a" ? "2.0" : "9.9")));
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .Returns<Plugin, CancellationToken>((plugin, _) => Task.FromResult(plugin.Id == "c"
+                ? new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0")
+                : new AgentUpdateAvailability(AgentUpdateStatus.UpToDate)));
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([a, b, c])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithProbe(probe)
+            .WithUpdate(update)
+            .WithAvailability(availability)
+            .WithOperationLifetime(new DeferredOperationLifetime())
+            .Build();
+        viewModel.Load(null);
+        var cardA = viewModel.Cards.Single(card => card.PluginId == "a");
+        var cardB = viewModel.Cards.Single(card => card.PluginId == "b");
+        var cardC = viewModel.Cards.Single(card => card.PluginId == "c");
+        var bAvailability = cardB.UpdateAvailability;
+        var cAvailability = cardC.UpdateAvailability;
+        Assert.NotNull(bAvailability);
+        Assert.NotNull(cAvailability);
+
+        viewModel.DetectCommand.Execute(null);
+
+        // a already settled; b is holding the pass open and c has not been reached.
+        Assert.Equal("2.0", cardA.Version);
+        Assert.Equal(AgentInstallState.Detecting, cardB.InstallState);
+        Assert.Equal(AgentInstallState.Detecting, cardC.InstallState);
+
+        // Torn down mid-pass: the abandoned pass must settle like a thrown probe instead of
+        // leaving the cards it announced stuck on "Detecting…" forever.
+        viewModel.Dispose();
+        gateB.SetResult(new AgentProbeResult(true, "5.0"));
+
+        Assert.True(SpinWait.SpinUntil(() => viewModel.CanDetect, TimeSpan.FromSeconds(5)));
+        Assert.DoesNotContain(viewModel.Cards, card => card.InstallState == AgentInstallState.Detecting);
+
+        // The resolved card keeps its fresh result; b's post-dispose result was never applied and
+        // c was never probed, so both carry their complete pre-pass state.
+        Assert.Equal(AgentInstallState.Installed, cardA.InstallState);
+        Assert.Equal("2.0", cardA.Version);
+        Assert.Equal(AgentInstallState.Installed, cardB.InstallState);
+        Assert.Equal("1.0", cardB.Version);
+        Assert.Same(bAvailability, cardB.UpdateAvailability);
+        Assert.Equal(AgentInstallState.Installed, cardC.InstallState);
+        Assert.Equal("1.0", cardC.Version);
+        Assert.Same(cAvailability, cardC.UpdateAvailability);
+        probe.Verify(x => x.ProbeAsync(c, It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+
+    [Fact]
     public void DetectCardCommand_WhileHeaderActionRuns_CanExecuteIsFalse()
     {
         var a = Launchable("a");

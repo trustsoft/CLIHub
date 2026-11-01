@@ -19,6 +19,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 {
     private static readonly AgentOption NoneOption = new(null, "None");
 
+    /// <summary>
+    ///   The summary line shown when a manual update check is abandoned by a thrown check. Kept
+    ///   deliberately distinct from every <see cref="BuildUpdateCheckSummary" /> wording so an
+    ///   aborted pass can never read as "checked everything, no updates".
+    /// </summary>
+    private const string UpdateCheckFailureSummary = "Update check failed";
+
     private readonly IPluginCatalog catalog;
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;
@@ -620,7 +627,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         try
         {
             var cards = this.Cards.ToList();
-            var previousStates = cards.ToDictionary(card => card, card => card.InstallState);
+            var previousStates = cards.ToDictionary(
+                card => card,
+                card => (InstallState: card.InstallState, card.Version, card.UpdateAvailability));
+
+            // Cards this pass has already committed a fresh probe result to. A committed result
+            // describes the host right now, so it is never rolled back to the pre-pass snapshot.
+            var resolved = new HashSet<AgentCardItem>();
 
             // Announce the pass on every card before the first probe, so no chip shows a stale
             // settled state while its agent is being re-probed.
@@ -636,10 +649,14 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                     var result = await this.probe.ProbeAsync(card.Plugin, cancellationToken);
                     if (this.disposed)
                     {
+                        // The pass is abandoned mid-flight: settle it exactly like a thrown probe,
+                        // so no card is left announcing a probe that will never complete.
+                        this.SettleAbortedDetectPass(cards, resolved, previousStates);
                         return;
                     }
 
                     this.ApplyProbeResult(card, result);
+                    resolved.Add(card);
                 }
 
                 this.RefreshAvailabilitySummary();
@@ -649,9 +666,17 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             {
                 // The pass is abandoning: settle every card it had flipped to Detecting back to
                 // its pre-pass state so no chip stays stuck, then let the caller log the failure.
-                foreach (var card in cards)
+                this.SettleAbortedDetectPass(cards, resolved, previousStates);
+
+                // The cards changed before the pass abandoned, so the derived surfaces must be
+                // rebuilt too: the header counts and the default-agent options otherwise keep
+                // describing the pre-pass state — a selector option reading "(Not installed)"
+                // next to a summary card that already reports a version. A disposed surface is
+                // gone, so it is left alone.
+                if (!this.disposed)
                 {
-                    card.InstallState = previousStates[card];
+                    this.RefreshAvailabilitySummary();
+                    this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
                 }
 
                 throw;
@@ -660,6 +685,36 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         finally
         {
             this.IsDetecting = false;
+        }
+    }
+
+    /// <summary>
+    ///   Settles an aborted header-wide detection pass: every card the pass had not committed a
+    ///   fresh probe result to is restored to its complete pre-pass state — installation state,
+    ///   version, and update-availability indicator together — so nothing is left announcing a
+    ///   probe that will never complete and no chip disagrees with its shown version. A card the
+    ///   pass already resolved keeps its fresh result: a committed probe result is never rolled
+    ///   back to the state the host had before the pass started.
+    /// </summary>
+    /// <param name="cards"> The card snapshot the aborted pass worked through. </param>
+    /// <param name="resolved"> The cards the pass already applied a fresh probe result to. </param>
+    /// <param name="previousStates"> The pre-pass state of every card in the snapshot. </param>
+    private void SettleAbortedDetectPass(
+        IReadOnlyList<AgentCardItem> cards,
+        IReadOnlySet<AgentCardItem> resolved,
+        IReadOnlyDictionary<AgentCardItem, (AgentInstallState InstallState, string? Version, AgentUpdateAvailability? UpdateAvailability)> previousStates)
+    {
+        foreach (var card in cards)
+        {
+            if (resolved.Contains(card))
+            {
+                continue;
+            }
+
+            var (installState, version, updateAvailability) = previousStates[card];
+            card.InstallState = installState;
+            card.Version = version;
+            card.UpdateAvailability = updateAvailability;
         }
     }
 
@@ -678,31 +733,51 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // pass itself never changes an install state.
             var checkedCount = cards.Count(card => card.InstallState == AgentInstallState.Installed);
 
-            await Task.WhenAll(cards.Select(async card =>
+            try
             {
-                if (card.InstallState != AgentInstallState.Installed)
+                await Task.WhenAll(cards.Select(async card =>
                 {
-                    // A missing CLI has no update source to check; clear any stale advisory
-                    // indicator so it cannot survive an uninstall.
-                    card.UpdateAvailability = null;
-                    return;
-                }
+                    if (card.InstallState != AgentInstallState.Installed)
+                    {
+                        // A missing CLI has no update source to check; clear any stale advisory
+                        // indicator so it cannot survive an uninstall.
+                        card.UpdateAvailability = null;
+                        return;
+                    }
 
-                // Invalidate first so the check below bypasses the cached result and its TTL.
-                this.availability.InvalidateFor(card.Plugin);
-                var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+                    // Invalidate first so the check below bypasses the cached result and its TTL.
+                    this.availability.InvalidateFor(card.Plugin);
+                    var availability = await this.availability.CheckAsync(card.Plugin, cancellationToken);
+                    if (!this.disposed)
+                    {
+                        card.UpdateAvailability = availability;
+                    }
+                }));
+
                 if (!this.disposed)
                 {
-                    card.UpdateAvailability = availability;
+                    this.UpdateCheckSummary = BuildUpdateCheckSummary(
+                        checkedCount,
+                        cards.Count(card => card.HasUpdateAvailable));
+                    this.RefreshAvailabilitySummary();
                 }
-            }));
-
-            if (!this.disposed)
+            }
+            // Cancellation is not a failure: the exception still propagates (so the operation
+            // boundary logs it as cancelled), but it never writes the failure summary.
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                this.UpdateCheckSummary = BuildUpdateCheckSummary(
-                    checkedCount,
-                    cards.Count(card => card.HasUpdateAvailable));
-                this.RefreshAvailabilitySummary();
+                // The pass is abandoning. Leaving the summary cleared would read as "nothing to
+                // report", so replace it with an explicit failure line. Cards the pass already
+                // settled keep their fresh result; cards it never reached keep their pre-pass
+                // indicator, which the next check re-fetches because the cache was invalidated.
+                // Rethrow so the shared operation boundary still logs the failure.
+                if (!this.disposed)
+                {
+                    this.UpdateCheckSummary = UpdateCheckFailureSummary;
+                    this.RefreshAvailabilitySummary();
+                }
+
+                throw;
             }
         }
         finally

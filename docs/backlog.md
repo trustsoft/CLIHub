@@ -138,7 +138,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent and process domain
 
-### Detect failure restores install state but not the version (low, deferred)
+### Detect failure restores install state but not the version (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
 
 - Severity: Low — exception path only, no notification fires there, and it self-heals on the next
   successful pass.
@@ -156,7 +156,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the next change touching `AgentManagementViewModel`'s probe paths, or a report of a
   version line beside an uninstalled agent after a failed Detect.
 
-### Dispose racing a Detect pass can leave unprobed cards in Detecting (low, deferred)
+### Dispose racing a Detect pass can leave unprobed cards in Detecting (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
 
 - Severity: Low — the surface is torn down, and `Load()` rebuilds the cards, so nothing renders the
   residual state.
@@ -169,7 +169,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: reuse of a disposed or abandoned section instance, or a future surface that keeps cards
   alive across a cancelled Detect.
 
-### A failed manual update check leaves no summary and stale indicators (low, deferred)
+### A failed manual update check leaves no summary and stale indicators (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
 
 - Severity: Low — exception path only; the next successful check or a page reload heals it.
 - Evidence: `CheckUpdatesAsync` clears `UpdateCheckSummary` at the start and only rebuilds it after

@@ -33,8 +33,10 @@ its shown version or update indicator.
 #### Scenario: An aborted pass keeps already-settled cards' fresh results
 - **WHEN** a multi-card detection pass has already applied a fresh probe result to one card and a
   later card's probe then throws
-- **THEN** the already-settled card keeps its fresh installation state, version, and
-  update-availability indicator exactly as the probe reported them
+- **THEN** the already-settled card keeps its fresh installation state and version exactly as the
+  probe reported them
+- **AND** its update-availability indicator is consistent with that state — preserved when the
+  agent is installed and cleared when it is not, as a probe result always settles it
 - **AND** it is not rolled back to its pre-pass state
 
 #### Scenario: An aborted pass restores every unresolved card completely

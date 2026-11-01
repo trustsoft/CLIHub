@@ -395,3 +395,28 @@ verbatim).
   were each within 1-3 lines of this investigation's re-verified numbers (`:623`, `:637-640`,
   `:652-655`+`:657`/`:648`, `:666-712`, `:785-798`) — no material drift, no contradiction between the
   brief and the code found. No deviation from the brief was required.
+
+## Implementation addendum (2026-11-01)
+
+Two fixes were added during verification of the implementation; the plan above did not anticipate
+them. Both are recorded here because they extend the change's shipped behavior.
+
+1. **Aborted `DetectAsync` rebuilds the derived surfaces.** `DefaultAgentDetail` reads `Cards` live,
+   but `DefaultAgentOptions` were rebuilt only on the success path. After an aborted pass a card the
+   pass had settled as installed therefore still had a selector option built at `Load` reading
+   "(Not installed)", while the summary card showed "Version 2.0" — the misleading pairing the
+   proposal's Why-item 1 describes, with the stale half on the selector side. The abort path now
+   calls `RefreshAvailabilitySummary()` and `RebuildDefaultAgentOptions(...)` after settling, guarded
+   by `!this.disposed`; the disposed branch deliberately does not, because that surface is gone.
+   Covered by the extended `DetectCommand_WhenProbeThrowsAfterACardSettled_...` test.
+2. **Cancellation is not a failure.** The new `catch` in `CheckUpdatesAsync` also caught
+   `OperationCanceledException`, so a check cancelled by application shutdown would have shown
+   "Update check failed" while the operation boundary logged it as cancelled. The catch is now
+   filtered with `when (ex is not OperationCanceledException)`; the exception still propagates and
+   the summary is left untouched. Covered by
+   `CheckUpdatesCommand_WhenCheckIsCancelled_LeavesNoFailureSummary`.
+
+Independent verification also corrected one scenario in the `agent-detection` delta: a probe reports
+only installation state and version, never update availability, so the scenario now says the settled
+card keeps its fresh installation state and version and an update-availability indicator consistent
+with that state. The requirement body was already accurate.
