@@ -583,7 +583,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Re-checked (2026-10-31): `SettingsPageCatalog.AllPages` has 9 pages in 3 groups, so neither
   threshold is close; remains deferred.
 
-### Project and agent rows no longer end symmetrically about the pane divider
+### Project and agent rows no longer end symmetrically about the pane divider - **[done 2026-11-01: agent-row-inset-alignment]**
 
 - Severity: Low (cosmetic; 2 DIP, ~1.3 px at 100% scaling)
 - Evidence: `project-row-trailing-inset` set `Sizing.ProjectRow.Padding` to `12,9,12,9` so the project
@@ -591,11 +591,35 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   divider (`src/CLIHub/Themes/Sizing.xaml:92` right 12 + `Sizing.Pane.Margin` 10 at `:63`), while the
   agent row still ends 20 DIP from it (`Sizing.AgentRow.Padding` `10,0,10,0` at `:76` + the same pane
   margin). Before the change both were 20 DIP, which is what the old padding comment claimed.
-- Proposed remedy: set `Sizing.AgentRow.Padding` to `10,0,12,0` so both rows end 22 DIP from the
-  divider, or accept the 2 DIP difference. Do not restore the project row's trailing padding to 10:
-  the row's symmetric 12 DIP inset is the behavior the change established.
+- Proposed remedy: set `Sizing.AgentRow.Padding` to `12,0,12,0` so the agent row's content sits 22
+  DIP from the divider and from the window's outer borders, like the project row's, or accept the 2
+  DIP difference. The original draft here said `10,0,12,0`, which had the divider-facing side
+  backwards: the Agents pane sits right of the divider column, so the agent row's left padding faces
+  the divider. Do not restore the project row's trailing padding to 10: the row's symmetric 12 DIP
+  inset is the behavior the change established.
 - Trigger: the next change that touches agent row padding, or a report of the divider-side gap
   looking uneven at a wide Projects pane.
+- Status: fixed by `agent-row-inset-alignment` (2026-11-01), which set `Sizing.AgentRow.Padding` to
+  `12,0,12,0`; both panes' row content now reads 22 DIP from the pane divider and 22 DIP from the
+  window's outer borders.
+- Residual evidence: none.
+
+### `launch-window-layout` spec contradicts itself about the window width
+
+- Severity: Low (documentation drift; no runtime behavior)
+- Evidence: `openspec/specs/launch-window-layout/spec.md:252-254` (scenario "Fixed width and content
+  height": "the window height follows its content and its width does not change") contradicts
+  `:232-234` (scenario "Window fits its content": "the window's width follows the panes, so the window
+  never keeps empty space beside its content") and the actual `SizeToContent="WidthAndHeight"`
+  (`src/CLIHub/Views/LaunchWindow.xaml:20`). Any pane-content width change moves the window: `agent-row-inset-alignment`
+  widened it from 596 to 600 DIP by adding 4 DIP of agent row padding, so the "width does not change"
+  scenario cannot hold as written.
+- Proposed remedy: amend the "Window chrome" requirement's "Fixed width and content height" scenario
+  to say that the width is never user-resizable while it still follows the panes' content widths, or
+  delete the scenario in favor of "Window fits its content". Do not make the window fixed-width to
+  match the text: `Auto` pane columns plus `SizeToContent` are the established behavior.
+- Trigger: the next change that touches launch-window sizing, pane widths, or the
+  `launch-window-layout` spec.
 
 ### Single-use FontSize and CornerRadius literals stay untokenized
 

@@ -73,7 +73,10 @@
     <!-- Smallest usable Agents pane: the agent row's fixed parts plus a little text. -->
     <sys:Double x:Key="Sizing.AgentPane.MinWidth">260</sys:Double>
     <sys:Double x:Key="Sizing.AgentRow.Height">60</sys:Double>
-    <Thickness x:Key="Sizing.AgentRow.Padding">10,0,10,0</Thickness>
+    <!-- Agent row padding: the leading and trailing content insets are equal (12px each), so
+         the row's content starts and ends the same distance from the pane divider and the
+         window border as the project row's content does. -->
+    <Thickness x:Key="Sizing.AgentRow.Padding">12,0,12,0</Thickness>
     <!-- Gap between an agent's text and its action buttons. -->
     <Thickness x:Key="Sizing.AgentRow.TextMargin">14,0,24,0</Thickness>
     <!-- Upper bound for an agent's name and version, so a long name cannot stretch the window. -->

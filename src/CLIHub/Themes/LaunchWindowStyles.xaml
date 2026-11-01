@@ -289,7 +289,7 @@
                     <StackPanel>
                         <Rectangle Height="1"
                                    Fill="{DynamicResource RowDividerBrush}"
-                                   Margin="10,0,12,0"
+                                   Margin="12,0,12,0"
                                    Visibility="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource IndexToDividerVisibility}}"/>
                         <Border x:Name="Bd"
                                 CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
@@ -369,8 +369,9 @@
                             </Grid>
                             <ControlTemplate.Triggers>
                                 <!-- While the bar is displayed the content keeps a 4px standoff from
-                                     it; with the bar hidden the standoff collapses, so both panes'
-                                     rows end the same 10px away from the pane's edge. -->
+                                     it; with the bar hidden the standoff collapses. It is added on
+                                     top of the row's 12 DIP trailing padding, so both panes' rows
+                                     end 16 DIP from the list edge while the bar is visible. -->
                                 <Trigger SourceName="PART_VerticalScrollBar" Property="Visibility" Value="Visible">
                                     <Setter TargetName="PART_ScrollContentPresenter" Property="Margin" Value="0,0,4,0"/>
                                 </Trigger>

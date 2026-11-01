@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-01
+goal: Equalize the agent row's horizontal content padding with the project row's so both panes' row content sits 22 DIP from the pane divider and from the window's outer edges
+skip_specs: true
