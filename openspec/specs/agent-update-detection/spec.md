@@ -206,7 +206,7 @@ The system SHALL NOT perform an update-availability check for an agent that is n
 
 ### Requirement: On-demand update availability check
 
-The system SHALL support a forced update-availability check, requested from the management UI, that bypasses the per-agent cached result and its time-to-live by invalidating only the checked agents' cached results before checking. The forced check SHALL be driven from the call site: the availability service's own caching, coalescing, and degrade-to-`Unknown` behavior SHALL be unchanged. A forced check SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site; the check itself resolves the installed version through the version service as any availability check does. The forced check SHALL skip agents that are not installed on the host, SHALL clear their advisory update indicators, and SHALL assign each checked agent's fresh result to its card.
+The system SHALL support a forced update-availability check, requested from the management UI, that bypasses the per-agent cached result and its time-to-live by invalidating only the checked agents' cached results before checking. The forced check SHALL be driven from the call site: the availability service's own caching, coalescing, and degrade-to-`Unknown` behavior SHALL be unchanged. A forced check SHALL NOT re-run host-installation detection and SHALL NOT issue a version command at the call site; the check itself resolves the installed version through the version service as any availability check does. The forced check SHALL skip agents that are not installed on the host, SHALL clear their advisory update indicators, and SHALL assign each checked agent's fresh result to its card. When the forced check is aborted by a thrown exception from an agent's check, the system SHALL report an explicit failure summary rather than leaving the summary blank or absent, SHALL still make the check available again afterward, and SHALL leave each already-checked agent's fresh result assigned to its card.
 
 #### Scenario: Forced check bypasses the cache
 
@@ -239,3 +239,11 @@ The system SHALL support a forced update-availability check, requested from the 
 
 - **WHEN** a forced update check is implemented
 - **THEN** the availability service's caching, per-agent invalidation, in-flight coalescing, and degrade-to-`Unknown` paths are unchanged, and the force is achieved by invalidating before checking
+
+#### Scenario: An aborted forced check reports an explicit failure summary
+
+- **WHEN** a forced update check throws while checking one agent
+- **THEN** the check-summary line reports an explicit failure rather than being left blank or absent
+- **AND** the failure summary is never a valid "agents checked" summary string, so it cannot be read as "no updates found"
+- **AND** the forced check becomes available to run again afterward
+- **AND** any agent whose fresh result was already assigned to its card before the failure keeps that fresh result
