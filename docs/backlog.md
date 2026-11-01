@@ -6,7 +6,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Architecture and design
 
-### Refactoring and simplification portfolio (2026-10-30 analysis)
+### Refactoring and simplification portfolio (2026-10-30 analysis) - **[done 2026-10-30]**
 
 - Severity: Medium (maintainability; no direct user impact except the linked defect entries)
 - Evidence: read-only analysis of 486 C#/XAML files (54,954 lines) with build/test/validate green
@@ -38,7 +38,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
      `SettingsNavigation.cs`; `SettingsPageCatalog` extracted; the 13-arg DI factory replaced with
      `AddTransient<SettingsViewModel>()`; then `SettingsUpdateCard`, `AccentSelection`, and
      `WatchedDirectoryEditor` extracted with the XAML binding moves. The view model dropped from 1,925
-     to 1,616, then 853 lines. The parked `TryAddWatchedDirectory` quirk remains out of scope.
+     to 1,616, then 853 lines. The `TryAddWatchedDirectory` duplicate-add quirk is out of scope here and
+     is now parked as its own entry under "Projects and scanning".
   2. `agent-management-pass-consolidation` - **[done 2026-10-30: `5627010`/`c0ecb09`]** one
      restartable-pass primitive and one card-action scope; the duplicated busy-state raisers are merged.
   3. `settings-save-pipeline-unification` - **[done 2026-10-30: `8e1b647`/`0053f13`]**
@@ -116,7 +117,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
 
-### Configuration decomposition (Proposal 6) - first slice in progress
+### Configuration decomposition (Proposal 6) - first slice done, follow-ups deferred
 
 - Severity: Low (structural, no user impact expected)
 - Evidence: analysis of 2026-10-29 flagged the single `AppConfig` as coupling unrelated concerns
@@ -209,8 +210,13 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `2026-10-31-provenance-mark-contrast` (`f0ae96e`/`6207e95`/`3cd52aa`). Findings B, C, D, G, and H
   are recorded below (B resolved, C/D deferred pending a product discussion, G a watch item, H already
   done). No live folder monitoring and no config-format redesign are in scope.
-- Status: the accepted work is complete and archived; the remaining product items are C/D.
-- Trigger: none; this is the audit trail for the 2026-10-31 workstream.
+- Status: the accepted work is complete and archived; the remaining product items C/D are dropped.
+- Decision (2026-11-01): findings C and D are dropped. Their text was never written down here and
+  cannot be recovered from the archive (searched `openspec/changes/archive` for "Finding C"/"Finding D"
+  — no matches), so they cannot be triaged, planned, or verified; no user report has referenced them
+  since the 2026-10-31 audit. Nothing was implemented for them.
+- Reopen trigger: a user report that matches a still-unexplained project-acquisition or correction
+  gap; that report gets its own entry with fresh evidence rather than a reconstruction of C/D.
 
 ### Explicit "Rescan now" action - **[done 2026-10-31]**
 
@@ -225,6 +231,28 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   tooltip "Rescan every watched root" (`src/CLIHub/Views/SettingsWindow.xaml:174-181`).
 - Status: resolved by the shipped scanning UI; nothing was re-implemented.
 - Residual evidence: none.
+
+### Adding an already-watched folder is a silent no-op reported as success
+
+- Severity: Low (UI feedback only; no data loss and no wrong persisted state)
+- Evidence: `TryAddWatchedDirectory` adds a row only when no row with the same path exists
+  (`src/CLIHub/ViewModels/Settings/WatchedDirectoryEditor.cs:491-508`) and then falls through to
+  `return true` (`:510`) for the duplicate case. Both callers treat `true` as success:
+  `AddWatchedDirectory` clears `NewWatchedDirectoryText` and the validation error (`:456-463`), and
+  `AddWatchedDirectoryFromPicker` clears both errors (`:441-454`). So typing or picking a folder that
+  is already monitored clears the input and shows nothing, while the list and the summary count stay
+  unchanged — the user cannot tell whether the add worked or the folder was already there. No test
+  covers the duplicate path: `SettingsViewModelApplicationTests` covers add-success (`:286`),
+  missing folder (`:302`), and apply failure (`:316`) only.
+- Proposed remedy: make the duplicate case distinguishable from success — either return `false` with
+  a dedicated message (for example "That folder is already monitored") so the existing error surface
+  and input retention apply, or return a result value the callers map to an informational message.
+  Add one test per caller (typed path and picker) asserting the message and that the count is unchanged.
+- Note: this quirk was previously mentioned only parenthetically in the refactoring portfolio entry
+  ("The parked `TryAddWatchedDirectory` quirk remains out of scope") without its own evidence,
+  remedy, or trigger; it is recorded here so the deferred finding is not lost.
+- Trigger: a report of an add that "did nothing", the next change touching
+  `WatchedDirectoryEditor` add/validation paths, or a redesign of the watched-directory list feedback.
 
 ### Per-project / per-agent filtering - **[closed 2026-10-31]**
 
@@ -264,7 +292,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## DI and lifetime
 
-### Process composition has two registration owners
+### Process composition has two registration owners - **[done 2026-10-30: composition-and-dead-path-cleanup]**
 
 - Severity: Low (latent; the shipping graph is correct today)
 - Evidence: four process services are registered in
@@ -280,7 +308,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `AddProcessServices`, both duplicate sets were deleted, and `Assert.Single` guards plus resolution
   tests were added.
 
-### Second single-instance check is unreachable in the shipping app
+### Second single-instance check is unreachable in the shipping app - **[done 2026-10-30: composition-and-dead-path-cleanup]**
 
 - Severity: Low (defensive duplication)
 - Evidence: `ApplicationHost.Start` exits a duplicate before building the provider
@@ -517,7 +545,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## UI and theming
 
-### Dead-path residue after tier 2
+### Dead-path residue after tier 2 - **[done 2026-10-30: composition-and-dead-path-cleanup]**
 
 - Severity: Low
 - Evidence: the placeholder settings page is unreachable because every `SettingsPage` entry passes
@@ -534,7 +562,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the placeholder page, `PageGroups`,
   `ApplyStartupUpdateCheck`, the tray relay, and `AgentProcess.Runtime` were removed.
 
-### Spec text still describes the removed placeholder and defensive instance paths
+### Spec text still describes the removed placeholder and defensive instance paths - **[done 2026-10-30: align-specs-with-dead-path-cleanup]**
 
 - Severity: Low (documentation drift; no runtime behavior)
 - Evidence: the code paths these statements describe were deleted by
