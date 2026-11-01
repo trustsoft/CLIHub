@@ -353,6 +353,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: a third test that needs a live `LaunchWindow`, or a window-level behavior that the view model
   cannot cover.
 
+### `Skip.If` plus `return;` depends on the method not being `[DoesNotReturn]`
+
+- Severity: Low (latent; only a package upgrade can trigger it)
+- Evidence: `tests/CLIHub.Core.Windows.Tests/WindowsInteractiveProcessRunnerTests.cs` calls
+  `Skip.If(true, "...")` and then keeps a `return;` inside each `if (resolved… is null)` block. The
+  `return;` is unreachable at runtime but is what makes the nullable flow analysis treat the value as
+  non-null afterwards, so no null-forgiving operator is needed. `Skip.If` is not annotated
+  `[DoesNotReturn]` in `Xunit.SkippableFact` 1.5.85; if a future version adds that annotation, both
+  `return;` statements become `CS0162` and the repository's zero-warning build gate fails.
+- Proposed remedy: on the next `Xunit.SkippableFact` upgrade, remove the two `return;` statements and
+  confirm the build still reports 0 warnings and no `CS8604`/`CS8602` at the use sites; if narrowing is
+  lost, restore an explicit guard instead of suppressing the warning.
+- Trigger: any version bump of `Xunit.SkippableFact`.
+
 ### Duplicated test helpers and no shared view-model builders - **[done 2026-10-30]**
 
 - Severity: Low (test-only maintenance)
@@ -467,19 +481,39 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Agent tooling
 
-### `graphify update .` exits non-zero on a successful refresh
+### Two sessions in one working tree can revert each other's OpenSpec files
 
-- Severity: Low (tooling; only matters to scripts that gate on the exit code)
-- Evidence: `graphify update .` prints `Code graph updated.` and rewrites `graphify-out/graph.json`,
-  `graph.html`, and `GRAPH_REPORT.md`, yet exits `1`; observed on 2026-11-01 in three consecutive
-  implementation runs (`agent-pass-abort-settling`, `watched-directory-duplicate-feedback`,
-  `remove-startup-window-marker`). Its warnings go to stderr (unclassified extensions, "N code file(s)
-  yielded no symbols", community relabel hints), which PowerShell then surfaces as `NativeCommandError`.
-- Proposed remedy: exit `0` when the graph was rebuilt and only warn on the side-channel messages, or
-  document the exit-code contract explicitly so a gate can distinguish "wrote successfully" from
-  "failed" instead of learning to ignore the code.
-- Trigger: the first gate script that treats the non-zero exit as a failure, or a CI job that runs
-  `graphify update` and reports on it.
+- Severity: Medium (silent loss of archived state; no error surfaces)
+- Evidence: on 2026-11-01 a second orchestrator session worked `openspec/changes/agent-detection-defaults-detail-copy/`
+  in the same checkout. At 20:12:52, while the first session was between the archive commit of
+  `watched-directory-duplicate-feedback` (20:03) and the commit of `remove-startup-window-marker`
+  (20:19), that change's archived files disappeared, an older pre-tick copy of the change reappeared
+  under `openspec/changes/`, and `openspec list` started reporting the already-archived change as
+  active again; the same operation also removed the change's already-applied scenario from
+  `openspec/specs/preferences-ui/spec.md`. Nothing in the first session's git history explains it (no
+  stash, no HEAD move), so the most likely cause is the other session checking out or restoring paths.
+  The damage was repaired from HEAD and verified (`git status` clean, `openspec list` correct,
+  `validate` clean, 225 archived changes intact).
+- Proposed remedy: give each concurrent session its own worktree (`opencode.worktree_create`) instead
+  of sharing one checkout, and after every `openspec archive` re-check `git status` plus
+  `openspec list` rather than trusting the command's own output.
+- Trigger: any second session in the same checkout, or an archived change reappearing in
+  `openspec list`.
+
+### `graphify update .` success is ambiguous to shell wrappers
+
+- Severity: Low (tooling; only matters to scripts that judge the command by wrapper status)
+- Evidence: `graphify update .` finishes with `Code graph updated.`, rewrites `graphify-out/graph.json`,
+  `graph.html`, and `GRAPH_REPORT.md`, and returns `$LASTEXITCODE = 0` (measured directly on 2026-11-01).
+  Yet three earlier pipeline runs reported "Exited with code 1" for the same command, because graphify
+  writes advisory warnings to stderr (unclassified extensions, "N code file(s) yielded no symbols",
+  community relabel hints) and PowerShell surfaces them as `NativeCommandError` under the strict error
+  preference the tool runs with. The exit code was never the problem; the wrapper status was.
+- Proposed remedy: send those advisories to stdout, or document that the command's success is
+  `$LASTEXITCODE == 0` plus the `Code graph updated.` line, so gates read the real code instead of the
+  wrapper status. If neither is possible, the gate should run graphify with the strict preference
+  relaxed instead of treating the noise as a failure.
+- Trigger: the first gate script that fails or warns on a graphify refresh that actually succeeded.
 
 ### Reasoning effort is not weighted into the exhaustion logic
 

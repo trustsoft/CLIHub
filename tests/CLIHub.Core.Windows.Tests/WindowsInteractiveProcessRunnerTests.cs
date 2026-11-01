@@ -39,7 +39,7 @@ public class WindowsInteractiveProcessRunnerTests
             new RuntimeInfo { ExecutablePath = "powershell.exe", Type = RuntimeType.PowerShell });
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task LaunchAsync_PowerShell7_ChildStartsInWorkingDirectory()
     {
         var locator = new WindowsRuntimeLocator(
@@ -48,7 +48,7 @@ public class WindowsInteractiveProcessRunnerTests
         var resolvedPwsh = locator.Locate(RuntimeKind.PowerShell7);
         if (resolvedPwsh is null)
         {
-            // PowerShell 7 is not installed on this machine; there is nothing to launch.
+            Skip.If(true, "PowerShell 7 is not installed on this machine.");
             return;
         }
 
@@ -59,7 +59,7 @@ public class WindowsInteractiveProcessRunnerTests
             resolvedPwsh);
     }
 
-    [Fact]
+    [SkippableFact]
     public async Task LaunchAsync_GitBash_ChildStartsInWorkingDirectory()
     {
         var locator = new WindowsRuntimeLocator(
@@ -68,7 +68,7 @@ public class WindowsInteractiveProcessRunnerTests
         var resolvedGitBash = locator.Locate(RuntimeKind.GitBash);
         if (resolvedGitBash is null)
         {
-            // Git for Windows is not installed on this machine; there is nothing to launch.
+            Skip.If(true, "Git for Windows is not installed on this machine.");
             return;
         }
 
