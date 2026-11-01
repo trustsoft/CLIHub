@@ -372,9 +372,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public string ProbePolicyDefaults => $"{this.ProbeTtlWatermark} min · {this.ProbeTimeoutWatermark} sec";
 
     /// <summary>
-    ///   The DEFAULTS summary-card detail: when the built-in values apply.
+    ///   The DEFAULTS summary-card detail: the two fields the built-in defaults apply to.
     /// </summary>
-    public string ProbePolicyDefaultsDetail => "Used when a field is empty";
+    public string ProbePolicyDefaultsDetail => "Cache TTL · Checking timeout";
 
     /// <summary>
     ///   Whether either detection field holds a value, so <see cref="ResetProbePolicyCommand" />

@@ -901,7 +901,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Load();
 
         Assert.Equal("15 min · 10 sec", fixture.ViewModel.ProbePolicyDefaults);
-        Assert.Equal("Used when a field is empty", fixture.ViewModel.ProbePolicyDefaultsDetail);
+        Assert.Equal("Cache TTL · Checking timeout", fixture.ViewModel.ProbePolicyDefaultsDetail);
         Assert.False(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
 
         fixture.ViewModel.ProbeTtlText = "25";

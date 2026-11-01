@@ -265,7 +265,7 @@
                                           Value="{Binding ProbePolicyTimeoutSummary}"/>
 
                     <controls:SummaryCard Detail="{Binding ProbePolicyDefaultsDetail}"
-                                          DetailToolTip="Applied when a detection field is empty"
+                                          DetailToolTip="Built-in defaults for cache TTL and version check timeout"
                                           Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                                           Label="DEFAULTS"
                                           Value="{Binding ProbePolicyDefaults}"/>
