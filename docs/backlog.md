@@ -232,7 +232,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Status: resolved by the shipped scanning UI; nothing was re-implemented.
 - Residual evidence: none.
 
-### Adding an already-watched folder is a silent no-op reported as success
+### Adding an already-watched folder is a silent no-op reported as success - **[done 2026-11-01: watched-directory-duplicate-feedback]**
 
 - Severity: Low (UI feedback only; no data loss and no wrong persisted state)
 - Evidence: `TryAddWatchedDirectory` adds a row only when no row with the same path exists
@@ -253,6 +253,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   remedy, or trigger; it is recorded here so the deferred finding is not lost.
 - Trigger: a report of an add that "did nothing", the next change touching
   `WatchedDirectoryEditor` add/validation paths, or a redesign of the watched-directory list feedback.
+- Resolved (2026-11-01) by `watched-directory-duplicate-feedback`: the duplicate branch now sets `WatchedDirectoryError` to "That folder is already monitored." and returns `false`, so both commands keep the typed input and surface the message while the root list and count stay unchanged; two caller-level tests cover the typed path and the picker, and no persisted-state invariant changed.
 
 ### Per-project / per-agent filtering - **[closed 2026-10-31]**
 

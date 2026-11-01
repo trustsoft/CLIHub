@@ -339,6 +339,27 @@ public class SettingsViewModelApplicationTests
     }
 
     [Fact]
+    public void AddWatchedDirectory_DuplicatePath_ReportsMessageAndKeepsInput()
+    {
+        var fixture = new SettingsViewModelFixture();
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
+        var countBeforeDuplicate = fixture.ViewModel.Scanning.WatchedDirectories.Count;
+        fixture.ViewModel.Scanning.NewWatchedDirectoryText = path;
+
+        fixture.ViewModel.Scanning.AddWatchedDirectoryCommand.Execute(null);
+
+        Assert.Equal(1, countBeforeDuplicate);
+        Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
+        Assert.Equal("That folder is already monitored.", fixture.ViewModel.Scanning.WatchedDirectoryError);
+        Assert.Equal(path, fixture.ViewModel.Scanning.NewWatchedDirectoryText);
+        Assert.Equal(countBeforeDuplicate, fixture.ViewModel.Scanning.WatchedDirectories.Count);
+        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
+    }
+
+    [Fact]
     public void RemoveWatchedDirectoryCommand_RemovesRoot()
     {
         var fixture = new SettingsViewModelFixture();
@@ -711,6 +732,25 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.AddWatchedDirectoryFromPickerCommand.Execute(null);
 
         Assert.Contains(fixture.ViewModel.Scanning.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void AddWatchedDirectoryFromPicker_DuplicateFolder_ReportsMessageAndKeepsCount()
+    {
+        var fixture = new SettingsViewModelFixture();
+        fixture.ViewModel.Load();
+        var path = Path.TrimEndingDirectorySeparator(Path.GetTempPath());
+        fixture.Dialogs.Setup(dialogs => dialogs.SelectFolder(It.IsAny<string>())).Returns(path);
+        fixture.ViewModel.Scanning.AddWatchedDirectoryFromPickerCommand.Execute(null);
+        var countBeforeDuplicate = fixture.ViewModel.Scanning.WatchedDirectories.Count;
+
+        fixture.ViewModel.Scanning.AddWatchedDirectoryFromPickerCommand.Execute(null);
+
+        Assert.Equal(1, countBeforeDuplicate);
+        Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
+        Assert.Equal("That folder is already monitored.", fixture.ViewModel.Scanning.WatchedDirectoryError);
+        Assert.Equal(countBeforeDuplicate, fixture.ViewModel.Scanning.WatchedDirectories.Count);
+        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]

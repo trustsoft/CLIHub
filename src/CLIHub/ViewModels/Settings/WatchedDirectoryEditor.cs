@@ -507,7 +507,8 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
             return false;
         }
 
-        return true;
+        this.WatchedDirectoryError = "That folder is already monitored.";
+        return false;
     }
 
     private WatchedDirectoryRow CreateWatchedDirectoryRow(string path, int scanDepth, ProjectDiscoveryMode discoveryMode)
