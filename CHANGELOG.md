@@ -8,22 +8,30 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## 1.0.4 — 2026-10-31
+## 1.0.4 — 2026-11-01
 
 ### Added
 
 - Manual projects can change their folder from Settings → Projects; the project keeps its identity, favorite flag, last-used timestamp, and current selection, re-derives its name from the new folder, invalidates its logo cache entry, and persists immediately (`project-path-correction`, `project-management`).
 - The launch window shows each project's provenance as a compact `M`/`D` mark in a right-side marker rail on the path line; the existing favorite marker stays on the name line (`launch-window-project-provenance`, `project-management`).
+- A dedicated "Agent Detection" Settings page holds the detection cache TTL and version-check timeout, with page-header cards for the effective values, the built-in defaults, and a Reset action that clears both fields back to the defaults (`agent-detection-settings-page`, `preferences-ui`, `settings-theme`).
+- The CLI Agents page header adds an UPDATES summary card aggregating installed agents' update availability (count, "None", or "Unknown") with detail and tone, refreshed after the load-time pass, header and per-card update checks, and detection passes (`agent-detection-settings-page`, `agent-availability-display`, `settings-theme`).
 
 ### Changed
 
 - The `ProjectProvenanceMark` style is shared from `Controls.xaml` and uses the primary text brush for manual projects and the muted brush for discovered projects, so the mark is readable in the Light, Dark, and Blue themes (`provenance-mark-contrast`).
+- The CLI Agents page no longer hosts the DETECTION section; its summary row is now AGENTS, DEFAULT, and UPDATES, and the section-header chip-button style is shared between CLI Agents and Agent Detection (`agent-detection-settings-page`, `settings-theme`).
+- README screenshots now include the Agent Detection page and the post-split CLI Agents layout (`agent-detection-follow-ups`).
 
 ### Fixed
 
 - Changing a project's folder updates the Settings row's path text and tooltip immediately, without a restart (`project-path-refresh`, `project-management`).
 - Project path validation errors no longer expose the `ArgumentException` parameter suffix in the Settings error line (`project-path-correction`).
 - Project removal confirmations are owned by the window that triggered them, so removing a project from Settings shows the prompt above Settings and blocks Settings until it is answered (`project-removal-dialog-ownership`, `project-management`).
+
+### Removed
+
+- The unbound `ProbePolicySummary` and `ProbePolicyDetail` summary properties and their change notifications; the per-field detection cards use `ProbePolicyCacheTtl*` and `ProbePolicyTimeout*` (`agent-detection-follow-ups`).
 
 ## 1.0.3 — 2026-10-31
 

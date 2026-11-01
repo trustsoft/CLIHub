@@ -3,15 +3,18 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
-## 1.0.4 — 2026-10-31
+## 1.0.4 — 2026-11-01
 
 ### New
 
+- Agent detection settings now have their own page: Cache TTL and Version check timeout moved from CLI Agents to Settings → Agent Detection, with the effective values and built-in defaults in the header cards and a Reset action that restores both fields to their defaults.
+- The CLI Agents header now shows an UPDATES card that reports how many installed agents have a newer version, whether all installed agents are up to date, or that update availability is still unknown.
 - You can change a manual project's folder from Settings → Projects when the project moves or is renamed. CLIHub keeps the project's identity, favorite state, and recency, updates its name and logo, and applies the change immediately.
 - The launch window now shows whether each project was added manually or discovered by scanning, in a compact marker on the right side of the project row.
 
 ### Improved
 
+- CLI Agents now focuses on agent management — the default agent and the agent cards — while detection tuning lives on the adjacent Agent Detection page.
 - Project provenance markers are readable in the Light, Dark, and Blue themes.
 
 ### Fixed
