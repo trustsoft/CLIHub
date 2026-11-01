@@ -64,7 +64,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger: the next refactoring cycle; adopt one change at a time, smallest first, with the existing
   suite as the safety net.
 
-### `IStartupWindow` is an empty marker interface after the tier 2 cleanup
+### `IStartupWindow` is an empty marker interface after the tier 2 cleanup - **[done 2026-11-01: remove-startup-window-marker]**
 
 - Severity: Low (structural; no user impact)
 - Evidence: `remove-unused-code-tier2` removed `ShowOnPointerMonitor` from
@@ -76,6 +76,8 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   abstraction if a second implementation appears), then delete `IStartupWindow`.
 - Trigger: the next change that touches startup composition or app bootstrapping, or a second
   implementer of `IStartupWindow`.
+- Status: resolved by `remove-startup-window-marker` (2026-11-01): `IStartupWindow.cs` was deleted and
+  both members are typed as `CLIHub.Views.LaunchWindow`; no behavior change.
 
 ### Architectural improvement proposals (2026-10-29 analysis)
 
@@ -335,6 +337,22 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 
 ## Test suite
 
+### `LaunchWindow` cannot be constructed outside an `Application`
+
+- Severity: Low (test-only; forces workarounds, no product impact)
+- Evidence: `src/CLIHub/Views/LaunchWindow.xaml.cs:44` calls `InitializeComponent()`, and the XAML root
+  resolves `StaticResource Sizing.FontFamily.Text` from application-level merged dictionaries, so
+  constructing the window in the test host throws `XamlParseException`
+  (`tests/CLIHub.Tests/Views/LaunchWindowClosedGuardTests.cs:12-20` records the limitation). Two changes
+  have now paid for it: that guard test settles for a plain `Window`, and
+  `remove-startup-window-marker` returns `(LaunchWindow)null!` from a strict mock because no real
+  instance can exist.
+- Proposed remedy: move the resource-dependent lookup out of the constructor path (for example apply the
+  font through a style that resolves after load), or give the test host a minimal `Application` with the
+  theme dictionaries merged, so a real window can be built in tests.
+- Trigger: a third test that needs a live `LaunchWindow`, or a window-level behavior that the view model
+  cannot cover.
+
 ### Duplicated test helpers and no shared view-model builders - **[done 2026-10-30]**
 
 - Severity: Low (test-only maintenance)
@@ -448,6 +466,20 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   does not bring the window forward.
 
 ## Agent tooling
+
+### `graphify update .` exits non-zero on a successful refresh
+
+- Severity: Low (tooling; only matters to scripts that gate on the exit code)
+- Evidence: `graphify update .` prints `Code graph updated.` and rewrites `graphify-out/graph.json`,
+  `graph.html`, and `GRAPH_REPORT.md`, yet exits `1`; observed on 2026-11-01 in three consecutive
+  implementation runs (`agent-pass-abort-settling`, `watched-directory-duplicate-feedback`,
+  `remove-startup-window-marker`). Its warnings go to stderr (unclassified extensions, "N code file(s)
+  yielded no symbols", community relabel hints), which PowerShell then surfaces as `NativeCommandError`.
+- Proposed remedy: exit `0` when the graph was rebuilt and only warn on the side-channel messages, or
+  document the exit-code contract explicitly so a gate can distinguish "wrote successfully" from
+  "failed" instead of learning to ignore the code.
+- Trigger: the first gate script that treats the non-zero exit as a failure, or a CI job that runs
+  `graphify update` and reports on it.
 
 ### Reasoning effort is not weighted into the exhaustion logic
 

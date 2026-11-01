@@ -28,7 +28,7 @@ public sealed class WpfApplicationStartupUi : IApplicationStartupUi, IDisposable
     public event EventHandler? UpdateDownloadRequested;
 
     /// <inheritdoc />
-    public IStartupWindow LaunchWindow => this.launchWindow;
+    public LaunchWindow LaunchWindow => this.launchWindow;
 
     /// <inheritdoc />
     public void RefreshMenu() => this.tray.RefreshMenu();

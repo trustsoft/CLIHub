@@ -1,5 +1,7 @@
 namespace CLIHub.Startup;
 
+using CLIHub.Views;
+
 /// <summary>
 ///   Provides the UI actions and notifications used by application startup orchestration.
 /// </summary>
@@ -13,7 +15,7 @@ public interface IApplicationStartupUi
     /// <summary>
     ///   Gets the launch window exposed to the WPF lifecycle adapter.
     /// </summary>
-    IStartupWindow LaunchWindow { get; }
+    LaunchWindow LaunchWindow { get; }
 
     /// <summary>
     ///   Rebuilds the tray menu after update state changes.

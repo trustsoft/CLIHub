@@ -10,6 +10,7 @@ using CLIHub.Core.Models;
 using CLIHub.Startup;
 using CLIHub.Lifetime;
 using CLIHub.Composition;
+using CLIHub.Views;
 
 public class ApplicationBootstrapperTests
 {
@@ -27,12 +28,14 @@ public class ApplicationBootstrapperTests
         fixture.StartupStateLoader.InSequence(sequence).Setup(x => x.Load()).Returns(startupState);
         fixture.Session.InSequence(sequence).Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Hotkey.Object);
-        fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
+        // The startup context's SetMainWindow delegate is a no-op in these tests, so the window value is
+        // never read; null is intentional because constructing a LaunchWindow needs a live Application.
+        fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns((LaunchWindow)null!);
         fixture.Ui.Setup(x => x.ShowLaunchWindow());
         fixture.Hotkey.InSequence(sequence).Setup(x => x.Register(startupState.Preferences));
         fixture.OptionalStartup.InSequence(sequence).Setup(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()));
 
-        fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
+        fixture.Bootstrapper.Start(CreateContext());
 
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Once);
     }
@@ -44,7 +47,7 @@ public class ApplicationBootstrapperTests
         fixture.StartupStateLoader.Setup(x => x.Load()).Throws(new InvalidOperationException("test"));
 
         Assert.Throws<InvalidOperationException>(() =>
-            fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object)));
+            fixture.Bootstrapper.Start(CreateContext()));
 
         fixture.Session.Verify(x => x.Start(It.IsAny<ApplicationStartupContext>()), Times.Never);
     }
@@ -62,11 +65,11 @@ public class ApplicationBootstrapperTests
         fixture.StartupStateLoader.Setup(x => x.Load()).Returns(startupState);
         fixture.Session.Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
         fixture.HotkeyFactory.Setup(x => x()).Returns(fixture.Hotkey.Object);
-        fixture.Ui.SetupGet(x => x.LaunchWindow).Returns(fixture.Window.Object);
+        fixture.Ui.SetupGet(x => x.LaunchWindow).Returns((LaunchWindow)null!);
         fixture.Hotkey.Setup(x => x.Register(startupState.Preferences));
         fixture.OptionalStartup.Setup(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()));
 
-        fixture.Bootstrapper.Start(CreateContext(fixture.Window.Object));
+        fixture.Bootstrapper.Start(CreateContext());
 
         fixture.Ui.Verify(x => x.ShowLaunchWindow(), Times.Never);
         fixture.Hotkey.Verify(x => x.Register(startupState.Preferences), Times.Once);
@@ -91,7 +94,7 @@ public class ApplicationBootstrapperTests
             provider.GetRequiredService<IApplicationOperationLifetime>());
     }
 
-    private static ApplicationStartupContext CreateContext(IStartupWindow window) =>
+    private static ApplicationStartupContext CreateContext() =>
         new(_ => { }, _ => { });
 
     private sealed class BootstrapperFixture
@@ -103,7 +106,6 @@ public class ApplicationBootstrapperTests
         public Mock<IOptionalStartupCoordinator> OptionalStartup { get; } = new(MockBehavior.Strict);
         public Mock<Core.Scanning.IProjectScanner> ProjectScanner { get; } = new();
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
-        public Mock<IStartupWindow> Window { get; } = new(MockBehavior.Strict);
 
         public ApplicationBootstrapper Bootstrapper { get; }
 

@@ -12,13 +12,12 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Interop;
 using CLIHub.ViewModels;
-using CLIHub.Startup;
 
 /// <summary>
 ///   Interaction logic for LaunchWindow.xaml. The window is a chromeless popup shell: it stays on
 ///   top, hides when it loses focus unless pinned, and is centred on the pointer's monitor.
 /// </summary>
-public partial class LaunchWindow : Window, IStartupWindow
+public partial class LaunchWindow : Window
 {
     private readonly LaunchWindowViewModel viewModel;
     private readonly PromptState promptState;
