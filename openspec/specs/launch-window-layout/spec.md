@@ -251,7 +251,7 @@ The launch window SHALL be presented without operating-system window chrome, del
 
 #### Scenario: Fixed width and content height
 - **WHEN** the panes' content changes
-- **THEN** the window height follows its content and its width does not change
+- **THEN** the window height follows its content, and the window's size is never settable by the user — there is no OS resize border and `ResizeMode` is `NoResize`
 
 #### Scenario: Window cannot be moved or resized by dragging
 - **WHEN** the user drags anywhere on the window surface
