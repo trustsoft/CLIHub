@@ -47,15 +47,9 @@ internal static class SettingsPageCatalog
             "General",
             IconGlyphs.Settings),
         new(
-            "hotkeys",
-            "Global Hotkey",
-            "The global hotkey used to show the launcher.",
-            "General",
-            IconGlyphs.KeyboardShortcut),
-        new(
             "launch-window",
             "Launch Window",
-            "Where the launch window appears and how project paths are shortened in it.",
+            "The global hotkey, where the launch window appears, and how project paths are shortened in it.",
             "General",
             IconGlyphs.OpenInNewWindow),
         new(

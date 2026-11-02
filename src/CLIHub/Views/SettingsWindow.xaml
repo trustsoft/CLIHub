@@ -502,8 +502,6 @@
                         <Grid>
                             <views:SettingsGeneralPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=general}"/>
 
-                            <views:SettingsHotkeysPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=hotkeys}"/>
-
                             <views:SettingsLaunchWindowPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=launch-window}"/>
 
                             <views:SettingsTerminalPage Visibility="{Binding SelectedPage.Key, Converter={StaticResource PageKeyVisibility}, ConverterParameter=terminal}"/>

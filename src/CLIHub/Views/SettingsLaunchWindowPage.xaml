@@ -8,6 +8,32 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
+        <controls:SectionHeader Text="ACTIVATION"/>
+        <controls:SettingCard Title="Global hotkey"
+                           Hint="Press a combination in the field. Esc cancels capture."
+                           Icon="{x:Static themes:IconGlyphs.Keyboard}">
+            <Border x:Name="HotkeyField"
+                    MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
+                    PreviewKeyDown="HotkeyField_PreviewKeyDown"
+                    Style="{StaticResource HotkeyField}">
+                <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
+                <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource HotkeyChip}">
+                                <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </controls:SettingCard>
+
         <controls:SectionHeader Text="POSITION"/>
         <controls:SettingCard Title="Launcher window position"
                            Hint="Where the launch window appears when it is shown."

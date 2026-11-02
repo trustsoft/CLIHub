@@ -54,7 +54,7 @@ public sealed class SettingsPageMetadataTests
         var pages = ReadAllPages();
 
         // Loud failure on a regex/reflection accident: an empty side would make the comparison a no-op.
-        Assert.Equal(11, pages.Length);
+        Assert.Equal(10, pages.Length);
         Assert.True(
             templateKeys.Count >= 3,
             $"Expected at least three DataTemplate keys in SettingsWindow.xaml, found {templateKeys.Count}.");
