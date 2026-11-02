@@ -757,7 +757,7 @@ The Agent Detection page SHALL present the agent detection cache TTL and version
 #### Scenario: Icon and description
 
 - **WHEN** the Agent Detection page is selected in the sidebar
-- **THEN** the sidebar item shows the Diagnostic icon (IconGlyphs.Diagnostic) and the page description "Caching and timeout behavior for agent detection."
+- **THEN** the sidebar item shows the Process icon (IconGlyphs.Process) and the page description "Caching and timeout behavior for agent detection."
 
 #### Scenario: DEFAULTS card shown
 
