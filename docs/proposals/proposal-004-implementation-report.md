@@ -4,6 +4,11 @@
 **Change ID:** `process-domain-model`  
 **Status:** ✅ **COMPLETE** (archived)
 
+> **Update (2026-11-02):** This report records the 2026-10-29 snapshot. Phase 3 consumer migration was
+> completed by `37e3c46`, and Phase 4 (`f7c1495`) added `ProcessOrchestratorTests`, `RuntimeResolverTests`,
+> and `CommandLineBuilderAdapterTests` while removing the obsolete `ProcessLauncher`. The "deferred"
+> notes below describe the historical snapshot, not the current state.
+
 ## Commits
 
 1. **Plan:** `5d2006f` — docs(openspec): propose process-domain-model

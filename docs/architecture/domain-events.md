@@ -15,7 +15,7 @@ A **domain event** is a published fact about a state change in the domain, decou
 
 **Event:** `ProjectSelected(string Id, string Path, DateTimeOffset SelectedAt)`
 
-**Publisher:** `ProjectService.SetCurrentProject` at line 250, after the project state is updated and persisted.
+**Publisher:** `ProjectService.SetCurrentProject` (method at line 252, publishing at line 269), after the project state is updated and persisted.
 
 **Subscribers:**
 - `ProjectSelectionLoggingSubscriber` — emits a structured Debug log line with operation scope `"ProjectSelected"` and the project ID and path.
@@ -26,7 +26,7 @@ A **domain event** is a published fact about a state change in the domain, decou
 
 **Event:** `AgentLaunched(string PluginId, string? ProjectPath, AgentCommandKind CommandKind, DateTimeOffset LaunchedAt)`
 
-**Publisher:** `AgentCommandService.LaunchInteractiveCommandAsync` (extracted method called by `ExecuteAsync` at lines 71-75), after `LaunchInteractiveAsync` succeeds, and only when `CommandKind` is `Launch` or `Resume`. `Update` commands do NOT publish `AgentLaunched` — they are update executions, not launches, and belong to a future `AgentUpdateExecuted` event. `Version` commands use a different execution path (`CaptureOutputAsync`) and are out of scope.
+**Publisher:** `AgentCommandService.LaunchInteractiveCommandAsync` (called by `ExecuteAsync` at line 76), after `LaunchInteractiveAsync` succeeds, and only when `CommandKind` is `Launch` or `Resume`. `Update` commands do NOT publish `AgentLaunched` — they are update executions, not launches, and belong to a future `AgentUpdateExecuted` event. `Version` commands use a different execution path (`CaptureOutputAsync`) and are out of scope.
 
 **Subscribers:**
 - `AgentLaunchAuditSubscriber` — emits a structured Debug log line with operation scope `"AgentLaunch"`, the plugin ID, command kind, and project path (or `"<no-project>"` when the path is null).
@@ -91,13 +91,13 @@ The following events are candidates for future changes. Each is listed with its 
 
 ## Exception Policy
 
-Subscriber exceptions are caught by `DomainEventBus` and logged with the event type and correlation ID (see `DomainEventBus.Publish` at line 42-48). Other subscribers continue to receive the event. The bus does not retry, does not stop publication, and does not propagate the exception to the publisher.
+Subscriber exceptions are caught by `DomainEventBus` and logged with the event type and correlation ID (see `DomainEventBus.Publish` at lines 24-50). Other subscribers continue to receive the event. The bus does not retry, does not stop publication, and does not propagate the exception to the publisher.
 
 A subscriber that throws is a bug in the subscriber, not the publisher or bus. Fix the subscriber.
 
 ## Ordering and Thread-Safety Assumptions
 
-- **Synchronous dispatch:** `DomainEventBus.Publish` dispatches events synchronously in subscription order (see line 36-49). A subscriber runs inline with the publisher's call stack.
+- **Synchronous dispatch:** `DomainEventBus.Publish` dispatches events synchronously in subscription order (see lines 24-50). A subscriber runs inline with the publisher's call stack.
 - **Single-threaded subscription model:** Subscribers are registered at DI-container build time and never unregistered (except for test cleanup via `IDisposable`). The bus does not support concurrent subscription/unsubscription.
 - **Subscription order:** Subscribers are notified in the order they subscribed. No priority or ordering configuration is exposed. If ordering matters, revisit this design.
 

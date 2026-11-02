@@ -125,7 +125,7 @@ The accent is application-scoped and independent of the theme. The palettes decl
 To add another theme:
 1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
 2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
-3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Appearance page binds the swatch brushes directly, so the page and its templates need no edit.
+3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Theme & Accent page binds the swatch brushes directly, so the page and its templates need no edit.
 4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
 A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references. While the stored theme is System, `SystemThemeFollower` also re-applies the palette through the same switcher when the Windows apps light/dark mode changes during the session; fixed themes ignore personalization changes.
 

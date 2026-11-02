@@ -9,7 +9,7 @@ PNGs so the banner can be edited and regenerated without design tools.
 | `social-preview.png` | `src/social-preview.html` + `launch-window.png` | Repository social preview (1280 × 640) for the GitHub link card. Not referenced by the README. |
 | `workflow.png` | `src/workflow.html` | Three-step product summary: project, agent, terminal. |
 | `launch-window.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | The launch window with the Projects and Agents panes. |
-| `settings-appearance.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Theme & Accent (theme and accent color). The launcher position and path display now live on the Launch Window page. |
+| `settings-appearance.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Theme & Accent (theme and accent color). The global hotkey, launcher position, and path display live on the Launch Window page. |
 | `settings-discovery.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Project Scanning (watched roots, scanning rules, watcher status). |
 | `settings-agents.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → CLI Agents (installed agents and the default agent). |
 | `settings-agent-detection.png` | App capture (`tools\Capture-ReadmeImages.ps1`) | Settings → Agent Detection (detection cache TTL, version check timeout, DEFAULTS card, and Reset action). |
@@ -77,10 +77,10 @@ or GIF files under 1 MB.
 
 The app captures are produced by `tools\Capture-ReadmeImages.ps1` through the debug-only
 `CLIHUB_CAPTURE_DIR` mode (`src/CLIHub/Views/ReadmeImageCapture.cs`). The debug build renders
-the launch window and the Theme & Accent, Project Scanning, and CLI Agents Settings pages with
-`RenderTargetBitmap` at 144 DPI (1.5×), applies the 12 px rounded-corner mask, and shuts down. The
-render path has no DWM frame ring to crop, which is why the harness does not perform the old
-two-pixel crop.
+the launch window and the Theme & Accent, Project Scanning, CLI Agents, and Agent Detection
+Settings pages with `RenderTargetBitmap` at 144 DPI (1.5×), applies the 12 px rounded-corner mask,
+and shuts down. The render path has no DWM frame ring to crop, which is why the harness does not
+perform the old two-pixel crop.
 
 The harness seeds a throwaway configuration with illustrative project names and a watched
 directory, backs up and restores `%APPDATA%\CLIHub\config.json` and `cache\logos.json`, and creates

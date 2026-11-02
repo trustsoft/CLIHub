@@ -51,8 +51,10 @@ ports and update state; the application workflow owns cross-surface coordination
 - `Agents/` owns commands, detection, versions, availability composition, command capability checks, and
   running-agent process monitoring.
 - `Updates/` owns Core update/release-note contracts and Velopack integration.
-- `Infrastructure/` owns process-launch orchestration, agent process matching, filesystem paths, logging
-  persistence, and the infrastructure ports implemented by `CLIHub.Core.Windows`.
+- `Processes/` owns the process domain: runtime resolution, command-line building, launch orchestration,
+  agent process finding, and the process value objects.
+- `Infrastructure/` owns process runners and matching adapters, filesystem paths, logging persistence, and
+  the infrastructure ports implemented by `CLIHub.Core.Windows`.
 - `Events/` owns the synchronous domain event bus, event contracts, and event subscribers for observable
   domain workflows.
 - `Composition/` groups Core dependency-injection registration; `CLIHub.Core.Windows` registers its own

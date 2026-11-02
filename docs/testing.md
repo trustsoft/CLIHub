@@ -319,7 +319,7 @@ with every change; the commands above produce the current numbers on demand.
 `Directory.Build.props` sets `LangVersion=14.0` and `EnforceCodeStyleInBuild=true`, and `.editorconfig` pins the
 style rules `IDE0009`, `IDE0011`, `IDE0065`, `IDE0161`, and `IDE1006` to warning severity. `TreatWarningsAsErrors`
 is not set, so a style or naming violation is reported as a build warning and does not fail `dotnet build` or
-`dotnet test`. The `code-style` spec (`openspec/specs/code-style/spec.md:22-24`) requires violations to be
+`dotnet test`. The `code-style` spec (`openspec/specs/code-style/spec.md:24-29`) requires violations to be
 *flagged*, not to break the build.
 
 Read the warning list as part of the gate: a green build with new warnings is not a clean change just because

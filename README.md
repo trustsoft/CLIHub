@@ -33,7 +33,7 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 <img src="docs/images/settings-appearance.png" alt="CLIHub Settings: theme and accent color" width="880">
 
-*Settings → Theme & Accent: theme and accent color. The launcher position and path display live on the Launch Window page under General. Theme and accent changes apply immediately after Save, and the System theme follows the Windows light/dark mode live.*
+*Settings → Theme & Accent: theme and accent color. The global hotkey, launcher position, and path display live on the Launch Window page under General. Theme and accent changes apply immediately after Save, and the System theme follows the Windows light/dark mode live.*
 
 <img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and scanning rules" width="880">
 
@@ -60,7 +60,7 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 - PowerShell, PowerShell 7, Command Prompt, and Git Bash runtime selection, with missing runtimes flagged
   before launch.
 - Chromeless launch window with drag-resizable panes, a resizable Settings window, and a What's New window,
-  all sharing the Dark, Light, and Blue palettes plus a system-synced option, with an accent color that is
+  all sharing the Dark, Light, and Deep Blue palettes plus a system-synced option, with an accent color that is
   independent of the theme.
 - Startup update checks, download-and-restart updates, release notes, and Windows autostart.
 - Agent update protection while that agent's own processes are running.

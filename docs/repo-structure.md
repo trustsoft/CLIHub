@@ -45,13 +45,13 @@ Build output is redirected to the git-ignored `artifacts/` and `obj/` directorie
 ## Source Navigation
 
 - `CLIHub.Core` is organized by ownership: `Configuration/`, `Projects/`, `Scanning/`, `Plugins/`, `Agents/`,
-  `Updates/`, `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`, `Logging/`, `Formatting/`,
-  and embedded `SeedPlugins/`.
+  `Processes/`, `Updates/`, `Events/`, `Infrastructure/`, and `Composition/`, plus shared `Models/`, `Hotkeys/`,
+  `Logging/`, `Formatting/`, and embedded `SeedPlugins/`.
 - `CLIHub.Core.Windows` holds the Windows platform adapters (registry startup, single-instance guard, process
   runners, agent process inspection, system theme detection) behind the ports declared in Core.
 - `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, `Controls/`,
-  `Behaviors/`, `Helpers/`, and `Imaging/`, plus subsystem folders that mirror ownership: `Tray/`, `Startup/`,
-  `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
+  `Behaviors/`, `Helpers/`, `Imaging/`, and `Assets/`, plus subsystem folders that mirror ownership: `Tray/`,
+  `Startup/`, `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
   registration). Only the entry point (`Program.cs`, `App.xaml.cs`, `AssemblyInfo.cs`) stays at the project root.
 - Core contracts are colocated with their owning subsystem. Exact class locations should be checked in the
   source rather than inferred from this summary.
