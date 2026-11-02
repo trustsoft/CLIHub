@@ -26,17 +26,17 @@
     </UserControl.Resources>
 
     <StackPanel>
+        <TextBlock Margin="0,2,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Changes apply immediately. Save and Cancel only affect the other pages."
+                   TextWrapping="Wrap"/>
+
+        <TextBlock Margin="0,2,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Discovered projects are read-only – manage them in Project Scanning."
+                   TextWrapping="Wrap"/>
+
         <controls:SectionHeader Text="REGISTERED PROJECTS"/>
-
-        <TextBlock Margin="0,0,0,4"
-                   Style="{StaticResource HintText}"
-                   Text="Project changes apply immediately. Save and Cancel only affect the other settings."
-                   TextWrapping="Wrap"/>
-
-        <TextBlock Margin="0,0,0,10"
-                   Style="{StaticResource HintText}"
-                   Text="Discovered projects are managed by Project Scanning and are read-only here."
-                   TextWrapping="Wrap"/>
 
         <Grid MinHeight="44" Margin="0,0,0,4">
             <Rectangle RadiusX="8"
@@ -65,7 +65,7 @@
                          Background="Transparent"
                          BorderThickness="0"
                          Style="{StaticResource SettingsInput}"
-                         Tag="Enter absolute directory path (e.g., C:\repos)…"
+                         Tag="Absolute folder path, e.g. C:\repos"
                          Text="{Binding ProjectRegistry.NewProjectPath, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <Button Grid.Column="2"
@@ -78,7 +78,7 @@
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         Command="{Binding ProjectRegistry.RegisterCommand}"
-                        Content="Register"
+                        Content="Add"
                         Style="{StaticResource AccentButton}"/>
             </Grid>
         </Grid>
@@ -203,7 +203,7 @@
         </ItemsControl>
 
         <TextBlock Margin="0,0,0,8"
-                   Text="No projects registered yet.">
+                   Text="No projects yet – add a folder above.">
             <TextBlock.Style>
                 <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
                     <Setter Property="Visibility" Value="Collapsed"/>

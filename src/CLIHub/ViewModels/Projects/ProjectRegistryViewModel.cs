@@ -75,9 +75,6 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     public bool HasMissingFolders => this.MissingFolderCount > 0;
 
     /// <inheritdoc />
-    public string ProjectMixSummary => $"{this.DiscoveredCount} discovered · {this.ManualCount} manual";
-
-    /// <inheritdoc />
     public string FolderStatusSummary => this.MissingFolderCount switch
     {
         0 => string.Empty,
@@ -205,7 +202,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
 
         if (this.Projects.Any(item => ProjectPathPolicy.AreEqual(item.Path, path)))
         {
-            this.ErrorText = "This folder is already registered as a project.";
+            this.ErrorText = "This folder is already registered.";
             return false;
         }
 
@@ -261,7 +258,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         }
         catch (DirectoryNotFoundException ex)
         {
-            this.ErrorText = $"The selected folder does not exist: {ex.Message}";
+            this.ErrorText = $"Folder not found: {ex.Message}";
         }
         catch (ArgumentException ex)
         {
@@ -307,7 +304,6 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         this.OnPropertyChanged(nameof(this.TotalCount));
         this.OnPropertyChanged(nameof(this.MissingFolderCount));
         this.OnPropertyChanged(nameof(this.HasMissingFolders));
-        this.OnPropertyChanged(nameof(this.ProjectMixSummary));
         this.OnPropertyChanged(nameof(this.FolderStatusSummary));
     }
 }

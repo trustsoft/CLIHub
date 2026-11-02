@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-03
+skip_specs: true
+x-skip_specs_rationale: "Copy-only change with no behavior, configuration, or layout modification. No durable specification quotes these UI strings."

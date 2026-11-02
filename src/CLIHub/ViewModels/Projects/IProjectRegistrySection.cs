@@ -35,12 +35,7 @@ public interface IProjectRegistrySection : IDisposable
     bool HasMissingFolders { get; }
 
     /// <summary>
-    ///   The discovered/manual split summary, e.g. "31 discovered · 4 manual".
-    /// </summary>
-    string ProjectMixSummary { get; }
-
-    /// <summary>
-    ///   The folder-health summary shown under the split.
+    ///   The folder-health summary shown as the PROJECTS card's alert line.
     /// </summary>
     string FolderStatusSummary { get; }
 

@@ -55,7 +55,7 @@ internal static class SettingsPageCatalog
         new(
             "projects-registry",
             "Projects",
-            "Registered projects, their provenance, and manually added entries.",
+            "Where projects come from and how to manage them.",
             "Engines & Repos",
             IconGlyphs.FolderSelect,
             SummaryRowKey: "RegistrySummaryCards"),

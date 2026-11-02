@@ -69,7 +69,6 @@ public class ProjectRegistryViewModelTests : IDisposable
         Assert.Equal(3, section.TotalCount);
         Assert.Equal(1, section.MissingFolderCount);
         Assert.True(section.HasMissingFolders);
-        Assert.Equal("1 discovered · 2 manual", section.ProjectMixSummary);
         Assert.Equal("1 folder missing", section.FolderStatusSummary);
     }
 
@@ -361,7 +360,7 @@ public class ProjectRegistryViewModelTests : IDisposable
         section.ChangePathCommand.Execute(section.Projects.Single());
 
         Assert.True(section.HasError);
-        Assert.Equal($"The selected folder does not exist: Folder does not exist: {newFolder}", section.ErrorText);
+        Assert.Equal($"Folder not found: Folder does not exist: {newFolder}", section.ErrorText);
     }
 
     [Fact]

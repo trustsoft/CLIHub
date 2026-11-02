@@ -194,20 +194,19 @@
             <DataTemplate x:Key="RegistrySummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <controls:SummaryCard Alert="{Binding ProjectRegistry.FolderStatusSummary}"
-                                          AlertToolTip="Projects with missing folders"
-                                          Detail="{Binding ProjectRegistry.ProjectMixSummary}"
-                                          DetailToolTip="Found by scanning or added manually"
+                                          AlertToolTip="Folders that no longer exist"
+                                          Detail="In the launch window"
                                           Icon="{x:Static themes:IconGlyphs.Code}"
                                           IsAlertVisible="{Binding ProjectRegistry.HasMissingFolders}"
                                           Label="PROJECTS"
                                           Value="{Binding ProjectRegistry.TotalCount}"/>
 
-                    <controls:SummaryCard Detail="Registered manually"
+                    <controls:SummaryCard Detail="Added by you"
                                           Icon="{x:Static themes:IconGlyphs.Edit}"
                                           Label="MANUAL"
                                           Value="{Binding ProjectRegistry.ManualCount}"/>
 
-                    <controls:SummaryCard Detail="Managed by Project Scanning"
+                    <controls:SummaryCard Detail="From watched folders"
                                           Icon="{x:Static themes:IconGlyphs.Search}"
                                           Label="DISCOVERED"
                                           Value="{Binding ProjectRegistry.DiscoveredCount}"/>
