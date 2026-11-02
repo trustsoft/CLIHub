@@ -63,7 +63,7 @@ internal static class SettingsPageCatalog
             "Projects",
             "Registered projects, their provenance, and manually added entries.",
             "Engines & Repos",
-            IconGlyphs.CheckList,
+            IconGlyphs.FolderSelect,
             SummaryRowKey: "RegistrySummaryCards"),
         new(
             "projects",

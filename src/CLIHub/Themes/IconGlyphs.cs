@@ -49,6 +49,7 @@ internal static class IconGlyphs
     public const string CheckList = "\uE9D5";
     public const string FolderOpen = "\uE8B7";
     public const string FolderAdd = "\uE8F4";
+    public const string FolderSelect = "\uF89A";
     public const string Settings = "\uE713";
     public const string Pin = "\uE718";
     public const string Pinned = "\uE77A";
