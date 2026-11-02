@@ -509,10 +509,11 @@ try {
     }
 
     Assert-ImageSize (Join-Path $OutputDirectory 'launch-window.png') -Width 800 -Height 600
-    Assert-ImageSize (Join-Path $OutputDirectory 'settings-appearance.png') -Width 1200 -Height 900
-    Assert-ImageSize (Join-Path $OutputDirectory 'settings-discovery.png') -Width 1200 -Height 900
-    Assert-ImageSize (Join-Path $OutputDirectory 'settings-agents.png') -Width 1200 -Height 900
-    Assert-ImageSize (Join-Path $OutputDirectory 'settings-agent-detection.png') -Width 1200 -Height 900
+    # The Settings window is 790 x 612 DIP (SettingsWindow.xaml), rendered at 1.5x.
+    Assert-ImageSize (Join-Path $OutputDirectory 'settings-appearance.png') -Width 1185 -Height 900
+    Assert-ImageSize (Join-Path $OutputDirectory 'settings-discovery.png') -Width 1185 -Height 900
+    Assert-ImageSize (Join-Path $OutputDirectory 'settings-agents.png') -Width 1185 -Height 900
+    Assert-ImageSize (Join-Path $OutputDirectory 'settings-agent-detection.png') -Width 1185 -Height 900
 
     if (-not $SkipWebImages) {
         $chromeCandidates = @(
