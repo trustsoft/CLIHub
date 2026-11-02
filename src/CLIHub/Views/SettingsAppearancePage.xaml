@@ -9,7 +9,7 @@
     <StackPanel>
         <controls:SectionHeader Text="THEME"/>
         <controls:SettingCard Title="Application theme"
-                           Hint="Select the visual palette and luminosity mode. Applies immediately on save; System Theme follows Windows."
+                           Hint="Select the visual palette and luminosity mode. System Theme follows Windows."
                            Icon="{x:Static themes:IconGlyphs.Brightness}"
                            Placement="Stacked">
             <ListBox Margin="0,0,-8,0"
@@ -69,7 +69,7 @@
         </controls:SettingCard>
 
         <controls:SettingCard Title="Accent color"
-                           Hint="Applied to active states, focus rings, toggles, and primary actions. Applies immediately on save."
+                           Hint="Applied to active states, focus rings, toggles, and primary actions."
                            Badge="{Binding Accent.ActiveAccentLabel}"
                            BadgeTone="Accent"
                            Icon="{x:Static themes:IconGlyphs.Palette}"
