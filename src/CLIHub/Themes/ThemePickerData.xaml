@@ -44,33 +44,28 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <Grid>
-                        <Border x:Name="Card"
-                                Padding="10"
-                                Background="{DynamicResource ChipBgBrush}"
-                                BorderBrush="{DynamicResource FieldStrokeBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
-                            <ContentPresenter/>
-                        </Border>
-                        <!-- Selection ring drawn over the card edge, so selecting never shifts content -->
-                        <Border x:Name="SelectionRing"
-                                Margin="-1"
-                                BorderBrush="{DynamicResource AccentBrush}"
-                                BorderThickness="1"
-                                CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
-                                IsHitTestVisible="False"
-                                Visibility="Collapsed"/>
-                    </Grid>
+                    <!--
+                        Selection paints the card's own border: no extra ring or badge is drawn, so
+                        selecting never adds an element or shifts content. Hover comes first so a
+                        selected or focused card keeps the accent border.
+                    -->
+                    <Border x:Name="Card"
+                            Padding="10"
+                            Background="{DynamicResource ChipBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}">
+                        <ContentPresenter/>
+                    </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
-                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
                         </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                        </Trigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="SelectionRing" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
