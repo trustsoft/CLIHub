@@ -461,7 +461,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   always the first instance, so the production single-instance shortcut can no longer mask the
   argument checks; the `ParamName` assertions are unchanged.
 
-### ApplicationHost second-instance activation test times out on CI (low, deferred)
+### ApplicationHost second-instance activation test times out on CI (low, deferred) - **[done 2026-11-02: single-instance-activation-reliability]**
 
 - Severity: Low (CI flake; the same test passes locally and on the next commit).
 - Evidence: CI run `40226957693` (commit `7355819`) failed
@@ -478,6 +478,14 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   signal for tests.
 - Trigger: a second CI occurrence, or a user report that launching the app while it is already open
   does not bring the window forward.
+- Resolved (2026-11-02, `single-instance-activation-reliability`): the first instance now creates its
+  `NamedPipeServerStream` synchronously in the guard constructor, so the pipe is listening before the
+  constructor returns, and `SignalActivation` retries on a monotonic `Environment.TickCount64` deadline
+  (~2 s) with exponential backoff (50 ms to 500 ms) instead of two fixed attempts. The second CI
+  occurrence (Release run `41374596015` on v1.0.5) is the trigger that closed this entry.
+  `SingleInstanceGuardTests` covers the immediate-signal race window, a client that connects before the
+  server waits, repeated activations over one guard, and the bounded silent-failure path; the
+  `ApplicationHost` test passed 10/10 repeated runs.
 
 ### Speculative test-infrastructure ideas from `tests/CLIHub.Tests/README.md`
 

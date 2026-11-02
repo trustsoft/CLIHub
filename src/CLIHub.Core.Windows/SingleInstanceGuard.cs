@@ -1,6 +1,7 @@
 namespace CLIHub.Core.Windows;
 
 using System.IO.Pipes;
+using System.Text;
 
 /// <summary>
 ///   Ensures a single application instance. The first instance owns a named mutex and
@@ -10,6 +11,13 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
 {
     private const string MutexName = @"Local\CLIHub.SingleInstance";
     private const string PipeName = "CLIHub.SingleInstance";
+
+    // Activation delivery: a monotonic ~2 s deadline, retry backoff starting at 50 ms and growing to
+    // the longest single connection attempt.
+    private const int ActivationDeadlineMs = 2000;
+    private const int MaxConnectTimeoutMs = 500;
+    private const int InitialRetryDelayMs = 50;
+    private const int MaxRetryDelayMs = 500;
 
     private readonly Mutex mutex;
     private readonly string pipeName;
@@ -59,62 +67,116 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
         if (this.isFirstInstance)
         {
             this.cts = new CancellationTokenSource();
-            this.serverTask = Task.Run(() => this.ServerLoopAsync(this.cts.Token));
+
+            NamedPipeServerStream? initialServer = null;
+            try
+            {
+                // The pipe instance is listening as soon as it exists, so a duplicate that signals
+                // right after this constructor returns is still delivered to the server loop.
+                initialServer = CreateServerStream(this.pipeName);
+            }
+            catch
+            {
+                // Activation degrades but startup continues: the server loop retries creation
+                // through the same error-handling path it uses for every other failure.
+            }
+
+            this.serverTask = Task.Run(() => this.ServerLoopAsync(this.cts.Token, initialServer));
         }
     }
 
     /// <summary>
     ///   Signals the running primary instance to show its window. Safe to call from a
-    ///   second instance; failures are swallowed so the caller can exit quietly.
+    ///   second instance; failures are swallowed so the caller can exit quietly. The signal is
+    ///   retried on a monotonic deadline, so a server that becomes ready shortly after this call
+    ///   still receives it.
     /// </summary>
     public void SignalActivation()
     {
-        for (var attempt = 0; attempt < 2; attempt++)
+        var deadline = Environment.TickCount64 + ActivationDeadlineMs;
+        var delayMs = InitialRetryDelayMs;
+
+        while (Environment.TickCount64 < deadline)
         {
             try
             {
                 using var client = new NamedPipeClientStream(".", this.pipeName, PipeDirection.Out);
-                client.Connect(500);
+
+                // Keep one attempt, including its wait, inside the overall deadline.
+                var remaining = (int)Math.Max(1, deadline - Environment.TickCount64);
+                client.Connect(Math.Min(MaxConnectTimeoutMs, remaining));
+
                 using var writer = new StreamWriter(client) { AutoFlush = true };
                 writer.WriteLine("SHOW");
                 return;
             }
             catch
             {
-                Thread.Sleep(100);
+                var remaining = deadline - Environment.TickCount64;
+                if (remaining <= 0)
+                {
+                    return; // Out of time; give up silently.
+                }
+
+                Thread.Sleep((int)Math.Min(delayMs, remaining));
+                delayMs = Math.Min(delayMs * 2, MaxRetryDelayMs);
             }
         }
     }
 
-    private async Task ServerLoopAsync(CancellationToken token)
+    private static NamedPipeServerStream CreateServerStream(string pipeName)
+        => new(
+            pipeName,
+            PipeDirection.In,
+            maxNumberOfServerInstances: 1,
+            PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous);
+
+    private async Task ServerLoopAsync(CancellationToken token, NamedPipeServerStream? initialServer)
     {
+        var server = initialServer;
+
         while (!token.IsCancellationRequested)
         {
             try
             {
-                using var server = new NamedPipeServerStream(
-                    this.pipeName,
-                    PipeDirection.In,
-                    maxNumberOfServerInstances: 1,
-                    PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous);
+                server ??= CreateServerStream(this.pipeName);
 
                 await server.WaitForConnectionAsync(token);
 
-                using var reader = new StreamReader(server);
-                var message = await reader.ReadLineAsync(token);
+                string? message;
+                using (var reader = new StreamReader(
+                    server,
+                    Encoding.UTF8,
+                    detectEncodingFromByteOrderMarks: true,
+                    bufferSize: 1024,
+                    leaveOpen: true))
+                {
+                    message = await reader.ReadLineAsync(token);
+                }
 
                 if (string.Equals(message, "SHOW", StringComparison.OrdinalIgnoreCase))
                 {
                     this.ActivationRequested?.Invoke();
                 }
+
+                // The next iteration creates a fresh pipe instance so later duplicate launches are
+                // served again; the client retry covers the turn between this disposal and the next
+                // WaitForConnectionAsync.
+                server.Dispose();
+                server = null;
             }
             catch (OperationCanceledException)
             {
+                server?.Dispose();
+                server = null;
                 break;
             }
             catch
             {
+                server?.Dispose();
+                server = null;
+
                 try
                 {
                     await Task.Delay(200, token);
@@ -125,6 +187,10 @@ public sealed class SingleInstanceGuard : IDisposable, ISingleInstanceGuard
                 }
             }
         }
+
+        // Covers the case where cancellation was already requested before the loop first ran, so
+        // the stream created by the constructor is still owned by the loop when it never starts.
+        server?.Dispose();
     }
 
     /// <summary>

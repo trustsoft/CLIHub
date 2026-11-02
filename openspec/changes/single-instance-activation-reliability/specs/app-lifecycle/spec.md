@@ -2,7 +2,7 @@
 
 ### Requirement: Single instance enforcement
 
-The application SHALL ensure only one instance runs at a time using a named mutex. The first instance SHALL create its activation named pipe before the guard constructor returns, so the pipe is listening before any duplicate instance can attempt to signal it. A duplicate instance SHALL retry signaling within a bounded deadline (~2 seconds) to account for server readiness delays. An activation signal that cannot be delivered SHALL fail silently without blocking the duplicate process or crashing either instance.
+The application SHALL ensure only one instance runs at a time using a named mutex. The first instance SHALL create its activation named pipe before the guard constructor returns when pipe creation succeeds, so the pipe is listening before any duplicate instance can attempt to signal it; if pipe creation fails, startup SHALL continue without activation support and the server loop SHALL retry creation. A duplicate instance SHALL retry signaling within a bounded deadline (~2 seconds) to account for server readiness delays. An activation signal that cannot be delivered SHALL fail silently without blocking the duplicate process or crashing either instance.
 
 #### Scenario: First instance starts successfully
 - **WHEN** the application starts and no other instance holds the mutex
