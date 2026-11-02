@@ -1,0 +1,31 @@
+# Tasks: revise the Project Scanning page copy
+
+- [x] 1. Page description: `Watched folders, scan rules, and watcher status.` (`SettingsNavigation.cs`)
+- [x] 2. Header add action: tooltip and accessible name `Add a watched folder` / `Add watched folder`
+- [x] 3. Header rescan action: tooltip and accessible name `Rescan all watched folders`
+- [x] 4. AGENTS card detail: `N supported plugins`, singular for one plugin; update the asserting test
+- [x] 5. Keep `DAEMON` (rejected rename) — no change
+- [x] 6. Watcher empty state: `No watched folders`
+- [x] 7. Section header: `WATCHED FOLDERS`
+- [x] 8. Watched counter: `No folders watched` / `1 folder watched` / `N folders watched`; update tests
+- [x] 9. Immediate-apply note: new wording, placed directly under the page header
+- [x] 10. Depth chip tooltip: `Folder scan depth`
+- [x] 11. Discovery chip tooltip: `What counts as a repository`
+- [x] 12. Remove action: tooltip and accessible name `Remove watched folder`; adjacent rescan accessible name `Rescan this watched folder`
+- [x] 13. Path placeholder: `Absolute folder path, e.g. C:\repos`
+- [x] 14. Add button: `Add`
+- [x] 15. Duplicate error: `This folder is already watched.`; update tests
+- [x] 16. Section header: `SCANNING RULES`
+- [x] 17. Add the line: `Depth and discovery are defaults for new folders; each row can override them.`
+- [x] 18. Depth card title: `Scan depth`
+- [x] 19. Depth card hint: `Levels below a watched folder to search.`
+- [x] 20. Discovery card title: `Discovery`
+- [x] 21. Discovery card hint: `Git repositories, AI agent folders (.claude, .opencode), or both.`
+- [x] 22. Ignored card title: `Ignored patterns`
+- [x] 23. Ignored card hint: `Folder names skipped in every scan. Case-insensitive; * is a wildcard.`
+- [x] 24. Remove the `Globs supported` badge
+- [x] 25. Scan-depth validation messages: `Scan depth must be …` (`SettingsApplicationService.cs`)
+- [x] 26. Docs: README description/alt text, `docs/architecture/scanning.md` action name, `docs/images/README.md` caption
+- [x] 27. Spec deltas: `preferences-ui` field labels, `settings-theme` section header and content start
+- [x] 28. Gates: `dotnet build CLIHub.sln` 0 warnings / 0 errors; `dotnet test CLIHub.sln` 1,344 passed / 0 failed; `openspec validate --all` 30/30 (pre-existing long-requirement warnings only)
+- [x] 29. Manual smoke: the user confirmed the full Settings → Project Scanning page, including the Discovery and Ignored patterns cards. The debug capture harness had already rendered the top of the page (header, note, `WATCHED FOLDERS`, row, add row, `SCANNING RULES`); its rounded-corner copy step failed on a missing output directory while the raw capture was inspected and the user configuration was restored byte-for-byte.

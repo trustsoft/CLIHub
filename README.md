@@ -35,9 +35,9 @@ chosen command in the terminal you already use. Agents are not embedded, proxied
 
 *Settings → Theme & Accent: theme and accent color. The global hotkey, launcher position, and path display live on the Launch Window page under General. Theme and accent changes apply immediately after Save, and the System theme follows the Windows light/dark mode live.*
 
-<img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched directories and scanning rules" width="880">
+<img src="docs/images/settings-discovery.png" alt="CLIHub Settings: watched folders and scanning rules" width="880">
 
-*Settings → Project Scanning: watched roots, scan depth and scanning rules, and the background watcher.*
+*Settings → Project Scanning: watched folders, scan rules, and watcher status.*
 
 <img src="docs/images/settings-agents.png" alt="CLIHub Settings: installed CLI agents and the default agent" width="880">
 

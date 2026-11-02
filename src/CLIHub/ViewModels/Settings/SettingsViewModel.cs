@@ -514,9 +514,11 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     public int AgentsSupportedCount => this.AgentsState.SupportedAgentCount;
 
     /// <summary>
-    ///   The supported-agent count shown under the installed count.
+    ///   The supported-plugin count shown under the installed count.
     /// </summary>
-    public string AgentsSupportSummary => $"{this.AgentsSupportedCount} supported";
+    public string AgentsSupportSummary => this.AgentsSupportedCount == 1
+        ? "1 supported plugin"
+        : $"{this.AgentsSupportedCount} supported plugins";
 
     /// <summary>
     ///   The status line of the update check.

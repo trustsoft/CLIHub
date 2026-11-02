@@ -146,22 +146,22 @@
                                       Spacing="8">
                     <Button Width="{StaticResource Sizing.IconButton.Width}"
                             Height="{StaticResource Sizing.IconButton.Height}"
-                            AutomationProperties.Name="Add Directory"
+                            AutomationProperties.Name="Add watched folder"
                             Command="{Binding Scanning.AddWatchedDirectoryFromPickerCommand}"
                             Padding="0"
                             Style="{StaticResource SettingsIconButton}"
-                            ToolTip="Add a watched root">
+                            ToolTip="Add a watched folder">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                    Text="{x:Static themes:IconGlyphs.FolderAdd}"/>
                     </Button>
                     <Button Width="{StaticResource Sizing.IconButton.Width}"
                             Height="{StaticResource Sizing.IconButton.Height}"
-                            AutomationProperties.Name="Scan Now"
+                            AutomationProperties.Name="Rescan all watched folders"
                             Command="{Binding Scanning.ScanNowCommand}"
                             Padding="0"
                             Style="{StaticResource AccentButton}"
-                            ToolTip="Rescan every watched root">
+                            ToolTip="Rescan all watched folders">
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                    Text="{x:Static themes:IconGlyphs.Refresh}"/>

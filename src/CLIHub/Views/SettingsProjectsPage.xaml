@@ -8,8 +8,13 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
+        <TextBlock Margin="0,2,0,0"
+                   Style="{StaticResource HintText}"
+                   Text="Changes apply immediately. Save and Cancel only affect the other pages."
+                   TextWrapping="Wrap"/>
+
         <Grid>
-            <controls:SectionHeader Text="WATCHED REPOSITORY DIRECTORIES"/>
+            <controls:SectionHeader Text="WATCHED FOLDERS"/>
             <TextBlock Margin="0,18,0,8"
                        HorizontalAlignment="Right"
                        VerticalAlignment="Center"
@@ -17,11 +22,6 @@
                        Text="{Binding Scanning.WatchedRootsSummary}"
                        TextWrapping="NoWrap"/>
         </Grid>
-
-        <TextBlock Margin="0,0,0,8"
-                   Style="{StaticResource HintText}"
-                   Text="Scanning changes apply immediately. Save and Cancel only affect the other settings."
-                   TextWrapping="Wrap"/>
 
         <ItemsControl ItemsSource="{Binding Scanning.WatchedDirectories}">
             <ItemsControl.ItemTemplate>
@@ -70,12 +70,12 @@
                                               SelectedItem="{Binding SelectedDepth, Mode=TwoWay}"
                                               Style="{StaticResource SettingsChipComboBox}"
                                               Tag="{Binding DepthChipLabel}"
-                                              ToolTip="Scan depth for this folder"/>
+                                              ToolTip="Folder scan depth"/>
                                     <ComboBox ItemsSource="{Binding DiscoveryOptions}"
                                               SelectedItem="{Binding SelectedDiscovery, Mode=TwoWay}"
                                               Style="{StaticResource SettingsChipComboBox}"
                                               Tag="{Binding DiscoveryChipLabel}"
-                                              ToolTip="What counts as a repository in this folder"/>
+                                              ToolTip="What counts as a repository"/>
                                     <TextBlock VerticalAlignment="Center"
                                                Style="{StaticResource HintText}"
                                                Text="{Binding DiscoveredSummary}"/>
@@ -88,7 +88,7 @@
                                                   Spacing="2">
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Rescan this watched root"
+                                        AutomationProperties.Name="Rescan this watched folder"
                                         Command="{Binding DataContext.Scanning.ScanWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding Path}"
                                         Style="{StaticResource ChipRemoveButton}"
@@ -100,11 +100,11 @@
 
                                 <Button Width="{StaticResource Sizing.IconButton.Width}"
                                         Height="{StaticResource Sizing.IconButton.Height}"
-                                        AutomationProperties.Name="Remove watched root"
+                                        AutomationProperties.Name="Remove watched folder"
                                         Command="{Binding DataContext.Scanning.RemoveWatchedDirectoryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                         CommandParameter="{Binding Path}"
                                         Style="{StaticResource ChipRemoveButton}"
-                                        ToolTip="Remove watched root">
+                                        ToolTip="Remove watched folder">
                                     <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                Text="{x:Static themes:IconGlyphs.Delete}"/>
@@ -143,7 +143,7 @@
                          Background="Transparent"
                          BorderThickness="0"
                          Style="{StaticResource SettingsInput}"
-                         Tag="Enter absolute directory path (e.g., C:\repos)…"
+                         Tag="Absolute folder path, e.g. C:\repos"
                          Text="{Binding Scanning.NewWatchedDirectoryText, UpdateSourceTrigger=PropertyChanged}"/>
 
                 <Button Grid.Column="2"
@@ -156,7 +156,7 @@
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
                         Command="{Binding Scanning.AddWatchedDirectoryCommand}"
-                        Content="Register"
+                        Content="Add"
                         Style="{StaticResource AccentButton}"/>
             </Grid>
         </Grid>
@@ -166,10 +166,14 @@
                    Text="{Binding Scanning.WatchedDirectoryError}"
                    Visibility="{Binding Scanning.HasWatchedDirectoryError, Converter={StaticResource BoolToVisibility}}"/>
 
-        <controls:SectionHeader Text="DISCOVERY &amp; SCANNING RULES"/>
+        <controls:SectionHeader Text="SCANNING RULES"/>
+        <TextBlock Margin="0,0,0,10"
+                   Style="{StaticResource HintText}"
+                   Text="Depth and discovery are defaults for new folders; each row can override them."
+                   TextWrapping="Wrap"/>
         <controls:SettingsGroup>
-            <controls:SettingCard Title="Repository scan depth"
-                           Hint="Default depth for a directory you add from now on. Each row can override it."
+            <controls:SettingCard Title="Scan depth"
+                           Hint="Levels below a watched folder to search."
                            Icon="{x:Static themes:IconGlyphs.Zoom}"
                            Grouped="True">
             <ComboBox HorizontalAlignment="Right"
@@ -185,8 +189,8 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <controls:SettingCard Title="Repository discovery"
-                           Hint="Default for a directory you add from now on: Git repositories, folders used by an AI agent (such as .claude or .opencode), or either. Each row can override it."
+        <controls:SettingCard Title="Discovery"
+                           Hint="Git repositories, AI agent folders (.claude, .opencode), or both."
                            Icon="{x:Static themes:IconGlyphs.Filter}"
                            Grouped="True">
             <ComboBox HorizontalAlignment="Right"
@@ -202,9 +206,8 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <controls:SettingCard Title="Ignored directory patterns"
-                           Hint="Folders skipped while scanning. Globs are matched case-insensitively; '*' matches any characters."
-                           Badge="Globs supported"
+        <controls:SettingCard Title="Ignored patterns"
+                           Hint="Folder names skipped in every scan. Case-insensitive; * is a wildcard."
                            Icon="{x:Static themes:IconGlyphs.Blocked}"
                            Grouped="True"
                            Placement="Stacked">

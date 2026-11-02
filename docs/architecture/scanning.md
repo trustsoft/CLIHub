@@ -56,8 +56,8 @@ root with the stored scan settings and reconciles only projects beneath it:
 The pass reports `Scanning` while it runs and, afterwards, the last scan time, the total discovered-project
 count, and the scan coverage — how many folders the walk examined. The discovered-project count is always the
 number of registered projects with discovered provenance, so a project registered manually is not counted twice
-and a single-root rescan reports the same number as a full pass. The page-header "Scan Now" remains the full
-pass through `Reload()`.
+and a single-root rescan reports the same number as a full pass. The page-header "Rescan all watched folders"
+action remains the full pass through `Reload()`.
 
 `IProjectScanner.CountDiscoveredProjects(root)` reports how many discovered projects sit at or below a watched
 root. The Project Scanning page uses it for the secondary line of each watched-directory row, where the count

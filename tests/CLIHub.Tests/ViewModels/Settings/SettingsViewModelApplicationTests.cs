@@ -295,7 +295,7 @@ public class SettingsViewModelApplicationTests
         Assert.Contains(fixture.ViewModel.Scanning.WatchedDirectories, row => string.Equals(row.Path, path, StringComparison.OrdinalIgnoreCase));
         Assert.Equal(string.Empty, fixture.ViewModel.Scanning.NewWatchedDirectoryText);
         Assert.False(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
-        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
+        Assert.Equal("1 folder watched", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -353,10 +353,10 @@ public class SettingsViewModelApplicationTests
 
         Assert.Equal(1, countBeforeDuplicate);
         Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
-        Assert.Equal("That folder is already monitored.", fixture.ViewModel.Scanning.WatchedDirectoryError);
+        Assert.Equal("This folder is already watched.", fixture.ViewModel.Scanning.WatchedDirectoryError);
         Assert.Equal(path, fixture.ViewModel.Scanning.NewWatchedDirectoryText);
         Assert.Equal(countBeforeDuplicate, fixture.ViewModel.Scanning.WatchedDirectories.Count);
-        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
+        Assert.Equal("1 folder watched", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -371,7 +371,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.RemoveWatchedDirectoryCommand.Execute(path);
 
         Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
-        Assert.Equal("No roots monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
+        Assert.Equal("No folders watched", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -748,9 +748,9 @@ public class SettingsViewModelApplicationTests
 
         Assert.Equal(1, countBeforeDuplicate);
         Assert.True(fixture.ViewModel.Scanning.HasWatchedDirectoryError);
-        Assert.Equal("That folder is already monitored.", fixture.ViewModel.Scanning.WatchedDirectoryError);
+        Assert.Equal("This folder is already watched.", fixture.ViewModel.Scanning.WatchedDirectoryError);
         Assert.Equal(countBeforeDuplicate, fixture.ViewModel.Scanning.WatchedDirectories.Count);
-        Assert.Equal("1 root monitored", fixture.ViewModel.Scanning.WatchedRootsSummary);
+        Assert.Equal("1 folder watched", fixture.ViewModel.Scanning.WatchedRootsSummary);
     }
 
     [Fact]
@@ -974,7 +974,7 @@ public class SettingsViewModelApplicationTests
 
         Assert.Equal(2, fixture.ViewModel.AgentsInstalledCount);
         Assert.Equal(5, fixture.ViewModel.AgentsSupportedCount);
-        Assert.Equal("5 supported", fixture.ViewModel.AgentsSupportSummary);
+        Assert.Equal("5 supported plugins", fixture.ViewModel.AgentsSupportSummary);
         Assert.Contains(nameof(SettingsViewModel.AgentsInstalledCount), raised);
         Assert.Contains(nameof(SettingsViewModel.AgentsSupportedCount), raised);
         Assert.Contains(nameof(SettingsViewModel.AgentsSupportSummary), raised);

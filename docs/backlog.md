@@ -345,3 +345,14 @@ snapshot.
   icon duplicates adjacent text, in one pass across the windows rather than one glyph at a time.
 - Trigger: an accessibility requirement or audit, or the next change that adds icons to a
   screen-reader-facing surface.
+
+### Projects page add row still uses `Register` and the old placeholder
+
+- Severity: Low (copy consistency between two sibling pages)
+- Evidence: `2026-11-03-project-scanning-copy` aligned the Project Scanning add row on
+  `Absolute folder path, e.g. C:\repos` and `Add`, but `SettingsProjectRegistryPage.xaml:68,81`
+  (the Projects page) still says `Enter absolute directory path (e.g., C:\repos)…` and `Register`.
+  Both pages add a project folder and now read differently.
+- Proposed remedy: apply the same placeholder and `Add` label to the Projects page, or extract the
+  shared add-row copy if a third surface appears.
+- Trigger: the next Projects-page copy or layout change.

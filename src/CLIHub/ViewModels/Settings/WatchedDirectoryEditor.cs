@@ -50,7 +50,7 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
     private int manualProjectCount;
     private int scannedDirectoryCount;
     private string watcherStateLabel = "Off";
-    private string watcherDetailText = "No watched roots configured";
+    private string watcherDetailText = "No watched folders";
     private bool disposed;
 
     /// <summary>
@@ -129,9 +129,9 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
     /// </summary>
     public string WatchedRootsSummary => this.WatchedDirectories.Count switch
     {
-        0 => "No roots monitored",
-        1 => "1 root monitored",
-        var count => $"{count} roots monitored"
+        0 => "No folders watched",
+        1 => "1 folder watched",
+        var count => $"{count} folders watched"
     };
 
     /// <summary>
@@ -507,7 +507,7 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
             return false;
         }
 
-        this.WatchedDirectoryError = "That folder is already monitored.";
+        this.WatchedDirectoryError = "This folder is already watched.";
         return false;
     }
 
@@ -660,7 +660,7 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
         };
         this.WatcherDetailText = current.State switch
         {
-            ProjectScanState.NotConfigured => "No watched roots configured",
+            ProjectScanState.NotConfigured => "No watched folders",
             ProjectScanState.Scanning => "Scan in progress",
             ProjectScanState.Error => current.Error ?? "Scan failed",
             _ => current.LastScanUtc is { } last

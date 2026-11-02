@@ -62,7 +62,7 @@ internal static class SettingsPageCatalog
         new(
             "projects",
             "Project Scanning",
-            "Watched directories, scanning rules, and the background watcher.",
+            "Watched folders, scan rules, and watcher status.",
             "Engines & Repos",
             IconGlyphs.SyncFolder,
             HeaderActionKey: "ProjectsHeaderAction",

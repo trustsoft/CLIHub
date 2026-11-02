@@ -334,10 +334,10 @@ public sealed class SettingsApplicationService
     }
 
     private static string ScanDepthError =>
-        $"Repository scan depth must be a whole number between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+        $"Scan depth must be a whole number between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
 
     private static string WatchedDirectoryScanDepthError(string root) =>
-        $"Repository scan depth for {root} must be between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
+        $"Scan depth for {root} must be between {ProjectScanningDefaults.MinScanDepth} and {ProjectScanningDefaults.MaxScanDepth}.";
 
     private static bool IsScanDepthInRange(int scanDepth) =>
         scanDepth is >= ProjectScanningDefaults.MinScanDepth and <= ProjectScanningDefaults.MaxScanDepth;
