@@ -9,7 +9,7 @@
     <StackPanel>
         <controls:SectionHeader Text="THEME"/>
         <controls:SettingCard Title="Application theme"
-                           Hint="Select the visual palette and luminosity mode. Applies immediately on save; System Sync follows Windows."
+                           Hint="Select the visual palette and luminosity mode. Applies immediately on save; System Theme follows Windows."
                            Icon="{x:Static themes:IconGlyphs.Brightness}"
                            Placement="Stacked">
             <ListBox Margin="0,0,-8,0"
@@ -18,14 +18,11 @@
                      Style="{StaticResource ThemeOptionGroup}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                        <StackPanel AutomationProperties.HelpText="{Binding Description}"
+                                    ToolTip="{Binding Description}">
 
                             <!-- Palette sample: each card previews its own theme through fixed brushes -->
-                            <Border Height="56"
+                            <Border Height="48"
                                     Background="{Binding PreviewCardBrush, Converter={StaticResource ThemeBrushKey}}"
                                     BorderBrush="{DynamicResource ControlStrokeBrush}"
                                     BorderThickness="1"
@@ -86,16 +83,12 @@
                                 </Grid>
                             </Border>
 
-                            <StackPanel Grid.Row="1" Margin="0,9,0,0">
-                                <TextBlock FontSize="{StaticResource Sizing.FontSize.Body}"
-                                           FontWeight="Medium"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{Binding Name}"/>
-                                <TextBlock Margin="0,3,0,0"
-                                           Style="{StaticResource HintText}"
-                                           Text="{Binding Description}"/>
-                            </StackPanel>
-                        </Grid>
+                            <TextBlock Margin="2,4,0,0"
+                                       FontSize="{StaticResource Sizing.FontSize.Body}"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       Text="{Binding Name}"/>
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

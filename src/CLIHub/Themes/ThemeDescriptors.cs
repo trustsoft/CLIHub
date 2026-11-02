@@ -59,14 +59,14 @@ public static class ThemeDescriptors
             "ThemePreviewBarLightBrush"),
         new ThemeDescriptor(
             AppTheme.Blue,
-            "Blue Theme",
+            "Deep Blue Theme",
             "Blue-tinted dark chrome",
             "/Themes/BlueTheme.xaml",
             "ThemePreviewBlueBrush",
             "ThemePreviewBarBlueBrush"),
         new ThemeDescriptor(
             AppTheme.System,
-            "System Sync",
+            "System Theme",
             "Follow Windows personalization state",
             null,
             "ThemePreviewSystemBrush",
