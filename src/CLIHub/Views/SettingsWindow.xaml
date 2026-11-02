@@ -13,7 +13,7 @@
         Icon="pack://application:,,,/app.ico"
         Background="{DynamicResource ChromeBgBrush}"
         FontFamily="{StaticResource Sizing.FontFamily.Text}"
-        Height="687" Width="888"
+        Height="612" Width="790"
         MinHeight="480" MinWidth="640"
         KeyDown="OnKeyDown"
         ResizeMode="CanResize"
