@@ -340,14 +340,14 @@ the custom entry is selected, including after the Settings window is closed and 
 
 ### Requirement: Projects and Paths page options
 
-The Project Scanning page SHALL offer a watched-directories list with add, per-directory scan, and remove actions, a "Repository scan depth" field, an "Ignored directory patterns" list, a "Repository discovery" selector with the options "Git only", "Agents only", and "Git and agents", and a read-only background watcher status. The per-directory scan action SHALL rescan only that directory's watched root, unlike the page-header action that rescans every saved root. Each watched-directory row SHALL show, beneath its path, a depth chip and a discovery chip that open a menu of allowed values, plus the number of discovered repositories beneath that directory. The "Repository scan depth" and "Repository discovery" fields SHALL act as defaults for a directory added from now on and SHALL NOT change the settings of existing rows. The page SHALL show the stored values when opened.
+The Project Scanning page SHALL offer a watched-directories list with add, per-directory scan, and remove actions, a "Scan depth" field, an "Ignored patterns" list, a "Discovery" selector with the options "Git only", "Agents only", and "Git and agents", and a read-only background watcher status. The per-directory scan action SHALL rescan only that directory's watched root, unlike the page-header action that rescans every saved root. Each watched-directory row SHALL show, beneath its path, a depth chip and a discovery chip that open a menu of allowed values, plus the number of discovered repositories beneath that directory. The "Scan depth" and "Discovery" fields SHALL act as defaults for a directory added from now on and SHALL NOT change the settings of existing rows. The page SHALL show the stored values when opened.
 
 Changes to the scanning settings SHALL apply immediately, without requiring the footer Save: adding or removing a watched directory, changing a row's depth or discovery chip, changing the default depth or discovery mode, and adding or removing an ignored pattern SHALL each persist atomically, reconfigure the background scanner, and trigger a scan. A newly added watched directory SHALL therefore be scanned while the page is open, the page-header scan action and the summary cards SHALL always describe the list shown on the page, and the page SHALL state that scanning changes apply immediately. The footer Save and Cancel SHALL continue to govern the remaining settings, and Cancel SHALL NOT revert scanning changes that were already applied.
 
 #### Scenario: Options offered
 
 - **WHEN** the Settings window opens on "Project Scanning"
-- **THEN** it shows the watched-directories list with add, scan, and remove actions, the depth and discovery defaults, the "Ignored directory patterns" list, and the watcher status
+- **THEN** it shows the watched-directories list with add, scan, and remove actions, the depth and discovery defaults, the "Ignored patterns" list, and the watcher status
 - **AND** it states that scanning changes apply immediately
 
 #### Scenario: Stored values loaded
@@ -375,7 +375,7 @@ Changes to the scanning settings SHALL apply immediately, without requiring the 
 
 - **WHEN** the user adds a folder that is already in the watched-directories list (by normalized path), whether by typing the path or by browsing to it
 - **THEN** no new row is added and the watched-root count is unchanged
-- **AND** an explicit message states that the folder is already monitored
+- **AND** an explicit message states that the folder is already watched
 - **AND** the input the user entered or selected is not cleared
 
 #### Scenario: Scanner reload failure after a successful scanning apply

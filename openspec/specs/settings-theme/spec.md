@@ -289,7 +289,7 @@ The Settings window SHALL keep the active page's header visible while page conte
 #### Scenario: Projects content starts below the header
 
 - **WHEN** the "Project Scanning" page is shown
-- **THEN** the scrollable content begins at the "WATCHED REPOSITORY DIRECTORIES" section below the header divider
+- **THEN** the scrollable content begins with the immediate-apply note, followed by the "WATCHED FOLDERS" section, below the header divider
 
 #### Scenario: Summary detail lines span the card width
 
