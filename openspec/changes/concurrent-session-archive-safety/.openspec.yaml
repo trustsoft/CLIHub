@@ -1,0 +1,6 @@
+schema: spec-driven
+skip_specs: true
+goal: |
+  Establish process guardrails and minimal tooling to prevent concurrent-session state loss
+  (archived changes reverting, specs disappearing, pipeline state emptied) by mandating
+  worktree isolation, adding post-archive integrity checks, and reinforcing write discipline.
