@@ -36,8 +36,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly PathDisplayOption[] PathDisplayOptions =
     {
-        new(PathDisplayStyle.LeftTrim, "Left trim — keep the end of the path"),
-        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis — keep both ends")
+        new(PathDisplayStyle.LeftTrim, "Left trim – keep the end of the path"),
+        new(PathDisplayStyle.MiddleEllipsis, "Middle ellipsis – keep both ends")
     };
     private static readonly LogLevelOption[] LogLevelOptions =
     {
@@ -50,10 +50,10 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     private static readonly PopupPositionOption[] PopupPositionOptions =
     {
-        new(PopupScreenPosition.Center, "Active monitor — centered"),
-        new(PopupScreenPosition.TopCenter, "Active monitor — top-center"),
+        new(PopupScreenPosition.Center, "Active monitor – centered"),
+        new(PopupScreenPosition.TopCenter, "Active monitor – top-center"),
         new(PopupScreenPosition.CursorRelative, "Cursor-relative"),
-        new(PopupScreenPosition.PrimaryScreen, "Primary monitor — centered")
+        new(PopupScreenPosition.PrimaryScreen, "Primary monitor – centered")
     };
 
     private static readonly AppThemeOption[] AppThemeOptions = ThemeDescriptors.All

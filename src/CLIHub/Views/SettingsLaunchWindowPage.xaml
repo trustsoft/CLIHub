@@ -8,7 +8,7 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <controls:SectionHeader Text="LAUNCHER POSITIONING"/>
+        <controls:SectionHeader Text="POSITION"/>
         <controls:SettingCard Title="Launcher window position"
                            Hint="Where the launch window appears when it is shown."
                            Icon="{x:Static themes:IconGlyphs.Location}">
@@ -25,7 +25,7 @@
             </ComboBox>
         </controls:SettingCard>
 
-        <controls:SectionHeader Text="PATHS"/>
+        <controls:SectionHeader Text="PROJECT PATHS"/>
         <controls:SettingCard Title="Path display"
                            Hint="How long project paths are shortened in the launch window."
                            Icon="{x:Static themes:IconGlyphs.FolderOpen}">
