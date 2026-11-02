@@ -27,4 +27,4 @@ openspec validate --all
 - [x] Build passes: `dotnet build CLIHub.sln`
 - [x] Tests pass: `dotnet test CLIHub.sln`
 - [x] OpenSpec validation passes: `openspec validate --all`
-- [ ] Smoke: the selected theme and accent cards show only an accent-colored border (no ring, no check badge, no check in the dot); hovering an unselected card raises its border; the custom accent entry still shows its glyph when selected
+- [x] Smoke: the selected theme and accent cards show only an accent-colored border (no ring, no check badge, no check in the dot); hovering an unselected card raises its border; the custom accent entry still shows its glyph when selected
