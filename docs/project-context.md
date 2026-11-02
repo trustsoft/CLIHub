@@ -26,8 +26,11 @@ The application does not embed agents, execute plugin code, act as an IDE, or su
 Dependency direction:
 
 ```text
-CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows -> CLIHub <- CLIHub.Tests
+CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows <- CLIHub <- CLIHub.Tests
+CLIHub.Core.Windows.Tests -> CLIHub.Core.Windows, CLIHub.Core
 ```
+
+An arrow points from a project to the project it references.
 
 `CLIHub.Core` must not reference the WPF application or Windows-only APIs. Windows integration is isolated
 in `CLIHub.Core.Windows` (registry startup, named mutex/pipe activation, process execution adapters, and

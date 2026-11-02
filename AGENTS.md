@@ -90,8 +90,9 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
   and untracked files untouched.
 - Pipeline state transitions MUST go through `node .opencode/scripts/pipeline-state.mjs`
   (`add`/`update`/`prune`), so the 10-entry cap and the atomic compare-and-swap write are enforced in one
-  place; stage transitions, stage notes, and commit shas are recorded with `update`. The sidebar plugin
-  (`plugins/pipeline-status`) stays read-only and never writes the state file.
+  place; stage transitions, stage notes, and commit shas are recorded with `update`. The pipeline-status
+  sidebar plugin (installed in the OpenCode global configuration, outside this repository) stays read-only
+  and never writes the state file.
 - Never write `.opencode/pipeline.json` directly with `node -e`, shell redirection, or manual JSON edits;
   every mutation MUST go through `node .opencode/scripts/pipeline-state.mjs`.
 

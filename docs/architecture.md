@@ -17,13 +17,16 @@ This is the current architecture index. Detailed behavior belongs in the focused
 Dependency flow:
 
 ```text
-CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows -> CLIHub <- CLIHub.Tests
+CLIHub.Core.Tests -> CLIHub.Core <- CLIHub.Core.Windows <- CLIHub <- CLIHub.Tests
+CLIHub.Core.Windows.Tests -> CLIHub.Core.Windows, CLIHub.Core
 ```
+
+An arrow points from a project to the project it references.
 
 `CLIHub.Core` has no WPF dependency and no Windows API dependency: platform integration lives behind
 ports, and the adapters are in `CLIHub.Core.Windows` (see [ADR-0006](adr/0006-windows-platform-library.md)).
-Windows shell conventions that need no Windows APIs — `ProcessLauncher` and command-line building —
-remain in Core.
+Windows shell conventions that need no Windows APIs — process launch orchestration (`ProcessOrchestrator`) and
+command-line building (`CommandLineBuilderAdapter`, `WindowsCommandLineBuilder`) — remain in Core.
 
 ## Runtime Composition
 

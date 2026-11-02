@@ -117,9 +117,10 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 ## Application
 
 - **Launch window** — the main CLIHub window, opened from the tray or the global hotkey, with the
-  Projects pane and the AI Agents pane separated by a resizable divider.
+  Projects pane and the Agents pane separated by a resizable divider.
 - **Tray** — the system tray (notification area) icon with the context menu: current project,
-  recent projects, Add Project…, launch agents, Settings, What's New, exit.
+  recent projects, Add Project…, Launch Agent, Settings, What's New, an update check or download
+  action, Show CLIHub, and Exit.
 - **Global hotkey** — a configurable key combination (default `Ctrl+Shift+Space`) that toggles the
   launch window from any application, configured on the Launch Window Settings page. See
   [hotkey-support](../openspec/specs/hotkey-support/spec.md).

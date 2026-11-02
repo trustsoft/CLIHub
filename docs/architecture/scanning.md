@@ -65,7 +65,8 @@ is shown next to the discovery mode and the scan depth.
 
 ## Watcher and status
 
-While at least one watched directory is configured, a recursive `FileSystemWatcher` observes the roots. Change
+A recursive `FileSystemWatcher` is created for each existing configured watched directory; a missing root is
+skipped with a warning, and the scanner still reports watching whenever roots are configured. Change
 events only arm a debounced timer (~750 ms); a single coalesced reconcile pass runs afterwards. Passes never
 overlap, and a watcher buffer overflow triggers a full rescan and watcher re-creation.
 

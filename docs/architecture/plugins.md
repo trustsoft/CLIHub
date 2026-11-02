@@ -1,6 +1,8 @@
 # Plugins
 
-Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an optional `logo.png`:
+Each plugin is discovered from its own subdirectory of `%APPDATA%\CLIHub\plugins\`, containing `plugin.json`
+and an optional `logo.png`. The descriptor's `id` is authoritative; the built-in seeded folders are named by
+plugin id:
 
 ```jsonc
 {
@@ -25,8 +27,8 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
 }
 ```
 
-- `schemaVersion` is optional and defaults to 1. Values greater than 1 or non-integer values are invalid;
-  the supported maximum is currently 1.
+- `schemaVersion` is optional; when the field is absent the descriptor is accepted as schema version 1, the
+  supported maximum. Values greater than 1 or non-integer values are invalid.
 
 - `commands` is a named set; only `launch` is required.
 - `detection.systemPaths` are host install markers (env vars expanded); `detection.projectIndicators` are project-relative markers.
@@ -34,7 +36,8 @@ Each plugin lives in `%APPDATA%\CLIHub\plugins\<id>\` with `plugin.json` and an 
   - `"source": "npm"` with `"package": "<name>"` — the latest version is read from `https://registry.npmjs.org/<package>/latest`.
   - `"source": "githubReleases"` with `"repo": "<owner>/<repository>"` — the latest version is read from that repository's latest GitHub release (`tag_name`, leading `v` stripped).
   - An unrecognized `source` is ignored with a logged warning; the agent is treated as having no update source. The result never gates or alters the Update action.
-- Built-in descriptors for OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code are embedded and seeded on first run.
+- Built-in descriptors for OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code are embedded
+  and seeded when no plugin subdirectory contains `plugin.json`.
 
 ## Plugin Errors
 

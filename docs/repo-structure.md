@@ -37,7 +37,10 @@ Use this file for navigation. Current behavior and architecture are summarized i
 ├── README.md
 ├── AGENTS.md
 ├── CHANGELOG.md
-└── RELEASE-NOTES.md
+├── RELEASE-NOTES.md
+├── improvements.md           # Active architecture improvement directions
+├── opencode.json             # OpenCode project configuration
+└── .gitattributes
 ```
 
 Build output is redirected to the git-ignored `artifacts/` and `obj/` directories.

@@ -30,8 +30,9 @@ The Core process subsystem protects agent updates from running against an active
   runs in two detail tiers: the cheap executable-name tier never retrieves command lines, and the
   command-line tier adds the runtime-host rule and is authoritative for the execution-time update
   gates.
-- `AgentProcessMonitor` combines the inspector, matcher, and plugin catalog and exposes the matching
-  `RunningAgent` records through `HasRunningAgents()` and `GetRunningAgents()`; the runtime-host names
+- `AgentProcessMonitor` combines the process orchestrator (which adapts the inspector and matcher) with the
+  plugin catalog and exposes the matching `RunningAgent` records through `HasRunningAgents()` and
+  `GetRunningAgents()`; the runtime-host names
   join the candidate set exactly when command-line detail is requested and at least one plugin declares
   an npm package, so the name pre-filter never drops a match the matcher would make, and a machine
   full of `node.exe` processes with no npm-declared agent never triggers a WMI read.

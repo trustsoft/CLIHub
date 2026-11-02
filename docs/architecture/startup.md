@@ -13,13 +13,13 @@ Before the host starts, `App.OnStartup` calls the WPF base implementation, appli
 1. **ApplicationHost** (WPF lifecycle boundary):
    - Acquires the single-instance guard as the first host action, before any environment setup. If another instance owns the mutex, the host signals activation to the running instance, requests WPF shutdown, and returns; no data directories, logging, or services are initialized for the duplicate process, and no tray icon or window is created.
    - Creates the `%APPDATA%\CLIHub\` data layout (`logs`, `plugins`, and `cache`).
-   - Configures Serilog using the log-level preference read from `config.json`, then logs application startup.
+   - Configures Serilog using the log level, retention days, and file-size limit read from `config.json`, then logs application startup.
    - Builds the service provider through `AddClIHubServices`, which composes Core services and WPF services; the pre-acquired guard is registered into the composition so the provider owns guard disposal.
    - Delegates to `ApplicationBootstrapper.Start`.
 
 2. **StartupStateLoader** (required state initialization):
-   - Seeds built-in plugin descriptors when the plugins directory is empty, then loads plugin descriptors.
-   - Loads preferences, applies the default process runtime, and refreshes the per-user Windows Run registration from `StartWithWindows`.
+   - Seeds built-in plugin descriptors when no plugin subdirectory contains `plugin.json`, then loads plugin descriptors.
+   - Loads preferences and refreshes the per-user Windows Run registration from `StartWithWindows`; the default runtime stays in the preferences store and is read when a launch command executes.
    - Returns immutable `StartupState` containing the loaded preferences.
 
 3. **ApplicationBootstrapper** (session and hotkey setup):
@@ -35,7 +35,7 @@ Before the host starts, `App.OnStartup` calls the WPF base implementation, appli
    - Logs warnings on failure; does not throw.
 
 5. **ApplicationBootstrapper** (background scanning):
-   - Starts the project scanner (`IProjectScanner.Start`), which applies the scanning preferences loaded by `StartupStateLoader`; the DI container disposes it on shutdown.
+   - Starts the project scanner (`IProjectScanner.Start`), which re-reads the scanning preferences from the preferences store and configures the watcher; the DI container disposes it on shutdown.
 
 6. ApplicationBootstrapper logs that startup is complete.
 
@@ -79,7 +79,7 @@ The failure behavior above describes the current implementation, not a recommend
 2. Disposes `ApplicationSession`, which disposes `ShellCoordinator`. The coordinator removes application-level event subscriptions before tracked operations are stopped.
 3. Cancels tracked application operations and waits for them within the shutdown timeout.
 4. Disposes the service provider. This unregisters the global hotkey, removes its window-message hook, disposes the tray icon, and disposes singleton persistence services, including `ConfigurationRepository` (which flushes pending configuration writes), the logo cache service (which saves dirty cache state), and `SingleInstanceGuard` (which stops its pipe server and releases the mutex).
-5. Flushes and closes Serilog, then calls the WPF base implementation.
+5. Flushes and closes Serilog; `App.OnExit` then calls the WPF base implementation.
 
 The order is implemented in:
 - `src/CLIHub/App.xaml.cs` — WPF lifecycle delegation to `ApplicationHost`

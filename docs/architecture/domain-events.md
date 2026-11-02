@@ -65,7 +65,7 @@ The following events are candidates for future changes. Each is listed with its 
 
 **Trigger:** A subscriber needs to track project-added facts (for example, recency tracking, project-discovery telemetry, or a project-added notification in the UI).
 
-**Publisher:** `ProjectService.RegisterProjectAsync` (or equivalent), after the project is persisted to the project state store.
+**Publisher:** `ProjectService.AddProject` (or equivalent manual-registration API), after the project is persisted to the project state store.
 
 **Consumer:** TBD. Revisit when a subscriber needs the fact.
 
@@ -98,7 +98,7 @@ A subscriber that throws is a bug in the subscriber, not the publisher or bus. F
 ## Ordering and Thread-Safety Assumptions
 
 - **Synchronous dispatch:** `DomainEventBus.Publish` dispatches events synchronously in subscription order (see lines 24-50). A subscriber runs inline with the publisher's call stack.
-- **Single-threaded subscription model:** Subscribers are registered at DI-container build time and never unregistered (except for test cleanup via `IDisposable`). The bus does not support concurrent subscription/unsubscription.
+- **Single-threaded subscription model:** Subscribers are registered as DI singletons and subscribe in their constructors; DI constructs them lazily when the publisher is first resolved. Their subscriptions are disposed with the container at shutdown. The bus does not support concurrent subscription/unsubscription.
 - **Subscription order:** Subscribers are notified in the order they subscribed. No priority or ordering configuration is exposed. If ordering matters, revisit this design.
 
-**Thread-safety:** The bus does not guard the subscription dictionary with locks. Concurrent `Publish` calls from different threads targeting the same event type are safe (each call reads the handler list atomically via `ToList()` at line 36), but concurrent `Subscribe` and `Publish` is not supported. Register subscribers at container build time, before `Publish` can be called.
+**Thread-safety:** The bus does not guard the subscription dictionary with locks. A single `Publish` call copies the handler list with `ToList()` at line 36 before dispatch, so handlers added during that dispatch are not invoked by it; concurrent `Subscribe` and `Publish` is still not supported. Register subscribers before `Publish` can be called.
