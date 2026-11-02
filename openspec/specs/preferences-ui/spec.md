@@ -128,7 +128,8 @@ The Updates section SHALL let the user trigger an update check and report the ou
 
 ### Requirement: Path display preference
 
-The Settings window SHALL offer a choice of how long project paths are shortened in the launch window.
+The Settings window SHALL offer a choice of how long project paths are shortened in the launch window,
+under a "PROJECT PATHS" section header on the Launch Window page.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Launch Window"
@@ -248,16 +249,23 @@ The Logs page SHALL offer a log-level selector (Verbose, Debug, Information, War
 
 ### Requirement: Popup screen position
 
-The Launch Window page SHALL offer a "Launcher window position" selector under a "LAUNCHER POSITIONING" section header, with the options "Active monitor — centered", "Active monitor — top-center", "Cursor-relative", and "Primary monitor — centered", defaulting to "Active monitor — centered". Options that target a monitor SHALL follow the "<monitor> — <placement>" label pattern so that both the monitor and the placement the launch window will use are explicit. "Cursor-relative" SHALL keep its pointer-relative wording because it does not target a monitor.
+The Launch Window page SHALL offer a "Launcher window position" selector under a "POSITION" section
+header, with the options "Active monitor – centered", "Active monitor – top-center",
+"Cursor-relative", and "Primary monitor – centered", defaulting to "Active monitor – centered".
+Options that target a monitor SHALL follow the "<monitor> – <placement>" label pattern so that both the
+monitor and the placement the launch window will use are explicit. "Cursor-relative" SHALL keep its
+pointer-relative wording because it does not target a monitor.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Launch Window"
-- **THEN** the "LAUNCHER POSITIONING" section shows the "Launcher window position" selector with the four options and the stored value selected
-- **AND** the monitor-targeting options are labelled "Active monitor — centered", "Active monitor — top-center", and "Primary monitor — centered"
+- **THEN** the "POSITION" section shows the "Launcher window position" selector with the four options
+  and the stored value selected
+- **AND** the monitor-targeting options are labelled "Active monitor – centered", "Active monitor –
+  top-center", and "Primary monitor – centered"
 
 #### Scenario: Default position
 - **WHEN** no launcher window position has been stored
-- **THEN** "Active monitor — centered" is selected
+- **THEN** "Active monitor – centered" is selected
 
 #### Scenario: Persist on save
 - **WHEN** the user selects a launcher window position and chooses "Save"
