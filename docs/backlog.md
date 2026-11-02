@@ -2,82 +2,10 @@
 
 Parked findings and deferred work. Each item records evidence, severity, a proposed remedy, and the
 trigger that should bring it back. The pipeline protocol (`pipeline-protocol` skill) reviews this
-file during `/pipe-resume`; do not re-derive parked work from conversation history.
+file during `/pipe-resume`; do not re-derive parked work from conversation history. Resolved entries
+are pruned from this list once their evidence is no longer needed; recover them from git history.
 
 ## Architecture and design
-
-### Refactoring and simplification portfolio (2026-10-30 analysis) - **[done 2026-10-30]**
-
-- Severity: Medium (maintainability; no direct user impact except the linked defect entries)
-- Evidence: read-only analysis of 486 C#/XAML files (54,954 lines) with build/test/validate green
-  (1,259 tests). Exact eight-line duplication in `src/` is negligible; cost is concentrated in a few
-  god classes and repeated policy:
-  - `SettingsViewModel` is 1,925 lines with ~72 public members and a 13-parameter constructor;
-    `Load()` is 128 lines with ~30 direct field writes plus 44 manual notifications
-    (`src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:1302-1429`), and the option records,
-    `WatchedDirectoryRow`, scanning editor, accent state, update card, and persistence mapping all
-    live in the same class (`:26-259`, `:858-925`, `:1466-1736`, `:1800-1924`).
-  - `SettingsApplicationService` is 558 lines; `SettingsInput`/`SettingsDraft` flatten the same five
-    scanning fields (`:55-60`, `:106-111`) while `ScanningSettingsInput` already exists (`:140-144`);
-    validation and the persistence block are written twice (`:270-344`, `:348-357` vs `:488-496`);
-    `Save` maintains three hand-written apply/rollback/persist lists (`:449-498`, `:516-521`).
-  - `AgentManagementViewModel` is 823 lines and repeats the CTS + generation + linked-token guard
-    three times and the per-card busy prologue/finally twice (`:413-419`, `:484-490`, `:548-584`,
-    `:702-735`; also `AgentPaneController.cs:92-96`).
-  - `LaunchWindowViewModel` had a 12-parameter constructor (`:54-65`), a dead
-    `IUserNotificationService` dependency (`:26,71`), and constructed its action coordinator
-    itself (`:78-106`). Resolved by slice 4 on 2026-10-30: 11 parameters, no dead dependency, and
-    one deliberately inline coordinator.
-  - `ProjectScanningService` is 610 lines and implements the full pass and single-root pass twice
-    (`:381-429` vs `:458-500`) with two removal algorithms (`:503-590`).
-  - `WindowsRuntimeLocator` is 544 lines and repeats the PATH scan and candidate probe per runtime
-    (`:295-329`/`:369-395`, `:446-501`).
-- Proposed remedy: sequence into independent, behavior-preserving OpenSpec changes:
-  1. `settings-viewmodel-decomposition` - **[done 2026-10-30: slice 1 `0d9b217`/`72fda1c`, slice 2 `531a1ed`/`473df0a`]**
-     option/navigation types moved to `SettingsOptions.cs`, `WatchedDirectoryRow.cs`, and
-     `SettingsNavigation.cs`; `SettingsPageCatalog` extracted; the 13-arg DI factory replaced with
-     `AddTransient<SettingsViewModel>()`; then `SettingsUpdateCard`, `AccentSelection`, and
-     `WatchedDirectoryEditor` extracted with the XAML binding moves. The view model dropped from 1,925
-     to 1,616, then 853 lines. The `TryAddWatchedDirectory` duplicate-add quirk is out of scope here and
-     is now parked as its own entry under "Projects and scanning".
-  2. `agent-management-pass-consolidation` - **[done 2026-10-30: `5627010`/`c0ecb09`]** one
-     restartable-pass primitive and one card-action scope; the duplicated busy-state raisers are merged.
-  3. `settings-save-pipeline-unification` - **[done 2026-10-30: `8e1b647`/`0053f13`]**
-     `ScanningSettingsInput` nested in the input/draft records, one normalization, one
-     `WriteScanning`, one `WritePreferences`, and one apply/rollback table.
-  4. `launch-window-composition` - **[done 2026-10-30: `da80c4f`/`732c9af`]** the dead
-     `IUserNotificationService` dependency is gone (11-parameter constructor); show/activate/hide
-     policy moved into the view model (`PrepareForShow`, `PrepareForActivation`, `MarkShown`,
-     `ShouldHideOnDeactivate`); `LaunchWindowViewModelBuilder` collapses to one `Compose()` helper.
-     `WindowActionCoordinator` stays inline-constructed: its three view-model delegates make
-     constructor injection circular, and the context/factory alternatives had only one consumer.
-  5. `scanning-and-runtime-probe-unification` - **[done 2026-10-30: `76aac1d`/`5b429a2`]** one scan
-     pass shape, one executable probe helper, shared `AgentProbePolicy`/`UpdateCheckSource` policy.
-  6. `composition-and-dead-path-cleanup` - **[done 2026-10-30: `composition-and-dead-path-cleanup`]**
-     single process-registration home, remove the unreachable instance check and tray relay, and
-     tier-3 dead members.
-  7. `test-support-consolidation` - **[done 2026-10-30]** shared `RunOnSta`/repository-root
-     helpers, `InlineOperationLifetime` fake, `AgentManagementViewModelBuilder`, and
-     `SettingsViewModelFixture`; the 2,347-line agent test file is split into six partial-class
-     files by concern (69 methods, 28/12/22/4/3); test project package versions centralized in
-     `tests/Directory.Packages.props`.
-- Trigger: the next refactoring cycle; adopt one change at a time, smallest first, with the existing
-  suite as the safety net.
-
-### `IStartupWindow` is an empty marker interface after the tier 2 cleanup - **[done 2026-11-01: remove-startup-window-marker]**
-
-- Severity: Low (structural; no user impact)
-- Evidence: `remove-unused-code-tier2` removed `ShowOnPointerMonitor` from
-  `src/CLIHub/Startup/IStartupWindow.cs`, leaving the interface with no members. It survives only as
-  the type of `IApplicationStartupUi.LaunchWindow` and the
-  `ApplicationStartupContext.SetMainWindow` delegate parameter, both of which always receive the
-  concrete `LaunchWindow`.
-- Proposed remedy: type those two members as `LaunchWindow` (or introduce a narrower window
-  abstraction if a second implementation appears), then delete `IStartupWindow`.
-- Trigger: the next change that touches startup composition or app bootstrapping, or a second
-  implementer of `IStartupWindow`.
-- Status: resolved by `remove-startup-window-marker` (2026-11-01): `IStartupWindow.cs` was deleted and
-  both members are typed as `CLIHub.Views.LaunchWindow`; no behavior change.
 
 ### Architectural improvement proposals (2026-10-29 analysis)
 
@@ -138,193 +66,7 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Trigger (reopen): a further cross-concern edit that still forces synchronized mapping changes, or
   the `config-format-v2` decision below.
 
-## Agent and process domain
-
-### Detect failure restores install state but not the version (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
-
-- Severity: Low — exception path only, no notification fires there, and it self-heals on the next
-  successful pass.
-- Evidence: `DetectAsync` snapshots only `InstallState`
-  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:437`) and, on a thrown probe, restores
-  that state for every flipped card (`:462-472`); cards that had already settled keep the
-  `Version`/`UpdateAvailability` the abandoned pass wrote. `DetectCardAsync` has the same family
-  (`:422-428` with `ApplyProbeResult` `:490-503`). `DefaultAgentDetail` (`:110-125`) reads only
-  `Version`, so after a later selection change a card restored to NotInstalled can pair
-  "(Not installed)" in the selector with "Version 2.0" in the summary. The spec scenario "Detecting
-  never persists after a failed probe" is satisfied.
-- Proposed remedy: snapshot `Version` and `UpdateAvailability` together with `InstallState` and
-  restore all three on a thrown pass, or revert only the cards still `Detecting` and leave settled
-  cards wholly settled; extend the existing restore tests to the chosen rule.
-- Trigger: the next change touching `AgentManagementViewModel`'s probe paths, or a report of a
-  version line beside an uninstalled agent after a failed Detect.
-
-### Dispose racing a Detect pass can leave unprobed cards in Detecting (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
-
-- Severity: Low — the surface is torn down, and `Load()` rebuilds the cards, so nothing renders the
-  residual state.
-- Evidence: `DetectAsync` returns early when `this.disposed`
-  (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:451-454`); cards flipped to
-  `Detecting` at pass start (`:441-444`) that were never probed keep that state, because the
-  restore path runs only for exceptions.
-- Proposed remedy: treat the early return like a cancelled pass — restore the snapshot before
-  returning, or route it through the exception restore path.
-- Trigger: reuse of a disposed or abandoned section instance, or a future surface that keeps cards
-  alive across a cancelled Detect.
-
-### A failed manual update check leaves no summary and stale indicators (low, deferred) - **[done 2026-11-01: agent-pass-abort-settling]**
-
-- Severity: Low — exception path only; the next successful check or a page reload heals it.
-- Evidence: `CheckUpdatesAsync` clears `UpdateCheckSummary` at the start and only rebuilds it after
-  `Task.WhenAll` (`src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs:518,545-550`), so a
-  thrown `CheckAsync` leaves the line empty; cards checked before the failure keep their fresh
-  results, cards after it keep the previous (possibly stale) advisory indicators. `InvalidateFor`
-  has already dropped their cached results, so the next press re-fetches. The failure is logged by
-  the operation lifetime (`ApplicationOperationLifetime`, "Application operation failed").
-- Proposed remedy: on a thrown pass, either restore the pre-pass indicators for every card or set a
-  short failure summary (for example "Update check failed") so the empty line cannot read as "no
-  updates"; cover the half-finished pass in a test.
-- Trigger: a report of a silent or ambiguous manual update check, or the next change touching
-  `CheckUpdatesAsync`.
-
-### Runtime integration tests pass silently when the runtime is absent
-
-- Severity: Low
-- Evidence: `LaunchAsync_GitBash_ChildStartsInWorkingDirectory` and
-  `LaunchAsync_PowerShell7_ChildStartsInWorkingDirectory`
-  (`tests/CLIHub.Core.Windows.Tests/WindowsInteractiveProcessRunnerTests.cs`) `return` early —
-  reported as passed, not skipped — when the runtime cannot be resolved on the machine.
-- Proposed remedy: use a skip mechanism (for example `SkippableFact`) so CI reporting distinguishes
-  "not run" from "passed".
-- Trigger: a CI coverage review or a hidden-regression investigation.
-
-## Projects and scanning
-
-### Project acquisition and correction triage (2026-10-31)
-
-- Severity: Medium (product behavior; triage only)
-- Evidence: audited at HEAD `ccf4285` against the archived scanning/project-management designs, the
-  live specs, source, and tests. Findings A (launch-window provenance), F (change a manual project's
-  folder), and E (removal-confirmation ownership) were implemented and archived:
-  `2026-10-31-launch-window-project-provenance` (`c579511`/`d6d9ca2`/`1d33add`, archive `d67d95c`),
-  `2026-10-31-project-path-correction` (`d17bb92`/`a205edb`, archive `bd94040`), and
-  `2026-10-31-project-removal-dialog-ownership` (`2bf240d`/`72b1f25`, archive `be19281`). Smoke
-  follow-ups: `2026-10-31-project-path-refresh` (`7b8bde0`/`eda2421`/`205c157`) and
-  `2026-10-31-provenance-mark-contrast` (`f0ae96e`/`6207e95`/`3cd52aa`). Findings B, C, D, G, and H
-  are recorded below (B resolved, C/D deferred pending a product discussion, G a watch item, H already
-  done). No live folder monitoring and no config-format redesign are in scope.
-- Status: the accepted work is complete and archived; the remaining product items C/D are dropped.
-- Decision (2026-11-01): findings C and D are dropped. Their text was never written down here and
-  cannot be recovered from the archive (searched `openspec/changes/archive` for "Finding C"/"Finding D"
-  — no matches), so they cannot be triaged, planned, or verified; no user report has referenced them
-  since the 2026-10-31 audit. Nothing was implemented for them.
-- Reopen trigger: a user report that matches a still-unexplained project-acquisition or correction
-  gap; that report gets its own entry with fresh evidence rather than a reconstruction of C/D.
-
-### Explicit "Rescan now" action - **[done 2026-10-31]**
-
-- Severity: Low (stale deferred item)
-- Evidence: the archived design deferred an explicit rescan
-  (`openspec/changes/archive/2026-10-11-settings-projects-scanning/design.md:74`) while the status
-  stayed read-only. At HEAD `ccf4285` the controls already exist:
-  `WatchedDirectoryEditor.ScanNowCommand` performs the full pass through `IProjectScanner.Reload()`
-  (`src/CLIHub/ViewModels/Settings/WatchedDirectoryEditor.cs:80,315`); per-root rescan uses
-  `ScanWatchedDirectoryCommand` and `IProjectScanner.Rescan(root)` (`:77,300,541`,
-  `src/CLIHub/Views/SettingsProjectsPage.xaml:91-95`); the page header exposes "Scan Now" with the
-  tooltip "Rescan every watched root" (`src/CLIHub/Views/SettingsWindow.xaml:174-181`).
-- Status: resolved by the shipped scanning UI; nothing was re-implemented.
-- Residual evidence: none.
-
-### Adding an already-watched folder is a silent no-op reported as success - **[done 2026-11-01: watched-directory-duplicate-feedback]**
-
-- Severity: Low (UI feedback only; no data loss and no wrong persisted state)
-- Evidence: `TryAddWatchedDirectory` adds a row only when no row with the same path exists
-  (`src/CLIHub/ViewModels/Settings/WatchedDirectoryEditor.cs:491-508`) and then falls through to
-  `return true` (`:510`) for the duplicate case. Both callers treat `true` as success:
-  `AddWatchedDirectory` clears `NewWatchedDirectoryText` and the validation error (`:456-463`), and
-  `AddWatchedDirectoryFromPicker` clears both errors (`:441-454`). So typing or picking a folder that
-  is already monitored clears the input and shows nothing, while the list and the summary count stay
-  unchanged — the user cannot tell whether the add worked or the folder was already there. No test
-  covers the duplicate path: `SettingsViewModelApplicationTests` covers add-success (`:286`),
-  missing folder (`:302`), and apply failure (`:316`) only.
-- Proposed remedy: make the duplicate case distinguishable from success — either return `false` with
-  a dedicated message (for example "That folder is already monitored") so the existing error surface
-  and input retention apply, or return a result value the callers map to an informational message.
-  Add one test per caller (typed path and picker) asserting the message and that the count is unchanged.
-- Note: this quirk was previously mentioned only parenthetically in the refactoring portfolio entry
-  ("The parked `TryAddWatchedDirectory` quirk remains out of scope") without its own evidence,
-  remedy, or trigger; it is recorded here so the deferred finding is not lost.
-- Trigger: a report of an add that "did nothing", the next change touching
-  `WatchedDirectoryEditor` add/validation paths, or a redesign of the watched-directory list feedback.
-- Resolved (2026-11-01) by `watched-directory-duplicate-feedback`: the duplicate branch now sets `WatchedDirectoryError` to "That folder is already monitored." and returns `false`, so both commands keep the typed input and surface the message while the root list and count stay unchanged; two caller-level tests cover the typed path and the picker, and no persisted-state invariant changed.
-
-### Per-project / per-agent filtering - **[closed 2026-10-31]**
-
-- Severity: Low (exploratory product direction)
-- Evidence: per-project agent filtering was deferred in
-  `openspec/changes/archive/2026-09-27-project-management/design.md:128`. Shipped behavior is one
-  global preference: `showOnlyProjectAgents` hides agents not detected in the selected project
-  (`src/CLIHub/ViewModels/Launch/LaunchWindowViewModel.cs:198-218`,
-  `src/CLIHub/ViewModels/Agents/AgentPaneController.cs:82-103`; the action is
-  "Only agents available in project" at `src/CLIHub/ViewModels/Launch/LaunchWindowActionBuilder.cs:44-50`).
-  Detection is marker-based through each plugin's `projectIndicators`, not a theoretical
-  "launchable in any project" check.
-- Decision (2026-10-31): the global detection-based filter is the intended behavior. No per-project
-  allowlist or manual override is needed; no case of a used-but-undetected agent was reported.
-  Reopen only if such a case appears, or if per-project filter state is explicitly requested.
-- Residual evidence: none.
-
-### Provenance-mark style is duplicated across two project surfaces - **[done 2026-10-31]**
-
-- Severity: Low (maintainability; both definitions currently use identical tokens)
-- Evidence: `SettingsProjectRegistryPage.xaml:10-24` holds the local `ProjectProvenanceMark` style;
-  `launch-window-project-provenance` adds an equivalent style in `LaunchWindowStyles.xaml` rather
-  than editing the Settings page, so the two findings can be committed independently. Both use
-  `Sizing.FontSize.Section`, `TextMutedBrush`, `AccentSelectionBrush`, and a `CanRemove` trigger.
-- Resolved (2026-10-31) by `provenance-mark-contrast`: promoted to `Controls.xaml` with the contrast-safe brush rule (manual `TextPrimaryBrush`, discovered `TextMutedBrush`).
-- Trigger: a third surface needs the mark, or the mark's visual values change.
-
-### Recent-projects limit is hardcoded to 10 - **[closed 2026-10-31]**
-
-- Severity: Low (no reported pain)
-- Evidence: `src/CLIHub/Tray/TrayStateProjection.cs:51` calls `GetRecentProjects(10)`; the service
-  API already accepts a limit (`src/CLIHub.Core/Projects/IProjectService.cs:21-25`). The deferred
-  note is `openspec/changes/archive/2026-09-27-project-management/design.md:129`.
-- Decision (2026-10-31): keep the tray recent-projects cap at 10. No user request or reported pain;
-  a future preference needs no service change because the limit is already a parameter.
-- Reopen trigger: a user request for a different recent-projects count. Residual evidence: none.
-
 ## DI and lifetime
-
-### Process composition has two registration owners - **[done 2026-10-30: composition-and-dead-path-cleanup]**
-
-- Severity: Low (latent; the shipping graph is correct today)
-- Evidence: four process services are registered in
-  `src/CLIHub.Core.Windows/WindowsServiceCollectionExtensions.cs:47-63` and again in
-  `src/CLIHub/Composition/ServiceRegistration.cs:55-59`. MS.DI keeps the last descriptor, so the
-  Windows factories never run in the app but do run in the adapter tests; `AgentProcessMatcher` is
-  resolvable only because Core registers it at
-  `src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs:140`.
-- Proposed remedy: register Core-owned process services once in Core, leave platform adapters in
-  `AddWindowsInfrastructure`, and add `Assert.Single` uniqueness guards for the four types.
-- Trigger: the next change to process composition, or a Windows factory change that has no effect.
-- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the four registrations moved to Core
-  `AddProcessServices`, both duplicate sets were deleted, and `Assert.Single` guards plus resolution
-  tests were added.
-
-### Second single-instance check is unreachable in the shipping app - **[done 2026-10-30: composition-and-dead-path-cleanup]**
-
-- Severity: Low (defensive duplication)
-- Evidence: `ApplicationHost.Start` exits a duplicate before building the provider
-  (`src/CLIHub/Startup/ApplicationHost.cs:49-56`); the provider then owns the same guard, whose
-  `IsFirstInstance` is captured in its constructor
-  (`src/CLIHub.Core.Windows/SingleInstanceGuard.cs:16,57`). `ApplicationBootstrapper` repeats the
-  check plus signal/shutdown (`:55-59`), and `InstanceCoordinator.Coordinate` can therefore only
-  return `FirstInstance` in production.
-- Proposed remedy: let the host own the decision and delete the coordinator, or keep the defensive
-  check and document it as test-only; do not leave it looking like a live second path.
-- Trigger: the next startup-composition change.
-- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the bootstrapper's defensive
-  coordinator check was deleted; `ApplicationHost` remains the only single-instance decision point.
 
 ### Transient IDisposable chain retained by the root provider
 
@@ -367,34 +109,6 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   lost, restore an explicit guard instead of suppressing the warning.
 - Trigger: any version bump of `Xunit.SkippableFact`.
 
-### Duplicated test helpers and no shared view-model builders - **[done 2026-10-30]**
-
-- Severity: Low (test-only maintenance)
-- Status: resolved by `test-support-consolidation`. `tests/CLIHub.Tests/Support/TestHelpers.cs` now
-  owns `RunOnSta(Action, string message)`, a cached `Lazy<string>` repository-root lookup, and
-  `InlineOperationLifetime` (17 duplicate copies deleted, all 33 `RunOnSta` call sites keep their
-  original message text). `Builders/AgentManagementViewModelBuilder.cs` replaces the 70
-  `CreateViewModel(...)` call sites, and `Builders/SettingsViewModelFixture.cs` replaces the
-  51-site nested fixture. The 2,347-line agent test file is split into six partial-class files
-  (69 methods; one test class preserved so the timing-gated tests stay serial). The registration
-  uniqueness guard was already present at `Composition/ServiceRegistrationTests.cs:77-80` and was
-  verified rather than duplicated.
-- Residual evidence: none. Test project package versions now live in `tests/Directory.Packages.props`.
-
-### Test project global usings are duplicated across the three csproj files - **[done 2026-10-31]**
-
-- Severity: Low (6 duplicated lines, test-only build metadata)
-- Status: resolved. `tests/Directory.Build.props` now owns `<Using Include="Xunit" />` and explicitly
-  re-imports the repository-root `Directory.Build.props`, so `BaseOutputPath`,
-  `BaseIntermediateOutputPath`, `Version`, `LangVersion`, and `EnforceCodeStyleInBuild` still apply to
-  all three test projects (verified for each project with `dotnet msbuild -getProperty`:
-  `artifacts\<Project>\`, `obj\<Project>\`, `1.0.3`, `14.0`, `true`). `<Using Include="System.IO" />`
-  was deleted from `CLIHub.Core.Tests` and `CLIHub.Core.Windows.Tests`, where it is implicit for
-  `Microsoft.NET.Sdk`, but kept in `CLIHub.Tests`: that project sets `UseWPF=true`, and the
-  WindowsDesktop SDK's implicit usings do not include `System.IO`, so removing it failed the build
-  with 148 errors.
-- Residual evidence: none.
-
 ### Single unexplained test failure (not reproduced)
 
 - Severity: Low (watch item)
@@ -418,79 +132,10 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `--filter "FullyQualifiedName~ProjectScanningServiceTests"`. No failure name to capture; the
   assertion was not changed. Stays a watch item.
 
-### CheckCardUpdatesCommand test races the card-action reset (low, flaky) - **[done 2026-10-31]**
-
-- Severity: Low (test-only race; not a product bug)
-- Evidence: `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.cs:1609`
-  (`Assert.False(viewModel.IsCardActionRunning)`) failed once on 2026-10-30 during verification of
-  `remove-unused-code-tier1` (Expected False, Actual True), then passed in isolation and in five
-  repeat runs. The `SpinWait` predicate (`AgentManagementViewModelTests.cs:1605`,
-  `CheckCardUpdatesCommand.CanExecute(cardA)`) becomes true at `AgentManagementViewModel.cs:725`
-  (`card.IsCheckingUpdates = false`) *before* `ExitCardAction()` clears `IsCardActionRunning` at
-  `:726`, so the assertion can observe that intermediate state under parallel load. Not caused by
-  that change: neither file is in its diff.
-- Proposed remedy: extend the `SpinUntil` predicate to also require `!viewModel.IsCardActionRunning`,
-  or spin on `IsCardActionRunning` before the final assertion.
-- Trigger: the next red run of
-  `CheckCardUpdatesCommand_WhilePerCardCheckRuns_DisablesOnlyTheActingCardAndGatesHeader`, or a CI
-  flake carrying that test name.
-- Resolved (2026-10-31, `test-stability-hardening`): the `SpinUntil` predicate at
-  `AgentManagementViewModelTests.UpdateAvailability.cs:420` now also requires
-  `!viewModel.IsCardActionRunning`, so it covers both `setBusy(false)` and `ExitCardAction()`.
-  The same intermediate-state race existed in the sibling `DetectCardCommand_WhilePerCardDetectRuns`
-  predicate (`AgentManagementViewModelTests.Detection.cs:352`) and was fixed the same way. No
-  assertion was relaxed; targeted runs were 5/5 green.
-
-### ApplicationHost null-argument tests fail while the app is running - **[done 2026-10-31]**
-
-- Severity: Low (test isolation; the suite result depends on machine state, not on the code under test)
-- Evidence: `tests/CLIHub.Tests/ApplicationHostTests.cs:27` (`Start_WithNullDispatch_ThrowsArgumentNullException`)
-  and `:40` (`Start_WithNullSetMainWindow_ThrowsArgumentNullException`) report
-  `Assert.Throws() Failure: No exception was thrown` whenever a CLIHub instance is running. Reproduced on
-  2026-10-23 during the `accent-independent-of-theme` smoke: with the app open `CLIHub.Tests` reported
-  410 passed / 2 failed; after closing it, 412 / 412 passed with no code change. The single-instance
-  guard short-circuits `ApplicationHost.Start` (a second instance exits before the argument checks), so
-  the null-argument guard is never reached.
-- Proposed remedy: make single-instance ownership injectable into `ApplicationHost` (or bypass it in a
-  test mode) so the argument validation is exercised regardless of a running instance, then assert both
-  the null-argument exceptions and the ownership path explicitly.
-- Trigger: the next red `CLIHub.Tests` run that coincides with the application being open, or any CI job
-  that runs the suite on a machine where CLIHub autostarts.
-- Resolved (2026-10-31, `test-stability-hardening`): both null-argument tests now build the host
-  through `CreateHostWithUniqueGuard`, which injects unique mutex/pipe names. The host is therefore
-  always the first instance, so the production single-instance shortcut can no longer mask the
-  argument checks; the `ParamName` assertions are unchanged.
-
-### ApplicationHost second-instance activation test times out on CI (low, deferred) - **[done 2026-11-02: single-instance-activation-reliability]**
-
-- Severity: Low (CI flake; the same test passes locally and on the next commit).
-- Evidence: CI run `40226957693` (commit `7355819`) failed
-  `ApplicationHostTests.Start_SecondInstance_SignalsActivationAndSkipsEnvironmentSetup`
-  (`tests/CLIHub.Tests/ApplicationHostTests.cs:46-76`) with `System.TimeoutException` at `:70` after its
-  5 s wait; the following commit `bdd9770` passed the same test on the same runner image. The signal is
-  best-effort: `SignalActivation` makes two `Connect(500)` attempts with a 100 ms pause and swallows
-  every failure (`src/CLIHub.Core.Windows/SingleInstanceGuard.cs:70-87`), while the listening server is
-  started through `Task.Run` in the constructor (`:59-63`). On a cold or loaded runner the pipe server
-  may not yet sit in `WaitForConnectionAsync` when the duplicate signals, so the signal is lost and
-  nothing retries.
-- Proposed remedy: retry the connect until an overall deadline (~2 s) instead of two fixed attempts, or
-  retry signalling from the test until the activation event fires; optionally expose a server-ready
-  signal for tests.
-- Trigger: a second CI occurrence, or a user report that launching the app while it is already open
-  does not bring the window forward.
-- Resolved (2026-11-02, `single-instance-activation-reliability`): the first instance now creates its
-  `NamedPipeServerStream` synchronously in the guard constructor, so the pipe is listening before the
-  constructor returns, and `SignalActivation` retries on a monotonic `Environment.TickCount64` deadline
-  (~2 s) with exponential backoff (50 ms to 500 ms) instead of two fixed attempts. The second CI
-  occurrence (Release run `41374596015` on v1.0.5) is the trigger that closed this entry.
-  `SingleInstanceGuardTests` covers the immediate-signal race window, a client that connects before the
-  server waits, repeated activations over one guard, and the bounded silent-failure path; the
-  `ApplicationHost` test passed 10/10 repeated runs.
-
 ### Speculative test-infrastructure ideas from `tests/CLIHub.Tests/README.md`
 
 - Severity: Low (speculative; the current suite works without any of them)
-- Evidence: the "Future Improvements" section at `tests/CLIHub.Tests/README.md:252-267` (commit `1c27693`)
+- Evidence: the "Future Improvements" section formerly in `tests/CLIHub.Tests/README.md` (commit `1c27693`)
   listed five enhancements that were never planned, and the section was deleted when that file was
   trimmed to the `LaunchWindowViewModelBuilder` walkthrough (`testing-conventions-doc`, 2026-11-01).
   Five ideas are preserved here: builders for `ProjectPaneController` and `AgentPaneController`;
@@ -596,27 +241,6 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
   mechanism to project level is a later, separate decision.
 
-### Concurrent writers can clobber `.opencode/pipeline.json` - **[done 2026-10-31]**
-
-- Severity: Medium (silent loss of pipeline state, no error surfaces)
-- Evidence: the sidebar plugin only reads the file, but every orchestrator session rewrites it
-  read-modify-write (read JSON, mutate, temp file + rename) with no lock or revision check. On
-  2026-10-22 two sessions wrote the same file minutes apart: the theme workstream advanced
-  `theme-xaml-structure` (18:21) and `live-theme-switch` (20:28) while the sidebar-limit work
-  appended `pipeline-sidebar-limit`; each write preserved the other's data only because it happened
-  to re-read first. A write landing between another writer's read and its rename drops that
-  writer's transition silently.
-- Proposed remedy: keep one writer per project (orchestrator owns the file) or serialize with a
-  lock file, and make the write re-read and retry when the top-level `updatedAt` changed since the
-  read (compare-and-swap). `.opencode/scripts/pipeline-state.mjs` is now the intended single writer
-  and re-applies the operation when the target's `mtimeMs`/`size` changed before the rename (3
-  attempts); this entry stays open until every writer uses it.
-- Trigger: the first stage transition that vanishes from the sidebar, or the first two sessions
-  that run pipeline work in the same project at the same time.
-- Closed by policy (2026-10-31): the only state-file writer in the repository is
-  `.opencode/scripts/pipeline-state.mjs`; `AGENTS.md` pins the sidebar plugin to read-only, and
-  `pipeline-state check` reports 10 ok / 0 warnings. Reopen if a second writer is introduced.
-
 ### `pipeline-state check` cannot validate commit shas from foreign repositories
 
 - Severity: Low (informational warning only; `check` still exits 0 and the sidebar is unaffected)
@@ -638,45 +262,6 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   foreign-repo sha returns.
 
 ## UI and theming
-
-### Dead-path residue after tier 2 - **[done 2026-10-30: composition-and-dead-path-cleanup]**
-
-- Severity: Low
-- Evidence: the placeholder settings page is unreachable because every `SettingsPage` entry passes
-  `IsImplemented: true` (`SettingsViewModel.cs:281-352`; only tests construct `false`), and
-  `PagesByGroup`/`PageGroups` are test-only (`:407-410`, `:558`). `ApplyStartupUpdateCheck` only logs
-  (`src/CLIHub/Settings/PreferenceApplier.cs:84-85`). The tray handler's
-  `UpdateDownloadRequested`/`ShowLaunchWindow`/`Exit` slots are overwritten by
-  `TrayIconController.RefreshMenu` (`src/CLIHub/Tray/TrayIconController.cs:129-134`), making the
-  handler-to-actions relay unreachable. `AgentProcess.Runtime` is never assigned
-  (`src/CLIHub.Core/Processes/AgentProcess.cs:34`; no `Runtime =` in `src`/`tests`).
-- Proposed remedy: remove the unreachable paths in one change; keep the placeholder page only if a
-  page is actually planned.
-- Trigger: the next dead-code sweep or composition change.
-- Resolved (2026-10-30) by `composition-and-dead-path-cleanup`: the placeholder page, `PageGroups`,
-  `ApplyStartupUpdateCheck`, the tray relay, and `AgentProcess.Runtime` were removed.
-
-### Spec text still describes the removed placeholder and defensive instance paths - **[done 2026-10-30: align-specs-with-dead-path-cleanup]**
-
-- Severity: Low (documentation drift; no runtime behavior)
-- Evidence: the code paths these statements describe were deleted by
-  `composition-and-dead-path-cleanup`, so the scenarios can no longer be reached:
-  - `openspec/specs/app-lifecycle/spec.md`, scenario "Second instance exits through the provider
-    lifecycle" — the defensive `InstanceCoordinator` check is gone; `ApplicationHost` exits a
-    duplicate before the service provider is built.
-  - `openspec/specs/preferences-ui/spec.md`, Requirement "Settings sections" ("A page whose settings
-    are not yet implemented SHALL show a neutral empty state") and scenario "Page without implemented
-    settings" — every production Settings page is implemented, and `IsImplemented` and
-    `SettingsPlaceholderPage` were removed.
-  - `openspec/specs/settings-theme/spec.md`, scenario "Placeholder page readable" — the placeholder
-    page and the `EmptyStateText` style it used were removed.
-- Proposed remedy: amend or delete those scenarios in a later spec change; do not restore the removed
-  code to match the text.
-- Trigger: the next change that touches Settings page metadata or startup instance handling, or a
-  request to amend the app-lifecycle/preferences-ui/settings-theme specs.
-- Resolved (2026-10-30) by `align-specs-with-dead-path-cleanup` (commit `e35be6f`/archive `575ff89`):
-  the three scenarios were removed; the requirements were replaced under slightly broader names with
-  every other scenario unchanged.
 
 ### Resolver role override ignores exhaustedUntil
 
@@ -702,51 +287,9 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
 - Proposed remedy: one registration point, for example a page factory carried on the metadata.
   Deliberately not done now because it moves view creation into the view model.
 - Trigger: a fifth page group or a fifteenth page.
-- Re-checked (2026-10-31): `SettingsPageCatalog.AllPages` has 9 pages in 3 groups, so neither
-  threshold is close; remains deferred.
-
-### Project and agent rows no longer end symmetrically about the pane divider - **[done 2026-11-01: agent-row-inset-alignment]**
-
-- Severity: Low (cosmetic; 2 DIP, ~1.3 px at 100% scaling)
-- Evidence: `project-row-trailing-inset` set `Sizing.ProjectRow.Padding` to `12,9,12,9` so the project
-  row's own leading and trailing content insets match. That row now ends 22 DIP from the pane
-  divider (`src/CLIHub/Themes/Sizing.xaml:92` right 12 + `Sizing.Pane.Margin` 10 at `:63`), while the
-  agent row still ends 20 DIP from it (`Sizing.AgentRow.Padding` `10,0,10,0` at `:76` + the same pane
-  margin). Before the change both were 20 DIP, which is what the old padding comment claimed.
-- Proposed remedy: set `Sizing.AgentRow.Padding` to `12,0,12,0` so the agent row's content sits 22
-  DIP from the divider and from the window's outer borders, like the project row's, or accept the 2
-  DIP difference. The original draft here said `10,0,12,0`, which had the divider-facing side
-  backwards: the Agents pane sits right of the divider column, so the agent row's left padding faces
-  the divider. Do not restore the project row's trailing padding to 10: the row's symmetric 12 DIP
-  inset is the behavior the change established.
-- Trigger: the next change that touches agent row padding, or a report of the divider-side gap
-  looking uneven at a wide Projects pane.
-- Status: fixed by `agent-row-inset-alignment` (2026-11-01), which set `Sizing.AgentRow.Padding` to
-  `12,0,12,0`; both panes' row content now reads 22 DIP from the pane divider and 22 DIP from the
-  window's outer borders.
-- Residual evidence: none.
-
-### `launch-window-layout` spec contradicts itself about the window width - **[done 2026-11-01: launch-window-width-spec-reconciliation]**
-
-- Severity: Low (documentation drift; no runtime behavior)
-- Evidence: `openspec/specs/launch-window-layout/spec.md:252-254` (scenario "Fixed width and content
-  height": "the window height follows its content and its width does not change") contradicts
-  `:232-234` (scenario "Window fits its content": "the window's width follows the panes, so the window
-  never keeps empty space beside its content") and the actual `SizeToContent="WidthAndHeight"`
-  (`src/CLIHub/Views/LaunchWindow.xaml:20`). Any pane-content width change moves the window: `agent-row-inset-alignment`
-  widened it from 596 to 600 DIP by adding 4 DIP of agent row padding, so the "width does not change"
-  scenario cannot hold as written.
-- Proposed remedy: amend the "Window chrome" requirement's "Fixed width and content height" scenario
-  to say that the width is never user-resizable while it still follows the panes' content widths, or
-  delete the scenario in favor of "Window fits its content". Do not make the window fixed-width to
-  match the text: `Auto` pane columns plus `SizeToContent` are the established behavior.
-- Trigger: the next change that touches launch-window sizing, pane widths, or the
-  `launch-window-layout` spec.
-- Status: fixed by `launch-window-width-spec-reconciliation` (2026-11-01), which corrected the
-  "Fixed width and content height" scenario's body (the scenario's name is unchanged — OpenSpec's
-  MODIFIED delta mechanism does not support a scenario-level rename) to state the window's
-  height-follows-content and non-user-resizable facts without claiming the width is constant.
-- Residual evidence: none.
+- Re-checked (2026-11-02): `SettingsPageCatalog.AllPages` now has 10 pages in 3 groups (the
+  Agent Detection page was added after the previous recheck), so neither threshold is close;
+  remains deferred.
 
 ### Single-use FontSize and CornerRadius literals stay untokenized
 
@@ -765,10 +308,13 @@ file during `/pipe-resume`; do not re-derive parked work from conversation histo
   `FrameworkElementAutomationPeer.GetNameCore()` falls back to `GetPlainText()`, and
   `TextBlockAutomationPeer.IsControlElementCore()` keeps it in the Content view. A probe against the
   .NET 10 reference assemblies confirmed it:
-  `TextBlockAutomationPeer: Name='\uE713' CtrlType=Text IsContent=True`. Sites: the Settings
-  page-header emblem (`src/CLIHub/Views/SettingsWindow.xaml:434-440`, this change's added `TextBlock`),
-  the sidebar page glyph (`src/CLIHub/Views/SettingsWindow.xaml:372-377`), and the `SettingCard` icon
-  box (`src/CLIHub/Themes/SettingsStyles.xaml:214-230`, glyph `TextBlock` at `:224-229`). There is no
+  `TextBlockAutomationPeer: Name='\uE713' CtrlType=Text IsContent=True`. Current sites: the Settings
+  page-header emblem (`src/CLIHub/Views/SettingsWindow.xaml:424-430`, whose comment already records
+  the WPF limitation), the sidebar page glyph (`SettingsWindow.xaml:362-367`), the `SettingCard` icon
+  box (`src/CLIHub/Themes/SettingsStyles.xaml:214-230`), the section-header glyph
+  (`SettingsStyles.xaml:390-396`), and the status-chip glyph (`SettingsWindow.xaml:123`). The
+  `settings-page-icons` change centralized the glyph values in `themes/IconGlyphs.cs`, which makes a
+  shared decorative element easier to apply, but it did not add an accessibility opt-out. There is no
   per-element opt-out: `AutomationProperties.Name=""` is ignored (the peer falls back to the text) and
   `AutomationProperties.AccessibilityView` does not exist in WPF.
 - Proposed remedy: one shared decorative-glyph element whose `OnCreateAutomationPeer()` returns `null`
