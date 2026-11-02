@@ -169,8 +169,31 @@ are pruned from this list once their evidence is no longer needed; recover them 
 - Proposed remedy: give each concurrent session its own worktree (`opencode.worktree_create`) instead
   of sharing one checkout, and after every `openspec archive` re-check `git status` plus
   `openspec list` rather than trusting the command's own output.
+- Status: mitigated by `concurrent-session-archive-safety` (2026-11-02): worktree isolation, post-archive
+  checks, and sole-writer discipline are now rules; reopen if a shared-checkout loss recurs.
 - Trigger: any second session in the same checkout, or an archived change reappearing in
   `openspec list`.
+
+### Recovery from concurrent-session loss
+
+When concurrent-session loss is detected (archived change reappears, spec reverts, pipeline state emptied):
+
+**Tracked OpenSpec/spec files:**
+1. Run `git reflog` to find the last known good commit before the loss.
+2. Run `git restore --source=<sha> -- <paths>` to restore specific files (preferred), or
+3. Run `git reset --hard <sha>` to restore the entire working tree (requires explicit user approval per
+   AGENTS.md, and only when unrelated work is not at risk).
+
+**`.opencode/pipeline.json` (gitignored):**
+1. Restore from the OpenCode snapshot store (for example `~/.local/share/opencode/snapshot/<project-hash>`
+   on this machine), or
+2. Reconstruct entries with `node .opencode/scripts/pipeline-state.mjs add/update`.
+
+**Verify restoration:** Run `git status`, `openspec list`, `openspec validate --all`, and
+`node .opencode/scripts/pipeline-state.mjs check`.
+
+The 2026-11-01 OpenSpec files were restored from HEAD, and the 2026-11-02 pipeline state from a session
+snapshot.
 
 ### `graphify update .` success is ambiguous to shell wrappers
 

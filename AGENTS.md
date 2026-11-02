@@ -62,10 +62,23 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
 
 - You MUST get explicit user approval before `git commit`, `git push`, `git reset`/`git revert` that rewrites
   history, `openspec archive`, or moving a change into `openspec/changes/archive/`.
+- **Concurrent sessions:** Every concurrent orchestrator session MUST use its own worktree (the OpenCode
+  `worktree_create` tool) instead of sharing one checkout. A single session at a time may use the primary
+  working tree. Running two sessions in the same working tree causes silent file reversions (archived
+  changes reappearing, specs reverting, pipeline state loss) that require manual recovery from git history
+  or session snapshots.
 - Approval applies only to the specific action the user asked for. Approval for one change or commit never
   carries over to a later change, a follow-up task, or another commit.
 - Implement and verify the work first, then report the result and ask whether to archive and commit. Do not
   stage files for a commit that the user has not explicitly approved.
+- **Post-archive integrity check:** After `openspec archive` and its archive commit, verify the following
+  before continuing:
+  - `git status --porcelain` is empty (no unexpected staged or unstaged changes)
+  - `openspec list` does not include the just-archived change
+  - `openspec validate --all` reports 0 errors
+  - `node .opencode/scripts/pipeline-state.mjs check` reports 0 warnings (or expected warnings only)
+
+  If any check fails, stop and report the discrepancy to the user instead of continuing to the next task.
 - For a change with a manual smoke task, `git commit` and `openspec archive` MUST wait until the user
   completes and confirms the smoke: run gates, verify, report, wait for the smoke result, then ask for
   commit/archive approval.
@@ -79,6 +92,8 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
   (`add`/`update`/`prune`), so the 10-entry cap and the atomic compare-and-swap write are enforced in one
   place; stage transitions, stage notes, and commit shas are recorded with `update`. The sidebar plugin
   (`plugins/pipeline-status`) stays read-only and never writes the state file.
+- Never write `.opencode/pipeline.json` directly with `node -e`, shell redirection, or manual JSON edits;
+  every mutation MUST go through `node .opencode/scripts/pipeline-state.mjs`.
 
 ## Documentation and OpenSpec
 
