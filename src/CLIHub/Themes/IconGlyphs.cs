@@ -18,12 +18,15 @@ internal static class IconGlyphs
     public const string Maximize = "\uE922";
     public const string Restore = "\uE923";
     public const string Keyboard = "\uE765";
+    public const string KeyboardShortcut = "\uEDA7";
     public const string Robot = "\uE99A";
     public const string Palette = "\uE790";
     public const string Diagnostic = "\uE9D9";
+    public const string Process = "\uE9F3";
     public const string History = "\uE81C";
     public const string Calendar = "\uE787";
     public const string Equalizer = "\uE9E9";
+    public const string OpenInNewWindow = "\uE8A7";
     public const string Power = "\uE7E8";
     public const string ChevronDown = "\uE70D";
     public const string Location = "\uE81D";
@@ -31,6 +34,7 @@ internal static class IconGlyphs
     public const string Page = "\uE7C3";
     public const string Document = "\uE8A5";
     public const string Sync = "\uE895";
+    public const string SyncFolder = "\uE8F7";
     public const string Ringer = "\uEA8F";
     public const string Info = "\uE946";
     public const string Zoom = "\uE71E";
@@ -42,6 +46,7 @@ internal static class IconGlyphs
     public const string Code = "\uE943";
     public const string Filter = "\uE71C";
     public const string BulletedList = "\uE8FD";
+    public const string CheckList = "\uE9D5";
     public const string FolderOpen = "\uE8B7";
     public const string FolderAdd = "\uE8F4";
     public const string Settings = "\uE713";
