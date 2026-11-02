@@ -8,21 +8,38 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## Unreleased
+## 1.0.5 - 2026-11-02
+
+### Added
+
+- A new "Launch Window" Settings page under General (key `launch-window`, icon `Equalizer`) holds the launcher-positioning and path-display cards moved off the Appearance and Global Hotkey pages; "Appearance" becomes "Theme & Accent" and "Hotkeys & Quick Launcher" becomes "Global Hotkey", with their keys, view-model properties, configuration keys, and behavior unchanged (`launch-window-settings-page`, `preferences-ui`, `settings-theme`).
 
 ### Changed
 
-- A release-preparation sequence now starts with the README screenshots: `docs/images/tools/Capture-ReadmeImages.ps1` runs, and its output is committed, before any other release-preparation commit, so the tagged tree shows the UI that ships; `docs/releasing.md` states the step and `AGENTS.md` repeats the rule (`release-prep-screenshot-refresh`).
+- A release-preparation sequence now starts with the README screenshots: `docs/images/tools/Capture-ReadmeImages.ps1` runs, and its output is committed, before any other release-preparation commit, so the tagged tree shows the UI that ships; `docs/releasing.md` states the step and `AGENTS.md` repeats the rule, and the harness now asserts the shipped 1185 × 918 Settings capture size (`release-prep-screenshot-refresh`).
 - The `launch-window-layout` spec no longer contradicts itself about the launch window's width; the "Window chrome" requirement now states that the window's height follows its content and its size is never user-adjustable, without claiming the width stays constant (`launch-window-width-spec-reconciliation`, `launch-window-layout`).
 - The Settings page header now shows the active page's icon as a plain muted glyph before the title, reusing `SettingsPage.Icon` with no tile, border, or accent, in its own column so the Updates title chip keeps wrapping with the title (`settings-page-header-emblem`, `settings-theme`).
 - The "View release notes" link in the Settings Updates page header moved from the bottom-right of the header onto the title row, immediately after the "Channel: Stable" chip, so the header reads as one line of metadata (title, version chip, channel chip, release-notes link) and one line of actions (status chip and check button) (`updates-release-notes-link-placement`, `preferences-ui`, `settings-theme`).
+- Theme option cards are compact: a 48 DIP preview swatch, a 4 DIP gap to the name with a 2 DIP left offset, palette-accurate swatch colors, the description moved to the tooltip and accessible help text, and the Blue and System cards named "Deep Blue Theme" and "System Theme" with their stored tokens unchanged (`theme-option-card-compact`, `preferences-ui`).
+- Selection on theme and accent cards is drawn by the card's own `AccentBrush` border; the separate selection ring, the theme preview check badge, and the check inside the accent dot are removed, while hover, focus, and selection keep their precedence (`selection-border-indicator`, `preferences-ui`).
+- The Launch Window page's section headers are `POSITION` and `PROJECT PATHS`, and both selectors use an en dash between the subject and the qualifier instead of an em dash (`launch-window-section-labels`, `preferences-ui`).
+- The Settings window's default size is 790 × 612 DIP (1185 × 918 px at 150%), and its sidebar column is `Auto` instead of a fixed 220 DIP, so it sizes to its widest item (`SettingsWindow.xaml`).
+- The Windows adapter tests report a missing PowerShell 7 or Git runtime as a skipped test instead of a pass, through a test-project-only `Xunit.SkippableFact` reference (`runtime-test-conditional-skips`).
+- `docs/testing.md` becomes the repo-wide testing guide: project-to-test-project mapping, `MethodOrScenario_Condition_ExpectedResult`, Arrange/Act/Assert, the mixed strict/loose mock rule, hand-written fakes, `FakeTimeProvider` and temp-directory patterns, the shared `TestHelpers`, skip semantics, the nine architecture-boundary invariants, both spec/test workflows, and the gate commands (`testing-conventions-doc`).
 
 ### Fixed
 
+- Adding an already-watched folder now returns `false` and sets `WatchedDirectoryError` to an explicit message, so both the typed and picker adders keep the input and surface the error instead of reporting success (`watched-directory-duplicate-feedback`, `preferences-ui`, `project-scanning`).
+- The Agent Detection DEFAULTS card detail now reads `Cache TTL · Checking timeout` and its tooltip matches, instead of the generic "Used when a field is empty" (`agent-detection-defaults-detail-copy`, `settings-theme`, `preferences-ui`).
+- An aborted agent detection pass restores the full install-state/version/availability snapshot for cards it never resolved, rebuilds the header counts and default-agent options, and gives `Check updates` an explicit failure summary that does not treat cancellation as a failure (`agent-pass-abort-settling`, `agent-detection`).
 - The launch-window project row's trailing inset now matches its leading 12 DIP inset because the favorite star and the provenance mark right-align in the marker rail (`project-row-trailing-inset`, `launch-window-layout`).
 - The launch-window agent row's horizontal insets are now 12 DIP on both sides, matching the project row, so both panes' row content sits 22 DIP from the pane divider and from the window's outer borders (`agent-row-inset-alignment`, `launch-window-layout`).
 
-## 1.0.4 — 2026-11-01
+### Removed
+
+- The empty `IStartupWindow` interface and its two uses; `IApplicationStartupUi.LaunchWindow` and `ApplicationStartupContext.SetMainWindow` now use the concrete `LaunchWindow` (`remove-startup-window-marker`).
+
+## 1.0.4 - 2026-11-01
 
 ### Added
 

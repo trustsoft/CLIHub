@@ -3,6 +3,28 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.5 — 2026-11-02
+
+### New
+
+- Settings has a new Launch Window page under General that holds the launcher window position and the project path display, which were previously split between the Appearance and Global Hotkey pages.
+
+### Improved
+
+- The Appearance page is now Theme & Accent, and Hotkeys & Quick Launcher is now Global Hotkey, so each page title matches its contents.
+- Theme cards are more compact: each card shows the palette preview and its name, the description moved to the hover tooltip, and the accent color selector now fits on the same screen.
+- A selected theme or accent card is marked by its accent-colored border only, without the extra ring or check badge.
+- The Settings header shows the current page's icon before its title, and the View release notes link on the Updates page moved next to the version and channel chips.
+- Settings opens at a slightly smaller default size, and its sidebar fits its labels instead of keeping a fixed-width gap.
+- The Launch Window page uses shorter section names, POSITION and PROJECT PATHS, and en dashes in its option labels.
+- Project rows and agent rows in the launch window now share the same side padding, so both panes line up with the pane divider and the window edges.
+
+### Fixed
+
+- Adding a folder that is already monitored now reports it instead of clearing the input as though the add had succeeded.
+- The Agent Detection DEFAULTS card now labels its two values as Cache TTL and Checking timeout instead of the generic hint.
+- An interrupted agent detection pass no longer leaves agent cards or the Default agent selector showing stale or contradictory state, and a cancelled Check updates no longer counts as a failure.
+
 ## 1.0.4 — 2026-11-01
 
 ### New
