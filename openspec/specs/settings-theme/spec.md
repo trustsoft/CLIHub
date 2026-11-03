@@ -537,4 +537,4 @@ The Settings window SHALL show three summary cards under the "Agent Detection" p
 #### Scenario: Defaults card detail
 
 - **WHEN** the defaults card is visible
-- **THEN** the detail line shows "Cache TTL · Checking timeout"
+- **THEN** the detail line shows "Cache TTL · Version timeout"

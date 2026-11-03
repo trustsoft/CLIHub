@@ -771,7 +771,7 @@ The Agent Detection page SHALL present the agent detection cache TTL and version
 #### Scenario: DEFAULTS card detail
 
 - **WHEN** the DEFAULTS card is visible
-- **THEN** the detail line shows "Cache TTL · Checking timeout"
+- **THEN** the detail line shows "Cache TTL · Version timeout"
 
 #### Scenario: Reset action shown
 
