@@ -9,14 +9,14 @@
     <StackPanel>
         <controls:SettingCard Margin="0,16,0,8"
                            Title="Start with Windows"
-                           Hint="Launch CLIHub automatically when you sign in to Windows."
+                           Hint="Applies to this Windows account only."
                            Icon="{x:Static themes:IconGlyphs.Power}">
             <CheckBox HorizontalAlignment="Right"
                       IsChecked="{Binding StartWithWindows, Mode=TwoWay}"
                       Style="{StaticResource ToggleCheckBox}"/>
         </controls:SettingCard>
         <controls:SettingCard Title="Start minimized to tray"
-                           Hint="Start CLIHub minimized in the system tray instead of showing the window."
+                           Hint="Starts in the tray without a window."
                            Icon="{x:Static themes:IconGlyphs.ChevronDown}">
             <CheckBox HorizontalAlignment="Right"
                       IsChecked="{Binding StartMinimized, Mode=TwoWay}"

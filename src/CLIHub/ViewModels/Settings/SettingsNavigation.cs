@@ -43,7 +43,7 @@ internal static class SettingsPageCatalog
         new(
             "general",
             "General & Startup",
-            "Startup behavior and how the window opens.",
+            "How CLIHub starts and opens.",
             "General",
             IconGlyphs.Settings),
         new(
