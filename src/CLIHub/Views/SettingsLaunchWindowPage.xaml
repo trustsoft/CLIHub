@@ -10,7 +10,7 @@
     <StackPanel>
         <controls:SectionHeader Text="ACTIVATION"/>
         <controls:SettingCard Title="Global hotkey"
-                           Hint="Press a combination in the field. Esc cancels capture."
+                           Hint="Press a combination. Esc cancels capture."
                            Icon="{x:Static themes:IconGlyphs.Keyboard}">
             <Border x:Name="HotkeyField"
                     MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
@@ -36,7 +36,7 @@
 
         <controls:SectionHeader Text="POSITION"/>
         <controls:SettingCard Title="Launcher window position"
-                           Hint="Where the launch window appears when it is shown."
+                           Hint="Active monitor is the one under the pointer."
                            Icon="{x:Static themes:IconGlyphs.Location}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding PopupPositions}"
@@ -53,7 +53,7 @@
 
         <controls:SectionHeader Text="PROJECT PATHS"/>
         <controls:SettingCard Title="Path display"
-                           Hint="How long project paths are shortened in the launch window."
+                           Hint="Long paths are shortened in project rows."
                            Icon="{x:Static themes:IconGlyphs.FolderOpen}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding PathDisplays}"

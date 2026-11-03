@@ -51,14 +51,14 @@ public partial class SettingsLaunchWindowPage : UserControl
         var modifiers = ToHotkeyModifiers(Keyboard.Modifiers);
         if (modifiers == HotkeyModifiers.None)
         {
-            viewModel.SetHotkeyError("Hotkey must include at least one modifier (Ctrl, Shift, Alt, Win).");
+            viewModel.SetHotkeyError("Add a modifier: Ctrl, Shift, Alt, or Win.");
             return;
         }
 
         var definition = new HotkeyDefinition(modifiers, KeyInterop.VirtualKeyFromKey(key));
         if (!HotkeyParser.TryParse(HotkeyParser.Format(definition), out _))
         {
-            viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1-F24, or a named key (Space, Enter, Tab, Escape, arrows, and so on) with a modifier.");
+            viewModel.SetHotkeyError("Unsupported key. Use a letter, digit, F1–F24, or a named key (Space, Enter, Tab, arrows), plus a modifier.");
             return;
         }
 

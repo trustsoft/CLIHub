@@ -49,7 +49,7 @@ internal static class SettingsPageCatalog
         new(
             "launch-window",
             "Launch Window",
-            "The global hotkey, where the launch window appears, and how project paths are shortened in it.",
+            "Global hotkey, launcher position, and path display.",
             "General",
             IconGlyphs.OpenInNewWindow),
         new(
