@@ -548,7 +548,7 @@ The summary cards showing supported and installed agent counts and update availa
 #### Scenario: UPDATES card detail while unknown
 
 - **WHEN** the UPDATES card value is "Unknown"
-- **THEN** the detail line shows "Run Check updates" or equivalent
+- **THEN** the detail line shows "Check updates"
 
 #### Scenario: UPDATES card detail when all up to date
 
@@ -558,7 +558,7 @@ The summary cards showing supported and installed agent counts and update availa
 #### Scenario: UPDATES card detail when updates available
 
 - **WHEN** the UPDATES card value is a count N
-- **THEN** the detail line shows "N of M installed agents" with singular/plural handling (e.g., "1 of 3 installed agents" or "3 of 5 installed agents")
+- **THEN** the detail line shows "N of M agents have updates" with singular/plural handling: "1 of M agent(s) has an update" when N=1, otherwise "N of M agent(s) have updates", where the "agent(s)" part pluralizes based on M (the installed count)
 
 #### Scenario: UPDATES card detail when no installed agents
 

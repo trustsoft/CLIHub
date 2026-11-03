@@ -431,7 +431,7 @@ The Settings window SHALL show three summary cards under the "CLI Agents" page h
 #### Scenario: Updates card detail while unknown
 
 - **WHEN** the updates card value is "Unknown"
-- **THEN** the detail line shows "Run Check updates" or equivalent
+- **THEN** the detail line shows "Check updates"
 
 #### Scenario: Updates card detail when all up to date
 
@@ -441,7 +441,7 @@ The Settings window SHALL show three summary cards under the "CLI Agents" page h
 #### Scenario: Updates card detail when updates available
 
 - **WHEN** the updates card value is a count N
-- **THEN** the detail line shows "N of M installed agents" with singular/plural handling (e.g., "1 of 3 installed agents" or "3 of 5 installed agents")
+- **THEN** the detail line shows "N of M agents have updates" with singular/plural handling: "1 of M agent(s) has an update" when N=1, otherwise "N of M agent(s) have updates", where the "agent(s)" part pluralizes based on M (the installed count)
 
 #### Scenario: Updates card detail when no installed agents
 

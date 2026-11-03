@@ -408,7 +408,7 @@ The card SHALL present actions appropriate to the agent's declared capabilities 
 #### Scenario: Per-card Check updates reports its outcome on the card
 
 - **WHEN** a per-card "Check updates" action completes for an installed agent
-- **THEN** the card's message line reports `Update available · {installed} → {latest}` when an update is available, `Up to date` when the agent is up to date, and `Update availability unknown` when availability could not be determined
+- **THEN** the card's message line reports `Update available` when an update is available, `Up to date` when the agent is up to date, and `Update status unknown` when availability could not be determined
 - **AND** the header-wide update-check summary line is left unchanged
 - **AND** the Update action's availability is unchanged
 

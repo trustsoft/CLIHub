@@ -12,7 +12,7 @@ The CLI Agents page (Settings → CLI Agents) currently has text that is redunda
 
 An approved mockup (`cli-agents-copy-mockup.html`) shows the refreshed copy, validated for clarity, brevity, and consistency.
 
-## What
+## What Changes
 
 Replace the CLI Agents page text with the approved set:
 
