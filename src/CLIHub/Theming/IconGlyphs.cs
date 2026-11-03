@@ -1,4 +1,4 @@
-namespace CLIHub.Themes;
+namespace CLIHub.Theming;
 
 /// <summary>
 ///   Segoe MDL2 Assets glyphs used by the dark-chrome XAML, as compile-time checked constants.

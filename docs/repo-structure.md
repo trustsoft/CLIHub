@@ -52,7 +52,7 @@ Build output is redirected to the git-ignored `artifacts/` and `obj/` directorie
   `Logging/`, `Formatting/`, and embedded `SeedPlugins/`.
 - `CLIHub.Core.Windows` holds the Windows platform adapters (registry startup, single-instance guard, process
   runners, agent process inspection, system theme detection) behind the ports declared in Core.
-- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Hotkeys/`, `Converters/`, `Interop/`, `Controls/`,
+- `CLIHub` contains `Views/`, `ViewModels/`, `Themes/`, `Theming/`, `Hotkeys/`, `Converters/`, `Interop/`, `Controls/`,
   `Behaviors/`, `Helpers/`, `Imaging/`, and `Assets/`, plus subsystem folders that mirror ownership: `Tray/`,
   `Startup/`, `Lifetime/`, `Settings/`, `Updates/`, `Launching/`, and `Composition/` (DI
   registration). Only the entry point (`Program.cs`, `App.xaml.cs`, `AssemblyInfo.cs`) stays at the project root.

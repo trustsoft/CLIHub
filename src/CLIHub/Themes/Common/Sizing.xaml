@@ -4,7 +4,7 @@
 
     <!--
         Sizing tokens: font families, font sizes, spacing, corner radii, then component metrics,
-        referenced by Controls.xaml, SettingsControls.xaml, SettingsStyles.xaml, ThemePickerData.xaml,
+        referenced by Controls.xaml, SettingsControls.xaml, SettingsStyles.xaml, PickerData.xaml,
         LaunchWindowStyles.xaml, and the Views via StaticResource.
 
         Naming convention: Sizing.<Category>.<Property>. Categories appear in the file in this order:

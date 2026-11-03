@@ -21,7 +21,7 @@ using CLIHub.Core.Models;
 ///     and a Settings save re-applies it, so the same implementation covers both paths.
 ///   </para>
 ///   <para>
-///     UI thread only, matching <see cref="CLIHub.Themes.PaletteSwitcher" />; no synchronization is
+///     UI thread only, matching <see cref="CLIHub.Theming.PaletteSwitcher" />; no synchronization is
 ///     performed.
 ///   </para>
 /// </remarks>

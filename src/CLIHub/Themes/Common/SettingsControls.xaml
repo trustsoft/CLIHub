@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:CLIHub.Controls"
-                    xmlns:themes="clr-namespace:CLIHub.Themes">
+                    xmlns:themes="clr-namespace:CLIHub.Theming">
     <!--
         Shared input and control templates for Settings pages (extracted from SettingsStyles.xaml).
         Merged at application level because Settings pages are UserControls built before they attach
@@ -13,7 +13,7 @@
             Static lookups resolve only against merged dictionaries. The templates use Sizing tokens
             and no Controls.xaml style, so they merge the tokens directly.
         -->
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/Sizing.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Section rhythm: uppercase muted label, optional hint under the fields -->

@@ -1,7 +1,7 @@
 namespace CLIHub.ViewModels;
 
 using CLIHub.Controls;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Update status card shown in the Settings Updates page header.

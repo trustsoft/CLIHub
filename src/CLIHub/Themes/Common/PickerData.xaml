@@ -13,7 +13,7 @@
             The picker styles use only Sizing tokens, so this dictionary merges the tokens directly
             instead of Controls.xaml — otherwise the shared styles would be loaded a second time.
         -->
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/Sizing.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Theme picker: preview cards in one equal-width row. The preview palette below is theme

@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
-             xmlns:themes="clr-namespace:CLIHub.Themes"
+             xmlns:themes="clr-namespace:CLIHub.Theming"
              mc:Ignorable="d">
     <UserControl.Resources>
         <!-- State chip next to the agent name: version when installed, danger state when missing;

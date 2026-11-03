@@ -11,8 +11,8 @@ using static CLIHub.Tests.Support.TestHelpers;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     Two kinds of file are allowlisted by design: the palettes (<c>Themes/*Theme.xaml</c>, colours only)
-///     and <c>Themes/ThemePickerData.xaml</c> (theme-identity preview swatches that must read the same
+///     Two kinds of file are allowlisted by design: the palettes (<c>Themes/*.xaml</c>, colours only)
+///     and <c>Themes/Common/PickerData.xaml</c> (theme-identity preview swatches that must read the same
 ///     under every theme).
 ///   </para>
 ///   <para>
@@ -46,7 +46,7 @@ public sealed class ThemeColorLiteralTests
         Assert.True(
             xamlFiles.Length >= 20,
             $"Expected the full XAML tree under '{appRoot}', but found only {xamlFiles.Length} files.");
-        Assert.Contains(xamlFiles, path => IsFile(path, appRoot, "Themes", "ThemePickerData.xaml"));
+        Assert.Contains(xamlFiles, path => IsFile(path, appRoot, "Themes", "Common", "PickerData.xaml"));
 
         var failures = new List<string>();
         var allowlistedLiteralCount = 0;
@@ -100,12 +100,12 @@ public sealed class ThemeColorLiteralTests
     private static bool IsAllowlisted(string relativePath)
     {
         var normalized = relativePath.Replace('\\', '/');
-        if (string.Equals(normalized, "Themes/ThemePickerData.xaml", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(normalized, "Themes/Common/PickerData.xaml", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        return Regex.IsMatch(normalized, "^Themes/[^/]+Theme\\.xaml$", RegexOptions.IgnoreCase);
+        return Regex.IsMatch(normalized, "^Themes/(Dark|Light|Blue)\\.xaml$", RegexOptions.IgnoreCase);
     }
 
     private static bool IsFile(string path, string appRoot, params string[] relativeSegments)

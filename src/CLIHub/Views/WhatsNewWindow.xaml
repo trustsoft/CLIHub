@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:themes="clr-namespace:CLIHub.Themes"
+        xmlns:themes="clr-namespace:CLIHub.Theming"
         mc:Ignorable="d"
         Title="What's New"
         Background="{DynamicResource ChromeBgBrush}"
@@ -27,7 +27,7 @@
     </WindowChrome.WindowChrome>
     <Window.Resources>
         <!-- Window-scoped styles: this window's drawn chrome and notes typography. -->
-        <ResourceDictionary Source="/Themes/WhatsNewStyles.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/WhatsNewStyles.xaml"/>
     </Window.Resources>
 
     <Border BorderBrush="{DynamicResource FieldStrokeBrush}" BorderThickness="1">

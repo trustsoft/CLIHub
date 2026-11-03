@@ -9,7 +9,7 @@
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/Sizing.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/Sizing.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!--

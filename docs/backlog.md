@@ -364,9 +364,9 @@ snapshot.
   `TextBlockAutomationPeer: Name='\uE713' CtrlType=Text IsContent=True`. Current sites: the Settings
   page-header emblem (`src/CLIHub/Views/SettingsWindow.xaml:424-430`, whose comment already records
   the WPF limitation), the sidebar page glyph (`SettingsWindow.xaml:362-367`), the `SettingCard` icon
-  box (`src/CLIHub/Themes/SettingsStyles.xaml:214-230`), the section-header glyph
+  box (`src/CLIHub/Themes/Common/SettingsStyles.xaml:214-230`), the section-header glyph
   (`SettingsStyles.xaml:390-396`), and the status-chip glyph (`SettingsWindow.xaml:123`). The
-  `settings-page-icons` change centralized the glyph values in `themes/IconGlyphs.cs`, which makes a
+  `settings-page-icons` change centralized the glyph values in `Theming/IconGlyphs.cs`, which makes a
   shared decorative element easier to apply, but it did not add an accessibility opt-out. There is no
   per-element opt-out: `AutomationProperties.Name=""` is ignored (the peer falls back to the text) and
   `AutomationProperties.AccessibilityView` does not exist in WPF.

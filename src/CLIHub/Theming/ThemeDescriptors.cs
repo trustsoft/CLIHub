@@ -1,4 +1,4 @@
-namespace CLIHub.Themes;
+namespace CLIHub.Theming;
 
 using CLIHub.Core.Models;
 
@@ -25,7 +25,7 @@ public sealed record ThemeDescriptor(
 /// <summary>
 ///   The single source of truth for per-theme data in the WPF layer. Theme descriptors are listed in
 ///   picker order; the preview brush keys resolve to the fixed swatches declared in
-///   <c> ThemePickerData.xaml </c>.
+///   <c> PickerData.xaml </c>.
 /// </summary>
 /// <remarks>
 ///   The preview dot is deliberately not part of the descriptor: every real theme previews the live
@@ -54,14 +54,14 @@ public static class ThemeDescriptors
             AppTheme.Light,
             "Light",
             "Bright, high-contrast palette",
-            "/Themes/LightTheme.xaml",
+            "/Themes/Light.xaml",
             "ThemePreviewLightBrush",
             "ThemePreviewBarLightBrush"),
         new ThemeDescriptor(
             AppTheme.Blue,
             "Deep Blue",
             "Dark with a blue tint",
-            "/Themes/BlueTheme.xaml",
+            "/Themes/Blue.xaml",
             "ThemePreviewBlueBrush",
             "ThemePreviewBarBlueBrush"),
         new ThemeDescriptor(

@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-11-04
+goal: "Reorganize WPF theming assets: palette XAML at Themes root, shared styles under Themes/Common/, C# code in Theming namespace"
+skip_specs: true
+x-skip_specs_rationale: "Pure internal refactor: file moves and path updates with zero behavior change. No capability modifications, no user-facing changes."

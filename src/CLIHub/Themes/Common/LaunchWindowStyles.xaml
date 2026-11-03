@@ -12,7 +12,7 @@
     -->
 
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Themes/Controls.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/Controls.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <conv:IndexToDividerVisibilityConverter x:Key="IndexToDividerVisibility"/>

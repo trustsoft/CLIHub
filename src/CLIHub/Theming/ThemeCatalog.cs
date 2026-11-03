@@ -1,4 +1,4 @@
-namespace CLIHub.Themes;
+namespace CLIHub.Theming;
 
 using CLIHub.Core.Models;
 

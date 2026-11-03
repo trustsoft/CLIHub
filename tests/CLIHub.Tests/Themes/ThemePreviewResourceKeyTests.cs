@@ -2,7 +2,7 @@ namespace CLIHub.Tests.Themes;
 
 using System.Text.RegularExpressions;
 
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 using static CLIHub.Tests.Support.TestHelpers;
 

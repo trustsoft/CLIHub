@@ -5,7 +5,7 @@
         Settings window and page chrome: sidebar, footer, headers, and implicit styles for
         CLIHub.Controls custom types. Merged at application level because Settings pages are UserControls
         built before they attach to the window tree. This dictionary is the application-level entry point:
-        it merges Controls.xaml (shared keyed bases), ThemePickerData.xaml (preview + picker styles) and
+        it merges Controls.xaml (shared keyed bases), PickerData.xaml (preview + picker styles) and
         SettingsControls.xaml (input/control templates), and each of those merges Sizing.xaml for its own
         token lookups.
     -->
@@ -14,14 +14,14 @@
         <!--
             StaticResource inside a dictionary resolves only against this dictionary and its merges.
             Controls.xaml supplies the shared keyed bases this file builds on (QuietChipButton,
-            VersionChipBorder, VersionChipText); ThemePickerData.xaml brings the theme and accent picker
+            VersionChipBorder, VersionChipText); PickerData.xaml brings the theme and accent picker
             keys, SettingsControls.xaml the input/control templates and the text styles (HintText). The
             two leaf dictionaries merge Sizing.xaml themselves because a loose dictionary cannot reach
             application-level siblings.
         -->
-        <ResourceDictionary Source="/Themes/Controls.xaml"/>
-        <ResourceDictionary Source="/Themes/ThemePickerData.xaml"/>
-        <ResourceDictionary Source="/Themes/SettingsControls.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/Controls.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/PickerData.xaml"/>
+        <ResourceDictionary Source="/Themes/Common/SettingsControls.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
     <!-- Footer buttons -->

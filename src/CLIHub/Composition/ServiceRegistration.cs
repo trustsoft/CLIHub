@@ -20,7 +20,7 @@ using CLIHub.Settings;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Startup;
-using CLIHub.Themes;
+using CLIHub.Theming;
 using CLIHub.Tray;
 
 using Serilog;

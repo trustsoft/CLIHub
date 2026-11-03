@@ -1,6 +1,6 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   A Settings navigation page: a stable key, a display title, the group it belongs to, and the

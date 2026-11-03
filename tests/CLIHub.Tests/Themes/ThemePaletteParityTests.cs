@@ -10,14 +10,15 @@ public sealed class ThemePaletteParityTests
     public void ThemePalettes_AllPaletteFilesDefineOneIdenticalKeySet()
     {
         var themesDirectory = Path.Combine(FindRepositoryRoot(), "src", "CLIHub", "Themes");
-        var paletteFiles = Directory.GetFiles(themesDirectory, "*Theme.xaml")
+        var paletteFiles = Directory.GetFiles(themesDirectory, "*.xaml")
             .OrderBy(Path.GetFileName, StringComparer.Ordinal)
             .ToArray();
 
         // Loud failure on rename or glob accidents: the check is only meaningful when it walks the
         // known palettes, so their presence is asserted explicitly.
-        Assert.Contains("DarkTheme.xaml", paletteFiles.Select(Path.GetFileName));
-        Assert.Contains("LightTheme.xaml", paletteFiles.Select(Path.GetFileName));
+        Assert.Contains("Dark.xaml", paletteFiles.Select(Path.GetFileName));
+        Assert.Contains("Light.xaml", paletteFiles.Select(Path.GetFileName));
+        Assert.Contains("Blue.xaml", paletteFiles.Select(Path.GetFileName));
 
         var referenceKeys = ReadKeys(paletteFiles[0]);
         foreach (var file in paletteFiles.Skip(1))
