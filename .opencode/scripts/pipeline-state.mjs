@@ -23,8 +23,11 @@
 //
 // `update` applies a state transition to one existing entry: the stage pointer,
 // the change status, the entry note, per-stage status/note rows, and per-stage
-// commit shas. It never prunes. Unknown ids and invalid stage/status values are
-// rejected before anything is written.
+// commit shas. It never prunes. Advancing the stage pointer backfills every
+// earlier stage row to `done`, so a jump from `plan` to `archive` cannot leave a
+// stale `pending` row behind; an explicit `--stage-status` for an earlier stage
+// still wins. Unknown ids and invalid stage/status values are rejected before
+// anything is written.
 //
 // `prune` removes the oldest completed entries until the file is at or below
 // the limit; `--dry-run` reports the removals without writing.
@@ -34,9 +37,13 @@
 // resolve, an `openspec/changes/<id>/` directory, an
 // `openspec/changes/archive/*-<id>/` directory, or a note starting with
 // `tooling:`. A completed entry with no evidence is a `no-evidence` warning,
-// and a recorded sha that git cannot resolve is a `sha-missing` warning. The
-// repository root is `--repo`, else the parent of a `.opencode/pipeline.json`
-// state file, else the current working directory.
+// and a recorded sha that git cannot resolve is a `sha-missing` warning. Two
+// record-consistency warnings sit on top of the evidence check: a stage pointer
+// past a stage row that does not resolve to `done` is `inconsistent-stages`,
+// and a `done` entry whose `archive` row is not `done` with no OpenSpec
+// directory to close is `no-archive-path`. The repository root is `--repo`,
+// else the parent of a `.opencode/pipeline.json` state file, else the current
+// working directory.
 //
 // Writes are atomic (temp file in the same directory, then rename) and
 // UTF-8 without BOM. Before the rename the target is re-statted: if another
@@ -52,6 +59,8 @@
 //   ok <id> (<evidence-kind> [detail])
 //   warning: <id> no evidence (...)
 //   warning: <id> commit sha <sha> not found in <repo>
+//   warning: <id> stage <pointer> with unfinished earlier stage(s): <detail>
+//   warning: <id> done without an archive path; close it with --stage archive --status done --stage-status archive=done --stage-note "archive=n/a: <reason>"
 //   checked <n> changes: <ok> ok, <warnings> warning(s)
 //   state: <absolute path> (<n> changes)
 //
@@ -474,6 +483,15 @@ function validateUpdateInput({ stage, status, stageStatuses = {}, stageNotes = {
  * row had none or the status actually changed; `stageNotes` sets a row's
  * `note`; `commits` records a sha under `commits` and mirrors it into the
  * stage row's `commit`. The entry's `updatedAt` always becomes `now`.
+ *
+ * Advancing `stage` backfills: every stage before the new pointer that is not
+ * named in this call's `stageStatuses` becomes `done`. An explicit
+ * `stageStatuses` entry always wins, an existing row keeps its `note` and
+ * `commit`, `at` only moves under the rule above, and a missing row is created
+ * as `{ status: "done", at: <now> }`. Rows at or after the pointer are never
+ * changed by the backfill, and omitting `stage` leaves derivation untouched.
+ * The rule is idempotent: re-applying the same pointer to a fully done entry
+ * rewrites neither status nor `at`.
  */
 export function applyUpdate(
   change,
@@ -512,7 +530,12 @@ export function applyUpdate(
       stageNotes[name] !== undefined ||
       commits[name] !== undefined,
   );
-  if (touched.length === 0) {
+  const currentIndex = stage !== undefined ? STAGES.indexOf(stage) : -1;
+  const backfilled =
+    currentIndex > 0
+      ? STAGES.slice(0, currentIndex).filter((name) => stageStatuses[name] === undefined)
+      : [];
+  if (touched.length === 0 && backfilled.length === 0) {
     return next;
   }
 
@@ -520,12 +543,20 @@ export function applyUpdate(
   let commitMap =
     change.commits && typeof change.commits === "object" ? { ...change.commits } : undefined;
 
-  for (const name of touched) {
+  for (const name of STAGES) {
+    const isTouched = touched.includes(name);
+    const isBackfilled = backfilled.includes(name);
+    if (!isTouched && !isBackfilled) {
+      continue;
+    }
+
     const row = { ...(stages[name] ?? {}) };
 
-    if (stageStatuses[name] !== undefined) {
+    const targetStatus =
+      stageStatuses[name] !== undefined ? stageStatuses[name] : isBackfilled ? "done" : undefined;
+    if (targetStatus !== undefined) {
       const previousStatus = row.status;
-      row.status = stageStatuses[name];
+      row.status = targetStatus;
       if (row.at === undefined || previousStatus !== row.status) {
         row.at = at;
       }
@@ -652,6 +683,21 @@ function groundTruthWarning(change, probes) {
  * separate `sha-missing` finding, which suppresses `no-evidence` so an entry
  * stays on one output line. Mid-flight entries are never `no-evidence`.
  *
+ * Two record-consistency findings check the stored record rather than the
+ * evidence, and they also suppress `no-evidence`:
+ *
+ * - `inconsistent-stages` — the stage pointer names a stage but an earlier
+ *   stage row does not resolve to `done`; `stage` carries the pointer and
+ *   `detail` the comma-joined unfinished stage names. Applies once the entry
+ *   claims completion (`status` `done` or pointer at `commit`/`archive`), so
+ *   mid-flight `plan`/`impl` work stays quiet, because a completed pointer past
+ *   an unfinished row is exactly the corruption that makes an entry unprunable.
+ * - `no-archive-path` — the change is `done`, the `archive` row does not
+ *   resolve to `done`, and the id has no OpenSpec lifecycle to close (no
+ *   `openspec/changes/<id>/` and no archive directory ending in `-<id>`).
+ *   `detail` carries the comma-joined unresolved stage names. Skipped when the
+ *   id is empty or the probes cannot answer (`specDirExists` missing).
+ *
  * @param {Array<object>} changes entries from the state file.
  * @param {{repoRoot?: string, archiveIds?: () => Set<string>, specDirExists?: (id: string) => boolean, commitResolves?: (sha: string) => boolean}} [probes]
  *   evidence source; a missing probe reports no evidence.
@@ -668,7 +714,8 @@ export function collectFindings(changes, probes, options = {}) {
   const findings = [];
 
   for (const change of list) {
-    const id = typeof change?.id === "string" && change.id.trim() !== "" ? change.id.trim() : "?";
+    const rawId = typeof change?.id === "string" ? change.id.trim() : "";
+    const id = rawId !== "" ? rawId : "?";
     const entryFindings = [];
     const evidence = findEvidence(change, probes, archiveIds);
 
@@ -680,6 +727,41 @@ export function collectFindings(changes, probes, options = {}) {
       seen.add(sha);
       if (typeof probes?.commitResolves === "function" && !probes.commitResolves(sha)) {
         entryFindings.push({ id, level: "warning", kind: "sha-missing", detail: sha, repoRoot });
+      }
+    }
+
+    const pointerIndex = STAGES.indexOf(change?.stage);
+    if (claimsCompletion(change) && pointerIndex > 0) {
+      const unfinished = STAGES.slice(0, pointerIndex).filter(
+        (name) => stageState(change, name).status !== "done",
+      );
+      if (unfinished.length > 0) {
+        entryFindings.push({
+          id,
+          level: "warning",
+          kind: "inconsistent-stages",
+          stage: change.stage,
+          detail: unfinished.join(","),
+        });
+      }
+    }
+
+    if (
+      rawId !== "" &&
+      typeof probes?.specDirExists === "function" &&
+      change?.status === "done" &&
+      stageState(change, "archive").status !== "done"
+    ) {
+      const hasLifecycle =
+        probes.specDirExists(rawId) || [...archiveIds].some((name) => name.endsWith(`-${rawId}`));
+      if (!hasLifecycle) {
+        const unresolved = STAGES.filter((name) => stageState(change, name).status !== "done");
+        entryFindings.push({
+          id,
+          level: "warning",
+          kind: "no-archive-path",
+          detail: unresolved.join(","),
+        });
       }
     }
 
@@ -910,6 +992,19 @@ function formatFinding(finding) {
     return (
       `warning: ${finding.id} no evidence ` +
       `(commit sha, openspec dir, archive dir, or note 'tooling: ...')`
+    );
+  }
+  if (finding.kind === "inconsistent-stages") {
+    return (
+      `warning: ${finding.id} stage ${finding.stage} ` +
+      `with unfinished earlier stage(s): ${finding.detail}`
+    );
+  }
+  if (finding.kind === "no-archive-path") {
+    return (
+      `warning: ${finding.id} done without an archive path; close it with ` +
+      `--stage archive --status done --stage-status archive=done ` +
+      `--stage-note "archive=n/a: <reason>"`
     );
   }
   return `warning: ${finding.id} ${finding.kind}`;

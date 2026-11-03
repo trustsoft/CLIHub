@@ -284,6 +284,24 @@ snapshot.
   still validates shas against a single repo root, so the item stays open latently until the first
   foreign-repo sha returns.
 
+### Pipeline protocol has no documented close-out for stages that do not apply
+
+- Severity: Medium (a finished entry stays visible as unfinished and can never be pruned)
+- Evidence (2026-11-03): the `docs-actualization` entry sat at `commit`/`done` with the `archive` row
+  `pending` because docs-only work has no OpenSpec change to archive; the orchestrator had no
+  documented way to close it. The same class of record (`2026-11-03-launch-window-copy`, pointer
+  `archive` with a frozen `pending` `commit` row) came from stage jumps in `update`. The repo script
+  now backfills passed stage rows and warns via `no-archive-path` / `inconsistent-stages`
+  (`.opencode/scripts/pipeline-state.mjs`), but the global `pipeline-protocol` skill still describes
+  only the OpenSpec archive path.
+- Proposed remedy: in `D:\Projects\opencode-sidebar-suite`, add the rule to the skill — every entry
+  finishes at `archive`/`done`; a stage that does not apply is recorded `done` with a note beginning
+  `n/a: <reason>`; advancing the pointer closes earlier rows. Decide whether the skill source moves
+  into that repository and is deployed by `install.ps1`, which currently copies only `plugins/` and
+  `shared/`.
+- Trigger: the next docs-only or tooling entry that has to be closed, or the next edit of the global
+  `pipeline-protocol` skill.
+
 ## UI and theming
 
 ### Resolver role override ignores exhaustedUntil

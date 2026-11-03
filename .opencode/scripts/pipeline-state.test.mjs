@@ -3,8 +3,9 @@
 //
 // Exercises the 10-entry cap, the completed-only pruning rule, the atomic
 // file shape, the duplicate refusal, the compare-and-swap retry, the
-// `update` transitions (stage/status, stage rows, notes, commits), and the
-// `check` evidence reconciliation plus its write-time warning.
+// `update` transitions (stage/status, stage rows, notes, commits, stage
+// backfill), and the `check` evidence reconciliation plus its write-time
+// warning and record-consistency findings.
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -422,6 +423,12 @@ test("update sets stage and status, refreshes both updatedAt values, and leaves 
     const updated = state.changes[2];
     assert.equal(updated.stage, "impl");
     assert.equal(updated.status, "active");
+    assert.equal(
+      updated.stages.plan.status,
+      "done",
+      "advancing the pointer backfills the passed stage",
+    );
+    assert.match(updated.stages.plan.at, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     assert.notEqual(updated.updatedAt, BASE_UPDATED_AT);
     assert.match(updated.updatedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     assert.notEqual(state.updatedAt, BASE_UPDATED_AT);
@@ -510,6 +517,135 @@ test("update creates a missing stage row with a fresh at and never mutates the i
       status: "done",
       at: "2026-10-23T12:34:56.000Z",
     });
+  });
+});
+
+test("applyUpdate_AdvancePlanToArchive_BackfillsEarlierStagesToDone", () => {
+  const now = new Date("2026-10-25T08:00:00.000Z");
+  const fixture = buildChange({
+    id: "jump",
+    stage: "plan",
+    status: "active",
+    now: new Date(BASE_UPDATED_AT),
+  });
+  assert.equal(fixture.stages.plan.status, "active");
+  assert.equal(fixture.stages.impl.status, "pending");
+  assert.equal(fixture.stages.commit.status, "pending");
+
+  const updated = applyUpdate(fixture, {
+    stage: "archive",
+    status: "done",
+    stageStatuses: { archive: "done" },
+    now,
+  });
+
+  for (const name of ["plan", "impl", "commit"]) {
+    assert.equal(updated.stages[name].status, "done", `${name} must be backfilled to done`);
+    assert.equal(updated.stages[name].at, "2026-10-25T08:00:00.000Z", `${name} gets a fresh at`);
+  }
+  assert.equal(updated.stages.archive.status, "done");
+  assert.equal(updated.stage, "archive");
+  assert.equal(isCompleted(updated), true);
+});
+
+test("applyUpdate_BackfilledEarlierRow_KeepsNoteCommitAndRecordedAt", () => {
+  const input = {
+    id: "keep",
+    stage: "commit",
+    status: "active",
+    updatedAt: BASE_UPDATED_AT,
+    commits: { impl: "abc1234" },
+    stages: {
+      plan: { status: "done", at: BASE_UPDATED_AT, note: "plan note" },
+      impl: {
+        status: "done",
+        at: "2026-01-02T00:00:00.000Z",
+        commit: "abc1234",
+        note: "impl note",
+      },
+      commit: { status: "pending" },
+    },
+  };
+
+  const updated = applyUpdate(input, {
+    stage: "archive",
+    stageStatuses: { archive: "done" },
+    now: new Date("2026-10-25T08:00:00.000Z"),
+  });
+
+  assert.deepEqual(updated.stages.plan, {
+    status: "done",
+    at: BASE_UPDATED_AT,
+    note: "plan note",
+  });
+  assert.deepEqual(updated.stages.impl, {
+    status: "done",
+    at: "2026-01-02T00:00:00.000Z",
+    commit: "abc1234",
+    note: "impl note",
+  });
+  assert.deepEqual(updated.stages.commit, {
+    status: "done",
+    at: "2026-10-25T08:00:00.000Z",
+  });
+});
+
+test("applyUpdate_ExplicitEarlierStageStatus_WinsOverBackfill", () => {
+  const fixture = buildChange({
+    id: "blocked-impl",
+    stage: "impl",
+    status: "active",
+    now: new Date(BASE_UPDATED_AT),
+  });
+
+  const updated = applyUpdate(fixture, {
+    stage: "archive",
+    stageStatuses: { impl: "blocked", archive: "done" },
+    now: new Date("2026-10-25T08:00:00.000Z"),
+  });
+
+  assert.equal(updated.stages.impl.status, "blocked", "an explicit status is never backfilled");
+  assert.equal(updated.stages.plan.status, "done");
+  assert.equal(updated.stages.commit.status, "done");
+  assert.equal(isCompleted(updated), false);
+});
+
+test("updateChange_AdvanceWithPartialStageStatuses_CompletedAndIdempotent", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    const now = new Date("2026-10-26T09:30:00.000Z");
+    writeStateRaw(
+      file,
+      stateOf([
+        buildChange({
+          id: "jump",
+          stage: "plan",
+          status: "active",
+          now: new Date(BASE_UPDATED_AT),
+        }),
+      ]),
+    );
+
+    const options = {
+      id: "jump",
+      stage: "archive",
+      status: "done",
+      stageStatuses: { archive: "done" },
+      stageNotes: { archive: "archive=n/a: docs-only" },
+      now,
+    };
+
+    const first = updateChange(file, options);
+    assert.equal(isCompleted(first.change), true);
+    const firstBytes = readFileSync(file);
+
+    const second = updateChange(file, options);
+    assert.equal(isCompleted(second.change), true);
+    assert.deepEqual(
+      readFileSync(file),
+      firstBytes,
+      "re-applying the same advance must not churn the file",
+    );
   });
 });
 
@@ -728,6 +864,83 @@ test("collectFindings_ToolingNote_OkAttestation", () => {
 
   assert.equal(findings.length, 0);
   assert.deepEqual(entries[0].evidence, { kind: "attestation" });
+});
+
+test("collectFindings_ArchivePointerWithPendingCommitRow_WarningInconsistentStages", () => {
+  const entry = {
+    id: "stuck",
+    stage: "archive",
+    status: "done",
+    updatedAt: BASE_UPDATED_AT,
+    commits: {},
+    stages: {
+      plan: { status: "done" },
+      impl: { status: "done" },
+      commit: { status: "pending" },
+      archive: { status: "done" },
+    },
+  };
+
+  const { entries, findings } = collectFindings([entry], NO_EVIDENCE_PROBES);
+
+  assert.equal(findings.length, 1, "the new finding suppresses no-evidence");
+  assert.equal(findings[0].kind, "inconsistent-stages");
+  assert.equal(findings[0].id, "stuck");
+  assert.equal(findings[0].stage, "archive");
+  assert.equal(findings[0].detail, "commit");
+  assert.equal(entries[0].level, "warning");
+});
+
+test("collectFindings_DoneWithoutOpenSpecLifecycle_WarningNoArchivePath", () => {
+  const entry = { id: "docs-only", stage: "commit", status: "done" };
+
+  const { findings } = collectFindings([entry], NO_EVIDENCE_PROBES);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].kind, "no-archive-path");
+  assert.equal(findings[0].detail, "archive");
+
+  const withSpec = collectFindings([entry], { ...NO_EVIDENCE_PROBES, specDirExists: () => true });
+  assert.equal(withSpec.findings.length, 0, "an OpenSpec directory is an archive path");
+
+  const withoutProbe = collectFindings([entry], undefined);
+  assert.deepEqual(
+    withoutProbe.findings.map((finding) => finding.kind),
+    ["no-evidence"],
+    "the rule is skipped when the probes cannot answer",
+  );
+});
+
+test("the CLI check renders the inconsistent-stages and no-archive-path lines", () => {
+  withDir((dir) => {
+    const repo = join(dir, "repo");
+    const file = join(repo, ".opencode", "pipeline.json");
+    mkdirSync(join(repo, ".opencode"), { recursive: true });
+    writeStateRaw(
+      file,
+      stateOf([
+        {
+          id: "stuck",
+          stage: "archive",
+          status: "done",
+          updatedAt: BASE_UPDATED_AT,
+          commits: {},
+          stages: { commit: { status: "pending" } },
+        },
+        { id: "docs-only", stage: "commit", status: "done", updatedAt: BASE_UPDATED_AT, commits: {} },
+      ]),
+    );
+
+    const run = spawnSync(process.execPath, [SCRIPT, "check", "--file", file], { encoding: "utf8" });
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(run.stdout.trimEnd().split(/\r?\n/), [
+      "warning: stuck stage archive with unfinished earlier stage(s): commit",
+      'warning: docs-only done without an archive path; close it with --stage archive --status done --stage-status archive=done --stage-note "archive=n/a: <reason>"',
+      "checked 2 changes: 0 ok, 2 warning(s)",
+      `state: ${resolvePath(file)} (2 changes)`,
+    ]);
+  });
 });
 
 test("the CLI check reports evidence, mid-flight, and warnings without writing", () => {

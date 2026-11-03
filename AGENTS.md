@@ -95,6 +95,10 @@ status dumps, formatting) — the orchestrator picks per task; `pipe/*` agents u
   and never writes the state file.
 - Never write `.opencode/pipeline.json` directly with `node -e`, shell redirection, or manual JSON edits;
   every mutation MUST go through `node .opencode/scripts/pipeline-state.mjs`.
+- Every pipeline-state entry MUST finish at `archive`/`done` in the same session. A stage that does not
+  apply (docs-only work, out-of-repo tooling) is recorded `done` with a stage note beginning `n/a: <reason>`;
+  the script closes passed stages automatically when the pointer advances, and `check` warns on a `done`
+  record with no archive path.
 
 ## Documentation and OpenSpec
 
