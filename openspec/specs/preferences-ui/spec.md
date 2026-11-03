@@ -191,19 +191,19 @@ The Terminal Profiles page SHALL offer the runtime hosts PowerShell, PowerShell 
 
 ### Requirement: Updates page options
 
-The Settings page header for "Updates" SHALL show the current version and stable channel as chips next to the page title, an update-status chip indicating either that the build is current or that an update is available, a "Check for updates" action, and a "View release notes" action on the title row after the channel chip. The page body SHALL offer the "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-release versions" controls under an "UPDATE PREFERENCES" section. The page SHALL show the current application version and check status without commit, target, or agent-protocol detail.
+The Settings page header for "Updates" SHALL show the current version and stable channel as chips next to the page title, an update-status chip indicating either that the build is current or that an update is available, a "Check for updates" action, and a "Release notes" action on the title row after the channel chip. The page body SHALL offer the "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-releases" controls. The page SHALL show the current application version and check status without commit, target, or agent-protocol detail.
 
 #### Scenario: Options offered
 
 - **WHEN** the Settings window opens on "Updates"
 - **THEN** the page header shows the version and stable channel chips, the update-status chip, and the "Check for updates" action
-- **AND** the title row shows "View release notes" after the channel chip
-- **AND** the page body shows "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-release versions" toggles under "UPDATE PREFERENCES"
+- **AND** the title row shows "Release notes" after the channel chip
+- **AND** the page body shows "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-releases" toggles
 
 #### Scenario: Defaults
 
 - **WHEN** no update preferences have been stored
-- **THEN** "Automatically download updates" and "Notify about stable releases" are on and "Notify about pre-release versions" is off
+- **THEN** "Automatically download updates" and "Notify about stable releases" are on and "Notify about pre-releases" is off
 
 #### Scenario: Persist on save
 
@@ -654,7 +654,7 @@ The Updates page SHALL let the user open the application release notes from the 
 
 #### Scenario: Open release notes
 
-- **WHEN** the user activates "View release notes"
+- **WHEN** the user activates "Release notes"
 - **THEN** the What's New window opens, or the existing one is brought to the front
 - **AND** the running version is recorded as seen using the existing release-notes launcher behavior
 
