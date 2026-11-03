@@ -245,13 +245,13 @@ public sealed class SettingsApplicationService
 
         if (!int.TryParse(input.LogRetentionDaysText?.Trim(), out var retentionDays) || retentionDays <= 0)
         {
-            error = "Log retention must be a positive number of days.";
+            error = "Log retention must be at least 1 day.";
             return false;
         }
 
         if (!int.TryParse(input.LogFileSizeLimitText?.Trim(), out var sizeLimitMb) || sizeLimitMb < 0)
         {
-            error = "Log file size limit must be zero or a positive number of megabytes.";
+            error = "Log size limit must be 0 MB or more.";
             return false;
         }
 

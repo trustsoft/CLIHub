@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-03
+skip_specs: true
+x-skip_specs_rationale: "Copy-only change with no behavior or layout modification. The changed strings (section headers, hints, card title, and validation error messages) are not quoted in any durable specification. The logging capability in settings-logging specifies behavior contracts (log level enumeration, rotation policy, size limit enforcement) but does not quote UI labels or error messages, and the new copy does not alter those contracts."

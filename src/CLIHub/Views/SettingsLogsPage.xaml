@@ -8,10 +8,9 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <controls:SectionHeader Text="LOGGING"/>
-        <controls:SettingsGroup>
+        <controls:SettingsGroup Margin="0,18,0,8">
             <controls:SettingCard Title="Log level"
-                               Hint="Takes effect after the next start."
+                               Hint="Applies after restart."
                                Icon="{x:Static themes:IconGlyphs.Filter}"
                                Grouped="True">
                 <ComboBox HorizontalAlignment="Right"
@@ -28,7 +27,7 @@
             </controls:SettingCard>
 
             <controls:SettingCard Title="Log retention"
-                               Hint="Daily log files to keep."
+                               Hint="Daily files to keep."
                                Icon="{x:Static themes:IconGlyphs.Calendar}"
                                Grouped="True">
                 <controls:NumericField MinWidth="120"
@@ -38,7 +37,7 @@
             </controls:SettingCard>
 
             <controls:SettingCard Title="Log size limit"
-                               Hint="The per-file limit (0 = unlimited)."
+                               Hint="Per file. 0 = no limit."
                                Icon="{x:Static themes:IconGlyphs.Equalizer}"
                                Grouped="True">
                 <controls:NumericField MinWidth="120"
@@ -48,9 +47,7 @@
             </controls:SettingCard>
         </controls:SettingsGroup>
 
-        <controls:SectionHeader Text="LOG FILE"/>
-        <controls:SettingCard Title="Log file"
-                           Hint="The current log file path."
+        <controls:SettingCard Title="Current log file"
                            Icon="{x:Static themes:IconGlyphs.Document}"
                            Placement="Stacked">
             <Grid>
