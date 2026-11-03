@@ -34,7 +34,7 @@
         </Grid>
         <controls:SettingsGroup>
             <controls:SettingCard Title="Cache TTL"
-                               Hint="How long detection and version results are cached. Empty — use defaults."
+                               Hint="How long detection and version results are cached."
                                Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"
@@ -45,7 +45,7 @@
             </controls:SettingCard>
 
             <controls:SettingCard Title="Version check timeout"
-                               Hint="How long a single version check may take. Empty — use defaults."
+                               Hint="Maximum time for one version check."
                                Icon="{x:Static themes:IconGlyphs.Diagnostic}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"

@@ -233,13 +233,13 @@ public sealed class SettingsApplicationService
 
         if (!TryParsePositive(input.ProbeTtlText, out var ttl))
         {
-            error = "Cache TTL must be a positive number of minutes, or empty for the default.";
+            error = "Cache TTL must be at least 1 minute. Leave empty to use the default.";
             return false;
         }
 
         if (!TryParsePositive(input.ProbeTimeoutText, out var timeout))
         {
-            error = "Version check timeout must be a positive number of seconds, or empty for the default.";
+            error = "Version check timeout must be at least 1 second. Leave empty to use the default.";
             return false;
         }
 

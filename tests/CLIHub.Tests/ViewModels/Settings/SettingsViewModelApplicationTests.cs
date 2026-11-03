@@ -901,7 +901,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Load();
 
         Assert.Equal("15 min · 10 sec", fixture.ViewModel.ProbePolicyDefaults);
-        Assert.Equal("Cache TTL · Checking timeout", fixture.ViewModel.ProbePolicyDefaultsDetail);
+        Assert.Equal("Cache TTL · Version timeout", fixture.ViewModel.ProbePolicyDefaultsDetail);
         Assert.False(fixture.ViewModel.ResetProbePolicyCommand.CanExecute(null));
 
         fixture.ViewModel.ProbeTtlText = "25";
@@ -951,7 +951,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.SaveCommand.Execute(null);
 
         Assert.False(closeRequested);
-        Assert.Equal("Version check timeout must be a positive number of seconds, or empty for the default.", fixture.ViewModel.ValidationError);
+        Assert.Equal("Version check timeout must be at least 1 second. Leave empty to use the default.", fixture.ViewModel.ValidationError);
         fixture.Preferences.Verify(x => x.Update(It.IsAny<Action<AppPreferences>>()), Times.Never);
     }
 

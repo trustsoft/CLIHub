@@ -374,7 +374,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     /// <summary>
     ///   The DEFAULTS summary-card detail: the two fields the built-in defaults apply to.
     /// </summary>
-    public string ProbePolicyDefaultsDetail => "Cache TTL · Checking timeout";
+    public string ProbePolicyDefaultsDetail => "Cache TTL · Version timeout";
 
     /// <summary>
     ///   Whether either detection field holds a value, so <see cref="ResetProbePolicyCommand" />

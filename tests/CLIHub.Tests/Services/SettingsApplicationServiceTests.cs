@@ -27,7 +27,7 @@ public class SettingsApplicationServiceTests
 
         Assert.False(success);
         Assert.Null(draft);
-        Assert.Equal("Cache TTL must be a positive number of minutes, or empty for the default.", error);
+        Assert.Equal("Cache TTL must be at least 1 minute. Leave empty to use the default.", error);
     }
 
     [Fact]
