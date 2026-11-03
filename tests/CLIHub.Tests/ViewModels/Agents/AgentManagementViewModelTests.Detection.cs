@@ -46,7 +46,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.True(card.IsInstalled);
         Assert.Equal("9.9", card.Version);
-        Assert.Equal("Installed · version 9.9", card.Message);
+        Assert.Equal("Installed · v9.9", card.Message);
         Assert.True(card.HasUpdateAvailable);
         Assert.Equal("0.9.0 → 1.0.0", card.UpdateAvailabilityText);
         Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);
@@ -169,7 +169,7 @@ public partial class AgentManagementViewModelTests
         Assert.Null(card.Version);
         Assert.Null(card.UpdateAvailability);
         Assert.False(card.HasUpdateAvailable);
-        Assert.Equal("Not installed on the host", card.Message);
+        Assert.Equal("Not installed on this PC", card.Message);
 
         // The Load pass checked once; the probe itself must not check again.
         availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Once);

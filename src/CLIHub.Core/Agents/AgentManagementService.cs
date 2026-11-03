@@ -92,7 +92,7 @@ public sealed class AgentManagementService : IAgentProbeService, IAgentUpdateSer
         {
             return new AgentUpdateResult(
                 AgentUpdateOutcome.Blocked,
-                "Update blocked while running");
+                "Agent is running — stop it to update");
         }
 
         var workingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

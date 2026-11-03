@@ -422,7 +422,7 @@ public class AgentManagementServiceTests
         var result = await service.UpdateAsync(plugin);
 
         Assert.Equal(AgentUpdateOutcome.Blocked, result.Outcome);
-        Assert.Equal("Update blocked while running", result.Message);
+        Assert.Equal("Agent is running — stop it to update", result.Message);
         commands.VerifyNoOtherCalls();
     }
 

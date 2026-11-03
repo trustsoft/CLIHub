@@ -75,7 +75,7 @@ public partial class AgentManagementViewModelTests
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
 
-        Assert.Equal("Update started.", viewModel.Cards[0].Message);
+        Assert.Equal("Update started", viewModel.Cards[0].Message);
     }
 
 
@@ -87,13 +87,13 @@ public partial class AgentManagementViewModelTests
         var update = new Mock<IAgentUpdateService>();
         update
             .Setup(x => x.UpdateAsync(a, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Update blocked while running"));
+            .ReturnsAsync(new AgentUpdateResult(AgentUpdateOutcome.Blocked, "Agent is running — stop it to update"));
         var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProbe(probe).WithUpdate(update).Build();
         viewModel.Load(null);
 
         viewModel.UpdateCommand.Execute(viewModel.Cards[0]);
 
-        Assert.Equal("Update blocked while running", viewModel.Cards[0].Message);
+        Assert.Equal("Agent is running — stop it to update", viewModel.Cards[0].Message);
     }
 
 }

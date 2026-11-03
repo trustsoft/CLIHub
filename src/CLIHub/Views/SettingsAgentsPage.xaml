@@ -49,7 +49,7 @@
     <StackPanel>
         <controls:SectionHeader Text="MANAGEMENT"/>
         <controls:SettingCard Title="Default agent"
-                           Hint="Preselected when the launch window opens."
+                           Hint="Preselected in the launch window."
                            Icon="{x:Static themes:IconGlyphs.Robot}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding AgentsState.DefaultAgentOptions}"
@@ -87,11 +87,11 @@
                            Style="{StaticResource HintText}"
                            Text="{Binding AgentsState.UpdateCheckSummary}"
                            Visibility="{Binding AgentsState.UpdateCheckSummary, Converter={StaticResource EmptyToCollapsedVisibility}}"/>
-                <Button AutomationProperties.Name="Detect installed agents and versions"
+                <Button AutomationProperties.Name="Recheck each agent and its version"
                         Command="{Binding AgentsState.DetectCommand}"
                         IsEnabled="{Binding AgentsState.CanDetect}"
                         Style="{StaticResource SectionHeaderChipButton}"
-                        ToolTip="Detect installed agents and versions">
+                        ToolTip="Recheck each agent and its version">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -103,11 +103,11 @@
                                    Text="Detect"/>
                     </StackPanel>
                 </Button>
-                <Button AutomationProperties.Name="Check for agent updates"
+                <Button AutomationProperties.Name="Check all installed agents for updates"
                         Command="{Binding AgentsState.CheckUpdatesCommand}"
                         IsEnabled="{Binding AgentsState.CanCheckUpdates}"
                         Style="{StaticResource SectionHeaderChipButton}"
-                        ToolTip="Check for agent updates">
+                        ToolTip="Check all installed agents for updates">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -160,7 +160,7 @@
                                     <Border Margin="8,0,0,0"
                                             AutomationProperties.Name="Update available"
                                             Style="{StaticResource AgentUpdateChip}"
-                                            ToolTip="A newer version is available"
+                                            ToolTip="Newer version available"
                                             Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
                                         <TextBlock Style="{StaticResource AgentUpdateChipText}"
                                                    Text="{Binding UpdateAvailabilityText}"/>
@@ -185,7 +185,7 @@
                                             CommandParameter="{Binding}"
                                             IsEnabled="{Binding CanDetect}"
                                             Style="{StaticResource ChipRemoveButton}"
-                                            ToolTip="Detect installation and version">
+                                            ToolTip="Recheck this agent and its version">
                                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                    Text="{x:Static themes:IconGlyphs.Refresh}"/>
@@ -209,7 +209,7 @@
                                             CommandParameter="{Binding}"
                                             IsEnabled="{Binding CanUpdate}"
                                             Style="{StaticResource ChipRemoveButton}"
-                                            ToolTip="Run the agent's update command">
+                                            ToolTip="Run this agent's update command">
                                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                    Text="{x:Static themes:IconGlyphs.Update}"/>
@@ -221,7 +221,7 @@
                                             CommandParameter="{Binding}"
                                             IsEnabled="{Binding CanEditConfig}"
                                             Style="{StaticResource ChipRemoveButton}"
-                                            ToolTip="Open the agent's plugin.json">
+                                            ToolTip="Open this agent's plugin.json">
                                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                    Text="{x:Static themes:IconGlyphs.Document}"/>

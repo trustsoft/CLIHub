@@ -70,7 +70,7 @@ internal static class SettingsPageCatalog
         new(
             "agents",
             "CLI Agents",
-            "Installed CLI agents and the default agent.",
+            "Agent status, updates, and the default agent.",
             "Engines & Repos",
             IconGlyphs.Robot,
             SummaryRowKey: "AgentsSummaryCards"),

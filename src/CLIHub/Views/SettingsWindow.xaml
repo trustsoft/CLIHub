@@ -217,7 +217,6 @@
             <DataTemplate x:Key="AgentsSummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <controls:SummaryCard Detail="{Binding AgentsState.AvailabilitySummary}"
-                                          DetailToolTip="Installed agents and supported plugin count"
                                           Icon="{x:Static themes:IconGlyphs.Robot}"
                                           Label="AGENTS"
                                           Value="{Binding AgentsState.InstalledAgentCount}"/>
@@ -230,7 +229,6 @@
                                           ValueToolTip="{Binding AgentsState.DefaultAgentName}"/>
 
                     <controls:SummaryCard Detail="{Binding AgentsState.UpdatesDetail}"
-                                          DetailToolTip="Agent update availability"
                                           Icon="{x:Static themes:IconGlyphs.Update}"
                                           Label="UPDATES"
                                           Value="{Binding AgentsState.UpdatesValue}"

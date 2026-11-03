@@ -43,7 +43,7 @@ public partial class AgentManagementViewModelTests
 
         // The default agent is not installed, so it gets no version probe and its detail falls
         // back to the preselection text instead of a version.
-        Assert.Equal("Preselected in the launch window", viewModel.DefaultAgentDetail);
+        Assert.Equal("In the launch window", viewModel.DefaultAgentDetail);
         Assert.Contains(viewModel.DefaultAgentOptions, option => option.Id is null);
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
@@ -129,7 +129,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.Equal("None", viewModel.DefaultAgentName);
         Assert.False(viewModel.HasDefaultAgent);
-        Assert.Equal("No default agent — choose one", viewModel.DefaultAgentDetail);
+        Assert.Equal("Choose an agent below", viewModel.DefaultAgentDetail);
         Assert.Equal(SummaryCardTone.Muted, viewModel.DefaultAgentValueTone);
     }
 
@@ -310,7 +310,7 @@ public partial class AgentManagementViewModelTests
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while running", card.Message);
+        Assert.Equal("Agent is running — stop it to update", card.Message);
         Assert.True(card.HasMessage);
     }
 
@@ -328,7 +328,7 @@ public partial class AgentManagementViewModelTests
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while running", card.Message);
+        Assert.Equal("Agent is running — stop it to update", card.Message);
         Assert.True(card.HasMessage);
 
         // An unrelated node script names no declared npm package and blocks nothing.
@@ -424,7 +424,7 @@ public partial class AgentManagementViewModelTests
         SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromSeconds(5));
 
         Assert.False(card.CanUpdate);
-        Assert.Equal("Update blocked while running", card.Message);
+        Assert.Equal("Agent is running — stop it to update", card.Message);
     }
 
 

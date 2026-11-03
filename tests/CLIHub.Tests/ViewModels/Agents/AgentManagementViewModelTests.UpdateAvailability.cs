@@ -675,10 +675,10 @@ public partial class AgentManagementViewModelTests
 
 
     [Theory]
-    [InlineData(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0", "Update available · 1.0.0 → 2.0.0")]
+    [InlineData(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0", "Update available")]
     [InlineData(AgentUpdateStatus.UpdateAvailable, null, null, "Update available")]
     [InlineData(AgentUpdateStatus.UpToDate, null, null, "Up to date")]
-    [InlineData(AgentUpdateStatus.Unknown, null, null, "Update availability unknown")]
+    [InlineData(AgentUpdateStatus.Unknown, null, null, "Update status unknown")]
     public void CheckCardUpdatesCommand_WhenCheckSettles_WritesExpectedOutcomeMessage(
         AgentUpdateStatus status,
         string? installedVersion,
@@ -745,7 +745,7 @@ public partial class AgentManagementViewModelTests
         viewModel.CheckCardUpdatesCommand.Execute(card);
 
         Assert.Null(card.UpdateAvailability);
-        Assert.Equal("Not installed on the host", card.Message);
+        Assert.Equal("Not installed on this PC", card.Message);
         availability.Verify(x => x.InvalidateFor(a), Times.Never);
         availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -954,7 +954,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.Equal(0, viewModel.UpdatesAvailableCount);
         Assert.Equal("Unknown", viewModel.UpdatesValue);
-        Assert.Equal("Run Check updates", viewModel.UpdatesDetail);
+        Assert.Equal("Check updates", viewModel.UpdatesDetail);
         Assert.Equal(SummaryCardTone.Muted, viewModel.UpdatesValueTone);
     }
 
@@ -983,8 +983,8 @@ public partial class AgentManagementViewModelTests
     }
 
     [Theory]
-    [InlineData(1, "1 of 3 installed agents")]
-    [InlineData(2, "2 of 3 installed agents")]
+    [InlineData(1, "1 of 3 agents has an update")]
+    [InlineData(2, "2 of 3 agents have updates")]
     public void UpdatesAggregation_WhenUpdatesAvailable_ReportsCountAgainstInstalledAgents(
         int updateCount,
         string expectedDetail)
@@ -1033,7 +1033,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.Equal(1, viewModel.UpdatesAvailableCount);
         Assert.Equal("1", viewModel.UpdatesValue);
-        Assert.Equal("1 of 1 installed agent", viewModel.UpdatesDetail);
+        Assert.Equal("1 of 1 agent has an update", viewModel.UpdatesDetail);
         Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
     }
 
@@ -1092,7 +1092,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.True(SpinWait.SpinUntil(() => viewModel.UpdatesAvailableCount == 1, TimeSpan.FromSeconds(5)));
         Assert.Equal("1", viewModel.UpdatesValue);
-        Assert.Equal("1 of 2 installed agents", viewModel.UpdatesDetail);
+        Assert.Equal("1 of 2 agents has an update", viewModel.UpdatesDetail);
         Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
         Assert.Contains(nameof(AgentManagementViewModel.UpdatesValue), raised);
         Assert.Contains(nameof(AgentManagementViewModel.UpdatesDetail), raised);
@@ -1128,7 +1128,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.Equal(1, viewModel.UpdatesAvailableCount);
         Assert.Equal("1", viewModel.UpdatesValue);
-        Assert.Equal("1 of 2 installed agents", viewModel.UpdatesDetail);
+        Assert.Equal("1 of 2 agents has an update", viewModel.UpdatesDetail);
         Assert.Equal(SummaryCardTone.Accent, viewModel.UpdatesValueTone);
         Assert.Contains(nameof(AgentManagementViewModel.UpdatesValue), raised);
     }

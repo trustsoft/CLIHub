@@ -136,7 +136,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         {
             if (!this.HasDefaultAgent)
             {
-                return "No default agent — choose one";
+                return "Choose an agent below";
             }
 
             var version = this.Cards
@@ -144,7 +144,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 ?.Version;
 
             return version is null
-                ? "Preselected in the launch window"
+                ? "In the launch window"
                 : $"Version {version}";
         }
     }
@@ -316,7 +316,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             {
                 var installed = this.InstalledAgentCount;
                 var noun = installed == 1 ? "agent" : "agents";
-                return $"{this.UpdatesAvailableCount} of {installed} installed {noun}";
+                return this.UpdatesAvailableCount == 1
+                    ? $"1 of {installed} {noun} has an update"
+                    : $"{this.UpdatesAvailableCount} of {installed} {noun} have updates";
             }
 
             if (this.InstalledAgentCount == 0)
@@ -324,7 +326,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 return "No installed agents";
             }
 
-            return this.AllInstalledAgentsUpToDate ? "All installed agents up to date" : "Run Check updates";
+            return this.AllInstalledAgentsUpToDate ? "All installed agents up to date" : "Check updates";
         }
     }
 
@@ -580,7 +582,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                     // user action may have set between render and pass completion.
                     if (running.Count > 0)
                     {
-                        card.Message = "Update blocked while running";
+                        card.Message = "Agent is running — stop it to update";
                     }
                 }
             }
@@ -605,9 +607,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             this.ApplyProbeResult(card, result);
             card.Message = (result.IsInstalled, result.Version) switch
             {
-                (true, { } version) => $"Installed · version {version}",
+                (true, { } version) => $"Installed · v{version}",
                 (true, null) => "Installed",
-                _ => "Not installed on the host"
+                _ => "Not installed on this PC"
             };
             this.RefreshAvailabilitySummary();
             this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
@@ -801,7 +803,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // Defensive gate (command + IsEnabled already refuse not-installed cards): a missing
             // CLI has no update source to check; clear any stale advisory indicator.
             card.UpdateAvailability = null;
-            card.Message = "Not installed on the host";
+            card.Message = "Not installed on this PC";
             this.RefreshAvailabilitySummary();
             return;
         }
@@ -815,12 +817,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             card.UpdateAvailability = availability;
             card.Message = availability.Status switch
             {
-                AgentUpdateStatus.UpdateAvailable when availability.InstalledVersion is { } installed
-                                                 && availability.LatestVersion is { } latest
-                    => $"Update available · {installed} → {latest}",
                 AgentUpdateStatus.UpdateAvailable => "Update available",
                 AgentUpdateStatus.UpToDate => "Up to date",
-                _ => "Update availability unknown"
+                _ => "Update status unknown"
             };
             this.RefreshAvailabilitySummary();
         }
@@ -878,8 +877,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         var result = await this.update.UpdateAsync(card.Plugin, cancellationToken);
         card.Message = result.Outcome switch
         {
-            AgentUpdateOutcome.Started => "Update started.",
-            _ => result.Message ?? "Update failed."
+            AgentUpdateOutcome.Started => "Update started",
+            _ => result.Message ?? "Update failed"
         };
 
         if (result.Started)
