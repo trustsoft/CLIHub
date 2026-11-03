@@ -37,7 +37,7 @@
 - [x] 5.1 Build: `dotnet build CLIHub.sln`
 - [x] 5.2 Run tests: `dotnet test CLIHub.sln`
 - [x] 5.3 Validate: `openspec validate --all`
-- [ ] 5.4 Run manual smoke test: Open CLIHub, navigate to Settings → Theme & Accent, verify copy matches the approved mockup, verify accessible names via Narrator or Accessibility Insights (theme options read as "Dark theme", "Light theme", etc.; custom accent entry reads as "Custom accent color"), verify selection and save behavior unchanged.
+- [x] 5.4 Run manual smoke test: Open CLIHub, navigate to Settings → Theme & Accent, verify copy matches the approved mockup, verify accessible names via Narrator or Accessibility Insights (theme options read as "Dark theme", "Light theme", etc.; custom accent entry reads as "Custom accent color"), verify selection and save behavior unchanged. Confirmed by the user on 2026-11-03.
 - [x] 5.5 Update graph: `graphify update .`
 
 ## Notes
