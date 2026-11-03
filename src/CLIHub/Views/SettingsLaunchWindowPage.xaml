@@ -8,64 +8,64 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <controls:SectionHeader Text="ACTIVATION"/>
-        <controls:SettingCard Title="Global hotkey"
-                           Hint="Press a combination. Esc cancels capture."
-                           Icon="{x:Static themes:IconGlyphs.Keyboard}">
-            <Border x:Name="HotkeyField"
-                    MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
-                    PreviewKeyDown="HotkeyField_PreviewKeyDown"
-                    Style="{StaticResource HotkeyField}">
-                <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
-                <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
+        <controls:SettingsGroup Margin="0,18,0,8">
+            <controls:SettingCard Title="Launcher shortcut"
+                               Hint="Global hotkey. Press a combination; Esc cancels capture."
+                               Icon="{x:Static themes:IconGlyphs.Keyboard}"
+                               Grouped="True">
+                <Border x:Name="HotkeyField"
+                        MouseLeftButtonDown="HotkeyField_MouseLeftButtonDown"
+                        PreviewKeyDown="HotkeyField_PreviewKeyDown"
+                        Style="{StaticResource HotkeyField}">
+                    <!-- -6 cancels the last chip's trailing margin, so the left and right insets stay equal -->
+                    <ItemsControl Margin="0,0,-6,0" ItemsSource="{Binding HotkeyParts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource HotkeyChip}">
+                                    <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </controls:SettingCard>
+            <controls:SettingCard Title="Launcher placement"
+                               Hint="Where the window opens. The active monitor follows the pointer."
+                               Icon="{x:Static themes:IconGlyphs.Location}"
+                               Grouped="True">
+                <ComboBox HorizontalAlignment="Right"
+                          ItemsSource="{Binding PopupPositions}"
+                          SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"
+                          Style="{StaticResource SettingsComboBox}"
+                          behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                    <ComboBox.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource HotkeyChip}">
-                                <TextBlock Style="{StaticResource HotkeyChipText}" Text="{Binding}"/>
-                            </Border>
+                            <TextBlock Text="{Binding Name}"/>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </Border>
-        </controls:SettingCard>
-
-        <controls:SectionHeader Text="POSITION"/>
-        <controls:SettingCard Title="Launcher window position"
-                           Hint="Active monitor is the one under the pointer."
-                           Icon="{x:Static themes:IconGlyphs.Location}">
-            <ComboBox HorizontalAlignment="Right"
-                      ItemsSource="{Binding PopupPositions}"
-                      SelectedItem="{Binding SelectedPopupPosition, Mode=TwoWay}"
-                      Style="{StaticResource SettingsComboBox}"
-                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </controls:SettingCard>
-
-        <controls:SectionHeader Text="PROJECT PATHS"/>
-        <controls:SettingCard Title="Path display"
-                           Hint="Long paths are shortened in project rows."
-                           Icon="{x:Static themes:IconGlyphs.FolderOpen}">
-            <ComboBox HorizontalAlignment="Right"
-                      ItemsSource="{Binding PathDisplays}"
-                      SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
-                      Style="{StaticResource SettingsComboBox}"
-                      behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}"/>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-        </controls:SettingCard>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </controls:SettingCard>
+            <controls:SettingCard Title="Project path shortening"
+                               Hint="How long paths are shortened in project rows."
+                               Icon="{x:Static themes:IconGlyphs.FolderOpen}"
+                               Grouped="True">
+                <ComboBox HorizontalAlignment="Right"
+                          ItemsSource="{Binding PathDisplays}"
+                          SelectedItem="{Binding SelectedPathDisplay, Mode=TwoWay}"
+                          Style="{StaticResource SettingsComboBox}"
+                          behaviors:ComboBoxBehaviors.AutoWidthToItems="True">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </controls:SettingCard>
+        </controls:SettingsGroup>
     </StackPanel>
 </UserControl>
