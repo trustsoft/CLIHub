@@ -467,13 +467,13 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
         var text = value.Trim();
         if (text.Length == 0)
         {
-            this.WatchedDirectoryError = "Enter a folder path or browse for one.";
+            this.WatchedDirectoryError = "Choose a folder or type its path.";
             return false;
         }
 
         if (!Path.IsPathFullyQualified(text) || !Directory.Exists(text))
         {
-            this.WatchedDirectoryError = "Enter an existing absolute folder path.";
+            this.WatchedDirectoryError = "Use a full folder path that exists.";
             return false;
         }
 
@@ -484,7 +484,7 @@ public sealed class WatchedDirectoryEditor : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            this.WatchedDirectoryError = "Enter a valid absolute folder path.";
+            this.WatchedDirectoryError = "That path isn't valid.";
             return false;
         }
 

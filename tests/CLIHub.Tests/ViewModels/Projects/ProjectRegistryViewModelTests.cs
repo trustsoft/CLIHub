@@ -197,7 +197,7 @@ public class ProjectRegistryViewModelTests : IDisposable
         section.RegisterCommand.Execute(null);
 
         Assert.True(section.HasError);
-        Assert.Contains("existing absolute", section.ErrorText);
+        Assert.Equal("Use a full folder path that exists.", section.ErrorText);
         Assert.Empty(section.Projects);
     }
 

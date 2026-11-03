@@ -179,13 +179,13 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         var text = value.Trim();
         if (text.Length == 0)
         {
-            this.ErrorText = "Enter a folder path or browse for one.";
+            this.ErrorText = "Choose a folder or type its path.";
             return false;
         }
 
         if (!Path.IsPathFullyQualified(text) || !Directory.Exists(text))
         {
-            this.ErrorText = "Enter an existing absolute folder path.";
+            this.ErrorText = "Use a full folder path that exists.";
             return false;
         }
 
@@ -196,7 +196,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            this.ErrorText = "Enter a valid absolute folder path.";
+            this.ErrorText = "That path isn't valid.";
             return false;
         }
 
