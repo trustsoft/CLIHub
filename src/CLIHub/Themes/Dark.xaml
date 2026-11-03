@@ -2,9 +2,11 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--
-        Dark palette. Colours only: the palette is shared application-wide, while the launch
-        window's styles live in LaunchWindowStyles.xaml so other windows keep their own look.
-        Values follow the approved popup design (the mockup and the reference implementation).
+        Theme palette. Defines the application brush keys (chrome, surfaces, strokes,
+        overlays, text, and status). Dark.xaml is the base palette merged by App.xaml;
+        Light.xaml and Blue.xaml are swapped in at runtime by PaletteSwitcher when the
+        effective theme resolves to light or blue. To add another theme, copy this file
+        and replace the Color values; see docs/architecture/ui.md.
     -->
 
     <!-- Surfaces -->
@@ -26,14 +28,13 @@
     <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
     <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
     <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
-    <!-- 1px highlight line drawn across the top edge of the dark-chrome windows -->
+    <!-- 1px highlight line drawn across the top edge of windows with drawn chrome -->
     <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
     <!-- Thumb of the slim application-level scrollbar -->
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF"/>
 
     <!-- Text -->
-    <!-- Primary text is one step off pure white (pure white reads harsh on the dark chrome);
-         it sits a hair above MenuItemBrush so list names keep a slight edge over menu entries. -->
+    <!-- Primary text sits a hair above MenuItemBrush so list names keep a slight edge over menu entries. -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFE9E9E9"/>
     <SolidColorBrush x:Key="TextMutedBrush" Color="#FF9A9A9A"/>
     <SolidColorBrush x:Key="SectionLabelBrush" Color="#FF8B8B8B"/>
@@ -42,7 +43,7 @@
     <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE6E6E6"/>
     <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5C5C63"/>
 
-    <!-- Status: the single error tone (validation and failure messages on dark surfaces) -->
+    <!-- Status: error, success, and selection tones -->
     <SolidColorBrush x:Key="DangerBrush" Color="#FFD97B7B"/>
     <SolidColorBrush x:Key="SuccessBrush" Color="#FF4ADE80"/>
     <SolidColorBrush x:Key="SuccessSelectionBrush" Color="#1F4ADE80"/>
