@@ -7,9 +7,9 @@
              xmlns:themes="clr-namespace:CLIHub.Themes"
              mc:Ignorable="d">
     <StackPanel>
-        <controls:SectionHeader Text="THEME"/>
-        <controls:SettingCard Title="Application theme"
-                           Hint="Select the visual palette and luminosity mode. System Theme follows Windows."
+        <controls:SettingCard Margin="0,18,0,8"
+                           Title="Theme"
+                           Hint="System follows the Windows light/dark mode."
                            Icon="{x:Static themes:IconGlyphs.Brightness}"
                            Placement="Stacked">
             <ListBox Margin="0,0,-8,0"
@@ -69,7 +69,7 @@
         </controls:SettingCard>
 
         <controls:SettingCard Title="Accent color"
-                           Hint="Applied to active states, focus rings, toggles, and primary actions."
+                           Hint="Used for selection, focus, and emphasis."
                            Badge="{Binding Accent.ActiveAccentLabel}"
                            BadgeTone="Accent"
                            Icon="{x:Static themes:IconGlyphs.Palette}"
@@ -155,7 +155,7 @@
                              Style="{StaticResource SettingsInput}"
                              Tag="#RRGGBB"
                              Text="{Binding Accent.AccentText, UpdateSourceTrigger=PropertyChanged}"
-                             ToolTip="Custom accent color as #RRGGBB"/>
+                             ToolTip="Hex color, e.g. #4CC2FF"/>
                 </StackPanel>
             </StackPanel>
         </controls:SettingCard>

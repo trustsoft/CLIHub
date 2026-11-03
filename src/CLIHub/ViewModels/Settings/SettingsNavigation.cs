@@ -90,7 +90,7 @@ internal static class SettingsPageCatalog
         new(
             "appearance",
             "Theme & Accent",
-            "Theme and accent color.",
+            "How CLIHub looks.",
             "System",
             IconGlyphs.Palette),
         new(

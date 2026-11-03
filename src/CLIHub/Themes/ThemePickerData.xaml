@@ -35,7 +35,7 @@
     <SolidColorBrush x:Key="ThemePreviewBarBlueBrush" Color="#FF3E4C66"/>
 
     <Style x:Key="ThemeOptionItem" TargetType="ListBoxItem">
-        <Setter Property="AutomationProperties.Name" Value="{Binding Name}"/>
+        <Setter Property="AutomationProperties.Name" Value="{Binding AccessibleName}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <!-- The group cancels this trailing gap with a matching negative margin, keeping the row

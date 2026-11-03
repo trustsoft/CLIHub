@@ -45,29 +45,29 @@ public static class ThemeDescriptors
     [
         new ThemeDescriptor(
             AppTheme.Dark,
-            "Dark Theme",
-            "Fluent Dark (default)",
+            "Dark",
+            "Default palette",
             null,
             "ThemePreviewDarkBrush",
             "ThemePreviewBarDarkBrush"),
         new ThemeDescriptor(
             AppTheme.Light,
-            "Light Theme",
-            "High contrast daylight profile",
+            "Light",
+            "Bright, high-contrast palette",
             "/Themes/LightTheme.xaml",
             "ThemePreviewLightBrush",
             "ThemePreviewBarLightBrush"),
         new ThemeDescriptor(
             AppTheme.Blue,
-            "Deep Blue Theme",
-            "Blue-tinted dark chrome",
+            "Deep Blue",
+            "Dark with a blue tint",
             "/Themes/BlueTheme.xaml",
             "ThemePreviewBlueBrush",
             "ThemePreviewBarBlueBrush"),
         new ThemeDescriptor(
             AppTheme.System,
-            "System Theme",
-            "Follow Windows personalization state",
+            "System",
+            "Follows the Windows light/dark mode",
             null,
             "ThemePreviewSystemBrush",
             "ThemePreviewBarLightBrush")

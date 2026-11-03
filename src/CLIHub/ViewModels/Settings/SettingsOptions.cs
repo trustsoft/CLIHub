@@ -65,7 +65,13 @@ public sealed record AppThemeOption(
     string Description,
     string PreviewCardBrush,
     string PreviewBarBrush,
-    bool UsesAccentPreviewDot);
+    bool UsesAccentPreviewDot)
+{
+    /// <summary>
+    ///   The accessible name combining the theme name with "theme" for screen readers.
+    /// </summary>
+    public string AccessibleName => $"{this.Name} theme";
+}
 
 /// <summary>
 ///   A selectable accent color: a palette preset or the custom hex entry.
@@ -77,9 +83,10 @@ public sealed record AppThemeOption(
 public sealed record AccentChoice(string Name, string Hex, string Hint, bool IsCustom)
 {
     /// <summary>
-    ///   The accessible name combining the label with the color value or hint.
+    ///   The accessible name: a self-describing label for the custom entry, otherwise the label with
+    ///   the color value or hint.
     /// </summary>
-    public string AccessibleName => $"{this.Name} {this.Hint}";
+    public string AccessibleName => this.IsCustom ? "Custom accent color" : $"{this.Name} {this.Hint}";
 }
 
 /// <summary>

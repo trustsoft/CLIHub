@@ -9,7 +9,7 @@ using CLIHub.Themes;
 public sealed class AccentSelection : ObservableObject
 {
     private static readonly AccentChoice CustomAccentChoice =
-        new("Custom...", "Transparent", "RGB / Hex", true);
+        new("Custom", "Transparent", "Your own color", true);
 
     private static readonly AccentChoice[] AccentChoices = AccentPalette.Presets
         .Select(preset => new AccentChoice(preset.Name, preset.Hex, preset.Hex, false))
