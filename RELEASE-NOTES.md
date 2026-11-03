@@ -3,6 +3,29 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.0.6 — 2026-11-03
+
+### New
+
+- The global hotkey now lives on the Launch Window page next to launcher placement and path shortening, so all activation settings sit together; the separate Global Hotkey page is gone.
+- The Launch Window page shows its three settings as one grouped card named Launcher shortcut, Launcher placement, and Project path shortening.
+
+### Improved
+
+- Theme choices are named Dark, Light, Deep Blue, and System, each with a short description, and the custom accent entry is called Custom.
+- Copy across Settings is shorter and plainer on General & Startup, Launch Window, Theme & Accent, Logs, Updates, Terminal Profiles, Projects, Project Scanning, Agent Detection, and CLI Agents.
+- The Logs, Theme & Accent, Updates, and Launch Window pages drop section headers that repeated their content, so each page starts with its settings.
+- Project Scanning says folder throughout instead of mixing folder, directory, and watched root, states the per-folder default and override rule once, and moves the immediate-apply note under the page header.
+- The Projects add row uses the same Add button and Absolute folder path, e.g. C:\repos placeholder as Project Scanning.
+- CLI Agents details read more plainly: the DEFAULT card says Choose an agent below or In the launch window, the UPDATES card counts updates as "N of M agents have updates", and tooltips distinguish checking all agents from checking one.
+- Agent Detection hints and validation are shorter, and the DEFAULTS card says Version timeout instead of Checking timeout.
+- Settings sidebar icons now match the purpose of each page.
+- Invalid folder and hotkey input tells you what to do, for example Choose a folder or type its path. and Add a modifier: Ctrl, Shift, Alt, or Win.
+
+### Fixed
+
+- Launching CLIHub again while the first instance is still starting now reliably brings the existing window forward; previously the second launch could exit silently on a cold or busy machine.
+
 ## 1.0.5 — 2026-11-02
 
 ### New

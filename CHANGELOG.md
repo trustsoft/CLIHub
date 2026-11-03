@@ -8,6 +8,31 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.0.6 - 2026-11-03
+
+### Added
+
+- The Launch Window Settings page gains an `ACTIVATION` block for the global hotkey, and the standalone Global Hotkey page is deleted, reducing the sidebar from eleven pages to ten with every hotkey binding, validation message, and configuration key unchanged (`launch-window-hotkey-section`, `preferences-ui`).
+- Theme options gain an `AccessibleName` (`Dark theme`, `Light theme`, `Deep Blue theme`, `System theme`) bound to `AutomationProperties.Name`, so the shortened visible names stay self-describing for screen readers; the custom accent entry's accessible name is `Custom accent color` (`theme-accent-copy`, `preferences-ui`).
+
+### Changed
+
+- The Launch Window page replaces its three single-setting sections (ACTIVATION, POSITION, PROJECT PATHS) with one grouped `SettingsGroup` and hairline separators, and renames the cards to `Launcher shortcut`, `Launcher placement`, and `Project path shortening`; the page description, controls, option lists, bindings, validation, and configuration keys are unchanged (`launch-window-page-layout`, `preferences-ui`).
+- Settings copy is tightened on General & Startup, Launch Window, Theme & Accent, Logs, Updates, Terminal Profiles, Projects, Project Scanning, Agent Detection, and CLI Agents: shorter page descriptions and hints, redundant section headers removed on Logs, Theme & Accent, Updates, and Launch Window, and the Project Scanning page uses folder as the single user-facing term for a watched root, states the default/override rule once, moves the immediate-apply note under the page header, and drops the `Globs supported` badge (`general-startup-copy`, `launch-window-copy`, `theme-accent-copy`, `logs-page-copy`, `updates-page-copy`, `terminal-profiles-copy`, `projects-page-copy`, `project-scanning-copy`, `agent-detection-copy-refresh`, `cli-agents-copy-refresh`, `preferences-ui`, `settings-theme`).
+- The shared add-row validation messages on Projects and Project Scanning are rewritten to `Choose a folder or type its path.`, `Use a full folder path that exists.`, and `That path isn't valid.`; validation order and the duplicate-folder messages are unchanged (`add-row-validation-copy`).
+- Settings page icons use purpose-specific glyphs: `launch-window` → `OpenInNewWindow`, `projects-registry` → `FolderSelect`, `projects` → `SyncFolder`, and `agent-detection` → `Process`, backed by new `IconGlyphs` constants; the `preferences-ui` Agent Detection scenario now pins `IconGlyphs.Process` (`settings-page-icons`, `abba14a`, `preferences-ui`).
+- The Projects page shows the static detail `In the launch window` on its summary card instead of the discovered/manual mix, drops the duplicate detail tooltip, and removes `ProjectMixSummary` from `IProjectRegistrySection` and `ProjectRegistryViewModel` (`projects-page-copy`).
+- Agent tooling: concurrent orchestrator sessions must run in their own worktree, every `openspec archive` is followed by an integrity checklist, and direct writes to `.opencode/pipeline.json` are forbidden; `docs/backlog.md` records the concurrent-session recovery procedure (`concurrent-session-archive-safety`).
+- `README.md`, `docs/project-context.md`, `docs/architecture.md` and its topic files, `docs/glossary.md`, and `docs/repo-structure.md` are actualized for the current composition and Settings layout (`ab6c937`, `1ca798f`, `fc026a0`).
+
+### Fixed
+
+- Single-instance activation is reliable on a cold or loaded machine: the first instance creates its named pipe synchronously in the guard constructor and a duplicate's `SignalActivation()` retries with exponential backoff inside a roughly two-second deadline, so a second launch brings the existing window forward instead of exiting silently; new tests cover a signal sent immediately after guard construction and a client that connects before `WaitForConnectionAsync` is pending (`single-instance-activation-reliability`, `app-lifecycle`).
+
+### Removed
+
+- `SettingsHotkeysPage.xaml` and its code-behind (the Global Hotkey page), `ProjectMixSummary`, the Project Scanning `Globs supported` badge, the duplicate `DetailToolTip` attributes on the CLI Agents AGENTS/UPDATES and Agent Detection CACHE TTL/TIMEOUT cards, and the Theme & Accent "applies on save" hint (`launch-window-hotkey-section`, `projects-page-copy`, `project-scanning-copy`, `cli-agents-copy-refresh`, `agent-detection-copy-refresh`, `72bc817`).
+
 ## 1.0.5 - 2026-11-02
 
 ### Added
