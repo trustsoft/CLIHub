@@ -84,7 +84,7 @@ internal static class SettingsPageCatalog
         new(
             "terminal",
             "Terminal Profiles",
-            "The shell used to open interactive agent commands.",
+            "The terminal that CLI agents run in.",
             "Engines & Repos",
             IconGlyphs.Terminal),
         new(

@@ -10,7 +10,7 @@
     <StackPanel>
         <controls:SettingCard Margin="0,16,0,0"
                            Title="Default runtime"
-                           Hint="Runtime used to open interactive agent commands."
+                           Hint="Used for every agent command."
                            Icon="{x:Static themes:IconGlyphs.Terminal}">
             <ComboBox HorizontalAlignment="Right"
                       ItemsSource="{Binding Runtimes}"
@@ -31,7 +31,7 @@
                                             <DataTrigger Binding="{Binding IsInstalled}" Value="False">
                                                 <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
                                                 <Setter Property="AutomationProperties.HelpText"
-                                                        Value="The runtime executable was not found, so a command in this runtime cannot be launched."/>
+                                                        Value="Not installed. Agent commands can't run in this runtime."/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
