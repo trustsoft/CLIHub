@@ -128,8 +128,7 @@ The Updates section SHALL let the user trigger an update check and report the ou
 
 ### Requirement: Path display preference
 
-The Settings window SHALL offer a choice of how long project paths are shortened in the launch window,
-under a "PROJECT PATHS" section header on the Launch Window page.
+The Settings window SHALL offer a choice of how long project paths are shortened in the launch window, under "Project path shortening" on the Launch Window page.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Launch Window"
@@ -249,19 +248,12 @@ The Logs page SHALL offer a log-level selector (Verbose, Debug, Information, War
 
 ### Requirement: Popup screen position
 
-The Launch Window page SHALL offer a "Launcher window position" selector under a "POSITION" section
-header, with the options "Active monitor – centered", "Active monitor – top-center",
-"Cursor-relative", and "Primary monitor – centered", defaulting to "Active monitor – centered".
-Options that target a monitor SHALL follow the "<monitor> – <placement>" label pattern so that both the
-monitor and the placement the launch window will use are explicit. "Cursor-relative" SHALL keep its
-pointer-relative wording because it does not target a monitor.
+The Launch Window page SHALL offer a "Launcher placement" selector with the options "Active monitor – centered", "Active monitor – top-center", "Cursor-relative", and "Primary monitor – centered", defaulting to "Active monitor – centered". Options that target a monitor SHALL follow the "<monitor> – <placement>" label pattern so that both the monitor and the placement the launch window will use are explicit. "Cursor-relative" SHALL keep its pointer-relative wording because it does not target a monitor.
 
 #### Scenario: Options offered
 - **WHEN** the Settings window opens on "Launch Window"
-- **THEN** the "POSITION" section shows the "Launcher window position" selector with the four options
-  and the stored value selected
-- **AND** the monitor-targeting options are labelled "Active monitor – centered", "Active monitor –
-  top-center", and "Primary monitor – centered"
+- **THEN** the "Launcher placement" selector shows the four options and the stored value is selected
+- **AND** the monitor-targeting options are labelled "Active monitor – centered", "Active monitor – top-center", and "Primary monitor – centered"
 
 #### Scenario: Default position
 - **WHEN** no launcher window position has been stored
@@ -660,7 +652,7 @@ The Updates page SHALL let the user open the application release notes from the 
 
 ### Requirement: Settings sections and pages
 
-The Settings window SHALL present a sidebar with the groups "General", "Engines & Repos", and "System" and the pages "General & Startup", "Launch Window", "Projects", "Project Scanning", "CLI Agents", "Agent Detection", "Terminal Profiles", "Theme & Accent", "Logs", and "Updates". Selecting a page SHALL show that page's content and mark it active, and the window SHALL open on "General & Startup". Each existing preference SHALL appear on its page: the startup toggles on "General & Startup", the global hotkey on "Launch Window" as the first (`ACTIVATION`) section, the launcher window position and path display style on "Launch Window" under their respective sections, the default runtime on "Terminal Profiles", the agent detection fields on "Agent Detection", the theme and accent color on "Theme & Accent", and the startup update check and manual update check on "Updates". The "Projects" page SHALL be grouped with "Project Scanning" under "Engines & Repos" and SHALL present the registered project list with its management actions. The footer SHALL show the current application version.
+The Settings window SHALL present a sidebar with the groups "General", "Engines & Repos", and "System" and the pages "General & Startup", "Launch Window", "Projects", "Project Scanning", "CLI Agents", "Agent Detection", "Terminal Profiles", "Theme & Accent", "Logs", and "Updates". Selecting a page SHALL show that page's content and mark it active, and the window SHALL open on "General & Startup". Each existing preference SHALL appear on its page: the startup toggles on "General & Startup", the launcher shortcut on "Launch Window" as the first setting in the grouped card, the launcher placement and project path shortening on "Launch Window" in the same grouped card, the default runtime on "Terminal Profiles", the agent detection fields on "Agent Detection", the theme and accent color on "Theme & Accent", and the startup update check and manual update check on "Updates". The "Projects" page SHALL be grouped with "Project Scanning" under "Engines & Repos" and SHALL present the registered project list with its management actions. The footer SHALL show the current application version.
 
 #### Scenario: Sections shown
 
@@ -677,7 +669,7 @@ The Settings window SHALL present a sidebar with the groups "General", "Engines 
 
 - **WHEN** the Settings window opens
 - **THEN** "Launch Window" appears under "General" as the first page after "General & Startup" and before "Projects"
-- **AND** selecting it shows the global hotkey capture field, the launcher window position control, and the path display control
+- **AND** selecting it shows the launcher shortcut capture field, the launcher placement control, and the project path shortening control
 
 #### Scenario: Projects page in the sidebar
 
@@ -694,7 +686,7 @@ The Settings window SHALL present a sidebar with the groups "General", "Engines 
 #### Scenario: Existing controls on their pages
 
 - **WHEN** the Settings window opens
-- **THEN** the "Start with Windows" and "Start minimized to tray" toggles appear on "General & Startup", the global-hotkey capture field appears on "Launch Window" in the `ACTIVATION` section (the first section on the page), the launcher window position and path display selectors appear on "Launch Window" under their respective sections, the default-runtime selector appears on "Terminal Profiles", the agent detection `Cache TTL, minutes` and `Version check timeout, seconds` fields appear on "Agent Detection", the theme and accent selectors appear on "Theme & Accent", and the "Check for updates on startup" toggle and manual update check appear on "Updates"
+- **THEN** the "Start with Windows" and "Start minimized to tray" toggles appear on "General & Startup", the launcher shortcut capture field appears on "Launch Window" as the first setting in a grouped card, the launcher placement and project path shortening selectors appear on "Launch Window" in the same grouped card, the default-runtime selector appears on "Terminal Profiles", the agent detection `Cache TTL, minutes` and `Version check timeout, seconds` fields appear on "Agent Detection", the theme and accent selectors appear on "Theme & Accent", and the "Check for updates on startup" toggle and manual update check appear on "Updates"
 
 #### Scenario: Current values loaded
 
@@ -709,7 +701,7 @@ The Settings window SHALL present a sidebar with the groups "General", "Engines 
 #### Scenario: Hotkey section first on Launch Window
 
 - **WHEN** the Settings window opens on "Launch Window"
-- **THEN** the page shows three sections in order: `ACTIVATION` (containing the global hotkey capture field), `POSITION` (launcher window position selector), and `PROJECT PATHS` (path display selector)
+- **THEN** the page shows one grouped card with three settings in order: launcher shortcut (containing the hotkey capture field), launcher placement, and project path shortening
 
 ### Requirement: Agent Detection page content
 
