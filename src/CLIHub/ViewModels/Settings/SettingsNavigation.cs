@@ -102,7 +102,7 @@ internal static class SettingsPageCatalog
         new(
             "updates",
             "Updates",
-            "Check for new CLIHub builds, configure update preferences, and view release notes.",
+            "Update checks, downloads, and notifications.",
             "System",
             IconGlyphs.Sync,
             HeaderTitleExtraKey: "UpdatesHeaderTitleExtra",

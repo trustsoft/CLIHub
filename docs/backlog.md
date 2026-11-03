@@ -332,6 +332,18 @@ snapshot.
   Agent Detection page was added after the previous recheck), so neither threshold is close;
   remains deferred.
 
+### Release notes requirement says "status card" but the link is on the title row
+
+- Severity: Low (spec accuracy; no behavior or UI defect)
+- Evidence: `openspec/specs/preferences-ui/spec.md:651-659` — the "Release notes from Settings"
+  requirement body says the user opens release notes "from the status card", but the
+  `Release notes →` link lives in `UpdatesHeaderTitleExtra` on the page title row
+  (`src/CLIHub/Views/SettingsWindow.xaml:92-113`). The mismatch predates the Updates copy revision
+  and was left untouched there to keep that change label-only.
+- Proposed remedy: reword the requirement body to "from the title row" in the next edit of that
+  requirement or during a spec-accuracy sweep.
+- Trigger: the next change touching "Release notes from Settings", or a documentation audit.
+
 ### Single-use FontSize and CornerRadius literals stay untokenized
 
 - Severity: Low (consistency)

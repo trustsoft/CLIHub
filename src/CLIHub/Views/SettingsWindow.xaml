@@ -107,7 +107,7 @@
                     <Button VerticalAlignment="Center"
                             Margin="8,0,0,0"
                             Command="{Binding ShowReleaseNotesCommand}"
-                            Content="View release notes  →"
+                            Content="Release notes →"
                             Style="{StaticResource LinkButton}"
                             ToolTip="Open What's New"/>
                 </StackPanel>
