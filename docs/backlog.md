@@ -66,6 +66,20 @@ are pruned from this list once their evidence is no longer needed; recover them 
 - Trigger (reopen): a further cross-concern edit that still forces synchronized mapping changes, or
   the `config-format-v2` decision below.
 
+### Enum mappers silently swallow undefined enum values in `ToToken` (project-wide idiom)
+
+- Severity: Low (latent; every mapper coerces an undefined value to its default token)
+- Evidence: review on 2026-11-04 — `RuntimeKinds.ToToken`
+  (`src/CLIHub.Core/Models/Processes/RuntimeKind.cs:110-116`) maps an undefined enum value such as
+  `(RuntimeKind)42` to `"ps"`, which then persists and round-trips as a valid PowerShell token. The
+  same discard-arm idiom exists in `AppTheme.ToToken`, `PopupScreenPosition.ToToken`, and
+  `PathDisplayStyle.ToToken`, so this is a project-wide pattern, not a per-file defect; changing one
+  mapper alone would break consistency.
+- Proposed remedy: decide once project-wide — keep the idiom and document it, or make all mappers
+  throw on undefined values to surface bugs earlier.
+- Trigger: the next new enum mapper, or a config-corruption incident where a bogus enum value got
+  persisted as a valid token.
+
 ## DI and lifetime
 
 ### Transient IDisposable chain retained by the root provider
@@ -150,6 +164,19 @@ are pruned from this list once their evidence is no longer needed; recover them 
   separate decisions, each needing its own change and its own dependency review.
 - Trigger: a contributor wants a builder, UI-state verification, or performance measurement that the
   current suite does not provide.
+
+### `RuntimeKinds.TryParse` alias table has no direct tests
+
+- Severity: Low (untested parsing surface; the behavior itself is correct)
+- Evidence: review on 2026-11-04 — `tests/CLIHub.Core.Tests/Models/Processes/RuntimeKindsTests.cs`
+  covers only the `Parse` fallback and the canonical `ToToken` tokens, while the alias table in
+  `src/CLIHub.Core/Models/Processes/RuntimeKind.cs:68-98` (executable names, case and whitespace
+  variants) is exercised only incidentally through `LegacyTerminalPreferenceMigrationTests`. No test
+  pins `pwsh`→`PowerShell7`, `git-bash`→`GitBash`, `" PS7 "` trimming, `TryParse` returning false with
+  `out` = `PowerShell`, or the `TryParse(ToToken(k))` round-trip identity. Test expansion was offered
+  and deferred by the user during the review.
+- Proposed remedy: extend `RuntimeKindsTests` with alias, casing, and round-trip theories.
+- Trigger: the next change touching `RuntimeKinds` parsing or the legacy terminal migration.
 
 ## Agent tooling
 

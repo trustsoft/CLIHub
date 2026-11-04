@@ -53,12 +53,17 @@ public static class RuntimeKinds
     public const string GitBashToken = "bash";
 
     /// <summary>
+    ///   The runtime used when none is stored or the stored value is unrecognized.
+    /// </summary>
+    public const RuntimeKind Default = RuntimeKind.PowerShell;
+
+    /// <summary>
     ///   Parses a runtime token (or a recognized executable/alias).
     ///   Returns false for null, empty, or unknown values.
     /// </summary>
     public static bool TryParse(string? value, out RuntimeKind kind)
     {
-        kind = RuntimeKind.PowerShell;
+        kind = Default;
 
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -99,10 +104,10 @@ public static class RuntimeKinds
     }
 
     /// <summary>
-    ///   Parses a runtime token, falling back to <see cref="RuntimeKind.PowerShell" />.
+    ///   Parses a runtime token, falling back to <see cref="Default" />.
     /// </summary>
     public static RuntimeKind Parse(string? value) =>
-        TryParse(value, out var kind) ? kind : RuntimeKind.PowerShell;
+        TryParse(value, out var kind) ? kind : Default;
 
     /// <summary>
     ///   Returns the stored token for a runtime.
