@@ -73,7 +73,6 @@ public class ServiceCollectionExtensionsTests
         var second = provider.GetRequiredService<IConfigurationRepository>();
 
         Assert.Same(first, second);
-        Assert.True(provider.GetRequiredService<IConfigMigrationRunner>().HasMigrations);
     }
 
     [Fact]

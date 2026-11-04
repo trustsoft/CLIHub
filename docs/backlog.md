@@ -56,7 +56,7 @@ are pruned from this list once their evidence is no longer needed; recover them 
   settings), so part of the intent may already be satisfied - the slice must prove real coupling
   before restructuring anything.
 - Proposed remedy: `config-decomposition-slice` change - internal domain-aligned decomposition at the
-  snapshot/repository boundary only; external file format, migrations, and atomic write stay untouched.
+  snapshot/repository boundary only; external file format and atomic write stay untouched.
   Reject or shrink if reconnaissance shows the coupling is already contained. **Result (2026-10-29,
   commit `de590e4`, archived as `2026-10-29-config-decomposition-slice`): `ScanningPreferences` value
   object extracted (five flat `AppPreferences` properties composed as `Scanning`), document mapping
@@ -164,19 +164,6 @@ are pruned from this list once their evidence is no longer needed; recover them 
   separate decisions, each needing its own change and its own dependency review.
 - Trigger: a contributor wants a builder, UI-state verification, or performance measurement that the
   current suite does not provide.
-
-### `RuntimeKinds.TryParse` alias table has no direct tests
-
-- Severity: Low (untested parsing surface; the behavior itself is correct)
-- Evidence: review on 2026-11-04 — `tests/CLIHub.Core.Tests/Models/Processes/RuntimeKindsTests.cs`
-  covers only the `Parse` fallback and the canonical `ToToken` tokens, while the alias table in
-  `src/CLIHub.Core/Models/Processes/RuntimeKind.cs:68-98` (executable names, case and whitespace
-  variants) is exercised only incidentally through `LegacyTerminalPreferenceMigrationTests`. No test
-  pins `pwsh`→`PowerShell7`, `git-bash`→`GitBash`, `" PS7 "` trimming, `TryParse` returning false with
-  `out` = `PowerShell`, or the `TryParse(ToToken(k))` round-trip identity. Test expansion was offered
-  and deferred by the user during the review.
-- Proposed remedy: extend `RuntimeKindsTests` with alias, casing, and round-trip theories.
-- Trigger: the next change touching `RuntimeKinds` parsing or the legacy terminal migration.
 
 ## Agent tooling
 

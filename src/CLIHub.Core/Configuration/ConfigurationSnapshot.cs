@@ -62,7 +62,6 @@ public sealed class ConfigurationSnapshot
     {
         StartWithWindows = preferences.StartWithWindows,
         Hotkey = preferences.Hotkey,
-        TerminalExecutable = preferences.TerminalExecutable,
         DefaultRuntime = preferences.DefaultRuntime,
         LogLevel = preferences.LogLevel,
         LogRetentionDays = preferences.LogRetentionDays,
@@ -74,7 +73,6 @@ public sealed class ConfigurationSnapshot
         AutoDownloadUpdates = preferences.AutoDownloadUpdates,
         NotifyStableUpdates = preferences.NotifyStableUpdates,
         NotifyPrereleaseUpdates = preferences.NotifyPrereleaseUpdates,
-        ShowWindowOnStartup = preferences.ShowWindowOnStartup,
         StartMinimized = preferences.StartMinimized,
         PinLaunchWindow = preferences.PinLaunchWindow,
         PopupScreenPosition = preferences.PopupScreenPosition,

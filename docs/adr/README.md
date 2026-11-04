@@ -24,10 +24,11 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 | ADR   | Decision                                                              | Status   |
 | ----- | --------------------------------------------------------------------- | -------- |
 | 0001  | [Core/UI boundaries](0001-core-ui-boundaries.md)                       | Accepted (amended by 0006) |
-| 0002  | [Single configuration document](0002-single-configuration-document.md) | Accepted |
+| 0002  | [Single configuration document](0002-single-configuration-document.md) | Accepted (migration decision superseded by 0014) |
 | 0003  | [Startup orchestration](0003-startup-orchestration.md)                 | Accepted |
 | 0004  | [Plugin catalog and precedence](0004-plugin-catalog-and-precedence.md) | Accepted |
 | 0005  | [UI dialog boundaries](0005-ui-dialog-boundaries.md)                   | Accepted |
 | 0006  | [Windows platform library](0006-windows-platform-library.md)           | Accepted |
 | 0012  | [Process domain unification](ADR-0012-process-domain-unification.md)    | Accepted |
 | 0013  | [No generic persistence or cache abstraction](0013-no-generic-persistence-cache.md) | Accepted |
+| 0014  | [Remove configuration migrations](0014-remove-configuration-migrations.md) | Accepted |

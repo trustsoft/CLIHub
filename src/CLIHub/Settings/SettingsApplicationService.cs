@@ -570,7 +570,6 @@ public sealed class SettingsApplicationService
         preferences.AccentColor = draft.AccentColor;
         preferences.StartWithWindows = draft.StartWithWindows;
         preferences.StartMinimized = draft.StartMinimized;
-        preferences.ShowWindowOnStartup = !draft.StartMinimized;
         preferences.PathDisplayStyle = PathDisplayStyles.ToToken(draft.PathDisplayStyle);
         WriteScanning(preferences, draft.Scanning);
         preferences.DefaultAgentId = string.IsNullOrWhiteSpace(draft.DefaultAgentId) ? null : draft.DefaultAgentId;

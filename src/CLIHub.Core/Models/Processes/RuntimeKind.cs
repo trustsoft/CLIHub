@@ -27,8 +27,7 @@ public enum RuntimeKind
 }
 
 /// <summary>
-///   Maps <see cref="RuntimeKind" /> to and from its stored token and resolves legacy
-///   terminal-executable values.
+///   Maps <see cref="RuntimeKind" /> to and from its stored token.
 /// </summary>
 public static class RuntimeKinds
 {
@@ -58,7 +57,7 @@ public static class RuntimeKinds
     public const RuntimeKind Default = RuntimeKind.PowerShell;
 
     /// <summary>
-    ///   Parses a runtime token (or a recognized executable/alias).
+    ///   Parses a runtime token (case-insensitive, surrounding whitespace ignored).
     ///   Returns false for null, empty, or unknown values.
     /// </summary>
     public static bool TryParse(string? value, out RuntimeKind kind)
@@ -73,29 +72,15 @@ public static class RuntimeKinds
         switch (value.Trim().ToLowerInvariant())
         {
             case "ps":
-            case "powershell":
-            case "powershell.exe":
                 kind = RuntimeKind.PowerShell;
                 return true;
             case "ps7":
-            case "pwsh":
-            case "pwsh.exe":
-            case "powershell7":
-            case "powershell-7":
-            case "powershell 7":
                 kind = RuntimeKind.PowerShell7;
                 return true;
             case "cmd":
-            case "cmd.exe":
-            case "command prompt":
-            case "commandprompt":
                 kind = RuntimeKind.CommandPrompt;
                 return true;
             case "bash":
-            case "bash.exe":
-            case "gitbash":
-            case "git-bash":
-            case "git bash":
                 kind = RuntimeKind.GitBash;
                 return true;
             default:

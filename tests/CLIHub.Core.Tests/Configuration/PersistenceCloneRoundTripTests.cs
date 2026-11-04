@@ -26,7 +26,6 @@ public class PersistenceCloneRoundTripTests
     [
         nameof(AppPreferences.StartWithWindows),
         nameof(AppPreferences.Hotkey),
-        nameof(AppPreferences.TerminalExecutable),
         nameof(AppPreferences.DefaultRuntime),
         nameof(AppPreferences.LogLevel),
         nameof(AppPreferences.LogRetentionDays),
@@ -38,7 +37,6 @@ public class PersistenceCloneRoundTripTests
         nameof(AppPreferences.AutoDownloadUpdates),
         nameof(AppPreferences.NotifyStableUpdates),
         nameof(AppPreferences.NotifyPrereleaseUpdates),
-        nameof(AppPreferences.ShowWindowOnStartup),
         nameof(AppPreferences.StartMinimized),
         nameof(AppPreferences.PinLaunchWindow),
         nameof(AppPreferences.PopupScreenPosition),
@@ -182,7 +180,6 @@ public class PersistenceCloneRoundTripTests
             {
                 StartWithWindows = true,
                 Hotkey = "Ctrl+Alt+P",
-                TerminalExecutable = "terminal.exe",
                 DefaultRuntime = RuntimeKind.GitBash,
                 LogLevel = "Debug",
                 LogRetentionDays = 14,
@@ -195,7 +192,6 @@ public class PersistenceCloneRoundTripTests
                 NotifyStableUpdates = false,
                 NotifyPrereleaseUpdates = true,
                 StartMinimized = false,
-                ShowWindowOnStartup = true,
                 PinLaunchWindow = true,
                 PopupScreenPosition = PopupScreenPosition.TopCenter,
                 AppTheme = AppTheme.System,
@@ -240,7 +236,6 @@ public class PersistenceCloneRoundTripTests
     {
         Assert.Equal(expected.StartWithWindows, actual.StartWithWindows);
         Assert.Equal(expected.Hotkey, actual.Hotkey);
-        Assert.Equal(expected.TerminalExecutable, actual.TerminalExecutable);
         Assert.Equal(expected.DefaultRuntime, actual.DefaultRuntime);
         Assert.Equal(expected.LogLevel, actual.LogLevel);
         Assert.Equal(expected.LogRetentionDays, actual.LogRetentionDays);
@@ -252,10 +247,6 @@ public class PersistenceCloneRoundTripTests
         Assert.Equal(expected.AutoDownloadUpdates, actual.AutoDownloadUpdates);
         Assert.Equal(expected.NotifyStableUpdates, actual.NotifyStableUpdates);
         Assert.Equal(expected.NotifyPrereleaseUpdates, actual.NotifyPrereleaseUpdates);
-        // ShowWindowOnStartup is derived on write at the document boundary (stored as
-        // !StartMinimized); the source is kept consistent so the derived relation holds on the
-        // snapshot boundary (verbatim copy) and the document boundary alike.
-        Assert.Equal(!expected.StartMinimized, actual.ShowWindowOnStartup);
         Assert.Equal(expected.StartMinimized, actual.StartMinimized);
         Assert.Equal(expected.PinLaunchWindow, actual.PinLaunchWindow);
         Assert.Equal(expected.PopupScreenPosition, actual.PopupScreenPosition);
