@@ -69,22 +69,15 @@ public static class PopupScreenPositions
         switch (value.Trim())
         {
             case "center":
-            case "centre":
-            case "center-of-active-monitor":
                 position = PopupScreenPosition.Center;
                 return true;
             case "topCenter":
-            case "top-center":
-            case "top":
                 position = PopupScreenPosition.TopCenter;
                 return true;
             case "cursorRelative":
-            case "cursor-relative":
-            case "cursor":
                 position = PopupScreenPosition.CursorRelative;
                 return true;
             case "primary":
-            case "primary-screen":
                 position = PopupScreenPosition.PrimaryScreen;
                 return true;
             default:

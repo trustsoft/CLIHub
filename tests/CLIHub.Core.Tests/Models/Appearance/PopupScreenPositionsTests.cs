@@ -14,6 +14,31 @@ public class PopupScreenPositionsTests
     }
 
     [Theory]
+    [InlineData("center", PopupScreenPosition.Center)]
+    [InlineData("topCenter", PopupScreenPosition.TopCenter)]
+    [InlineData("cursorRelative", PopupScreenPosition.CursorRelative)]
+    [InlineData("primary", PopupScreenPosition.PrimaryScreen)]
+    public void TryParse_CanonicalTokens_ParseCorrectly(string value, PopupScreenPosition expected)
+    {
+        Assert.True(PopupScreenPositions.TryParse(value, out var position));
+        Assert.Equal(expected, position);
+    }
+
+    [Theory]
+    [InlineData("centre")]
+    [InlineData("center-of-active-monitor")]
+    [InlineData("top-center")]
+    [InlineData("top")]
+    [InlineData("cursor-relative")]
+    [InlineData("cursor")]
+    [InlineData("primary-screen")]
+    public void Parse_OldAliases_FallBackToCenter(string value)
+    {
+        Assert.False(PopupScreenPositions.TryParse(value, out _));
+        Assert.Equal(PopupScreenPosition.Center, PopupScreenPositions.Parse(value));
+    }
+
+    [Theory]
     [InlineData(PopupScreenPosition.Center, PopupScreenPositions.CenterToken)]
     [InlineData(PopupScreenPosition.TopCenter, PopupScreenPositions.TopCenterToken)]
     [InlineData(PopupScreenPosition.CursorRelative, PopupScreenPositions.CursorRelativeToken)]

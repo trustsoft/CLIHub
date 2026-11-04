@@ -44,11 +44,9 @@ public static class PathDisplayStyles
     {
         null or "" => Default,
         var token when token.Equals(MiddleEllipsisToken, StringComparison.OrdinalIgnoreCase)
-            || token.Equals("middle-ellipsis", StringComparison.OrdinalIgnoreCase)
-            || token.Equals("middle", StringComparison.OrdinalIgnoreCase) => PathDisplayStyle.MiddleEllipsis,
+            => PathDisplayStyle.MiddleEllipsis,
         var token when token.Equals(LeftTrimToken, StringComparison.OrdinalIgnoreCase)
-            || token.Equals("left-trim", StringComparison.OrdinalIgnoreCase)
-            || token.Equals("left", StringComparison.OrdinalIgnoreCase) => PathDisplayStyle.LeftTrim,
+            => PathDisplayStyle.LeftTrim,
         _ => Default
     };
 
