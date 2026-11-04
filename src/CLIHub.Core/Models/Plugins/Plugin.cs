@@ -44,6 +44,22 @@ public class Plugin
     public string? Description { get; set; }
 
     /// <summary>
+    ///   The plugin descriptor's own version (semantic version string), or null when the
+    ///   descriptor omits the optional <c> version </c> field.
+    /// </summary>
+    public string? Version { get; set; }
+
+    /// <summary>
+    ///   The plugin's publisher as declared in the descriptor, or null when omitted.
+    /// </summary>
+    public string? Publisher { get; set; }
+
+    /// <summary>
+    ///   The plugin's homepage URL as declared in the descriptor, or null when omitted.
+    /// </summary>
+    public string? Homepage { get; set; }
+
+    /// <summary>
     ///   The named command set exposed by this agent.
     /// </summary>
     public AgentCommands Commands { get; set; } = new();
@@ -85,6 +101,9 @@ public class Plugin
             Id = this.Id,
             Name = this.Name,
             Description = this.Description,
+            Version = this.Version,
+            Publisher = this.Publisher,
+            Homepage = this.Homepage,
             LogoPath = this.LogoPath,
             PluginDirectory = this.PluginDirectory,
             Commands = this.Commands,

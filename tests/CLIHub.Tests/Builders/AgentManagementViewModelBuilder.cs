@@ -14,6 +14,7 @@ using CLIHub.Core.Processes;
 using CLIHub.ViewModels;
 using CLIHub.Lifetime;
 using CLIHub.Launching;
+using CLIHub.Tests.Support;
 
 using static CLIHub.Tests.Support.TestHelpers;
 
@@ -30,12 +31,16 @@ public class AgentManagementViewModelBuilder
     private Mock<IAgentUpdateService>? update;
     private Mock<IExternalLauncher>? launcher;
     private Mock<IAgentProcessInspector>? processInspector;
+    private Mock<IPluginInstaller>? pluginInstaller;
+    private FakePluginDialogService? pluginDialogs;
+    private InMemoryPluginStateRepository? pluginState;
     private IApplicationOperationLifetime? operationLifetime;
     private ILogger<AgentManagementViewModel>? logger;
     private ILogger<AgentProcessMonitor>? processMonitorLogger;
 
     private Plugin[]? plugins;
     private InvalidPluginEntry[]? invalidPlugins;
+    private DisabledPluginEntry[]? disabledPlugins;
 
     /// <summary>
     ///   Configures the plugin catalog with specific plugins.
@@ -52,6 +57,15 @@ public class AgentManagementViewModelBuilder
     public AgentManagementViewModelBuilder WithInvalidPlugins(params InvalidPluginEntry[] invalidPlugins)
     {
         this.invalidPlugins = invalidPlugins;
+        return this;
+    }
+
+    /// <summary>
+    ///   Configures the disabled plugin entries rendered in the Disabled section.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithDisabledPlugins(params DisabledPluginEntry[] disabledPlugins)
+    {
+        this.disabledPlugins = disabledPlugins;
         return this;
     }
 
@@ -128,6 +142,33 @@ public class AgentManagementViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom plugin installer mock.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithPluginInstaller(Mock<IPluginInstaller> pluginInstaller)
+    {
+        this.pluginInstaller = pluginInstaller;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom plugin dialog service fake.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithPluginDialogs(FakePluginDialogService pluginDialogs)
+    {
+        this.pluginDialogs = pluginDialogs;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom in-memory plugin state repository.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithPluginState(InMemoryPluginStateRepository pluginState)
+    {
+        this.pluginState = pluginState;
+        return this;
+    }
+
+    /// <summary>
     ///   Provides a custom application operation lifetime.
     /// </summary>
     public AgentManagementViewModelBuilder WithOperationLifetime(IApplicationOperationLifetime operationLifetime)
@@ -181,6 +222,9 @@ public class AgentManagementViewModelBuilder
         var update = this.update ?? new Mock<IAgentUpdateService>();
         var launcher = this.launcher ?? new Mock<IExternalLauncher>();
         var processInspector = this.processInspector ?? this.CreateDefaultProcessInspector();
+        var pluginInstaller = this.pluginInstaller ?? new Mock<IPluginInstaller>();
+        var pluginDialogs = this.pluginDialogs ?? new FakePluginDialogService();
+        var pluginState = this.pluginState ?? new InMemoryPluginStateRepository();
 
         var processMonitor = new AgentProcessMonitor(
             new ProcessOrchestrator(
@@ -205,6 +249,9 @@ public class AgentManagementViewModelBuilder
             launcher.Object,
             processMonitor,
             this.operationLifetime ?? new InlineOperationLifetime(),
+            pluginInstaller.Object,
+            pluginDialogs,
+            pluginState,
             this.logger ?? NullLogger<AgentManagementViewModel>.Instance);
 
         var mocks = new AgentMocks
@@ -216,7 +263,8 @@ public class AgentManagementViewModelBuilder
             Probe = probe,
             Update = update,
             Launcher = launcher,
-            ProcessInspector = processInspector
+            ProcessInspector = processInspector,
+            PluginInstaller = pluginInstaller
         };
 
         return (viewModel, mocks);
@@ -227,6 +275,7 @@ public class AgentManagementViewModelBuilder
         var mock = new Mock<IPluginCatalog>();
         mock.Setup(x => x.GetAllPlugins()).Returns(this.plugins ?? []);
         mock.Setup(x => x.GetInvalidPlugins()).Returns(this.invalidPlugins ?? []);
+        mock.Setup(x => x.GetDisabledPlugins()).Returns(this.disabledPlugins ?? []);
         return mock;
     }
 
@@ -250,5 +299,6 @@ public class AgentManagementViewModelBuilder
         public required Mock<IAgentUpdateService> Update { get; init; }
         public required Mock<IExternalLauncher> Launcher { get; init; }
         public required Mock<IAgentProcessInspector> ProcessInspector { get; init; }
+        public required Mock<IPluginInstaller> PluginInstaller { get; init; }
     }
 }

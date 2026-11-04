@@ -106,6 +106,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<PluginCatalog>();
         services.AddSingleton<IPluginCatalog>(sp => sp.GetRequiredService<PluginCatalog>());
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
+        services.AddSingleton<IPluginStateRepository, PluginStateRepository>();
+        services.AddSingleton<IPluginInstaller, PluginInstaller>();
         return services;
     }
 

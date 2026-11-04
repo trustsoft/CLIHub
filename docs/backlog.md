@@ -346,6 +346,24 @@ snapshot.
   Agent Detection page was added after the previous recheck), so neither threshold is close;
   remains deferred.
 
+### Plugin-management bindings bypass the agent-management interface
+
+- Severity: Low (maintenance and type-safety; the UI works through WPF reflection)
+- Evidence (2026-11-04): `src/CLIHub/Views/SettingsAgentsPage.xaml:329-399` binds
+  `AgentsState.DisabledCards`, `HasDisabledPlugins`, and `EnablePluginCommand`;
+  `src/CLIHub/Views/SettingsWindow.xaml:219` binds `PluginCatalogSummary`. Those members (and the
+  older `InvalidCards`) are declared only on `AgentManagementViewModel`, while
+  `SettingsViewModel.AgentsState` is typed as `IAgentManagementSection`
+  (`src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:188`). WPF resolves them at runtime, so the
+  page works, but interface-typed consumers cannot see them and the interface documentation is
+  inaccurate. `AvailabilitySummary` (`IAgentManagementSection.cs:32`) is no longer bound anywhere
+  after the AGENTS summary card switched to `PluginCatalogSummary`.
+- Proposed remedy: add the plugin-management members (and `InvalidCards`) to
+  `IAgentManagementSection`, or extract a narrower plugin surface; decide whether
+  `AvailabilitySummary` is still needed or remove it with its tests.
+- Trigger: the next change touching `IAgentManagementSection`, the CLI Agents page, or any
+  non-XAML consumer of `AgentsState`.
+
 ### Release notes requirement says "status card" but the link is on the title row
 
 - Severity: Low (spec accuracy; no behavior or UI defect)

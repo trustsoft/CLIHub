@@ -44,4 +44,10 @@ public interface IPluginCatalog
     /// </summary>
     /// <returns> The invalid entries and their read or validation diagnostics. </returns>
     IReadOnlyList<InvalidPluginEntry> GetInvalidPlugins();
+
+    /// <summary>
+    ///   Gets disabled plugin entries that were skipped during load.
+    /// </summary>
+    /// <returns> The disabled plugins and their state metadata. </returns>
+    IReadOnlyList<DisabledPluginEntry> GetDisabledPlugins();
 }

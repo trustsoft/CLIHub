@@ -9,6 +9,7 @@ public sealed class ArchitectureBoundaryTests
         "App.xaml.cs",
         "AssemblyInfo.cs",
         "Imaging" + Path.DirectorySeparatorChar + "LogoImageSourceCache.cs",
+        "Launching" + Path.DirectorySeparatorChar + "PluginDialogService.cs",
         "Launching" + Path.DirectorySeparatorChar + "ProjectDialogService.cs",
         "Startup" + Path.DirectorySeparatorChar + "ApplicationHost.cs",
         "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",

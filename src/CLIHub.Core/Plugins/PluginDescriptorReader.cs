@@ -25,6 +25,21 @@ public sealed class PluginDescriptorReader : IPluginDescriptorReader
         try
         {
             var json = File.ReadAllText(descriptorPath);
+            return this.ReadContent(json);
+        }
+        catch (Exception ex)
+        {
+            return new PluginDescriptorReadResult(null, ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public PluginDescriptorReadResult ReadContent(string json)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
+
+        try
+        {
             JsonObject? document;
             try
             {

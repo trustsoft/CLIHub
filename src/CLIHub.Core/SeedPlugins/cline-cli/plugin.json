@@ -2,6 +2,9 @@
   "id": "cline-cli",
   "name": "Cline CLI",
   "description": "Cline AI coding assistant CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://www.npmjs.com/package/cline",
   "commands": {
     "launch": { "executable": "cline" },
     "version": { "executable": "cline", "arguments": "--version" },

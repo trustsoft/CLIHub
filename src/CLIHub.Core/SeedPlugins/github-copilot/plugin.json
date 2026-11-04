@@ -2,6 +2,9 @@
   "id": "github-copilot",
   "name": "GitHub Copilot",
   "description": "GitHub Copilot CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://github.com/github/copilot-cli",
   "commands": {
     "launch": { "executable": "copilot" },
     "resume": { "executable": "copilot", "arguments": "--continue" },

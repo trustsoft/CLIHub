@@ -41,11 +41,16 @@ process inspection) behind ports declared in Core.
 - .NET 10 and C# 14.0 are the development baseline; nullable reference types and implicit usings are enabled.
 - The application uses WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Serilog, System.Text.Json,
   and Velopack.
-- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `logs\`, `plugins\`, and `cache\`.
+- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `plugin-state.json`, `logs\`, `plugins\`, and `cache\`.
 - Configuration is one camelCase JSON document with an atomic write path. Preferences and project state expose
   narrower store interfaces over that document.
+- Plugin lifecycle state (origin, content hash, disabled flag) is tracked in a separate `plugin-state.json` under
+  `%APPDATA%\CLIHub\`.
 - Plugins are JSON descriptors under `%APPDATA%\CLIHub\plugins\<id>\`; they contain command definitions and
   detection markers. Plugins do not load DLLs or execute code in-process.
+- Users can install plugins from local `.clihub-plugin.zip` packages, disable/enable plugins, and open the plugins
+  folder from the CLI Agents settings page. Built-in plugins are refreshed on app update using three-hash logic
+  that preserves user modifications.
 - Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
   manually added projects untouched. Scanning settings apply immediately from the Project Scanning page.
 - The Settings Projects page lists every registered project with its provenance, registers, removes, and

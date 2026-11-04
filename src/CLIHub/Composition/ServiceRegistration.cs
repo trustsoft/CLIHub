@@ -195,6 +195,7 @@ public static class ServiceRegistration
     private static IServiceCollection AddSharedUiServices(this IServiceCollection services)
     {
         services.AddSingleton<IProjectDialogService, ProjectDialogService>();
+        services.AddSingleton<IPluginDialogService, PluginDialogService>();
         services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<IExternalLauncher, ExternalLauncher>();
         services.AddSingleton<LogoImageSourceCache>();

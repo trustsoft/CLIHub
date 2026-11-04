@@ -2,6 +2,9 @@
   "id": "openclaude",
   "name": "OpenClaude",
   "description": "OpenClaude CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://www.npmjs.com/package/@twigpine/openclaude",
   "commands": {
     "launch": { "executable": "openclaude" },
     "resume": { "executable": "openclaude", "arguments": "--continue" },

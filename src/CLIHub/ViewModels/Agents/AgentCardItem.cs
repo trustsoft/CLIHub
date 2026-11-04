@@ -2,6 +2,7 @@ namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
+using CLIHub.Core.Plugins;
 using CLIHub.Helpers;
 
 /// <summary>
@@ -296,6 +297,56 @@ public sealed class AgentCardItem : ObservableObject
     ///   Whether the card has an action outcome message to show.
     /// </summary>
     public bool HasMessage => !string.IsNullOrEmpty(this.Message);
+
+    /// <summary>
+    ///   The plugin's recorded origin from the plugin state file, or null when no state entry
+    ///   exists. One of the <c> CLIHub.Core.Plugins.PluginOrigin </c> values.
+    /// </summary>
+    public string? Origin
+    {
+        get;
+        set => this.SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    ///   The installed version recorded in the plugin state file, or null when unknown.
+    /// </summary>
+    public string? InstalledVersion
+    {
+        get;
+        set => this.SetProperty(ref field, value);
+    }
+
+    /// <summary>
+    ///   The origin badge text: "Built-in", "Installed", or "Unknown" (plugins without a state
+    ///   entry are unknown-origin).
+    /// </summary>
+    public string OriginBadgeText => this.Origin switch
+    {
+        PluginOrigin.Builtin => "Built-in",
+        PluginOrigin.Installed => "Installed",
+        _ => "Unknown"
+    };
+
+    /// <summary>
+    ///   The origin badge tooltip: the plugin's version, publisher, and homepage as declared
+    ///   in the descriptor, when available.
+    /// </summary>
+    public string OriginBadgeTooltip
+    {
+        get
+        {
+            var lines = new List<string?>
+            {
+                this.Plugin.Version is { } version ? $"Version: {version}" : null,
+                this.Plugin.Publisher is { } publisher ? $"Publisher: {publisher}" : null,
+                this.Plugin.Homepage is { } homepage ? $"Homepage: {homepage}" : null
+            };
+
+            var tooltip = string.Join("\n", lines.Where(line => line is not null));
+            return tooltip.Length == 0 ? this.OriginBadgeText : tooltip;
+        }
+    }
 
     private static IReadOnlyList<string> BuildCommandLabels(AgentCommands? commands)
     {
