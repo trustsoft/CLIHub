@@ -64,3 +64,7 @@
 - No stage relies on a later stage to repair compile or test failures.
 - Stage 5 is documentation/tooling only and does not change runtime behavior.
 - Stage 6 is the final verification gate before reporting completion.
+
+## Verification
+
+- Manual smoke (2026-11-04): user confirmed that an existing `config.json` carrying `schemaVersion`, `terminalExecutable`, and `showWindowOnStartup` loads its known values without being rewritten at startup, and that the next settings save drops the removed fields.
