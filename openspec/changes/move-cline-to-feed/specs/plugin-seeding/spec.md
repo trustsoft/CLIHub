@@ -44,9 +44,7 @@ The built-in set SHALL include a descriptor for each supported agent, and each d
 #### Scenario: Complete command sets
 
 - **WHEN** the built-in descriptors are inspected
-- **THEN** OpenCode and Pi define `launch`, `resume`, `version`, and `update`
-- **AND** OpenClaude defines `launch`, `resume`, and `version`
-- **AND** GitHub Copilot and Qwen Code define `launch`, `version`, and `update`
+- **THEN** OpenCode, Pi, GitHub Copilot, OpenClaude, and Qwen Code each define `launch`, `resume`, `version`, and `update`
 
 #### Scenario: Commands match the agent CLI surface
 

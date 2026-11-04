@@ -98,7 +98,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("cline-cli", "Built-in Cline", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null),
+                new("opencode", "Built-in OpenCode", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null),
                 new("custom-plugin", "Custom", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg2.zip", "def456", null, null)
             ]);
 
@@ -113,7 +113,7 @@ public class BrowsePluginsDialogViewModelTests
         // Assert
         Assert.Single(vm.Plugins);
         Assert.Equal("custom-plugin", vm.Plugins[0].Id);
-        Assert.DoesNotContain(vm.Plugins, p => p.Id == "cline-cli");
+        Assert.DoesNotContain(vm.Plugins, p => p.Id == "opencode");
     }
 
     [Fact]
