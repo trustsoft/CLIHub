@@ -50,7 +50,7 @@ public sealed class ApplicationResourceKeyTests
     {
         var appRoot = Path.Combine(FindRepositoryRoot(), "src", "CLIHub");
         var themesDirectory = Path.Combine(appRoot, "Themes");
-        var paletteFiles = Directory.GetFiles(themesDirectory, "*Theme.xaml")
+        var paletteFiles = Directory.GetFiles(themesDirectory, "*.xaml")
             .OrderBy(Path.GetFileName, StringComparer.Ordinal)
             .ToArray();
 
@@ -113,7 +113,7 @@ public sealed class ApplicationResourceKeyTests
     {
         var appRoot = Path.Combine(FindRepositoryRoot(), "src", "CLIHub");
         var themesDirectory = Path.Combine(appRoot, "Themes");
-        var paletteFiles = Directory.GetFiles(themesDirectory, "*Theme.xaml")
+        var paletteFiles = Directory.GetFiles(themesDirectory, "*.xaml")
             .OrderBy(Path.GetFileName, StringComparer.Ordinal)
             .ToArray();
 
@@ -286,7 +286,7 @@ public sealed class ApplicationResourceKeyTests
 
     private static bool IsPaletteFile(string path)
     {
-        return Regex.IsMatch(Path.GetFileName(path), "^[^/\\\\]+Theme\\.xaml$", RegexOptions.IgnoreCase);
+        return Regex.IsMatch(Path.GetFileName(path), "^(Dark|Light|Blue)\\.xaml$", RegexOptions.IgnoreCase);
     }
 
     private static bool IsBuildOutput(string path)

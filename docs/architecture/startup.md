@@ -50,7 +50,7 @@ The implementation is in:
 - `src/CLIHub/Startup/OptionalStartupCoordinator.cs` — release notes and update check
 - `src/CLIHub/Lifetime/ApplicationSession.cs` — session lifecycle and coordinator ownership
 - `src/CLIHub/Startup/ShellCoordinator.cs` — shell creation and event wiring
-- `src/CLIHub/Themes/PaletteSwitcher.cs` — stored-theme application before the first window
+- `src/CLIHub/Theming/PaletteSwitcher.cs` — stored-theme application before the first window
 - `src/CLIHub/Settings/AccentApplier.cs` — stored-accent application before the first window
 - `src/CLIHub/Composition/ServiceRegistration.cs` — WPF service registration
 

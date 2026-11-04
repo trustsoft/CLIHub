@@ -4,7 +4,7 @@ using System.Windows;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Windows;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Applies the theme palette by swapping the tracked palette overlay of the application resources.

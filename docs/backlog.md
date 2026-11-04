@@ -56,7 +56,7 @@ are pruned from this list once their evidence is no longer needed; recover them 
   settings), so part of the intent may already be satisfied - the slice must prove real coupling
   before restructuring anything.
 - Proposed remedy: `config-decomposition-slice` change - internal domain-aligned decomposition at the
-  snapshot/repository boundary only; external file format, migrations, and atomic write stay untouched.
+  snapshot/repository boundary only; external file format and atomic write stay untouched.
   Reject or shrink if reconnaissance shows the coupling is already contained. **Result (2026-10-29,
   commit `de590e4`, archived as `2026-10-29-config-decomposition-slice`): `ScanningPreferences` value
   object extracted (five flat `AppPreferences` properties composed as `Scanning`), document mapping
@@ -65,6 +65,20 @@ are pruned from this list once their evidence is no longer needed; recover them 
   Agent/Update/Appearance extraction and store narrowing, each with an evidence trigger.**
 - Trigger (reopen): a further cross-concern edit that still forces synchronized mapping changes, or
   the `config-format-v2` decision below.
+
+### Enum mappers silently swallow undefined enum values in `ToToken` (project-wide idiom)
+
+- Severity: Low (latent; every mapper coerces an undefined value to its default token)
+- Evidence: review on 2026-11-04 — `RuntimeKinds.ToToken`
+  (`src/CLIHub.Core/Models/Processes/RuntimeKind.cs:110-116`) maps an undefined enum value such as
+  `(RuntimeKind)42` to `"ps"`, which then persists and round-trips as a valid PowerShell token. The
+  same discard-arm idiom exists in `AppTheme.ToToken`, `PopupScreenPosition.ToToken`, and
+  `PathDisplayStyle.ToToken`, so this is a project-wide pattern, not a per-file defect; changing one
+  mapper alone would break consistency.
+- Proposed remedy: decide once project-wide — keep the idiom and document it, or make all mappers
+  throw on undefined values to surface bugs earlier.
+- Trigger: the next new enum mapper, or a config-corruption incident where a bogus enum value got
+  persisted as a valid token.
 
 ## DI and lifetime
 
@@ -302,6 +316,22 @@ snapshot.
 - Trigger: the next docs-only or tooling entry that has to be closed, or the next edit of the global
   `pipeline-protocol` skill.
 
+### Plugin feed cancellation is reported as a download failure
+
+- Severity: Low (edge-case UX; no data loss, temp files are cleaned)
+- Evidence (2026-11-04): `src/CLIHub.Core/Plugins/PluginFeedClient.cs` catches timeout cancellation
+  with a `when (!cancellationToken.IsCancellationRequested)` filter, but the subsequent general
+  `catch (Exception)` intercepts external cancellation and returns a generic "Could not load plugin
+  feed" / "Package download failed" result instead of letting the caller observe cancellation.
+  `FollowRedirectsAsync` also allows 5 HEAD requests (`hop < MaxRedirectHops`), so a chain of five
+  redirects is rejected as "more than 5 hops" while the docs say "up to 5 hops".
+- Proposed remedy: add
+  `catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }`
+  before the general catch in both methods, and align the redirect loop/message with the documented
+  5-redirect limit.
+- Trigger: the next change touching `PluginFeedClient`, or a user report of a spurious error dialog
+  when cancelling a feed request.
+
 ## UI and theming
 
 ### Resolver role override ignores exhaustedUntil
@@ -331,6 +361,24 @@ snapshot.
 - Re-checked (2026-11-02): `SettingsPageCatalog.AllPages` now has 10 pages in 3 groups (the
   Agent Detection page was added after the previous recheck), so neither threshold is close;
   remains deferred.
+
+### Plugin-management bindings bypass the agent-management interface
+
+- Severity: Low (maintenance and type-safety; the UI works through WPF reflection)
+- Evidence (2026-11-04): `src/CLIHub/Views/SettingsAgentsPage.xaml:329-399` binds
+  `AgentsState.DisabledCards`, `HasDisabledPlugins`, and `EnablePluginCommand`;
+  `src/CLIHub/Views/SettingsWindow.xaml:219` binds `PluginCatalogSummary`. Those members (and the
+  older `InvalidCards`) are declared only on `AgentManagementViewModel`, while
+  `SettingsViewModel.AgentsState` is typed as `IAgentManagementSection`
+  (`src/CLIHub/ViewModels/Settings/SettingsViewModel.cs:188`). WPF resolves them at runtime, so the
+  page works, but interface-typed consumers cannot see them and the interface documentation is
+  inaccurate. `AvailabilitySummary` (`IAgentManagementSection.cs:32`) is no longer bound anywhere
+  after the AGENTS summary card switched to `PluginCatalogSummary`.
+- Proposed remedy: add the plugin-management members (and `InvalidCards`) to
+  `IAgentManagementSection`, or extract a narrower plugin surface; decide whether
+  `AvailabilitySummary` is still needed or remove it with its tests.
+- Trigger: the next change touching `IAgentManagementSection`, the CLI Agents page, or any
+  non-XAML consumer of `AgentsState`.
 
 ### Release notes requirement says "status card" but the link is on the title row
 
@@ -364,9 +412,9 @@ snapshot.
   `TextBlockAutomationPeer: Name='\uE713' CtrlType=Text IsContent=True`. Current sites: the Settings
   page-header emblem (`src/CLIHub/Views/SettingsWindow.xaml:424-430`, whose comment already records
   the WPF limitation), the sidebar page glyph (`SettingsWindow.xaml:362-367`), the `SettingCard` icon
-  box (`src/CLIHub/Themes/SettingsStyles.xaml:214-230`), the section-header glyph
+  box (`src/CLIHub/Themes/Common/SettingsStyles.xaml:214-230`), the section-header glyph
   (`SettingsStyles.xaml:390-396`), and the status-chip glyph (`SettingsWindow.xaml:123`). The
-  `settings-page-icons` change centralized the glyph values in `themes/IconGlyphs.cs`, which makes a
+  `settings-page-icons` change centralized the glyph values in `Theming/IconGlyphs.cs`, which makes a
   shared decorative element easier to apply, but it did not add an accessibility opt-out. There is no
   per-element opt-out: `AutomationProperties.Name=""` is ignored (the peer falls back to the text) and
   `AutomationProperties.AccessibilityView` does not exist in WPF.

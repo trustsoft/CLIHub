@@ -65,9 +65,6 @@ public static class ServiceCollectionExtensions
 
     private static IServiceCollection AddConfigurationServices(this IServiceCollection services)
     {
-        services.AddSingleton<IConfigMigration, LegacyTerminalPreferenceMigration>();
-        services.AddSingleton<IConfigMigration, StartMinimizedMigration>();
-        services.AddSingleton<IConfigMigrationRunner, ConfigMigrationRunner>();
         services.AddSingleton<IConfigurationRepository, ConfigurationRepository>();
         services.AddSingleton<IPreferencesStore, PreferencesStore>();
         return services;
@@ -109,6 +106,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<PluginCatalog>();
         services.AddSingleton<IPluginCatalog>(sp => sp.GetRequiredService<PluginCatalog>());
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
+        services.AddSingleton<IPluginStateRepository, PluginStateRepository>();
+        services.AddSingleton<IPluginInstaller, PluginInstaller>();
+        services.AddSingleton<IPluginFeedClient, PluginFeedClient>();
         return services;
     }
 

@@ -4,6 +4,8 @@
 
 Accepted — 2026-10-06. Implemented by `introduce-configuration-snapshot`, `add-config-schema-version`, `add-config-migration-runner`, `make-preferences-and-project-updates-explicit`, and `introduce-configuration-repository`.
 
+The **Versioned schema with migrations** decision and its **every persisted field change ships with a migration** consequence are superseded by [ADR-0014](0014-remove-configuration-migrations.md), which replaces the migration layer with a version-tolerant read.
+
 ## Context
 
 CLIHub persists user preferences (hotkey, runtime, filters, update behavior) and project state (tracked projects, current selection). Both change independently and at different moments — a preference toggle in the Settings window, a project selection in the launch window — and both must survive crashes.

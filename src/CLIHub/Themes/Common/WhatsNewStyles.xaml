@@ -1,0 +1,65 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        What's New styles. Merged from WhatsNewWindow.xaml (not from App.xaml) so styling stays
+        scoped to this window, which draws its own chrome: a header with the title and a close
+        button, and a scrolling body of release notes. Merging Controls.xaml brings the palette
+        and sizing tokens transitively: StaticResource inside a dictionary resolves only against
+        that dictionary's own merged dictionaries.
+    -->
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Themes/Common/Controls.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Install action for an available update: a quiet chip that turns into the accent color -->
+    <Style x:Key="NotesInstallButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Padding" Value="12,5"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Release note section: version, its date, then its non-empty groups -->
+    <Style x:Key="NotesVersionHeading" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesVersionDate" TargetType="TextBlock">
+        <Setter Property="Margin" Value="8,0,0,2"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesGroupLabel" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource SectionLabelBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesEntry" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="NotesEntryBullet" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="NotesEmptyText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+</ResourceDictionary>

@@ -14,23 +14,25 @@ public class PathDisplayStyleTests
     }
 
     [Theory]
-    [InlineData("leftTrim")]
-    [InlineData("left-trim")]
-    [InlineData("LEFTTRIM")]
-    [InlineData("left")]
-    public void Parse_LeftTrimTokens_ReturnLeftTrim(string value)
+    [InlineData("leftTrim", PathDisplayStyle.LeftTrim)]
+    [InlineData("LEFTTRIM", PathDisplayStyle.LeftTrim)]
+    [InlineData("LeftTrim", PathDisplayStyle.LeftTrim)]
+    [InlineData("middleEllipsis", PathDisplayStyle.MiddleEllipsis)]
+    [InlineData("MiddleEllipsis", PathDisplayStyle.MiddleEllipsis)]
+    [InlineData("MIDDLEELLIPSIS", PathDisplayStyle.MiddleEllipsis)]
+    public void Parse_CanonicalTokens_ParseCorrectly(string value, PathDisplayStyle expected)
     {
-        Assert.Equal(PathDisplayStyle.LeftTrim, PathDisplayStyles.Parse(value));
+        Assert.Equal(expected, PathDisplayStyles.Parse(value));
     }
 
     [Theory]
-    [InlineData("middleEllipsis")]
+    [InlineData("left-trim")]
+    [InlineData("left")]
     [InlineData("middle-ellipsis")]
-    [InlineData("MiddleEllipsis")]
     [InlineData("middle")]
-    public void Parse_MiddleEllipsisTokens_ReturnMiddleEllipsis(string value)
+    public void Parse_OldAliases_FallBackToLeftTrim(string value)
     {
-        Assert.Equal(PathDisplayStyle.MiddleEllipsis, PathDisplayStyles.Parse(value));
+        Assert.Equal(PathDisplayStyle.LeftTrim, PathDisplayStyles.Parse(value));
     }
 
     [Theory]

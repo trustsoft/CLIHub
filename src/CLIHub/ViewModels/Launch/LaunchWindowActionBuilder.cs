@@ -2,7 +2,7 @@ namespace CLIHub.ViewModels;
 
 using System.Windows.Input;
 
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Builds the data-driven Actions menus shown in the launch-window panes.

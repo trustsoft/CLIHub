@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
-             xmlns:themes="clr-namespace:CLIHub.Themes"
+             xmlns:themes="clr-namespace:CLIHub.Theming"
              mc:Ignorable="d">
     <UserControl.Resources>
         <!-- State chip next to the agent name: version when installed, danger state when missing;
@@ -44,6 +44,28 @@
 
         <Style x:Key="AgentUpdateChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
             <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+        </Style>
+
+        <!-- Origin badge next to the state chip: neutral-muted for built-in and unknown
+             origins, accent for plugins installed from a package; the tooltip carries the
+             descriptor's version, publisher, and homepage when declared -->
+        <Style x:Key="AgentOriginChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Origin}" Value="installed">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="AgentOriginChipText" TargetType="TextBlock" BasedOn="{StaticResource VersionChipText}">
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Origin}" Value="installed">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
     <StackPanel>
@@ -119,6 +141,66 @@
                                    Text="Check updates"/>
                     </StackPanel>
                 </Button>
+                <Button AutomationProperties.Name="Install a plugin from a package file"
+                        Command="{Binding AgentsState.InstallPluginCommand}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Install an agent plugin from a .clihub-plugin.zip package">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Add}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Install Plugin…"/>
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="Browse plugins from the remote feed"
+                        Command="{Binding AgentsState.BrowsePluginsCommand}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Browse and install plugins from the remote feed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Search}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Browse Plugins…"/>
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="Open the plugins folder in Windows Explorer"
+                        Command="{Binding AgentsState.OpenPluginsFolderCommand}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Open %APPDATA%\CLIHub\plugins in Windows Explorer">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.FolderOpen}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Open Plugins Folder"/>
+                    </StackPanel>
+                </Button>
+                <Button AutomationProperties.Name="Reload the plugin catalog"
+                        Command="{Binding AgentsState.ReloadCatalogCommand}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Rescan the plugins folder without restarting the app">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.SyncFolder}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Reload Catalog"/>
+                    </StackPanel>
+                </Button>
             </controls:SpacedPanel>
         </Grid>
         <ItemsControl ItemsSource="{Binding AgentsState.Cards}">
@@ -156,6 +238,13 @@
                                             Style="{StaticResource AgentStateChip}">
                                         <TextBlock Style="{StaticResource AgentStateChipText}"
                                                    Text="{Binding VersionChipText}"/>
+                                    </Border>
+                                    <Border Margin="8,0,0,0"
+                                            AutomationProperties.Name="Plugin origin"
+                                            Style="{StaticResource AgentOriginChip}"
+                                            ToolTip="{Binding OriginBadgeTooltip}">
+                                        <TextBlock Style="{StaticResource AgentOriginChipText}"
+                                                   Text="{Binding OriginBadgeText}"/>
                                     </Border>
                                     <Border Margin="8,0,0,0"
                                             AutomationProperties.Name="Update available"
@@ -226,6 +315,17 @@
                                                    FontSize="{StaticResource Sizing.FontSize.Glyph}"
                                                    Text="{x:Static themes:IconGlyphs.Document}"/>
                                     </Button>
+                                    <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                            Height="{StaticResource Sizing.IconButton.Height}"
+                                            AutomationProperties.Name="Disable plugin"
+                                            Command="{Binding DataContext.AgentsState.DisablePluginCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource ChipRemoveButton}"
+                                            ToolTip="Disable this plugin without deleting its files">
+                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                                   Text="{x:Static themes:IconGlyphs.Blocked}"/>
+                                    </Button>
                                 </controls:SpacedPanel>
                                 <TextBlock Margin="0,2,0,0"
                                            MaxWidth="{StaticResource Sizing.AgentRow.TextMaxWidth}"
@@ -235,6 +335,77 @@
                                            Text="{Binding Message}"
                                            TextAlignment="Right"
                                            Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <controls:SectionHeader Text="DISABLED"
+                                Visibility="{Binding AgentsState.HasDisabledPlugins, Converter={StaticResource BoolToVisibility}}"/>
+        <ItemsControl ItemsSource="{Binding AgentsState.DisabledCards}"
+                      Visibility="{Binding AgentsState.HasDisabledPlugins, Converter={StaticResource BoolToVisibility}}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,8"
+                            Padding="12"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
+                            Opacity="0.7">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Image Grid.Column="0"
+                                   Width="32"
+                                   Height="32"
+                                   VerticalAlignment="Top"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   Source="{Binding LogoPath, Converter={StaticResource PathToImage}}"
+                                   Stretch="Uniform"/>
+
+                            <StackPanel Grid.Column="1" Margin="12,0,12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock VerticalAlignment="Center"
+                                               FontSize="{StaticResource Sizing.FontSize.Body}"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{Binding Name}"/>
+                                    <Border Margin="8,0,0,0"
+                                            Style="{StaticResource InvalidAgentStateChip}">
+                                        <TextBlock Style="{StaticResource InvalidAgentStateChipText}"
+                                                   Text="{Binding VersionChipText}"/>
+                                    </Border>
+                                    <Border Margin="8,0,0,0"
+                                            AutomationProperties.Name="Plugin origin"
+                                            Style="{StaticResource AgentOriginChip}"
+                                            ToolTip="{Binding OriginBadgeText}">
+                                        <TextBlock Style="{StaticResource AgentOriginChipText}"
+                                                   Text="{Binding OriginBadgeText}"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Margin="0,3,0,0"
+                                           Style="{StaticResource HintText}"
+                                           Text="Disabled"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                                <Button Width="{StaticResource Sizing.IconButton.Width}"
+                                        Height="{StaticResource Sizing.IconButton.Height}"
+                                        AutomationProperties.Name="Enable plugin"
+                                        Command="{Binding DataContext.AgentsState.EnablePluginCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource ChipRemoveButton}"
+                                        ToolTip="Enable this plugin">
+                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="{StaticResource Sizing.FontSize.Glyph}"
+                                               Text="{x:Static themes:IconGlyphs.Checkmark}"/>
+                                </Button>
                             </StackPanel>
                         </Grid>
                     </Border>

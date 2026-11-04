@@ -6,7 +6,7 @@ using System.Windows;
 using Microsoft.Extensions.Logging;
 
 using CLIHub.Controls;
-using CLIHub.Themes;
+using CLIHub.Theming;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.FileSystem;

@@ -50,6 +50,11 @@ public static class AppPaths
     public static string ConfigFile { get; } = Path.Combine(Root, "config.json");
 
     /// <summary>
+    ///   The plugin lifecycle state file: <c> %APPDATA%\CLIHub\plugin-state.json </c>.
+    /// </summary>
+    public static string PluginStateFile { get; } = Path.Combine(Root, "plugin-state.json");
+
+    /// <summary>
     ///   The persistent logo cache state file: <c> %APPDATA%\CLIHub\cache\logos.json </c>.
     /// </summary>
     public static string LogosCacheFile { get; } = Path.Combine(CacheDirectory, "logos.json");

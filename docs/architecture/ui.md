@@ -11,27 +11,27 @@ theming.
 
 ## XAML Themes and Styles Recipe
 
-Layering, in merge order: `Sizing.xaml` (metrics, font and radius tokens) → `Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `ThemePickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `ThemePickerData.xaml`, then `SettingsControls.xaml`) → per-window dictionaries (`LaunchWindowStyles.xaml`, `WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `SlimScrollBar.xaml` (implicit `ScrollBar`), `SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
+Layering, in merge order: `Common/Sizing.xaml` (metrics, font and radius tokens) → `Common/Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `Common/PickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `Common/SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `Common/SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `Common/PickerData.xaml`, then `Common/SettingsControls.xaml`) → per-window dictionaries (`Common/LaunchWindowStyles.xaml`, `Common/WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Common/SlimScrollBar.xaml` (implicit `ScrollBar`), `Common/SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
 
 The application-level merge tree is therefore exactly:
 
 ```
 App.xaml
-├─ DarkTheme.xaml            base palette (LightTheme/BlueTheme merged on top by PaletteSwitcher)
-├─ SlimScrollBar.xaml        implicit ScrollBar style
-└─ SettingsStyles.xaml       Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
-   ├─ Controls.xaml          shared keyed styles
-   │  └─ Sizing.xaml         Sizing.* tokens
-   ├─ ThemePickerData.xaml   ThemePreview*Brush + ThemeOption*/AccentOption* styles
-   │  └─ Sizing.xaml
-   └─ SettingsControls.xaml  input/control templates + NumericField implicit style
-      └─ Sizing.xaml
+├─ Dark.xaml                  base palette (Light/Blue merged on top by PaletteSwitcher)
+├─ Common/SlimScrollBar.xaml  implicit ScrollBar style
+└─ Common/SettingsStyles.xaml Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
+   ├─ Common/Controls.xaml    shared keyed styles
+   │  └─ Common/Sizing.xaml   Sizing.* tokens
+   ├─ Common/PickerData.xaml  ThemePreview*Brush + ThemeOption*/AccentOption* styles
+   │  └─ Common/Sizing.xaml
+   └─ Common/SettingsControls.xaml input/control templates + NumericField implicit style
+      └─ Common/Sizing.xaml
 ```
 
-`SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, and `SettingsStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `ThemePickerData`, and `SettingsControls` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
+`SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, and `SettingsStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `PickerData`, and `SettingsControls` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
 
 To add a window:
-1. Create `Themes/<Window>Styles.xaml` merging `/Themes/Controls.xaml` (this brings the sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries; palette brushes resolve from the application-level palette through `DynamicResource`).
+1. Create `Themes/Common/<Window>Styles.xaml` merging `/Themes/Common/Controls.xaml` (this brings the sizing tokens transitively — StaticResource inside a dictionary resolves only against that dictionary's own merged dictionaries; palette brushes resolve from the application-level palette through `DynamicResource`).
 2. Define keyed styles only (no implicit styles — they would not reach popups anyway); build on the shared bases (`IconChipButton`, `QuietChipButton`, `WindowHeader`, `WindowTitle`) via `BasedOn`.
 3. Merge it from the window's `Window.Resources`; reference colors exclusively through palette brushes, metrics through `Sizing.*`, glyphs through `IconGlyphs`.
 4. Add tooltips as plain `ToolTip="..."` attributes — the app-level implicit style themes them automatically.
@@ -118,15 +118,15 @@ never eats into the trimmed path. The `ProjectProvenanceMark` style lives in `Co
 `TextPrimaryBrush`, discovered `TextMutedBrush`), so the Settings registry and the launch window render
 the same mark; the mark's tooltip and accessible name carry the full `Manual`/`Discovered` label.
 
-The registered palettes (`DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
+The registered palettes (`Dark.xaml`, `Light.xaml`, `Blue.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. The three files differ ONLY in colour values; their structure (comments, key order, whitespace) is identical and mechanically guarded by the parity test. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
 
 The accent is application-scoped and independent of the theme. The palettes declare chrome and surface brushes only — neither `AccentBrush` nor `AccentSelectionBrush` is a palette key — and `AccentApplier` writes both brushes into `Application.Resources` for the startup call in `App` and the Settings-save call in `WpfAccentPreferenceTarget`. A theme switch therefore leaves the accent untouched, and an accent save never changes the palette. The stored accent is always applied, the default Sky included; an invalid or missing value normalizes back to Sky.
 
 To add another theme:
-1. Copy `DarkTheme.xaml` to a new `<Name>Theme.xaml` and define the same brush keys with new colors.
-2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Themes/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
-3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `ThemePickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Theme & Accent page binds the swatch brushes directly, so the page and its templates need no edit.
-4. The palette parity test enumerates every `Themes/*Theme.xaml`, so the new palette joins the key-set check automatically — no test edit is needed.
+1. Copy `Dark.xaml` to a new `<Name>.xaml` and preserve the exact file structure and replace only the Color attribute values (the parity test enforces this).
+2. Add the `AppTheme` member and its token in Core, then one `ThemeDescriptors.All` entry (`src/CLIHub/Theming/ThemeDescriptors.cs`, order: Dark, Light, Blue, then System) holding the new palette path. `ThemeCatalog.ResolvePalettePath` is descriptor-driven, so no switch arm is needed.
+3. Give the descriptor its preview brush keys (`ThemePreview*Brush` definitions live in `Themes/Common/PickerData.xaml`). `SettingsViewModel` derives `AppThemeOptions` from the descriptor and the Theme & Accent page binds the swatch brushes directly, so the page and its templates need no edit.
+4. The palette parity test enumerates every `Themes/*.xaml` at the root of `Themes/` (non-recursive, so `Common/` is excluded), so the new palette joins the key-set check automatically — no test edit is needed.
 A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references. While the stored theme is System, `SystemThemeFollower` also re-applies the palette through the same switcher when the Windows apps light/dark mode changes during the session; fixed themes ignore personalization changes.
 
 ## Theme Data Locations
@@ -135,20 +135,20 @@ A saved theme applies to every open window immediately through `PaletteSwitcher`
 |---|---|
 | Theme identity and tokens | `src/CLIHub.Core/Models/Appearance/AppTheme.cs` (`AppTheme`, `AppThemes`; UI-independent) |
 | Accent identity and presets | `src/CLIHub.Core/Models/Appearance/AccentPalette.cs` (`AccentPalette`: the Sky default and the preset names/hex values; UI-independent) |
-| WPF descriptor registry | `src/CLIHub/Themes/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
-| Palettes | `src/CLIHub/Themes/DarkTheme.xaml`, `LightTheme.xaml`, `BlueTheme.xaml` (colours only, one identical key set) |
-| Picker preview data | `src/CLIHub/Themes/ThemePickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
-| Runtime palette resolution | `src/CLIHub/Themes/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Themes/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`). While the stored theme is System, `src/CLIHub/Themes/SystemThemeFollower.cs` follows the Windows personalization setting for the running first-instance session and re-applies through the same switcher |
+| WPF descriptor registry | `src/CLIHub/Theming/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
+| Palettes | `src/CLIHub/Themes/Dark.xaml`, `Light.xaml`, `Blue.xaml` (identical structure and key order, differing only in Color values) |
+| Picker preview data | `src/CLIHub/Themes/Common/PickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
+| Runtime palette resolution | `src/CLIHub/Theming/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Theming/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`). While the stored theme is System, `src/CLIHub/Theming/SystemThemeFollower.cs` follows the Windows personalization setting for the running first-instance session and re-applies through the same switcher |
 | Runtime accent application | `src/CLIHub/Settings/AccentApplier.cs` (writes `AccentBrush` and `AccentSelectionBrush` into `Application.Resources`, never `MergedDictionaries`; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfAccentPreferenceTarget.cs`) |
 
 The static guards that keep those files coherent:
 
-- `tests/CLIHub.Tests/Themes/ThemePaletteParityTests.cs` — every palette defines one identical key set.
+- `tests/CLIHub.Tests/Themes/ThemePaletteParityTests.cs` — palettes have identical structure (key order, comments, whitespace) differing only in Color values.
 - `tests/CLIHub.Tests/Themes/ThemePreviewResourceKeyTests.cs` — preview keys referenced by name
   (descriptor values and XAML `StaticResource`) exist in the application-level tree, and no declared
   preview key is orphaned.
 - `tests/CLIHub.Tests/Themes/ThemeColorLiteralTests.cs` — colour literals are rejected outside the
-  palettes and `ThemePickerData.xaml`.
+  palettes and `Themes/Common/PickerData.xaml`.
 - `tests/CLIHub.Tests/Themes/ApplicationResourceKeyTests.cs` — palette keys are never referenced with
   `StaticResource`, and no `x:Key` is declared twice across the non-palette application-level merge
   tree.

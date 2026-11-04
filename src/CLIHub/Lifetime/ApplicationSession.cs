@@ -3,7 +3,7 @@ namespace CLIHub.Lifetime;
 using CLIHub.Core.Windows;
 using CLIHub.Updates;
 using CLIHub.Startup;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Owns application-level event subscriptions for the running first-instance session.

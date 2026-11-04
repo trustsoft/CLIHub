@@ -89,7 +89,7 @@ public sealed class XamlResourceReferenceTests
             xamlFiles.Length >= 20,
             $"Expected the full XAML tree under '{appRoot}', but found only {xamlFiles.Length} files.");
         Assert.Contains(xamlFiles, path => path == Path.Combine(appRoot, "App.xaml"));
-        Assert.Contains(xamlFiles, path => path.EndsWith(Path.Combine("Themes", "SettingsStyles.xaml"), StringComparison.Ordinal));
+        Assert.Contains(xamlFiles, path => path.EndsWith(Path.Combine("Themes", "Common", "SettingsStyles.xaml"), StringComparison.Ordinal));
         Assert.Contains(xamlFiles, path => path.EndsWith(Path.Combine("Views", "SettingsWindow.xaml"), StringComparison.Ordinal));
 
         var documents = xamlFiles.ToDictionary(path => path, LoadDocument, StringComparer.OrdinalIgnoreCase);

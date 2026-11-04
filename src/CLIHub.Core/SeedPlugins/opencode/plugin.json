@@ -2,6 +2,9 @@
   "id": "opencode",
   "name": "OpenCode",
   "description": "AI coding agent CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://www.npmjs.com/package/@opencode/cli",
   "commands": {
     "launch": { "executable": "opencode" },
     "resume": { "executable": "opencode", "arguments": "--continue" },

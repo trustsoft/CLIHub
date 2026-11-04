@@ -122,8 +122,7 @@ public class SettingsNavigationTests
                 DefaultRuntime = RuntimeKind.PowerShell,
                 Hotkey = "Ctrl+Shift+A",
                 PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
-                CheckForUpdatesOnStartup = true,
-                ShowWindowOnStartup = true
+                CheckForUpdatesOnStartup = true
             });
             this.Preferences.Setup(x => x.Update(It.IsAny<Action<AppPreferences>>()));
             this.Startup.Setup(x => x.IsEnabled()).Returns(false);

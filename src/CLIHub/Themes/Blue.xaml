@@ -1,0 +1,51 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Theme palette. Defines the application brush keys (chrome, surfaces, strokes,
+        overlays, text, and status). Dark.xaml is the base palette merged by App.xaml;
+        Light.xaml and Blue.xaml are swapped in at runtime by PaletteSwitcher when the
+        effective theme resolves to light or blue. To add another theme, copy this file
+        and replace the Color values; see docs/architecture/ui.md.
+    -->
+
+    <!-- Surfaces -->
+    <SolidColorBrush x:Key="ChromeBgBrush" Color="#FF232833"/>
+    <SolidColorBrush x:Key="StripBgBrush" Color="#24000000"/>
+    <SolidColorBrush x:Key="PopoverBgBrush" Color="#FF2A3140"/>
+    <!-- Open actions-menu surface: the Actions control's pressed tone (the pressed overlay over the
+         pane header), used as the open menu's background so the control and menu share one fill. -->
+    <SolidColorBrush x:Key="PopoverOpenBrush" Color="#FF1C212B"/>
+    <SolidColorBrush x:Key="HairlineBrush" Color="#0FFFFFFF"/>
+
+    <!-- Strokes and overlays -->
+    <SolidColorBrush x:Key="FieldStrokeBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="ActionsBorderBrush" Color="#FF353C4A"/>
+    <SolidColorBrush x:Key="ControlStrokeBrush" Color="#1FFFFFFF"/>
+    <SolidColorBrush x:Key="ChipBgBrush" Color="#0DFFFFFF"/>
+    <SolidColorBrush x:Key="ChipStrokeBrush" Color="#14FFFFFF"/>
+    <SolidColorBrush x:Key="ThumbBgBrush" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="RowDividerBrush" Color="#0AFFFFFF"/>
+    <SolidColorBrush x:Key="HoverOverlayBrush" Color="#0FFFFFFF"/>
+    <SolidColorBrush x:Key="PressedOverlayBrush" Color="#14000000"/>
+    <!-- 1px highlight line drawn across the top edge of windows with drawn chrome -->
+    <SolidColorBrush x:Key="TopHighlightBrush" Color="#0DFFFFFF"/>
+    <!-- Thumb of the slim application-level scrollbar -->
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#33FFFFFF"/>
+
+    <!-- Text -->
+    <!-- Primary text sits a hair above MenuItemBrush so list names keep a slight edge over menu entries. -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#FFE8EBF1"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#FF9BA4B5"/>
+    <SolidColorBrush x:Key="SectionLabelBrush" Color="#FF8D97A9"/>
+    <SolidColorBrush x:Key="BrandBrush" Color="#FFADB6C6"/>
+    <SolidColorBrush x:Key="IconBrush" Color="#FFD7DCE6"/>
+    <SolidColorBrush x:Key="MenuItemBrush" Color="#FFE5E9F1"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#FF5A6272"/>
+
+    <!-- Status: error, success, and selection tones -->
+    <SolidColorBrush x:Key="DangerBrush" Color="#FFD98282"/>
+    <SolidColorBrush x:Key="SuccessBrush" Color="#FF4ADE80"/>
+    <SolidColorBrush x:Key="SuccessSelectionBrush" Color="#1F4ADE80"/>
+
+</ResourceDictionary>

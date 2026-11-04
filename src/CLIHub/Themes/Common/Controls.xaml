@@ -1,0 +1,194 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Shared styles: typography and control templates used by more than one window. Palette brushes
+        are referenced with DynamicResource and resolve from the application-level palette, so this
+        dictionary merges only the structural sizing tokens. All styles are keyed - nothing here is
+        implicit, so windows keep their own look.
+    -->
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Themes/Common/Sizing.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!--
+        Typography
+    -->
+
+    <!-- Pane header: section label -->
+    <Style x:Key="SectionLabel" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource SectionLabelBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Drawn window header: the title a chromeless window does not get from the OS -->
+    <Style x:Key="WindowTitle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="14,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Brand and version chip -->
+    <Style x:Key="BrandText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="VersionChipBorder" TargetType="Border">
+        <Setter Property="CornerRadius" Value="{StaticResource Sizing.CornerRadius.Chip}"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="Background" Value="{DynamicResource ChipBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ChipStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style x:Key="VersionChipText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Chip}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+    </Style>
+
+    <!-- Project row provenance mark: the compact "M"/"D" source indicator shared by the Settings
+         Projects page and the launch window project list. Manual projects (CanRemove is true exactly
+         for them) use the strong primary foreground so the mark stays readable on light surfaces;
+         discovered projects keep the muted tone. The character remains the primary distinction. -->
+    <Style x:Key="ProjectProvenanceMark" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding CanRemove}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        Drawn chrome
+    -->
+
+    <!-- Header strip of a drawn-chrome window: drag area behind the title and close button -->
+    <Style x:Key="WindowHeader" TargetType="Grid">
+        <Setter Property="Height" Value="{StaticResource Sizing.WindowHeader.Height}"/>
+        <Setter Property="Background" Value="{DynamicResource StripBgBrush}"/>
+    </Style>
+
+    <!--
+        Dark popover tooltip: the little sibling of the actions popover. Keyed here as the base for
+        the application-level implicit ToolTip style in App.xaml — tooltips live outside the
+        window visual tree, so only an application-level implicit style reaches them.
+    -->
+    <Style x:Key="DarkToolTip" TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Body}"/>
+        <Setter Property="HasDropShadow" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
+                            Background="{DynamicResource PopoverBgBrush}"
+                            BorderBrush="{DynamicResource FieldStrokeBrush}"
+                            BorderThickness="1"
+                            Padding="10,6">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="16" ShadowDepth="5" Opacity="0.4"/>
+                        </Border.Effect>
+                        <ContentPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Buttons
+    -->
+
+    <!--
+        Icon button: a transparent chip whose chrome appears on hover only. The close buttons of
+        the drawn-chrome windows and the launch window's footer icon buttons are built on it.
+    -->
+    <Style x:Key="IconChipButton" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                            Background="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Close button of a drawn-chrome window: the counterpart of the OS close box -->
+    <Style x:Key="WindowCloseButton" TargetType="Button" BasedOn="{StaticResource IconChipButton}">
+        <Setter Property="Width" Value="{StaticResource Sizing.IconButton.Width}"/>
+        <Setter Property="Height" Value="{StaticResource Sizing.IconButton.Height}"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!--
+        Quiet chip button: chip-toned surface with a hairline stroke, hover brightens both.
+        The template reads Background, BorderBrush and Padding off the button, so variants set
+        them (and extra triggers) instead of redeclaring the template.
+    -->
+    <Style x:Key="QuietChipButton" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Background" Value="{DynamicResource ChipBgBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ChipStrokeBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ControlStrokeBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -45,7 +45,7 @@ Rendered from the running application (v0.9.0, 630×806):
 
 An interactive HTML comparison of an optional section emblem to the left of the Settings page title —
 the empty left part of the page header. It reproduces the current window on the real palette
-(`Themes/DarkTheme.xaml`) and metrics (`Themes/Sizing.xaml`: window 888×687, title bar 40, sidebar 208,
+(`Themes/Dark.xaml`) and metrics (`Themes/Common/Sizing.xaml`: window 888×687, title bar 40, sidebar 208,
 header insets 24/16, `SettingCard` 28×28 icon box, footer 50), so a chosen variant can be ported to XAML
 without re-measuring.
 

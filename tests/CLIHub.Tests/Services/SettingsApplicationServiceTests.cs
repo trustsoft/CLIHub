@@ -429,7 +429,6 @@ public class SettingsApplicationServiceTests
         DefaultRuntime = RuntimeKind.GitBash,
         PathDisplayStyle = PathDisplayStyles.LeftTrimToken,
         Hotkey = "Ctrl+Shift+A",
-        CheckForUpdatesOnStartup = true,
-        ShowWindowOnStartup = true
+        CheckForUpdatesOnStartup = true
     };
 }

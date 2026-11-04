@@ -4,7 +4,7 @@ using System.Windows;
 
 using CLIHub.Core.Models;
 using CLIHub.Settings;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Covers the WPF theme preference target without an application object. The test process

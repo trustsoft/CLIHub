@@ -20,7 +20,7 @@ using CLIHub.Settings;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Startup;
-using CLIHub.Themes;
+using CLIHub.Theming;
 using CLIHub.Tray;
 
 using Serilog;
@@ -166,6 +166,8 @@ public static class ServiceRegistration
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
+        services.AddTransient<BrowsePluginsDialogViewModel>();
+        services.AddTransient<BrowsePluginsDialog>();
         return services;
     }
 
@@ -195,6 +197,7 @@ public static class ServiceRegistration
     private static IServiceCollection AddSharedUiServices(this IServiceCollection services)
     {
         services.AddSingleton<IProjectDialogService, ProjectDialogService>();
+        services.AddSingleton<IPluginDialogService, PluginDialogService>();
         services.AddSingleton<IUserNotificationService, UserNotificationService>();
         services.AddSingleton<IExternalLauncher, ExternalLauncher>();
         services.AddSingleton<LogoImageSourceCache>();

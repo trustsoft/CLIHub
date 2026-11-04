@@ -10,7 +10,7 @@ using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
 using CLIHub.Startup;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 public class ApplicationSessionTests
 {

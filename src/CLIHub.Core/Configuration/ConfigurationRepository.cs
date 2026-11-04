@@ -8,14 +8,13 @@ using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 
 /// <summary>
-///   Owns configuration snapshots, migrations, and persistence to config.json.
+///   Owns configuration snapshots and persistence to config.json.
 /// </summary>
 public sealed class ConfigurationRepository : IConfigurationRepository
 {
     private static readonly TimeSpan DebounceDelay = TimeSpan.FromMilliseconds(250);
 
     private readonly ILogger<ConfigurationRepository> logger;
-    private readonly IConfigMigrationRunner migrationRunner;
     private readonly object stateGate = new();
     private readonly object writerGate = new();
     private readonly object writeLock = new();
@@ -36,13 +35,10 @@ public sealed class ConfigurationRepository : IConfigurationRepository
     /// <param name="configFilePath">
     ///   Overrides the config file location; defaults to <c> %APPDATA%\CLIHub\config.json </c>.
     /// </param>
-    /// <param name="migrationRunner"> Optional schema migration runner. </param>
     public ConfigurationRepository(ILogger<ConfigurationRepository> logger,
-                                   string? configFilePath = null,
-                                   IConfigMigrationRunner? migrationRunner = null)
+                                   string? configFilePath = null)
     {
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        this.migrationRunner = migrationRunner ?? new ConfigMigrationRunner();
 
         if (string.IsNullOrWhiteSpace(configFilePath))
         {
@@ -104,30 +100,8 @@ public sealed class ConfigurationRepository : IConfigurationRepository
             var json = File.ReadAllText(this.configFilePath);
             var document = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options);
 
-            var schemaVersion = document?.SchemaVersion ?? AppConfigDocument.LegacySchemaVersion;
-            if (schemaVersion < AppConfigDocument.LegacySchemaVersion ||
-                schemaVersion > AppConfigDocument.CurrentSchemaVersion)
-            {
-                this.logger.LogWarning(
-                    "Unsupported configuration schema version {SchemaVersion} at {Path}",
-                    schemaVersion,
-                    this.configFilePath);
-                this.cachedSnapshot = new ConfigurationSnapshot();
-                this.loaded = true;
-                return;
-            }
-
-            var snapshot = document?.ToSnapshot() ?? new ConfigurationSnapshot();
-            var migrated = !this.migrationRunner.HasMigrations &&
-                schemaVersion == AppConfigDocument.LegacySchemaVersion
-                ? new ConfigurationMigrationResult(snapshot, schemaVersion)
-                : this.migrationRunner.Migrate(schemaVersion, snapshot, AppConfigDocument.CurrentSchemaVersion);
-            this.cachedSnapshot = migrated.Snapshot;
+            this.cachedSnapshot = document?.ToSnapshot() ?? new ConfigurationSnapshot();
             this.loaded = true;
-            if (migrated.SchemaVersion != schemaVersion)
-            {
-                this.QueueWrite(Serialize(this.cachedSnapshot));
-            }
 
             this.logger.LogDebug("Loaded configuration from {Path}", this.configFilePath);
         }

@@ -23,4 +23,51 @@ public class RuntimeKindsTests
     {
         Assert.Equal(token, RuntimeKinds.ToToken(runtime));
     }
+
+    [Theory]
+    [InlineData("ps", RuntimeKind.PowerShell)]
+    [InlineData("PS", RuntimeKind.PowerShell)]
+    [InlineData("  ps  ", RuntimeKind.PowerShell)]
+    [InlineData("ps7", RuntimeKind.PowerShell7)]
+    [InlineData("PS7", RuntimeKind.PowerShell7)]
+    [InlineData("\tps7\n", RuntimeKind.PowerShell7)]
+    [InlineData("cmd", RuntimeKind.CommandPrompt)]
+    [InlineData("CMD", RuntimeKind.CommandPrompt)]
+    [InlineData("  cmd  ", RuntimeKind.CommandPrompt)]
+    [InlineData("bash", RuntimeKind.GitBash)]
+    [InlineData("Bash", RuntimeKind.GitBash)]
+    [InlineData("  bash  ", RuntimeKind.GitBash)]
+    public void TryParse_CanonicalTokenAnyCaseWithSurroundingWhitespace_ResolvesKind(
+        string value,
+        RuntimeKind expected)
+    {
+        Assert.True(RuntimeKinds.TryParse(value, out var kind));
+        Assert.Equal(expected, kind);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("future-runtime")]
+    [InlineData("powershell.exe")]
+    [InlineData("pwsh.exe")]
+    [InlineData("command prompt")]
+    [InlineData("git bash")]
+    public void TryParse_UnknownMissingOrRemovedValue_ReturnsFalseWithPowerShell(string? value)
+    {
+        Assert.False(RuntimeKinds.TryParse(value, out var kind));
+        Assert.Equal(RuntimeKind.PowerShell, kind);
+    }
+
+    [Theory]
+    [InlineData(RuntimeKind.PowerShell)]
+    [InlineData(RuntimeKind.PowerShell7)]
+    [InlineData(RuntimeKind.CommandPrompt)]
+    [InlineData(RuntimeKind.GitBash)]
+    public void TryParse_StoredToken_RoundTripsToSameKind(RuntimeKind kind)
+    {
+        Assert.True(RuntimeKinds.TryParse(RuntimeKinds.ToToken(kind), out var parsed));
+        Assert.Equal(kind, parsed);
+    }
 }

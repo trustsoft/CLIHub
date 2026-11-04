@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:CLIHub.Controls"
              xmlns:behaviors="clr-namespace:CLIHub.Behaviors"
-             xmlns:themes="clr-namespace:CLIHub.Themes"
+             xmlns:themes="clr-namespace:CLIHub.Theming"
              mc:Ignorable="d">
     <StackPanel>
         <controls:SettingsGroup Margin="0,18,0,8">

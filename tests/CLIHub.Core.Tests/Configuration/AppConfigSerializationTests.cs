@@ -64,14 +64,6 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
-    public void AppConfigDocument_NewWrites_IncludeCurrentSchemaVersion()
-    {
-        var json = JsonSerializer.Serialize(AppConfigDocument.From(new AppConfig()), CoreJson.Options);
-
-        Assert.Contains("\"schemaVersion\": 2", json);
-    }
-
-    [Fact]
     public void Hotkey_NewConfiguration_UsesCtrlShiftSpaceDefault()
     {
         Assert.Equal("Ctrl+Shift+Space", new AppConfig().Preferences.Hotkey);
@@ -81,7 +73,7 @@ public class AppConfigSerializationTests
     public void Hotkey_AbsentFromStoredDocument_UsesCtrlShiftSpaceDefault()
     {
         const string json = """
-        { "schemaVersion": 2, "projects": [], "preferences": {}, "currentProjectId": null }
+        { "projects": [], "preferences": {}, "currentProjectId": null }
         """;
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
@@ -109,7 +101,6 @@ public class AppConfigSerializationTests
             {
                 StartWithWindows = true,
                 Hotkey = "Ctrl+Alt+P",
-                TerminalExecutable = "terminal.exe",
                 DefaultRuntime = RuntimeKind.PowerShell,
                 LogLevel = "Debug",
                 ShowOnlyProjectAgents = true,
@@ -136,7 +127,6 @@ public class AppConfigSerializationTests
         Assert.Equal(config.Projects[0].LogoPath, restored.Projects[0].LogoPath);
         Assert.Equal(config.Preferences.StartWithWindows, restored.Preferences.StartWithWindows);
         Assert.Equal(config.Preferences.Hotkey, restored.Preferences.Hotkey);
-        Assert.Equal(config.Preferences.TerminalExecutable, restored.Preferences.TerminalExecutable);
         Assert.Equal(config.Preferences.DefaultRuntime, restored.Preferences.DefaultRuntime);
         Assert.Equal(config.Preferences.LogLevel, restored.Preferences.LogLevel);
         Assert.Equal(config.Preferences.ShowOnlyProjectAgents, restored.Preferences.ShowOnlyProjectAgents);
@@ -154,7 +144,6 @@ public class AppConfigSerializationTests
     {
         const string json = """
         {
-          "schemaVersion": 1,
           "projects": [],
           "preferences": { "defaultRuntime": "future-runtime" },
           "currentProjectId": null
@@ -212,7 +201,7 @@ public class AppConfigSerializationTests
     public void ProjectScanningPreferences_Absent_UseDefaults()
     {
         const string json = """
-        { "schemaVersion": 2, "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
+        { "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
         """;
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
@@ -240,7 +229,7 @@ public class AppConfigSerializationTests
     public void DefaultAgentId_Absent_ReadsAsNull()
     {
         const string json = """
-        { "schemaVersion": 2, "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
+        { "projects": [], "preferences": { "hotkey": "Ctrl+Shift+A" }, "currentProjectId": null }
         """;
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
@@ -267,7 +256,7 @@ public class AppConfigSerializationTests
     public void ProjectSource_Absent_ReadsAsManual()
     {
         const string json = """
-        { "schemaVersion": 2, "projects": [ { "id": "p", "name": "p", "path": "C:\\p" } ], "preferences": {}, "currentProjectId": null }
+        { "projects": [ { "id": "p", "name": "p", "path": "C:\\p" } ], "preferences": {}, "currentProjectId": null }
         """;
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();

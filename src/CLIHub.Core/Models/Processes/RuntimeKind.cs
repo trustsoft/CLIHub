@@ -27,8 +27,7 @@ public enum RuntimeKind
 }
 
 /// <summary>
-///   Maps <see cref="RuntimeKind" /> to and from its stored token and resolves legacy
-///   terminal-executable values.
+///   Maps <see cref="RuntimeKind" /> to and from its stored token.
 /// </summary>
 public static class RuntimeKinds
 {
@@ -53,12 +52,17 @@ public static class RuntimeKinds
     public const string GitBashToken = "bash";
 
     /// <summary>
-    ///   Parses a runtime token (or a recognized executable/alias).
+    ///   The runtime used when none is stored or the stored value is unrecognized.
+    /// </summary>
+    public const RuntimeKind Default = RuntimeKind.PowerShell;
+
+    /// <summary>
+    ///   Parses a runtime token (case-insensitive, surrounding whitespace ignored).
     ///   Returns false for null, empty, or unknown values.
     /// </summary>
     public static bool TryParse(string? value, out RuntimeKind kind)
     {
-        kind = RuntimeKind.PowerShell;
+        kind = Default;
 
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -68,29 +72,15 @@ public static class RuntimeKinds
         switch (value.Trim().ToLowerInvariant())
         {
             case "ps":
-            case "powershell":
-            case "powershell.exe":
                 kind = RuntimeKind.PowerShell;
                 return true;
             case "ps7":
-            case "pwsh":
-            case "pwsh.exe":
-            case "powershell7":
-            case "powershell-7":
-            case "powershell 7":
                 kind = RuntimeKind.PowerShell7;
                 return true;
             case "cmd":
-            case "cmd.exe":
-            case "command prompt":
-            case "commandprompt":
                 kind = RuntimeKind.CommandPrompt;
                 return true;
             case "bash":
-            case "bash.exe":
-            case "gitbash":
-            case "git-bash":
-            case "git bash":
                 kind = RuntimeKind.GitBash;
                 return true;
             default:
@@ -99,10 +89,10 @@ public static class RuntimeKinds
     }
 
     /// <summary>
-    ///   Parses a runtime token, falling back to <see cref="RuntimeKind.PowerShell" />.
+    ///   Parses a runtime token, falling back to <see cref="Default" />.
     /// </summary>
     public static RuntimeKind Parse(string? value) =>
-        TryParse(value, out var kind) ? kind : RuntimeKind.PowerShell;
+        TryParse(value, out var kind) ? kind : Default;
 
     /// <summary>
     ///   Returns the stored token for a runtime.

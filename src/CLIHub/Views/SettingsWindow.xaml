@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        xmlns:themes="clr-namespace:CLIHub.Themes"
+        xmlns:themes="clr-namespace:CLIHub.Theming"
         xmlns:conv="clr-namespace:CLIHub.Converters"
         xmlns:controls="clr-namespace:CLIHub.Controls"
         xmlns:views="clr-namespace:CLIHub.Views"
@@ -216,7 +216,7 @@
             <!-- CLI Agents summary cards, pinned to the page header. -->
             <DataTemplate x:Key="AgentsSummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
-                    <controls:SummaryCard Detail="{Binding AgentsState.AvailabilitySummary}"
+                    <controls:SummaryCard Detail="{Binding AgentsState.PluginCatalogSummary}"
                                           Icon="{x:Static themes:IconGlyphs.Robot}"
                                           Label="AGENTS"
                                           Value="{Binding AgentsState.InstalledAgentCount}"/>

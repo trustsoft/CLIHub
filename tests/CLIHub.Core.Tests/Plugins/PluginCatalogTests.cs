@@ -29,8 +29,19 @@ public class PluginCatalogTests : IDisposable
         File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
     }
 
-    private PluginCatalog CreateManager() =>
-        new(NullLogger<PluginCatalog>.Instance, this.CreateResolver(), this.root);
+    private PluginCatalog CreateManager(IPluginStateRepository? stateRepository = null) =>
+        new(NullLogger<PluginCatalog>.Instance, this.CreateResolver(), this.root, stateRepository: stateRepository);
+
+    private PluginStateRepository CreateStateRepository() =>
+        new(NullLogger<PluginStateRepository>.Instance, Path.Combine(this.root, "plugin-state.json"));
+
+    private void WriteState(string pluginId, PluginStateEntry entry)
+    {
+        var repository = this.CreateStateRepository();
+        var document = repository.Load();
+        document.Plugins[pluginId] = entry;
+        repository.Save(document);
+    }
 
     private PluginLogoResolver CreateResolver() =>
         new(this.CreateCache(), new LogoOptions(null));
@@ -387,6 +398,88 @@ public class PluginCatalogTests : IDisposable
         second.LoadPlugins();
 
         Assert.Equal(cachedLogo, second.GetAllPlugins().Single().LogoPath);
+    }
+
+    [Fact]
+    public void LoadPlugins_DisabledPlugin_NotLoadedByGetAllPlugins()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed) { Disabled = true });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        Assert.Empty(manager.GetAllPlugins());
+        Assert.Empty(manager.GetInvalidPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_DisabledPlugin_ReturnedByGetDisabledPluginsWithStateMetadata()
+    {
+        this.WritePlugin("opencode", """
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "version": "1.4.0",
+          "commands": { "launch": { "executable": "opencode" } }
+        }
+        """);
+        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed) { InstalledVersion = "1.2.3", Disabled = true });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        var disabled = Assert.Single(manager.GetDisabledPlugins());
+        Assert.Equal("opencode", disabled.PluginId);
+        Assert.Equal(Path.Combine(this.root, "opencode"), disabled.PluginDirectory);
+        Assert.Equal(PluginOrigin.Installed, disabled.Origin);
+        // The descriptor's own version wins over the state file's recorded installed version.
+        Assert.Equal("1.4.0", disabled.Version);
+    }
+
+    [Fact]
+    public void LoadPlugins_EnabledPluginWithStateEntry_LoadsNormally()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin));
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        var plugin = Assert.Single(manager.GetAllPlugins());
+        Assert.Equal("opencode", plugin.Id);
+        Assert.Empty(manager.GetDisabledPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_PluginWithoutStateEntry_LoadsNormally()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        Assert.Single(manager.GetAllPlugins());
+        Assert.Empty(manager.GetDisabledPlugins());
+    }
+
+    [Fact]
+    public void ReloadPlugins_AfterEnable_DisabledPluginReturnsToCatalog()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin) { Disabled = true });
+        var repository = this.CreateStateRepository();
+        var manager = this.CreateManager(repository);
+        manager.LoadPlugins();
+        Assert.Single(manager.GetDisabledPlugins());
+
+        var document = repository.Load();
+        document.Plugins["opencode"].Disabled = false;
+        repository.Save(document);
+        manager.ReloadPlugins();
+
+        Assert.Single(manager.GetAllPlugins());
+        Assert.Empty(manager.GetDisabledPlugins());
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

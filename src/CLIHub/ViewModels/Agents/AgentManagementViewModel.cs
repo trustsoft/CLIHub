@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Lifetime;
@@ -13,7 +15,8 @@ using CLIHub.Launching;
 
 /// <summary>
 ///   Owns the CLI Agents management surface: one card per agent, the supported/installed counts,
-///   the default-agent selection, and the per-card actions.
+///   the default-agent selection, the per-card actions, and the plugin lifecycle actions
+///   (install, disable, enable, open plugins folder, reload catalog).
 /// </summary>
 public sealed class AgentManagementViewModel : ObservableObject, IAgentManagementSection
 {
@@ -35,6 +38,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IExternalLauncher launcher;
     private readonly AgentProcessMonitor processMonitor;
     private readonly IApplicationOperationLifetime operationLifetime;
+    private readonly IPluginInstaller pluginInstaller;
+    private readonly IPluginDialogService pluginDialogs;
+    private readonly IPluginStateRepository pluginState;
+    private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentManagementViewModel> logger;
 
     private bool disposed;
@@ -56,6 +63,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="launcher"> Opens the agent's configuration file. </param>
     /// <param name="processMonitor"> Running-agent monitor used to gate card update availability. </param>
     /// <param name="operationLifetime"> Application lifetime for tracked actions. </param>
+    /// <param name="pluginInstaller"> Installs agent plugins from local packages. </param>
+    /// <param name="pluginDialogs"> Plugin installation dialogs. </param>
+    /// <param name="pluginState"> Plugin lifecycle state shown on the cards and updated by the lifecycle actions. </param>
+    /// <param name="preferencesStore"> Preferences store for feed URL checking. </param>
     /// <param name="logger"> Logger. </param>
     public AgentManagementViewModel(IPluginCatalog catalog,
                                     IAgentDetectionService detection,
@@ -66,6 +77,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IExternalLauncher launcher,
                                     AgentProcessMonitor processMonitor,
                                     IApplicationOperationLifetime operationLifetime,
+                                    IPluginInstaller pluginInstaller,
+                                    IPluginDialogService pluginDialogs,
+                                    IPluginStateRepository pluginState,
+                                    IPreferencesStore preferencesStore,
                                     ILogger<AgentManagementViewModel> logger)
     {
         this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
@@ -77,6 +92,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.launcher = launcher ?? throw new ArgumentNullException(nameof(launcher));
         this.processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
+        this.pluginInstaller = pluginInstaller ?? throw new ArgumentNullException(nameof(pluginInstaller));
+        this.pluginDialogs = pluginDialogs ?? throw new ArgumentNullException(nameof(pluginDialogs));
+        this.pluginState = pluginState ?? throw new ArgumentNullException(nameof(pluginState));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.catalog.PluginsChanged += this.OnPluginsChanged;
 
@@ -84,8 +103,14 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
         this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
+        this.DisablePluginCommand = new RelayCommand<AgentCardItem>(this.DisablePlugin);
+        this.EnablePluginCommand = new RelayCommand<DisabledAgentCardItem>(this.EnablePlugin);
         this.DetectCommand = new RelayCommand(() => _ = this.RunAsync("Agent detection", this.DetectAsync), () => this.CanDetect);
         this.CheckUpdatesCommand = new RelayCommand(() => _ = this.RunAsync("Agent update check", this.CheckUpdatesAsync), () => this.CanCheckUpdates);
+        this.InstallPluginCommand = new RelayCommand(this.InstallPlugin);
+        this.BrowsePluginsCommand = new RelayCommand(this.BrowsePlugins, this.CanBrowsePlugins);
+        this.OpenPluginsFolderCommand = new RelayCommand(this.OpenPluginsFolder);
+        this.ReloadCatalogCommand = new RelayCommand(this.ReloadCatalog);
     }
 
     /// <inheritdoc />
@@ -95,6 +120,54 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     ///   Invalid plugin entries, rendered without actions.
     /// </summary>
     public ObservableCollection<InvalidAgentCardItem> InvalidCards { get; } = new();
+
+    /// <summary>
+    ///   Plugins disabled in the plugin state file, rendered in the separate Disabled section
+    ///   with an Enable action. Populated during <see cref="Load" /> and every catalog reload.
+    /// </summary>
+    public ObservableCollection<DisabledAgentCardItem> DisabledCards { get; } = new();
+
+    /// <summary>
+    ///   Whether any disabled plugin is rendered: gates the Disabled section's visibility.
+    /// </summary>
+    public bool HasDisabledPlugins => this.DisabledCards.Count > 0;
+
+    /// <summary>
+    ///   The plugin origin mix for the AGENTS summary card: how many loaded plugins are
+    ///   built-in, installed from packages, and of unknown origin.
+    /// </summary>
+    public string PluginCatalogSummary
+    {
+        get
+        {
+            if (this.Cards.Count == 0)
+            {
+                return "No agent plugins found";
+            }
+
+            var builtin = this.Cards.Count(card => card.Origin == PluginOrigin.Builtin);
+            var installed = this.Cards.Count(card => card.Origin == PluginOrigin.Installed);
+            var unknown = this.Cards.Count - builtin - installed;
+
+            var parts = new List<string>();
+            if (builtin > 0)
+            {
+                parts.Add($"{builtin} built-in");
+            }
+
+            if (installed > 0)
+            {
+                parts.Add($"{installed} installed");
+            }
+
+            if (unknown > 0)
+            {
+                parts.Add($"{unknown} unknown");
+            }
+
+            return string.Join(" · ", parts);
+        }
+    }
 
     /// <inheritdoc />
     public int InstalledAgentCount => this.Cards.Count(card => card.IsInstalled);
@@ -189,6 +262,40 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <inheritdoc />
     public RelayCommand CheckUpdatesCommand { get; }
+
+    /// <summary>
+    ///   Installs an agent plugin from a local package: opens the package picker, inspects the
+    ///   package, shows the confirmation listing every declared command, and installs after the
+    ///   user confirms.
+    /// </summary>
+    public RelayCommand InstallPluginCommand { get; }
+
+    /// <summary>
+    ///   Opens the Browse Plugins dialog showing the remote feed.
+    /// </summary>
+    public RelayCommand BrowsePluginsCommand { get; }
+
+    /// <summary>
+    ///   Disables a plugin: marks it disabled in the plugin state file (no file deletion) and
+    ///   reloads the catalog so the card moves to the Disabled section.
+    /// </summary>
+    public RelayCommand<AgentCardItem> DisablePluginCommand { get; }
+
+    /// <summary>
+    ///   Re-enables a disabled plugin: clears the disabled flag in the plugin state file and
+    ///   reloads the catalog so the card returns to the active list.
+    /// </summary>
+    public RelayCommand<DisabledAgentCardItem> EnablePluginCommand { get; }
+
+    /// <summary>
+    ///   Opens the plugins folder (<c> %APPDATA%\CLIHub\plugins </c>) in Windows Explorer.
+    /// </summary>
+    public RelayCommand OpenPluginsFolderCommand { get; }
+
+    /// <summary>
+    ///   Reloads the plugin catalog without restarting the application.
+    /// </summary>
+    public RelayCommand ReloadCatalogCommand { get; }
 
     /// <inheritdoc />
     public bool IsDetecting
@@ -356,12 +463,22 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.UpdateCheckSummary = null;
         this.Cards.Clear();
         this.InvalidCards.Clear();
+        this.DisabledCards.Clear();
 
         var plugins = this.catalog.GetAllPlugins();
         foreach (var entry in this.catalog.GetInvalidPlugins())
         {
             this.InvalidCards.Add(new InvalidAgentCardItem(entry));
         }
+
+        foreach (var disabled in this.catalog.GetDisabledPlugins())
+        {
+            this.DisabledCards.Add(new DisabledAgentCardItem(disabled));
+        }
+
+        // Origin metadata comes from the plugin state file, not the descriptor: a plugin with
+        // no state entry renders with the neutral Unknown badge.
+        var pluginState = this.pluginState.Load();
 
         // Cards render with declarative availability (Update enabled exactly when the plugin
         // declares an update command); the running-agent blocked state populates afterwards
@@ -378,6 +495,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
             var declaresUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
 
+            var stateEntry = pluginState.Plugins.GetValueOrDefault(plugin.Id);
+
             var card = new AgentCardItem(
                 plugin,
                 plugin.LogoPath,
@@ -385,7 +504,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 null,
                 AgentConfigurationPath.For(plugin))
             {
-                CanUpdate = declaresUpdate
+                CanUpdate = declaresUpdate,
+                Origin = stateEntry?.Origin,
+                InstalledVersion = stateEntry?.InstalledVersion
             };
 
             this.Cards.Add(card);
@@ -436,6 +557,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.OnPropertyChanged(nameof(this.UpdatesValue));
         this.OnPropertyChanged(nameof(this.UpdatesDetail));
         this.OnPropertyChanged(nameof(this.UpdatesValueTone));
+        this.OnPropertyChanged(nameof(this.HasDisabledPlugins));
+        this.OnPropertyChanged(nameof(this.PluginCatalogSummary));
     }
 
     /// <summary>
@@ -906,6 +1029,135 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             this.logger.LogWarning(ex, "Could not open agent config {Path}", path);
             card.Message = $"Could not open {path}";
         }
+    }
+
+    /// <summary>
+    ///   Runs the plugin installation workflow: pick a package, inspect it without writes,
+    ///   confirm with the user (every declared command is listed), then install. Validation
+    ///   failures surface as an error dialog and stop before any file is written.
+    /// </summary>
+    private void InstallPlugin()
+    {
+        var packagePath = this.pluginDialogs.PickPluginPackage();
+        if (string.IsNullOrWhiteSpace(packagePath))
+        {
+            return;
+        }
+
+        var preview = this.pluginInstaller.Inspect(packagePath);
+        if (!preview.IsValid)
+        {
+            this.pluginDialogs.ShowValidationError(preview.Errors);
+            return;
+        }
+
+        if (!this.pluginDialogs.ShowInstallConfirmation(preview))
+        {
+            return;
+        }
+
+        var result = this.pluginInstaller.Install(packagePath, replaceExisting: preview.ReplacesExistingPlugin);
+        if (result.Success)
+        {
+            this.pluginDialogs.ShowInstallOutcome(result, preview.PluginName);
+        }
+        else
+        {
+            this.pluginDialogs.ShowValidationError(result.Errors);
+        }
+    }
+
+    /// <summary>
+    ///   Marks a plugin disabled in the state file (files stay on disk) and reloads the catalog
+    ///   so the plugin leaves the active list and appears in the Disabled section.
+    /// </summary>
+    /// <param name="card"> The card of the plugin to disable. </param>
+    private void DisablePlugin(AgentCardItem card)
+    {
+        try
+        {
+            this.UpdatePluginStateEntry(card.PluginId, entry => entry.Disabled = true);
+            this.catalog.ReloadPlugins();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Could not disable plugin {PluginId}", card.PluginId);
+            card.Message = "Could not disable the plugin";
+        }
+    }
+
+    /// <summary>
+    ///   Clears a plugin's disabled flag in the state file and reloads the catalog so the
+    ///   plugin returns to the active list without re-installation.
+    /// </summary>
+    /// <param name="card"> The disabled card of the plugin to enable. </param>
+    private void EnablePlugin(DisabledAgentCardItem card)
+    {
+        try
+        {
+            this.UpdatePluginStateEntry(card.PluginId, entry => entry.Disabled = false);
+            this.catalog.ReloadPlugins();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Could not enable plugin {PluginId}", card.PluginId);
+        }
+    }
+
+    /// <summary>
+    ///   Opens the Browse Plugins dialog.
+    /// </summary>
+    private void BrowsePlugins()
+    {
+        try
+        {
+            this.pluginDialogs.ShowBrowsePluginsDialog();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Could not open Browse Plugins dialog");
+        }
+    }
+
+    /// <summary>
+    ///   Whether the Browse Plugins command is available (feed is not disabled).
+    /// </summary>
+    private bool CanBrowsePlugins() => FeedUrlProvider.GetFeedUrl(this.preferencesStore) is not null;
+
+    /// <summary>
+    ///   Opens the plugins folder in Windows Explorer through the external launcher.
+    /// </summary>
+    private void OpenPluginsFolder()
+    {
+        try
+        {
+            this.launcher.Open(AppPaths.PluginsDirectory);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Could not open the plugins folder {Path}", AppPaths.PluginsDirectory);
+        }
+    }
+
+    /// <summary>
+    ///   Reloads the plugin catalog on demand; the PluginsChanged notification rebuilds the
+    ///   cards, including any newly installed, modified, or removed plugins.
+    /// </summary>
+    private void ReloadCatalog() => this.catalog.ReloadPlugins();
+
+    /// <summary>
+    ///   Applies a mutation to one plugin's lifecycle state entry, creating the entry when the
+    ///   plugin has none yet, and persists the state document.
+    /// </summary>
+    /// <param name="pluginId"> The plugin id whose entry is updated. </param>
+    /// <param name="update"> The mutation applied to the entry. </param>
+    private void UpdatePluginStateEntry(string pluginId, Action<PluginStateEntry> update)
+    {
+        var document = this.pluginState.Load();
+        var entry = document.Plugins.GetValueOrDefault(pluginId) ?? new PluginStateEntry(PluginOrigin.Unknown);
+        update(entry);
+        document.Plugins[pluginId] = entry;
+        this.pluginState.Save(document);
     }
 
     private Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>

@@ -8,17 +8,17 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <!-- Palette only: shared brushes, no implicit styles, so other windows are unaffected. -->
-                <ResourceDictionary Source="/Themes/DarkTheme.xaml"/>
+                <ResourceDictionary Source="/Themes/Dark.xaml"/>
                 <!--
                     The slim scrollbar lives here, not in a window dictionary: implicit styles
                     from window resources do not reach the scrollbars inside ScrollViewer and ListBox
                     templates — only application-level implicit styles do.
                 -->
-                <ResourceDictionary Source="/Themes/SlimScrollBar.xaml"/>
+                <ResourceDictionary Source="/Themes/Common/SlimScrollBar.xaml"/>
                 <!--
                     Settings window and page chrome. SettingsStyles.xaml is the application-level entry
                     point for the settings layer: it merges Controls.xaml (shared keyed styles),
-                    ThemePickerData.xaml (theme/accent picker data), and SettingsControls.xaml
+                    PickerData.xaml (theme/accent picker data), and SettingsControls.xaml
                     (input/control templates), while those dictionaries merge Sizing.xaml for their own
                     token lookups. Together they provide settings chrome, picker data, input templates,
                     sizing tokens, and the implicit custom-control styles (SectionHeader, SettingCard,
@@ -27,7 +27,7 @@
                     not reachable during their XAML load. Controls.xaml is loaded exactly once for the
                     application, through this entry.
                 -->
-                <ResourceDictionary Source="/Themes/SettingsStyles.xaml"/>
+                <ResourceDictionary Source="/Themes/Common/SettingsStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Shared converters, referenced from window content by key. The PathToImage

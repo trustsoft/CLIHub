@@ -11,7 +11,7 @@ using CLIHub.Core.Windows;
 using CLIHub.Startup;
 using CLIHub.Updates;
 using CLIHub.Lifetime;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 public class ShellCoordinatorTests
 {

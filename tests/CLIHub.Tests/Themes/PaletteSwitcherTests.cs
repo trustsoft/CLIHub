@@ -3,7 +3,7 @@ namespace CLIHub.Tests.Themes;
 using System.Windows;
 
 using CLIHub.Core.Models;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Covers the tracked palette overlay of <see cref="PaletteSwitcher" />. Every test uses a fresh
@@ -37,7 +37,7 @@ public sealed class PaletteSwitcherTests
         Assert.Same(palette, Assert.Single(merged));
         var path = Assert.Single(requested);
         Assert.Equal(ThemeCatalog.ResolvePalettePath(AppTheme.Light, systemPrefersLight: false), path);
-        Assert.Contains("LightTheme.xaml", path, StringComparison.Ordinal);
+        Assert.Contains("Light.xaml", path, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class PaletteSwitcherTests
 
         Assert.True(applied);
         Assert.Equal(2, requested.Count);
-        Assert.Contains("BlueTheme.xaml", requested[1], StringComparison.Ordinal);
+        Assert.Contains("Blue.xaml", requested[1], StringComparison.Ordinal);
         var blue = Assert.Single(merged);
         Assert.Same(created[1], blue);
         Assert.NotSame(created[0], blue);

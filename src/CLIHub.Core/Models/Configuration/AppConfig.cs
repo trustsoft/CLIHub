@@ -38,12 +38,6 @@ public class AppPreferences
     public string Hotkey { get; set; } = "Ctrl+Shift+Space";
 
     /// <summary>
-    ///   Legacy path to the terminal executable. Superseded by <see cref="DefaultRuntime" />;
-    ///   kept for backward compatibility and read once to migrate existing configurations.
-    /// </summary>
-    public string TerminalExecutable { get; set; } = "wt.exe";
-
-    /// <summary>
     ///   Runtime used to launch interactive agent commands. Defaults to Windows PowerShell.
     /// </summary>
     public RuntimeKind DefaultRuntime { get; set; } = RuntimeKind.PowerShell;
@@ -103,12 +97,6 @@ public class AppPreferences
     public bool NotifyPrereleaseUpdates { get; set; }
 
     /// <summary>
-    ///   Legacy startup-visibility preference. Superseded by <see cref="StartMinimized" />
-    ///   and kept only so the schema 1→2 migration can read existing configurations.
-    /// </summary>
-    public bool ShowWindowOnStartup { get; set; } = true;
-
-    /// <summary>
     ///   When true (default), CLIHub starts minimized in the system tray; when false,
     ///   the main window is shown at startup. Applies to manual and Windows starts.
     /// </summary>
@@ -157,4 +145,10 @@ public class AppPreferences
     ///   ID of the agent the launch window preselects, or null for none.
     /// </summary>
     public string? DefaultAgentId { get; set; }
+
+    /// <summary>
+    ///   URL of the plugin feed index, or null to use the default official feed.
+    ///   An explicit empty string disables the feed.
+    /// </summary>
+    public string? PluginFeedUrl { get; set; }
 }

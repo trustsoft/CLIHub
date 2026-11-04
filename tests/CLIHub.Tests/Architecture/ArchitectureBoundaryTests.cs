@@ -9,6 +9,7 @@ public sealed class ArchitectureBoundaryTests
         "App.xaml.cs",
         "AssemblyInfo.cs",
         "Imaging" + Path.DirectorySeparatorChar + "LogoImageSourceCache.cs",
+        "Launching" + Path.DirectorySeparatorChar + "PluginDialogService.cs",
         "Launching" + Path.DirectorySeparatorChar + "ProjectDialogService.cs",
         "Startup" + Path.DirectorySeparatorChar + "ApplicationHost.cs",
         "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",
@@ -18,8 +19,8 @@ public sealed class ArchitectureBoundaryTests
         "Settings" + Path.DirectorySeparatorChar + "AccentApplier.cs",
         "Settings" + Path.DirectorySeparatorChar + "WpfAccentPreferenceTarget.cs",
         "Settings" + Path.DirectorySeparatorChar + "WpfThemePreferenceTarget.cs",
-        "Themes" + Path.DirectorySeparatorChar + "PaletteSwitcher.cs",
-        "Themes" + Path.DirectorySeparatorChar + "SystemThemeFollower.cs"
+        "Theming" + Path.DirectorySeparatorChar + "PaletteSwitcher.cs",
+        "Theming" + Path.DirectorySeparatorChar + "SystemThemeFollower.cs"
     ];
 
     [Fact]

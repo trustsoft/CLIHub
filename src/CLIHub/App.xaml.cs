@@ -8,7 +8,7 @@ using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Settings;
 using CLIHub.Startup;
-using CLIHub.Themes;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Interaction logic for App.xaml

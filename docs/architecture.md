@@ -45,7 +45,7 @@ ports and update state; the application workflow owns cross-surface coordination
 
 ## Core Ownership
 
-- `Configuration/` owns the single `config.json` document, migrations (`Configuration/Migrations/`), snapshots,
+- `Configuration/` owns the single `config.json` document, snapshots,
   and atomic persistence.
 - `Projects/` owns project state, selection, recency, favorites, paths, and project logos.
 - `Plugins/` owns descriptor discovery, validation, catalog reload, and built-in seeding.
@@ -63,8 +63,8 @@ ports and update state; the application workflow owns cross-surface coordination
 - `Composition/` groups Core dependency-injection registration; `CLIHub.Core.Windows` registers its own
   adapters via `AddWindowsInfrastructure`, and the application composition root calls both.
 
-Subsystem folders define the namespace. Subfolders used only for navigation — `Models/<area>/`,
-`ViewModels/<area>/`, and `Configuration/Migrations/` — keep the parent subsystem namespace so consumers
+Subsystem folders define the namespace. Subfolders used only for navigation — `Models/<area>/` and
+`ViewModels/<area>/` — keep the parent subsystem namespace so consumers
 keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
 
 ## Invariants

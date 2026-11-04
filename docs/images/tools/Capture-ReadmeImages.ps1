@@ -415,7 +415,6 @@ try {
     $preferences = [pscustomobject]@{
         startWithWindows = $false
         hotkey = 'Ctrl+Shift+Space'
-        terminalExecutable = 'wt.exe'
         defaultRuntime = 'ps'
         logLevel = 'Information'
         logRetentionDays = 7
@@ -427,7 +426,6 @@ try {
         autoDownloadUpdates = $false
         notifyStableUpdates = $true
         notifyPrereleaseUpdates = $false
-        showWindowOnStartup = $true
         startMinimized = $false
         pinLaunchWindow = $true
         popupScreenPosition = 'center'
@@ -453,7 +451,6 @@ try {
     }
 
     $configuration = [pscustomobject]@{
-        schemaVersion = 2
         projects = $projectDocuments
         preferences = $preferences
         currentProjectId = $projectDocuments[0].id

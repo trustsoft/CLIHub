@@ -107,6 +107,7 @@ public partial class AgentManagementViewModelTests
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns(() => [Launchable("valid")]);
         catalog.Setup(x => x.GetInvalidPlugins()).Returns(() => currentInvalid);
+        catalog.Setup(x => x.GetDisabledPlugins()).Returns([]);
         var viewModel = new AgentManagementViewModelBuilder().WithPlugins([]).WithDetection(Detection()).WithVersions(Versions()).WithPluginCatalog(catalog).Build();
 
         viewModel.Load(null);

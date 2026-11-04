@@ -8,21 +8,6 @@ using CLIHub.Core.Configuration;
 internal sealed class AppConfigDocument
 {
     /// <summary>
-    ///   The schema version written by the current configuration serializer.
-    /// </summary>
-    public int? SchemaVersion { get; set; }
-
-    /// <summary>
-    ///   The current configuration schema version.
-    /// </summary>
-    public const int CurrentSchemaVersion = 2;
-
-    /// <summary>
-    ///   The schema version represented by documents without version metadata.
-    /// </summary>
-    public const int LegacySchemaVersion = 0;
-
-    /// <summary>
     ///   Projects stored in the configuration document.
     /// </summary>
     public List<ProjectDocument> Projects { get; set; } = new();
@@ -55,7 +40,6 @@ internal sealed class AppConfigDocument
 
         return new AppConfigDocument
         {
-            SchemaVersion = CurrentSchemaVersion,
             Projects = snapshot.Projects.Select(ProjectDocument.From).ToList(),
             Preferences = PreferencesDocument.From(snapshot.Preferences),
             CurrentProjectId = snapshot.CurrentProjectId
@@ -118,7 +102,6 @@ internal sealed class AppConfigDocument
     {
         public bool StartWithWindows { get; set; }
         public string Hotkey { get; set; } = "Ctrl+Shift+Space";
-        public string TerminalExecutable { get; set; } = "wt.exe";
         public string DefaultRuntime { get; set; } = "ps";
         public string LogLevel { get; set; } = "Information";
         public int LogRetentionDays { get; set; } = 7;
@@ -130,7 +113,6 @@ internal sealed class AppConfigDocument
         public bool AutoDownloadUpdates { get; set; } = true;
         public bool NotifyStableUpdates { get; set; } = true;
         public bool NotifyPrereleaseUpdates { get; set; }
-        public bool ShowWindowOnStartup { get; set; } = true;
         public bool StartMinimized { get; set; } = true;
         public bool PinLaunchWindow { get; set; }
         public string PopupScreenPosition { get; set; } = "center";
@@ -144,6 +126,7 @@ internal sealed class AppConfigDocument
         public List<string>? IgnoredPatterns { get; set; }
         public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
         public string? DefaultAgentId { get; set; }
+        public string? PluginFeedUrl { get; set; }
 
         // Both From and ToPreferences must map every public property of AppPreferences;
         // PersistenceCloneRoundTripTests fails the suite when a field is missed.
@@ -151,7 +134,6 @@ internal sealed class AppConfigDocument
         {
             StartWithWindows = preferences.StartWithWindows,
             Hotkey = preferences.Hotkey,
-            TerminalExecutable = preferences.TerminalExecutable,
             DefaultRuntime = RuntimeKinds.ToToken(preferences.DefaultRuntime),
             LogLevel = preferences.LogLevel,
             LogRetentionDays = preferences.LogRetentionDays,
@@ -164,8 +146,6 @@ internal sealed class AppConfigDocument
             NotifyStableUpdates = preferences.NotifyStableUpdates,
             NotifyPrereleaseUpdates = preferences.NotifyPrereleaseUpdates,
             StartMinimized = preferences.StartMinimized,
-            // Keep the legacy field non-stale so older readers stay consistent.
-            ShowWindowOnStartup = !preferences.StartMinimized,
             PinLaunchWindow = preferences.PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.ToToken(preferences.PopupScreenPosition),
             AppTheme = AppThemes.ToToken(preferences.AppTheme),
@@ -187,14 +167,14 @@ internal sealed class AppConfigDocument
             ScanDepth = preferences.Scanning.ScanDepth,
             IgnoredPatterns = preferences.Scanning.IgnoredPatterns is null ? null : new List<string>(preferences.Scanning.IgnoredPatterns),
             DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.Scanning.DiscoveryMode),
-            DefaultAgentId = preferences.DefaultAgentId
+            DefaultAgentId = preferences.DefaultAgentId,
+            PluginFeedUrl = preferences.PluginFeedUrl
         };
 
         public AppPreferences ToPreferences() => new()
         {
             StartWithWindows = this.StartWithWindows,
             Hotkey = this.Hotkey,
-            TerminalExecutable = this.TerminalExecutable,
             DefaultRuntime = RuntimeKinds.Parse(this.DefaultRuntime),
             LogLevel = this.LogLevel,
             LogRetentionDays = this.LogRetentionDays,
@@ -207,7 +187,6 @@ internal sealed class AppConfigDocument
             NotifyStableUpdates = this.NotifyStableUpdates,
             NotifyPrereleaseUpdates = this.NotifyPrereleaseUpdates,
             StartMinimized = this.StartMinimized,
-            ShowWindowOnStartup = this.ShowWindowOnStartup,
             PinLaunchWindow = this.PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.Parse(this.PopupScreenPosition),
             AppTheme = AppThemes.Parse(this.AppTheme),
@@ -222,7 +201,8 @@ internal sealed class AppConfigDocument
                 IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
                 DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode)
             },
-            DefaultAgentId = this.DefaultAgentId
+            DefaultAgentId = this.DefaultAgentId,
+            PluginFeedUrl = this.PluginFeedUrl
         };
 
         private static IReadOnlyDictionary<string, WatchedDirectoryScanSettings> BuildWatchedDirectorySettings(

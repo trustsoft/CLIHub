@@ -24,7 +24,7 @@ public sealed class PluginInitializationService : IPluginInitializationService
     /// <inheritdoc />
     public void Initialize()
     {
-        this.pluginSeeder.SeedIfEmpty();
+        this.pluginSeeder.EnsureBuiltinsExist();
         this.pluginCatalog.LoadPlugins();
     }
 }

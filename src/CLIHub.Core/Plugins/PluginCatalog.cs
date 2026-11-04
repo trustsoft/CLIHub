@@ -18,9 +18,11 @@ public sealed class PluginCatalog : IPluginCatalog
     private readonly IPluginDescriptorValidator descriptorValidator;
     private readonly IPluginDescriptorSource source;
     private readonly ILoggingContextProvider loggingContext;
+    private readonly IPluginStateRepository? stateRepository;
     private readonly string pluginsPath;
     private IReadOnlyList<Plugin> plugins = Array.Empty<Plugin>();
     private IReadOnlyList<InvalidPluginEntry> invalidPlugins = Array.Empty<InvalidPluginEntry>();
+    private IReadOnlyList<DisabledPluginEntry> disabledPlugins = Array.Empty<DisabledPluginEntry>();
 
     /// <inheritdoc />
     public event EventHandler? PluginsChanged;
@@ -35,13 +37,15 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
     /// <param name="source"> The source of plugin descriptors. </param>
     /// <param name="loggingContext"> The provider for operation logging scopes. </param>
+    /// <param name="stateRepository"> The plugin lifecycle state repository used to skip disabled plugins. </param>
     public PluginCatalog(ILogger<PluginCatalog> logger,
                          PluginLogoResolver logoResolver,
                          string? pluginsPath = null,
                          IPluginDescriptorReader? descriptorReader = null,
                          IPluginDescriptorValidator? descriptorValidator = null,
                          IPluginDescriptorSource? source = null,
-                         ILoggingContextProvider? loggingContext = null)
+                         ILoggingContextProvider? loggingContext = null,
+                         IPluginStateRepository? stateRepository = null)
     {
         this.logger = logger;
         this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
@@ -50,6 +54,7 @@ public sealed class PluginCatalog : IPluginCatalog
         this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
         this.source = source ?? new LocalFolderPluginSource(this.pluginsPath, this.descriptorReader);
         this.loggingContext = loggingContext ?? new LoggingContextProvider(NullLogger<LoggingContextProvider>.Instance);
+        this.stateRepository = stateRepository;
     }
 
     /// <inheritdoc />
@@ -70,6 +75,8 @@ public sealed class PluginCatalog : IPluginCatalog
     {
         var plugins = new List<Plugin>();
         var invalidPlugins = new List<InvalidPluginEntry>();
+        var disabledPlugins = new List<DisabledPluginEntry>();
+        PluginStateDocument? state = null;
         using var scope = this.loggingContext.BeginOperation("PluginCatalogLoad");
 
         foreach (var entry in this.source.EnumerateDescriptors())
@@ -88,6 +95,20 @@ public sealed class PluginCatalog : IPluginCatalog
 
                 if (plugin is not null)
                 {
+                    // Disabled plugins are not loaded, not validated, and not launchable; they
+                    // surface separately so the UI can offer enabling them again.
+                    state ??= this.stateRepository?.Load();
+                    if (state is not null && state.Plugins.TryGetValue(plugin.Id, out var stateEntry) && stateEntry.Disabled)
+                    {
+                        disabledPlugins.Add(new DisabledPluginEntry(
+                            plugin.Id,
+                            entry.PluginDirectory,
+                            stateEntry.Origin,
+                            plugin.Version ?? stateEntry.InstalledVersion));
+                        this.logger.LogInformation("Skipped disabled plugin {PluginId} in {Directory}", plugin.Id, entry.PluginDirectory);
+                        continue;
+                    }
+
                     var validationResult = this.descriptorValidator.Validate(plugin);
                     if (!validationResult.IsValid)
                     {
@@ -126,6 +147,7 @@ public sealed class PluginCatalog : IPluginCatalog
 
         this.logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
         this.invalidPlugins = invalidPlugins;
+        this.disabledPlugins = disabledPlugins;
         return plugins;
     }
 
@@ -134,6 +156,9 @@ public sealed class PluginCatalog : IPluginCatalog
 
     /// <inheritdoc />
     public IReadOnlyList<InvalidPluginEntry> GetInvalidPlugins() => this.invalidPlugins;
+
+    /// <inheritdoc />
+    public IReadOnlyList<DisabledPluginEntry> GetDisabledPlugins() => this.disabledPlugins;
 
     private static string? FindLoadedPluginDirectory(IReadOnlyList<Plugin> plugins,
                                                      string pluginId,

@@ -34,40 +34,6 @@ The configuration repository SHALL persist changes only after a complete update 
 - **WHEN** concurrent update operations change different configuration fields
 - **THEN** each completed update is applied to the latest committed snapshot and neither update is lost
 
-### Requirement: Snapshot persistence preserves the existing document
-
-The configuration repository SHALL be the sole coordination boundary for snapshots, schema migrations, debounced persistence, atomic replacement, and synchronous flush of the existing single `config.json` document, while preserving its JSON property names, defaults, and current schema-version metadata.
-
-#### Scenario: Snapshot round-trip preserves configuration data
-- **GIVEN** a snapshot containing projects, preferences, and a current project ID
-- **WHEN** it is persisted, flushed, and loaded by a new repository instance
-- **THEN** all values round-trip without changing the established JSON document shape
-
-#### Scenario: New writes identify the current schema
-- **GIVEN** a configuration is persisted by the current application
-- **WHEN** the resulting `config.json` is read
-- **THEN** it contains the current numeric `schemaVersion` at the top level
-
-#### Scenario: Successful migration schedules the current schema document
-- **GIVEN** a supported legacy configuration is migrated successfully
-- **WHEN** the repository completes loading the migrated snapshot
-- **THEN** it schedules the migrated configuration with the current schema version for persistence
-
-#### Scenario: Failed migration preserves the original document
-- **GIVEN** a legacy configuration migration fails
-- **WHEN** the repository handles the failed load
-- **THEN** it does not publish or persist a partially migrated snapshot and leaves the original document unchanged
-
-#### Scenario: Flush persists all completed updates
-- **GIVEN** one or more repository updates have completed
-- **WHEN** the repository's synchronous flush operation returns
-- **THEN** all updates completed before the flush began are durable in the single configuration document
-
-#### Scenario: Repository retains atomic single-file persistence
-- **GIVEN** configuration updates are pending
-- **WHEN** the repository writes them to disk
-- **THEN** it preserves the established JSON property shape and uses debounced atomic replacement of the single `config.json` file
-
 ### Requirement: Stores use the snapshot boundary
 
 The preferences and project state stores SHALL expose read operations and explicit update operations that work on detached owned values, and SHALL persist the owned section without requiring callers to pair mutable `Load` and `Save` calls.
@@ -82,107 +48,17 @@ The preferences and project state stores SHALL expose read operations and explic
 - **WHEN** the caller mutates the returned value without invoking an explicit update operation
 - **THEN** a subsequent read returns the previously stored value
 
-### Requirement: Configuration schema versions are explicit and compatible
-
-The configuration boundary SHALL treat a missing `schemaVersion` as legacy version 0, accept it through the established compatibility path, and distinguish unsupported future or invalid versions from the current schema without silently overwriting their source document.
-
-#### Scenario: Legacy document without a version remains readable
-- **GIVEN** a valid existing configuration document has no `schemaVersion` property
-- **WHEN** the configuration is loaded
-- **THEN** its projects and preferences are loaded using the legacy compatibility behavior
-
-#### Scenario: Unknown future version is non-destructive
-- **GIVEN** a configuration document declares a schema version greater than the current version
-- **WHEN** the configuration is loaded
-- **THEN** the service reports the unsupported schema, uses safe defaults for the running process, and does not overwrite the source document
-
-#### Scenario: Invalid version is rejected safely
-- **GIVEN** a configuration document declares an invalid schema version
-- **WHEN** the configuration is loaded
-- **THEN** the service follows the safe-default/error logging path and does not perform a destructive rewrite
-
-### Requirement: Configuration migrations are ordered and explicit
-
-The configuration boundary SHALL apply registered migrations in an ordered, contiguous sequence from the loaded schema version to the current schema version, while treating current-version documents as a no-op.
-
-#### Scenario: Current-version document requires no migration
-- **GIVEN** a configuration document declares the current schema version
-- **WHEN** the configuration is loaded
-- **THEN** no migration is invoked and the document is converted normally
-
-#### Scenario: Legacy document follows the migration path
-- **GIVEN** a configuration document declares a supported older schema version and migrations cover every step to the current version
-- **WHEN** the configuration is loaded
-- **THEN** migrations run once in ascending version order before the configuration is converted
-
-### Requirement: Migration failures are non-destructive
-
-The configuration boundary SHALL treat missing migration paths and migration exceptions as load failures, preserve the source document, and avoid automatically writing a partially migrated result.
-
-#### Scenario: Missing migration path does not overwrite the document
-- **GIVEN** a configuration document requires a migration for which no contiguous path is registered
-- **WHEN** the configuration is loaded
-- **THEN** the service reports the migration failure, uses safe defaults for the running process, and leaves the source document unchanged
-
-#### Scenario: Failed migration does not publish partial state
-- **GIVEN** an ordered migration sequence where one migration throws after changing its in-memory input
-- **WHEN** the configuration is loaded
-- **THEN** the service reports the failure, does not publish the partial result, and leaves the source document unchanged
-
-### Requirement: Startup visibility preference is migrated to start-minimized
-
-The configuration migration layer SHALL convert the schema 1 `showWindowOnStartup` preference into the schema 2 `startMinimized` preference, inverting its value, while preserving unrelated configuration values.
-
-#### Scenario: Show-window enabled maps to start-minimized disabled
-- **GIVEN** a schema 1 configuration has `showWindowOnStartup` set to `true`
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `startMinimized` is set to `false`
-
-#### Scenario: Show-window disabled maps to start-minimized enabled
-- **GIVEN** a schema 1 configuration has `showWindowOnStartup` set to `false`
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `startMinimized` is set to `true`
-
-#### Scenario: Migration preserves unrelated values
-- **GIVEN** a schema 1 configuration with preferences and projects
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** all preferences other than the startup-visibility preference and all project state are unchanged
-
-### Requirement: Legacy terminal executable maps to the available shells
-
-The configuration migration layer SHALL convert a schema 0 `terminalExecutable` preference into a `defaultRuntime` token from the available set (`ps`, `ps7`, `cmd`, `bash`) while preserving unrelated configuration values.
-
-#### Scenario: Windows Terminal executable maps to PowerShell
-- **GIVEN** a legacy configuration contains `terminalExecutable` set to `wt.exe`
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `defaultRuntime` is set to `ps`
-
-#### Scenario: Command Prompt executable maps to the Command Prompt token
-- **GIVEN** a legacy configuration contains `terminalExecutable` set to `cmd.exe`
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `defaultRuntime` is set to `cmd`
-
-#### Scenario: PowerShell executable maps to the PowerShell token
-- **GIVEN** a legacy configuration contains `terminalExecutable` set to a PowerShell executable
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `defaultRuntime` is set to `ps`
-
-#### Scenario: Missing or unknown executable uses the default runtime
-- **GIVEN** a legacy configuration contains no recognized terminal executable
-- **WHEN** the configuration is migrated to the current schema
-- **THEN** `defaultRuntime` is set to `ps` and unrelated preferences and project state are unchanged
-
 ### Requirement: Runtime tokens resolve to the available shells
 
-The configuration boundary SHALL parse only the available runtime tokens (`ps`, `ps7`, `cmd`, `bash`) and SHALL resolve any missing, unknown, or no-longer-supported token (including the removed `wt`) to the default runtime PowerShell, without preventing the application from starting.
+The configuration boundary SHALL parse only the canonical runtime tokens (`ps`, `ps7`, `cmd`, `bash`, case-insensitive and trimmed) and SHALL resolve any missing, unknown, or no-longer-supported token to the default runtime PowerShell, without preventing the application from starting.
 
 #### Scenario: Known tokens map to their runtime
-- **GIVEN** a configuration stores `defaultRuntime` as `ps`, `ps7`, `cmd`, or `bash`
+- **GIVEN** a configuration stores `defaultRuntime` as `ps`, `ps7`, `cmd`, or `bash` (in any case, with or without surrounding whitespace)
 - **WHEN** the configuration is loaded
 - **THEN** the corresponding runtime is used
 
 #### Scenario: Removed or unknown token resolves to the default
-- **GIVEN** a configuration stores `defaultRuntime` as the removed token `wt` or any unrecognized value
+- **GIVEN** a configuration stores `defaultRuntime` as an unrecognized value or is missing the field entirely
 - **WHEN** the configuration is loaded
 - **THEN** PowerShell is used and the application starts normally
 
@@ -258,7 +134,7 @@ The configuration boundary SHALL default the accent color to the Sky value when 
 
 ### Requirement: Project scanning preferences default safely and round-trip
 
-The configuration boundary SHALL default the project-scanning preferences when they are absent from a stored document and SHALL round-trip them through the single `config.json` document: `watchedDirectories` default empty, `scanDepth` default `2`, `ignoredPatterns` default the built-in set when absent, `discoveryMode` default `both`, and `watchedDirectorySettings` default empty. Each per-root entry SHALL carry the root path, a scan depth, and a discovery mode; entries for paths that are not in `watchedDirectories` SHALL be ignored. Adding these fields SHALL NOT change the numeric `schemaVersion`.
+The configuration boundary SHALL default the project-scanning preferences when they are absent from a stored document and SHALL round-trip them through the single `config.json` document: `watchedDirectories` default empty, `scanDepth` default `2`, `ignoredPatterns` default the built-in set when absent, `discoveryMode` default `both`, and `watchedDirectorySettings` default empty. Each per-root entry SHALL carry the root path, a scan depth, and a discovery mode; entries for paths that are not in `watchedDirectories` SHALL be ignored. Adding these fields SHALL NOT require a schema version increment.
 
 #### Scenario: Absent fields use defaults
 - **GIVEN** a stored configuration has no project-scanning preference fields
@@ -303,11 +179,11 @@ The configuration boundary SHALL default the project-scanning preferences when t
 #### Scenario: Schema version is unchanged
 - **GIVEN** a configuration is persisted after project-scanning preferences are added
 - **WHEN** the resulting `config.json` is read
-- **THEN** it contains the same `schemaVersion` as before the scanning fields were added
+- **THEN** it contains no `schemaVersion` metadata and the scanning fields are present
 
 ### Requirement: Project provenance defaults safely and round-trips
 
-The configuration boundary SHALL persist each project's provenance (`source`: `manual` or `discovered`) and SHALL treat a missing or unrecognized value as `manual`. Adding this field SHALL NOT change the numeric `schemaVersion`.
+The configuration boundary SHALL persist each project's provenance (`source`: `manual` or `discovered`) and SHALL treat a missing or unrecognized value as `manual`. Adding this field SHALL NOT require a schema version increment.
 
 #### Scenario: Missing provenance is manual
 - **GIVEN** a stored project has no provenance field
@@ -321,7 +197,7 @@ The configuration boundary SHALL persist each project's provenance (`source`: `m
 
 ### Requirement: Default agent preference defaults safely and round-trips
 
-The configuration boundary SHALL persist an optional `defaultAgentId` preference, default it to null when absent, and treat an unrecognized value as no default without preventing the application from starting. Adding this field SHALL NOT change the numeric `schemaVersion`.
+The configuration boundary SHALL persist an optional `defaultAgentId` preference, default it to null when absent, and treat an unrecognized value as no default without preventing the application from starting. Adding this field SHALL NOT require a schema version increment.
 
 #### Scenario: Absent field has no default agent
 - **GIVEN** a stored configuration has no `defaultAgentId`
@@ -332,3 +208,37 @@ The configuration boundary SHALL persist an optional `defaultAgentId` preference
 - **GIVEN** a default agent id is stored
 - **WHEN** the configuration is persisted and loaded again
 - **THEN** the same default agent id is restored
+
+### Requirement: Snapshot persistence preserves the document without schema migration
+
+The configuration repository SHALL be the sole coordination boundary for snapshots, debounced persistence, atomic replacement, and synchronous flush of the existing single `config.json` document, while preserving its JSON property names and defaults. Unknown properties SHALL be ignored on read, missing properties SHALL default, and the repository SHALL NOT reject or rewrite a document because of removed metadata.
+
+#### Scenario: Snapshot round-trip preserves configuration data
+- **GIVEN** a snapshot containing projects, preferences, and a current project ID
+- **WHEN** it is persisted, flushed, and loaded by a new repository instance
+- **THEN** all values round-trip without changing the established JSON document shape
+
+#### Scenario: Document with unknown properties reads successfully
+- **GIVEN** a configuration document contains properties that are not recognized by the current schema (e.g., `schemaVersion`, `terminalExecutable`, `showWindowOnStartup`)
+- **WHEN** the configuration is loaded
+- **THEN** unknown properties are ignored, known current fields load their values, and the application starts normally
+
+#### Scenario: Document with missing current fields uses defaults
+- **GIVEN** a configuration document is missing current preference fields (e.g., `defaultRuntime`, `startMinimized`)
+- **WHEN** the configuration is loaded
+- **THEN** missing fields receive their default values and the application starts normally
+
+#### Scenario: Old document is not rewritten at load
+- **GIVEN** a configuration document contains unknown properties or is missing current fields
+- **WHEN** the configuration is loaded
+- **THEN** the source document is not modified until the next explicit save operation
+
+#### Scenario: Flush persists all completed updates
+- **GIVEN** one or more repository updates have completed
+- **WHEN** the repository's synchronous flush operation returns
+- **THEN** all updates completed before the flush began are durable in the single configuration document
+
+#### Scenario: Repository retains atomic single-file persistence
+- **GIVEN** configuration updates are pending
+- **WHEN** the repository writes them to disk
+- **THEN** it preserves the established JSON property shape and uses debounced atomic replacement of the single `config.json` file

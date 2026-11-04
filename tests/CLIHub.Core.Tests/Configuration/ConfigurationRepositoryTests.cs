@@ -42,20 +42,19 @@ public class ConfigurationRepositoryTests : IDisposable
 
         Assert.True(File.Exists(this.ConfigPath));
         Assert.Contains("\"currentProjectId\": \"abc\"", File.ReadAllText(this.ConfigPath));
-        Assert.Contains("\"schemaVersion\": 2", File.ReadAllText(this.ConfigPath));
     }
 
     [Fact]
-    public void Read_LegacyDocumentWithoutSchemaVersion_ReadsExistingValues()
+    public void Read_DocumentWithoutSchemaVersion_ReadsExistingValues()
     {
-        const string legacyJson = """
+        const string storedJson = """
         {
           "projects": [],
           "preferences": { "hotkey": "Ctrl+Alt+L" },
           "currentProjectId": null
         }
         """;
-        File.WriteAllText(this.ConfigPath, legacyJson);
+        File.WriteAllText(this.ConfigPath, storedJson);
 
         using var repository = this.CreateRepository();
 
@@ -63,43 +62,32 @@ public class ConfigurationRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void Read_UnknownSchemaVersion_UsesDefaultsWithoutOverwritingSource()
+    public void Read_DocumentWithUnknownMetadata_LoadsKnownValuesWithoutRewritingSource()
     {
-        const string futureJson = """
+        const string storedJson = """
         {
           "schemaVersion": 99,
           "projects": [],
-          "preferences": { "hotkey": "Ctrl+Alt+F" },
+          "preferences": {
+            "hotkey": "Ctrl+Alt+F",
+            "terminalExecutable": "wt.exe",
+            "showWindowOnStartup": false,
+            "defaultRuntime": "cmd",
+            "startMinimized": false
+          },
           "currentProjectId": "future-project"
         }
         """;
-        File.WriteAllText(this.ConfigPath, futureJson);
+        File.WriteAllText(this.ConfigPath, storedJson);
 
         using var repository = this.CreateRepository();
+        var snapshot = repository.Read();
 
-        Assert.Null(repository.Read().CurrentProjectId);
-        Assert.Equal(futureJson, File.ReadAllText(this.ConfigPath));
-        Assert.Contains(this.logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
-    }
-
-    [Fact]
-    public void Read_InvalidSchemaVersion_UsesDefaultsWithoutOverwritingSource()
-    {
-        const string invalidJson = """
-        {
-          "schemaVersion": -1,
-          "projects": [],
-          "preferences": {},
-          "currentProjectId": "invalid-project"
-        }
-        """;
-        File.WriteAllText(this.ConfigPath, invalidJson);
-
-        using var repository = this.CreateRepository();
-
-        Assert.Null(repository.Read().CurrentProjectId);
-        Assert.Equal(invalidJson, File.ReadAllText(this.ConfigPath));
-        Assert.Contains(this.logger.Warnings, warning => warning.Contains("Unsupported configuration schema version"));
+        Assert.Equal("future-project", snapshot.CurrentProjectId);
+        Assert.Equal("Ctrl+Alt+F", snapshot.Preferences.Hotkey);
+        Assert.Equal(RuntimeKind.CommandPrompt, snapshot.Preferences.DefaultRuntime);
+        Assert.False(snapshot.Preferences.StartMinimized);
+        Assert.Equal(storedJson, File.ReadAllText(this.ConfigPath));
     }
 
     [Fact]
