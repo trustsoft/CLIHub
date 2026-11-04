@@ -126,6 +126,7 @@ internal sealed class AppConfigDocument
         public List<string>? IgnoredPatterns { get; set; }
         public string DiscoveryMode { get; set; } = ProjectDiscoveryModes.BothToken;
         public string? DefaultAgentId { get; set; }
+        public string? PluginFeedUrl { get; set; }
 
         // Both From and ToPreferences must map every public property of AppPreferences;
         // PersistenceCloneRoundTripTests fails the suite when a field is missed.
@@ -166,7 +167,8 @@ internal sealed class AppConfigDocument
             ScanDepth = preferences.Scanning.ScanDepth,
             IgnoredPatterns = preferences.Scanning.IgnoredPatterns is null ? null : new List<string>(preferences.Scanning.IgnoredPatterns),
             DiscoveryMode = ProjectDiscoveryModes.ToToken(preferences.Scanning.DiscoveryMode),
-            DefaultAgentId = preferences.DefaultAgentId
+            DefaultAgentId = preferences.DefaultAgentId,
+            PluginFeedUrl = preferences.PluginFeedUrl
         };
 
         public AppPreferences ToPreferences() => new()
@@ -199,7 +201,8 @@ internal sealed class AppConfigDocument
                 IgnoredPatterns = this.IgnoredPatterns is null ? null : new List<string>(this.IgnoredPatterns),
                 DiscoveryMode = ProjectDiscoveryModes.Parse(this.DiscoveryMode)
             },
-            DefaultAgentId = this.DefaultAgentId
+            DefaultAgentId = this.DefaultAgentId,
+            PluginFeedUrl = this.PluginFeedUrl
         };
 
         private static IReadOnlyDictionary<string, WatchedDirectoryScanSettings> BuildWatchedDirectorySettings(

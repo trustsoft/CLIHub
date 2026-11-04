@@ -281,7 +281,9 @@ public class PluginFeedVersionComparator
     {
         if (installedVersion == null)
         {
-            return UpdateStatus.UpdateAvailable; // Unknown installed version, show feed version
+            return UpdateStatus.Available; // Not installed. The caller distinguishes an installed
+                                           // plugin whose version is null (UpdateAvailable) from a
+                                           // plugin with no state entry at all (Available).
         }
         
         // Attempt numeric major.minor.patch comparison
@@ -619,7 +621,7 @@ CLIHub-plugins/
 - `Compare_NumericInstalledGreaterThanFeed_ReturnsDifferentVersionAvailable`: numeric installed > feed returns `DifferentVersionAvailable` (downgrade)
 - `Compare_NonNumericInstalledMatchesFeed_ReturnsCurrent`: non-numeric versions match as strings returns `Current`
 - `Compare_NonNumericInstalledDiffersFeed_ReturnsDifferentVersionAvailable`: non-numeric versions differ as strings returns `DifferentVersionAvailable`
-- `Compare_InstalledNull_ReturnsUpdateAvailable`: no installed version returns `UpdateAvailable`
+- `Compare_InstalledNull_ReturnsAvailable`: no installed version returns `Available`
 
 **ViewModel tests (extend existing `AgentManagementViewModelTests`):**
 

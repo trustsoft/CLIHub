@@ -4,9 +4,11 @@ using System.Text;
 
 using System.Windows;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 
 using CLIHub.Core.Plugins;
+using CLIHub.Views;
 
 /// <summary>
 ///   WPF implementation of plugin installation dialogs: a package file picker, the
@@ -15,6 +17,17 @@ using CLIHub.Core.Plugins;
 /// </summary>
 public sealed class PluginDialogService : IPluginDialogService
 {
+    private readonly IServiceProvider serviceProvider;
+
+    /// <summary>
+    ///   Creates the dialog service.
+    /// </summary>
+    /// <param name="serviceProvider"> Service provider for resolving dialog view models and windows. </param>
+    public PluginDialogService(IServiceProvider serviceProvider)
+    {
+        this.serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    }
+
     /// <inheritdoc />
     public string? PickPluginPackage()
     {
@@ -105,6 +118,14 @@ public sealed class PluginDialogService : IPluginDialogService
             "Plugin installation failed",
             MessageBoxButton.OK,
             MessageBoxImage.Warning);
+    }
+
+    /// <inheritdoc />
+    public void ShowBrowsePluginsDialog()
+    {
+        var dialog = this.serviceProvider.GetRequiredService<BrowsePluginsDialog>();
+        dialog.Owner = ResolveOwner();
+        dialog.ShowDialog();
     }
 
     private static MessageBoxResult Show(string message,

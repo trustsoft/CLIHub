@@ -156,6 +156,21 @@
                                    Text="Install Plugin…"/>
                     </StackPanel>
                 </Button>
+                <Button AutomationProperties.Name="Browse plugins from the remote feed"
+                        Command="{Binding AgentsState.BrowsePluginsCommand}"
+                        Style="{StaticResource SectionHeaderChipButton}"
+                        ToolTip="Browse and install plugins from the remote feed">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock VerticalAlignment="Center"
+                                   FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
+                                   Text="{x:Static themes:IconGlyphs.Search}"/>
+                        <TextBlock Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontSize="{StaticResource Sizing.FontSize.Section}"
+                                   Text="Browse Plugins…"/>
+                    </StackPanel>
+                </Button>
                 <Button AutomationProperties.Name="Open the plugins folder in Windows Explorer"
                         Command="{Binding AgentsState.OpenPluginsFolderCommand}"
                         Style="{StaticResource SectionHeaderChipButton}"

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
@@ -40,6 +41,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IPluginInstaller pluginInstaller;
     private readonly IPluginDialogService pluginDialogs;
     private readonly IPluginStateRepository pluginState;
+    private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentManagementViewModel> logger;
 
     private bool disposed;
@@ -64,6 +66,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="pluginInstaller"> Installs agent plugins from local packages. </param>
     /// <param name="pluginDialogs"> Plugin installation dialogs. </param>
     /// <param name="pluginState"> Plugin lifecycle state shown on the cards and updated by the lifecycle actions. </param>
+    /// <param name="preferencesStore"> Preferences store for feed URL checking. </param>
     /// <param name="logger"> Logger. </param>
     public AgentManagementViewModel(IPluginCatalog catalog,
                                     IAgentDetectionService detection,
@@ -77,6 +80,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IPluginInstaller pluginInstaller,
                                     IPluginDialogService pluginDialogs,
                                     IPluginStateRepository pluginState,
+                                    IPreferencesStore preferencesStore,
                                     ILogger<AgentManagementViewModel> logger)
     {
         this.catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
@@ -91,6 +95,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.pluginInstaller = pluginInstaller ?? throw new ArgumentNullException(nameof(pluginInstaller));
         this.pluginDialogs = pluginDialogs ?? throw new ArgumentNullException(nameof(pluginDialogs));
         this.pluginState = pluginState ?? throw new ArgumentNullException(nameof(pluginState));
+        this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.catalog.PluginsChanged += this.OnPluginsChanged;
 
@@ -103,6 +108,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.DetectCommand = new RelayCommand(() => _ = this.RunAsync("Agent detection", this.DetectAsync), () => this.CanDetect);
         this.CheckUpdatesCommand = new RelayCommand(() => _ = this.RunAsync("Agent update check", this.CheckUpdatesAsync), () => this.CanCheckUpdates);
         this.InstallPluginCommand = new RelayCommand(this.InstallPlugin);
+        this.BrowsePluginsCommand = new RelayCommand(this.BrowsePlugins, this.CanBrowsePlugins);
         this.OpenPluginsFolderCommand = new RelayCommand(this.OpenPluginsFolder);
         this.ReloadCatalogCommand = new RelayCommand(this.ReloadCatalog);
     }
@@ -263,6 +269,11 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     ///   user confirms.
     /// </summary>
     public RelayCommand InstallPluginCommand { get; }
+
+    /// <summary>
+    ///   Opens the Browse Plugins dialog showing the remote feed.
+    /// </summary>
+    public RelayCommand BrowsePluginsCommand { get; }
 
     /// <summary>
     ///   Disables a plugin: marks it disabled in the plugin state file (no file deletion) and
@@ -1092,6 +1103,26 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             this.logger.LogWarning(ex, "Could not enable plugin {PluginId}", card.PluginId);
         }
     }
+
+    /// <summary>
+    ///   Opens the Browse Plugins dialog.
+    /// </summary>
+    private void BrowsePlugins()
+    {
+        try
+        {
+            this.pluginDialogs.ShowBrowsePluginsDialog();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(ex, "Could not open Browse Plugins dialog");
+        }
+    }
+
+    /// <summary>
+    ///   Whether the Browse Plugins command is available (feed is not disabled).
+    /// </summary>
+    private bool CanBrowsePlugins() => FeedUrlProvider.GetFeedUrl(this.preferencesStore) is not null;
 
     /// <summary>
     ///   Opens the plugins folder in Windows Explorer through the external launcher.

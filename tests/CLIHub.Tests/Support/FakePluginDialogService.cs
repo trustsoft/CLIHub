@@ -56,4 +56,10 @@ public sealed class FakePluginDialogService : IPluginDialogService
         ArgumentNullException.ThrowIfNull(result);
         this.Outcomes.Add((result, pluginName));
     }
+
+    /// <inheritdoc />
+    public void ShowBrowsePluginsDialog()
+    {
+        // No-op for tests: the dialog would spawn its own VM and run async operations.
+    }
 }

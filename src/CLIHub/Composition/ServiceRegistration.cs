@@ -166,6 +166,8 @@ public static class ServiceRegistration
         services.AddTransient<SettingsWindow>();
         services.AddSingleton<Func<SettingsWindow>>(sp => () => sp.GetRequiredService<SettingsWindow>());
         services.AddSingleton<ISettingsLauncher, SettingsLauncher>();
+        services.AddTransient<BrowsePluginsDialogViewModel>();
+        services.AddTransient<BrowsePluginsDialog>();
         return services;
     }
 

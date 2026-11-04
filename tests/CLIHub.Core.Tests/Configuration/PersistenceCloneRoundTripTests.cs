@@ -45,7 +45,8 @@ public class PersistenceCloneRoundTripTests
         nameof(AppPreferences.PathDisplayStyle),
         nameof(AppPreferences.LastSeenReleaseNotesVersion),
         nameof(AppPreferences.Scanning),
-        nameof(AppPreferences.DefaultAgentId)
+        nameof(AppPreferences.DefaultAgentId),
+        nameof(AppPreferences.PluginFeedUrl)
     ];
 
     [Fact]
@@ -210,7 +211,8 @@ public class PersistenceCloneRoundTripTests
                     IgnoredPatterns = ["node_modules", "*cache*"],
                     DiscoveryMode = ProjectDiscoveryMode.Agents
                 },
-                DefaultAgentId = "opencode"
+                DefaultAgentId = "opencode",
+                PluginFeedUrl = "https://example.com/plugins/index.json"
             }
         };
         return config;
@@ -266,5 +268,6 @@ public class PersistenceCloneRoundTripTests
         Assert.Equal(expected.Scanning.IgnoredPatterns, actual.Scanning.IgnoredPatterns);
         Assert.Equal(expected.Scanning.DiscoveryMode, actual.Scanning.DiscoveryMode);
         Assert.Equal(expected.DefaultAgentId, actual.DefaultAgentId);
+        Assert.Equal(expected.PluginFeedUrl, actual.PluginFeedUrl);
     }
 }

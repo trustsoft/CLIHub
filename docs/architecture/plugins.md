@@ -171,6 +171,88 @@ The "Open Plugins Folder" command opens `%APPDATA%\CLIHub\plugins\` in Windows E
 
 The "Reload Catalog" command triggers `IPluginCatalog.ReloadPlugins()`, rescanning the plugins directory and updating the UI without restarting the application.
 
+## Remote Plugin Feed
+
+CLIHub can browse and install plugins from a remote HTTPS index. By default, the official feed at `https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json` is used. The feed URL can be customized or disabled in Preferences.
+
+### Index Schema
+
+The feed index is JSON with `schemaVersion: 1`:
+
+```jsonc
+{
+  "schemaVersion": 1,
+  "lastUpdated": "2024-11-04T12:00:00Z",  // optional
+  "plugins": [
+    {
+      "id": "example-plugin",
+      "name": "Example Plugin",
+      "description": "An example plugin",
+      "version": "1.0.0",
+      "schemaVersion": 1,
+      "minAppVersion": "1.0.0",
+      "publisher": "Community",
+      "homepage": "https://example.com",
+      "packageUrl": "https://example.com/example-plugin-1.0.0.clihub-plugin.zip",
+      "sha256": "abc123...",  // hex-encoded SHA-256 of the package
+      "releaseNotesUrl": "https://example.com/release-notes",  // optional
+      "signature": null  // reserved for future signing; always null in this change
+    }
+  ]
+}
+```
+
+All URLs must be HTTPS. Manual redirects (3xx responses) are followed up to 5 hops; every redirected URL must also be HTTPS.
+
+### Package Verification
+
+Downloaded packages are verified:
+
+1. **SHA-256 checksum:** The downloaded package's SHA-256 hash must match the `sha256` value in the index entry. Mismatches abort installation with an error.
+2. **Package structure:** The ZIP structure is validated according to the same rules as local installation (one top-level directory, required `plugin.json`, optional `logo.png`, no hidden files or symlinks).
+
+### Installation Flow
+
+1. **Browse:** User opens "Browse Plugins" from the CLI Agents page. The feed is fetched over HTTPS.
+2. **Status classification:** Each feed entry is classified by comparing its `version` with the installed version (if any):
+   - **Available:** Not installed
+   - **Installed (Current):** Installed, versions match
+   - **Update available:** Installed, feed version newer
+   - **Different version available:** Installed, versions differ (downgrade or different build)
+3. **minAppVersion gating:** If `minAppVersion` is present and the current CLIHub version does not satisfy it (numeric major.minor.patch comparison), the plugin is shown but the Install/Update button is disabled with a message.
+4. **Download → Inspect → Confirm → Install:** User clicks Install/Update. CLIHub downloads the package to a temporary file, verifies the SHA-256 checksum, inspects the package structure, and shows the same confirmation dialog as local installation (plugin name, version, publisher, homepage, every declared command). On confirmation, the package is installed through the same `IPluginInstaller` workflow as local packages.
+5. **Install outcome:** Success or failure is shown in a dialog. On success, the catalog reloads and the plugin card reflects the new state.
+
+### Feed URL Preference
+
+The `PluginFeedUrl` preference in `AppPreferences` controls the feed URL:
+
+- **Absent or JSON `null`:** Use the default official URL (`https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json`).
+- **Explicit empty string (`""`):** Feed is disabled. The "Browse Plugins" button is grayed out (disabled) on the CLI Agents page.
+- **Non-empty HTTPS URL:** Use the custom feed URL. Non-HTTPS URLs are rejected at validation.
+
+### Built-In ID Filtering
+
+Feed entries whose `id` matches a built-in plugin ID (the set of IDs embedded in the current CLIHub build) are filtered out at load time and never shown in the Browse Plugins dialog. This prevents the feed from attempting to replace built-in plugins, which are managed by the seeding logic.
+
+### Publishing Contract
+
+The official feed at `trustsoft/CLIHub-plugins` is a curated index of community plugins. To publish a plugin:
+
+1. Package your plugin as a `.clihub-plugin.zip` following the format rules.
+2. Host the package at a public HTTPS URL (GitHub Releases, CDN, etc.).
+3. Compute its SHA-256 hash (`certutil -hashfile <file> SHA256` on Windows, `shasum -a 256 <file>` on Unix).
+4. Open a pull request to `trustsoft/CLIHub-plugins` adding your entry to `index.json`, including the package URL and SHA-256 hash.
+
+The maintainers review the package for safety and quality, and merge if approved. The updated index is immediately available to all CLIHub users who use the default feed URL.
+
+### Error Handling
+
+- **Network failure:** If the feed cannot be fetched, the Browse Plugins dialog shows an error message and an empty plugin list.
+- **Invalid index JSON:** If the index is malformed or has an unsupported `schemaVersion`, an error is shown.
+- **Download failure:** If a package download fails, an error dialog is shown and installation is aborted.
+- **Checksum mismatch:** If the downloaded package's SHA-256 does not match the index entry, an error is shown and the package is discarded without extraction.
+
 ## Plugin Errors
 
 - **Invalid plugin.json:** skip during discovery, log a warning (with the missing field)

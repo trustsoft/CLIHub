@@ -145,4 +145,10 @@ public class AppPreferences
     ///   ID of the agent the launch window preselects, or null for none.
     /// </summary>
     public string? DefaultAgentId { get; set; }
+
+    /// <summary>
+    ///   URL of the plugin feed index, or null to use the default official feed.
+    ///   An explicit empty string disables the feed.
+    /// </summary>
+    public string? PluginFeedUrl { get; set; }
 }

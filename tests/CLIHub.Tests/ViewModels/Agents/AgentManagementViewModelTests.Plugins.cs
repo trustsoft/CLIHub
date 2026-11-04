@@ -2,7 +2,9 @@ namespace CLIHub.Tests.ViewModels;
 
 using Moq;
 
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Launching;
 using CLIHub.ViewModels;
@@ -280,6 +282,42 @@ public partial class AgentManagementViewModelTests
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
         Assert.Equal(card.OriginBadgeText, card.OriginBadgeTooltip);
+    }
+
+    [Fact]
+    public void BrowsePluginsCommand_WhenFeedUrlIsNull_IsDisabled()
+    {
+        var preferencesStore = new Mock<IPreferencesStore>();
+        preferencesStore.Setup(x => x.Load()).Returns(new AppPreferences { PluginFeedUrl = null });
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPreferencesStore(preferencesStore)
+            .Build();
+
+        Assert.True(viewModel.BrowsePluginsCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void BrowsePluginsCommand_WhenFeedUrlIsEmptyString_IsDisabled()
+    {
+        var preferencesStore = new Mock<IPreferencesStore>();
+        preferencesStore.Setup(x => x.Load()).Returns(new AppPreferences { PluginFeedUrl = "" });
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPreferencesStore(preferencesStore)
+            .Build();
+
+        Assert.False(viewModel.BrowsePluginsCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void BrowsePluginsCommand_WhenFeedUrlIsDefault_IsEnabled()
+    {
+        var preferencesStore = new Mock<IPreferencesStore>();
+        preferencesStore.Setup(x => x.Load()).Returns(new AppPreferences { PluginFeedUrl = FeedUrlProvider.DefaultFeedUrl });
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPreferencesStore(preferencesStore)
+            .Build();
+
+        Assert.True(viewModel.BrowsePluginsCommand.CanExecute(null));
     }
 
     /// <summary>

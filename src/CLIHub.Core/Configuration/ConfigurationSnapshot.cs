@@ -81,6 +81,7 @@ public sealed class ConfigurationSnapshot
         PathDisplayStyle = preferences.PathDisplayStyle,
         LastSeenReleaseNotesVersion = preferences.LastSeenReleaseNotesVersion,
         Scanning = preferences.Scanning.Copy(),
-        DefaultAgentId = preferences.DefaultAgentId
+        DefaultAgentId = preferences.DefaultAgentId,
+        PluginFeedUrl = preferences.PluginFeedUrl
     };
 }

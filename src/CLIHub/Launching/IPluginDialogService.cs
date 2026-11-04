@@ -34,4 +34,9 @@ public interface IPluginDialogService
     /// <param name="result"> The installation result. </param>
     /// <param name="pluginName"> The installed plugin's display name, when known. </param>
     void ShowInstallOutcome(PluginInstallResult result, string? pluginName);
+
+    /// <summary>
+    ///   Opens the Browse Plugins dialog showing the remote feed.
+    /// </summary>
+    void ShowBrowsePluginsDialog();
 }

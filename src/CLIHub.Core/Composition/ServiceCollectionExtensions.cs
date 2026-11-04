@@ -108,6 +108,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPluginSeeder, PluginSeeder>();
         services.AddSingleton<IPluginStateRepository, PluginStateRepository>();
         services.AddSingleton<IPluginInstaller, PluginInstaller>();
+        services.AddSingleton<IPluginFeedClient, PluginFeedClient>();
         return services;
     }
 

@@ -48,9 +48,11 @@ process inspection) behind ports declared in Core.
   `%APPDATA%\CLIHub\`.
 - Plugins are JSON descriptors under `%APPDATA%\CLIHub\plugins\<id>\`; they contain command definitions and
   detection markers. Plugins do not load DLLs or execute code in-process.
-- Users can install plugins from local `.clihub-plugin.zip` packages, disable/enable plugins, and open the plugins
+- Users can install plugins from local `.clihub-plugin.zip` packages, browse and install from the remote HTTPS
+  plugin feed (default: official `trustsoft/CLIHub-plugins` index), disable/enable plugins, and open the plugins
   folder from the CLI Agents settings page. Built-in plugins are refreshed on app update using three-hash logic
-  that preserves user modifications.
+  that preserves user modifications. The feed URL preference (absent/null = default official; explicit `""` = disabled;
+  non-empty = custom HTTPS URL) controls Browse Plugins visibility.
 - Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
   manually added projects untouched. Scanning settings apply immediately from the Project Scanning page.
 - The Settings Projects page lists every registered project with its provenance, registers, removes, and

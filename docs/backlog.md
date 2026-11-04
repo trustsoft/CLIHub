@@ -316,6 +316,22 @@ snapshot.
 - Trigger: the next docs-only or tooling entry that has to be closed, or the next edit of the global
   `pipeline-protocol` skill.
 
+### Plugin feed cancellation is reported as a download failure
+
+- Severity: Low (edge-case UX; no data loss, temp files are cleaned)
+- Evidence (2026-11-04): `src/CLIHub.Core/Plugins/PluginFeedClient.cs` catches timeout cancellation
+  with a `when (!cancellationToken.IsCancellationRequested)` filter, but the subsequent general
+  `catch (Exception)` intercepts external cancellation and returns a generic "Could not load plugin
+  feed" / "Package download failed" result instead of letting the caller observe cancellation.
+  `FollowRedirectsAsync` also allows 5 HEAD requests (`hop < MaxRedirectHops`), so a chain of five
+  redirects is rejected as "more than 5 hops" while the docs say "up to 5 hops".
+- Proposed remedy: add
+  `catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }`
+  before the general catch in both methods, and align the redirect loop/message with the documented
+  5-redirect limit.
+- Trigger: the next change touching `PluginFeedClient`, or a user report of a spurious error dialog
+  when cancelling a feed request.
+
 ## UI and theming
 
 ### Resolver role override ignores exhaustedUntil

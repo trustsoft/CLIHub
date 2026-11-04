@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -34,6 +35,7 @@ public class AgentManagementViewModelBuilder
     private Mock<IPluginInstaller>? pluginInstaller;
     private FakePluginDialogService? pluginDialogs;
     private InMemoryPluginStateRepository? pluginState;
+    private Mock<IPreferencesStore>? preferencesStore;
     private IApplicationOperationLifetime? operationLifetime;
     private ILogger<AgentManagementViewModel>? logger;
     private ILogger<AgentProcessMonitor>? processMonitorLogger;
@@ -169,6 +171,15 @@ public class AgentManagementViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom preferences store mock.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithPreferencesStore(Mock<IPreferencesStore> preferencesStore)
+    {
+        this.preferencesStore = preferencesStore;
+        return this;
+    }
+
+    /// <summary>
     ///   Provides a custom application operation lifetime.
     /// </summary>
     public AgentManagementViewModelBuilder WithOperationLifetime(IApplicationOperationLifetime operationLifetime)
@@ -225,6 +236,7 @@ public class AgentManagementViewModelBuilder
         var pluginInstaller = this.pluginInstaller ?? new Mock<IPluginInstaller>();
         var pluginDialogs = this.pluginDialogs ?? new FakePluginDialogService();
         var pluginState = this.pluginState ?? new InMemoryPluginStateRepository();
+        var preferencesStore = this.preferencesStore ?? new Mock<IPreferencesStore>();
 
         var processMonitor = new AgentProcessMonitor(
             new ProcessOrchestrator(
@@ -252,6 +264,7 @@ public class AgentManagementViewModelBuilder
             pluginInstaller.Object,
             pluginDialogs,
             pluginState,
+            preferencesStore.Object,
             this.logger ?? NullLogger<AgentManagementViewModel>.Instance);
 
         var mocks = new AgentMocks
