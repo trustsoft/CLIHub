@@ -144,18 +144,22 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ListBoxItem">
-                    <StackPanel>
-                        <Rectangle Height="1"
-                                   Fill="{DynamicResource RowDividerBrush}"
-                                   Margin="12,0,12,0"
-                                   Visibility="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource IndexToDividerVisibility}}"/>
+                    <!-- Overlay root: the divider paints on top of the row's top edge without
+                         adding layout height, so the row pitch matches the project rows; the
+                         Rectangle comes after Bd so the hover fill never covers the divider. -->
+                    <Grid>
                         <Border x:Name="Bd"
                                 CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
                                 Background="Transparent"
                                 Padding="{StaticResource Sizing.AgentRow.Padding}">
                             <ContentPresenter/>
                         </Border>
-                    </StackPanel>
+                        <Rectangle Height="1"
+                                   VerticalAlignment="Top"
+                                   Fill="{DynamicResource RowDividerBrush}"
+                                   Margin="12,0,12,0"
+                                   Visibility="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=(ItemsControl.AlternationIndex), Converter={StaticResource IndexToDividerVisibility}}"/>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
@@ -175,11 +179,13 @@
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
         <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
         <Setter Property="VirtualizingPanel.VirtualizationMode" Value="Standard"/>
+        <Setter Property="VirtualizingPanel.ScrollUnit" Value="Pixel"/>
         <!--
             Own template: the default ListBox template hardcodes a 1px Border padding, which
-            shaves the scroll viewport to 432px, while MaxHeight is tuned to exactly seven 62px
-            rows (434px); that 2px deficit makes the item-based ScrollViewer report a scrollable
-            overflow and show the scrollbar even though every row fits.
+            would shave the scroll viewport, so the ScrollViewer is hosted directly instead.
+            MaxHeight (434px) is seven rows at the 62px pitch both panes share; that the
+            scrolled end position lands flush comes from ScrollUnit=Pixel above, not from
+            row-height arithmetic.
         -->
         <Setter Property="Template">
             <Setter.Value>
