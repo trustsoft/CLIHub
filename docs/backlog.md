@@ -334,20 +334,6 @@ snapshot.
 
 ## UI and theming
 
-### Resolver role override ignores exhaustedUntil
-
-- Severity: Low (agent tooling; a dispatch fails at runtime instead of falling back)
-- Evidence: `.opencode/scripts/resolve-model.mjs:181-196` — the `roleOverrides` branch returns the
-  pinned model immediately without consulting `runtime.exhaustedUntil`; the exhaustion filter
-  (lines 198-225) applies only to the preset chain. Observed 2026-10-24: with
-  `roleOverrides.planner = opencode/glm-5.3-flash-free` and the free quota exhausted, the
-  `pipe/planner` dispatch for `follow-windows-theme-changes` died with "Free usage limit reached",
-  and after `--exhaust` the resolver kept returning the same model.
-- Proposed remedy: apply the same `isStillExhausted` skip to the role override (fall through to the
-  preset chain when the pinned model is exhausted), or at least print a loud warning on resolution.
-- Trigger: any dispatch that fails on an exhausted overridden model, or the next
-  `resolve-model.mjs` edit.
-
 ### Settings-page registration lives in two places
 
 - Severity: Low (maintenance ergonomics)
