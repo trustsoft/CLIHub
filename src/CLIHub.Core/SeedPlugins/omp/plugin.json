@@ -1,0 +1,27 @@
+{
+  "id": "omp",
+  "name": "OMP",
+  "description": "Oh My Pi — AI coding agent CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://omp.sh",
+  "commands": {
+    "launch": { "executable": "omp" },
+    "resume": { "executable": "omp", "arguments": "--continue" },
+    "version": { "executable": "omp", "arguments": "--version" },
+    "update": { "executable": "omp", "arguments": "update" }
+  },
+  "updateCheck": {
+    "source": "npm",
+    "package": "@oh-my-pi/pi-coding-agent"
+  },
+  "detection": {
+    "systemPaths": [
+      "%USERPROFILE%\\.omp",
+      "%LOCALAPPDATA%\\omp"
+    ],
+    "projectIndicators": [
+      ".omp"
+    ]
+  }
+}

@@ -4,10 +4,10 @@ using CLIHub.Core.Plugins;
 
 public class EmbeddedPluginResourcesTests
 {
-    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "qwen-code"];
+    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "omp", "qwen-code", "devin"];
 
     [Fact]
-    public void BuiltinPluginIds_EnumeratesTheThreeBuiltInAgents()
+    public void BuiltinPluginIds_EnumeratesTheBuiltInAgents()
     {
         // Act
         var ids = EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly);

@@ -7,6 +7,8 @@ public class AgentUpdateVersionTests
     [Theory]
     [InlineData("opencode v2.0.32", 2, 0, 32)]
     [InlineData("0.30.0 (OpenClaude)", 0, 30, 0)]
+    [InlineData("omp/18.12.6", 18, 12, 6)]
+    [InlineData("devin 3000.11.92 (7f4e64980e22)", 3000, 11, 92)]
     [InlineData("1.0.100", 1, 0, 100)]
     public void TryExtract_VersionTextWithSurroundingContent_ExtractsFirstNumericTriple(
         string value,

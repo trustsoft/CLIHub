@@ -1,0 +1,27 @@
+{
+  "id": "devin",
+  "name": "Devin",
+  "description": "Devin CLI",
+  "version": "1.0.0",
+  "publisher": "CLIHub",
+  "homepage": "https://docs.devin.ai/cli",
+  "commands": {
+    "launch": { "executable": "devin" },
+    "resume": { "executable": "devin", "arguments": "--continue" },
+    "version": { "executable": "devin", "arguments": "--version" },
+    "update": { "executable": "devin", "arguments": "update" }
+  },
+  "updateCheck": {
+    "source": "githubReleases",
+    "repo": "CognitionAI/devin-cli"
+  },
+  "detection": {
+    "systemPaths": [
+      "%APPDATA%\\devin",
+      "%LOCALAPPDATA%\\devin"
+    ],
+    "projectIndicators": [
+      ".devin"
+    ]
+  }
+}

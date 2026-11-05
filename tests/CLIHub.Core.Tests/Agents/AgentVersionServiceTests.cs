@@ -59,6 +59,8 @@ public class AgentVersionServiceTests
     [Theory]
     [InlineData("GitHub Copilot CLI 1.0.88.", "1.0.88")]
     [InlineData("0.30.0 (OpenClaude)", "0.30.0")]
+    [InlineData("omp/18.12.6", "18.12.6")]
+    [InlineData("devin 3000.11.92 (7f4e64980e22)", "3000.11.92")]
     [InlineData("1.18.32", "1.18.32")]
     [InlineData("v2.5", "2.5")]
     public async Task GetVersion_ExtractsVersionNumber(string output, string expected)

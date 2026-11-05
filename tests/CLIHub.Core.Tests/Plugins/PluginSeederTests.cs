@@ -8,7 +8,7 @@ using CLIHub.Core.Plugins;
 
 public class PluginSeederTests : IDisposable
 {
-    private static readonly string[] BuiltinIds = ["opencode", "pi", "qwen-code"];
+    private static readonly string[] BuiltinIds = ["opencode", "pi", "omp", "qwen-code", "devin"];
 
     private readonly string pluginsPath;
     private readonly string stateFilePath;
@@ -62,11 +62,11 @@ public class PluginSeederTests : IDisposable
         .Replace("\"name\": \"", "\"name\": \"Edited ", StringComparison.Ordinal);
 
     [Fact]
-    public void EnsureBuiltinsExist_EmptyFolder_WritesThreeDescriptors()
+    public void EnsureBuiltinsExist_EmptyFolder_WritesAllBuiltinDescriptors()
     {
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        Assert.Equal(3, written);
+        Assert.Equal(5, written);
         Assert.Equal(BuiltinIds.Length, Directory.GetDirectories(this.pluginsPath).Length);
         foreach (var id in BuiltinIds)
         {
@@ -105,9 +105,9 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // Only the other two built-ins are written: the matching opencode descriptor is
+        // Only the other four built-ins are written: the matching opencode descriptor is
         // adopted, not rewritten.
-        Assert.Equal(2, written);
+        Assert.Equal(4, written);
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Builtin, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(EmbeddedDescriptor("opencode")), entry.ContentHash);
@@ -121,8 +121,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // Only the other two built-ins are written; the modified descriptor is preserved.
-        Assert.Equal(2, written);
+        // Only the other four built-ins are written; the modified descriptor is preserved.
+        Assert.Equal(4, written);
         Assert.Equal(content, File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Unknown, entry.Origin);
@@ -151,7 +151,7 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        Assert.Equal(3, written);
+        Assert.Equal(5, written);
         Assert.Equal(customJson, File.ReadAllText(Path.Combine(this.pluginsPath, "custom", "plugin.json")));
         Assert.True(File.Exists(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
     }
@@ -160,7 +160,7 @@ public class PluginSeederTests : IDisposable
     public void EnsureBuiltinsExist_IsIdempotent()
     {
         var seeder = this.CreateSeeder();
-        Assert.Equal(3, seeder.EnsureBuiltinsExist());
+        Assert.Equal(5, seeder.EnsureBuiltinsExist());
         var snapshot = Directory.EnumerateFiles(this.pluginsPath, "*", SearchOption.AllDirectories)
             .OrderBy(p => p, StringComparer.Ordinal)
             .Select(p => (p, File.GetLastWriteTimeUtc(p)))
@@ -192,8 +192,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // The refreshed opencode descriptor plus the two other built-ins written fresh.
-        Assert.Equal(3, written);
+        // The refreshed opencode descriptor plus the four other built-ins written fresh.
+        Assert.Equal(5, written);
         Assert.Equal(EmbeddedDescriptor("opencode"), File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
         Assert.Equal(PluginHasher.ComputeHash(EmbeddedDescriptor("opencode")), this.ReadState("opencode").ContentHash);
     }
@@ -211,8 +211,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // Only the other two built-ins are written; the edited descriptor is preserved.
-        Assert.Equal(2, written);
+        // Only the other four built-ins are written; the edited descriptor is preserved.
+        Assert.Equal(4, written);
         Assert.Equal(editedContent, File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Builtin, entry.Origin);
@@ -230,7 +230,7 @@ public class PluginSeederTests : IDisposable
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
         // The installed plugin is not seeded, not even when its directory is missing.
-        Assert.Equal(2, written);
+        Assert.Equal(4, written);
         Assert.False(Directory.Exists(Path.Combine(this.pluginsPath, "opencode")));
         Assert.Equal(PluginOrigin.Installed, this.ReadState("opencode").Origin);
     }
@@ -247,7 +247,7 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        Assert.Equal(2, written);
+        Assert.Equal(4, written);
         Assert.Equal(content, File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
     }
 
@@ -261,7 +261,7 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        Assert.Equal(2, written);
+        Assert.Equal(4, written);
         Assert.False(Directory.Exists(Path.Combine(this.pluginsPath, "opencode")));
         Assert.True(this.ReadState("opencode").Disabled);
     }
@@ -289,8 +289,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // The re-seeded opencode descriptor plus the two other built-ins written fresh.
-        Assert.Equal(3, written);
+        // The re-seeded opencode descriptor plus the four other built-ins written fresh.
+        Assert.Equal(5, written);
         Assert.Equal(EmbeddedDescriptor("opencode"), File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Builtin, entry.Origin);
@@ -308,8 +308,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // Only the other two built-ins are written; the matching content is adopted.
-        Assert.Equal(2, written);
+        // Only the other four built-ins are written; the matching content is adopted.
+        Assert.Equal(4, written);
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Builtin, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(EmbeddedDescriptor("opencode")), entry.ContentHash);
@@ -327,8 +327,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // Only the other two built-ins are written; the user content is preserved.
-        Assert.Equal(2, written);
+        // Only the other four built-ins are written; the user content is preserved.
+        Assert.Equal(4, written);
         Assert.Equal(content, File.ReadAllText(Path.Combine(this.pluginsPath, "opencode", "plugin.json")));
         var entry = this.ReadState("opencode");
         Assert.Equal(PluginOrigin.Unknown, entry.Origin);
@@ -371,8 +371,8 @@ public class PluginSeederTests : IDisposable
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
-        // The refreshed descriptor plus the two other built-ins written fresh.
-        Assert.Equal(3, written);
+        // The refreshed descriptor plus the four other built-ins written fresh.
+        Assert.Equal(5, written);
         // The descriptor refreshes (app update, unmodified), but the modified logo survives.
         Assert.Equal(modifiedLogo, File.ReadAllBytes(Path.Combine(this.pluginsPath, "opencode", "logo.png")));
         Assert.Equal(PluginHasher.ComputeHash(new byte[] { 1, 2, 3, 4 }), this.ReadState("opencode").LogoHash);
@@ -403,7 +403,7 @@ public class PluginSeederTests : IDisposable
         catalog.LoadPlugins();
 
         var plugins = catalog.GetAllPlugins().ToList();
-        Assert.Equal(3, plugins.Count);
+        Assert.Equal(5, plugins.Count);
         Assert.All(plugins, p => Assert.NotNull(p.Commands.Launch));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Id)));
         Assert.All(plugins, p => Assert.False(string.IsNullOrWhiteSpace(p.Name)));
@@ -427,7 +427,9 @@ public class PluginSeederTests : IDisposable
         Assert.Multiple(
             () => AssertCommandSet(plugins["opencode"], full),
             () => AssertCommandSet(plugins["pi"], full),
-            () => AssertCommandSet(plugins["qwen-code"], full));
+            () => AssertCommandSet(plugins["omp"], full),
+            () => AssertCommandSet(plugins["qwen-code"], full),
+            () => AssertCommandSet(plugins["devin"], full));
     }
 
     [Fact]
@@ -447,7 +449,9 @@ public class PluginSeederTests : IDisposable
         Assert.Multiple(
             () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@opencode/cli"), plugins["opencode"].UpdateCheck),
             () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@earendil-works/pi-coding-agent"), plugins["pi"].UpdateCheck),
-            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@qwen-code/qwen-code"), plugins["qwen-code"].UpdateCheck));
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@oh-my-pi/pi-coding-agent"), plugins["omp"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("npm", Package: "@qwen-code/qwen-code"), plugins["qwen-code"].UpdateCheck),
+            () => Assert.Equal(new PluginUpdateCheck("githubReleases", Repo: "CognitionAI/devin-cli"), plugins["devin"].UpdateCheck));
     }
 
     private static void AssertCommandSet(Plugin plugin, AgentCommandKind[] expectedKinds)

@@ -58,8 +58,8 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 
 ## Agents and plugins
 
-- **Agent** — an AI coding agent CLI (OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude,
-  Qwen Code, or any user-added plugin). CLIHub never embeds or runs an agent in-process; it launches
+- **Agent** — an AI coding agent CLI (OpenCode, Pi, Cline CLI, GitHub Copilot, OMP, OpenClaude,
+  Qwen Code, Devin, or any user-added plugin). CLIHub never embeds or runs an agent in-process; it launches
   commands in an external terminal and uses declared filesystem markers plus Windows process inspection
   for availability and update-safety decisions.
 - **Plugin** — the descriptor-only way to define an agent: a folder under
@@ -69,7 +69,7 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Plugin descriptor** — the `plugin.json` file: `id`, `name`, `commands`, and `detection`
   markers. Only the `launch` command is required; a descriptor without it is rejected.
 - **Built-in agent** — one of the agents whose descriptors (and logos) are embedded in the
-  application binary: OpenCode, Pi, Qwen Code.
+  application binary: OpenCode, Pi, OMP, Qwen Code, Devin.
 - **Seeding** — writing the built-in descriptors into the plugins folder on first run, when it is
   empty. Seeding never overwrites or deletes existing plugin files; delete the plugins folder to
   re-seed. See [plugin-seeding](../openspec/specs/plugin-seeding/spec.md).
