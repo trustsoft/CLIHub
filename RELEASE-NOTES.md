@@ -3,6 +3,17 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.1 — 2026-11-05
+
+### New
+
+- OMP and Devin are built-in agents, ready to launch as soon as their CLIs are on your machine.
+
+### Improved
+
+- OpenClaude and GitHub Copilot are now distributed through the curated plugin feed and update independently of CLIHub. Existing installations keep their plugins; new installations install them from Browse Plugins.
+- The built-in set is OpenCode, Pi, OMP, Qwen Code, and Devin.
+
 ## 1.1.0 — 2026-11-05
 
 ### New

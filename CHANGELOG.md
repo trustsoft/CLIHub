@@ -8,6 +8,21 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.1.1 - 2026-11-05
+
+### Added
+
+- OMP (Oh My Pi) and Devin built-in agent descriptors with embedded logos: OMP checks npm `@oh-my-pi/pi-coding-agent` and Devin checks GitHub releases for `CognitionAI/devin-cli`; version extraction handles `omp/18.12.6` and `devin 3000.11.92 (commit)` output (`plugin-seeding`, `add-omp-devin-builtins`).
+
+### Changed
+
+- The built-in set is now OpenCode, Pi, OMP, Qwen Code, and Devin (`add-omp-devin-builtins`).
+- OpenClaude and GitHub Copilot moved from the embedded built-in set to the curated feed. Existing `origin=builtin` installations keep their files and state; new installations install both from Browse Plugins (`move-openclaude-to-feed`, `move-github-copilot-to-feed`, `plugin-seeding`).
+
+### Removed
+
+- Embedded `SeedPlugins/openclaude` and `SeedPlugins/github-copilot` descriptors and logos (`move-openclaude-to-feed`, `move-github-copilot-to-feed`).
+
 ## 1.1.0 - 2026-11-05
 
 ### Added
