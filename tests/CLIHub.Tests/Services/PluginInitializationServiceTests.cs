@@ -17,7 +17,7 @@ public class PluginInitializationServiceTests
         var seeder = new Mock<IPluginSeeder>(MockBehavior.Strict);
         var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
 
-        seeder.InSequence(sequence).Setup(x => x.EnsureBuiltinsExist()).Returns(6);
+        seeder.InSequence(sequence).Setup(x => x.EnsureBuiltinsExist()).Returns(5);
         catalog.InSequence(sequence).Setup(x => x.LoadPlugins());
 
         var service = new PluginInitializationService(seeder.Object, catalog.Object);

@@ -312,6 +312,21 @@ public class PluginInstallerTests : IDisposable
     }
 
     [Fact]
+    public void Inspect_FormerlyBuiltinClineCliId_NotRejectedAsReserved()
+    {
+        Assert.DoesNotContain("cline-cli", EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly));
+
+        var package = CreatePackage(
+            ("cline-cli/plugin.json", Text(ValidDescriptor.Replace("community", "cline-cli", StringComparison.Ordinal))));
+
+        var preview = this.CreateInstaller().Inspect(package);
+
+        Assert.True(preview.IsValid);
+        Assert.Empty(preview.Errors);
+        Assert.Equal("cline-cli", preview.PluginId);
+    }
+
+    [Fact]
     public void Inspect_ExistingInstalledPlugin_IdentifiesReplacementScenario()
     {
         this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal), installedVersion: "0.9.0");
