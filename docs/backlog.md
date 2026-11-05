@@ -332,6 +332,19 @@ snapshot.
 - Trigger: the next change touching `PluginFeedClient`, or a user report of a spurious error dialog
   when cancelling a feed request.
 
+### plugin-seeding spec example still names a feed agent
+
+- Severity: Low (documentation accuracy only; the example is illustrative)
+- Evidence (2026-11-05): `openspec/specs/plugin-seeding/spec.md:322` — the "Commands match the agent
+  CLI surface" scenario uses `copilot --continue` as its example, but GitHub Copilot is no longer a
+  built-in agent as of 1.1.1 (it is a feed plugin). The three chained changes carried the example
+  over deliberately to keep their deltas minimal, but a reader can now mistake a feed agent for a
+  built-in.
+- Proposed remedy: in the next change that touches `plugin-seeding`, replace the example with a
+  built-in agent (for example `omp --continue` or `devin --continue`) or phrase it without naming an
+  agent.
+- Trigger: the next spec change to `plugin-seeding`, or a documentation review.
+
 ## UI and theming
 
 ### Settings-page registration lives in two places
