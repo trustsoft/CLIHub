@@ -76,16 +76,16 @@
 
 ## Stage 7: Manual smoke test (user-performed)
 
-- [ ] 7.1 Open CLIHub with 8 or more registered agents. Scroll the Agents list to the end with the mouse
+- [x] 7.1 Open CLIHub with 8 or more registered agents. Scroll the Agents list to the end with the mouse
       wheel or the scrollbar thumb; confirm the last row ends flush with the pane's bottom edge, with no
       blank band below it.
-- [ ] 7.2 Scroll the Projects list to its end (with enough projects to require scrolling); confirm it still
+- [x] 7.2 Scroll the Projects list to its end (with enough projects to require scrolling); confirm it still
       ends flush, matching its pre-fix behavior (no regression).
-- [ ] 7.3 With exactly 7 registered agents, confirm the Agents list shows no vertical scrollbar (all 7 rows
+- [x] 7.3 With exactly 7 registered agents, confirm the Agents list shows no vertical scrollbar (all 7 rows
       fit without scrolling), matching the Projects list's behavior at exactly 7 projects.
-- [ ] 7.4 Confirm the agent row divider still looks like a thin hairline between rows (not above the first
+- [x] 7.4 Confirm the agent row divider still looks like a thin hairline between rows (not above the first
       row), in both dark and light themes, and that hovering a row still shows the expected hover highlight
       without a visual seam or doubled line at the divider.
-- [ ] 7.5 Scroll both lists with the mouse wheel and confirm the wheel-scroll feel is still acceptable
+- [x] 7.5 Scroll both lists with the mouse wheel and confirm the wheel-scroll feel is still acceptable
       (see `design.md` open question 2: pixel-unit scrolling can change the per-click scroll distance from
       the previous item-based behavior).
