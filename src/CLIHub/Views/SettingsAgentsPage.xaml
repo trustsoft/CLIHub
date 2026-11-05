@@ -9,8 +9,8 @@
              mc:Ignorable="d">
     <UserControl.Resources>
         <!-- State chip next to the agent name: version when installed, danger state when missing;
-             uses the footer version chip look -->
-        <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
+             outlined like the origin badge via OutlineChipBorder (transparent surface, muted border) -->
+        <Style x:Key="AgentStateChip" TargetType="Border" BasedOn="{StaticResource OutlineChipBorder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding InstallState}" Value="NotInstalled">
                     <Setter Property="Background" Value="Transparent"/>
@@ -49,9 +49,7 @@
         <!-- Origin badge next to the state chip: neutral-muted for built-in and unknown
              origins, accent for plugins installed from a package; the tooltip carries the
              descriptor's version, publisher, and homepage when declared -->
-        <Style x:Key="AgentOriginChip" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+        <Style x:Key="AgentOriginChip" TargetType="Border" BasedOn="{StaticResource OutlineChipBorder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Origin}" Value="installed">
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>

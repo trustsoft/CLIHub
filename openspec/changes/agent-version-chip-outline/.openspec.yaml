@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-11-06
+goal: "Make the agent version/state chip in Settings -> CLI Agents use the outlined chip treatment already used by the origin badge"
+skip_specs: true
+x-skip_specs_rationale: "Pure visual restyle: the chip's text, bindings, triggers, and the data it shows are unchanged. No OpenSpec capability (agent-ui, settings-theme, application-theme) states the chip's fill as a requirement, so there is no delta to write; only a shared XAML style and two BasedOn references change."

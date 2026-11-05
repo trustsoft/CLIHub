@@ -54,6 +54,11 @@
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
     </Style>
 
+    <Style x:Key="OutlineChipBorder" TargetType="Border" BasedOn="{StaticResource VersionChipBorder}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource TextMutedBrush}"/>
+    </Style>
+
     <!-- Project row provenance mark: the compact "M"/"D" source indicator shared by the Settings
          Projects page and the launch window project list. Manual projects (CanRemove is true exactly
          for them) use the strong primary foreground so the mark stays readable on light surfaces;
