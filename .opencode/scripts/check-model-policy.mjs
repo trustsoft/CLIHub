@@ -27,6 +27,19 @@ function fail(msg) {
   problems.push(msg);
 }
 
+/**
+ * Splits `model#variant` the way this gate needs it. `parseModelEntry` maps a
+ * trailing `#` to "no variant"; the gate must keep rejecting it, so the empty
+ * string is returned as the variant here.
+ */
+function strictModelEntry(entry) {
+  const hash = entry.indexOf("#");
+  if (hash <= 0) {
+    return { id: entry, variant: undefined };
+  }
+  return { id: entry.slice(0, hash), variant: entry.slice(hash + 1) };
+}
+
 const policy = JSON.parse(readFileSync(POLICY_PATH, "utf8"));
 
 // ── policy ────────────────────────────────────────────────────────────────────
@@ -75,9 +88,7 @@ for (const preset of presets) {
       continue;
     }
     for (const entry of chain) {
-      const hash = entry.indexOf("#");
-      const model = hash > 0 ? entry.slice(0, hash) : entry;
-      const variant = hash > 0 ? entry.slice(hash + 1) : undefined;
+      const { id: model, variant } = strictModelEntry(entry);
       if (!models.has(model)) {
         fail(`preset '${preset}' role '${role}' references unknown model '${model}'`);
         continue;
@@ -198,12 +209,10 @@ if (!existsSync(RUNTIME_PATH)) {
     if (!roles.includes(role)) {
       fail(`runtime.roleOverrides has unknown role '${role}'`);
     }
-    const hash = model.indexOf("#");
-    const id = hash > 0 ? model.slice(0, hash) : model;
+    const { id, variant } = strictModelEntry(model);
     if (!models.has(id)) {
       fail(`runtime.roleOverrides['${role}'] references unknown model '${id}'`);
-    } else if (hash > 0) {
-      const variant = model.slice(hash + 1);
+    } else if (variant !== undefined) {
       const supported = policy.models[id]?.variants ?? [];
       if (!supported.includes(variant)) {
         fail(`runtime.roleOverrides['${role}'] variant '#${variant}' is not supported by '${id}'`);

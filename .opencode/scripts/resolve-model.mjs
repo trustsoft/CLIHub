@@ -14,6 +14,9 @@
 // not-found) and resolves the next usable model for the role, so the fallback
 // happens in one command. The mark expires at --until, or after --backoff
 // minutes (default 30). A `model#variant` argument is reduced to its model id.
+// A role override whose model is exhausted is ignored while its mark is in
+// force: the resolver falls back to the preset chain instead of dispatching to
+// a model known to be unavailable, and reports the skipped override.
 //
 // Effort: the role declares a normalized level (off|low|medium|high|max); the
 // resolver maps it onto the chosen model's supported `variants` (the lowest
@@ -25,83 +28,16 @@
 // and use its output as the `model` for tools.subagent.
 // check-model-policy.mjs validates the result.
 
-import { readFileSync, writeFileSync, renameSync, existsSync, rmSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { flagValue, readJsonWithRetry, writeJsonAtomic } from "./json-io.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const POLICY_PATH = join(repoRoot, "docs", "agent-model-policy.json");
 const RUNTIME_PATH = join(repoRoot, ".opencode", "model-policy.json");
 
-const ROLES = ["planner", "implementer", "verifier", "explorer", "research", "mechanical"];
-const EFFORTS = new Set(["off", "low", "medium", "high", "max"]);
 const EFFORT_RANK = { none: 0, minimal: 1, low: 2, medium: 3, high: 4, xhigh: 5, max: 6 };
-
-// Windows can transiently hold a handle on the target file, which surfaces as
-// EPERM/EBUSY on the rename. These errors are worth retrying; everything else
-// is a real failure.
-const TRANSIENT_FILE_ERRORS = new Set(["EPERM", "EBUSY", "EACCES"]);
-
-/** Blocks the current thread for `ms` milliseconds (the script is synchronous). */
-function sleep(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
-/**
- * Writes `value` as JSON to `path` through a temp file and a rename, so a
- * reader never observes a partially written file. The rename is retried on
- * transient Windows sharing errors; the temp file is removed when the write
- * ultimately fails.
- */
-export function writeJsonAtomic(path, value, { retries = 8, delayMs = 100 } = {}) {
-  const tmp = `${path}.tmp-${process.pid}`;
-  writeFileSync(tmp, `${JSON.stringify(value, null, 2)}\n`, "utf8");
-  let lastError;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      renameSync(tmp, path);
-      return;
-    } catch (error) {
-      lastError = error;
-      const transient = TRANSIENT_FILE_ERRORS.has(error?.code);
-      if (!transient || attempt === retries) {
-        break;
-      }
-      sleep(delayMs * (attempt + 1));
-    }
-  }
-  try {
-    rmSync(tmp, { force: true });
-  } catch {
-    // The temp file is best-effort cleanup; the original error is the one that matters.
-  }
-  throw lastError;
-}
-
-function readJson(path) {
-  return JSON.parse(readFileSync(path, "utf8"));
-}
-
-/**
- * Reads a JSON file, retrying while the file is transiently locked. The
- * sidebar plugin polls the runtime file, and Windows can report a sharing
- * violation (EBUSY/EPERM) while another process holds it open.
- */
-export function readJsonWithRetry(path, { retries = 8, delayMs = 100 } = {}) {
-  let lastError;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      return readJson(path);
-    } catch (error) {
-      lastError = error;
-      if (!TRANSIENT_FILE_ERRORS.has(error?.code) || attempt === retries) {
-        break;
-      }
-      sleep(delayMs * (attempt + 1));
-    }
-  }
-  throw lastError;
-}
 
 // True when the model is currently exhausted (its exhaustedUntil is still in the future).
 function isStillExhausted(iso, now) {
@@ -178,9 +114,15 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
     .map(parseModelEntry)
     .filter((entry) => policy.models?.[entry.id]);
 
+  const exhausted = runtime.exhaustedUntil ?? {};
   const override = runtime.roleOverrides?.[role];
   const overrideEntry = override ? parseModelEntry(override) : undefined;
-  if (overrideEntry && policy.models?.[overrideEntry.id]) {
+  const overrideKnown = Boolean(overrideEntry && policy.models?.[overrideEntry.id]);
+  // An exhausted override is ignored exactly like an exhausted chain head:
+  // dispatching to a model that is known to be backing off would fail the run.
+  const overrideExhausted =
+    overrideKnown && isStillExhausted(exhausted[overrideEntry.id], now);
+  if (overrideKnown && !overrideExhausted) {
     const variants = policy.models?.[overrideEntry.id]?.variants ?? [];
     const variant = overrideEntry.variant ?? mapEffort(variants, roleDef.effort);
     return {
@@ -195,7 +137,6 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
     };
   }
 
-  const exhausted = runtime.exhaustedUntil ?? {};
   const skipped = chain.filter((entry) => {
     const { id } = parseModelEntry(entry);
     return policy.models?.[id] && isStillExhausted(exhausted[id], now);
@@ -222,7 +163,10 @@ export function resolveModel(policy, runtime, role, now = new Date()) {
     preset,
     chain,
     skipped,
-    reason: skipped.length > 0 ? "exhausted skip" : "preset default",
+    // Present only when an exhausted role override was ignored, so callers can
+    // tell a chain fallback forced by `exhaustedUntil` from the plain preset.
+    ...(overrideExhausted ? { overrideSkipped: override } : {}),
+    reason: skipped.length > 0 || overrideExhausted ? "exhausted skip" : "preset default",
     presetReason,
   };
 }
@@ -239,12 +183,6 @@ export function applyExhaustion(runtime, model, until) {
   return runtime;
 }
 
-/** Reads the value of a `--flag value` argument, or undefined when the flag is absent. */
-function flagValue(argv, flag) {
-  const index = argv.indexOf(flag);
-  return index >= 0 && index + 1 < argv.length ? argv[index + 1] : undefined;
-}
-
 function main() {
   const argv = process.argv.slice(2);
   const role = argv[0];
@@ -253,14 +191,15 @@ function main() {
   const until = flagValue(argv, "--until");
   const backoff = flagValue(argv, "--backoff");
 
-  if (!ROLES.includes(role)) {
+  const policy = readJsonWithRetry(POLICY_PATH);
+  const roleNames = Object.keys(policy.roles ?? {});
+  if (!roleNames.includes(role)) {
     console.error(
-      `usage: resolve-model.mjs <${ROLES.join("|")}> [--record] [--exhaust <model>] [--until <iso> | --backoff <minutes>]`,
+      `usage: resolve-model.mjs <${roleNames.length > 0 ? roleNames.join("|") : "role"}> [--record] [--exhaust <model>] [--until <iso> | --backoff <minutes>]`,
     );
     process.exit(2);
   }
 
-  const policy = readJsonWithRetry(POLICY_PATH);
   const runtime = existsSync(RUNTIME_PATH) ? readJsonWithRetry(RUNTIME_PATH) : {};
   const now = new Date();
 

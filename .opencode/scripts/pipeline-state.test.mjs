@@ -218,6 +218,42 @@ test("pruneCompleted removes only completed entries, oldest first", () => {
   assert.equal(stuck.removed.length, 0);
 });
 
+test("addChange_LimitBelowCompletedCount_PrunesThenAppendsAndWarns", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf([completed("done-old"), unfinished("open-1"), unfinished("open-2")]));
+
+    const result = addChange(file, { id: "fresh", limit: 1 });
+    const state = readState(file);
+
+    assert.deepEqual(result.removed.map((entry) => entry.id), ["done-old"]);
+    assert.equal(result.before, 3);
+    assert.equal(result.after, 3);
+    assert.deepEqual(state.changes.map((entry) => entry.id), ["open-1", "open-2", "fresh"]);
+    assert.equal(result.warnings.length, 1);
+    assert.match(result.warnings[0], /exceeds limit 1/);
+  });
+});
+
+test("runAdd_LimitZero_RefusedWithExitOneAndFileUnchanged", () => {
+  withDir((dir) => {
+    const file = join(dir, "pipeline.json");
+    writeStateRaw(file, stateOf(unfinishedEntries(2)));
+    const before = readFileSync(file);
+
+    const run = spawnSync(
+      process.execPath,
+      [SCRIPT, "add", "fresh", "--limit", "0", "--file", file],
+      { encoding: "utf8" },
+    );
+
+    assert.equal(run.status, 1, run.stderr);
+    assert.match(run.stderr, /--limit must be a positive integer/);
+    assert.equal(run.stdout, "");
+    assert.deepEqual(readFileSync(file), before);
+  });
+});
+
 test("the completion rule matches the sidebar plugin", () => {
   const allDone = {
     id: "impl-done",
@@ -784,6 +820,34 @@ const NO_EVIDENCE_PROBES = {
   commitResolves: () => false,
 };
 
+/**
+ * Probes whose `commitResolves` records every sha it is asked about, so a test
+ * can assert how many answers `collectFindings` actually requested.
+ */
+function countingCommitProbes(resolves) {
+  const calls = [];
+  return {
+    calls,
+    probes: {
+      repoRoot: "C:/repo",
+      archiveIds: () => new Set(),
+      specDirExists: () => false,
+      commitResolves: (sha) => {
+        calls.push(sha);
+        return resolves(sha);
+      },
+    },
+  };
+}
+
+/** Three changes that record the same three commit shas, plan/impl/archive. */
+function changesSharingShas(shas) {
+  return ["shared-0", "shared-1", "shared-2"].map((id) => ({
+    ...completed(id),
+    commits: { plan: shas[0], impl: shas[1], archive: shas[2] },
+  }));
+}
+
 test("collectFindings_DoneEntryWithResolvableSha_OkWithCommitEvidence", () => {
   const entry = {
     ...completed("sha-entry"),
@@ -909,6 +973,39 @@ test("collectFindings_DoneWithoutOpenSpecLifecycle_WarningNoArchivePath", () => 
     ["no-evidence"],
     "the rule is skipped when the probes cannot answer",
   );
+});
+
+test("collectFindings_ThreeChangesSharingThreeShas_ResolvesEachShaOnce", () => {
+  const shas = ["aaaa111", "bbbb222", "cccc333"];
+  const { calls, probes } = countingCommitProbes(() => true);
+
+  const { entries, findings } = collectFindings(changesSharingShas(shas), probes);
+
+  assert.deepEqual(calls, shas, "one probe call per unique sha, not one per change and loop");
+  assert.deepEqual(findings, []);
+  for (const entry of entries) {
+    assert.equal(entry.level, "ok");
+    assert.deepEqual(entry.evidence, { kind: "commit", detail: shas[0] });
+    assert.deepEqual(entry.findings, []);
+  }
+});
+
+test("collectFindings_ThreeUnresolvableShas_ResolvesEachShaOnceAndKeepsAllFindings", () => {
+  const shas = ["dead111", "dead222", "dead333"];
+  const { calls, probes } = countingCommitProbes(() => false);
+
+  const { entries, findings } = collectFindings(changesSharingShas(shas), probes);
+
+  assert.deepEqual(calls, shas, "a cached false answer still costs one probe call per unique sha");
+  assert.equal(findings.length, 9, "every change keeps its own three sha-missing findings");
+  for (const entry of entries) {
+    assert.equal(entry.evidence, null);
+    assert.deepEqual(
+      entry.findings.map((finding) => finding.kind),
+      ["sha-missing", "sha-missing", "sha-missing"],
+    );
+    assert.deepEqual(entry.findings.map((finding) => finding.detail), shas);
+  }
 });
 
 test("the CLI check renders the inconsistent-stages and no-archive-path lines", () => {

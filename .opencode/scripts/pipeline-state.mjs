@@ -68,17 +68,10 @@
 // with warnings, 2 refused (duplicate id).
 
 import { spawnSync } from "node:child_process";
-import {
-  existsSync,
-  readFileSync,
-  readdirSync,
-  renameSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { flagValue, writeJsonAtomic } from "./json-io.mjs";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_FILE = join(SCRIPT_DIR, "..", "pipeline.json");
@@ -91,13 +84,6 @@ export const STAGES = Object.freeze(["plan", "impl", "commit", "archive"]);
 
 /** Allowed change and stage statuses. */
 export const STATUSES = Object.freeze(["pending", "active", "done", "blocked"]);
-
-// Windows can transiently hold a handle on the target file, which surfaces as
-// EPERM/EBUSY on the rename. These errors are worth retrying; everything else
-// is a real failure.
-const TRANSIENT_FILE_ERRORS = new Set(["EPERM", "EBUSY", "EACCES"]);
-
-let tempCounter = 0;
 
 /** A duplicate change id; the CLI maps this to exit code 2. */
 export class RefusalError extends Error {
@@ -113,11 +99,6 @@ export class StateError extends Error {
     super(message);
     this.name = "StateError";
   }
-}
-
-/** Blocks the current thread for `ms` milliseconds (the script is synchronous). */
-function sleep(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
 /**
@@ -257,37 +238,12 @@ export function readState(file) {
 /**
  * Writes `state` as UTF-8 without BOM, 2-space indented, with a single
  * trailing newline, through a temp file in the same directory and a rename.
- * The rename is retried on transient Windows sharing errors; the temp file is
- * removed when the write ultimately fails.
+ * Delegates to the shared `writeJsonAtomic` with the pipeline's shorter retry
+ * budget: the sidebar polls this file every 2 s, so a quick failure is better
+ * than a long retry chain inside a gate.
  */
 export function writeStateAtomic(file, state, { retries = 5, delayMs = 50 } = {}) {
-  const target = resolve(file);
-  const tmp = `${target}.tmp-${process.pid}-${tempCounter++}`;
-  try {
-    writeFileSync(tmp, `${JSON.stringify(state, null, 2)}\n`, { encoding: "utf8" });
-
-    let lastError;
-    for (let attempt = 0; attempt <= retries; attempt += 1) {
-      try {
-        renameSync(tmp, target);
-        return;
-      } catch (error) {
-        lastError = error;
-        if (!TRANSIENT_FILE_ERRORS.has(error?.code) || attempt === retries) {
-          break;
-        }
-        sleep(delayMs * (attempt + 1));
-      }
-    }
-    throw lastError;
-  } catch (error) {
-    try {
-      rmSync(tmp, { force: true });
-    } catch {
-      // The temp file is best-effort cleanup; the original error is the one that matters.
-    }
-    throw error;
-  }
+  return writeJsonAtomic(file, state, { retries, delayMs });
 }
 
 function statOrNull(file) {
@@ -375,15 +331,9 @@ export function addChange(
       }
 
       const before = state.changes.length;
-      const kept = state.changes.slice();
-      const removed = [];
-      while (kept.length >= limit) {
-        const index = kept.findIndex(isCompleted);
-        if (index < 0) {
-          break;
-        }
-        removed.push(kept.splice(index, 1)[0]);
-      }
+      const pruned = pruneCompleted(state.changes, Math.max(0, limit - 1));
+      const removed = pruned.removed;
+      const kept = pruned.changes;
 
       kept.push(change);
       state.changes = kept;
@@ -671,6 +621,29 @@ function groundTruthWarning(change, probes) {
 }
 
 /**
+ * Wraps `commitResolves` so each sha is resolved at most once per `collectFindings`
+ * call: `findEvidence` and the per-sha loop ask for the same shas, and the real
+ * probe spawns git for every answer. Other probes pass through unchanged, so a
+ * probe object without `commitResolves` still means "no commit evidence".
+ */
+function memoCommitProbes(probes) {
+  const resolveCommit = typeof probes?.commitResolves === "function" ? probes.commitResolves : undefined;
+  if (!resolveCommit) {
+    return probes;
+  }
+  const cache = new Map();
+  return {
+    ...probes,
+    commitResolves: (sha) => {
+      if (!cache.has(sha)) {
+        cache.set(sha, resolveCommit(sha));
+      }
+      return cache.get(sha);
+    },
+  };
+}
+
+/**
  * Reconciles the state entries against ground truth without touching the file.
  *
  * Every entry yields a verdict `{ id, level, evidence, findings }`: `level` is
@@ -707,8 +680,9 @@ function groundTruthWarning(change, probes) {
  */
 export function collectFindings(changes, probes, options = {}) {
   const list = Array.isArray(changes) ? changes : [];
-  const repoRoot = probes?.repoRoot ?? options.repoRoot ?? process.cwd();
-  const archiveIds = typeof probes?.archiveIds === "function" ? probes.archiveIds() : new Set();
+  const shared = memoCommitProbes(probes);
+  const repoRoot = shared?.repoRoot ?? options.repoRoot ?? process.cwd();
+  const archiveIds = typeof shared?.archiveIds === "function" ? shared.archiveIds() : new Set();
 
   const entries = [];
   const findings = [];
@@ -717,7 +691,7 @@ export function collectFindings(changes, probes, options = {}) {
     const rawId = typeof change?.id === "string" ? change.id.trim() : "";
     const id = rawId !== "" ? rawId : "?";
     const entryFindings = [];
-    const evidence = findEvidence(change, probes, archiveIds);
+    const evidence = findEvidence(change, shared, archiveIds);
 
     const seen = new Set();
     for (const [, sha] of recordedShas(change)) {
@@ -725,7 +699,7 @@ export function collectFindings(changes, probes, options = {}) {
         continue;
       }
       seen.add(sha);
-      if (typeof probes?.commitResolves === "function" && !probes.commitResolves(sha)) {
+      if (typeof shared?.commitResolves === "function" && !shared.commitResolves(sha)) {
         entryFindings.push({ id, level: "warning", kind: "sha-missing", detail: sha, repoRoot });
       }
     }
@@ -888,12 +862,6 @@ export function updateChange(
     },
     { beforeRename },
   );
-}
-
-/** Reads the value of a `--flag value` argument, or undefined when the flag is absent. */
-function flagValue(argv, flag) {
-  const index = argv.indexOf(flag);
-  return index >= 0 && index + 1 < argv.length ? argv[index + 1] : undefined;
 }
 
 function parseLimit(raw) {
