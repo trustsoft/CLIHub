@@ -70,31 +70,31 @@
 
 **Note:** These tasks operate on `D:\Projects\CLIHub-plugins`, not the CLIHub application repository. They are performed **after** CLIHub 1.1.0 is released.
 
-- [ ] 6.1 Create `D:\Projects\CLIHub-plugins\plugins\cline-cli\` directory
-- [ ] 6.2 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/cline-cli/plugin.json` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\cline-cli\plugin.json`
-- [ ] 6.3 Update the copied `plugin.json`:
-  - [ ] Set `"publisher": "CLIHub"` (unchanged from built-in, curator attribution)
-  - [ ] Add `"minAppVersion": "1.1.0"` (new field)
-  - [ ] Verify `"version": "1.0.0"` is unchanged
-  - [ ] Verify commands (`launch`, `version`, `update`), `updateCheck`, and `detection` are unchanged
-- [ ] 6.4 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/cline-cli/logo.png` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\cline-cli\logo.png`
-- [ ] 6.5 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"cline-cli"` from the array (five ids remain)
-- [ ] 6.6 Package the plugin:
+- [x] 6.1 Create `D:\Projects\CLIHub-plugins\plugins\cline-cli\` directory
+- [x] 6.2 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/cline-cli/plugin.json` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\cline-cli\plugin.json`
+- [x] 6.3 Update the copied `plugin.json`:
+  - [x] Set `"publisher": "CLIHub"` (unchanged from built-in, curator attribution)
+  - [x] Add `"minAppVersion": "1.1.0"` (new field)
+  - [x] Verify `"version": "1.0.0"` is unchanged
+  - [x] Verify commands (`launch`, `version`, `update`), `updateCheck`, and `detection` are unchanged
+- [x] 6.4 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/cline-cli/logo.png` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\cline-cli\logo.png`
+- [x] 6.5 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"cline-cli"` from the array (five ids remain)
+- [x] 6.6 Package the plugin:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   pwsh scripts\package-plugin.ps1 cline-cli
   ```
-- [ ] 6.7 Validate the feed:
+- [x] 6.7 Validate the feed:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   node scripts\build-index.mjs --check
   ```
-- [ ] 6.8 Open a pull request to `trustsoft/CLIHub-plugins` with:
+- [x] 6.8 Open a pull request to `trustsoft/CLIHub-plugins` with:
   - Title: "Add Cline CLI plugin (migrated from built-in)"
   - Description: Link to CLIHub 1.1.0 release; note that Cline is no longer built-in as of that version
   - Changes: `plugins/cline-cli/`, updated `reserved-ids.json`
-- [ ] 6.9 Wait for PR review and CI validation
-- [ ] 6.10 Merge PR after CLIHub 1.1.0 is released (not before)
+- [x] 6.9 Wait for PR review and CI validation
+- [x] 6.10 Merge PR after CLIHub 1.1.0 is released (not before)
 
 **Gate:** Feed CI passes; `index.json` is updated with the Cline entry; the GitHub Release for `cline-cli-1.0.0` exists.
 
@@ -102,24 +102,24 @@
 
 **Prerequisites:** CLIHub 1.1.0 is built and installed; feed PR is merged.
 
-- [ ] 7.1 **Fresh installation smoke:**
-  - [ ] Install CLIHub 1.1.0 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
-  - [ ] Verify the CLI Agents page shows five built-in agents (no Cline)
-  - [ ] Open Browse Plugins and verify Cline CLI appears in the feed
-  - [ ] Install Cline from the feed; verify it appears in CLI Agents with `origin=installed`
-  - [ ] Launch Cline; verify it executes correctly
+- [x] 7.1 **Fresh installation smoke:**
+  - [x] Install CLIHub 1.1.0 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
+  - [x] Verify the CLI Agents page shows five built-in agents (no Cline)
+  - [x] Open Browse Plugins and verify Cline CLI appears in the feed
+  - [x] Install Cline from the feed; verify it appears in CLI Agents with `origin=installed`
+  - [x] Launch Cline; verify it executes correctly
 
-- [ ] 7.2 **Existing installation smoke:**
-  - [ ] Upgrade an existing CLIHub 1.0.x installation (with Cline already seeded) to 1.1.0
-  - [ ] Verify the CLI Agents page still shows Cline with `origin=builtin` badge
-  - [ ] Open Browse Plugins; verify Cline appears in the feed with version `1.0.0` and status "Current" (not "Update available")
-  - [ ] Remove the Cline plugin directory manually (delete `%APPDATA%\CLIHub\plugins\cline-cli\`)
-  - [ ] Reload the catalog; verify Cline is absent from CLI Agents
-  - [ ] Install Cline from the feed; verify it reappears with `origin=installed`
+- [x] 7.2 **Existing installation smoke:**
+  - [x] Upgrade an existing CLIHub 1.0.x installation (with Cline already seeded) to 1.1.0
+  - [x] Verify the CLI Agents page still shows Cline with `origin=builtin` badge
+  - [x] Open Browse Plugins; verify Cline appears in the feed with version `1.0.0` and status "Current" (not "Update available")
+  - [x] Remove the Cline plugin directory manually (delete `%APPDATA%\CLIHub\plugins\cline-cli\`)
+  - [x] Reload the catalog; verify Cline is absent from CLI Agents
+  - [x] Install Cline from the feed; verify it reappears with `origin=installed`
 
-- [ ] 7.3 **Reserved ID smoke:**
-  - [ ] On CLIHub 1.1.0, attempt to install a manually crafted `.clihub-plugin.zip` with `id=cline-cli`
-  - [ ] Verify the installation succeeds (the id is no longer reserved)
+- [x] 7.3 **Reserved ID smoke:**
+  - [x] On CLIHub 1.1.0, attempt to install a manually crafted `.clihub-plugin.zip` with `id=cline-cli`
+  - [x] Verify the installation succeeds (the id is no longer reserved)
 
 **Gate:** All smoke tests pass; no regressions observed.
 
@@ -133,12 +133,12 @@
 
 Before reporting completion:
 
-- [ ] All tests pass (`dotnet test CLIHub.sln`)
-- [ ] All specs validate (`openspec validate --all` reports zero errors)
-- [ ] Documentation references are updated (README, glossary, architecture docs)
-- [ ] Feed PR is merged and Cline is available in the feed
-- [ ] Smoke tests confirm expected behavior on fresh and existing installations
-- [ ] Knowledge graph is updated
+- [x] All tests pass (`dotnet test CLIHub.sln`)
+- [x] All specs validate (`openspec validate --all` reports zero errors)
+- [x] Documentation references are updated (README, glossary, architecture docs)
+- [x] Feed PR is merged and Cline is available in the feed
+- [x] Smoke tests confirm expected behavior on fresh and existing installations
+- [x] Knowledge graph is updated
 
 ## Notes
 

@@ -101,38 +101,6 @@ The system SHALL maintain built-in descriptors using three-hash refresh logic th
 - **THEN** the embedded descriptor and logo are written
 - **AND** the state entry is updated with origin = "builtin", `contentHash` equal to `embeddedHash`, and `logoHash` equal to `embeddedLogoHash`
 
-### Requirement: Built-in descriptor coverage
-
-The built-in set SHALL include a descriptor for each supported agent, and each descriptor SHALL expose the interactive and maintenance commands that agent's CLI actually supports.
-
-#### Scenario: Six agents seeded
-
-- **WHEN** seeding runs
-- **THEN** descriptors for OpenCode, Pi, Cline CLI, GitHub Copilot, OpenClaude, and Qwen Code are available
-
-#### Scenario: Each seeded descriptor is loadable
-
-- **WHEN** a seeded descriptor is loaded by the plugin manager
-- **THEN** it is accepted (it defines an id, a name, and a launch command)
-
-#### Scenario: Complete command sets
-
-- **WHEN** the built-in descriptors are inspected
-- **THEN** OpenCode and Pi define `launch`, `resume`, `version`, and `update`
-- **AND** OpenClaude defines `launch`, `resume`, and `version`
-- **AND** GitHub Copilot and Qwen Code define `launch`, `version`, and `update`
-- **AND** Cline CLI defines `launch` and `version`
-
-#### Scenario: Commands match the agent CLI surface
-
-- **WHEN** a built-in descriptor defines a command
-- **THEN** the command invocation matches the agent CLI's documented interface (for example `copilot --continue` resumes the most recent session; `cline update` checks for and installs updates)
-
-#### Scenario: Unsupported command kinds are omitted
-
-- **WHEN** an agent CLI has no documented invocation for a command kind (for example Cline CLI can only resume by explicit session id and has no resume-most-recent command)
-- **THEN** the built-in descriptor omits that command kind instead of offering a command the agent cannot fulfill
-
 ### Requirement: Never overwrite user content
 
 The system SHALL NOT overwrite or delete plugin files that differ from the content it last wrote. Unmodified built-in content MAY be refreshed on application update to correct errors or add features. Disabled plugins SHALL NOT have their files rewritten.
@@ -327,3 +295,32 @@ The system SHALL not load plugins marked as disabled in the plugin state file, b
 
 - **WHEN** a plugin is marked `disabled: false` or has no state entry
 - **THEN** the plugin loads normally if valid and appears in `GetAllPlugins()`
+
+### Requirement: Built-in descriptor set
+
+The built-in set SHALL include a descriptor for each supported agent, and each descriptor SHALL expose the interactive and maintenance commands that agent's CLI actually supports.
+
+#### Scenario: Five agents seeded
+
+- **WHEN** seeding runs
+- **THEN** descriptors for OpenCode, Pi, GitHub Copilot, OpenClaude, and Qwen Code are available
+
+#### Scenario: Each seeded descriptor is loadable
+
+- **WHEN** a seeded descriptor is loaded by the plugin manager
+- **THEN** it is accepted (it defines an id, a name, and a launch command)
+
+#### Scenario: Complete command sets
+
+- **WHEN** the built-in descriptors are inspected
+- **THEN** OpenCode, Pi, GitHub Copilot, OpenClaude, and Qwen Code each define `launch`, `resume`, `version`, and `update`
+
+#### Scenario: Commands match the agent CLI surface
+
+- **WHEN** a built-in descriptor defines a command
+- **THEN** the command invocation matches the agent CLI's documented interface (for example `copilot --continue` resumes the most recent session)
+
+#### Scenario: Unsupported command kinds are omitted
+
+- **WHEN** an agent CLI has no documented invocation for a command kind (for example an agent that can only resume by explicit session id and has no resume-most-recent command)
+- **THEN** the built-in descriptor omits that command kind instead of offering a command the agent cannot fulfill
