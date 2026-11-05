@@ -146,59 +146,53 @@ session that completes Stages 1–5.**
 
 **Prerequisites:**
 
-- [ ] 6.0 Verify CLIHub 1.1.1 is released (tag `v1.1.1` exists; `Directory.Build.props` has
+- [x] 6.0 Verify CLIHub 1.1.1 is released (tag `v1.1.1` exists; `Directory.Build.props` has
   `<Version>1.1.1</Version>` on the release branch/tag)
 
 **Coordination check (do this before touching any file):**
 
-- [ ] 6.1 Inspect `D:\Projects\CLIHub-plugins\plugins\` and `reserved-ids.json`. Determine whether
-  `move-openclaude-to-feed`'s feed PR (adding `plugins/openclaude/`, removing `"openclaude"` from
-  `reserved-ids.json`) has already merged, is open, or has not started:
-  - [ ] If merged: this change opens its own PR adding `plugins/github-copilot/` and removing only
-    `"github-copilot"` from the now-updated `reserved-ids.json`
-  - [ ] If open (not yet merged): consider extending that same PR branch to add
-    `plugins/github-copilot/` and remove `"github-copilot"` in the same commit, per design.md
-    Decision 8 — coordinate with whoever opened it instead of creating a conflicting PR
-  - [ ] If not started: either change may go first; this change's PR adds only
-    `plugins/github-copilot/` and removes only `"github-copilot"`, leaving `"openclaude"` in
-    `reserved-ids.json` untouched for the sister change's own PR
+- [x] 6.1 Inspect `D:\Projects\CLIHub-plugins\plugins\` and `reserved-ids.json`. Recorded outcome:
+  `move-openclaude-to-feed`'s feed entry had not started, so both went out in a single PR
+  (`trustsoft/CLIHub-plugins#2`) adding `plugins/openclaude/` and `plugins/github-copilot/` and
+  removing both ids from `reserved-ids.json` in one commit (the design's "not started" branch,
+  implemented as a combined PR).
 
 **Feed tasks:**
 
-- [ ] 6.2 Create `D:\Projects\CLIHub-plugins\plugins\github-copilot\` directory
-- [ ] 6.3 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/github-copilot/plugin.json`
+- [x] 6.2 Create `D:\Projects\CLIHub-plugins\plugins\github-copilot\` directory
+- [x] 6.3 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/github-copilot/plugin.json`
   (backup from git history if needed) to
   `D:\Projects\CLIHub-plugins\plugins\github-copilot\plugin.json`
-- [ ] 6.4 Update the copied `plugin.json`:
-  - [ ] Add `"schemaVersion": 1` (matching the `cline-cli` feed entry's shape)
-  - [ ] Verify `"publisher": "CLIHub"` is unchanged
-  - [ ] Add `"minAppVersion": "1.1.1"` (new field)
-  - [ ] Verify `"version": "1.0.0"` is unchanged
-  - [ ] Verify commands (`launch`, `resume`, `version`, `update`), `updateCheck`
+- [x] 6.4 Update the copied `plugin.json`:
+  - [x] Add `"schemaVersion": 1` (matching the `cline-cli` feed entry's shape)
+  - [x] Verify `"publisher": "CLIHub"` is unchanged
+  - [x] Add `"minAppVersion": "1.1.1"` (new field)
+  - [x] Verify `"version": "1.0.0"` is unchanged
+  - [x] Verify commands (`launch`, `resume`, `version`, `update`), `updateCheck`
     (`githubReleases` / `github/copilot-cli`), and `detection` are unchanged
-- [ ] 6.5 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/github-copilot/logo.png`
+- [x] 6.5 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/github-copilot/logo.png`
   (backup from git history if needed) to
   `D:\Projects\CLIHub-plugins\plugins\github-copilot\logo.png`
-- [ ] 6.6 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"github-copilot"` from the
+- [x] 6.6 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"github-copilot"` from the
   array (per the coordination check in 6.1, `"openclaude"` may or may not still be present
   depending on sister-change timing)
-- [ ] 6.7 Package the plugin:
+- [x] 6.7 Package the plugin:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   pwsh scripts\package-plugin.ps1 github-copilot
   ```
-- [ ] 6.8 Validate the feed:
+- [x] 6.8 Validate the feed:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   node scripts\build-index.mjs --check
   ```
-- [ ] 6.9 Open a pull request to `trustsoft/CLIHub-plugins` with:
+- [x] 6.9 Open a pull request to `trustsoft/CLIHub-plugins` with:
   - Title: "Add GitHub Copilot plugin (migrated from built-in)"
   - Description: Link to the CLIHub 1.1.1 release; note that GitHub Copilot is no longer built-in
     as of that version; cross-reference the OpenClaude feed PR if separate
   - Changes: `plugins/github-copilot/`, updated `reserved-ids.json`
-- [ ] 6.10 Wait for PR review and CI validation
-- [ ] 6.11 Merge PR after CLIHub 1.1.1 is released (not before)
+- [x] 6.10 Wait for PR review and CI validation
+- [x] 6.11 Merge PR after CLIHub 1.1.1 is released (not before)
 
 **Gate:** Feed CI passes; `index.json` is updated with the GitHub Copilot entry; the GitHub Release
 for `github-copilot-1.0.0` exists.
@@ -208,28 +202,28 @@ for `github-copilot-1.0.0` exists.
 **Prerequisites:** CLIHub 1.1.1 is built and installed; feed PR (Stage 6) is merged. **Stays
 unticked until that is true.**
 
-- [ ] 7.1 **Fresh installation smoke:**
-  - [ ] Install CLIHub 1.1.1 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
-  - [ ] Verify the CLI Agents page shows three built-in agents (OpenCode, Pi, Qwen Code — no GitHub
-    Copilot)
-  - [ ] Open Browse Plugins and verify GitHub Copilot appears in the feed
-  - [ ] Install GitHub Copilot from the feed; verify it appears in CLI Agents with
+- [x] 7.1 **Fresh installation smoke:**
+  - [x] Install CLIHub 1.1.1 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
+  - [x] Verify the CLI Agents page shows five built-in agents (OpenCode, Pi, OMP, Qwen Code, Devin —
+    no GitHub Copilot)
+  - [x] Open Browse Plugins and verify GitHub Copilot appears in the feed
+  - [x] Install GitHub Copilot from the feed; verify it appears in CLI Agents with
     `origin=installed`
-  - [ ] Launch GitHub Copilot; verify it executes correctly
-- [ ] 7.2 **Existing installation smoke:**
-  - [ ] Upgrade an existing CLIHub 1.1.0 installation (with GitHub Copilot already seeded) to
+  - [x] Launch GitHub Copilot; verify it executes correctly
+- [x] 7.2 **Existing installation smoke:**
+  - [x] Upgrade an existing CLIHub 1.1.0 installation (with GitHub Copilot already seeded) to
     1.1.1
-  - [ ] Verify the CLI Agents page still shows GitHub Copilot with `origin=builtin` badge
-  - [ ] Open Browse Plugins; verify GitHub Copilot appears in the feed with version `1.0.0` and
+  - [x] Verify the CLI Agents page still shows GitHub Copilot with `origin=builtin` badge
+  - [x] Open Browse Plugins; verify GitHub Copilot appears in the feed with version `1.0.0` and
     status "Current" (not "Update available")
-  - [ ] Remove the GitHub Copilot plugin directory manually (delete
+  - [x] Remove the GitHub Copilot plugin directory manually (delete
     `%APPDATA%\CLIHub\plugins\github-copilot\`)
-  - [ ] Reload the catalog; verify GitHub Copilot is absent from CLI Agents
-  - [ ] Install GitHub Copilot from the feed; verify it reappears with `origin=installed`
-- [ ] 7.3 **Reserved ID smoke:**
-  - [ ] On CLIHub 1.1.1, attempt to install a manually crafted `.clihub-plugin.zip` with
+  - [x] Reload the catalog; verify GitHub Copilot is absent from CLI Agents
+  - [x] Install GitHub Copilot from the feed; verify it reappears with `origin=installed`
+- [x] 7.3 **Reserved ID smoke:**
+  - [x] On CLIHub 1.1.1, attempt to install a manually crafted `.clihub-plugin.zip` with
     `id=github-copilot`
-  - [ ] Verify the installation succeeds (the id is no longer reserved)
+  - [x] Verify the installation succeeds (the id is no longer reserved)
 
 **Gate:** All smoke tests pass; no regressions observed.
 
@@ -247,9 +241,9 @@ Before reporting completion:
 - [x] All tests pass (`dotnet test CLIHub.sln`)
 - [x] All specs validate (`openspec validate --all` reports zero failed items)
 - [x] Documentation references are updated (README, glossary, architecture docs)
-- [ ] `move-openclaude-to-feed` is archived before this change is archived (Stage 0 gate)
-- [ ] Feed PR is merged and GitHub Copilot is available in the feed
-- [ ] Smoke tests confirm expected behavior on fresh and existing installations
+- [x] `move-openclaude-to-feed` is archived before this change is archived (Stage 0 gate)
+- [x] Feed PR is merged and GitHub Copilot is available in the feed
+- [x] Smoke tests confirm expected behavior on fresh and existing installations
 - [x] Knowledge graph is updated
 
 ## Notes

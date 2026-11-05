@@ -298,12 +298,13 @@ The system SHALL not load plugins marked as disabled in the plugin state file, b
 
 ### Requirement: Built-in agent descriptors
 
-The built-in set SHALL include a descriptor for each supported agent, and each descriptor SHALL expose the interactive and maintenance commands that agent's CLI actually supports.
+The built-in set SHALL include a descriptor for each supported agent, and each descriptor SHALL
+expose the interactive and maintenance commands that agent's CLI actually supports.
 
 #### Scenario: Built-in agents seeded
 
 - **WHEN** seeding runs
-- **THEN** descriptors for OpenCode, Pi, GitHub Copilot, and Qwen Code are available
+- **THEN** descriptors for OpenCode, Pi, and Qwen Code are available
 
 #### Scenario: Each seeded descriptor is loadable
 
@@ -313,7 +314,7 @@ The built-in set SHALL include a descriptor for each supported agent, and each d
 #### Scenario: Complete command sets
 
 - **WHEN** the built-in descriptors are inspected
-- **THEN** OpenCode, Pi, GitHub Copilot, and Qwen Code each define `launch`, `resume`, `version`, and `update`
+- **THEN** OpenCode, Pi, and Qwen Code each define `launch`, `resume`, `version`, and `update`
 
 #### Scenario: Commands match the agent CLI surface
 
