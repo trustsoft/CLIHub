@@ -41,7 +41,7 @@ plugin id:
   - `"source": "npm"` with `"package": "<name>"` — the latest version is read from `https://registry.npmjs.org/<package>/latest`.
   - `"source": "githubReleases"` with `"repo": "<owner>/<repository>"` — the latest version is read from that repository's latest GitHub release (`tag_name`, leading `v` stripped).
   - An unrecognized `source` is ignored with a logged warning; the agent is treated as having no update source. The result never gates or alters the Update action.
-- Built-in descriptors for OpenCode, Pi, GitHub Copilot, OpenClaude, and Qwen Code are embedded
+- Built-in descriptors for OpenCode, Pi, GitHub Copilot, and Qwen Code are embedded
   and seeded using the three-hash refresh logic described below.
 
 ## Plugin Installation

@@ -69,7 +69,7 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Plugin descriptor** — the `plugin.json` file: `id`, `name`, `commands`, and `detection`
   markers. Only the `launch` command is required; a descriptor without it is rejected.
 - **Built-in agent** — one of the agents whose descriptors (and logos) are embedded in the
-  application binary: OpenCode, Pi, GitHub Copilot, OpenClaude, Qwen Code.
+  application binary: OpenCode, Pi, GitHub Copilot, Qwen Code.
 - **Seeding** — writing the built-in descriptors into the plugins folder on first run, when it is
   empty. Seeding never overwrites or deletes existing plugin files; delete the plugins folder to
   re-seed. See [plugin-seeding](../openspec/specs/plugin-seeding/spec.md).

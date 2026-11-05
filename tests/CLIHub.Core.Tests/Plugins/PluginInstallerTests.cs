@@ -327,6 +327,21 @@ public class PluginInstallerTests : IDisposable
     }
 
     [Fact]
+    public void Inspect_FormerlyBuiltinOpenClaudeId_NotRejectedAsReserved()
+    {
+        Assert.DoesNotContain("openclaude", EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly));
+
+        var package = CreatePackage(
+            ("openclaude/plugin.json", Text(ValidDescriptor.Replace("community", "openclaude", StringComparison.Ordinal))));
+
+        var preview = this.CreateInstaller().Inspect(package);
+
+        Assert.True(preview.IsValid);
+        Assert.Empty(preview.Errors);
+        Assert.Equal("openclaude", preview.PluginId);
+    }
+
+    [Fact]
     public void Inspect_ExistingInstalledPlugin_IdentifiesReplacementScenario()
     {
         this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal), installedVersion: "0.9.0");

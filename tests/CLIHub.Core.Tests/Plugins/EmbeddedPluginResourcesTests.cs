@@ -4,10 +4,10 @@ using CLIHub.Core.Plugins;
 
 public class EmbeddedPluginResourcesTests
 {
-    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "github-copilot", "openclaude", "qwen-code"];
+    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "github-copilot", "qwen-code"];
 
     [Fact]
-    public void BuiltinPluginIds_EnumeratesTheFiveBuiltInAgents()
+    public void BuiltinPluginIds_EnumeratesTheFourBuiltInAgents()
     {
         // Act
         var ids = EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly);
@@ -26,5 +26,15 @@ public class EmbeddedPluginResourcesTests
 
         // Assert
         Assert.DoesNotContain("cline-cli", ids);
+    }
+
+    [Fact]
+    public void BuiltinPluginIds_NoLongerContainsOpenClaude()
+    {
+        // Act
+        var ids = EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly);
+
+        // Assert
+        Assert.DoesNotContain("openclaude", ids);
     }
 }
