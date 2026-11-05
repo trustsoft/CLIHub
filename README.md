@@ -15,8 +15,8 @@
 project.** It keeps your project folders, detects the agent CLIs installed on your machine, and opens the one
 you pick in an external terminal — in the right directory, with the right command.
 
-Built-in descriptors cover OpenCode, Pi, GitHub Copilot, and Qwen Code. Cline CLI and OpenClaude are
-available from the curated plugin feed; additional agents can be added as JSON plugins.
+Built-in descriptors cover OpenCode, Pi, and Qwen Code. Cline CLI, GitHub Copilot, and OpenClaude
+are available from the curated plugin feed; additional agents can be added as JSON plugins.
 
 ## How it works
 

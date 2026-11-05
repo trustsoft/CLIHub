@@ -4,10 +4,10 @@ using CLIHub.Core.Plugins;
 
 public class EmbeddedPluginResourcesTests
 {
-    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "github-copilot", "qwen-code"];
+    private static readonly string[] ExpectedBuiltinIds = ["opencode", "pi", "qwen-code"];
 
     [Fact]
-    public void BuiltinPluginIds_EnumeratesTheFourBuiltInAgents()
+    public void BuiltinPluginIds_EnumeratesTheThreeBuiltInAgents()
     {
         // Act
         var ids = EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly);
@@ -36,5 +36,15 @@ public class EmbeddedPluginResourcesTests
 
         // Assert
         Assert.DoesNotContain("openclaude", ids);
+    }
+
+    [Fact]
+    public void BuiltinPluginIds_NoLongerContainsGithubCopilot()
+    {
+        // Act
+        var ids = EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly);
+
+        // Assert
+        Assert.DoesNotContain("github-copilot", ids);
     }
 }

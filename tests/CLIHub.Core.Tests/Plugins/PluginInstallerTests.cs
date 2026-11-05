@@ -342,6 +342,21 @@ public class PluginInstallerTests : IDisposable
     }
 
     [Fact]
+    public void Inspect_FormerlyBuiltinGithubCopilotId_NotRejectedAsReserved()
+    {
+        Assert.DoesNotContain("github-copilot", EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly));
+
+        var package = CreatePackage(
+            ("github-copilot/plugin.json", Text(ValidDescriptor.Replace("community", "github-copilot", StringComparison.Ordinal))));
+
+        var preview = this.CreateInstaller().Inspect(package);
+
+        Assert.True(preview.IsValid);
+        Assert.Empty(preview.Errors);
+        Assert.Equal("github-copilot", preview.PluginId);
+    }
+
+    [Fact]
     public void Inspect_ExistingInstalledPlugin_IdentifiesReplacementScenario()
     {
         this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal), installedVersion: "0.9.0");
