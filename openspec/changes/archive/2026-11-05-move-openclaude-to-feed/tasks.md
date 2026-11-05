@@ -73,35 +73,35 @@
 
 **Prerequisites:**
 
-- [ ] 6.0 Verify CLIHub 1.1.1 is released (tag `v1.1.1` exists; `Directory.Build.props` has `<Version>1.1.1</Version>` on the release branch/tag)
+- [x] 6.0 Verify CLIHub 1.1.1 is released (tag `v1.1.1` exists; `Directory.Build.props` has `<Version>1.1.1</Version>` on the release branch/tag)
 
 **Feed tasks:**
 
-- [ ] 6.1 Create `D:\Projects\CLIHub-plugins\plugins\openclaude\` directory
-- [ ] 6.2 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/openclaude/plugin.json` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\openclaude\plugin.json`
-- [ ] 6.3 Update the copied `plugin.json`:
-  - [ ] Set `"publisher": "CLIHub"` (unchanged from built-in, curator attribution)
-  - [ ] Add `"minAppVersion": "1.1.1"` (new field)
-  - [ ] Verify `"version": "1.0.0"` is unchanged
-  - [ ] Verify commands (`launch`, `resume`, `version`, `update`), `updateCheck`, and `detection` are unchanged
-- [ ] 6.4 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/openclaude/logo.png` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\openclaude\logo.png`
-- [ ] 6.5 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"openclaude"` from the array (four ids remain: `github-copilot`, `opencode`, `pi`, `qwen-code`)
-- [ ] 6.6 Package the plugin:
+- [x] 6.1 Create `D:\Projects\CLIHub-plugins\plugins\openclaude\` directory
+- [x] 6.2 Copy `plugin.json` from the removed `src/CLIHub.Core/SeedPlugins/openclaude/plugin.json` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\openclaude\plugin.json`
+- [x] 6.3 Update the copied `plugin.json`:
+  - [x] Set `"publisher": "CLIHub"` (unchanged from built-in, curator attribution)
+  - [x] Add `"minAppVersion": "1.1.1"` (new field)
+  - [x] Verify `"version": "1.0.0"` is unchanged
+  - [x] Verify commands (`launch`, `resume`, `version`, `update`), `updateCheck`, and `detection` are unchanged
+- [x] 6.4 Copy `logo.png` from the removed `src/CLIHub.Core/SeedPlugins/openclaude/logo.png` (backup from git history if needed) to `D:\Projects\CLIHub-plugins\plugins\openclaude\logo.png`
+- [x] 6.5 Update `D:\Projects\CLIHub-plugins\reserved-ids.json` — remove `"openclaude"` from the array (four ids remain: `github-copilot`, `opencode`, `pi`, `qwen-code`)
+- [x] 6.6 Package the plugin:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   pwsh scripts\package-plugin.ps1 openclaude
   ```
-- [ ] 6.7 Validate the feed:
+- [x] 6.7 Validate the feed:
   ```powershell
   cd D:\Projects\CLIHub-plugins
   node scripts\build-index.mjs --check
   ```
-- [ ] 6.8 Open a pull request to `trustsoft/CLIHub-plugins` with:
+- [x] 6.8 Open a pull request to `trustsoft/CLIHub-plugins` with:
   - Title: "Add OpenClaude plugin (migrated from built-in)"
   - Description: Link to CLIHub 1.1.1 release; note that OpenClaude is no longer built-in as of that version
   - Changes: `plugins/openclaude/`, updated `reserved-ids.json`
-- [ ] 6.9 Wait for PR review and CI validation
-- [ ] 6.10 Merge PR after CLIHub 1.1.1 is released (not before)
+- [x] 6.9 Wait for PR review and CI validation
+- [x] 6.10 Merge PR after CLIHub 1.1.1 is released (not before)
 
 **Gate:** Feed CI passes; `index.json` is updated with the OpenClaude entry; the GitHub Release for `openclaude-1.0.0` exists.
 
@@ -109,24 +109,25 @@
 
 **Prerequisites:** CLIHub 1.1.1 is built and installed; feed PR is merged.
 
-- [ ] 7.1 **Fresh installation smoke:**
-  - [ ] Install CLIHub 1.1.1 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
-  - [ ] Verify the CLI Agents page shows four built-in agents (no OpenClaude)
-  - [ ] Open Browse Plugins and verify OpenClaude appears in the feed
-  - [ ] Install OpenClaude from the feed; verify it appears in CLI Agents with `origin=installed`
-  - [ ] Launch OpenClaude; verify it executes correctly
+- [x] 7.1 **Fresh installation smoke:**
+  - [x] Install CLIHub 1.1.1 on a clean machine (or with `%APPDATA%\CLIHub\` deleted)
+  - [x] Verify the CLI Agents page shows five built-in agents (OpenCode, Pi, OMP, Qwen Code, Devin;
+    no OpenClaude)
+  - [x] Open Browse Plugins and verify OpenClaude appears in the feed
+  - [x] Install OpenClaude from the feed; verify it appears in CLI Agents with `origin=installed`
+  - [x] Launch OpenClaude; verify it executes correctly
 
-- [ ] 7.2 **Existing installation smoke:**
-  - [ ] Upgrade an existing CLIHub 1.1.0 installation (with OpenClaude already seeded) to 1.1.1
-  - [ ] Verify the CLI Agents page still shows OpenClaude with `origin=builtin` badge
-  - [ ] Open Browse Plugins; verify OpenClaude appears in the feed with version `1.0.0` and status "Current" (not "Update available")
-  - [ ] Remove the OpenClaude plugin directory manually (delete `%APPDATA%\CLIHub\plugins\openclaude\`)
-  - [ ] Reload the catalog; verify OpenClaude is absent from CLI Agents
-  - [ ] Install OpenClaude from the feed; verify it reappears with `origin=installed`
+- [x] 7.2 **Existing installation smoke:**
+  - [x] Upgrade an existing CLIHub 1.1.0 installation (with OpenClaude already seeded) to 1.1.1
+  - [x] Verify the CLI Agents page still shows OpenClaude with `origin=builtin` badge
+  - [x] Open Browse Plugins; verify OpenClaude appears in the feed with version `1.0.0` and status "Current" (not "Update available")
+  - [x] Remove the OpenClaude plugin directory manually (delete `%APPDATA%\CLIHub\plugins\openclaude\`)
+  - [x] Reload the catalog; verify OpenClaude is absent from CLI Agents
+  - [x] Install OpenClaude from the feed; verify it reappears with `origin=installed`
 
-- [ ] 7.3 **Reserved ID smoke:**
-  - [ ] On CLIHub 1.1.1, attempt to install a manually crafted `.clihub-plugin.zip` with `id=openclaude`
-  - [ ] Verify the installation succeeds (the id is no longer reserved)
+- [x] 7.3 **Reserved ID smoke:**
+  - [x] On CLIHub 1.1.1, attempt to install a manually crafted `.clihub-plugin.zip` with `id=openclaude`
+  - [x] Verify the installation succeeds (the id is no longer reserved)
 
 **Gate:** All smoke tests pass; no regressions observed.
 
@@ -143,8 +144,8 @@ Before reporting completion:
 - [x] All tests pass (`dotnet test CLIHub.sln`)
 - [x] All specs validate (`openspec validate --all` reports zero errors)
 - [x] Documentation references are updated (README, glossary, architecture docs)
-- [ ] Feed PR is merged and OpenClaude is available in the feed
-- [ ] Smoke tests confirm expected behavior on fresh and existing installations
+- [x] Feed PR is merged and OpenClaude is available in the feed
+- [x] Smoke tests confirm expected behavior on fresh and existing installations
 - [x] Knowledge graph is updated
 
 ## Notes
