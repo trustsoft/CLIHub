@@ -460,7 +460,7 @@ Saving the scanning preferences SHALL persist them and take effect without resta
 
 ### Requirement: CLI Agents page management
 
-The CLI Agents page SHALL present one card per loaded agent, the page-header summary cards showing the supported and installed agent counts, the default agent selection, and the agent update availability aggregation, and a "Default agent" selector. It SHALL show the stored default agent when opened. The "Default agent" selector SHALL offer every loaded agent plus a "None" option, SHALL mark agents that are not installed on the host as disabled entries that cannot be selected, and SHALL refresh the option availability when agent detection runs. The page SHALL offer an agent detection action labelled "Detect" above the agent cards that re-detects every supported agent's installed state and version, and refreshes the agent cards, the availability summary, and the option availability.
+The CLI Agents page SHALL present one card per loaded agent, the page-header summary cards showing the supported and installed agent counts, the default agent selection, and the agent update availability aggregation, and a "Default agent" selector. It SHALL show the stored default agent when opened. The "Default agent" selector SHALL offer every loaded agent plus a "None" option, SHALL mark agents that are not installed on the host as disabled entries that cannot be selected, and SHALL refresh the option availability when agent detection runs. The page SHALL offer an agent detection action labelled "Detect" above the agent cards that re-detects every supported agent's installed state and version, and refreshes the agent cards, the availability summary, and the option availability. The page SHALL group the plugin-catalog actions — install a plugin from a package, browse the remote plugin feed, open the plugins folder, and reload the plugin catalog — under one "Actions" menu above the agent cards, distinct from the standalone "Detect" and "Check updates" actions, which act on agents rather than the plugin catalog and remain their own buttons.
 
 The summary cards showing supported and installed agent counts and update availability SHALL update immediately when agent detection completes, without requiring the Settings window to be closed and reopened. The UPDATES summary card SHALL show the number of installed agents with available updates when known, "None" when every installed agent is up to date, or "Unknown" while update availability is not checked, and SHALL refresh after the load-time availability pass, the header update check, per-card update checks, and detection passes that clear stale availability.
 
@@ -576,6 +576,23 @@ The summary cards showing supported and installed agent counts and update availa
 
 - **WHEN** the user invokes the "Detect" action above the agent cards and the detection completes
 - **THEN** the UPDATES card updates to reflect the cleared stale availability
+
+#### Scenario: Plugin actions grouped under one Actions menu
+
+- **WHEN** the CLI Agents page header is shown
+- **THEN** "Install Plugin…", "Browse Plugins…", "Open Plugins Folder", and "Reload Catalog" appear as entries of one "Actions" menu above the agent cards, in that order
+- **AND** "Detect" and "Check updates" remain their own standalone buttons, not entries of that menu
+
+#### Scenario: Actions menu entry behavior matches the prior standalone button
+
+- **WHEN** the user opens the Actions menu and invokes one of its four plugin entries
+- **THEN** the invoked entry runs the same command the equivalent standalone button ran before this change, with no change to its outcome
+- **AND** the menu closes after the entry is invoked
+
+#### Scenario: Browse Plugins entry disabled state
+
+- **WHEN** the plugin feed URL preference is configured to the disabled empty string
+- **THEN** the "Browse Plugins…" entry in the Actions menu is shown disabled
 
 ### Requirement: Default agent persists and applies
 
