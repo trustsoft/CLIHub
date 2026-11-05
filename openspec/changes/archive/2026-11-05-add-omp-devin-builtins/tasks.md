@@ -175,7 +175,7 @@ add-omp-devin-builtins --type change --strict` and confirm it reports the change
   Qwen Code, Devin) by running a minimal test harness or inspecting the release assembly
 - [x] 6.6 Verify a manually crafted `.clihub-plugin.zip` with `id=omp` and another with `id=devin`
   both fail the reserved-id check in `PluginInstaller` (or write a test that asserts this)
-- [ ] 6.7 Launch CLIHub against a fresh `%APPDATA%\CLIHub\plugins\` folder (or a throwaway test
+- [x] 6.7 Launch CLIHub against a fresh `%APPDATA%\CLIHub\plugins\` folder (or a throwaway test
   profile) and confirm both OMP and Devin cards appear with their logos rendered correctly in both
   themes
 
@@ -199,9 +199,9 @@ Before reporting completion:
 - [x] All tests pass (`dotnet test CLIHub.sln`)
 - [x] All specs validate (`openspec validate --all` reports zero failed items)
 - [x] Documentation references are updated (README, glossary, architecture docs)
-- [ ] `move-openclaude-to-feed` and `move-github-copilot-to-feed` are both archived, in that order,
+- [x] `move-openclaude-to-feed` and `move-github-copilot-to-feed` are both archived, in that order,
   before this change is archived (Stage 0 gate)
-- [ ] Both new logos pass a human visual-contrast check on Dark and Light themes
+- [x] Both new logos pass a human visual-contrast check on Dark and Light themes
 - [x] Knowledge graph is updated
 
 ## Notes

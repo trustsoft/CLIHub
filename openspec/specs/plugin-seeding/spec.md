@@ -304,7 +304,7 @@ expose the interactive and maintenance commands that agent's CLI actually suppor
 #### Scenario: Built-in agents seeded
 
 - **WHEN** seeding runs
-- **THEN** descriptors for OpenCode, Pi, and Qwen Code are available
+- **THEN** descriptors for OpenCode, Pi, OMP, Qwen Code, and Devin are available
 
 #### Scenario: Each seeded descriptor is loadable
 
@@ -314,7 +314,7 @@ expose the interactive and maintenance commands that agent's CLI actually suppor
 #### Scenario: Complete command sets
 
 - **WHEN** the built-in descriptors are inspected
-- **THEN** OpenCode, Pi, and Qwen Code each define `launch`, `resume`, `version`, and `update`
+- **THEN** OpenCode, Pi, OMP, Qwen Code, and Devin each define `launch`, `resume`, `version`, and `update`
 
 #### Scenario: Commands match the agent CLI surface
 
