@@ -365,6 +365,9 @@ snapshot.
   `AvailabilitySummary` is still needed or remove it with its tests.
 - Trigger: the next change touching `IAgentManagementSection`, the CLI Agents page, or any
   non-XAML consumer of `AgentsState`.
+- Re-checked (2026-11-05): `settings-agents-actions-menu` added `PluginActions` on
+  `AgentManagementViewModel` only and binds it through the interface-typed `AgentsState`, so this
+  pre-existing pattern gained one more member; the evidence and trigger stand.
 
 ### Release notes requirement says "status card" but the link is on the title row
 
@@ -409,3 +412,31 @@ snapshot.
   icon duplicates adjacent text, in one pass across the windows rather than one glyph at a time.
 - Trigger: an accessibility requirement or audit, or the next change that adds icons to a
   screen-reader-facing surface.
+
+### Actions-menu entries lost the removed buttons' tooltips and accessible names
+
+- Severity: Low (accessibility and discoverability parity regression; no functional impact)
+- Evidence (2026-11-05): the four plugin-management buttons removed from the CLI Agents header by
+  `settings-agents-actions-menu` carried `ToolTip` and `AutomationProperties.Name` attributes
+  (`src/CLIHub/Views/SettingsAgentsPage.xaml`, pre-change lines 144-203). Their Actions-menu
+  replacements reuse `MenuAction` (`src/CLIHub/ViewModels/Menu/MenuAction.cs`), which has no tooltip
+  or accessible-name fields, and the new `ACTIONS` toggle carries only its `Content` text. This
+  matches the Launch window's existing Actions menus, which also expose only label text.
+- Proposed remedy: add optional `ToolTip` and accessible-name fields to `MenuAction` and bind them in
+  both views' action-entry templates, or at minimum give the toggle an
+  `AutomationProperties.Name` such as "Plugin catalog actions".
+- Trigger: an accessibility audit, or the next change touching `MenuAction` or the Actions-menu item
+  templates.
+
+### Plugin Actions popup has no explicit close on page collapse
+
+- Severity: Low (the popup closes on outside click and window teardown; only a synthetic collapse
+  while it is open could leave it visible)
+- Evidence (2026-11-05): `SettingsAgentsPage.xaml` hosts `PluginActionsPopup` with
+  `StaysOpen="False"`; `SettingsAgentsPage.xaml.cs` closes it on entry click and Escape but not on
+  `Unloaded` or `IsVisibleChanged`. The Settings host toggles pages by visibility, so navigation is
+  normally an outside click that already closes the popup; the Launch window's menus have the same
+  shape.
+- Proposed remedy: close `PluginActionsPopup` from an `Unloaded`/`IsVisibleChanged` handler if a
+  non-click page transition can collapse the page while the menu is open.
+- Trigger: a report of a stale popup after navigation, or a change to the Settings page host.

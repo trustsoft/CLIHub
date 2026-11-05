@@ -29,6 +29,9 @@
             <ResourceDictionary.MergedDictionaries>
                 <!-- Window-scoped styles: the dark theme applies to this window only. -->
                 <ResourceDictionary Source="/Themes/Common/LaunchWindowStyles.xaml"/>
+                <!-- Shared Actions-menu styles (popover, entries, header toggle), the same
+                     application-level copy Settings pages reach through SettingsStyles.xaml. -->
+                <ResourceDictionary Source="/Themes/Common/ActionsMenuStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!--

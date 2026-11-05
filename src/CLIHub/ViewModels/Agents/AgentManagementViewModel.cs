@@ -12,6 +12,7 @@ using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Lifetime;
 using CLIHub.Launching;
+using CLIHub.Theming;
 
 /// <summary>
 ///   Owns the CLI Agents management surface: one card per agent, the supported/installed counts,
@@ -111,6 +112,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.BrowsePluginsCommand = new RelayCommand(this.BrowsePlugins, this.CanBrowsePlugins);
         this.OpenPluginsFolderCommand = new RelayCommand(this.OpenPluginsFolder);
         this.ReloadCatalogCommand = new RelayCommand(this.ReloadCatalog);
+        this.PluginActions =
+        [
+            new MenuAction { Label = "Install Plugin…", Glyph = IconGlyphs.Add, Command = this.InstallPluginCommand },
+            new MenuAction { Label = "Browse Plugins…", Glyph = IconGlyphs.Search, Command = this.BrowsePluginsCommand },
+            new MenuAction { Label = "Open Plugins Folder", Glyph = IconGlyphs.FolderOpen, Command = this.OpenPluginsFolderCommand },
+            new MenuAction { Label = "Reload Catalog", Glyph = IconGlyphs.SyncFolder, Command = this.ReloadCatalogCommand }
+        ];
     }
 
     /// <inheritdoc />
@@ -296,6 +304,15 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     ///   Reloads the plugin catalog without restarting the application.
     /// </summary>
     public RelayCommand ReloadCatalogCommand { get; }
+
+    /// <summary>
+    ///   The plugin-catalog entries of the AGENTS header's Actions menu: install a plugin from a
+    ///   package, browse the remote feed, open the plugins folder, and reload the catalog, in that
+    ///   order. Mirrors the launch window's data-driven pane Actions menus; each entry's command is
+    ///   the corresponding standalone command, so an entry is enabled exactly when its command can
+    ///   execute.
+    /// </summary>
+    public IReadOnlyList<MenuAction> PluginActions { get; }
 
     /// <inheritdoc />
     public bool IsDetecting

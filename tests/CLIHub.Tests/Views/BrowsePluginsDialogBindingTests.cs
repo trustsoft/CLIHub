@@ -3,14 +3,16 @@ namespace CLIHub.Tests.Views;
 using static CLIHub.Tests.Support.TestHelpers;
 
 /// <summary>
-///   Guards the Browse Plugins dialog wiring: the CLI Agents page entry point
-///   (<c>BrowsePluginsCommand</c>) and the per-row action/status/homepage bindings, closing the
-///   gap where the ViewModel was tested before the UI was wired.
+///   Guards the Browse Plugins dialog wiring: the CLI Agents page entry point (the plugin
+/// Actions menu fed by <c>PluginActions</c>, whose Browse entry carries
+/// <c>BrowsePluginsCommand</c> per AgentManagementViewModelTests.PluginActions) and the per-row
+/// action/status/homepage bindings, closing the gap where the ViewModel was tested before the UI
+/// was wired.
 /// </summary>
 public sealed class BrowsePluginsDialogBindingTests
 {
     [Fact]
-    public void SettingsAgentsPage_BindsBrowsePluginsCommand()
+    public void SettingsAgentsPage_BindsPluginActionsMenu()
     {
         var root = FindRepositoryRoot();
         var pagePath = Path.Combine(root, "src", "CLIHub", "Views", "SettingsAgentsPage.xaml");
@@ -18,7 +20,13 @@ public sealed class BrowsePluginsDialogBindingTests
 
         var content = File.ReadAllText(pagePath);
 
-        Assert.Contains("Command=\"{Binding AgentsState.BrowsePluginsCommand}\"", content);
+        // The Browse Plugins entry point is an entry of the data-driven Actions menu: the menu is
+        // fed by PluginActions, each entry button binds the entry's Command through the shared
+        // entry style, and a click closes the menu after the command runs.
+        Assert.Contains("ItemsSource=\"{Binding AgentsState.PluginActions}\"", content);
+        Assert.Contains("Style=\"{StaticResource ActionsMenuEntryButton}\"", content);
+        Assert.Contains("Command=\"{Binding Command}\"", content);
+        Assert.Contains("Click=\"OnMenuActionInvoked\"", content);
     }
 
     [Fact]

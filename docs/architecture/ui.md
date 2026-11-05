@@ -11,7 +11,7 @@ theming.
 
 ## XAML Themes and Styles Recipe
 
-Layering, in merge order: `Common/Sizing.xaml` (metrics, font and radius tokens) → `Common/Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `Common/PickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `Common/SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `Common/SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `Common/PickerData.xaml`, then `Common/SettingsControls.xaml`) → per-window dictionaries (`Common/LaunchWindowStyles.xaml`, `Common/WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Common/SlimScrollBar.xaml` (implicit `ScrollBar`), `Common/SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
+Layering, in merge order: `Common/Sizing.xaml` (metrics, font and radius tokens) → `Common/Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `Common/PickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `Common/SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `Common/SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `Common/PickerData.xaml`, then `Common/SettingsControls.xaml`) → `Common/ActionsMenuStyles.xaml` (the shared Actions-menu popover, entry, and header-toggle styles; merges `Controls.xaml`, and is merged both by `SettingsStyles.xaml` at application level — so Settings page `UserControl`s reach it — and by `LaunchWindow.xaml` window-scoped) and per-window dictionaries (`Common/LaunchWindowStyles.xaml`, `Common/WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Common/SlimScrollBar.xaml` (implicit `ScrollBar`), `Common/SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
 
 The application-level merge tree is therefore exactly:
 
@@ -24,8 +24,10 @@ App.xaml
    │  └─ Common/Sizing.xaml   Sizing.* tokens
    ├─ Common/PickerData.xaml  ThemePreview*Brush + ThemeOption*/AccentOption* styles
    │  └─ Common/Sizing.xaml
-   └─ Common/SettingsControls.xaml input/control templates + NumericField implicit style
-      └─ Common/Sizing.xaml
+   ├─ Common/SettingsControls.xaml input/control templates + NumericField implicit style
+   │  └─ Common/Sizing.xaml
+   └─ Common/ActionsMenuStyles.xaml shared Actions-menu styles (also merged window-scoped by LaunchWindow.xaml)
+      └─ Common/Controls.xaml
 ```
 
 `SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, and `SettingsStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `PickerData`, and `SettingsControls` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
