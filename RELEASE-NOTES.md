@@ -3,6 +3,18 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.0 — 2026-11-05
+
+### New
+
+- Install agent plugins from local `.clihub-plugin.zip` packages on the CLI Agents page. Installed plugins can be disabled, re-enabled, reloaded, and inspected by origin.
+- Browse a curated plugin feed from CLI Agents, with checksum-verified downloads, update detection, and a minimum-version gate.
+
+### Improved
+
+- Built-in agent descriptors and logos refresh on application updates without overwriting your edits; disabled built-ins stay disabled.
+- Cline CLI is now distributed through the curated plugin feed. Existing installations keep their Cline plugin; new installations install it from Browse Plugins.
+
 ## 1.0.6 — 2026-11-03
 
 ### New

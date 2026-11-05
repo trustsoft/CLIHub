@@ -8,6 +8,22 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.1.0 - 2026-11-05
+
+### Added
+
+- Plugin installation from local `.clihub-plugin.zip` packages: structural validation, staging, atomic install with backup/rollback, SHA-256 lifecycle state, disable/enable, origin badges, and manual catalog reload (`installable-plugins`, `plugin-installation`).
+- Curated HTTPS plugin feed: remote index, package downloads verified by SHA-256, Browse Plugins dialog, update detection, `minAppVersion` gating, and a `PluginFeedUrl` preference (`plugin-feed`).
+
+### Changed
+
+- Built-in seeding now refreshes unmodified descriptors and logos on application updates while preserving user edits and disabled state (`installable-plugins`, `plugin-seeding`).
+- Cline CLI moved from the embedded built-in set to the curated feed. Existing `origin=builtin` installations keep their files and state; new installations install Cline from Browse Plugins (`move-cline-to-feed`, `plugin-seeding`).
+
+### Removed
+
+- The embedded `SeedPlugins/cline-cli` descriptor and logo (`move-cline-to-feed`).
+
 ## 1.0.6 - 2026-11-03
 
 ### Added
