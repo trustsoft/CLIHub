@@ -39,10 +39,11 @@ plugin API to change the host model (`ctx.ui.model` exposes `current()` and
   | Full | Shown | |
   | --- | --- | --- |
   | `planner` | `pln` | roles: `pln` `imp` `ver` `exp` `res` `mch` |
-  | `zai-coding-plan` | `za` | providers: `za` `rf` `ds` `oc` |
-  | `relayfast` | `rf` | `ds` is `deepseek`, `oc` is `opencode` |
+  | `zai-coding-plan` | `za` | providers: `za` `rf` `ds` `oc` `lm` |
+  | `relayfast` | `rf` | `ds` is `deepseek`, `oc` is `opencode`, `lm` is `lmstudio` |
   | `opencode/glm-5.3-flash-free` | `oc/glm-5.3-flash` | the `-free` suffix is dropped |
   | `relayfast/claude-sonnet-5` | `rf/cl-sonnet-5` | the vendor word is shortened |
+  | `lmstudio/qwen/qwen3-coder-next` | `lm/q3-coder-next` | the vendor word is shortened too |
   | `#high` | `#h` | effort: `n` `i` `l` `m` `h` `x` `M` |
 
   These abbreviations are **read from the versioned policy and nowhere else**
@@ -56,7 +57,8 @@ plugin API to change the host model (`ctx.ui.model` exposes `current()` and
   writes the policy or the runtime document.
 
   Model names keep the version and the tier; only the vendor word is
-  shortened (`cl` claude, `ds` deepseek, `mm` minimax, `nemo` nemotron).
+  shortened (`cl` claude, `ds` deepseek, `mm` minimax, `nemo` nemotron,
+  `q3` qwen).
 
   The full model id is always kept in the data and in dialog values. The
   `/policy` details dialog shows the full ids and also prints the legend

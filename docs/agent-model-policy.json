@@ -10,7 +10,8 @@
       "relayfast": "rf",
       "relay.fast": "rf",
       "deepseek": "ds",
-      "opencode": "oc"
+      "opencode": "oc",
+      "lmstudio": "lm"
     },
     "models": {
       "claude-sonnet-5": "cl-sonnet-5",
@@ -19,7 +20,12 @@
       "deepseek-v4.1-flash": "ds-v4.1-flash",
       "deepseek-flash": "ds-flash",
       "minimax-m3.1-flash": "mm-m3.1-flash",
-      "nemotron-3.5-super-vl": "nemo-3.5-svl"
+      "nemotron-3.5-super-vl": "nemo-3.5-svl",
+      "qwen/qwen3-coder-next": "q3-coder-next",
+      "qwen/qwen3-coder-30b": "q3-coder-30b",
+      "qwen/qwen3.8-27b": "q3.8-27b",
+      "qwen/qwen3.6-35b-a3b": "q3.6-35b-a3b",
+      "zai-org/glm-4.7-flash": "glm-4.7-flash"
     },
     "variants": {
       "none": "n",
@@ -67,9 +73,15 @@
     "opencode/big-pickle": { "billing": "free", "tier": "low", "variants": [] },
     "opencode/longcat-2.5-preview-free": { "billing": "free", "tier": "low", "variants": [] },
     "opencode/beam-free": { "billing": "free", "tier": "low", "variants": ["low", "medium", "high", "xhigh", "max"] },
-    "opencode/nemotron-3.5-super-vl-free": { "billing": "free", "tier": "low", "variants": ["none", "minimal", "low", "medium", "high", "xhigh"] }
+    "opencode/nemotron-3.5-super-vl-free": { "billing": "free", "tier": "low", "variants": ["none", "minimal", "low", "medium", "high", "xhigh"] },
+    "lmstudio/qwen/qwen3-coder-next": { "billing": "local", "tier": "high", "variants": [] },
+    "lmstudio/qwen/qwen3.8-27b": { "billing": "local", "tier": "medium", "variants": [] },
+    "lmstudio/qwen/qwen3-coder-30b": { "billing": "local", "tier": "medium", "variants": [] },
+    "lmstudio/qwen/qwen3.6-35b-a3b": { "billing": "local", "tier": "medium", "variants": [] },
+    "lmstudio/zai-org/glm-4.7-flash": { "billing": "local", "tier": "medium", "variants": [] }
   },
   "_free_rule": "A model is free when its name contains 'free'/'Free' (usually a suffix), or it is opencode/big-pickle. The relay.fast catalogue is larger than what is listed; add entries when a chain needs one.",
+  "_local_rule": "billing 'local' means the lmstudio provider: LM Studio on the LAN GPU host (http://100.124.7.76:1234). OpenCode discovers those models itself, so the catalogue only has to name them; there is no metering, the cost is the host being up and the first request paying the model load. LM Studio exposes reasoning as on/off, not as OpenCode variants, so those entries declare no variants and never resolve a '#effort'. Tiers are a capability judgement, not a benchmark.",
   "presets": {
     "default": {
       "planner": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
@@ -102,6 +114,14 @@
       "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"],
       "research": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash"],
       "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
+    },
+    "local_first": {
+      "planner": ["lmstudio/qwen/qwen3-coder-next", "lmstudio/qwen/qwen3.8-27b", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5"],
+      "implementer": ["lmstudio/qwen/qwen3-coder-next", "lmstudio/qwen/qwen3-coder-30b", "lmstudio/qwen/qwen3.6-35b-a3b", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5"],
+      "verifier": ["lmstudio/qwen/qwen3-coder-next", "lmstudio/qwen/qwen3.8-27b", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5"],
+      "explorer": ["lmstudio/zai-org/glm-4.7-flash", "lmstudio/qwen/qwen3-coder-30b", "lmstudio/qwen/qwen3.6-35b-a3b", "zai-coding-plan/glm-5.3-flash"],
+      "research": ["lmstudio/qwen/qwen3.8-27b", "lmstudio/qwen/qwen3.6-35b-a3b", "lmstudio/zai-org/glm-4.7-flash", "zai-coding-plan/glm-5.3-flash"],
+      "mechanical": ["lmstudio/zai-org/glm-4.7-flash", "lmstudio/qwen/qwen3-coder-30b", "zai-coding-plan/glm-5.3-flash"]
     }
   },
   "overrides": []

@@ -29,7 +29,9 @@ not silently drop to `low`. A chain entry may pin a specific variant inline as `
 Models differ widely: `zai-coding-plan/glm-5.3` offers `low/high/max` (no `medium`), `relayfast/
 claude-haiku-4-5` offers only `high/max`, `relayfast/deepseek-v4-pro` has no `max`, and the free
 `longcat-2.5-preview-free`, `mimo-v2.6-flash-free`, and `big-pickle` accept no variant at all. The
-resolver omits the `#variant` suffix when a model cannot take one.
+`lmstudio` models take no variant either: LM Studio exposes reasoning as an on/off switch, not as
+OpenCode variants, so the resolver emits their bare ids. The resolver omits the `#variant` suffix
+when a model cannot take one.
 
 **Cost note:** a higher effort consumes more tokens, so on a metered plan it burns the quota faster.
 The exhaustion logic does not yet weight usage by effort; treat `max` on a plan model as a
@@ -45,9 +47,15 @@ verifier on a weaker model — a nominal verification is worse than no verificat
 
 ## Presets
 
-`default`, `plan_exhausted`, `free_only`, `flash_only` — each maps every role to an ordered fallback
-chain. Switch with `active_preset` (sidebar or by editing the runtime file), or schedule a switch with
-an `overrides` window in the policy JSON (`valid_from` / `valid_until`).
+`default`, `plan_exhausted`, `free_only`, `flash_only`, `local_first` — each maps every role to an
+ordered fallback chain. Switch with `active_preset` (sidebar or by editing the runtime file), or
+schedule a switch with an `overrides` window in the policy JSON (`valid_from` / `valid_until`).
+
+`local_first` puts the LM Studio models of the LAN GPU host ahead of every metered model and keeps
+the plan/paid chains as its tail, so a dispatch runs locally when the host answers and degrades to
+the cloud only when it does not. The host is not a guaranteed dependency: if it is down, the local
+entries exhaust one after another and the chain reaches `zai-coding-plan`/`relayfast` exactly like
+the `default` preset.
 
 ## Billing modes
 
@@ -56,6 +64,16 @@ an `overrides` window in the policy JSON (`valid_from` / `valid_until`).
 | `plan` | `zai-coding-plan` | subscription; shared 5-hour + weekly limits — can be exhausted mid-session |
 | `paid` | `relay.fast` (`relayfast`), `deepseek` | pay-per-token; no subscription limit |
 | `free` | models whose name contains `free`/`Free`, plus `opencode/big-pickle` | quota-limited (typically daily) |
+| `local` | `lmstudio` | LM Studio on the LAN GPU host; unmetered, but only while the host is up — the first request after an idle period pays the model load |
+
+### Local models (`lmstudio`)
+
+OpenCode discovers an LM Studio server's models itself, so the policy only has to name the ones a
+chain may dispatch to. The endpoint lives in the OpenCode provider config
+(`providers.lmstudio.settings.baseURL` in `~/.config/opencode/opencode.jsonc`, currently
+`http://100.124.7.76:1234/v1`), not in this policy: if the host moves, only that config changes and
+the policy ids stay valid. Putting another local model into a chain takes two edits — a catalogue
+entry and the chain that names it.
 
 ## Runtime file (`.opencode/model-policy.json`)
 
@@ -111,8 +129,8 @@ resolved, logged, and written.
 
 ```json
 "display": {
-  "providers": { "zai-coding-plan": "za", "relayfast": "rf", "deepseek": "ds", "opencode": "oc" },
-  "models": { "claude-sonnet-5": "cl-sonnet-5", "deepseek-v4.1-flash": "ds-v4.1-flash" },
+  "providers": { "zai-coding-plan": "za", "relayfast": "rf", "deepseek": "ds", "opencode": "oc", "lmstudio": "lm" },
+  "models": { "claude-sonnet-5": "cl-sonnet-5", "deepseek-v4.1-flash": "ds-v4.1-flash", "qwen/qwen3-coder-next": "q3-coder-next" },
   "variants": { "none": "n", "minimal": "i", "low": "l", "medium": "m", "high": "h", "xhigh": "x", "max": "M" },
   "roles": { "planner": "pln", "implementer": "imp", "verifier": "ver", "explorer": "exp", "research": "res", "mechanical": "mch" },
   "drop_free_suffix_for": ["opencode"]
@@ -122,7 +140,7 @@ resolved, logged, and written.
 | Table | Key | Value |
 |---|---|---|
 | `providers` | the provider id | its short code (`zai-coding-plan` → `za`) |
-| `models` | the model name without the provider | its short form; only the vendor word is shortened, the version and tier stay verbatim |
+| `models` | the model name without the provider | its short form; only the vendor word is shortened, the version and tier stay verbatim (`qwen/qwen3-coder-next` → `q3-coder-next`, so the id renders as `lm/q3-coder-next`) |
 | `variants` | the reasoning effort | one letter (`M` is max, `m` is medium, `i` is minimal, `l` is low) |
 | `roles` | the role name | its code in the narrow role column |
 | `drop_free_suffix_for` | a provider id | its `-free` model suffix is dropped, because every model of that provider is a free one |

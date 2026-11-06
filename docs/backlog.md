@@ -345,6 +345,21 @@ snapshot.
   agent.
 - Trigger: the next spec change to `plugin-seeding`, or a documentation review.
 
+### Local LM Studio models carry no reasoning-effort variant
+
+- Severity: Low (dispatch works; only effort control is missing for the local preset)
+- Evidence (2026-11-06): OpenCode's LM Studio discovery reports no `variants` for the five
+  `lmstudio/*` models (`opencode api get /api/model` lists them with an empty `variants` array),
+  although LM Studio itself exposes reasoning as `capabilities.reasoning.allowed_options`
+  `["off","on"]` in `GET /api/v1/models`. With `variants: []` in
+  `docs/agent-model-policy.json`, the resolver always emits a bare id, so a `local_first` dispatch
+  cannot pin thinking off (cheaper/faster) or on (deeper) the way the hosted chains do.
+- Proposed remedy: map the LM Studio reasoning switch onto the OpenCode variant vocabulary once the
+  provider package exposes it (likely `none`/`high`); until then the policy keeps `variants: []` and
+  the limitation is documented in the catalogue note and `docs/agent-model-policy.md`.
+- Trigger: a provider-package release that surfaces LM Studio reasoning as variants, or the first
+  local dispatch that needs thinking pinned off.
+
 ## UI and theming
 
 ### Settings-page registration lives in two places
