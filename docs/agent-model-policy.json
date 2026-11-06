@@ -84,12 +84,12 @@
   "_local_rule": "billing 'local' means the lmstudio provider: LM Studio on the LAN GPU host (http://100.124.7.76:1234). OpenCode discovers those models itself, so the catalogue only has to name them; there is no metering, the cost is the host being up and the first request paying the model load. LM Studio exposes reasoning as on/off, not as OpenCode variants, so those entries declare no variants and never resolve a '#effort'. Tiers are a capability judgement, not a benchmark.",
   "presets": {
     "default": {
-      "planner": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
-      "implementer": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "zai-coding-plan/glm-5.3-flash"],
-      "verifier": ["zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
-      "explorer": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
-      "research": ["zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash", "opencode/glm-5.3-flash-free"],
-      "mechanical": ["zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
+      "planner": ["relayfast/claude-sonnet-5", "zai-coding-plan/glm-5.3", "relayfast/deepseek-v4-pro"],
+      "implementer": ["zai-coding-plan/glm-5.3-flash", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
+      "verifier": ["deepseek/deepseek-v4-pro", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5"],
+      "explorer": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
+      "research": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash", "opencode/glm-5.3-flash-free"],
+      "mechanical": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
     },
     "plan_exhausted": {
       "planner": ["relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro", "deepseek/deepseek-v4-pro"],
