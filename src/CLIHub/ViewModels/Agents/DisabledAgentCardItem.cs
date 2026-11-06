@@ -45,15 +45,33 @@ public sealed class DisabledAgentCardItem
     public string? Version { get; }
 
     /// <summary>
-    ///   The origin badge text: "Built-in", "Installed", or "Unknown" (plugins without a state
-    ///   entry are unknown-origin).
+    ///   The agent name's tooltip: the recorded origin as a labelled line ("Origin: Built-in",
+    ///   "Origin: Installed", or "Origin: Unknown" — plugins without a state entry are
+    ///   unknown-origin), followed by the plugin's declared version when known. No publisher
+    ///   or homepage lines: the descriptor is not loaded for disabled plugins.
     /// </summary>
-    public string OriginBadgeText => this.Origin switch
+    public string IdentityTooltip
     {
-        PluginOrigin.Builtin => "Built-in",
-        PluginOrigin.Installed => "Installed",
-        _ => "Unknown"
-    };
+        get
+        {
+            var lines = new List<string>
+            {
+                $"Origin: {this.Origin switch
+                {
+                    PluginOrigin.Builtin => "Built-in",
+                    PluginOrigin.Installed => "Installed",
+                    _ => "Unknown"
+                }}"
+            };
+
+            if (this.Version is { } version)
+            {
+                lines.Add($"Version: {version}");
+            }
+
+            return string.Join("\n", lines);
+        }
+    }
 
     /// <summary> The version chip text, or "Unknown version" when the version is not known. </summary>
     public string VersionChipText => this.Version is { } version ? $"v{version}" : "Unknown version";

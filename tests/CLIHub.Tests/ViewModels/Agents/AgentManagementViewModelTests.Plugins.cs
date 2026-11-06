@@ -199,10 +199,10 @@ public partial class AgentManagementViewModelTests
         Assert.Equal(2, viewModel.DisabledCards.Count);
         Assert.True(viewModel.HasDisabledPlugins);
         var installed = viewModel.DisabledCards.Single(c => c.PluginId == "installed-one");
-        Assert.Equal("Installed", installed.OriginBadgeText);
+        Assert.StartsWith("Origin: Installed", installed.IdentityTooltip, StringComparison.Ordinal);
         Assert.Equal("v1.0.0", installed.VersionChipText);
         var unknown = viewModel.DisabledCards.Single(c => c.PluginId == "unknown-one");
-        Assert.Equal("Unknown", unknown.OriginBadgeText);
+        Assert.StartsWith("Origin: Unknown", unknown.IdentityTooltip, StringComparison.Ordinal);
         Assert.Equal("Unknown version", unknown.VersionChipText);
     }
 
@@ -222,7 +222,7 @@ public partial class AgentManagementViewModelTests
     }
 
     [Fact]
-    public void Load_WithOriginsFromState_PopulatesOriginBadgesAndCatalogSummary()
+    public void Load_WithOriginsFromState_PopulatesOriginDataAndCatalogSummary()
     {
         var state = new InMemoryPluginStateRepository();
         state.Document.Plugins["a"] = new PluginStateEntry(PluginOrigin.Builtin);
@@ -239,14 +239,14 @@ public partial class AgentManagementViewModelTests
         Assert.Equal(PluginOrigin.Builtin, viewModel.Cards.Single(c => c.PluginId == "a").Origin);
         Assert.Equal(PluginOrigin.Installed, viewModel.Cards.Single(c => c.PluginId == "b").Origin);
         Assert.Equal("1.2.0", viewModel.Cards.Single(c => c.PluginId == "b").InstalledVersion);
-        Assert.Equal("Built-in", viewModel.Cards.Single(c => c.PluginId == "a").OriginBadgeText);
-        Assert.Equal("Installed", viewModel.Cards.Single(c => c.PluginId == "b").OriginBadgeText);
-        Assert.Equal("Unknown", viewModel.Cards.Single(c => c.PluginId == "c").OriginBadgeText);
+        Assert.StartsWith("Origin: Built-in", viewModel.Cards.Single(c => c.PluginId == "a").IdentityTooltip, StringComparison.Ordinal);
+        Assert.StartsWith("Origin: Installed", viewModel.Cards.Single(c => c.PluginId == "b").IdentityTooltip, StringComparison.Ordinal);
+        Assert.StartsWith("Origin: Unknown", viewModel.Cards.Single(c => c.PluginId == "c").IdentityTooltip, StringComparison.Ordinal);
         Assert.Equal("1 built-in · 1 installed · 1 unknown", viewModel.PluginCatalogSummary);
     }
 
     [Fact]
-    public void Load_OriginBadgeTooltip_ListsDescriptorMetadataWhenDeclared()
+    public void Load_IdentityTooltip_ListsOriginAndDescriptorMetadataWhenDeclared()
     {
         var plugin = Launchable("a");
         plugin.Version = "1.2.0";
@@ -263,14 +263,15 @@ public partial class AgentManagementViewModelTests
 
         viewModel.Load(null);
 
-        var tooltip = viewModel.Cards.Single(c => c.PluginId == "a").OriginBadgeTooltip;
+        var tooltip = viewModel.Cards.Single(c => c.PluginId == "a").IdentityTooltip;
+        Assert.Contains("Origin: Installed", tooltip, StringComparison.Ordinal);
         Assert.Contains("Version: 1.2.0", tooltip, StringComparison.Ordinal);
         Assert.Contains("Publisher: Community", tooltip, StringComparison.Ordinal);
         Assert.Contains("Homepage: https://example.com/a", tooltip, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Load_OriginBadgeTooltip_FallsBackToBadgeTextWithoutMetadata()
+    public void Load_IdentityTooltip_ShowsOriginLabelWhenNoMetadataDeclared()
     {
         var viewModel = new AgentManagementViewModelBuilder()
             .WithPlugins([Launchable("a")])
@@ -281,7 +282,7 @@ public partial class AgentManagementViewModelTests
         viewModel.Load(null);
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
-        Assert.Equal(card.OriginBadgeText, card.OriginBadgeTooltip);
+        Assert.Equal("Origin: Unknown", card.IdentityTooltip);
     }
 
     [Fact]

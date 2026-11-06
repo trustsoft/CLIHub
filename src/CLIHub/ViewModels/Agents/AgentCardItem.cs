@@ -318,33 +318,41 @@ public sealed class AgentCardItem : ObservableObject
     }
 
     /// <summary>
-    ///   The origin badge text: "Built-in", "Installed", or "Unknown" (plugins without a state
-    ///   entry are unknown-origin).
+    ///   The agent name's tooltip: the recorded origin as a labelled line ("Origin: Built-in",
+    ///   "Origin: Installed", or "Origin: Unknown" — plugins without a state entry are
+    ///   unknown-origin), followed by the descriptor's version, publisher, and homepage as
+    ///   labelled lines when declared.
     /// </summary>
-    public string OriginBadgeText => this.Origin switch
-    {
-        PluginOrigin.Builtin => "Built-in",
-        PluginOrigin.Installed => "Installed",
-        _ => "Unknown"
-    };
-
-    /// <summary>
-    ///   The origin badge tooltip: the plugin's version, publisher, and homepage as declared
-    ///   in the descriptor, when available.
-    /// </summary>
-    public string OriginBadgeTooltip
+    public string IdentityTooltip
     {
         get
         {
-            var lines = new List<string?>
+            var lines = new List<string>
             {
-                this.Plugin.Version is { } version ? $"Version: {version}" : null,
-                this.Plugin.Publisher is { } publisher ? $"Publisher: {publisher}" : null,
-                this.Plugin.Homepage is { } homepage ? $"Homepage: {homepage}" : null
+                $"Origin: {this.Origin switch
+                {
+                    PluginOrigin.Builtin => "Built-in",
+                    PluginOrigin.Installed => "Installed",
+                    _ => "Unknown"
+                }}"
             };
 
-            var tooltip = string.Join("\n", lines.Where(line => line is not null));
-            return tooltip.Length == 0 ? this.OriginBadgeText : tooltip;
+            if (this.Plugin.Version is { } version)
+            {
+                lines.Add($"Version: {version}");
+            }
+
+            if (this.Plugin.Publisher is { } publisher)
+            {
+                lines.Add($"Publisher: {publisher}");
+            }
+
+            if (this.Plugin.Homepage is { } homepage)
+            {
+                lines.Add($"Homepage: {homepage}");
+            }
+
+            return string.Join("\n", lines);
         }
     }
 
