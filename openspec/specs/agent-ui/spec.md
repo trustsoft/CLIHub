@@ -218,7 +218,7 @@ THEN all agent-specific commands SHALL be disabled
 
 ### Requirement: Agent card displayed content
 
-An agent's management card SHALL present its declared identity and current state: display name, logo, a state chip next to the name that shows the installed version when the agent is installed with a resolved version, an "Installed" state when it is installed without one, a "Not installed" state when it is missing, or a "Detecting…" state while the card's installation state is being probed, and the declared command set listed after a "Supported commands" label. The state chip text SHALL be derived from the card's installation state, never from version placeholder text; the "Not installed" state SHALL keep its danger styling, and the "Detecting…" state SHALL use the chip's default styling. The card SHALL NOT present the plugin folder path or the declared detection markers. When an update is known to be available, the card SHALL render the advisory update chip in the state chip's position (immediately after the name, before the origin badge) with the installed and latest versions, and SHALL NOT render the state chip while the update chip is shown. When availability is unknown or the agent is up to date, the card SHALL show the state chip in that position and SHALL NOT show an update indicator, and a probe that reports the agent not installed on the host SHALL clear any update indicator the card was showing and SHALL show the state chip again. The update indicator SHALL NOT alter the Update action's availability.
+An agent's management card SHALL present its declared identity and current state: display name, logo, a state chip next to the name that shows the installed version when the agent is installed with a resolved version, an "Installed" state when it is installed without one, a "Not installed" state when it is missing, or a "Detecting…" state while the card's installation state is being probed, and the declared command set listed after a "Supported commands" label. The state chip text SHALL be derived from the card's installation state, never from version placeholder text; the "Not installed" state SHALL keep its danger styling, and the "Detecting…" state SHALL use the chip's default styling. The card SHALL NOT present the plugin folder path or the declared detection markers, and SHALL NOT render a separate origin badge. The agent name's tooltip SHALL present the recorded origin (one of "Built-in", "Installed", or "Unknown") as a labelled line, followed by the descriptor's version, publisher, and homepage as labelled lines when declared. When an update is known to be available, the card SHALL render the advisory update chip in the state chip's position (immediately after the name) with the installed and latest versions, and SHALL NOT render the state chip while the update chip is shown. When availability is unknown or the agent is up to date, the card SHALL show the state chip in that position and SHALL NOT show an update indicator, and a probe that reports the agent not installed on the host SHALL clear any update indicator the card was showing and SHALL show the state chip again. The update indicator SHALL NOT alter the Update action's availability.
 
 #### Scenario: Identity shown
 
@@ -256,7 +256,7 @@ An agent's management card SHALL present its declared identity and current state
 #### Scenario: Update available indicator shown
 
 - **WHEN** an installed agent's card is shown and availability is `UpdateAvailable` with installed version `2.0.32` and latest version `2.0.33`
-- **THEN** the card shows `2.0.32 → 2.0.33` in place of the state chip, in the state chip's position before the origin badge
+- **THEN** the card shows `2.0.32 → 2.0.33` in place of the state chip, immediately after the name
 - **AND** the state chip is not shown
 
 #### Scenario: No indicator when availability is unknown
@@ -293,7 +293,14 @@ An agent's management card SHALL present its declared identity and current state
 
 - **WHEN** a card is showing the update chip in place of the state chip and a later check settles availability to `UpToDate` or `Unknown`
 - **THEN** the update chip is no longer shown
-- **AND** the state chip is shown again, in its usual position before the origin badge, reflecting the card's current installation state
+- **AND** the state chip is shown again, in its usual position immediately after the name, reflecting the card's current installation state
+
+#### Scenario: Agent identity shown in name tooltip
+
+- **WHEN** an agent card's name is hovered
+- **THEN** the tooltip shows the recorded origin as "Origin: Built-in", "Origin: Installed", or "Origin: Unknown"
+- **AND** when the descriptor declares a version, publisher, or homepage, each is shown as an additional labelled line ("Version: …", "Publisher: …", "Homepage: …")
+- **AND** no separate origin badge is rendered on the card
 
 ### Requirement: Default agent selector reflects installation state
 

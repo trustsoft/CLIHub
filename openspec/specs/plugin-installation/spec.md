@@ -189,30 +189,6 @@ The system SHALL allow users to disable plugins (preventing load and launch) and
 - **THEN** the plugin directory and its files remain on disk
 - **AND** the plugin can be re-enabled without re-installation
 
-### Requirement: Plugin origin display
-
-The system SHALL display the origin of each plugin in the CLI Agents UI.
-
-#### Scenario: Built-in badge displayed
-
-- **WHEN** a plugin has origin = "builtin" in the state file
-- **THEN** the UI displays a "Built-in" badge on the plugin card
-
-#### Scenario: Installed badge displayed
-
-- **WHEN** a plugin has origin = "installed" in the state file
-- **THEN** the UI displays an "Installed" badge on the plugin card
-
-#### Scenario: Unknown badge displayed
-
-- **WHEN** a plugin has origin = "unknown" in the state file (no recognized origin)
-- **THEN** the UI displays an "Unknown" badge (neutral styling) on the plugin card
-
-#### Scenario: Origin tooltip shows metadata
-
-- **WHEN** a user hovers over an origin badge
-- **THEN** a tooltip displays the plugin's version, publisher, and homepage (if available)
-
 ### Requirement: Open plugins folder
 
 The system SHALL provide a command to open the plugins directory in Windows Explorer.
