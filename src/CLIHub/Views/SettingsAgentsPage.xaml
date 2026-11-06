@@ -16,6 +16,9 @@
                     <Setter Property="Background" Value="Transparent"/>
                     <Setter Property="BorderBrush" Value="{DynamicResource DangerBrush}"/>
                 </DataTrigger>
+                <DataTrigger Binding="{Binding HasUpdateAvailable}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
 
@@ -249,6 +252,14 @@
                                                Foreground="{DynamicResource TextPrimaryBrush}"
                                                Text="{Binding Name}"/>
                                     <Border Margin="8,0,0,0"
+                                            AutomationProperties.Name="Update available"
+                                            Style="{StaticResource AgentUpdateChip}"
+                                            ToolTip="Newer version available"
+                                            Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Style="{StaticResource AgentUpdateChipText}"
+                                                   Text="{Binding UpdateAvailabilityText}"/>
+                                    </Border>
+                                    <Border Margin="8,0,0,0"
                                             Style="{StaticResource AgentStateChip}">
                                         <TextBlock Style="{StaticResource AgentStateChipText}"
                                                    Text="{Binding VersionChipText}"/>
@@ -259,14 +270,6 @@
                                             ToolTip="{Binding OriginBadgeTooltip}">
                                         <TextBlock Style="{StaticResource AgentOriginChipText}"
                                                    Text="{Binding OriginBadgeText}"/>
-                                    </Border>
-                                    <Border Margin="8,0,0,0"
-                                            AutomationProperties.Name="Update available"
-                                            Style="{StaticResource AgentUpdateChip}"
-                                            ToolTip="Newer version available"
-                                            Visibility="{Binding HasUpdateAvailable, Converter={StaticResource BoolToVisibility}}">
-                                        <TextBlock Style="{StaticResource AgentUpdateChipText}"
-                                                   Text="{Binding UpdateAvailabilityText}"/>
                                     </Border>
                                 </StackPanel>
                                 <TextBlock Margin="0,3,0,0"

@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-11-06
+goal: "When an agent has an update available, show the update chip in the version/state chip's slot instead of both chips side by side"
