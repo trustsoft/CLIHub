@@ -1,6 +1,8 @@
 namespace CLIHub.Controls;
 
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 
 /// <summary>
@@ -214,5 +216,96 @@ public sealed class SummaryCard : Control
     {
         get => (string?)this.GetValue(BadgeCountProperty);
         set => this.SetValue(BadgeCountProperty, value);
+    }
+
+    /// <inheritdoc />
+    protected override AutomationPeer OnCreateAutomationPeer() => new SummaryCardAutomationPeer(this);
+
+    /// <summary>
+    ///   Exposes a <see cref="SummaryCard" /> to UI Automation as a named group so screen readers
+    ///   announce the card's label, value, detail, and badge status without requiring keyboard
+    ///   focus on the card.
+    /// </summary>
+    private sealed class SummaryCardAutomationPeer : FrameworkElementAutomationPeer
+    {
+        /// <summary>
+        ///   Initializes a new instance of the <see cref="SummaryCardAutomationPeer" /> class.
+        /// </summary>
+        /// <param name="owner"> The summary card this peer exposes. </param>
+        public SummaryCardAutomationPeer(SummaryCard owner)
+            : base(owner)
+        {
+        }
+
+        /// <summary> Returns the card's UI Automation class name. </summary>
+        /// <returns> The class name "SummaryCard". </returns>
+        protected override string GetClassNameCore() => "SummaryCard";
+
+        /// <summary> Returns the card's UI Automation control type. </summary>
+        /// <returns>
+        ///   <see cref="AutomationControlType.Group" />, because a summary card is a labelled
+        ///   grouping of related content rather than a plain text run.
+        /// </returns>
+        protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.Group;
+
+        /// <summary> Places the card in the UI Automation control view. </summary>
+        /// <returns>
+        ///   <see langword="true" />, so structural navigation and screen readers reach the card.
+        /// </returns>
+        protected override bool IsControlElementCore() => true;
+
+        /// <summary> Places the card in the UI Automation content view. </summary>
+        /// <returns>
+        ///   <see langword="true" />, so content-only navigation includes the card.
+        /// </returns>
+        protected override bool IsContentElementCore() => true;
+
+        /// <summary>
+        ///   Returns the card's accessible name. An explicit
+        ///   <see cref="AutomationProperties.NameProperty" /> (the attached "Name" property) set on
+        ///   the card wins; otherwise the label and value lead as one part, followed by the detail
+        ///   and, when the badge is visible, the badge status description (the badge tooltip,
+        ///   falling back to the badge text).
+        /// </summary>
+        /// <returns>
+        ///   The composed name with parts joined by ", ", or the empty string when every part is
+        ///   empty.
+        /// </returns>
+        protected override string GetNameCore()
+        {
+            var card = (SummaryCard)this.Owner;
+
+            var explicitName = AutomationProperties.GetName(card);
+            if (!string.IsNullOrEmpty(explicitName))
+            {
+                return explicitName;
+            }
+
+            var parts = new List<string>();
+
+            var leading = string.Join(
+                " ",
+                new[] { card.Label, card.Value }.Where(part => !string.IsNullOrEmpty(part)));
+            if (!string.IsNullOrEmpty(leading))
+            {
+                parts.Add(leading);
+            }
+
+            if (!string.IsNullOrEmpty(card.Detail))
+            {
+                parts.Add(card.Detail);
+            }
+
+            if (card.IsBadgeVisible)
+            {
+                var status = !string.IsNullOrEmpty(card.BadgeTooltip) ? card.BadgeTooltip : card.BadgeText;
+                if (!string.IsNullOrEmpty(status))
+                {
+                    parts.Add(status);
+                }
+            }
+
+            return string.Join(", ", parts);
+        }
     }
 }

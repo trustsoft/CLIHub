@@ -1,0 +1,10 @@
+schema: spec-driven
+created: 2026-11-08
+skip_specs: true
+# Rationale: the durable scenario "Missing folders reported" in
+# openspec/specs/settings-theme/spec.md already carries the clause
+# "the status is announced by screen readers without requiring keyboard focus on the card",
+# which was added by the archived change 2026-11-08-projects-card-alert-badge.
+# This change makes SummaryCard's automation peer visible in the UIA control/content view
+# so that contract is met. No observable behavior changes for sighted users; no new
+# scenario text is needed because the existing spec sentence already pins the requirement.
