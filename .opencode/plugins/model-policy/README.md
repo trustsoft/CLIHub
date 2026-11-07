@@ -64,12 +64,18 @@ plugin API to change the host model (`ctx.ui.model` exposes `current()` and
   `/policy` details dialog shows the full ids and also prints the legend
   above.
 
-  The model picker lists the short label in the title (`rf/cl-sonnet-5#h`, the
-  effort the role would run it with) and the exact id in the description
-  (`relayfast/claude-sonnet-5 · paid · high`), so the list stays short and the
-  value that will be written is still visible. A short id typed by hand in the
+  The model picker is the deliberate choice surface, not the compact sidebar:
+  its title is the full id and the full effort (`relayfast/claude-sonnet-5#high`),
+  with the human model name and the policy detail in the description
+  (`Claude Sonnet 5 · paid · high`). It lists every model the OpenCode host
+  reports — the TUI's location-scoped model cache first, then `ctx.client` — plus
+  every policy model the host does not report
+  (policy entries first, no duplicates), so the complete available set is
+  reachable. A model outside `docs/agent-model-policy.json` is marked in its
+  description and asks for confirmation before the override is written; the
+  dispatch policy check may still reject it. A short id typed by hand in the
   custom-model prompt is expanded back to the full id before it is written.
-  The `/policy` menu follows the same rule for its per-role entries.
+  The `/policy` menu follows the same full-id rule for its per-role entries.
 - `/policy` (slash) or the "Model policy control panel" palette command: a menu whose
   first entry is `Presets: <active>` (the saved-preset count is in its description),
   plus per-role model, details/session log, "clear overrides", "re-read".
@@ -87,7 +93,9 @@ document lists it.
 ## Data contract
 
 Both layers are JSON and are read directly with `node:fs`. No YAML is parsed and
-no catalogue is mirrored.
+no catalogue is mirrored to disk. The host model list is read through the
+location-scoped cache or `ctx.client` when the picker opens and kept in memory
+for one minute; it is never written into either document.
 
 | File | Role |
 | --- | --- |
@@ -302,7 +310,7 @@ bun run verify.ts
 bun build tui.tsx --target=bun --external "*" --outfile "$env:TEMP\mp-build-shared-b.js"
 ```
 
-`verify.ts` output (12 assertion groups, all passing):
+`verify.ts` output (16 assertion groups, all passing):
 
 ```text
 paths: default project resolution OK
@@ -314,6 +322,11 @@ atomicWriteJson: round-trip OK
 resolution: exhausted models skipped, starved chains flagged, log parsed
 overrides: window selects the effective preset without changing activePreset
 malformed runtime: refused write, explicit recreate repairs
+catalogue: providers are normalized to full ids and display names
+catalogue: the location model cache is normalized too
+catalogue: a rejected or failed host call falls back to the next source
+catalogue: the picker list is the union of policy and host models
+resolution: an undeclared preset never becomes the reported selection
 user presets: schema, name rules, save/apply/delete, marker clearing OK
 observation: event extraction and role attribution OK
 verify: all assertions passed
@@ -455,6 +468,11 @@ registered.
 - The preset picker lists one option per policy preset plus one per saved preset
   plus two actions. The host's list scrolling for a long list has not been verified;
   the limit here is a single user's runtime file.
+- The model picker now lists the whole host catalogue (107 models on the origin
+  machine) plus policy-only entries. The host dialog is searchable, but scrolling
+  that many rows has not been visually verified. If neither the location cache nor
+  `ctx.client` is available, the picker shows the policy catalogue and a warning
+  instead of failing.
 - The collapsed state is persisted through `ctx.storage.memory("collapsed", false)`
   and `ctx.storage.store("collapsed", value)`. The built-in MCP block uses an
   object-shaped store (`ctx.storage.store("view", { initial: { open: true } })`),

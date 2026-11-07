@@ -26,10 +26,16 @@ import {
   ensureRuntime,
   expandModelId,
   formatRemaining,
+  hostModelsFromClient,
   legendFor,
   logLine,
   matchOptionValue,
+  mergeModelChoices,
   modelLabel,
+  modelLabelFull,
+  modelsFromList,
+  modelsFromLocation,
+  modelsFromProviders,
   observeEvent,
   PRESET_NAME_MAX,
   readSnapshot,
@@ -329,6 +335,98 @@ assert.ok(models.includes("a/one") && models.includes("b/two"))
 assert.equal(describePreset(finalView, "default"), "planner=a/one")
 assert.equal(truncate("abcdef", 4), "abc…")
 
+// --- host catalogue --------------------------------------------------------
+//
+// The picker merges the policy catalogue with the providers the host reports:
+// all host models are visible, and a model already in the policy keeps its
+// policy entry (and description) instead of appearing twice.
+
+const providerPayload = {
+  providers: [
+    {
+      id: "zai-coding-plan",
+      name: "Z.ai",
+      models: {
+        "glm-5.3": { name: "GLM 5.3" },
+        "glm-5.3-flash": {},
+      },
+    },
+    {
+      id: "relayfast",
+      name: "RelayFast",
+      models: { "claude-sonnet-5": { name: "Claude Sonnet 5" } },
+    },
+  ],
+}
+
+const host = modelsFromProviders(providerPayload)
+assert.deepEqual(
+  host.map((model) => model.id),
+  ["relayfast/claude-sonnet-5", "zai-coding-plan/glm-5.3", "zai-coding-plan/glm-5.3-flash"],
+)
+assert.equal(host[0].name, "Claude Sonnet 5")
+assert.equal(host[0].providerName, "RelayFast")
+assert.deepEqual(
+  modelsFromProviders({ data: providerPayload }).map((model) => model.id),
+  host.map((model) => model.id),
+  "the {data} envelope is unwrapped",
+)
+assert.deepEqual(modelsFromProviders({ providers: [] }), [])
+assert.deepEqual(modelsFromProviders({ providers: [{ models: { "no/provider": {} } }] }), [])
+assert.deepEqual(modelsFromProviders(undefined), [])
+console.log("catalogue: providers are normalized to full ids and display names")
+
+const flatModels = [
+  { providerID: "relayfast", id: "claude-sonnet-5", name: "Claude Sonnet 5" },
+  { providerID: "zai-coding-plan", modelID: "glm-5.3", name: "GLM 5.3" },
+  { id: "opencode/big-pickle", name: "Big Pickle" },
+  { id: "no-provider" },
+]
+assert.deepEqual(
+  modelsFromList(flatModels).map((model) => model.id),
+  ["opencode/big-pickle", "relayfast/claude-sonnet-5", "zai-coding-plan/glm-5.3"],
+)
+assert.equal(modelsFromList({ models: flatModels }).length, 3, "an {models} envelope is accepted")
+assert.deepEqual(
+  modelsFromLocation({ data: { location: { model: { list: () => flatModels } } }, location: {} }).map(
+    (model) => model.id,
+  ),
+  ["opencode/big-pickle", "relayfast/claude-sonnet-5", "zai-coding-plan/glm-5.3"],
+)
+assert.deepEqual(modelsFromLocation({}), [], "an absent location cache is not a failure")
+console.log("catalogue: the location model cache is normalized too")
+
+const fallbackClient = await hostModelsFromClient({
+  app: {
+    providers: async () => {
+      throw new Error("down")
+    },
+  },
+  config: { providers: async () => providerPayload },
+})
+assert.equal(fallbackClient.length, 3, "a rejected call falls through to the next client shape")
+const errorClient = await hostModelsFromClient({
+  app: { providers: async () => ({ error: { message: "down" } }) },
+  provider: { list: async () => providerPayload },
+})
+assert.equal(errorClient.length, 3, "an error payload falls through to the next client shape")
+assert.deepEqual(await hostModelsFromClient(undefined), [])
+console.log("catalogue: a rejected or failed host call falls back to the next source")
+
+const merged = mergeModelChoices(["zai-coding-plan/glm-5.3", "policy/only"], host)
+assert.deepEqual(
+  merged.map((choice) => [choice.id, choice.inPolicy]),
+  [
+    ["zai-coding-plan/glm-5.3", true],
+    ["policy/only", true],
+    ["relayfast/claude-sonnet-5", false],
+    ["zai-coding-plan/glm-5.3-flash", false],
+  ],
+  "policy entries first, then host-only models sorted, without duplicates",
+)
+assert.equal(merged[0].name, "GLM 5.3", "a policy entry keeps its host display name")
+console.log("catalogue: the picker list is the union of policy and host models")
+
 // --- display rules come from the policy, and nowhere else ------------------
 //
 // Three fixtures pin the contract:
@@ -447,6 +545,16 @@ const labelFixture = {
 } as unknown as Snapshot
 assert.equal(modelLabel(labelFixture, "relayfast/claude-sonnet-5", "planner"), "rf/cl-sonnet-5#h")
 assert.equal(modelLabel(labelFixture, "opencode/glm-5.3-flash-free", "explorer"), "oc/glm-5.3-flash#l")
+assert.equal(
+  modelLabelFull(labelFixture, "relayfast/claude-sonnet-5", "planner"),
+  "relayfast/claude-sonnet-5#high",
+  "the picker shows the full id and the full effort",
+)
+assert.equal(
+  modelLabelFull(labelFixture, "relayfast/gpt-5.6-sol", "planner"),
+  "relayfast/gpt-5.6-sol",
+  "a model without a policy variant stays a full id",
+)
 assert.equal(expandModelId(labelFixture, "rf/cl-sonnet-5"), "relayfast/claude-sonnet-5")
 assert.equal(expandModelId(labelFixture, "rf/cl-sonnet-5#h"), "relayfast/claude-sonnet-5#h")
 assert.equal(expandModelId(labelFixture, "oc/glm-5.3-flash"), "opencode/glm-5.3-flash-free")

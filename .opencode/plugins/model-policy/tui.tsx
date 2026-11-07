@@ -30,9 +30,13 @@ import {
   ensureRuntime,
   formatClock,
   formatRemaining,
+  hostModelsFromClient,
   latestObservationForRole,
   logLine,
   matchOptionValue,
+  mergeModelChoices,
+  modelLabelFull,
+  modelsFromLocation,
   observationLabel,
   observeEvent,
   readSnapshot,
@@ -47,13 +51,13 @@ import {
   displayRules,
   expandModelId,
   legendFor,
-  modelLabel,
   shortModel,
   shortRole,
   shortVariant,
   truncate,
   type DisplayRules,
   type ExhaustedModel,
+  type HostModel,
   type Observation,
   type RoleView,
   type Snapshot,
@@ -126,6 +130,30 @@ async function selectOption(ctx: any, spec: {
   } finally {
     dialogOpen = false
   }
+}
+
+const HOST_MODELS_TTL_MS = 60_000
+let hostModelsCache: { at: number; models: HostModel[] } | undefined
+
+/**
+ * The host catalogue is fetched only when the picker opens; the policy list is
+ * enough for the panel itself. A short cache keeps repeated picks instant and
+ * still notices a provider edit within a minute.
+ */
+async function loadHostModels(ctx: any): Promise<HostModel[]> {
+  if (hostModelsCache && Date.now() - hostModelsCache.at < HOST_MODELS_TTL_MS) {
+    return hostModelsCache.models
+  }
+  // The location cache is local and does not depend on the server transport;
+  // the client call is the fallback for hosts that do not expose it.
+  const local = modelsFromLocation(ctx)
+  if (local.length > 0) {
+    hostModelsCache = { at: Date.now(), models: local }
+    return local
+  }
+  const models = await hostModelsFromClient(ctx?.client)
+  if (models.length > 0) hostModelsCache = { at: Date.now(), models }
+  return models
 }
 
 function Sidebar(props: {
@@ -539,20 +567,31 @@ export default Plugin.define({
       const role = snapshot.roles.find((entry) => entry.name === roleName)
       const current = snapshot.runtime.roleOverrides[roleName] ?? ""
       const chain = snapshot.policy.presets[snapshot.effectivePreset ?? ""]?.[roleName] ?? []
+      const host = await loadHostModels(ctx)
+      if (host.length === 0) {
+        showToast(ctx, "OpenCode model list unavailable; showing the policy catalogue", "warning")
+      }
+      const choices = mergeModelChoices(roleModels(snapshot, roleName), host)
 
       const options = [
         {
           value: "",
           title: "(use the preset chain)",
-          description: chain.length > 0 ? chain.map((model) => shortModel(model, displayRules(snapshot.policy))).join(" → ") : "no chain for this role in the effective preset",
+          description: chain.length > 0 ? chain.join(" → ") : "no chain for this role in the effective preset",
         },
-        ...roleModels(snapshot, roleName).map((model) => ({
-          value: model,
-          // Short id in the title, the exact id in the description: the list stays
-          // readable and the value that will be written is still visible.
-          title: modelLabel(snapshot, model, roleName),
-          description: `${model} · ${describeModel(snapshot, model)}`,
-        })),
+        ...choices.map((choice) => {
+          const detail = choice.inPolicy
+            ? [choice.name, describeModel(snapshot, choice.id)].filter(Boolean).join(" · ")
+            : [choice.name, "not in the policy catalogue"].filter(Boolean).join(" · ")
+          return {
+            value: choice.id,
+            // Full id in the title: the picker is a deliberate choice, not the
+            // compact sidebar. The description carries the human name and the
+            // policy detail (or the outside-policy marker).
+            title: choice.inPolicy ? modelLabelFull(snapshot, choice.id, roleName) : choice.id,
+            description: detail,
+          }
+        }),
         { value: CUSTOM_MODEL, title: "Custom model id…", description: "type the full provider/model id" },
       ]
 
@@ -569,7 +608,7 @@ export default Plugin.define({
         const typed = await withDialog(ctx, "Prompt", () =>
           ctx.ui.dialog.prompt({
             title: `Model for ${roleName}`,
-            description: "provider/model — a short id like rf/cl-sonnet-5 is expanded",
+            description: "full provider/model; a short policy id like rf/cl-sonnet-5 is expanded",
             placeholder: "zai-coding-plan/glm-5.3",
             value: current || role?.model || "",
           }),
@@ -582,6 +621,17 @@ export default Plugin.define({
           showToast(ctx, "Empty model id — nothing written", "warning")
           return
         }
+      }
+
+      const policyModel = model ? (model.includes("#") ? model.slice(0, model.indexOf("#")) : model) : undefined
+      if (policyModel && !snapshot.policy.models?.[policyModel]) {
+        const proceed = await withDialog(ctx, "Confirm", () =>
+          ctx.ui.dialog.confirm({
+            title: "Model outside the policy",
+            message: `${policyModel} is not in docs/agent-model-policy.json. The dispatch policy check may reject this override. Write it anyway?`,
+          }),
+        )
+        if (proceed !== true) return
       }
 
       const result = setRoleOverride(ctx, sessionID ?? currentSessionID(ctx), roleName, model)
@@ -703,7 +753,7 @@ export default Plugin.define({
       for (const role of snapshot.roles) {
         options.push({
           value: `role:${role.name}`,
-          title: `Role ${role.name}: ${modelLabel(snapshot, role.model ?? "-", role.name)}`,
+          title: `Role ${role.name}: ${modelLabelFull(snapshot, role.model ?? "-", role.name)}`,
           description: `${role.model ?? "-"} · ${describeRole(snapshot, role)}`,
         })
       }

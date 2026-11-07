@@ -21,6 +21,7 @@ export * from "./display"
 export * from "./observe"
 export * from "./snapshot"
 export * from "./presets"
+export * from "./catalogue"
 
 export { effectivePreset } from "./policy"
 export { atomicWriteJson } from "./io"

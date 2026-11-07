@@ -275,6 +275,17 @@ export function modelLabel(snapshot: Snapshot, model: string, role?: string): st
 }
 
 /**
+ * The unabbreviated picker label: the full model id plus the full effort the
+ * role would run it with, e.g. `relayfast/claude-sonnet-5#high`. A model the
+ * policy does not catalogue has no effort mapping and renders as its id.
+ */
+export function modelLabelFull(snapshot: Snapshot, model: string, role?: string): string {
+  const effort = role ? snapshot.policy?.roles[role]?.effort : undefined
+  const variant = effortVariant(snapshot.policy?.models[model]?.variants, effort)
+  return variant ? `${model}#${variant}` : model
+}
+
+/**
  * Maps a short display id back to the full id, e.g. `rf/cl-sonnet-5` ->
  * `relayfast/claude-sonnet-5`. A value that is already a full id, or that
  * matches nothing in the catalogue, is returned unchanged.
