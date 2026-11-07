@@ -36,6 +36,26 @@ public class ProjectRegistryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void Load_WithFavoriteAndTiedNames_KeepsManualFirstThenNamePathOrder()
+    {
+        var earlyPath = Path.Combine(Path.GetTempPath(), "clihub-settings-order-a");
+        var latePath = Path.Combine(Path.GetTempPath(), "clihub-settings-order-z");
+        var manualEarly = Project("manual-early", "Shared", ProjectSource.Manual, earlyPath);
+        var manualLate = Project("manual-late", "Shared", ProjectSource.Manual, latePath);
+        var favoriteDiscovered = Project("favorite-discovered", "Aardvark", ProjectSource.Discovered, earlyPath);
+        favoriteDiscovered.IsFavorite = true;
+        var projects = new List<Project> { manualLate, favoriteDiscovered, manualEarly };
+        var section = this.CreateSection(CreateService(projects));
+
+        section.Load();
+
+        // Settings ordering stays manual-first, then name, then path: favorites must not reorder it.
+        Assert.Equal(
+            new[] { "manual-early", "manual-late", "favorite-discovered" },
+            section.Projects.Select(item => item.Id));
+    }
+
+    [Fact]
     public void Load_WithMissingFolder_FlagsOnlyThatRow()
     {
         var projects = new List<Project>

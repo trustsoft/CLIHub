@@ -83,7 +83,8 @@ public sealed class ProjectPaneController : IDisposable
     /// <returns> The row matching the project service's current project, if it is visible. </returns>
     public ProjectModel? Refresh()
     {
-        var models = this.catalog.Sync(this.enricher.Enrich(this.projectService.GetAllProjects()));
+        var ordered = ProjectListOrdering.FavoritesFirst(this.projectService.GetAllProjects());
+        var models = this.catalog.Sync(this.enricher.Enrich(ordered));
         ProjectModelListSynchronizer.Synchronize(this.Projects, models);
 
         var currentId = this.GetCurrentProject()?.Id;

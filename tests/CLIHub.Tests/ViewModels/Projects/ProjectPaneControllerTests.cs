@@ -86,6 +86,75 @@ public class ProjectPaneControllerTests
     }
 
     [Fact]
+    public void Refresh_MixedFavorites_FavoriteRowsFirst()
+    {
+        var plain = Project("plain");
+        var favorite = Project("favorite");
+        favorite.IsFavorite = true;
+        var service = this.CreateService([plain, favorite], current: plain);
+        var controller = this.CreateController(service);
+
+        controller.Refresh();
+
+        Assert.Equal(new[] { "favorite", "plain" }, controller.Projects.Select(row => row.Id));
+    }
+
+    [Fact]
+    public void Refresh_TogglingFavorite_ReordersOnNextRefresh()
+    {
+        var plain = Project("plain");
+        var other = Project("other");
+        var projects = new List<Project> { other, plain };
+        var service = this.CreateService(projects, current: plain);
+        var controller = this.CreateController(service);
+        controller.Refresh();
+        Assert.Equal(new[] { "other", "plain" }, controller.Projects.Select(row => row.Id));
+
+        plain.IsFavorite = true;
+        controller.Refresh();
+
+        Assert.Equal(new[] { "plain", "other" }, controller.Projects.Select(row => row.Id));
+    }
+
+    [Fact]
+    public void Refresh_Reordering_PreservesSelection()
+    {
+        var plain = Project("plain");
+        var favorite = Project("favorite");
+        var projects = new List<Project> { plain, favorite };
+        var service = this.CreateService(projects, current: favorite);
+        var controller = this.CreateController(service);
+        controller.Refresh();
+        var selectedRowBefore = controller.Projects.Single(row => row.Id == "favorite");
+
+        favorite.IsFavorite = true;
+        var selection = controller.Refresh();
+
+        Assert.Same(selectedRowBefore, selection);
+        Assert.Same(selectedRowBefore, controller.Projects[0]);
+        Assert.Equal("favorite", controller.Projects[0].Id);
+    }
+
+    [Fact]
+    public void Refresh_Reordering_PreservesRowIdentity()
+    {
+        var plain = Project("plain");
+        var favorite = Project("favorite");
+        var projects = new List<Project> { plain, favorite };
+        var service = this.CreateService(projects, current: plain);
+        var controller = this.CreateController(service);
+        controller.Refresh();
+        var rowsBefore = controller.Projects.ToArray();
+
+        favorite.IsFavorite = true;
+        controller.Refresh();
+
+        Assert.Equal(new[] { "favorite", "plain" }, controller.Projects.Select(row => row.Id));
+        Assert.Same(rowsBefore.Single(row => row.Id == "favorite"), controller.Projects.Single(row => row.Id == "favorite"));
+        Assert.Same(rowsBefore.Single(row => row.Id == "plain"), controller.Projects.Single(row => row.Id == "plain"));
+    }
+
+    [Fact]
     public void AddProject_AddsAndSelectsDialogFolder()
     {
         var added = Project("project");
