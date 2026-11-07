@@ -30,14 +30,32 @@ public interface IProjectRegistrySection : IDisposable
     int TotalCount { get; }
 
     /// <summary>
+    ///   Number of projects whose folder no longer exists.
+    /// </summary>
+    int MissingFolderCount { get; }
+
+    /// <summary>
     ///   Whether any project folder is missing.
     /// </summary>
     bool HasMissingFolders { get; }
 
     /// <summary>
-    ///   The folder-health summary shown as the PROJECTS card's alert line.
+    ///   The folder-health summary text, e.g. "1 folder missing"; used as part of the badge tooltip;
+    ///   empty string when no folder is missing.
     /// </summary>
     string FolderStatusSummary { get; }
+
+    /// <summary>
+    ///   The compact chip label shown inline with the project count, e.g. "1 missing"; empty string
+    ///   when no folder is missing.
+    /// </summary>
+    string MissingFolderChip { get; }
+
+    /// <summary>
+    ///   The shared tooltip for the chip and icon badge; combines the folder-health summary with a
+    ///   description; empty string when no folder is missing.
+    /// </summary>
+    string BadgeTooltipText { get; }
 
     /// <summary>
     ///   The error from the last add or remove action, or null.

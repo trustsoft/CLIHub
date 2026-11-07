@@ -187,11 +187,12 @@
 
             <DataTemplate x:Key="RegistrySummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
-                    <controls:SummaryCard Alert="{Binding ProjectRegistry.FolderStatusSummary}"
-                                          AlertToolTip="Folders that no longer exist"
+                    <controls:SummaryCard BadgeCount="{Binding ProjectRegistry.MissingFolderCount, StringFormat={}{0}}"
+                                          BadgeText="{Binding ProjectRegistry.MissingFolderChip}"
+                                          BadgeTooltip="{Binding ProjectRegistry.BadgeTooltipText}"
                                           Detail="In the launch window"
                                           Icon="{x:Static themes:IconGlyphs.Code}"
-                                          IsAlertVisible="{Binding ProjectRegistry.HasMissingFolders}"
+                                          IsBadgeVisible="{Binding ProjectRegistry.HasMissingFolders}"
                                           Label="PROJECTS"
                                           Value="{Binding ProjectRegistry.TotalCount}"/>
 

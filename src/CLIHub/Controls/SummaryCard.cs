@@ -31,13 +31,13 @@ public enum SummaryCardTone
 
 /// <summary>
 ///   A compact metric card: a muted label, a prominent value, an optional muted detail line, and an
-///   optional danger-toned alert line, with an optional leading icon block.
+///   optional danger inline chip and icon badge, with an optional leading icon block.
 /// </summary>
 /// <remarks>
 ///   The icon always renders in the primary text brush, so a summary row reads as one block of text.
 ///   <see cref="SummaryCardTone.Neutral" /> is the muted tone and renders <see cref="Value" /> in the
-///   primary text tone. <see cref="Alert" /> always renders in the danger tone and has no tone
-///   property of its own, because every alert is a problem statement.
+///   primary text tone. <see cref="BadgeText" /> and <see cref="BadgeCount" /> always render in the
+///   danger tone and have no tone property of their own, because every badge is a problem statement.
 /// </remarks>
 public sealed class SummaryCard : Control
 {
@@ -84,22 +84,28 @@ public sealed class SummaryCard : Control
         nameof(DetailToolTip), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
 
     /// <summary>
-    ///   Identifies the <see cref="Alert" /> property.
+    ///   Identifies the <see cref="BadgeText" /> property.
     /// </summary>
-    public static readonly DependencyProperty AlertProperty = DependencyProperty.Register(
-        nameof(Alert), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
+    public static readonly DependencyProperty BadgeTextProperty = DependencyProperty.Register(
+        nameof(BadgeText), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
 
     /// <summary>
-    ///   Identifies the <see cref="AlertToolTip" /> property.
+    ///   Identifies the <see cref="BadgeTooltip" /> property.
     /// </summary>
-    public static readonly DependencyProperty AlertToolTipProperty = DependencyProperty.Register(
-        nameof(AlertToolTip), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
+    public static readonly DependencyProperty BadgeTooltipProperty = DependencyProperty.Register(
+        nameof(BadgeTooltip), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
 
     /// <summary>
-    ///   Identifies the <see cref="IsAlertVisible" /> property.
+    ///   Identifies the <see cref="IsBadgeVisible" /> property.
     /// </summary>
-    public static readonly DependencyProperty IsAlertVisibleProperty = DependencyProperty.Register(
-        nameof(IsAlertVisible), typeof(bool), typeof(SummaryCard), new PropertyMetadata(false));
+    public static readonly DependencyProperty IsBadgeVisibleProperty = DependencyProperty.Register(
+        nameof(IsBadgeVisible), typeof(bool), typeof(SummaryCard), new PropertyMetadata(false));
+
+    /// <summary>
+    ///   Identifies the <see cref="BadgeCount" /> property.
+    /// </summary>
+    public static readonly DependencyProperty BadgeCountProperty = DependencyProperty.Register(
+        nameof(BadgeCount), typeof(string), typeof(SummaryCard), new PropertyMetadata(default(string)));
 
     static SummaryCard()
     {
@@ -173,30 +179,40 @@ public sealed class SummaryCard : Control
     }
 
     /// <summary>
-    ///   An optional danger-toned line under the detail; it is shown only while
-    ///   <see cref="IsAlertVisible" /> is <see langword="true" /> and this text is non-empty.
+    ///   The compact danger chip label shown inline with the value, e.g. "1 missing"; hidden when
+    ///   null or empty.
     /// </summary>
-    public string? Alert
+    public string? BadgeText
     {
-        get => (string?)this.GetValue(AlertProperty);
-        set => this.SetValue(AlertProperty, value);
+        get => (string?)this.GetValue(BadgeTextProperty);
+        set => this.SetValue(BadgeTextProperty, value);
     }
 
     /// <summary>
-    ///   An optional tooltip for the alert line; no tooltip is shown when empty.
+    ///   Tooltip for both the inline chip and the icon count badge; one source of truth for the
+    ///   status description.
     /// </summary>
-    public string? AlertToolTip
+    public string? BadgeTooltip
     {
-        get => (string?)this.GetValue(AlertToolTipProperty);
-        set => this.SetValue(AlertToolTipProperty, value);
+        get => (string?)this.GetValue(BadgeTooltipProperty);
+        set => this.SetValue(BadgeTooltipProperty, value);
     }
 
     /// <summary>
-    ///   Whether the alert line is shown. The alert must also have non-empty text.
+    ///   Master visibility flag; when false both the chip and the icon count badge are hidden.
     /// </summary>
-    public bool IsAlertVisible
+    public bool IsBadgeVisible
     {
-        get => (bool)this.GetValue(IsAlertVisibleProperty);
-        set => this.SetValue(IsAlertVisibleProperty, value);
+        get => (bool)this.GetValue(IsBadgeVisibleProperty);
+        set => this.SetValue(IsBadgeVisibleProperty, value);
+    }
+
+    /// <summary>
+    ///   Count label for the icon block overlay badge, e.g. "1"; hidden when null or empty.
+    /// </summary>
+    public string? BadgeCount
+    {
+        get => (string?)this.GetValue(BadgeCountProperty);
+        set => this.SetValue(BadgeCountProperty, value);
     }
 }

@@ -66,9 +66,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
     /// <inheritdoc />
     public int TotalCount => this.Projects.Count;
 
-    /// <summary>
-    ///   Number of projects whose folder no longer exists.
-    /// </summary>
+    /// <inheritdoc />
     public int MissingFolderCount => this.Projects.Count(item => !item.IsFolderAvailable);
 
     /// <inheritdoc />
@@ -81,6 +79,19 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         1 => "1 folder missing",
         var count => $"{count} folders missing"
     };
+
+    /// <inheritdoc />
+    public string MissingFolderChip => this.MissingFolderCount switch
+    {
+        0 => string.Empty,
+        1 => "1 missing",
+        var count => $"{count} missing"
+    };
+
+    /// <inheritdoc />
+    public string BadgeTooltipText => this.HasMissingFolders
+        ? $"{this.FolderStatusSummary} · folders that no longer exist"
+        : string.Empty;
 
     /// <inheritdoc />
     public string NewProjectPath
@@ -305,5 +316,7 @@ public sealed class ProjectRegistryViewModel : ObservableObject, IProjectRegistr
         this.OnPropertyChanged(nameof(this.MissingFolderCount));
         this.OnPropertyChanged(nameof(this.HasMissingFolders));
         this.OnPropertyChanged(nameof(this.FolderStatusSummary));
+        this.OnPropertyChanged(nameof(this.MissingFolderChip));
+        this.OnPropertyChanged(nameof(this.BadgeTooltipText));
     }
 }

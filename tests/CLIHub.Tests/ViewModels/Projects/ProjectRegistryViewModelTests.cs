@@ -122,6 +122,65 @@ public class ProjectRegistryViewModelTests : IDisposable
     }
 
     [Fact]
+    public void MissingFolderChip_WithOneMissingFolder_ReturnsCompactSingular()
+    {
+        var project = Project("missing", "Missing", ProjectSource.Manual, MissingPath());
+        var section = this.CreateSection(CreateService([project]));
+
+        section.Load();
+
+        Assert.Equal("1 missing", section.MissingFolderChip);
+    }
+
+    [Fact]
+    public void MissingFolderChip_WithMultipleMissingFolders_ReturnsCompactPlural()
+    {
+        var projects = new List<Project>
+        {
+            Project("first", "First", ProjectSource.Manual, MissingPath()),
+            Project("second", "Second", ProjectSource.Discovered, MissingPath())
+        };
+        var section = this.CreateSection(CreateService(projects));
+
+        section.Load();
+
+        Assert.Equal("2 missing", section.MissingFolderChip);
+    }
+
+    [Fact]
+    public void MissingFolderChip_WithNoMissingFolders_ReturnsEmpty()
+    {
+        var project = Project("manual", "Manual", ProjectSource.Manual, ExistingFolder());
+        var section = this.CreateSection(CreateService([project]));
+
+        section.Load();
+
+        Assert.Equal(string.Empty, section.MissingFolderChip);
+    }
+
+    [Fact]
+    public void BadgeTooltipText_WithOneMissingFolder_ReturnsCombinedString()
+    {
+        var project = Project("missing", "Missing", ProjectSource.Manual, MissingPath());
+        var section = this.CreateSection(CreateService([project]));
+
+        section.Load();
+
+        Assert.Equal("1 folder missing · folders that no longer exist", section.BadgeTooltipText);
+    }
+
+    [Fact]
+    public void BadgeTooltipText_WithNoMissingFolders_ReturnsEmpty()
+    {
+        var project = Project("manual", "Manual", ProjectSource.Manual, ExistingFolder());
+        var section = this.CreateSection(CreateService([project]));
+
+        section.Load();
+
+        Assert.Equal(string.Empty, section.BadgeTooltipText);
+    }
+
+    [Fact]
     public void Load_SecondLoad_UpdatesRowsInPlace()
     {
         var folder = this.CreateTempDir();

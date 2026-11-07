@@ -342,12 +342,16 @@
     </Style>
 
     <!--
-        Page-header summary card: label, value, optional detail and alert lines, icon block. The icon
-        always uses the primary text brush so it matches the value line and the palette. The value
-        tones are applied by triggers on the templated parent, so the brushes stay palette-driven:
-        Neutral (the default) is the primary text tone, and Alert is always danger. The label and
-        value reserve the icon block's column, while the detail and alert lines span both columns
-        below the icon row, so their right edge is the card's right content edge.
+        Page-header summary card: label, value, optional detail line, icon block, and an optional
+        danger indicator made of two parts: a compact chip sitting inline with the value and a count
+        badge overlaying the icon block's top-right corner. The icon always uses the primary text
+        brush so it matches the value line and the palette. The value tones are applied by triggers
+        on the templated parent, so the brushes stay palette-driven: Neutral (the default) is the
+        primary text tone, and the badge is always danger. The label and value reserve the icon
+        block's column, while the detail line spans both columns below the icon row, so its right
+        edge is the card's right content edge. The value and the chip share a WrapPanel rather than
+        a horizontal StackPanel so the value keeps its character-ellipsis trimming; a chip combined
+        with a long value may wrap to the next line, which is acceptable.
     -->
     <Style TargetType="{x:Type controls:SummaryCard}">
         <!-- A card is a read-only metric, not an input: it must not take part in the tab order. -->
@@ -374,31 +378,72 @@
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            Text="{TemplateBinding Label}"/>
-                                <TextBlock x:Name="ValueText"
-                                           Margin="0,2,0,0"
-                                           FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{TemplateBinding Value}"
-                                           TextTrimming="CharacterEllipsis"
-                                           TextWrapping="NoWrap"
-                                           ToolTip="{TemplateBinding ValueToolTip}"/>
+                                <!-- A WrapPanel, not a horizontal StackPanel: the panel must give
+                                     the value a finite measure width or its trimming would stop. -->
+                                <WrapPanel>
+                                    <TextBlock x:Name="ValueText"
+                                               Margin="0,2,0,0"
+                                               FontSize="{StaticResource Sizing.FontSize.SummaryValue}"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{TemplateBinding Value}"
+                                               TextTrimming="CharacterEllipsis"
+                                               TextWrapping="NoWrap"
+                                               ToolTip="{TemplateBinding ValueToolTip}"/>
+                                    <Border x:Name="BadgeChip"
+                                            Margin="8,3,0,0"
+                                            Padding="5,1"
+                                            VerticalAlignment="Center"
+                                            BorderBrush="{DynamicResource DangerBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                                            ToolTip="{TemplateBinding BadgeTooltip}"
+                                            Visibility="Collapsed">
+                                        <TextBlock AutomationProperties.HelpText="{TemplateBinding BadgeTooltip}"
+                                                   FontSize="{StaticResource Sizing.FontSize.Chip}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource DangerBrush}"
+                                                   Text="{TemplateBinding BadgeText}"/>
+                                    </Border>
+                                </WrapPanel>
                             </StackPanel>
-                            <Border Grid.Column="1"
-                                    Width="24"
-                                    Height="24"
-                                    VerticalAlignment="Top"
-                                    Background="{DynamicResource ThumbBgBrush}"
-                                    BorderBrush="{DynamicResource ControlStrokeBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="{StaticResource Sizing.CornerRadius.IconBox}">
-                                <TextBlock HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           Text="{TemplateBinding Icon}"/>
-                            </Border>
+                            <Grid Grid.Column="1"
+                                  Width="24"
+                                  Height="24"
+                                  VerticalAlignment="Top">
+                                <Border Background="{DynamicResource ThumbBgBrush}"
+                                        BorderBrush="{DynamicResource ControlStrokeBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="{StaticResource Sizing.CornerRadius.IconBox}">
+                                    <TextBlock HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Text="{TemplateBinding Icon}"/>
+                                </Border>
+                                <Border x:Name="BadgeCountOverlay"
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        MinWidth="18"
+                                        Height="18"
+                                        Margin="0,-7,-7,0"
+                                        Padding="3,0"
+                                        Background="{DynamicResource DangerBrush}"
+                                        BorderBrush="{DynamicResource PopoverBgBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                                        Grid.ZIndex="1"
+                                        ToolTip="{TemplateBinding BadgeTooltip}"
+                                        Visibility="Collapsed">
+                                    <TextBlock HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="10.5"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource ChromeBgBrush}"
+                                               Text="{TemplateBinding BadgeCount}"/>
+                                </Border>
+                            </Grid>
                             <StackPanel Grid.Row="1"
                                         Grid.ColumnSpan="2">
                                 <TextBlock x:Name="DetailText"
@@ -406,13 +451,6 @@
                                            Style="{StaticResource HintText}"
                                            Text="{TemplateBinding Detail}"
                                            ToolTip="{TemplateBinding DetailToolTip}"/>
-                                <TextBlock x:Name="AlertText"
-                                           Margin="0,2,0,0"
-                                           Foreground="{DynamicResource DangerBrush}"
-                                           Style="{StaticResource HintText}"
-                                           Text="{TemplateBinding Alert}"
-                                           ToolTip="{TemplateBinding AlertToolTip}"
-                                           Visibility="Collapsed"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -439,15 +477,23 @@
                             <Setter TargetName="DetailText" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
 
-                        <!-- The alert needs both the flag and non-empty text; the last two triggers win. -->
-                        <Trigger Property="IsAlertVisible" Value="True">
-                            <Setter TargetName="AlertText" Property="Visibility" Value="Visible"/>
+                        <!-- The badges need both the flag and non-empty text; the last four
+                             triggers win, so null/empty always collapses regardless of the flag. -->
+                        <Trigger Property="IsBadgeVisible" Value="True">
+                            <Setter TargetName="BadgeChip" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="BadgeCountOverlay" Property="Visibility" Value="Visible"/>
                         </Trigger>
-                        <Trigger Property="Alert" Value="{x:Null}">
-                            <Setter TargetName="AlertText" Property="Visibility" Value="Collapsed"/>
+                        <Trigger Property="BadgeText" Value="{x:Null}">
+                            <Setter TargetName="BadgeChip" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
-                        <Trigger Property="Alert" Value="">
-                            <Setter TargetName="AlertText" Property="Visibility" Value="Collapsed"/>
+                        <Trigger Property="BadgeText" Value="">
+                            <Setter TargetName="BadgeChip" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="BadgeCount" Value="{x:Null}">
+                            <Setter TargetName="BadgeCountOverlay" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="BadgeCount" Value="">
+                            <Setter TargetName="BadgeCountOverlay" Property="Visibility" Value="Collapsed"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

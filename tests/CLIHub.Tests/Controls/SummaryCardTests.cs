@@ -19,13 +19,13 @@ public sealed class SummaryCardTests
     }
 
     [Fact]
-    public void Constructor_DefaultAlertVisibility_IsFalse()
+    public void Constructor_DefaultBadgeVisibility_IsFalse()
     {
         RunOnSta(() =>
         {
             var card = new SummaryCard();
 
-            Assert.False(card.IsAlertVisible);
+            Assert.False(card.IsBadgeVisible);
         }, "STA control test failed.");
     }
 }
