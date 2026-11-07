@@ -7,7 +7,7 @@
              xmlns:themes="clr-namespace:CLIHub.Theming"
              mc:Ignorable="d">
     <UserControl.Resources>
-        <!-- The "Folder not found" chip: visible while the row's enriched snapshot reports the
+        <!-- The "Folder missing" chip: visible while the row's enriched snapshot reports the
              folder unavailable, so no inverted converter is needed. -->
         <Style x:Key="ProjectMissingChip" TargetType="Border" BasedOn="{StaticResource HeaderChip}">
             <Setter Property="Background" Value="Transparent"/>
@@ -141,7 +141,7 @@
                                     <Border Margin="8,0,0,0"
                                             Style="{StaticResource ProjectMissingChip}">
                                         <TextBlock Style="{StaticResource ProjectMissingChipText}"
-                                                   Text="Folder not found"/>
+                                                   Text="Folder missing"/>
                                     </Border>
                                 </StackPanel>
 
