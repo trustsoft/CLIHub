@@ -425,7 +425,6 @@ try {
         checkForUpdatesOnStartup = $false
         autoDownloadUpdates = $false
         notifyStableUpdates = $true
-        notifyPrereleaseUpdates = $false
         startMinimized = $false
         pinLaunchWindow = $true
         popupScreenPosition = 'center'

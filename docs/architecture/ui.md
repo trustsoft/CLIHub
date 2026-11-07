@@ -120,6 +120,11 @@ never eats into the trimmed path. The `ProjectProvenanceMark` style lives in `Co
 `TextPrimaryBrush`, discovered `TextMutedBrush`), so the Settings registry and the launch window render
 the same mark; the mark's tooltip and accessible name carry the full `Manual`/`Discovered` label.
 
+The launch-window project list orders favorites first and then the remaining projects, preserving the
+stored order within each group: `ProjectListOrdering.FavoritesFirst` is a pure Core policy applied by
+`ProjectPaneController.Refresh()` before enrichment, so row identity and selection survive the reorder.
+The Settings Projects registry keeps its own ordering (manual projects first, then name and path).
+
 The registered palettes (`Dark.xaml`, `Light.xaml`, `Blue.xaml`) define the same brush keys and brushes are referenced with `DynamicResource`. The three files differ ONLY in colour values; their structure (comments, key order, whitespace) is identical and mechanically guarded by the parity test. `ThemeCatalog.ResolvePalettePath` resolves the palette for the effective theme, and `PaletteSwitcher` keeps it as one tracked overlay merged on top of the dark base: a non-null resolution replaces the tracked overlay in place (or appends it on first use), and a null resolution removes it so the dark base stays.
 
 The accent is application-scoped and independent of the theme. The palettes declare chrome and surface brushes only — neither `AccentBrush` nor `AccentSelectionBrush` is a palette key — and `AccentApplier` writes both brushes into `Application.Resources` for the startup call in `App` and the Settings-save call in `WpfAccentPreferenceTarget`. A theme switch therefore leaves the accent untouched, and an accent save never changes the palette. The stored accent is always applied, the default Sky included; an invalid or missing value normalizes back to Sky.

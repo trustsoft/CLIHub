@@ -8,6 +8,27 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## Unreleased
+
+### Added
+
+- The launch-window project list sorts favorites first, then the remaining projects in stored order, through a pure Core policy (`ProjectListOrdering.FavoritesFirst`) applied by `ProjectPaneController` before enrichment; row identity and selection survive the reorder (`favorites-first-project-order`, `launch-window-layout`).
+
+### Changed
+
+- CLI Agents card chips are consistent: the state/version chip is outlined like the other chips, and when an update is available the accent update chip replaces it in the same slot instead of appearing beside it (`agent-version-chip-outline`, `update-chip-replaces-version`, `agent-ui`).
+- The separate plugin origin badge is removed; the recorded origin plus the descriptor's version, publisher, and homepage now live in the agent name's tooltip (`remove-agent-origin-badge`, `agent-ui`, `plugin-installation`).
+- Update checking is stable-only: the disabled pre-release toggle and the "Channel: Stable" header chip are gone, `notifyPrereleaseUpdates` is removed from the configuration and snapshot, `UpdateService` always builds a stable Velopack source, and `VersionClassification` is deleted (`remove-prerelease-updates-option`, `update-checking`, `preferences-ui`, `configuration-snapshot`).
+- Agent tooling: the subagent model policy adds the `lmstudio` provider and the `local_first` preset, and the default preset is aligned with the current selection (`9b6c636`, `3a42732`).
+
+### Fixed
+
+- The launch window's project and agent lists scroll by pixel so their last row ends flush with the pane instead of stopping short (`fix-launch-list-scroll-gap`, `launch-window-layout`).
+
+### Removed
+
+- Dead code from the third cleanup tier: an unused plugin-feed constructor field, a write-only dialog field, dead null-conditionals in shutdown, an unused `workingDirectory` parameter through the command-line builder chain, two dead test-only declarations, and nine unused `using` directives (`remove-unused-code-tier3`).
+
 ## 1.1.1 - 2026-11-05
 
 ### Added

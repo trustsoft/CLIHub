@@ -28,10 +28,10 @@ use these terms with these meanings.
 - **Launch context** — the current project's folder, used as the working directory of a launched
   agent or any other [agent command](#agents-and-plugins).
 - **Recent projects** — projects ordered by last-used time (selection or a launch updates the
-  timestamp); the tray menu lists them by recency, while the launch-window project list shows all
-  projects in stored order.
+  timestamp); the tray menu lists them by recency, while the launch-window project list shows
+  favorites first and then the remaining projects in stored order.
 - **Favorite project** — a project flagged by the user; marked in the project list and the tray
-  menu and toggled from the project pane.
+  menu, toggled from the project pane, and listed before non-favorites in the launch window.
 - **Project logo** — an image resolved from well-known filenames in the project folder
   (for example `logo.png`, `icon.png`); falls back to a built-in default logo.
 

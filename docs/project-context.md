@@ -62,13 +62,16 @@ process inspection) behind ports declared in Core.
   launch-window position, and path display are configured on the Launch Window page; the probe cache TTL
   and version-check timeout are configured on Agent Detection.
 - The launch window is the active WPF shell; project rows show favorite and provenance markers in a
-  right-side rail.
+  right-side rail, and favorites sort first in the project list.
+- CLI Agents cards show a version/state chip that an update chip replaces while an update is available;
+  plugin origin plus descriptor metadata live in the agent name's tooltip, not in a separate badge.
 - Appearance is Dark, Light, or Deep Blue, plus System, which follows the Windows light/dark mode; one
   application-scoped accent color (Sky by default) is independent of the theme. Theme and accent changes
   apply immediately on a Settings save. With the System theme, a Windows personalization change is
   followed while the application runs and re-resolves the palette; fixed themes ignore it.
 - The application enforces one instance with `Local\CLIHub.SingleInstance` and a named-pipe activation signal.
-- Updates are coordinated through the application `IUpdateWorkflow`; Core owns Velopack integration and update ports.
+- Update checking is stable-only (no pre-release channel); updates are coordinated through the application
+  `IUpdateWorkflow`, while Core owns Velopack integration and update ports.
 - Agent process monitoring blocks the agent update action while any matching registered agent process is running.
 
 ## Documentation Routing

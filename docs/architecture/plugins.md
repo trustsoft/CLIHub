@@ -153,15 +153,16 @@ From the CLI Agents settings page, users can:
 
 Disabled plugins stay on disk and can be re-enabled without reinstallation. Disabled built-in plugins are not re-seeded (files not overwritten).
 
-### Plugin Origin Display
+### Plugin Identity Display
 
-The CLI Agents page displays an origin badge on each plugin card:
+The CLI Agents page does not render a separate origin badge. Each card carries the identity in the
+agent name's tooltip (`IdentityTooltip`): the recorded origin as a labelled line ("Origin: Built-in",
+"Origin: Installed", or "Origin: Unknown"), followed by the descriptor's version, publisher, and
+homepage when declared. Disabled plugins show the same tooltip with origin and version only.
 
-- **Built-in** badge: origin = `builtin` in state
-- **Installed** badge: origin = `installed` in state
-- **Unknown** badge: origin = `unknown` in state (neutral styling)
-
-Origin tooltips show plugin version, publisher, and homepage if available.
+The installed version or state is a chip on the name row. When an update is available, the
+accent-styled update chip (`<installed> → <latest>`) replaces the state chip in the same slot, so one
+chip at a time carries version information; the state chip returns when the update clears.
 
 ### Open Plugins Folder
 
