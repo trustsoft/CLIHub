@@ -98,7 +98,7 @@ public sealed class ApplicationHost : IApplicationHost
 
         try
         {
-            this.services?.GetService<IApplicationSession>()?.Dispose();
+            this.services.GetService<IApplicationSession>()?.Dispose();
         }
         catch (Exception ex)
         {
@@ -107,7 +107,7 @@ public sealed class ApplicationHost : IApplicationHost
 
         try
         {
-            this.services?
+            this.services
                 .GetService<IApplicationOperationLifetime>()?
                 .StopAsync(ApplicationOperationLifetime.DefaultShutdownTimeout)
                 .GetAwaiter()
@@ -118,7 +118,7 @@ public sealed class ApplicationHost : IApplicationHost
             Log.Warning(ex, "Application operation shutdown failed");
         }
 
-        this.services?.Dispose();
+        this.services.Dispose();
 
         Log.CloseAndFlush();
     }

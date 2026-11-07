@@ -49,7 +49,7 @@ public class ProcessOrchestratorTests
 
         this.mockResolver.Setup(x => x.ResolveAsync(RuntimeKind.PowerShell, It.IsAny<CancellationToken>()))
             .ReturnsAsync(runtime);
-        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command, @"C:\work"))
+        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command))
             .Returns(("powershell.exe", "-Command agent.exe --run"));
         this.mockInteractiveRunner.Setup(x => x.LaunchAsync(
                 It.IsAny<string>(), It.IsAny<RuntimeInfo>(), @"C:\work", It.IsAny<CancellationToken>()))
@@ -92,7 +92,7 @@ public class ProcessOrchestratorTests
 
         this.mockResolver.Setup(x => x.ResolveAsync(RuntimeKind.CommandPrompt, It.IsAny<CancellationToken>()))
             .ReturnsAsync(runtime);
-        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command, @"C:\work"))
+        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command))
             .Returns(("cmd.exe", "/c agent.exe"));
         this.mockInteractiveRunner.Setup(x => x.LaunchAsync(
                 It.IsAny<string>(), It.IsAny<RuntimeInfo>(), @"C:\work", It.IsAny<CancellationToken>()))
@@ -117,7 +117,7 @@ public class ProcessOrchestratorTests
 
         this.mockResolver.Setup(x => x.ResolveAsync(RuntimeKind.PowerShell, It.IsAny<CancellationToken>()))
             .ReturnsAsync(runtime);
-        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command, @"C:\work"))
+        this.mockBuilder.Setup(x => x.BuildInteractive(runtime, command))
             .Returns(("powershell.exe", "-Command agent.exe"));
         this.mockInteractiveRunner.Setup(x => x.LaunchAsync(
                 It.IsAny<string>(), It.IsAny<RuntimeInfo>(), @"C:\work", It.IsAny<CancellationToken>()))

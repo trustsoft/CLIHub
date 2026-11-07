@@ -1,7 +1,6 @@
 namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Models;
-using CLIHub.Theming;
 
 /// <summary>
 ///   Accent color selection section: presets, the custom entry, and custom-value memory.

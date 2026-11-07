@@ -1,6 +1,5 @@
 namespace CLIHub.Core.Plugins;
 
-using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -10,7 +9,6 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
-using CLIHub.Core.Updates;
 
 /// <summary>
 ///   Fetches the plugin feed index and downloads plugin packages over HTTPS with checksum verification.
@@ -24,19 +22,16 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
 
     private readonly HttpClient httpClient;
     private readonly IPreferencesStore preferencesStore;
-    private readonly IUpdateVersionProvider versionProvider;
     private readonly ILogger<PluginFeedClient> logger;
 
     /// <summary>
     ///   Creates the feed client with a dedicated HTTP handler that does not auto-redirect.
     /// </summary>
     /// <param name="preferencesStore"> Preferences store for timeout and feed URL. </param>
-    /// <param name="versionProvider"> Current application version provider. </param>
     /// <param name="logger"> Logger. </param>
     public PluginFeedClient(IPreferencesStore preferencesStore,
-                            IUpdateVersionProvider versionProvider,
                             ILogger<PluginFeedClient> logger)
-        : this(CreateDefaultHandler(), preferencesStore, versionProvider, logger)
+        : this(CreateDefaultHandler(), preferencesStore, logger)
     {
     }
 
@@ -46,15 +41,12 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// </summary>
     /// <param name="handler"> HTTP handler for the feed client's requests. </param>
     /// <param name="preferencesStore"> Preferences store for timeout and feed URL. </param>
-    /// <param name="versionProvider"> Current application version provider. </param>
     /// <param name="logger"> Logger. </param>
     internal PluginFeedClient(HttpMessageHandler handler,
                               IPreferencesStore preferencesStore,
-                              IUpdateVersionProvider versionProvider,
                               ILogger<PluginFeedClient> logger)
     {
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
-        this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         this.httpClient = new HttpClient(handler ?? throw new ArgumentNullException(nameof(handler)));

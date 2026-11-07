@@ -7,7 +7,6 @@ using CLIHub.Core.Events;
 public class DomainEventBusTests
 {
     private record TestEvent(string Value) : IDomainEvent;
-    private record AnotherEvent(int Number) : IDomainEvent;
 
     [Fact]
     public void Publish_InvokesSubscribedHandlers()

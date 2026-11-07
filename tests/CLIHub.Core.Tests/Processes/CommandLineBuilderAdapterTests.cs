@@ -18,7 +18,7 @@ public class CommandLineBuilderAdapterTests
         var command = new PluginCommand { Name = "test", Executable = "agent.exe", Arguments = "--run" };
 
         // Act
-        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command, @"C:\work");
+        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command);
 
         // Assert
         Assert.Equal("powershell.exe", fileName);
@@ -33,7 +33,7 @@ public class CommandLineBuilderAdapterTests
         var command = new PluginCommand { Name = "test", Executable = "agent.exe" };
 
         // Act
-        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command, @"C:\work");
+        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command);
 
         // Assert
         Assert.Equal(@"C:\Program Files\PowerShell\7\pwsh.exe", fileName);
@@ -48,7 +48,7 @@ public class CommandLineBuilderAdapterTests
         var command = new PluginCommand { Name = "test", Executable = "agent.exe" };
 
         // Act
-        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command, @"C:\work");
+        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command);
 
         // Assert
         Assert.Equal(@"C:\Program Files\Git\bin\bash.exe", fileName);
@@ -63,7 +63,7 @@ public class CommandLineBuilderAdapterTests
         var command = new PluginCommand { Name = "test", Executable = "agent.exe", Arguments = "-v" };
 
         // Act
-        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command, @"C:\work");
+        var (fileName, arguments) = this.adapter.BuildInteractive(runtime, command);
 
         // Assert
         Assert.Equal("cmd.exe", fileName);

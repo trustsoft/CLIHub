@@ -6,12 +6,9 @@ using System.Text;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Tests.Fakes;
-using CLIHub.Core.Updates;
 
 public class PluginFeedClientTests
 {
@@ -30,8 +27,7 @@ public class PluginFeedClientTests
             preferences.Update(p => p.AgentProbeTimeoutSeconds = timeoutSeconds.Value);
         }
 
-        var versionProvider = Mock.Of<IUpdateVersionProvider>(v => v.GetCurrentVersion() == "1.0.0");
-        return new PluginFeedClient(this.handler, preferences, versionProvider, NullLogger<PluginFeedClient>.Instance);
+        return new PluginFeedClient(this.handler, preferences, NullLogger<PluginFeedClient>.Instance);
     }
 
     [Fact]

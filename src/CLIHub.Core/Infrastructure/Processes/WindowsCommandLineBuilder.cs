@@ -14,7 +14,6 @@ internal static class WindowsCommandLineBuilder
     /// </summary>
     /// <param name="runtime"> The selected interactive runtime. </param>
     /// <param name="command"> The plugin command. </param>
-    /// <param name="workingDirectory"> The command working directory. </param>
     /// <param name="gitBashExecutable">
     ///   The absolute path of the resolved Git for Windows <c> bash.exe </c>; required for
     ///   <see cref="RuntimeKind.GitBash" /> and ignored by the other runtimes.
@@ -26,7 +25,6 @@ internal static class WindowsCommandLineBuilder
     /// <returns> The process executable and argument string. </returns>
     internal static (string FileName, string Arguments) BuildInteractive(RuntimeKind runtime,
                                                                          PluginCommand command,
-                                                                         string workingDirectory,
                                                                          string? gitBashExecutable,
                                                                          string? powerShell7Executable)
     {

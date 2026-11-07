@@ -11,8 +11,7 @@ public sealed class CommandLineBuilderAdapter : ICommandLineBuilder
     /// <inheritdoc/>
     public (string FileName, string Arguments) BuildInteractive(
         RuntimeExecutable runtime,
-        PluginCommand command,
-        string workingDirectory)
+        PluginCommand command)
     {
         // Extract resolved executables for GitBash and PowerShell7
         var gitBashExe = runtime.Kind == RuntimeKind.GitBash ? runtime.ExecutablePath : null;
@@ -21,7 +20,6 @@ public sealed class CommandLineBuilderAdapter : ICommandLineBuilder
         return WindowsCommandLineBuilder.BuildInteractive(
             runtime.Kind,
             command,
-            workingDirectory,
             gitBashExe,
             ps7Exe);
     }

@@ -9,8 +9,6 @@ using CLIHub.ViewModels;
 /// </summary>
 public partial class BrowsePluginsDialog : Window
 {
-    private readonly BrowsePluginsDialogViewModel viewModel;
-
     /// <summary>
     ///   Creates the dialog.
     /// </summary>
@@ -19,7 +17,6 @@ public partial class BrowsePluginsDialog : Window
     {
         this.InitializeComponent();
 
-        this.viewModel = viewModel;
         this.DataContext = viewModel;
 
         this.Loaded += async (sender, args) => await viewModel.LoadAsync();

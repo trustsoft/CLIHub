@@ -68,8 +68,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
             // Build command line
             var (fileName, arguments) = this.commandLineBuilder.BuildInteractive(
                 runtime,
-                request.Command,
-                request.WorkingDirectory);
+                request.Command);
 
             // Map RuntimeKind to RuntimeType
             var runtimeType = request.RuntimeKind switch

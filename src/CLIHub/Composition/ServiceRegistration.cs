@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Windows;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Converters;

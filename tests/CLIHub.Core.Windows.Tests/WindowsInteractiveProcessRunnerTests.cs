@@ -135,7 +135,7 @@ public class WindowsInteractiveProcessRunnerTests
         {
             var command = new PluginCommand { Name = "resume", Executable = "probe-agent", Arguments = "--continue" };
             var (_, arguments) = WindowsCommandLineBuilder.BuildInteractive(
-                RuntimeKind.PowerShell, command, shimDir, gitBashExecutable: null, powerShell7Executable: null);
+                RuntimeKind.PowerShell, command, gitBashExecutable: null, powerShell7Executable: null);
             arguments = arguments.Replace("-NoExit ", string.Empty, StringComparison.Ordinal);
 
             var runtime = new RuntimeInfo { ExecutablePath = "powershell.exe", Type = RuntimeType.PowerShell };
@@ -175,7 +175,7 @@ public class WindowsInteractiveProcessRunnerTests
             var command = new PluginCommand { Name = "launch", Executable = scriptPath };
 
             var (_, arguments) = WindowsCommandLineBuilder.BuildInteractive(
-                runtimeKind, command, workingDirectory, gitBashExecutable: null, powerShell7Executable);
+                runtimeKind, command, gitBashExecutable: null, powerShell7Executable);
             arguments = makeHeadless(arguments);
 
             var runner = new WindowsInteractiveProcessRunner(NullLogger<WindowsInteractiveProcessRunner>.Instance);

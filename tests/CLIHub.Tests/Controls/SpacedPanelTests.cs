@@ -180,12 +180,6 @@ public sealed class SpacedPanelTests
     }
 
     private static SpacedPanel CreatePanel(
-        params UIElement[] children)
-    {
-        return CreatePanel(children, Orientation.Vertical, 0);
-    }
-
-    private static SpacedPanel CreatePanel(
         UIElement first,
         UIElement second,
         Orientation orientation = Orientation.Vertical,

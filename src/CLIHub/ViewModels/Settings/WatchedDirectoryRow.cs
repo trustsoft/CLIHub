@@ -1,7 +1,5 @@
 namespace CLIHub.ViewModels;
 
-using CLIHub.Core.Models;
-
 /// <summary>
 ///   One watched-directory row: its path, the per-directory scan settings, and the number of
 ///   repositories found beneath it.
