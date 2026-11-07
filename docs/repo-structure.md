@@ -18,7 +18,6 @@ Use this file for navigation. Current behavior and architecture are summarized i
 ├── docs/                     # Current project, architecture, release, glossary, and ADR docs
 ├── openspec/
 │   ├── specs/                # Durable behavior contracts
-│   ├── plans/                # Roadmap and plan documents
 │   └── changes/archive/      # Completed change history
 ├── .github/
 │   ├── workflows/        # CI and tag-driven release workflows
