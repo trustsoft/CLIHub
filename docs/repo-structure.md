@@ -39,7 +39,6 @@ Use this file for navigation. Current behavior and architecture are summarized i
 ├── CHANGELOG.md
 ├── RELEASE-NOTES.md
 ├── improvements.md           # Active architecture improvement directions
-├── opencode.json             # OpenCode project configuration
 └── .gitattributes
 ```
 

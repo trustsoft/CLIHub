@@ -1,4 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "default_agent": "orchestrator"
+  "default_agent": "orchestrator",
+  "mcp": {
+    "stitch": {
+      "enabled": true
+    }
+  }
 }
