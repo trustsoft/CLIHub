@@ -104,8 +104,8 @@ for one minute; it is never written into either document.
 
 `<project>` is the session's `location.directory`, falling back to the plugin
 location, the default location, then the process cwd. The resolver and gate
-scripts for those documents live next to the plugin in this repository
-(`.opencode/scripts/`), so a project checkout needs no installation step;
+scripts for those documents are versioned in this repository
+(`project/.opencode/scripts/`) and deployed per project by `install.ps1`;
 on the origin machine the project was `D:\Projects\CLIHub`, i.e. exactly the two
 contract paths. Two environment
 variables override the paths (used by `verify.ts`):
@@ -297,14 +297,13 @@ The shared sidebar helpers — colors, collapse, session id, toast, polling, and
 the header row — live at `<project>\.opencode\shared\sidebar-ui.tsx`; the entry
 imports them as `../../shared/sidebar-ui`.
 
-The plugin, its modules, and the shared helpers are versioned in this repository
-under `.opencode/`; OpenCode discovers the entry from the project tree, and
-nothing needs to be copied into a user configuration directory.
+Canonical sources live in the opencode-sidebar-suite repository, and
+`install.ps1` copies them into the project's `.opencode` directory.
 
 ## Verification
 
-Commands actually run from the plugin directory
-(`.opencode\plugins\model-policy`, Bun 1.4.2):
+Commands actually run from `C:\Users\Maxim\.config\opencode\plugins\model-policy`
+(Bun 1.4.2):
 
 ```powershell
 bun run verify.ts
@@ -446,12 +445,13 @@ Registration: the plugin directory was listed as `local` by `opencode plugin lis
 Activation: restart the OpenCode CLI (or let the host reload plugins) so the
 project tree is re-read.
 
-Rollback: revert the commit that added the plugin, or delete
-`.opencode\plugins\model-policy\` by hand. Keep
-`.opencode\shared\sidebar-ui.tsx` while another entry imports it
-(`pipeline-status` does). The runtime file `.opencode/model-policy.json` can stay
-(the orchestrator owns most of it) or be deleted; it is recreated with defaults
-on the next load if the plugin is still registered.
+Rollback: run `.\uninstall.ps1 -ProjectDir <project>` (it removes exactly the
+managed names, including this plugin directory and `shared\sidebar-ui.tsx` when no
+other entry imports it), or delete
+`<project>\.opencode\plugins\model-policy\` by hand. The runtime file
+`.opencode\model-policy.json` can stay (the orchestrator owns most of it) or be
+deleted; it is recreated with defaults on the next load if the plugin is still
+registered.
 
 ## Known risks
 
