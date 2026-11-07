@@ -38,7 +38,6 @@ Use this file for navigation. Current behavior and architecture are summarized i
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── RELEASE-NOTES.md
-├── improvements.md           # Active architecture improvement directions
 └── .gitattributes
 ```
 
