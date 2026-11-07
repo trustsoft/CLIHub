@@ -4,7 +4,6 @@ using System.Reflection;
 
 using Microsoft.Extensions.Logging;
 
-using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 
 using Velopack;
@@ -23,11 +22,9 @@ public class UpdateService : IUpdateService
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
 
     private readonly ILogger<UpdateService> logger;
-    private readonly IPreferencesStore? preferences;
     private readonly TimeSpan checkTimeout;
     private readonly object managerGate = new();
     private UpdateManager? cachedManager;
-    private bool cachedManagerPrerelease;
     private bool managerCached;
     private readonly UpdateDownloader downloader;
     private readonly UpdateInstaller installer;
@@ -39,11 +36,9 @@ public class UpdateService : IUpdateService
     ///   Creates the service using the default GitHub update source.
     /// </summary>
     /// <param name="logger"> The service logger. </param>
-    /// <param name="preferencesStore"> Preferences source used to decide pre-release checks. </param>
-    public UpdateService(ILogger<UpdateService> logger, IPreferencesStore preferencesStore)
+    public UpdateService(ILogger<UpdateService> logger)
     {
         this.logger = logger;
-        this.preferences = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.checkTimeout = CheckTimeout;
         this.downloader = new UpdateDownloader(logger);
         this.installer = new UpdateInstaller(logger);
@@ -76,31 +71,29 @@ public class UpdateService : IUpdateService
 
     private UpdateManager? GetDefaultManager()
     {
-        var prerelease = this.preferences?.Load().NotifyPrereleaseUpdates ?? false;
-
         lock (this.managerGate)
         {
-            if (this.managerCached && this.cachedManagerPrerelease == prerelease)
+            if (this.managerCached)
             {
                 return this.cachedManager;
             }
 
-            this.cachedManager = this.CreateDefaultManager(prerelease);
-            this.cachedManagerPrerelease = prerelease;
+            this.cachedManager = this.CreateDefaultManager();
             this.managerCached = true;
             return this.cachedManager;
         }
     }
 
-    private UpdateManager? CreateDefaultManager(bool prerelease)
+    private UpdateManager? CreateDefaultManager()
     {
         try
         {
             // A GitHub repository URL uses the GitHub Releases source; any other URL or a local
             // folder (useful for testing and self-hosted mirrors) uses Velopack's default source.
+            // Only stable releases are published, so the source never includes pre-release builds.
             if (RepositoryUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase))
             {
-                return new UpdateManager(new GithubSource(RepositoryUrl, null, prerelease));
+                return new UpdateManager(new GithubSource(RepositoryUrl, null, prerelease: false));
             }
 
             return new UpdateManager(RepositoryUrl);

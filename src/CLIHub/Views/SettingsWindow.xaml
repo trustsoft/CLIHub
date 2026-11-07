@@ -98,12 +98,6 @@
                                        Text="{Binding Version, StringFormat=v{0}}"/>
                         </StackPanel>
                     </Border>
-                    <Border Margin="8,0,0,0" Style="{StaticResource HeaderChip}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource HeaderChipLabel}" Text="Channel: "/>
-                            <TextBlock Style="{StaticResource HeaderChipValue}" Text="Stable"/>
-                        </StackPanel>
-                    </Border>
                     <Button VerticalAlignment="Center"
                             Margin="8,0,0,0"
                             Command="{Binding ShowReleaseNotesCommand}"

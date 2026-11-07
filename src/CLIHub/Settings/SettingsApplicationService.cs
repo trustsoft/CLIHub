@@ -21,7 +21,6 @@ using CLIHub.Core.Scanning;
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
 /// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
 /// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
-/// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
 /// <param name="LogLevel"> Selected log level name. </param>
 /// <param name="LogRetentionDaysText"> Retained daily log file count as text. </param>
 /// <param name="LogFileSizeLimitText"> Per-file log size limit in megabytes as text (0 = unlimited). </param>
@@ -41,7 +40,6 @@ public sealed record SettingsInput(
     bool CheckForUpdatesOnStartup,
     bool AutoDownloadUpdates,
     bool NotifyStableUpdates,
-    bool NotifyPrereleaseUpdates,
     string LogLevel,
     string LogRetentionDaysText,
     string LogFileSizeLimitText,
@@ -64,7 +62,6 @@ public sealed record SettingsInput(
 /// <param name="CheckForUpdatesOnStartup"> Whether startup update checks are enabled. </param>
 /// <param name="AutoDownloadUpdates"> Whether updates are downloaded automatically in the background. </param>
 /// <param name="NotifyStableUpdates"> Whether stable update availability is notified. </param>
-/// <param name="NotifyPrereleaseUpdates"> Whether pre-release versions are checked and notified. </param>
 /// <param name="LogLevel"> Selected log level name. </param>
 /// <param name="LogRetentionDays"> Number of daily log files to retain. </param>
 /// <param name="LogFileSizeLimitMb"> Per-file log size limit in megabytes (0 = unlimited). </param>
@@ -84,7 +81,6 @@ public sealed record SettingsDraft(
     bool CheckForUpdatesOnStartup,
     bool AutoDownloadUpdates,
     bool NotifyStableUpdates,
-    bool NotifyPrereleaseUpdates,
     string LogLevel,
     int LogRetentionDays,
     int LogFileSizeLimitMb,
@@ -201,7 +197,6 @@ public sealed class SettingsApplicationService
             preferences.CheckForUpdatesOnStartup,
             preferences.AutoDownloadUpdates,
             preferences.NotifyStableUpdates,
-            preferences.NotifyPrereleaseUpdates,
             preferences.LogLevel,
             preferences.LogRetentionDays,
             preferences.LogFileSizeLimitMb,
@@ -277,7 +272,6 @@ public sealed class SettingsApplicationService
             input.CheckForUpdatesOnStartup,
             input.AutoDownloadUpdates,
             input.NotifyStableUpdates,
-            input.NotifyPrereleaseUpdates,
             input.LogLevel,
             retentionDays,
             sizeLimitMb,
@@ -561,7 +555,6 @@ public sealed class SettingsApplicationService
         preferences.CheckForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
         preferences.AutoDownloadUpdates = draft.AutoDownloadUpdates;
         preferences.NotifyStableUpdates = draft.NotifyStableUpdates;
-        preferences.NotifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
         preferences.LogLevel = draft.LogLevel;
         preferences.LogRetentionDays = draft.LogRetentionDays;
         preferences.LogFileSizeLimitMb = draft.LogFileSizeLimitMb;

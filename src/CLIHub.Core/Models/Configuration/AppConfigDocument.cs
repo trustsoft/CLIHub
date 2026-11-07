@@ -112,7 +112,6 @@ internal sealed class AppConfigDocument
         public bool CheckForUpdatesOnStartup { get; set; } = true;
         public bool AutoDownloadUpdates { get; set; } = true;
         public bool NotifyStableUpdates { get; set; } = true;
-        public bool NotifyPrereleaseUpdates { get; set; }
         public bool StartMinimized { get; set; } = true;
         public bool PinLaunchWindow { get; set; }
         public string PopupScreenPosition { get; set; } = "center";
@@ -144,7 +143,6 @@ internal sealed class AppConfigDocument
             CheckForUpdatesOnStartup = preferences.CheckForUpdatesOnStartup,
             AutoDownloadUpdates = preferences.AutoDownloadUpdates,
             NotifyStableUpdates = preferences.NotifyStableUpdates,
-            NotifyPrereleaseUpdates = preferences.NotifyPrereleaseUpdates,
             StartMinimized = preferences.StartMinimized,
             PinLaunchWindow = preferences.PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.ToToken(preferences.PopupScreenPosition),
@@ -185,7 +183,6 @@ internal sealed class AppConfigDocument
             CheckForUpdatesOnStartup = this.CheckForUpdatesOnStartup,
             AutoDownloadUpdates = this.AutoDownloadUpdates,
             NotifyStableUpdates = this.NotifyStableUpdates,
-            NotifyPrereleaseUpdates = this.NotifyPrereleaseUpdates,
             StartMinimized = this.StartMinimized,
             PinLaunchWindow = this.PinLaunchWindow,
             PopupScreenPosition = PopupScreenPositions.Parse(this.PopupScreenPosition),

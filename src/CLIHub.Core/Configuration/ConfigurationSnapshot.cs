@@ -72,7 +72,6 @@ public sealed class ConfigurationSnapshot
         CheckForUpdatesOnStartup = preferences.CheckForUpdatesOnStartup,
         AutoDownloadUpdates = preferences.AutoDownloadUpdates,
         NotifyStableUpdates = preferences.NotifyStableUpdates,
-        NotifyPrereleaseUpdates = preferences.NotifyPrereleaseUpdates,
         StartMinimized = preferences.StartMinimized,
         PinLaunchWindow = preferences.PinLaunchWindow,
         PopupScreenPosition = preferences.PopupScreenPosition,

@@ -360,6 +360,20 @@ snapshot.
 - Trigger: a provider-package release that surfaces LM Studio reasoning as variants, or the first
   local dispatch that needs thinking pinned off.
 
+## Documentation and release tooling
+
+### README screenshot script still writes the removed `notifyPrereleaseUpdates` key
+
+- Severity: Low (inert; the key is ignored on load and never written back)
+- Evidence (2026-11-07): `docs/images/tools/Capture-ReadmeImages.ps1:428` writes
+  `notifyPrereleaseUpdates = $false` into the mock `config.json` used for README screenshots.
+  `remove-prerelease-updates-option` removed the preference and its model plumbing, but this script
+  is screenshot tooling outside that change's scope.
+- Proposed remedy: delete the key from the mock config the next time the screenshot tooling is
+  touched.
+- Trigger: the next README-screenshot refresh (`docs/releasing.md` step 0 already requires re-running
+  the script) or any edit to `docs/images/tools/`.
+
 ## UI and theming
 
 ### Settings-page registration lives in two places

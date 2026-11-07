@@ -51,11 +51,8 @@ public sealed class UpdateStartupCoordinator : IUpdateStartupCoordinator
             if (result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is { } version)
             {
                 var appPrefs = this.preferences.Load();
-                var shouldNotify = VersionClassification.IsPrerelease(version)
-                    ? appPrefs.NotifyPrereleaseUpdates
-                    : appPrefs.NotifyStableUpdates;
 
-                if (shouldNotify)
+                if (appPrefs.NotifyStableUpdates)
                 {
                     notifyUpdateAvailable(version);
                 }

@@ -50,8 +50,8 @@
 
 ## 8. Manual smoke (user, not the implementer)
 
-- [ ] 8.1 Settings → Updates page shows Version chip, no Channel chip, and three toggles (startup check, auto-download, stable notifications)
-- [ ] 8.2 Update check returns only stable releases (no pre-release versions offered)
-- [ ] 8.3 Old config file with `notifyPrereleaseUpdates: true` loads without error, and the key disappears on next save
+- [x] 8.1 Settings → Updates page shows Version chip, no Channel chip, and three toggles (startup check, auto-download, stable notifications)
+- [x] 8.2 Update check returns only stable releases (no pre-release versions offered)
+- [x] 8.3 Old config file with `notifyPrereleaseUpdates: true` loads without error, and the key disappears on next save
 
-> **Note:** The implementer MUST leave stage 8 checkboxes unticked and MUST NOT claim GUI verification. The orchestrator reports these smoke tests to the user for confirmation.
+> **Note:** The implementer MUST leave stage 8 checkboxes unticked and MUST NOT claim GUI verification. The orchestrator reports these smoke tests to the user for confirmation. Confirmed by the user on 2026-11-07.

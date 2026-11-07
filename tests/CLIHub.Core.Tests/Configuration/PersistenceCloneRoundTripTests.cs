@@ -36,7 +36,6 @@ public class PersistenceCloneRoundTripTests
         nameof(AppPreferences.CheckForUpdatesOnStartup),
         nameof(AppPreferences.AutoDownloadUpdates),
         nameof(AppPreferences.NotifyStableUpdates),
-        nameof(AppPreferences.NotifyPrereleaseUpdates),
         nameof(AppPreferences.StartMinimized),
         nameof(AppPreferences.PinLaunchWindow),
         nameof(AppPreferences.PopupScreenPosition),
@@ -191,7 +190,6 @@ public class PersistenceCloneRoundTripTests
                 CheckForUpdatesOnStartup = false,
                 AutoDownloadUpdates = false,
                 NotifyStableUpdates = false,
-                NotifyPrereleaseUpdates = true,
                 StartMinimized = false,
                 PinLaunchWindow = true,
                 PopupScreenPosition = PopupScreenPosition.TopCenter,
@@ -248,7 +246,6 @@ public class PersistenceCloneRoundTripTests
         Assert.Equal(expected.CheckForUpdatesOnStartup, actual.CheckForUpdatesOnStartup);
         Assert.Equal(expected.AutoDownloadUpdates, actual.AutoDownloadUpdates);
         Assert.Equal(expected.NotifyStableUpdates, actual.NotifyStableUpdates);
-        Assert.Equal(expected.NotifyPrereleaseUpdates, actual.NotifyPrereleaseUpdates);
         Assert.Equal(expected.StartMinimized, actual.StartMinimized);
         Assert.Equal(expected.PinLaunchWindow, actual.PinLaunchWindow);
         Assert.Equal(expected.PopupScreenPosition, actual.PopupScreenPosition);

@@ -91,12 +91,6 @@ public class AppPreferences
     public bool NotifyStableUpdates { get; set; } = true;
 
     /// <summary>
-    ///   When true (default is false), update checks include pre-release
-    ///   versions and the user is notified when a pre-release update is available.
-    /// </summary>
-    public bool NotifyPrereleaseUpdates { get; set; }
-
-    /// <summary>
     ///   When true (default), CLIHub starts minimized in the system tray; when false,
     ///   the main window is shown at startup. Applies to manual and Windows starts.
     /// </summary>

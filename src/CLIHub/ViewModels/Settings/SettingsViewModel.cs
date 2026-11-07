@@ -88,7 +88,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private bool checkForUpdatesOnStartup = true;
     private bool autoDownloadUpdates = true;
     private bool notifyStableUpdates = true;
-    private bool notifyPrereleaseUpdates;
     private string updateMessage = string.Empty;
     private SettingsUpdateCard updateCard = new("Check for updates", string.Empty, "Not checked", SettingBadgeTone.Neutral);
     private string? validationError;
@@ -410,15 +409,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
-    ///   Whether pre-release versions are checked and notified.
-    /// </summary>
-    public bool NotifyPrereleaseUpdates
-    {
-        get => this.notifyPrereleaseUpdates;
-        set => this.SetProperty(ref this.notifyPrereleaseUpdates, value);
-    }
-
-    /// <summary>
     ///   The log level options offered by the selector.
     /// </summary>
     public IReadOnlyList<LogLevelOption> LogLevels => LogLevelOptions;
@@ -626,7 +616,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.checkForUpdatesOnStartup = draft.CheckForUpdatesOnStartup;
         this.autoDownloadUpdates = draft.AutoDownloadUpdates;
         this.notifyStableUpdates = draft.NotifyStableUpdates;
-        this.notifyPrereleaseUpdates = draft.NotifyPrereleaseUpdates;
         this.selectedLogLevel = LogLevelOptions.FirstOrDefault(o => o.Value == draft.LogLevel) ?? LogLevelOptions[2];
         this.logRetentionDaysText = draft.LogRetentionDays.ToString();
         this.logFileSizeLimitText = draft.LogFileSizeLimitMb.ToString();
@@ -664,7 +653,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         this.OnPropertyChanged(nameof(this.CheckForUpdatesOnStartup));
         this.OnPropertyChanged(nameof(this.AutoDownloadUpdates));
         this.OnPropertyChanged(nameof(this.NotifyStableUpdates));
-        this.OnPropertyChanged(nameof(this.NotifyPrereleaseUpdates));
         this.OnPropertyChanged(nameof(this.SelectedLogLevel));
         this.OnPropertyChanged(nameof(this.LogRetentionDaysText));
         this.OnPropertyChanged(nameof(this.LogFileSizeLimitText));
@@ -843,7 +831,6 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
             this.CheckForUpdatesOnStartup,
             this.AutoDownloadUpdates,
             this.NotifyStableUpdates,
-            this.NotifyPrereleaseUpdates,
             this.SelectedLogLevel.Value,
             this.LogRetentionDaysText,
             this.LogFileSizeLimitText,

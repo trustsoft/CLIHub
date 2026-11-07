@@ -97,38 +97,12 @@ public class UpdateStartupCoordinatorTests
     {
         var updateService = CreateUpdateService(
             new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0"));
-        var coordinator = CreateCoordinator(updateService.Object, notifyStable: false, notifyPrerelease: true);
+        var coordinator = CreateCoordinator(updateService.Object, notifyStable: false);
         var notificationCount = 0;
 
         await coordinator.CheckAsync(true, _ => notificationCount++);
 
         Assert.Equal(0, notificationCount);
-    }
-
-    [Fact]
-    public async Task CheckAsync_PrereleaseAvailable_WhenDisabled_DoesNotNotify()
-    {
-        var updateService = CreateUpdateService(
-            new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0-beta.1"));
-        var coordinator = CreateCoordinator(updateService.Object, notifyStable: true, notifyPrerelease: false);
-        var notificationCount = 0;
-
-        await coordinator.CheckAsync(true, _ => notificationCount++);
-
-        Assert.Equal(0, notificationCount);
-    }
-
-    [Fact]
-    public async Task CheckAsync_PrereleaseAvailable_WhenEnabled_Notifies()
-    {
-        var updateService = CreateUpdateService(
-            new UpdateCheckResult(UpdateStatus.UpdateAvailable, "1.0.0", "1.1.0-beta.1"));
-        var coordinator = CreateCoordinator(updateService.Object, notifyStable: true, notifyPrerelease: true);
-        string? notifiedVersion = null;
-
-        await coordinator.CheckAsync(true, version => notifiedVersion = version);
-
-        Assert.Equal("1.1.0-beta.1", notifiedVersion);
     }
 
     private static Mock<IUpdateWorkflow> CreateUpdateService(UpdateCheckResult result)
@@ -142,14 +116,12 @@ public class UpdateStartupCoordinatorTests
 
     private static UpdateStartupCoordinator CreateCoordinator(
         IUpdateWorkflow updateService,
-        bool notifyStable = true,
-        bool notifyPrerelease = false)
+        bool notifyStable = true)
     {
         var preferences = new Mock<IPreferencesStore>();
         preferences.Setup(x => x.Load()).Returns(new AppPreferences
         {
-            NotifyStableUpdates = notifyStable,
-            NotifyPrereleaseUpdates = notifyPrerelease
+            NotifyStableUpdates = notifyStable
         });
         return new(updateService, preferences.Object, NullLogger<UpdateStartupCoordinator>.Instance);
     }
