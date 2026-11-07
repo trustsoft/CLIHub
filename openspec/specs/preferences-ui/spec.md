@@ -190,19 +190,19 @@ The Terminal Profiles page SHALL offer the runtime hosts PowerShell, PowerShell 
 
 ### Requirement: Updates page options
 
-The Settings page header for "Updates" SHALL show the current version and stable channel as chips next to the page title, an update-status chip indicating either that the build is current or that an update is available, a "Check for updates" action, and a "Release notes" action on the title row after the channel chip. The page body SHALL offer the "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-releases" controls. The page SHALL show the current application version and check status without commit, target, or agent-protocol detail.
+The Settings page header for "Updates" SHALL show the current version as a chip next to the page title, an update-status chip indicating either that the build is current or that an update is available, a "Check for updates" action, and a "Release notes" action on the title row after the version chip. The page body SHALL offer the "Check for updates on startup", "Automatically download updates", and "Notify about stable releases" controls. The page SHALL show the current application version and check status without commit, target, or agent-protocol detail.
 
 #### Scenario: Options offered
 
 - **WHEN** the Settings window opens on "Updates"
-- **THEN** the page header shows the version and stable channel chips, the update-status chip, and the "Check for updates" action
-- **AND** the title row shows "Release notes" after the channel chip
-- **AND** the page body shows "Check for updates on startup", "Automatically download updates", "Notify about stable releases", and "Notify about pre-releases" toggles
+- **THEN** the page header shows the version chip, the update-status chip, and the "Check for updates" action
+- **AND** the title row shows "Release notes" after the version chip
+- **AND** the page body shows "Check for updates on startup", "Automatically download updates", and "Notify about stable releases" toggles
 
 #### Scenario: Defaults
 
 - **WHEN** no update preferences have been stored
-- **THEN** "Automatically download updates" and "Notify about stable releases" are on and "Notify about pre-releases" is off
+- **THEN** "Automatically download updates" and "Notify about stable releases" are on
 
 #### Scenario: Persist on save
 

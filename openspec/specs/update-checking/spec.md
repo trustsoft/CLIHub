@@ -262,26 +262,16 @@ The system SHALL, when background auto-download is enabled, download an availabl
 - **WHEN** the automatic download completes successfully
 - **THEN** the update surfaces offer the restart-to-update action
 
-### Requirement: Update notification preferences
+### Requirement: Stable update notification
 
-The system SHALL notify about stable and pre-release updates according to two independent preferences, and SHALL include pre-release versions in the update check only when pre-release notifications are enabled.
+The system SHALL always check for stable releases only. The system SHALL notify about stable updates when the stable-notification preference is enabled.
 
 #### Scenario: Stable notifications enabled
+
 - **WHEN** a stable update is found and stable notifications are enabled
 - **THEN** the update availability notification is shown
 
 #### Scenario: Stable notifications disabled
+
 - **WHEN** a stable update is found and stable notifications are disabled
-- **THEN** no update availability notification is shown
-
-#### Scenario: Pre-release versions included
-- **WHEN** pre-release notifications are enabled
-- **THEN** the update check includes pre-release versions
-
-#### Scenario: Pre-release notification shown
-- **WHEN** a pre-release update is found and pre-release notifications are enabled
-- **THEN** the update availability notification is shown
-
-#### Scenario: Both notification preferences disabled
-- **WHEN** both notification preferences are disabled
 - **THEN** no update availability notification is shown
