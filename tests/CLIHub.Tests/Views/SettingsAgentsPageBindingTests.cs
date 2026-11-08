@@ -1,7 +1,5 @@
 namespace CLIHub.Tests.Views;
 
-using System.Xml.Linq;
-
 using static CLIHub.Tests.Support.TestHelpers;
 
 /// <summary>

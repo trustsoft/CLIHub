@@ -1,14 +1,12 @@
 namespace CLIHub.Core.Tests.Composition;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;

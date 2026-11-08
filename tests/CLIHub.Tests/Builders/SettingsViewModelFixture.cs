@@ -9,7 +9,6 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Windows;
-using CLIHub.Controls;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Settings;

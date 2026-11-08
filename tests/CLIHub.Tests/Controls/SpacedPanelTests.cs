@@ -1,6 +1,5 @@
 namespace CLIHub.Tests.Controls;
 
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 

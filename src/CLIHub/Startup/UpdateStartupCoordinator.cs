@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
-using CLIHub.Core.Updates;
 using CLIHub.Updates;
 
 /// <summary>

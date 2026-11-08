@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 
 using CLIHub.Core;
 using CLIHub.Core.Windows;
-using CLIHub.Core.Scanning;
-using CLIHub.Core.Updates;
 using CLIHub.Converters;
 using CLIHub.Imaging;
 using CLIHub.Hotkeys;

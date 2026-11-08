@@ -1,7 +1,5 @@
 namespace CLIHub.ViewModels;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
 
 using CLIHub.Core.Infrastructure.Persistence;

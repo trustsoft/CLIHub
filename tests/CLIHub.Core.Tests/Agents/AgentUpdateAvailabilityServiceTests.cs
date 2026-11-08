@@ -1,7 +1,6 @@
 namespace CLIHub.Core.Tests.Agents;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;

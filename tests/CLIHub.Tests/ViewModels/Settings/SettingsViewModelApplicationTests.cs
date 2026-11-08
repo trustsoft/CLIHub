@@ -3,20 +3,11 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.IO;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
 
 using CLIHub.Controls;
-using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Processes;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
-using CLIHub.Launching;
-using CLIHub.Lifetime;
-using CLIHub.Settings;
 using CLIHub.Tests.Builders;
-using CLIHub.Updates;
 
 public class SettingsViewModelApplicationTests
 {

@@ -1,7 +1,6 @@
 namespace CLIHub.Core.Tests.Fakes;
 
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 using CLIHub.Core.Infrastructure.Processes;

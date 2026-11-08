@@ -6,7 +6,6 @@ using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Tests.Builders;
 using CLIHub.Theming;
-using CLIHub.ViewModels;
 
 public partial class AgentManagementViewModelTests
 {

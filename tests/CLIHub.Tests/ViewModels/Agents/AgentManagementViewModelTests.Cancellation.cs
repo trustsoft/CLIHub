@@ -1,23 +1,10 @@
 namespace CLIHub.Tests.ViewModels;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 using Moq;
 
-using CLIHub.Controls;
 using CLIHub.Core.Agents;
-using CLIHub.Core.Infrastructure.Logging;
-using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
-using CLIHub.Core.Plugins;
-using CLIHub.Core.Processes;
-using CLIHub.ViewModels;
-using CLIHub.Lifetime;
-using CLIHub.Launching;
 using CLIHub.Tests.Builders;
-
-using static CLIHub.Tests.Support.TestHelpers;
 
 public partial class AgentManagementViewModelTests
 {
