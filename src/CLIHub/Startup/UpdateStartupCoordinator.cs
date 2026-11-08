@@ -1,10 +1,10 @@
 namespace CLIHub.Startup;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Updates;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Runs the optional startup update check and reports available versions.

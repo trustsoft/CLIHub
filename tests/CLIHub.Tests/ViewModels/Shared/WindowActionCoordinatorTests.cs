@@ -1,9 +1,5 @@
 namespace CLIHub.Tests.ViewModels.Shared;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Persistence;
@@ -18,9 +14,13 @@ using CLIHub.Settings;
 using CLIHub.Updates;
 using CLIHub.ViewModels;
 
-using static CLIHub.Tests.Support.TestHelpers;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 using Xunit;
+
+using static CLIHub.Tests.Support.TestHelpers;
 
 public class WindowActionCoordinatorTests
 {

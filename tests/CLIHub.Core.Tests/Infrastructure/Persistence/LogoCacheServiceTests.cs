@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Tests.Infrastructure.Persistence;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Persistence;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class LogoCacheServiceTests : IDisposable
 {

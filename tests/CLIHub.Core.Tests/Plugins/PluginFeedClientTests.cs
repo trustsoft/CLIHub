@@ -4,11 +4,11 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class PluginFeedClientTests
 {

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 using CLIHub.Controls;
+
 using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class SpacedPanelTests

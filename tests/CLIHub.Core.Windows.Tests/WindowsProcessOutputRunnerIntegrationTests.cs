@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Windows.Tests;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Processes;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 ///   Integration tests for <see cref="WindowsProcessOutputRunner" /> with real cmd.exe processes.

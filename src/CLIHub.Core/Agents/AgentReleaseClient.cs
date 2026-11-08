@@ -3,11 +3,11 @@ namespace CLIHub.Core.Agents;
 using System.Globalization;
 using System.Text.Json;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Models.Plugins;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Reads the latest published version from the npm registry or from GitHub releases over a

@@ -1,16 +1,16 @@
 namespace CLIHub.Tests.Composition;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-
-using Moq;
-
 using CLIHub.Composition;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
 using CLIHub.Tests.Services;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
+
+using Moq;
 
 using Xunit;
 

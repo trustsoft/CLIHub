@@ -2,10 +2,10 @@ namespace CLIHub.Core.Tests.Infrastructure.Logging;
 
 using System.Collections.Generic;
 
+using CLIHub.Core.Infrastructure.Logging;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-
-using CLIHub.Core.Infrastructure.Logging;
 
 using Xunit;
 

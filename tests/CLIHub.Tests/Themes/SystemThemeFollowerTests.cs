@@ -2,10 +2,10 @@ namespace CLIHub.Tests.Themes;
 
 using System.Windows;
 
-using Microsoft.Win32;
-
 using CLIHub.Core.Models;
 using CLIHub.Theming;
+
+using Microsoft.Win32;
 
 /// <summary>
 ///   Covers the decision logic of <see cref="SystemThemeFollower" /> through its internal seam:

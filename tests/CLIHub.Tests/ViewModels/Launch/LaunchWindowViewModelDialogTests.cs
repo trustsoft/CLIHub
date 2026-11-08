@@ -1,11 +1,11 @@
 namespace CLIHub.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
-using CLIHub.Tests.Builders;
 using CLIHub.Launching;
+using CLIHub.Tests.Builders;
+
+using Moq;
 
 public class LaunchWindowViewModelDialogTests
 {

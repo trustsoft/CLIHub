@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Tests.Events;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Events;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class DomainEventBusTests
 {

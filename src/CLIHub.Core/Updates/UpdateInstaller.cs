@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Updates;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 using Velopack;
 
@@ -43,7 +43,7 @@ internal sealed class UpdateInstaller
         try
         {
             this.logger.LogInformation("Applying update and restarting: {Version}", version);
-            
+
             // This method does not return if successful - it terminates the current process
             manager.ApplyUpdatesAndRestart(asset);
 
@@ -79,7 +79,7 @@ internal sealed class UpdateInstaller
         try
         {
             this.logger.LogInformation("Applying update and exiting: {Version}", version);
-            
+
             // This method does not return if successful - it terminates the current process
             manager.ApplyUpdatesAndExit(asset);
 

@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Tests.Plugins;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Plugins;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class PluginStateRepositoryTests : IDisposable
 {

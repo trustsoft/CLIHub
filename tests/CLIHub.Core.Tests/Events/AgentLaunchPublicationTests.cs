@@ -1,15 +1,15 @@
 namespace CLIHub.Core.Tests.Events;
 
-using Microsoft.Extensions.Logging;
-
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging;
+
+using Moq;
 
 using Xunit;
 

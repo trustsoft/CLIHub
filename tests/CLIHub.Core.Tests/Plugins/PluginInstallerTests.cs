@@ -3,11 +3,11 @@ namespace CLIHub.Core.Tests.Plugins;
 using System.IO.Compression;
 using System.Text;
 
+using CLIHub.Core.Plugins;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
-
-using CLIHub.Core.Plugins;
 
 public class PluginInstallerTests : IDisposable
 {

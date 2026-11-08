@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.Processes;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Windows implementation of process output runner with timeout support.
@@ -71,7 +71,7 @@ public sealed class WindowsProcessOutputRunner : IProcessOutputRunner
             {
                 timedOut = !cancellationToken.IsCancellationRequested;
                 await TerminateProcessAsync(process);
-                
+
                 if (cancellationToken.IsCancellationRequested)
                 {
                     throw;

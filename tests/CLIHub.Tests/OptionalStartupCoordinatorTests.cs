@@ -1,11 +1,12 @@
 namespace CLIHub.Tests;
 
-using Moq;
+using CLIHub.Core.Models;
+using CLIHub.Lifetime;
+using CLIHub.Startup;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
-using CLIHub.Core.Models;
-using CLIHub.Startup;
-using CLIHub.Lifetime;
+using Moq;
 
 public sealed class OptionalStartupCoordinatorTests
 {

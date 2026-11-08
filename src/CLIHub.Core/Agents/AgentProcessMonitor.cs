@@ -1,12 +1,12 @@
 namespace CLIHub.Core.Agents;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Monitors running agent processes for update safety checks.

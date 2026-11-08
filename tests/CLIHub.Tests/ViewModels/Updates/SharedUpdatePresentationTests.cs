@@ -1,22 +1,22 @@
 namespace CLIHub.Tests.ViewModels;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Updates;
-using CLIHub.Tests.Services;
-using CLIHub.ViewModels;
-using CLIHub.Tray;
-using CLIHub.Updates;
+using CLIHub.Core.Windows;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Settings;
 using CLIHub.Startup;
+using CLIHub.Tests.Services;
+using CLIHub.Tray;
+using CLIHub.Updates;
+using CLIHub.ViewModels;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 

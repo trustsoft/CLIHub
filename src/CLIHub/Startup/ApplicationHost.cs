@@ -2,14 +2,14 @@ namespace CLIHub.Startup;
 
 using System.Windows;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Logging;
 using CLIHub.Composition;
 using CLIHub.Converters;
+using CLIHub.Core.Infrastructure.FileSystem;
+using CLIHub.Core.Logging;
 using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using Serilog;
 

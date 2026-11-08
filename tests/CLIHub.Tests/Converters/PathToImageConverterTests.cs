@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using CLIHub.Converters;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Imaging;
+
 using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class PathToImageConverterTests : IDisposable

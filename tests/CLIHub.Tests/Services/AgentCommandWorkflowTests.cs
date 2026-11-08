@@ -1,10 +1,10 @@
 namespace CLIHub.Tests.Services;
 
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Launching;
+
+using Moq;
 
 public class AgentCommandWorkflowTests
 {

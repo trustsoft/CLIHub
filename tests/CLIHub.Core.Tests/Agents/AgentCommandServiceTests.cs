@@ -1,13 +1,14 @@
 namespace CLIHub.Core.Tests.Agents;
 
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-
-using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Events;
+using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class AgentCommandServiceTests : IDisposable
 {

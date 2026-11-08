@@ -1,11 +1,11 @@
 namespace CLIHub.Core.Tests.Projects;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging;
 
 public class ProjectStateStoreTests : IDisposable
 {

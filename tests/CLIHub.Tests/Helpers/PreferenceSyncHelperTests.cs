@@ -41,7 +41,7 @@ public sealed class PreferenceSyncHelperTests
         var mockStore = new Mock<IPreferencesStore>();
         var updateCalled = false;
         Action<AppPreferences> update = p => { updateCalled = true; };
-        
+
         // Setup mock to actually invoke the callback
         mockStore.Setup(s => s.Update(It.IsAny<Action<AppPreferences>>()))
             .Callback<Action<AppPreferences>>(action => action(new AppPreferences()));

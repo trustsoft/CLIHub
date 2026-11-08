@@ -1,10 +1,10 @@
 namespace CLIHub.Core.Tests.Plugins;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class PluginSeederTests : IDisposable
 {

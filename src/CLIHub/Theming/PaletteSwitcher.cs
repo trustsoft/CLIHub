@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 
-using Serilog;
-
 using CLIHub.Core.Models;
+
+using Serilog;
 
 /// <summary>
 ///   Owns the single palette overlay merged into the application resources on top of the dark base

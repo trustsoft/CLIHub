@@ -1,11 +1,11 @@
 namespace CLIHub.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
 using CLIHub.Launching;
+
+using Moq;
 
 public class ProjectPaneControllerTests
 {

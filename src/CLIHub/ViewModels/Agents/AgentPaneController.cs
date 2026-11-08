@@ -2,12 +2,12 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Plugins;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Owns agent composition, filtering, selection identity, cache invalidation, and versions.

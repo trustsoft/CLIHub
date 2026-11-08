@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Tests.Fakes;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Models;
 
 /// <summary>
 ///   Fake runtime executable locator with a configurable path per kind (null by default).

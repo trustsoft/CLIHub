@@ -2,10 +2,10 @@ namespace CLIHub.Core.Configuration;
 
 using System.Text.Json;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Owns configuration snapshots and persistence to config.json.

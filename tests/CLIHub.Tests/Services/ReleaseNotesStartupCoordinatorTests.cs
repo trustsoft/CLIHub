@@ -1,15 +1,15 @@
 namespace CLIHub.Tests.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
+using CLIHub.Composition;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Startup;
 using CLIHub.Updates;
-using CLIHub.Composition;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class ReleaseNotesStartupCoordinatorTests
 {

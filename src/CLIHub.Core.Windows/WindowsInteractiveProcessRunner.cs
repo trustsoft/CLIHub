@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.Processes;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Windows implementation of interactive process launching.

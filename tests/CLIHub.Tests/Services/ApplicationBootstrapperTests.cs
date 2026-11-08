@@ -1,16 +1,16 @@
 namespace CLIHub.Tests.Services;
 
+using CLIHub.Composition;
+using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
+using CLIHub.Lifetime;
+using CLIHub.Startup;
+using CLIHub.Views;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
-
-using CLIHub.Core.Windows;
-using CLIHub.Core.Models;
-using CLIHub.Startup;
-using CLIHub.Lifetime;
-using CLIHub.Composition;
-using CLIHub.Views;
 
 public class ApplicationBootstrapperTests
 {

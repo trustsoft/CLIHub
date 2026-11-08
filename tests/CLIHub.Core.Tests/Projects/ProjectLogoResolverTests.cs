@@ -1,10 +1,10 @@
 namespace CLIHub.Core.Tests.Projects;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class ProjectLogoResolverTests : IDisposable
 {

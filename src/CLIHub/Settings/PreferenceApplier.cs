@@ -1,11 +1,11 @@
 namespace CLIHub.Settings;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
 using CLIHub.Hotkeys;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Default <see cref="IPreferenceApplier" />; forwards changes to the launcher and hotkey service.

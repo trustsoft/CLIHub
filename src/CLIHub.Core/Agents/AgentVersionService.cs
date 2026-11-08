@@ -3,11 +3,11 @@ namespace CLIHub.Core.Agents;
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Retrieves an agent's version by running its version command, with per-agent caching

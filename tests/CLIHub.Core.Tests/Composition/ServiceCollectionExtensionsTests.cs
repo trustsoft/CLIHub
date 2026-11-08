@@ -1,7 +1,5 @@
 namespace CLIHub.Core.Tests.Composition;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using CLIHub.Core;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
@@ -12,6 +10,8 @@ using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Tests.Fakes;
 using CLIHub.Core.Updates;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class ServiceCollectionExtensionsTests
 {

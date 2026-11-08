@@ -15,11 +15,11 @@ using ProcessResult = CLIHub.Core.Processes.ProcessResult;
 public sealed class FakeProcessOrchestrator : IProcessOrchestrator
 {
     /// <inheritdoc/>
-    public Task<ProcessResult> LaunchInteractiveAsync(LaunchRequest request) 
+    public Task<ProcessResult> LaunchInteractiveAsync(LaunchRequest request)
         => Task.FromResult(ProcessResult.Success(0));
 
     /// <inheritdoc/>
-    public Task<ProcessResult> CaptureOutputAsync(LaunchRequest request) 
+    public Task<ProcessResult> CaptureOutputAsync(LaunchRequest request)
         => Task.FromResult(ProcessResult.Success(0));
 
     /// <inheritdoc/>

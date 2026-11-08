@@ -2,16 +2,16 @@ namespace CLIHub.Tests.Services;
 
 using System.Windows;
 
+using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
+using CLIHub.Lifetime;
+using CLIHub.Startup;
+using CLIHub.Theming;
+using CLIHub.Updates;
+
 using Microsoft.Win32;
 
 using Moq;
-
-using CLIHub.Core.Models;
-using CLIHub.Core.Windows;
-using CLIHub.Startup;
-using CLIHub.Updates;
-using CLIHub.Lifetime;
-using CLIHub.Theming;
 
 public class ShellCoordinatorTests
 {

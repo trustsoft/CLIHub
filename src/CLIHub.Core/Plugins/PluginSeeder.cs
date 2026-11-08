@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Plugins;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.FileSystem;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Maintains the built-in plugins folder from descriptors and logos embedded in this

@@ -1,9 +1,9 @@
 namespace CLIHub.Startup;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Scanning;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Coordinates required and best-effort first-instance startup operations.

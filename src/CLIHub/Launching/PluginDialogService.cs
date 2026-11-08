@@ -1,14 +1,13 @@
 namespace CLIHub.Launching;
 
 using System.Text;
-
 using System.Windows;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Win32;
 
 using CLIHub.Core.Plugins;
 using CLIHub.Views;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Win32;
 
 /// <summary>
 ///   WPF implementation of plugin installation dialogs: a package file picker, the

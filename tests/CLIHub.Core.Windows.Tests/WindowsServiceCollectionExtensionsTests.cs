@@ -1,10 +1,10 @@
 namespace CLIHub.Core.Windows.Tests;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using CLIHub.Core.Agents;
 using CLIHub.Core;
+using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class WindowsServiceCollectionExtensionsTests
 {

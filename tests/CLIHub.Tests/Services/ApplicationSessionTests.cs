@@ -2,15 +2,15 @@ namespace CLIHub.Tests.Services;
 
 using System.Windows;
 
+using CLIHub.Core.Windows;
+using CLIHub.Lifetime;
+using CLIHub.Startup;
+using CLIHub.Theming;
+using CLIHub.Updates;
+
 using Microsoft.Win32;
 
 using Moq;
-
-using CLIHub.Core.Windows;
-using CLIHub.Lifetime;
-using CLIHub.Updates;
-using CLIHub.Startup;
-using CLIHub.Theming;
 
 public class ApplicationSessionTests
 {

@@ -1,9 +1,9 @@
 namespace CLIHub.Core.Windows;
 
+using CLIHub.Core.Infrastructure.Processes;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-using CLIHub.Core.Infrastructure.Processes;
 
 /// <summary>
 ///   Registers the Windows platform infrastructure: process runners, runtime executable resolution,

@@ -2,9 +2,9 @@ namespace CLIHub.Core.Tests.Updates;
 
 using System.Reflection;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Updates;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class ReleaseNotesServiceTests
 {

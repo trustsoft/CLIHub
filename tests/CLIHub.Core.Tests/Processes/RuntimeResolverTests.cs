@@ -1,10 +1,10 @@
 namespace CLIHub.Core.Tests.Processes;
 
-using Moq;
-
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Moq;
 
 /// <summary>
 ///   Unit tests for <see cref="RuntimeResolver" />.

@@ -1,11 +1,11 @@
 namespace CLIHub.Tests.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Tests.Builders;
 using CLIHub.Theming;
+
+using Moq;
 
 public partial class AgentManagementViewModelTests
 {

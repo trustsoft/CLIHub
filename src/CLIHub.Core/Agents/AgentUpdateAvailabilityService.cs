@@ -2,11 +2,11 @@ namespace CLIHub.Core.Agents;
 
 using System.Collections.Concurrent;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Models.Plugins;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Compares an agent's installed version with the version published by its declared source,

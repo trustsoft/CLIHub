@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Tests.Agents;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Models;
 using CLIHub.Core.Tests.Fakes;
 
 public class AgentDetectionServiceTests : IDisposable

@@ -2,12 +2,12 @@ namespace CLIHub.Core.Tests.Agents;
 
 using System.Net;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class AgentReleaseClientTests
 {

@@ -3,8 +3,8 @@ namespace CLIHub.Core.Tests.Configuration;
 using System.Reflection;
 using System.Text.Json;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Models;
 
 public class PersistenceCloneRoundTripTests
 {

@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Agents;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   On-demand agent operations for the management surface,

@@ -1,11 +1,11 @@
 namespace CLIHub.Core.Agents;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Events;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Executes named agent commands in a project folder.

@@ -1,11 +1,12 @@
 namespace CLIHub.Core.Tests.Events;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-
 using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.Logging;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class ProjectSelectionLoggingSubscriberTests
 {

@@ -1,9 +1,5 @@
 namespace CLIHub.Tests.Builders;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
@@ -13,11 +9,15 @@ using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
 using CLIHub.Core.Projects;
-using CLIHub.ViewModels;
 using CLIHub.Launching;
-using CLIHub.Settings;
 using CLIHub.Lifetime;
+using CLIHub.Settings;
 using CLIHub.Updates;
+using CLIHub.ViewModels;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 /// <summary>
 ///   Fluent builder for LaunchWindowViewModel test instances with sensible defaults.

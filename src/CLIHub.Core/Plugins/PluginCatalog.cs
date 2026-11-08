@@ -1,11 +1,11 @@
 namespace CLIHub.Core.Plugins;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 ///   Discovers and stores AI agent CLI tool plugins.

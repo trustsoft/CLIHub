@@ -1,13 +1,13 @@
 namespace CLIHub.Tests.Services;
 
+using CLIHub.Composition;
+using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
+using CLIHub.Startup;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
-
-using CLIHub.Core.Windows;
-using CLIHub.Core.Models;
-using CLIHub.Startup;
-using CLIHub.Composition;
 
 public class StartupPreferencesApplierTests
 {

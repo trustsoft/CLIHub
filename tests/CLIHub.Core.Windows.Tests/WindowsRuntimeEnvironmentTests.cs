@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Windows.Tests;
 
-using Microsoft.Win32;
-
 using CLIHub.Core.Windows;
+
+using Microsoft.Win32;
 
 /// <summary>
 ///   Tests for the hermetic Git registry install-path collector and the guarded real-registry

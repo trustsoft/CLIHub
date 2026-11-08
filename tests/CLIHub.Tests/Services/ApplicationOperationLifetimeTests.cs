@@ -1,9 +1,9 @@
 namespace CLIHub.Tests.Services;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class ApplicationOperationLifetimeTests
 {

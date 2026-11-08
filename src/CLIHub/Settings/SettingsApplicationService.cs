@@ -1,12 +1,12 @@
 namespace CLIHub.Settings;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
 using CLIHub.Core.Scanning;
+using CLIHub.Core.Windows;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Raw values collected from the Settings form before validation.

@@ -1,12 +1,12 @@
 namespace CLIHub.Core.Tests.Projects;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Events;
-using CLIHub.Core.Models;
 using CLIHub.Core.Infrastructure.Persistence;
+using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class ProjectServiceTests : IDisposable
 {

@@ -3,12 +3,12 @@ namespace CLIHub.Core.Windows;
 using System.IO;
 using System.Security;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
-
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 
 /// <summary>
 ///   Thin seam over the operating system, so Windows runtime resolution is testable without touching

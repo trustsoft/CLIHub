@@ -1,15 +1,15 @@
 namespace CLIHub.Tests.Services;
 
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Hotkeys;
+using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
+using CLIHub.Settings;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
-
-using CLIHub.Core.Configuration;
-using CLIHub.Core.Hotkeys;
-using CLIHub.Core.Windows;
-using CLIHub.Core.Models;
-using CLIHub.Settings;
 
 public class SettingsApplicationServiceTests
 {

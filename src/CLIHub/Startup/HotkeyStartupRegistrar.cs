@@ -1,10 +1,10 @@
 namespace CLIHub.Startup;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Coordinates startup hotkey parsing, fallback selection, and global registration.

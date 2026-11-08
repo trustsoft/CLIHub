@@ -1,12 +1,12 @@
 namespace CLIHub.ViewModels;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Models;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class LaunchCommandCoordinatorTests
 {

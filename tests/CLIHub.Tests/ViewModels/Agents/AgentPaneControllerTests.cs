@@ -1,15 +1,15 @@
 namespace CLIHub.ViewModels;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class AgentPaneControllerTests
 {

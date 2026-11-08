@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Tests.Configuration;
 
-using CLIHub.Core.Models;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Models;
 using CLIHub.Core.Tests.Fakes;
 
 public class PreferencesStoreTests

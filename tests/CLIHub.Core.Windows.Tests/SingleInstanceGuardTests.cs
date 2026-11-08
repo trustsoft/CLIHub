@@ -3,10 +3,10 @@ namespace CLIHub.Core.Windows.Tests;
 using System.Diagnostics;
 using System.IO.Pipes;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Windows;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class SingleInstanceGuardTests
 {

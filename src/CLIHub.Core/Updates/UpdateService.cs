@@ -2,9 +2,9 @@ namespace CLIHub.Core.Updates;
 
 using System.Reflection;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 using Velopack;
 using Velopack.Exceptions;
@@ -208,7 +208,7 @@ public class UpdateService : IUpdateService
         try
         {
             var result = this.installer.ApplyAndRestart(manager, asset);
-            
+
             if (result.Status == UpdateInstallStatus.Failed)
             {
                 throw new InvalidOperationException("Failed to apply the downloaded update");

@@ -1,10 +1,10 @@
 namespace CLIHub.Startup;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Updates;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Coordinates release-notes startup evaluation without owning presentation or persistence.

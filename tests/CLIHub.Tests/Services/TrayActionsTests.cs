@@ -1,15 +1,15 @@
 namespace CLIHub.Tests.Services;
 
-using Moq;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
-using CLIHub.Tray;
-using CLIHub.Lifetime;
 using CLIHub.Launching;
-using CLIHub.Updates;
+using CLIHub.Lifetime;
 using CLIHub.Settings;
+using CLIHub.Tray;
+using CLIHub.Updates;
+
+using Moq;
 
 public class TrayActionsTests
 {

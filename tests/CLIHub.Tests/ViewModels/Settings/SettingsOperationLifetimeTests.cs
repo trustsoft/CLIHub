@@ -1,16 +1,16 @@
 namespace CLIHub.ViewModels;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Windows;
 using CLIHub.Launching;
-using CLIHub.Settings;
 using CLIHub.Lifetime;
+using CLIHub.Settings;
 using CLIHub.Updates;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class SettingsOperationLifetimeTests
 {

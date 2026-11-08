@@ -2,17 +2,17 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using CLIHub.Lifetime;
 using CLIHub.Launching;
+using CLIHub.Lifetime;
 using CLIHub.Theming;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Owns the CLI Agents management surface: one card per agent, the supported/installed counts,

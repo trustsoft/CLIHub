@@ -1,7 +1,7 @@
 namespace CLIHub.Startup;
 
-using CLIHub.Views;
 using CLIHub.Tray;
+using CLIHub.Views;
 
 /// <summary>
 ///   Adapts the WPF tray and launch window to the application startup UI port.

@@ -1,15 +1,15 @@
 namespace CLIHub.Tests.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
+using CLIHub.Composition;
 using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Models;
 using CLIHub.Hotkeys;
 using CLIHub.Startup;
-using CLIHub.Composition;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class HotkeyStartupRegistrarTests
 {

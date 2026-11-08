@@ -1,10 +1,10 @@
 namespace CLIHub.Updates;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Coordinates shared update operations while keeping entry-point presentation policy outside Core.

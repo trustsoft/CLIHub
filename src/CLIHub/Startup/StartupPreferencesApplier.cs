@@ -1,7 +1,7 @@
 namespace CLIHub.Startup;
 
-using CLIHub.Core.Windows;
 using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
 
 /// <summary>
 ///   Applies the startup-related portion of the application preferences.

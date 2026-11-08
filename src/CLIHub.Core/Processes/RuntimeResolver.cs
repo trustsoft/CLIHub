@@ -25,7 +25,7 @@ public sealed class RuntimeResolver : IRuntimeResolver
         CancellationToken cancellationToken = default)
     {
         var path = this.locator.Locate(kind);
-        
+
         // Handle Windows built-in shells - locator returns null but they exist
         if (path is null && kind is RuntimeKind.PowerShell or RuntimeKind.CommandPrompt)
         {

@@ -1,8 +1,8 @@
 namespace CLIHub.Lifetime;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.Logging;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Tracks application-scoped asynchronous work and provides a bounded shutdown barrier.

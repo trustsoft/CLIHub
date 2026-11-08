@@ -1,17 +1,17 @@
 namespace CLIHub.ViewModels;
 
+using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.Processes;
+using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
+using CLIHub.Launching;
+using CLIHub.Lifetime;
+using CLIHub.Settings;
+using CLIHub.Updates;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
-
-using CLIHub.Core.Configuration;
-using CLIHub.Core.Infrastructure.Processes;
-using CLIHub.Core.Windows;
-using CLIHub.Core.Models;
-using CLIHub.Updates;
-using CLIHub.Settings;
-using CLIHub.Launching;
-using CLIHub.Lifetime;
 
 public class SettingsNavigationTests
 {

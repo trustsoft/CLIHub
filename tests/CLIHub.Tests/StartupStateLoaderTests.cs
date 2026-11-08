@@ -1,10 +1,10 @@
 namespace CLIHub.Tests;
 
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Startup;
+
+using Moq;
 
 public sealed class StartupStateLoaderTests
 {

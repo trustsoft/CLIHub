@@ -1,7 +1,5 @@
 namespace CLIHub.Tests.Composition;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using CLIHub.Composition;
 using CLIHub.Converters;
 using CLIHub.Core.Infrastructure.Processes;
@@ -18,6 +16,8 @@ using CLIHub.Tray;
 using CLIHub.Updates;
 using CLIHub.ViewModels;
 using CLIHub.Views;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class ServiceRegistrationTests
 {

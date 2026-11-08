@@ -1,13 +1,14 @@
 namespace CLIHub.Core.Tests.Agents;
 
-using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
-
-using CLIHub.Core.Models;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class AgentVersionServiceTests
 {
@@ -161,7 +162,7 @@ public class AgentVersionServiceTests
         service.Invalidate();
 
         this.outputResult = ProcessResult.Success(0, output: "2.0.0");
-        
+
         var version = await service.GetVersionAsync(plugin);
 
         Assert.Equal("2.0.0", version);

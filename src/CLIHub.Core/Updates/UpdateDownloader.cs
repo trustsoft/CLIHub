@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Updates;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 using Velopack;
 

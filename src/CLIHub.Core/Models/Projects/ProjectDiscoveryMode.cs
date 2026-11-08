@@ -53,12 +53,12 @@ public static class ProjectDiscoveryModes
     /// <param name="value"> The stored token. </param>
     /// <returns> The parsed mode. </returns>
     public static ProjectDiscoveryMode Parse(string? value) => value?.Trim().ToLowerInvariant() switch
-                                                               {
-                                                                   GitToken => ProjectDiscoveryMode.Git,
-                                                                   AgentsToken => ProjectDiscoveryMode.Agents,
-                                                                   BothToken => ProjectDiscoveryMode.Both,
-                                                                   _ => Default
-                                                               };
+    {
+        GitToken => ProjectDiscoveryMode.Git,
+        AgentsToken => ProjectDiscoveryMode.Agents,
+        BothToken => ProjectDiscoveryMode.Both,
+        _ => Default
+    };
 
     /// <summary>
     ///   Returns the configuration token for a mode.

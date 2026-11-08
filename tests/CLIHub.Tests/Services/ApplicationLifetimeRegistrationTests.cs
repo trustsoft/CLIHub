@@ -1,10 +1,10 @@
 namespace CLIHub.Tests.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-
+using CLIHub.Composition;
 using CLIHub.Core.Windows;
 using CLIHub.Lifetime;
-using CLIHub.Composition;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class ApplicationLifetimeRegistrationTests
 {

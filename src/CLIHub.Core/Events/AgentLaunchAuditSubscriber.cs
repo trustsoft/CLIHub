@@ -1,8 +1,8 @@
 namespace CLIHub.Core.Events;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.Logging;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Emits structured audit log for agent launches.

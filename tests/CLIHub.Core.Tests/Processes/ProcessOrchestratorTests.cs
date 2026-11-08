@@ -1,13 +1,13 @@
 namespace CLIHub.Core.Tests.Processes;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Processes;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 /// <summary>
 ///   Unit tests for <see cref="ProcessOrchestrator" />.

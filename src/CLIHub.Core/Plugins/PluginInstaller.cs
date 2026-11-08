@@ -3,10 +3,10 @@ namespace CLIHub.Core.Plugins;
 using System.IO.Compression;
 using System.Text;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Installs agent plugins from local <c> .clihub-plugin.zip </c> packages. Inspection

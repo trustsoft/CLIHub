@@ -1,14 +1,14 @@
 namespace CLIHub.Tests.ViewModels.Agents;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Tests.Support;
 using CLIHub.ViewModels;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 using static CLIHub.Tests.Support.TestHelpers;
 

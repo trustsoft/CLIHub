@@ -1,9 +1,9 @@
 namespace CLIHub.Tests.Services;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using CLIHub.Tray;
 using CLIHub.Composition;
+using CLIHub.Tray;
+
+using Microsoft.Extensions.DependencyInjection;
 
 public class TrayMenuBuilderRegistrationTests
 {

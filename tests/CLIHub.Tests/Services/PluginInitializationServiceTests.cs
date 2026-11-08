@@ -1,12 +1,12 @@
 namespace CLIHub.Tests.Services;
 
+using CLIHub.Composition;
+using CLIHub.Core.Plugins;
+using CLIHub.Startup;
+
 using Microsoft.Extensions.DependencyInjection;
 
 using Moq;
-
-using CLIHub.Core.Plugins;
-using CLIHub.Startup;
-using CLIHub.Composition;
 
 public class PluginInitializationServiceTests
 {

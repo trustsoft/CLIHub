@@ -1,9 +1,9 @@
 namespace CLIHub.Core.Windows.Tests;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 public class WindowsInteractiveProcessRunnerTests
 {

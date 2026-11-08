@@ -3,11 +3,11 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.IO;
 
-using Moq;
-
 using CLIHub.Controls;
 using CLIHub.Core.Models;
 using CLIHub.Tests.Builders;
+
+using Moq;
 
 public class SettingsViewModelApplicationTests
 {
@@ -436,7 +436,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.RemoveWatchedDirectoryCommand.Execute(@"C:\repos\one");
 
         Assert.Empty(fixture.ViewModel.Scanning.WatchedDirectories);
-            Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
+        Assert.DoesNotContain(@"C:\repos\one", fixture.CapturedPreferences.Scanning.WatchedDirectories ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -451,7 +451,7 @@ public class SettingsViewModelApplicationTests
 
         row.SelectedDepth = fixture.ViewModel.Scanning.ScanDepthOptions.First(option => option.Value == 5);
 
-            var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
+        var settings = fixture.CapturedPreferences.Scanning.WatchedDirectorySettings;
         Assert.NotNull(settings);
         Assert.Equal(5, settings[@"C:\repos\one"].ScanDepth);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
@@ -467,7 +467,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.AddIgnoredPatternCommand.Execute(null);
 
         Assert.Contains("custom-ignored-dir", fixture.ViewModel.Scanning.IgnoredPatterns);
-            Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.Scanning.IgnoredPatterns ?? []);
+        Assert.Contains("custom-ignored-dir", fixture.CapturedPreferences.Scanning.IgnoredPatterns ?? []);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -481,7 +481,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.SelectedDiscoveryMode = fixture.ViewModel.Scanning.DiscoveryModes
             .First(option => option.Mode == ProjectDiscoveryMode.Git);
 
-            Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.Scanning.DiscoveryMode);
+        Assert.Equal(ProjectDiscoveryMode.Git, fixture.CapturedPreferences.Scanning.DiscoveryMode);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 
@@ -495,7 +495,7 @@ public class SettingsViewModelApplicationTests
         fixture.ViewModel.Scanning.SelectedScanDepth = fixture.ViewModel.Scanning.ScanDepthOptions
             .First(option => option.Value == 4);
 
-            Assert.Equal(4, fixture.CapturedPreferences.Scanning.ScanDepth);
+        Assert.Equal(4, fixture.CapturedPreferences.Scanning.ScanDepth);
         fixture.Scanner.Verify(x => x.Reload(), Times.Once);
     }
 

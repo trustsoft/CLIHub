@@ -1,8 +1,8 @@
 namespace CLIHub.Startup;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Coordinates optional best-effort startup operations.
@@ -15,9 +15,9 @@ public sealed class OptionalStartupCoordinator : IOptionalStartupCoordinator
     private readonly ILogger<OptionalStartupCoordinator> logger;
 
     /// <summary>
-///   Creates the optional startup coordinator.
-/// </summary>
-/// <param name="operationLifetime"> Application operation lifetime boundary. </param>
+    ///   Creates the optional startup coordinator.
+    /// </summary>
+    /// <param name="operationLifetime"> Application operation lifetime boundary. </param>
     /// <param name="releaseNotesStartup"> Release-notes startup workflow. </param>
     /// <param name="updateStartup"> Startup update-check workflow. </param>
     /// <param name="logger"> Logger for optional operation failures. </param>

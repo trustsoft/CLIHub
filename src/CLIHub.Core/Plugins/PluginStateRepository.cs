@@ -2,10 +2,10 @@ namespace CLIHub.Core.Plugins;
 
 using System.Text.Json;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   File-backed <see cref="IPluginStateRepository" /> over

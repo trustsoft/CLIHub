@@ -3,9 +3,9 @@ namespace CLIHub;
 using System.Windows;
 
 using CLIHub.Core.Infrastructure.FileSystem;
-using CLIHub.Core.Windows;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
+using CLIHub.Core.Windows;
 using CLIHub.Settings;
 using CLIHub.Startup;
 using CLIHub.Theming;

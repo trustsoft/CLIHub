@@ -1,7 +1,5 @@
 namespace CLIHub.Tests.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
@@ -9,6 +7,8 @@ using CLIHub.Core.Plugins;
 using CLIHub.Launching;
 using CLIHub.Tests.Builders;
 using CLIHub.Tests.Support;
+
+using Moq;
 
 public partial class AgentManagementViewModelTests
 {

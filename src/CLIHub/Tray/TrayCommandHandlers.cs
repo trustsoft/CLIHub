@@ -2,10 +2,10 @@ namespace CLIHub.Tray;
 
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
-using CLIHub.Lifetime;
-using CLIHub.Updates;
-using CLIHub.Settings;
 using CLIHub.Launching;
+using CLIHub.Lifetime;
+using CLIHub.Settings;
+using CLIHub.Updates;
 
 /// <summary>
 ///   Executes user-invoked tray workflows without projecting tray state or owning WPF controls.

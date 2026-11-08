@@ -1,11 +1,11 @@
 namespace CLIHub.Tests.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Lifetime;
+
+using Moq;
 
 public partial class AgentManagementViewModelTests
 {

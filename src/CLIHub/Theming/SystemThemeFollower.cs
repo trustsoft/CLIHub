@@ -3,14 +3,14 @@ namespace CLIHub.Theming;
 using System;
 using System.Windows;
 
-using Microsoft.Win32;
-
-using Serilog;
-
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Windows;
+
+using Microsoft.Win32;
+
+using Serilog;
 
 /// <summary>
 ///   Follows the Windows apps-use-light-theme setting while the stored theme is "System" and

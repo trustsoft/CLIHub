@@ -1,9 +1,9 @@
 namespace CLIHub.Core.Projects;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Events;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Tracks project directories backed by the configuration repository.

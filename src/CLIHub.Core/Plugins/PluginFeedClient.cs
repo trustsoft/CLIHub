@@ -4,10 +4,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Fetches the plugin feed index and downloads plugin packages over HTTPS with checksum verification.

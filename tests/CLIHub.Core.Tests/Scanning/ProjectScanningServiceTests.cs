@@ -2,10 +2,6 @@ namespace CLIHub.Core.Tests.Scanning;
 
 using System.Diagnostics;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
@@ -13,6 +9,10 @@ using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
 using CLIHub.Core.Scanning;
 using CLIHub.Core.Tests.Fakes;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class ProjectScanningServiceTests : IDisposable
 {

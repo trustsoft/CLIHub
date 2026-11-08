@@ -1,11 +1,11 @@
 namespace CLIHub.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
+
+using Moq;
 
 public class WhatsNewViewModelTests
 {

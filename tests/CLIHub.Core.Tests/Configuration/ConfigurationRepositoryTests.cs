@@ -1,9 +1,9 @@
 namespace CLIHub.Core.Tests.Configuration;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.Logging;
 
 public class ConfigurationRepositoryTests : IDisposable
 {

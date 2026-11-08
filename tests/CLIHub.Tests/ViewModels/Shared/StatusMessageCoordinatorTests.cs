@@ -1,13 +1,13 @@
 namespace CLIHub.ViewModels;
 
-using Moq;
-
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Projects;
+using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
-using CLIHub.Launching;
+
+using Moq;
 
 public class StatusMessageCoordinatorTests
 {
@@ -221,7 +221,7 @@ public class StatusMessageCoordinatorTests
         var eventField = typeof(UpdateControlViewModel)
             .GetField("OutcomeReported", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var eventDelegate = eventField?.GetValue(updateControl) as MulticastDelegate;
-        
+
         if (eventDelegate != null)
         {
             foreach (var handler in eventDelegate.GetInvocationList())

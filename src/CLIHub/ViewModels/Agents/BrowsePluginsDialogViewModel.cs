@@ -3,12 +3,12 @@ namespace CLIHub.ViewModels;
 using System.Collections.ObjectModel;
 using System.IO;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Browse Plugins dialog: fetches the remote feed, displays available plugins with status,

@@ -2,23 +2,23 @@ namespace CLIHub.Composition;
 
 using System.IO;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
+using CLIHub.Converters;
 using CLIHub.Core;
 using CLIHub.Core.Windows;
-using CLIHub.Converters;
-using CLIHub.Imaging;
 using CLIHub.Hotkeys;
-using CLIHub.ViewModels;
-using CLIHub.Views;
-using CLIHub.Updates;
-using CLIHub.Settings;
+using CLIHub.Imaging;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
+using CLIHub.Settings;
 using CLIHub.Startup;
 using CLIHub.Theming;
 using CLIHub.Tray;
+using CLIHub.Updates;
+using CLIHub.ViewModels;
+using CLIHub.Views;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Serilog;
 

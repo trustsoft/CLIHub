@@ -1,11 +1,11 @@
 namespace CLIHub.Core.Tests.Infrastructure.Persistence;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 /// <summary>
 ///   Verifies the single fallback source: both domain resolvers share one

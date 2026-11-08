@@ -1,9 +1,5 @@
 namespace CLIHub.Tests.Builders;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -14,6 +10,10 @@ using CLIHub.Lifetime;
 using CLIHub.Settings;
 using CLIHub.Updates;
 using CLIHub.ViewModels;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 internal sealed class SettingsViewModelFixture
 {
@@ -76,12 +76,12 @@ internal sealed class SettingsViewModelFixture
                                                      string pathDisplayStyle = PathDisplayStyles.LeftTrimToken,
                                                      bool checkForUpdatesOnStartup = true,
                                                      bool startMinimized = true) => new AppPreferences
-    {
-        DefaultRuntime = defaultRuntime,
-        Hotkey = hotkey,
-        PathDisplayStyle = pathDisplayStyle,
-        CheckForUpdatesOnStartup = checkForUpdatesOnStartup,
-        StartMinimized = startMinimized,
-        AccentColor = accentColor
-    };
+                                                     {
+                                                         DefaultRuntime = defaultRuntime,
+                                                         Hotkey = hotkey,
+                                                         PathDisplayStyle = pathDisplayStyle,
+                                                         CheckForUpdatesOnStartup = checkForUpdatesOnStartup,
+                                                         StartMinimized = startMinimized,
+                                                         AccentColor = accentColor
+                                                     };
 }

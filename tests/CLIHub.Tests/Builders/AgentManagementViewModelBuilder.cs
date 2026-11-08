@@ -1,10 +1,5 @@
 namespace CLIHub.Tests.Builders;
 
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-
-using Moq;
-
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
@@ -12,10 +7,15 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
-using CLIHub.ViewModels;
-using CLIHub.Lifetime;
 using CLIHub.Launching;
+using CLIHub.Lifetime;
 using CLIHub.Tests.Support;
+using CLIHub.ViewModels;
+
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 using static CLIHub.Tests.Support.TestHelpers;
 

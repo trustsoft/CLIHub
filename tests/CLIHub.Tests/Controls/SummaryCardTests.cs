@@ -3,6 +3,7 @@ namespace CLIHub.Tests.Controls;
 using System.Windows.Automation.Peers;
 
 using CLIHub.Controls;
+
 using static CLIHub.Tests.Support.TestHelpers;
 
 public sealed class SummaryCardTests

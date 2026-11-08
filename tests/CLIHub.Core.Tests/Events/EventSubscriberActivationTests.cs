@@ -1,11 +1,11 @@
 namespace CLIHub.Core.Tests.Events;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core;
 using CLIHub.Core.Events;
 using CLIHub.Core.Models;
+
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Xunit;
 

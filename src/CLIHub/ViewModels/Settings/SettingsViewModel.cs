@@ -3,12 +3,9 @@ namespace CLIHub.ViewModels;
 using System.ComponentModel;
 using System.Windows;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Controls;
-using CLIHub.Theming;
-using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Agents;
+using CLIHub.Core.Hotkeys;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Logging;
@@ -17,8 +14,11 @@ using CLIHub.Core.Scanning;
 using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
-using CLIHub.Updates;
 using CLIHub.Settings;
+using CLIHub.Theming;
+using CLIHub.Updates;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   View model for the Settings window: loads preferences,

@@ -1,9 +1,9 @@
 namespace CLIHub.Startup;
 
 using CLIHub.Core.Windows;
-using CLIHub.Updates;
 using CLIHub.Lifetime;
 using CLIHub.Theming;
+using CLIHub.Updates;
 
 /// <summary>
 ///   Coordinates application shell creation (tray and launch window) and event wiring. The

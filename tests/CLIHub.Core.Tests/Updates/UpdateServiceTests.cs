@@ -1,9 +1,9 @@
 namespace CLIHub.Core.Tests.Updates;
 
-using Microsoft.Extensions.Logging.Abstractions;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Velopack;
 using Velopack.Locators;

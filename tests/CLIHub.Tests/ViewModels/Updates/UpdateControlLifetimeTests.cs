@@ -1,11 +1,11 @@
 namespace CLIHub.ViewModels;
 
+using CLIHub.Lifetime;
+using CLIHub.Updates;
+
 using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
-
-using CLIHub.Lifetime;
-using CLIHub.Updates;
 
 public class UpdateControlLifetimeTests
 {

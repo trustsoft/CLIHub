@@ -1,12 +1,12 @@
 namespace CLIHub.Core.Scanning;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Discovers repositories under the watched roots, reconciles the discovered-project subset, and

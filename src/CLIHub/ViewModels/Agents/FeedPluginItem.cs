@@ -153,11 +153,11 @@ public sealed class FeedPluginItem : ObservableObject
     ///   for Current.
     /// </summary>
     public string ActionText => this.Status switch
-                                {
-                                    PluginUpdateStatus.UpdateAvailable => "Update",
-                                    PluginUpdateStatus.Available or PluginUpdateStatus.DifferentVersionAvailable => "Install",
-                                    _ => string.Empty
-                                };
+    {
+        PluginUpdateStatus.UpdateAvailable => "Update",
+        PluginUpdateStatus.Available or PluginUpdateStatus.DifferentVersionAvailable => "Install",
+        _ => string.Empty
+    };
 
     /// <summary>
     ///   Whether the action button should be visible.

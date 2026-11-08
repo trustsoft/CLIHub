@@ -3,12 +3,12 @@ namespace CLIHub.ViewModels;
 using System.Windows;
 using System.Windows.Input;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Models;
 using CLIHub.Core.Updates;
 using CLIHub.Lifetime;
 using CLIHub.Updates;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   State and command for an update control: shows the current version when idle, checks for

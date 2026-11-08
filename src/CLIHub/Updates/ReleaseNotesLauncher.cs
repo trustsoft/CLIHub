@@ -1,10 +1,10 @@
 namespace CLIHub.Updates;
 
-using Microsoft.Extensions.Logging;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Updates;
 using CLIHub.Views;
+
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 ///   Owns the application's single <see cref="WhatsNewWindow" /> instance so that every entry point
