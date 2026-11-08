@@ -20,6 +20,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - The separate plugin origin badge is removed; the recorded origin plus the descriptor's version, publisher, and homepage now live in the agent name's tooltip (`remove-agent-origin-badge`, `agent-ui`, `plugin-installation`).
 - Update checking is stable-only: the disabled pre-release toggle and the "Channel: Stable" header chip are gone, `notifyPrereleaseUpdates` is removed from the configuration and snapshot, `UpdateService` always builds a stable Velopack source, and `VersionClassification` is deleted (`remove-prerelease-updates-option`, `update-checking`, `preferences-ui`, `configuration-snapshot`).
 - Agent tooling: the subagent model policy adds the `lmstudio` provider and the `local_first` preset, and the default preset is aligned with the current selection (`9b6c636`, `3a42732`).
+- The manual ("M") provenance mark uses the same muted foreground as the discovered ("D") mark in both the launch window and the Settings Projects page; the character remains the only distinction (`provenance-mark-uniform-tone`, `project-management`).
 
 ### Fixed
 

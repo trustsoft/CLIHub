@@ -60,19 +60,13 @@
     </Style>
 
     <!-- Project row provenance mark: the compact "M"/"D" source indicator shared by the Settings
-         Projects page and the launch window project list. Manual projects (CanRemove is true exactly
-         for them) use the strong primary foreground so the mark stays readable on light surfaces;
-         discovered projects keep the muted tone. The character remains the primary distinction. -->
+         Projects page and the launch window project list. Both marks use TextMutedBrush; the
+         character is the only distinction between manual and discovered projects. -->
     <Style x:Key="ProjectProvenanceMark" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding CanRemove}" Value="True">
-                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
-            </DataTrigger>
-        </Style.Triggers>
     </Style>
 
     <!--

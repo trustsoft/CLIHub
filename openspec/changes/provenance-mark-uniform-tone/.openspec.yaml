@@ -1,0 +1,4 @@
+schema: spec-driven
+created: 2026-11-08
+goal: Render the M (manual) provenance mark in the same muted style as the D (discovered) mark by removing the CanRemove DataTrigger from ProjectProvenanceMark, and center both rail markers in the launch window so they are coaxial
+skip_specs: true

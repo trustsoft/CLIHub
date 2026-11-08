@@ -170,9 +170,9 @@
                                                  exactly the space the path may fill, with no chrome arithmetic
                                                  in the converter. -->
                                             <ColumnDefinition Width="{StaticResource Sizing.ProjectRow.TextGap}"/>
-                                            <!-- Text plus the right marker rail: the markers right-align to the
-                                                 rail's trailing edge and the rail's fixed width prevents row
-                                                 jitter when the favorite star is hidden. -->
+                                            <!-- Text plus the right marker rail: the markers center within the
+                                                 rail column so their midpoints coincide, and the rail's fixed
+                                                 width prevents row jitter when the favorite star is hidden. -->
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
 
@@ -197,9 +197,9 @@
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <!-- Fixed right rail: the star sits on the name line and the
-                                                     provenance mark on the path line, both right-aligned to the
-                                                     rail's trailing edge, so the two markers never compete on
-                                                     one line and hiding the star shifts nothing. -->
+                                                     provenance mark on the path line, both centered within the
+                                                     rail column, so their horizontal midpoints coincide and
+                                                     hiding the star shifts nothing. -->
                                                 <ColumnDefinition Width="{StaticResource Sizing.ProjectRow.MarkerRailWidth}"/>
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -242,7 +242,7 @@
 
                                             <TextBlock Grid.Row="0"
                                                        Grid.Column="1"
-                                                       HorizontalAlignment="Right"
+                                                       HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"
                                                        FontSize="13"
                                                        Foreground="{DynamicResource AccentBrush}"
@@ -251,7 +251,7 @@
 
                                             <TextBlock Grid.Row="1"
                                                        Grid.Column="1"
-                                                       HorizontalAlignment="Right"
+                                                       HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"
                                                        Style="{StaticResource ProjectProvenanceMark}"
                                                        AutomationProperties.Name="{Binding SourceLabel}"

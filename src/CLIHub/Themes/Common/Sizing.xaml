@@ -92,17 +92,16 @@
     <!-- Smallest usable Projects pane: its list plus the pane padding on both sides. -->
     <sys:Double x:Key="Sizing.ProjectPane.MinWidth">320</sys:Double>
     <!-- Project row padding: the row's leading and trailing content insets are equal (12px
-         each), so the logo and the right-aligned marker rail sit the same distance from the
-         row's edges. -->
+         each), so the logo and the marker rail sit the same distance from the row's edges. -->
     <Thickness x:Key="Sizing.ProjectRow.Padding">12,9,12,9</Thickness>
     <!-- Gap between a project row's thumbnail and its texts: a fixed grid column, so the text
          column's measured width is exactly the space the path may fill. -->
     <GridLength x:Key="Sizing.ProjectRow.TextGap">15</GridLength>
     <!-- Fixed width of the launch-window project row's right marker rail, sized to the widest
          marker: the favorite star sits on the name line and the provenance mark on the path
-         line, and both right-align to the rail's trailing edge so they land exactly on the
-         row's 12px trailing inset. The fixed width still keeps the provenance mark and the
-         text from shifting when the star is hidden. -->
+         line, and both center within the rail column so their midpoints coincide. The fixed
+         width still keeps the provenance mark and the text from shifting when the star is
+         hidden. -->
     <GridLength x:Key="Sizing.ProjectRow.MarkerRailWidth">16</GridLength>
     <!-- Upper bound for a project name on the Settings Projects page, so the provenance mark
          sits right after the name and a long name cannot push it away. -->
