@@ -7,7 +7,10 @@ namespace CLIHub.Core.Plugins;
 /// </summary>
 /// <param name="PluginId"> The plugin id. </param>
 /// <param name="PluginDirectory"> The plugin's directory on disk. </param>
-/// <param name="Origin"> The recorded origin (<see cref="PluginOrigin" /> values), or null when no state entry exists. </param>
+/// <param name="Origin">
+///   The recorded origin (<see cref="PluginOrigin" /> values), or null when no state entry
+///   exists.
+/// </param>
 /// <param name="Version"> The plugin's declared version, or null when unknown. </param>
 public sealed record DisabledPluginEntry(
     string PluginId,

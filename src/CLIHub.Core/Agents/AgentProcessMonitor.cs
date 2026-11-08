@@ -66,15 +66,15 @@ public sealed class AgentProcessMonitor
     ///   Gets the list of currently running agents with their process details.
     /// </summary>
     /// <remarks>
-    ///   <para>
-    ///     Process enumeration is pre-filtered to the candidate names derived from the catalog's
-    ///     launch executables (see <see cref="AgentProcessMatcher.GetCandidateProcessNames" />);
-    ///     processes whose name cannot match any launch executable are never inspected. Under
-    ///     <see cref="AgentProcessMatchDetail.CommandLine" /> the runtime host names join the
-    ///     candidates and command lines are retrieved for candidate processes; under
-    ///     <see cref="AgentProcessMatchDetail.ExecutableName" /> no command lines are retrieved.
-    ///     Update gating uses <see cref="AgentProcessMatchDetail.CommandLine" />.
-    ///   </para>
+    /// <para>
+    ///   Process enumeration is pre-filtered to the candidate names derived from the catalog's
+    ///   launch executables (see <see cref="AgentProcessMatcher.GetCandidateProcessNames" />);
+    ///   processes whose name cannot match any launch executable are never inspected. Under
+    ///   <see cref="AgentProcessMatchDetail.CommandLine" /> the runtime host names join the
+    ///   candidates and command lines are retrieved for candidate processes; under
+    ///   <see cref="AgentProcessMatchDetail.ExecutableName" /> no command lines are retrieved.
+    ///   Update gating uses <see cref="AgentProcessMatchDetail.CommandLine" />.
+    /// </para>
     /// </remarks>
     /// <param name="detail"> The matching fidelity of the enumeration. </param>
     /// <returns> List of running agents. Empty if none are running. </returns>

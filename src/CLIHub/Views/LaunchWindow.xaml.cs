@@ -85,7 +85,7 @@ public partial class LaunchWindow : Window
 
     /// <summary>
     ///   Places the window at <paramref name="position" />. Used for the deferred placement queued
-    ///   after <c>Show</c>, which runs when the layout pass settles and can arrive after the
+    ///   after <c> Show </c>, which runs when the layout pass settles and can arrive after the
     ///   window has closed; the request is ignored in that case.
     /// </summary>
     /// <param name="position"> The configured popup screen position. </param>

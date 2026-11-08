@@ -10,7 +10,7 @@ using System.Windows.Threading;
 using CLIHub.ViewModels;
 
 /// <summary>
-///   Debug-only README image capture. When <c>CLIHUB_CAPTURE_DIR</c> is set, the application renders
+///   Debug-only README image capture. When <c> CLIHUB_CAPTURE_DIR </c> is set, the application renders
 ///   the launch window and the three screenshot Settings pages at 1.5× and exits. The capture runs
 ///   in-process so it works on a locked or headless desktop, where screen-copy and PrintWindow
 ///   return black frames.

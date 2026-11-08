@@ -9,21 +9,21 @@ using CLIHub.Core.Models;
 ///   Writes the application-scoped accent brushes into the application resources.
 /// </summary>
 /// <remarks>
-///   <para>
-///     The accent is one color for the whole application and is independent of the theme: the palette
-///     dictionaries define chrome and surface brushes only, so these two keys are supplied here and
-///     nowhere else.
-///   </para>
-///   <para>
-///     Both callers pass <see cref="Application.Resources" /> itself, never its
-///     <c> MergedDictionaries </c>: local entries are what shadow a merged palette, and the merged
-///     collection has no keyed indexer. Startup applies the stored accent before any window is created
-///     and a Settings save re-applies it, so the same implementation covers both paths.
-///   </para>
-///   <para>
-///     UI thread only, matching <see cref="CLIHub.Theming.PaletteSwitcher" />; no synchronization is
-///     performed.
-///   </para>
+/// <para>
+///   The accent is one color for the whole application and is independent of the theme: the palette
+///   dictionaries define chrome and surface brushes only, so these two keys are supplied here and
+///   nowhere else.
+/// </para>
+/// <para>
+///   Both callers pass <see cref="Application.Resources" /> itself, never its
+///   <c> MergedDictionaries </c>: local entries are what shadow a merged palette, and the merged
+///   collection has no keyed indexer. Startup applies the stored accent before any window is created
+///   and a Settings save re-applies it, so the same implementation covers both paths.
+/// </para>
+/// <para>
+///   UI thread only, matching <see cref="CLIHub.Theming.PaletteSwitcher" />; no synchronization is
+///   performed.
+/// </para>
 /// </remarks>
 internal static class AccentApplier
 {

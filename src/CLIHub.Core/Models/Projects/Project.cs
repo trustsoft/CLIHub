@@ -4,7 +4,7 @@ namespace CLIHub.Core.Models;
 ///   The persisted brief record of a project directory tracked by CLIHub: identity, path,
 ///   provenance, favorite flag, last-used timestamp, and the vestigial persisted logo path.
 ///   A plain mutable POCO with no change notifications; UI display rows are separate enriched
-///   models (see the app project's <c>ProjectModel</c>).
+///   models (see the app project's <c> ProjectModel </c>).
 /// </summary>
 public class Project
 {

@@ -6,15 +6,15 @@ using CLIHub.Core.Models;
 ///   Loads and exposes the current set of AI agent CLI tool plugins.
 /// </summary>
 /// <remarks>
-///   <para>
-///     Read methods return detached copies: mutating a returned plugin — including its commands
-///     or detection state — does not affect the loaded catalog or any later read.
-///   </para>
-///   <para>
-///     Plugin ids are loader-level identity and are compared with ordinal equality when duplicate
-///     descriptors are resolved at load time: the first valid plugin in deterministic directory
-///     order wins, and ids that differ only by case are distinct plugins.
-///   </para>
+/// <para>
+///   Read methods return detached copies: mutating a returned plugin — including its commands
+///   or detection state — does not affect the loaded catalog or any later read.
+/// </para>
+/// <para>
+///   Plugin ids are loader-level identity and are compared with ordinal equality when duplicate
+///   descriptors are resolved at load time: the first valid plugin in deterministic directory
+///   order wins, and ids that differ only by case are distinct plugins.
+/// </para>
 /// </remarks>
 public interface IPluginCatalog
 {

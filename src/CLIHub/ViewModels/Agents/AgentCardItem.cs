@@ -11,13 +11,19 @@ using CLIHub.Helpers;
 /// </summary>
 public enum AgentInstallState
 {
-    /// <summary>An installation probe is running; the settled state is not known yet.</summary>
+    /// <summary>
+    ///   An installation probe is running; the settled state is not known yet.
+    /// </summary>
     Detecting,
 
-    /// <summary>The agent is installed on the host.</summary>
+    /// <summary>
+    ///   The agent is installed on the host.
+    /// </summary>
     Installed,
 
-    /// <summary>The agent is not installed on the host.</summary>
+    /// <summary>
+    ///   The agent is not installed on the host.
+    /// </summary>
     NotInstalled
 }
 
@@ -221,7 +227,7 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   Whether the per-card "Detect" action is currently running for this card: the per-card
     ///   busy flag for that action, written by the management view model. Distinct from the
-    ///   section-level <c>IsDetecting</c> pass flag on <c>IAgentManagementSection</c>, which
+    ///   section-level <c> IsDetecting </c> pass flag on <c> IAgentManagementSection </c>, which
     ///   tracks the header-wide detection pass.
     /// </summary>
     public bool IsDetecting
@@ -240,7 +246,7 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   Whether the per-card "Check updates" action is currently running for this card: the
     ///   per-card busy flag for that action, written by the management view model. Distinct from
-    ///   the section-level <c>IsCheckingUpdates</c> pass flag on <c>IAgentManagementSection</c>,
+    ///   the section-level <c> IsCheckingUpdates </c> pass flag on <c> IAgentManagementSection </c>,
     ///   which tracks the header-wide check.
     /// </summary>
     public bool IsCheckingUpdates

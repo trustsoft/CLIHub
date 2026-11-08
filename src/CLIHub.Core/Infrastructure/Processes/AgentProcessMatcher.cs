@@ -12,7 +12,7 @@ public sealed class AgentProcessMatcher
     /// <summary>
     ///   Process names of the known shared runtime hosts (Node.js and Python) that npm shims and
     ///   python entry points spawn agents inside (design decision: npm shims and python entry
-    ///   points; shells such as <c>pwsh</c> are deliberately excluded because CLIHub itself spawns
+    ///   points; shells such as <c> pwsh </c> are deliberately excluded because CLIHub itself spawns
     ///   them constantly and their command lines carry no package marker). Compared ignoring case.
     /// </summary>
     public static IReadOnlySet<string> RuntimeHostProcessNames { get; } =
@@ -23,18 +23,18 @@ public sealed class AgentProcessMatcher
     ///   name without extension, which is exactly the comparison basis <see cref="IsMatch" /> uses.
     ///   Under <see cref="AgentProcessMatchDetail.CommandLine" /> detail, the shared runtime host
     ///   names (<see cref="RuntimeHostProcessNames" />) are added whenever at least one plugin
-    ///   declares both a launch command and an npm <c>updateCheck</c> package, so the inspector
+    ///   declares both a launch command and an npm <c> updateCheck </c> package, so the inspector
     ///   pre-filter cannot drop a runtime-hosted process the matcher would accept.
     /// </summary>
     /// <remarks>
-    ///   <para>
-    ///     The process inspector port pre-filters processes by this set before reading expensive
-    ///     per-process details such as the main module. A process can match a plugin only when its
-    ///     executable file name equals one of these candidates or — under command-line detail —
-    ///     it is hosted inside one of the runtime hosts these candidates include exactly when
-    ///     command-line matching is active, so the filter cannot drop a match the matcher would
-    ///     make.
-    ///   </para>
+    /// <para>
+    ///   The process inspector port pre-filters processes by this set before reading expensive
+    ///   per-process details such as the main module. A process can match a plugin only when its
+    ///   executable file name equals one of these candidates or — under command-line detail —
+    ///   it is hosted inside one of the runtime hosts these candidates include exactly when
+    ///   command-line matching is active, so the filter cannot drop a match the matcher would
+    ///   make.
+    /// </para>
     /// </remarks>
     /// <param name="plugins"> The plugins whose launch executables define the candidates. </param>
     /// <param name="detail">
@@ -83,23 +83,23 @@ public sealed class AgentProcessMatcher
     ///   Attempts to match a process instance to a plugin.
     /// </summary>
     /// <remarks>
-    ///   <para>
-    ///     A process matches a plugin when either rule holds. Executable-name rule: the process
-    ///     executable's file name equals the plugin's declared launch executable's file name,
-    ///     ignoring case. Command-line rule (design D5): the plugin has a launch command and
-    ///     declares an npm <c>updateCheck</c> with a non-empty package; the process runs inside a
-    ///     shared runtime host (<see cref="RuntimeHostProcessNames" />); and the process's command
-    ///     line — normalized by replacing forward slashes with backslashes — contains
-    ///     <c>node_modules\</c> followed by the package name (likewise normalized) followed by a
-    ///     trailing separator, compared ignoring case. The trailing separator is the boundary that
-    ///     keeps a package name that is a prefix of another package's name from matching.
-    ///   </para>
-    ///   <para>
-    ///     A process hosted inside a shared runtime without a readable command line (retrieval
-    ///     degraded or unavailable) never command-line-matches; the executable-name rule alone
-    ///     applies, which cannot match a host-named process unless the plugin's launch executable
-    ///     is the host itself.
-    ///   </para>
+    /// <para>
+    ///   A process matches a plugin when either rule holds. Executable-name rule: the process
+    ///   executable's file name equals the plugin's declared launch executable's file name,
+    ///   ignoring case. Command-line rule (design D5): the plugin has a launch command and
+    ///   declares an npm <c> updateCheck </c> with a non-empty package; the process runs inside a
+    ///   shared runtime host (<see cref="RuntimeHostProcessNames" />); and the process's command
+    ///   line — normalized by replacing forward slashes with backslashes — contains
+    ///   <c> node_modules\ </c> followed by the package name (likewise normalized) followed by a
+    ///   trailing separator, compared ignoring case. The trailing separator is the boundary that
+    ///   keeps a package name that is a prefix of another package's name from matching.
+    /// </para>
+    /// <para>
+    ///   A process hosted inside a shared runtime without a readable command line (retrieval
+    ///   degraded or unavailable) never command-line-matches; the executable-name rule alone
+    ///   applies, which cannot match a host-named process unless the plugin's launch executable
+    ///   is the host itself.
+    /// </para>
     /// </remarks>
     /// <param name="processInstance"> The process to match. </param>
     /// <param name="plugin"> The plugin to match against. </param>
@@ -135,7 +135,7 @@ public sealed class AgentProcessMatcher
     }
 
     /// <summary>
-    ///   Determines whether the plugin declares an npm <c>updateCheck</c> with a non-empty package
+    ///   Determines whether the plugin declares an npm <c> updateCheck </c> with a non-empty package
     ///   — the command-line matching marker (source kind compared ignoring case, matching
     ///   <see cref="Agents.AgentReleaseClient" /> precedent).
     /// </summary>

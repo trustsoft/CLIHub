@@ -13,21 +13,21 @@ using CLIHub.Core.Models;
 ///   palette declared by App.xaml, and swaps or removes it when the theme changes.
 /// </summary>
 /// <remarks>
-///   <para>
-///     UI thread only. Startup applies the palette from <c>App.OnStartup</c> and a Settings save
-///     applies it from the dispatcher, so no synchronization is performed.
-///   </para>
-///   <para>
-///     Exactly one overlay is tracked. The dark palette stays the base merged by App.xaml; a null
-///     resolution (explicit Dark, System on a Windows-dark desktop, unknown values) removes the
-///     tracked overlay and keeps that base. When the overlay is still present it is replaced in
-///     place, so the merge order of the other dictionaries is preserved.
-///   </para>
-///   <para>
-///     A palette that cannot be loaded never produces a half-applied theme: the candidate dictionary
-///     is built before the collection is touched, the failure is logged as a warning, and the
-///     previously applied palette stays in effect.
-///   </para>
+/// <para>
+///   UI thread only. Startup applies the palette from <c> App.OnStartup </c> and a Settings save
+///   applies it from the dispatcher, so no synchronization is performed.
+/// </para>
+/// <para>
+///   Exactly one overlay is tracked. The dark palette stays the base merged by App.xaml; a null
+///   resolution (explicit Dark, System on a Windows-dark desktop, unknown values) removes the
+///   tracked overlay and keeps that base. When the overlay is still present it is replaced in
+///   place, so the merge order of the other dictionaries is preserved.
+/// </para>
+/// <para>
+///   A palette that cannot be loaded never produces a half-applied theme: the candidate dictionary
+///   is built before the collection is touched, the failure is logged as a warning, and the
+///   previously applied palette stays in effect.
+/// </para>
 /// </remarks>
 public sealed class PaletteSwitcher
 {

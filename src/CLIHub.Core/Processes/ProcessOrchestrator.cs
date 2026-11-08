@@ -6,7 +6,7 @@ using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Orchestrates all process operations: launching, capturing output, and finding running agents.
+///   Orchestrates all process operations: launching, capturing output, and finding running agents.
 /// </summary>
 public class ProcessOrchestrator : IProcessOrchestrator
 {
@@ -19,15 +19,15 @@ public class ProcessOrchestrator : IProcessOrchestrator
     private readonly ILogger<ProcessOrchestrator> logger;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ProcessOrchestrator"/> class.
+    ///   Initializes a new instance of the <see cref="ProcessOrchestrator" /> class.
     /// </summary>
-    /// <param name="runtimeResolver">The runtime resolver.</param>
-    /// <param name="commandLineBuilder">The command line builder.</param>
-    /// <param name="interactiveRunner">The interactive process runner.</param>
-    /// <param name="outputRunner">The process output runner.</param>
-    /// <param name="processFinder">The agent process finder.</param>
-    /// <param name="loggingContext">The logging context provider.</param>
-    /// <param name="logger">The logger.</param>
+    /// <param name="runtimeResolver"> The runtime resolver. </param>
+    /// <param name="commandLineBuilder"> The command line builder. </param>
+    /// <param name="interactiveRunner"> The interactive process runner. </param>
+    /// <param name="outputRunner"> The process output runner. </param>
+    /// <param name="processFinder"> The agent process finder. </param>
+    /// <param name="loggingContext"> The logging context provider. </param>
+    /// <param name="logger"> The logger. </param>
     public ProcessOrchestrator(
         IRuntimeResolver runtimeResolver,
         ICommandLineBuilder commandLineBuilder,
@@ -46,7 +46,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
         this.logger = logger;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task<ProcessResult> LaunchInteractiveAsync(LaunchRequest request)
     {
         using var scope = this.loggingContext.BeginOperation("LaunchInteractive");
@@ -109,7 +109,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task<ProcessResult> CaptureOutputAsync(LaunchRequest request)
     {
         using var scope = this.loggingContext.BeginOperation("CaptureOutput");
@@ -179,7 +179,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
         }
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AgentProcess>> FindRunningAgentsAsync(
         ProcessMatchCriteria criteria)
     {
@@ -190,7 +190,7 @@ public class ProcessOrchestrator : IProcessOrchestrator
         return processes;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task<IReadOnlyList<PluginAgentProcess>> FindRunningAgentsAsync(
         IReadOnlyList<Plugin> plugins,
         AgentProcessMatchDetail detail)

@@ -4,22 +4,22 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// Adapts <see cref="IRuntimeExecutableLocator"/> to provide runtime resolution.
+///   Adapts <see cref="IRuntimeExecutableLocator" /> to provide runtime resolution.
 /// </summary>
 public sealed class RuntimeResolver : IRuntimeResolver
 {
     private readonly IRuntimeExecutableLocator locator;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="RuntimeResolver"/> class.
+    ///   Initializes a new instance of the <see cref="RuntimeResolver" /> class.
     /// </summary>
-    /// <param name="locator">The runtime executable locator.</param>
+    /// <param name="locator"> The runtime executable locator. </param>
     public RuntimeResolver(IRuntimeExecutableLocator locator)
     {
         this.locator = locator;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Task<RuntimeExecutable?> ResolveAsync(
         RuntimeKind kind,
         CancellationToken cancellationToken = default)

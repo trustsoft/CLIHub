@@ -13,7 +13,7 @@ public enum AgentProcessMatchDetail
 
     /// <summary>
     ///   Additionally matches processes hosted inside a shared runtime (for example
-    ///   <c>node.exe</c>) by their command line. Authoritative for update gating.
+    ///   <c> node.exe </c>) by their command line. Authoritative for update gating.
     /// </summary>
     CommandLine
 }

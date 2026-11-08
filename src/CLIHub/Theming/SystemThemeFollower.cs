@@ -17,22 +17,22 @@ using CLIHub.Core.Windows;
 ///   re-applies the matching dark or light palette when it changes during a running session.
 /// </summary>
 /// <remarks>
-///   <para>
-///     The guards (the stored theme read and the light/dark comparison) run on the dedicated
-///     system-events thread and touch no UI; only the palette apply is marshaled to the UI thread
-///     through the dispatch delegate supplied to <see cref="Start" />.
-///   </para>
-///   <para>
-///     The preference-change category is deliberately ignored: the categories raised for the
-///     apps light/dark toggle vary across Windows builds, so the registry-value comparison — not
-///     the event category — is the filter. Unrelated preference events read the same value,
-///     observe no flip, and dispatch nothing.
-///   </para>
-///   <para>
-///     One <see cref="UserPreferenceChangedEventHandler" /> instance is kept for both the
-///     subscription and its removal, because <c> SystemEvents.UserPreferenceChanged </c> is a
-///     static event whose handlers must be detached when the owner is disposed.
-///   </para>
+/// <para>
+///   The guards (the stored theme read and the light/dark comparison) run on the dedicated
+///   system-events thread and touch no UI; only the palette apply is marshaled to the UI thread
+///   through the dispatch delegate supplied to <see cref="Start" />.
+/// </para>
+/// <para>
+///   The preference-change category is deliberately ignored: the categories raised for the
+///   apps light/dark toggle vary across Windows builds, so the registry-value comparison — not
+///   the event category — is the filter. Unrelated preference events read the same value,
+///   observe no flip, and dispatch nothing.
+/// </para>
+/// <para>
+///   One <see cref="UserPreferenceChangedEventHandler" /> instance is kept for both the
+///   subscription and its removal, because <c> SystemEvents.UserPreferenceChanged </c> is a
+///   static event whose handlers must be detached when the owner is disposed.
+/// </para>
 /// </remarks>
 public sealed class SystemThemeFollower : IDisposable
 {

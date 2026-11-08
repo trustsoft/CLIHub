@@ -125,8 +125,8 @@ public sealed class ApplicationHost : IApplicationHost
 
     /// <summary>
     ///   Publishes the DI-constructed shared UI pieces into the application resource dictionary
-    ///    before any window is created, so XAML <c> StaticResource </c> lookups resolve the
-    ///    cache-backed instances (the XAML declarations were removed on purpose).
+    ///   before any window is created, so XAML <c> StaticResource </c> lookups resolve the
+    ///   cache-backed instances (the XAML declarations were removed on purpose).
     /// </summary>
     private static void InstallSharedUiResources(ServiceProvider services)
     {

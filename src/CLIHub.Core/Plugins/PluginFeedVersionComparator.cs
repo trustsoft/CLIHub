@@ -27,7 +27,8 @@ public enum PluginUpdateStatus
 }
 
 /// <summary>
-///   Compares installed plugin version with feed version using numeric comparison with fallback to string equality.
+///   Compares installed plugin version with feed version using numeric comparison with fallback to string
+///   equality.
 /// </summary>
 public static class PluginFeedVersionComparator
 {

@@ -4,8 +4,8 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// Adapts <see cref="IAgentProcessInspector"/> and <see cref="AgentProcessMatcher"/> 
-/// to provide agent process finding.
+///   Adapts <see cref="IAgentProcessInspector" /> and <see cref="AgentProcessMatcher" />
+///   to provide agent process finding.
 /// </summary>
 public sealed class AgentProcessFinder : IAgentProcessFinder
 {
@@ -13,10 +13,10 @@ public sealed class AgentProcessFinder : IAgentProcessFinder
     private readonly AgentProcessMatcher matcher;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AgentProcessFinder"/> class.
+    ///   Initializes a new instance of the <see cref="AgentProcessFinder" /> class.
     /// </summary>
-    /// <param name="inspector">The agent process inspector.</param>
-    /// <param name="matcher">The agent process matcher.</param>
+    /// <param name="inspector"> The agent process inspector. </param>
+    /// <param name="matcher"> The agent process matcher. </param>
     public AgentProcessFinder(
         IAgentProcessInspector inspector,
         AgentProcessMatcher matcher)
@@ -25,7 +25,7 @@ public sealed class AgentProcessFinder : IAgentProcessFinder
         this.matcher = matcher;
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Task<IReadOnlyList<AgentProcess>> FindAsync(
         ProcessMatchCriteria criteria,
         CancellationToken cancellationToken = default)
@@ -53,7 +53,7 @@ public sealed class AgentProcessFinder : IAgentProcessFinder
         return Task.FromResult<IReadOnlyList<AgentProcess>>(matches);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public Task<IReadOnlyList<PluginAgentProcess>> FindAllAsync(
         IReadOnlyList<Plugin> plugins,
         AgentProcessMatchDetail detail,

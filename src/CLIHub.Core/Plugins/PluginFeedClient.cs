@@ -258,8 +258,8 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
 
     /// <summary>
     ///   Reads the response body as a UTF-8 string, returning null once the stream exceeds
-    ///   <paramref name="maxBytes"/>. This enforces the size limit during streaming for responses
-    ///   with a missing or lying <c>Content-Length</c> (or chunked transfer encoding).
+    ///   <paramref name="maxBytes" />. This enforces the size limit during streaming for responses
+    ///   with a missing or lying <c> Content-Length </c> (or chunked transfer encoding).
     /// </summary>
     private static async Task<string?> ReadBoundedAsync(HttpContent content, int maxBytes, CancellationToken cancellationToken)
     {
@@ -289,7 +289,7 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
 
     /// <summary>
     ///   Copies the response body to the destination file in chunks, returning true once the stream
-    ///   exceeds <paramref name="maxBytes"/>. On an oversized result the partial file is left for
+    ///   exceeds <paramref name="maxBytes" />. On an oversized result the partial file is left for
     ///   the caller to delete.
     /// </summary>
     private static async Task<bool> CopyBoundedAsync(HttpContent content, string destinationPath, int maxBytes, CancellationToken cancellationToken)

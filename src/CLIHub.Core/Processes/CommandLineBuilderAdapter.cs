@@ -4,11 +4,11 @@ using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 
 /// <summary>
-/// Adapts <see cref="WindowsCommandLineBuilder"/> to provide command line building.
+///   Adapts <see cref="WindowsCommandLineBuilder" /> to provide command line building.
 /// </summary>
 public sealed class CommandLineBuilderAdapter : ICommandLineBuilder
 {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public (string FileName, string Arguments) BuildInteractive(
         RuntimeExecutable runtime,
         PluginCommand command)
@@ -24,7 +24,7 @@ public sealed class CommandLineBuilderAdapter : ICommandLineBuilder
             ps7Exe);
     }
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public (string FileName, string Arguments) BuildCaptured(
         string executable,
         string? arguments)

@@ -8,7 +8,7 @@ namespace CLIHub.Core.Models;
 /// <param name="StartTime"> When the process was started. </param>
 /// <param name="CommandLine">
 ///   The process's full command line, supplied only for command-line-detail inspection
-///   (<c>AgentProcessMatchDetail.CommandLine</c>). It is null when command lines are not retrieved
+///   (<c> AgentProcessMatchDetail.CommandLine </c>). It is null when command lines are not retrieved
 ///   (executable-name detail) or could not be read for this process (retrieval degraded).
 /// </param>
 public sealed record AgentProcessInstance(int ProcessId,

@@ -9,7 +9,8 @@ namespace CLIHub.Core.Scanning;
 ///   Roots that were missing or unreadable are absent, so projects under them are not treated as removed.
 /// </param>
 /// <param name="ScannedDirectoryCounts">
-///   Number of directories the walk examined under each successfully scanned root, keyed by normalized root path.
+///   Number of directories the walk examined under each successfully scanned root, keyed by normalized root
+///   path.
 /// </param>
 public sealed record DiscoveryResult(IReadOnlyList<string> DiscoveredPaths,
                                      IReadOnlyList<string> ScannedRoots,

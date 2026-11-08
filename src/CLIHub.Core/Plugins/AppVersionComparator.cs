@@ -1,7 +1,8 @@
 namespace CLIHub.Core.Plugins;
 
 /// <summary>
-///   Compares current application version with minimum required plugin version using numeric major.minor.patch comparison.
+///   Compares current application version with minimum required plugin version using numeric major.minor.patch
+///   comparison.
 /// </summary>
 public static class AppVersionComparator
 {

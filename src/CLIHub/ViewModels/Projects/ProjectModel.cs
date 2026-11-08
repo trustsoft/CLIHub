@@ -74,7 +74,7 @@ public sealed class ProjectModel : INotifyPropertyChanged
 
     /// <summary>
     ///   The final logo path — the project logo resolver has already applied the default-logo
-    ///   fallback — rendered through the shared <c>PathToImage</c> converter.
+    ///   fallback — rendered through the shared <c> PathToImage </c> converter.
     /// </summary>
     public string? LogoPath
     {

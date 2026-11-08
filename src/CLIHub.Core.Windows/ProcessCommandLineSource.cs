@@ -25,7 +25,7 @@ internal interface IProcessCommandLineSource
 }
 
 /// <summary>
-///   Retrieves process command lines with a single WMI <c>Win32_Process</c> query over the
+///   Retrieves process command lines with a single WMI <c> Win32_Process </c> query over the
 ///   supplied process names. Best effort: command lines that WMI cannot read (elevated or
 ///   other-session processes) are simply missing from the returned map; query failures propagate
 ///   to the caller's degradation path.

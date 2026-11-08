@@ -359,7 +359,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     public bool IsCardActionRunning => this.runningCardActionCount > 0;
 
     /// <summary>
-    ///   Whether any pass or per-card action is currently running: true while Detect, Check updates, or a per-card action runs.
+    ///   Whether any pass or per-card action is currently running: true while Detect, Check updates, or a per-card
+    ///   action runs.
     /// </summary>
     private bool IsAnyPassRunning => this.IsDetecting || this.IsCheckingUpdates || this.IsCardActionRunning;
 
@@ -580,8 +581,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <summary>
     ///   Reports a busy-state flip to the UI: the derived availability properties change, and the
-    ///   gated commands re-query explicitly. WPF buttons cache the <see cref="System.Windows.Input.ICommand.CanExecute" />
-    ///   result and only re-query on <c>CanExecuteChanged</c>, so without the explicit raise a
+    ///   gated commands re-query explicitly. WPF buttons cache the
+    ///   <see cref="System.Windows.Input.ICommand.CanExecute" />
+    ///   result and only re-query on <c> CanExecuteChanged </c>, so without the explicit raise a
     ///   button that re-queried mid-pass would stay disabled after the pass ends.
     /// </summary>
     private void RaiseBusyStateChanges()
