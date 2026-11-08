@@ -468,3 +468,17 @@ snapshot.
 - Proposed remedy: close `PluginActionsPopup` from an `Unloaded`/`IsVisibleChanged` handler if a
   non-click page transition can collapse the page while the menu is open.
 - Trigger: a report of a stale popup after navigation, or a change to the Settings page host.
+
+### Two glyph constants went unused after the Agent Detection icon swap
+
+- Severity: Low (dead constants only; no behavioral or build impact, and the compiler does not warn
+  on an unused `const` member)
+- Evidence (2026-11-08): the `agent-detection-page-icons` change replaced every reference to
+  `IconGlyphs.Diagnostic` (E9D9, five positions) and `IconGlyphs.Process` (E9F3, the page entry) on
+  the Settings -> Agent Detection page. Both declarations remain at
+  `src/CLIHub/Theming/IconGlyphs.cs:24-25` with zero references anywhere in `src/` or `tests/`;
+  `IconGlyphs` is the single glyph catalog, so an unreferenced member is dead weight rather than a
+  bug.
+- Proposed remedy: delete both constants, or keep them deliberately as catalog entries if another
+  page is expected to reuse the glyph.
+- Trigger: the next change that touches `IconGlyphs.cs`, or a dead-code sweep.
