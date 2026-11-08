@@ -765,12 +765,12 @@ The Agent Detection page SHALL present the agent detection cache TTL and version
 #### Scenario: Icon and description
 
 - **WHEN** the Agent Detection page is selected in the sidebar
-- **THEN** the sidebar item shows the Process icon (IconGlyphs.Process) and the page description "Caching and timeout behavior for agent detection."
+- **THEN** the sidebar item shows the Radar icon (IconGlyphs.Radar, EB44) and the page description "Caching and timeout behavior for agent detection."
 
 #### Scenario: DEFAULTS card shown
 
 - **WHEN** the Agent Detection page header is visible
-- **THEN** the third summary card is labelled "DEFAULTS" with the Diagnostic icon and shows the built-in default values for both detection parameters
+- **THEN** the third summary card is labelled "DEFAULTS" with the UpdateRestore icon (IconGlyphs.UpdateRestore, E777) and shows the built-in default values for both detection parameters
 
 #### Scenario: DEFAULTS card value
 
