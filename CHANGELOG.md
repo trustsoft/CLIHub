@@ -21,6 +21,7 @@ internal-refactor names refer to `openspec/changes/archive/<name>`.
 - Update checking is stable-only: the disabled pre-release toggle and the "Channel: Stable" header chip are gone, `notifyPrereleaseUpdates` is removed from the configuration and snapshot, `UpdateService` always builds a stable Velopack source, and `VersionClassification` is deleted (`remove-prerelease-updates-option`, `update-checking`, `preferences-ui`, `configuration-snapshot`).
 - Agent tooling: the subagent model policy adds the `lmstudio` provider and the `local_first` preset, and the default preset is aligned with the current selection (`9b6c636`, `3a42732`).
 - The manual ("M") provenance mark uses the same muted foreground as the discovered ("D") mark in both the launch window and the Settings Projects page; the character remains the only distinction (`provenance-mark-uniform-tone`, `project-management`).
+- The Settings Agent Detection page uses a distinct icon per role instead of one repeated glyph: Radar for the page and its sidebar entry, Recent for cache TTL, Stopwatch for the version check timeout, and UpdateRestore for the defaults card; a setting row and its summary card share one glyph (`agent-detection-page-icons`, `settings-theme`, `preferences-ui`).
 
 ### Fixed
 

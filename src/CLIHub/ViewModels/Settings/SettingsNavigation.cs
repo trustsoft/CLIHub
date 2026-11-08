@@ -79,7 +79,7 @@ internal static class SettingsPageCatalog
             "Agent Detection",
             "Caching and timeout behavior for agent detection.",
             "Engines & Repos",
-            IconGlyphs.Process,
+            IconGlyphs.Radar,
             SummaryRowKey: "AgentDetectionSummaryCards"),
         new(
             "terminal",

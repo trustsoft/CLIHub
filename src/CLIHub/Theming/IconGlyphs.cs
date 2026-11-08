@@ -23,6 +23,10 @@ internal static class IconGlyphs
     public const string Palette = "\uE790";
     public const string Diagnostic = "\uE9D9";
     public const string Process = "\uE9F3";
+    public const string Radar = "\uEB44";
+    public const string Recent = "\uE823";
+    public const string Stopwatch = "\uE916";
+    public const string UpdateRestore = "\uE777";
     public const string History = "\uE81C";
     public const string Calendar = "\uE787";
     public const string Equalizer = "\uE9E9";

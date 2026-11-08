@@ -235,18 +235,18 @@
             <DataTemplate x:Key="AgentDetectionSummaryCards">
                 <controls:SpacedPanel Orientation="Horizontal" Spacing="8" StretchChildren="True">
                     <controls:SummaryCard Detail="{Binding ProbePolicyCacheTtlDetail}"
-                                          Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                                          Icon="{x:Static themes:IconGlyphs.Recent}"
                                           Label="CACHE TTL"
                                           Value="{Binding ProbePolicyCacheTtlSummary}"/>
 
                     <controls:SummaryCard Detail="{Binding ProbePolicyTimeoutDetail}"
-                                          Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                                          Icon="{x:Static themes:IconGlyphs.Stopwatch}"
                                           Label="TIMEOUT"
                                           Value="{Binding ProbePolicyTimeoutSummary}"/>
 
                     <controls:SummaryCard Detail="{Binding ProbePolicyDefaultsDetail}"
                                           DetailToolTip="Built-in values for cache TTL and version check timeout."
-                                          Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                                          Icon="{x:Static themes:IconGlyphs.UpdateRestore}"
                                           Label="DEFAULTS"
                                           Value="{Binding ProbePolicyDefaults}"/>
                 </controls:SpacedPanel>

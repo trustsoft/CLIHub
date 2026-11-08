@@ -35,7 +35,7 @@
         <controls:SettingsGroup>
             <controls:SettingCard Title="Cache TTL"
                                Hint="How long detection and version results are cached."
-                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Icon="{x:Static themes:IconGlyphs.Recent}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"
                                        Minimum="1"
@@ -46,7 +46,7 @@
 
             <controls:SettingCard Title="Version check timeout"
                                Hint="Maximum time for one version check."
-                               Icon="{x:Static themes:IconGlyphs.Diagnostic}"
+                               Icon="{x:Static themes:IconGlyphs.Stopwatch}"
                                Grouped="True">
                 <controls:NumericField MinWidth="110"
                                        Minimum="1"
