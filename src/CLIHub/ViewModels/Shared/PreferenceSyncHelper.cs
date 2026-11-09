@@ -1,4 +1,4 @@
-namespace CLIHub.Helpers;
+namespace CLIHub.ViewModels;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;

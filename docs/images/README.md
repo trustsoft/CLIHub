@@ -76,7 +76,7 @@ or GIF files under 1 MB.
 ## Replace the app screenshots
 
 The app captures are produced by `tools\Capture-ReadmeImages.ps1` through the debug-only
-`CLIHUB_CAPTURE_DIR` mode (`src/CLIHub/Views/ReadmeImageCapture.cs`). The debug build renders
+`CLIHUB_CAPTURE_DIR` mode (`src/CLIHub/Diagnostics/ReadmeImageCapture.cs`). The debug build renders
 the launch window and the Theme & Accent, Project Scanning, CLI Agents, and Agent Detection
 Settings pages with `RenderTargetBitmap` at 144 DPI (1.5×), applies the 12 px rounded-corner mask,
 and shuts down. The render path has no DWM frame ring to crop, which is why the harness does not

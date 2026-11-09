@@ -1,8 +1,8 @@
-namespace CLIHub.Tests.Helpers;
+namespace CLIHub.Tests.ViewModels.Shared;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
-using CLIHub.Helpers;
+using CLIHub.ViewModels;
 
 using Moq;
 

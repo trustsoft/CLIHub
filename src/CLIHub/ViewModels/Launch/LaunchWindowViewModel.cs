@@ -6,7 +6,6 @@ using System.ComponentModel;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
-using CLIHub.Helpers;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Settings;

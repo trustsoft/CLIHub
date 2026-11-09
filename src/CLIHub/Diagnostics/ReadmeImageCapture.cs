@@ -1,5 +1,5 @@
 #if DEBUG
-namespace CLIHub.Views;
+namespace CLIHub.Diagnostics;
 
 using System.IO;
 using System.Windows;
@@ -8,6 +8,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 using CLIHub.ViewModels;
+using CLIHub.Views;
 
 /// <summary>
 ///   Debug-only README image capture. When <c> CLIHUB_CAPTURE_DIR </c> is set, the application renders

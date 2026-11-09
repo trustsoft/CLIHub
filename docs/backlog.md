@@ -447,7 +447,7 @@ snapshot.
 - Evidence (2026-11-05): the four plugin-management buttons removed from the CLI Agents header by
   `settings-agents-actions-menu` carried `ToolTip` and `AutomationProperties.Name` attributes
   (`src/CLIHub/Views/SettingsAgentsPage.xaml`, pre-change lines 144-203). Their Actions-menu
-  replacements reuse `MenuAction` (`src/CLIHub/ViewModels/Menu/MenuAction.cs`), which has no tooltip
+  replacements reuse `MenuAction` (`src/CLIHub/ViewModels/Shared/MenuAction.cs`), which has no tooltip
   or accessible-name fields, and the new `ACTIONS` toggle carries only its `Content` text. This
   matches the Launch window's existing Actions menus, which also expose only label text.
 - Proposed remedy: add optional `ToolTip` and accessible-name fields to `MenuAction` and bind them in

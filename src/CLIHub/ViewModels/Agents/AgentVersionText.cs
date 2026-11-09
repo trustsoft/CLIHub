@@ -1,4 +1,4 @@
-namespace CLIHub.Helpers;
+namespace CLIHub.ViewModels;
 
 /// <summary>
 ///   Owns the user-facing agent state chip texts shared by the agent surfaces, so the display
