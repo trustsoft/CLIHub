@@ -63,7 +63,8 @@
     <Thickness x:Key="Sizing.Footer.VersionChipMargin">8,2,0,0</Thickness>
     <Thickness x:Key="Sizing.Footer.VerticalPadding">0,10</Thickness>
     <Thickness x:Key="Sizing.Pane.Margin">10</Thickness>
-    <sys:Double x:Key="Sizing.PaneHeader.Height">32</sys:Double>
+    <!-- Matches the Actions toggle's 24 DIP chip, so the label sits tight to the pane's top inset. -->
+    <sys:Double x:Key="Sizing.PaneHeader.Height">24</sys:Double>
     <Thickness x:Key="Sizing.PaneHeader.Margin">0,0,0,4</Thickness>
     <sys:Double x:Key="Sizing.PaneList.MaxHeight">434</sys:Double>
     <sys:Double x:Key="Sizing.Splitter.HitWidth">9</sys:Double>

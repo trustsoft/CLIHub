@@ -8,6 +8,12 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## Unreleased
+
+### Changed
+
+- The launch window's pane headers are 24 DIP tall instead of 32, so the PROJECTS/AGENTS labels sit closer to the pane's top edge; the Actions chip keeps its full height and both panes stay aligned (`launch-window-layout`).
+
 ## 1.1.2 - 2026-11-09
 
 ### Added
