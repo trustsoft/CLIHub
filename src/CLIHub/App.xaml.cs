@@ -34,7 +34,7 @@ public partial class App : Application
             window => this.MainWindow = (Window)window);
 
 #if DEBUG
-        if (CLIHub.Views.ReadmeImageCapture.TryStart(this))
+        if (CLIHub.Diagnostics.ReadmeImageCapture.TryStart(this))
         {
             return;
         }

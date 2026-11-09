@@ -8,6 +8,7 @@ public sealed class ArchitectureBoundaryTests
     [
         "App.xaml.cs",
         "AssemblyInfo.cs",
+        "Diagnostics" + Path.DirectorySeparatorChar + "ReadmeImageCapture.cs",
         "Imaging" + Path.DirectorySeparatorChar + "LogoImageSourceCache.cs",
         "Launching" + Path.DirectorySeparatorChar + "PluginDialogService.cs",
         "Launching" + Path.DirectorySeparatorChar + "ProjectDialogService.cs",

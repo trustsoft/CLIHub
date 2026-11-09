@@ -1,6 +1,6 @@
-namespace CLIHub.Tests.Helpers;
+namespace CLIHub.Tests.ViewModels.Agents;
 
-using CLIHub.Helpers;
+using CLIHub.ViewModels;
 
 using Xunit;
 

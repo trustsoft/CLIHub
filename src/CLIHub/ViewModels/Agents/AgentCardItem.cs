@@ -3,7 +3,6 @@ namespace CLIHub.ViewModels;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
-using CLIHub.Helpers;
 
 /// <summary>
 ///   Installation state of an agent as known by a view-model surface. XAML data triggers match
