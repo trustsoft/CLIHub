@@ -380,7 +380,8 @@ try {
         [pscustomobject]@{ Directory = 'design-system'; Name = 'Design System'; Letter = 'D'; Color = '#8B5CF6'; Favorite = $false; MinutesAgo = 14 },
         [pscustomobject]@{ Directory = 'search-api'; Name = 'Search API'; Letter = $null; Color = $null; Favorite = $false; MinutesAgo = 21 },
         [pscustomobject]@{ Directory = 'mobile-app'; Name = 'Mobile App'; Letter = $null; Color = $null; Favorite = $false; MinutesAgo = 37 },
-        [pscustomobject]@{ Directory = 'data-pipeline'; Name = 'Data Pipeline'; Letter = $null; Color = $null; Favorite = $false; MinutesAgo = 52 }
+        [pscustomobject]@{ Directory = 'data-pipeline'; Name = 'Data Pipeline'; Letter = $null; Color = $null; Favorite = $false; MinutesAgo = 52 },
+        [pscustomobject]@{ Directory = 'notification-service'; Name = 'Notification Service'; Letter = $null; Color = $null; Favorite = $false; MinutesAgo = 66 }
     )
 
     $utf8 = [System.Text.UTF8Encoding]::new($false)
