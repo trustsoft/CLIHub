@@ -3,6 +3,23 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.2 — 2026-11-09
+
+### New
+
+- Favorites now sort to the top of the launch window's project list, while the remaining projects keep their stored order.
+
+### Improved
+
+- On CLI Agents, an available update now replaces the version chip in the same slot, and the agent name tooltip shows the agent's origin along with its version, publisher, and homepage.
+- Update checking is stable-only: the pre-release option and the Stable channel label are gone from Settings.
+- Each setting on the Agent Detection page has its own icon instead of one repeated glyph.
+- Manual and discovered projects use the same muted tone for their provenance mark; the letter is the only difference.
+
+### Fixed
+
+- The launch window's project and agent lists end flush with the pane instead of stopping short when scrolled to the bottom.
+
 ## 1.1.1 — 2026-11-05
 
 ### New
