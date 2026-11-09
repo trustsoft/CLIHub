@@ -90,8 +90,8 @@ dotnet run --project src/CLIHub/CLIHub.csproj
 3. Select an available agent and run the required command.
 4. Configure startup behavior, hotkey, launcher position, default agent, terminal runtime, probing, update checks,
    theme and accent, logging, and project scanning in Settings.
-5. Close an agent's running processes before using its Update action; CLIHub keeps that action disabled while
-   the matching process is detected.
+5. In Settings → CLI Agents, an agent's Update action is available only when CLIHub knows an update is
+   available; it stays disabled while the agent's matching processes are running.
 
 ## Data and Plugins
 

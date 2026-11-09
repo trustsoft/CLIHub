@@ -70,6 +70,7 @@ public partial class AgentManagementViewModelTests
         // The skipped card keeps no stale indicator and is never invalidated or checked.
         Assert.Null(cardB.UpdateAvailability);
         Assert.False(cardB.HasUpdateAvailable);
+        Assert.False(cardB.CanUpdate);
         availability.Verify(x => x.InvalidateFor(b), Times.Never);
         availability.Verify(x => x.CheckAsync(b, It.IsAny<CancellationToken>()), Times.Never);
         availability.Verify(x => x.InvalidateFor(a), Times.Once);
@@ -87,7 +88,7 @@ public partial class AgentManagementViewModelTests
     [Fact]
     public void CheckUpdatesCommand_AssignsFreshResultToInstalledCard()
     {
-        var a = Launchable("a");
+        var a = Launchable("a", withUpdate: true);
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
@@ -97,11 +98,13 @@ public partial class AgentManagementViewModelTests
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         Assert.False(card.HasUpdateAvailable);
+        Assert.False(card.CanUpdate);
 
         viewModel.CheckUpdatesCommand.Execute(null);
 
         Assert.True(card.HasUpdateAvailable);
         Assert.Equal("1.0.0 → 2.0.0", card.UpdateAvailabilityText);
+        Assert.True(card.CanUpdate);
     }
 
 
@@ -645,7 +648,7 @@ public partial class AgentManagementViewModelTests
     [Fact]
     public void CheckCardUpdatesCommand_AssignsFreshResultToCard()
     {
-        var a = Launchable("a");
+        var a = Launchable("a", withUpdate: true);
         var availability = new Mock<IAgentUpdateAvailabilityService>();
         availability
             .SetupSequence(x => x.CheckAsync(a, It.IsAny<CancellationToken>()))
@@ -655,11 +658,13 @@ public partial class AgentManagementViewModelTests
         viewModel.Load(null);
         var card = viewModel.Cards[0];
         Assert.False(card.HasUpdateAvailable);
+        Assert.False(card.CanUpdate);
 
         viewModel.CheckCardUpdatesCommand.Execute(card);
 
         Assert.True(card.HasUpdateAvailable);
         Assert.Equal("1.0.0 → 2.0.0", card.UpdateAvailabilityText);
+        Assert.True(card.CanUpdate);
     }
 
 
@@ -734,6 +739,7 @@ public partial class AgentManagementViewModelTests
         viewModel.CheckCardUpdatesCommand.Execute(card);
 
         Assert.Null(card.UpdateAvailability);
+        Assert.False(card.CanUpdate);
         Assert.Equal("Not installed on this PC", card.Message);
         availability.Verify(x => x.InvalidateFor(a), Times.Never);
         availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Never);
@@ -806,6 +812,7 @@ public partial class AgentManagementViewModelTests
         Assert.False(card.IsCheckingUpdates);
         Assert.True(viewModel.CheckCardUpdatesCommand.CanExecute(card));
         Assert.Equal(beforeFailure, card.UpdateAvailability);
+        Assert.False(card.CanUpdate);
         Assert.Null(card.Message);
     }
 

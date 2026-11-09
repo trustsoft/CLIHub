@@ -482,3 +482,16 @@ snapshot.
 - Proposed remedy: delete both constants, or keep them deliberately as catalog entries if another
   page is expected to reuse the glyph.
 - Trigger: the next change that touches `IconGlyphs.cs`, or a dead-code sweep.
+
+### Settings card CanUpdate does not itself test installation state
+
+- Severity: Low (no reachable wrong state today; the not-installed gate relies on every caller clearing availability)
+- Evidence (2026-11-09): `AgentCardItem.CanUpdate` derives from the availability status, the declared
+  `update` command, and `IsBlockedByRunningAgent` only (`src/CLIHub/ViewModels/Agents/AgentCardItem.cs:209-212`).
+  A not-installed card is disabled because every production path skips or clears availability
+  (`AgentManagementViewModel` load and check paths); a direct assignment of `UpdateAvailable` to a
+  not-installed card would compute `CanUpdate == true`.
+- Proposed remedy: add `this.IsInstalled` to the derivation and raise `CanUpdate` from the
+  `InstallState` setter, or add a card-level test that pins the current caller-owns-the-gate contract.
+- Trigger: a new availability writer that can leave a result behind an uninstall, or the next change
+  touching `AgentCardItem.CanUpdate`.

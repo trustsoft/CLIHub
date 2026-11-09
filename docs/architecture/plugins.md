@@ -40,7 +40,7 @@ plugin id:
 - `updateCheck` is optional and names the distribution channel the agent publishes to, so CLIHub can tell when a newer version exists. Two source kinds are supported:
   - `"source": "npm"` with `"package": "<name>"` — the latest version is read from `https://registry.npmjs.org/<package>/latest`.
   - `"source": "githubReleases"` with `"repo": "<owner>/<repository>"` — the latest version is read from that repository's latest GitHub release (`tag_name`, leading `v` stripped).
-  - An unrecognized `source` is ignored with a logged warning; the agent is treated as having no update source. The result never gates or alters the Update action.
+  - An unrecognized `source` is ignored with a logged warning; the agent is treated as having no update source, so its availability is `Unknown` and the Settings CLI Agents card Update action stays disabled. The launch-window Update action remains declaration-based.
 - Built-in descriptors for OpenCode, Pi, OMP, Qwen Code, and Devin are embedded
   and seeded using the three-hash refresh logic described below.
 

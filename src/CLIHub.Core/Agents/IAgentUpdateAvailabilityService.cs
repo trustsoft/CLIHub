@@ -5,13 +5,14 @@ using CLIHub.Core.Models;
 /// <summary>
 ///   Determines whether a newer version of an agent exists by comparing the probed installed
 ///   version with the version published by the agent's declared distribution source.
-///   Results are advisory only and cached per agent.
+///   Results gate the Settings card Update action and are cached per agent.
 /// </summary>
 public interface IAgentUpdateAvailabilityService
 {
     /// <summary>
     ///   Returns the agent's update availability, reusing the cached result until the configured
-    ///   agent probe time-to-live elapses. Failures degrade to <see cref="AgentUpdateStatus.Unknown" />
+    ///   agent probe time-to-live elapses. The result gates the Settings card Update action.
+    ///   Failures degrade to <see cref="AgentUpdateStatus.Unknown" />
     ///   instead of throwing; caller cancellation still propagates.
     /// </summary>
     /// <param name="plugin"> The agent to check. </param>

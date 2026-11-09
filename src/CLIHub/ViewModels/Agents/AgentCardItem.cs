@@ -70,6 +70,7 @@ public sealed class AgentCardItem : ObservableObject
     private AgentInstallState lastSettledState;
     private string? version;
     private AgentUpdateAvailability? updateAvailability;
+    private bool isBlockedByRunningAgent;
     private bool isDetecting;
     private bool isCheckingUpdates;
 
@@ -201,17 +202,35 @@ public sealed class AgentCardItem : ObservableObject
     }
 
     /// <summary>
-    ///   Whether the Update action is available for the agent.
+    ///   Whether the Update action is available for the agent: the latest update-availability
+    ///   result reports <see cref="AgentUpdateStatus.UpdateAvailable" />, the agent declares an
+    ///   <c> update </c> command, and no matching agent process is running.
     /// </summary>
-    public bool CanUpdate
+    public bool CanUpdate =>
+        this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable
+        && this.Plugin.Commands?.Get(AgentCommandKind.Update) is not null
+        && !this.IsBlockedByRunningAgent;
+
+    /// <summary>
+    ///   Whether a process matching the agent is running. Written by the management view model's
+    ///   blocked-state population pass and part of the Update enablement derivation: while true,
+    ///   <see cref="CanUpdate" /> stays false regardless of the availability result.
+    /// </summary>
+    public bool IsBlockedByRunningAgent
     {
-        get;
-        set => this.SetProperty(ref field, value);
+        get => this.isBlockedByRunningAgent;
+        set
+        {
+            if (this.SetProperty(ref this.isBlockedByRunningAgent, value))
+            {
+                this.OnPropertyChanged(nameof(this.CanUpdate));
+            }
+        }
     }
 
     /// <summary>
     ///   The latest update availability check result, or null before the first check. The result
-    ///   is advisory only: it never gates or alters the Update action.
+    ///   gates the Settings card Update action; see <see cref="CanUpdate" />.
     /// </summary>
     public AgentUpdateAvailability? UpdateAvailability
     {
@@ -222,13 +241,15 @@ public sealed class AgentCardItem : ObservableObject
             {
                 this.OnPropertyChanged(nameof(this.UpdateAvailabilityText));
                 this.OnPropertyChanged(nameof(this.HasUpdateAvailable));
+                this.OnPropertyChanged(nameof(this.CanUpdate));
             }
         }
     }
 
     /// <summary>
-    ///   The advisory update indicator text ("installed → latest"), or null when availability is
-    ///   unknown or the agent is up to date, so no placeholder is ever rendered.
+    ///   The update indicator text ("installed → latest"), or null when availability is
+    ///   unknown or the agent is up to date, so no placeholder is ever rendered. The indicator and
+    ///   <see cref="CanUpdate" /> derive from the same availability result.
     /// </summary>
     public string? UpdateAvailabilityText =>
         this.UpdateAvailability is { Status: AgentUpdateStatus.UpdateAvailable, InstalledVersion: { } installed, LatestVersion: { } latest }
@@ -236,8 +257,8 @@ public sealed class AgentCardItem : ObservableObject
             : null;
 
     /// <summary>
-    ///   Whether an update is known to be available. Advisory only; it does not enable, disable,
-    ///   or block the Update action.
+    ///   Whether an update is known to be available. Reflects the availability status; see
+    ///   <see cref="CanUpdate" /> for the gated enablement rule.
     /// </summary>
     public bool HasUpdateAvailable => this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable;
 

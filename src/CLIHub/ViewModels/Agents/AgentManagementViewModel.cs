@@ -68,7 +68,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="catalog"> Plugin catalog supplying the agents. </param>
     /// <param name="detection"> Host availability detection. </param>
     /// <param name="version"> Version probe service. </param>
-    /// <param name="availability"> Advisory update availability service. </param>
+    /// <param name="availability"> Update availability service gating the card Update action. </param>
     /// <param name="probe"> On-demand probe operations. </param>
     /// <param name="update"> On-demand update operations. </param>
     /// <param name="launcher"> Opens the agent's configuration file. </param>
@@ -112,7 +112,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), card => this.CanDetectCard(card));
         this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
-        this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)));
+        this.UpdateCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent update", ct => this.UpdateAsync(card, ct)), card => card?.CanUpdate == true);
         this.EditConfigCommand = new RelayCommand<AgentCardItem>(this.EditConfig);
         this.DisablePluginCommand = new RelayCommand<AgentCardItem>(this.DisablePlugin);
         this.EnablePluginCommand = new RelayCommand<DisabledAgentCardItem>(this.EnablePlugin);
@@ -514,20 +514,19 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         // no state entry renders with the neutral Unknown badge.
         var pluginState = this.pluginState.Load();
 
-        // Cards render with declarative availability (Update enabled exactly when the plugin
-        // declares an update command); the running-agent blocked state populates afterwards
-        // through a fire-and-forget pass, so the page load stays the refresh trigger. The
-        // execution-time block itself stays in AgentManagementService. The pass runs one
-        // enumeration that feeds every card: grouping the single result by plugin id yields
-        // exactly the per-plugin partitions (first-match attribution, one match per process), so
-        // each card sees the same running-agent state a per-plugin call would report.
+        // Cards render with gated availability (Update enabled when availability is
+        // UpdateAvailable AND the plugin declares an update command AND no running agent);
+        // the running-agent blocked state populates afterwards through a fire-and-forget pass,
+        // so the page load stays the refresh trigger. The execution-time block itself stays in
+        // AgentManagementService. The pass runs one enumeration that feeds every card: grouping
+        // the single result by plugin id yields exactly the per-plugin partitions (first-match
+        // attribution, one match per process), so each card sees the same running-agent state a
+        // per-plugin call would report.
         var anyDeclaresUpdate = plugins.Any(plugin => plugin.Commands?.Get(AgentCommandKind.Update) is not null);
 
         foreach (var plugin in plugins)
         {
             var isInstalled = this.detection.IsInstalledInSystem(plugin);
-
-            var declaresUpdate = plugin.Commands?.Get(AgentCommandKind.Update) is not null;
 
             var stateEntry = pluginState.Plugins.GetValueOrDefault(plugin.Id);
 
@@ -538,7 +537,6 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 null,
                 AgentConfigurationPath.For(plugin))
             {
-                CanUpdate = declaresUpdate,
                 Origin = stateEntry?.Origin,
                 InstalledVersion = stateEntry?.InstalledVersion
             };
@@ -588,20 +586,28 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <summary>
-    ///   Re-applies the AGENTS card order when a card settles to <see cref="AgentInstallState.Installed" />
-    ///   or <see cref="AgentInstallState.NotInstalled" />. A <see cref="AgentInstallState.Detecting" />
+    ///   Responds to a card's property changes: re-applies the AGENTS card order when a card
+    ///   settles to <see cref="AgentInstallState.Installed" /> or
+    ///   <see cref="AgentInstallState.NotInstalled" />, and re-queries the gated Update command
+    ///   when the card's Update enablement changes. A <see cref="AgentInstallState.Detecting" />
     ///   transition is a no-op for ordering, so a header-wide Detect pass never shuffles the list.
     /// </summary>
     /// <param name="sender"> The card that changed. </param>
     /// <param name="e"> The property-change arguments. </param>
     private void OnCardPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (this.disposed || e.PropertyName != nameof(AgentCardItem.InstallState))
+        if (this.disposed || sender is not AgentCardItem card)
         {
             return;
         }
 
-        if (sender is not AgentCardItem card || card.InstallState == AgentInstallState.Detecting)
+        if (e.PropertyName == nameof(AgentCardItem.CanUpdate))
+        {
+            this.UpdateCommand.RaiseCanExecuteChanged();
+            return;
+        }
+
+        if (e.PropertyName != nameof(AgentCardItem.InstallState) || card.InstallState == AgentInstallState.Detecting)
         {
             return;
         }
@@ -785,12 +791,11 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
             foreach (var card in cards)
             {
-                var declaresUpdate = card.Plugin.Commands?.Get(AgentCommandKind.Update) is not null;
                 var running = runningByPlugin[card.Plugin.Id].ToList();
 
                 if (this.blockedStatePass.IsCurrent(generation, cancellationToken))
                 {
-                    card.CanUpdate = declaresUpdate && running.Count == 0;
+                    card.IsBlockedByRunningAgent = running.Count > 0;
 
                     // Write the block explanation only when blocked; never clear a message a
                     // user action may have set between render and pass completion.
@@ -1098,7 +1103,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         if (result.Started)
         {
             // The updater may keep running interactively; dropping the cached result only
-            // forces the next lookup to re-probe instead of serving the stale cue.
+            // forces the next lookup to re-probe instead of serving the stale cue. Clearing the
+            // card's result immediately also disables Update (CanUpdate derives from it) until
+            // the next check resolves a new one.
+            card.UpdateAvailability = null;
             this.availability.InvalidateFor(card.Plugin);
         }
     }

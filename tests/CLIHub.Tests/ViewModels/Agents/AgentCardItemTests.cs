@@ -188,7 +188,7 @@ public sealed class AgentCardItemTests
     [Fact]
     public void UpdateAvailability_WhenSet_RaisesIndicatorNotifications()
     {
-        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
 
@@ -197,12 +197,13 @@ public sealed class AgentCardItemTests
         Assert.Contains(nameof(AgentCardItem.UpdateAvailability), properties);
         Assert.Contains(nameof(AgentCardItem.UpdateAvailabilityText), properties);
         Assert.Contains(nameof(AgentCardItem.HasUpdateAvailable), properties);
+        Assert.Contains(nameof(AgentCardItem.CanUpdate), properties);
     }
 
     [Fact]
     public void UpdateAvailability_WhenCleared_RaisesIndicatorNotifications()
     {
-        var card = CreateCard(AgentInstallState.Installed, "2.0.32");
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
         card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
         var properties = new List<string?>();
         card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
@@ -211,8 +212,90 @@ public sealed class AgentCardItemTests
 
         Assert.Contains(nameof(AgentCardItem.UpdateAvailabilityText), properties);
         Assert.Contains(nameof(AgentCardItem.HasUpdateAvailable), properties);
+        Assert.Contains(nameof(AgentCardItem.CanUpdate), properties);
         Assert.Null(card.UpdateAvailabilityText);
         Assert.False(card.HasUpdateAvailable);
+    }
+
+    [Fact]
+    public void IsBlockedByRunningAgent_WhenSet_RaisesCanUpdateNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+        Assert.True(card.CanUpdate);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.IsBlockedByRunningAgent = true;
+
+        Assert.Contains(nameof(AgentCardItem.IsBlockedByRunningAgent), properties);
+        Assert.Contains(nameof(AgentCardItem.CanUpdate), properties);
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenUpdateCommandAndUpdateAvailable_IsTrue()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.True(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenNoUpdateCommand_IsFalseRegardlessOfAvailability()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: false);
+
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.False(card.CanUpdate);
+    }
+
+    [Theory]
+    [InlineData(AgentUpdateStatus.Unknown)]
+    [InlineData(AgentUpdateStatus.UpToDate)]
+    [InlineData(AgentUpdateStatus.UpdateAvailable)]
+    public void CanUpdate_WhenAvailabilityStatusVaries_IsTrueOnlyForUpdateAvailable(
+        AgentUpdateStatus status)
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+
+        card.UpdateAvailability = new AgentUpdateAvailability(status, "2.0.32", "2.0.33");
+
+        Assert.Equal(status == AgentUpdateStatus.UpdateAvailable, card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenNeverChecked_IsFalse()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenBlockedByRunningAgent_IsFalse()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        card.IsBlockedByRunningAgent = true;
+
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenBlockedAgentUnblocks_IsTrueAgain()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true, isBlockedByRunningAgent: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+        Assert.False(card.CanUpdate);
+
+        card.IsBlockedByRunningAgent = false;
+
+        Assert.True(card.CanUpdate);
     }
 
     [Theory]
@@ -326,14 +409,31 @@ public sealed class AgentCardItemTests
         Assert.Contains(nameof(AgentCardItem.CanDetect), properties);
     }
 
-    private static AgentCardItem CreateCard(AgentInstallState state, string? version) =>
-        new(
-            new Plugin { Id = "test-agent", Name = "Test Agent" },
+    private static AgentCardItem CreateCard(
+        AgentInstallState state,
+        string? version,
+        bool withUpdateCommand = false,
+        bool isBlockedByRunningAgent = false)
+    {
+        var plugin = new Plugin { Id = "test-agent", Name = "Test Agent" };
+        if (withUpdateCommand)
+        {
+            plugin.Commands = new AgentCommands
+            {
+                Launch = new PluginCommand { Executable = "test-agent" },
+                Update = new PluginCommand { Executable = "test-agent", Arguments = "update" }
+            };
+        }
+
+        return new(
+            plugin,
             logoPath: null,
             isInstalled: state == AgentInstallState.Installed,
             version: version,
             configPath: null)
         {
-            InstallState = state
+            InstallState = state,
+            IsBlockedByRunningAgent = isBlockedByRunningAgent
         };
+    }
 }

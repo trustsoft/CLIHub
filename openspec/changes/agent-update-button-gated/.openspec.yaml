@@ -1,0 +1,4 @@
+affected_areas:
+  - agent-ui
+  - agent-update-detection
+  - preferences-ui

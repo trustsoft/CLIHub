@@ -3,7 +3,7 @@
 ## Purpose
 Determines whether a newer version of an agent exists by comparing the probed installed version
 with the latest version published by the agent's descriptor-declared distribution channel, and
-reports it as advisory information. Distinct from `update-checking`, which covers CLIHub's own
+gates the Settings card Update action; it is advisory for the launch-window Update action. Distinct from `update-checking`, which covers CLIHub's own
 Velopack updates, and from `agent-availability-display`, which dims agents unavailable in a
 project.
 

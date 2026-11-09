@@ -38,8 +38,12 @@ public partial class AgentManagementViewModelTests
     public void Dispose_CancelsBlockedStatePass()
     {
         var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
         var gate = new ManualResetEventSlim(false);
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).WithOperationLifetime(new DeferredOperationLifetime()).Build();
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).WithOperationLifetime(new DeferredOperationLifetime()).Build();
 
         viewModel.Load(null);
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
@@ -50,6 +54,7 @@ public partial class AgentManagementViewModelTests
         // are stale, so its blocking write must never reach the card.
         SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromMilliseconds(250));
 
+        Assert.True(card.HasUpdateAvailable);
         Assert.True(card.CanUpdate);
         Assert.Null(card.Message);
     }

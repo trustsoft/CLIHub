@@ -23,7 +23,11 @@ public partial class AgentManagementViewModelTests
         var b = Launchable("b");
         var detection = Detection();
         detection.Setup(x => x.IsInstalledInSystem(b)).Returns(false);
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(detection).WithVersions(Versions()).Build();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0", "2.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(detection).WithVersions(Versions()).WithAvailability(availability).Build();
 
         viewModel.Load("b");
 
@@ -39,6 +43,12 @@ public partial class AgentManagementViewModelTests
         // back to the preselection text instead of a version.
         Assert.Equal("In the launch window", viewModel.DefaultAgentDetail);
         Assert.Contains(viewModel.DefaultAgentOptions, option => option.Id is null);
+
+        // Only the installed, update-declaring card receives an availability result, so only it
+        // is enabled under the gated rule.
+        Assert.True(SpinWait.SpinUntil(
+            () => viewModel.Cards.Single(c => c.PluginId == "a").HasUpdateAvailable,
+            TimeSpan.FromSeconds(5)));
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
     }
@@ -259,7 +269,7 @@ public partial class AgentManagementViewModelTests
 
 
     [Fact]
-    public void Load_UnknownAvailability_LeavesCanUpdateUnchanged()
+    public void Load_UnknownAvailability_DisablesCanUpdate()
     {
         var a = Launchable("a", withUpdate: true);
         var availability = new Mock<IAgentUpdateAvailabilityService>();
@@ -271,9 +281,53 @@ public partial class AgentManagementViewModelTests
         viewModel.Load(null);
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(() => card.UpdateAvailability is not null, TimeSpan.FromSeconds(5)));
         Assert.False(card.HasUpdateAvailable);
         Assert.Null(card.UpdateAvailabilityText);
+        Assert.False(card.CanUpdate);
+    }
+
+
+    [Fact]
+    public void Load_UpdateAvailable_EnablesCanUpdate()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).Build();
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(
+            () => card.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable,
+            TimeSpan.FromSeconds(5)));
+        Assert.True(SpinWait.SpinUntil(
+            () => !card.IsBlockedByRunningAgent || card.CanUpdate,
+            TimeSpan.FromSeconds(5)));
         Assert.True(card.CanUpdate);
+    }
+
+
+    [Fact]
+    public void Load_UpToDate_DisablesCanUpdate()
+    {
+        var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpToDate, "2.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).Build();
+
+        viewModel.Load(null);
+
+        var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(
+            () => card.UpdateAvailability?.Status == AgentUpdateStatus.UpToDate,
+            TimeSpan.FromSeconds(5)));
+        Assert.False(card.CanUpdate);
     }
 
 
@@ -299,11 +353,17 @@ public partial class AgentManagementViewModelTests
     public void Load_MatchingAgentProcessRunning_DisablesUpdateAndExplainsBlock()
     {
         var a = Launchable("a", withUpdate: true);
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).Build();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(Processes(new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).Build();
 
         viewModel.Load(null);
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(() => card.IsBlockedByRunningAgent, TimeSpan.FromSeconds(5)));
+        Assert.True(card.HasUpdateAvailable);
         Assert.False(card.CanUpdate);
         Assert.Equal("Agent is running — stop it to update", card.Message);
         Assert.True(card.HasMessage);
@@ -315,13 +375,18 @@ public partial class AgentManagementViewModelTests
     {
         var a = Launchable("a", withUpdate: true);
         a.UpdateCheck = new PluginUpdateCheck("npm", "@opencode/cli");
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(Processes(
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(Processes(
                 @"C:\Program Files\nodejs\node.exe",
                 @"node.exe C:\Users\Maxim\AppData\Roaming\npm\node_modules\@opencode\cli\bin\opencode.js run")).Build();
 
         viewModel.Load(null);
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(() => card.IsBlockedByRunningAgent, TimeSpan.FromSeconds(5)));
         Assert.False(card.CanUpdate);
         Assert.Equal("Agent is running — stop it to update", card.Message);
         Assert.True(card.HasMessage);
@@ -329,11 +394,18 @@ public partial class AgentManagementViewModelTests
         // An unrelated node script names no declared npm package and blocks nothing.
         var b = Launchable("b", withUpdate: true);
         b.UpdateCheck = new PluginUpdateCheck("npm", "@other/package");
-        var unrelatedViewModel = new AgentManagementViewModelBuilder().WithPlugins([b]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(Processes(@"C:\Program Files\nodejs\node.exe", @"node.exe server.js")).Build();
+        var unrelatedAvailability = new Mock<IAgentUpdateAvailabilityService>();
+        unrelatedAvailability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var unrelatedViewModel = new AgentManagementViewModelBuilder().WithPlugins([b]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(unrelatedAvailability).WithProcessInspector(Processes(@"C:\Program Files\nodejs\node.exe", @"node.exe server.js")).Build();
 
         unrelatedViewModel.Load(null);
 
         var unrelatedCard = unrelatedViewModel.Cards.Single(c => c.PluginId == "b");
+        Assert.True(SpinWait.SpinUntil(
+            () => unrelatedCard.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable,
+            TimeSpan.FromSeconds(5)));
         Assert.True(unrelatedCard.CanUpdate);
         Assert.Null(unrelatedCard.Message);
     }
@@ -344,28 +416,41 @@ public partial class AgentManagementViewModelTests
     {
         var a = Launchable("a", withUpdate: true);
         var b = Launchable("b", withUpdate: true);
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", DateTime.Now))).Build();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(Processes(new AgentProcessInstance(7, @"C:\tools\b.exe", DateTime.Now))).Build();
 
         viewModel.Load(null);
 
         var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
+        var cardB = viewModel.Cards.Single(c => c.PluginId == "b");
+        Assert.True(SpinWait.SpinUntil(() => cardA.HasUpdateAvailable, TimeSpan.FromSeconds(5)));
+        Assert.True(SpinWait.SpinUntil(() => cardB.IsBlockedByRunningAgent, TimeSpan.FromSeconds(5)));
         Assert.True(cardA.CanUpdate);
         Assert.Null(cardA.Message);
-        Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
-        Assert.NotNull(viewModel.Cards.Single(c => c.PluginId == "b").Message);
+        Assert.False(cardB.CanUpdate);
+        Assert.NotNull(cardB.Message);
     }
 
 
     [Fact]
-    public void Load_WithNoRunningProcesses_KeepsDeclaredUpdateAvailableWithoutMessage()
+    public void Load_WithNoRunningProcesses_KeepsGatedUpdateAvailableWithoutMessage()
     {
         var a = Launchable("a", withUpdate: true);
         var b = Launchable("b");
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).Build();
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).Build();
 
         viewModel.Load(null);
 
-        Assert.True(viewModel.Cards.Single(c => c.PluginId == "a").CanUpdate);
+        var cardA = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(() => cardA.HasUpdateAvailable, TimeSpan.FromSeconds(5)));
+        Assert.True(cardA.CanUpdate);
         Assert.False(viewModel.Cards.Single(c => c.PluginId == "b").CanUpdate);
         Assert.All(viewModel.Cards, card => Assert.Null(card.Message));
     }
@@ -406,18 +491,26 @@ public partial class AgentManagementViewModelTests
     public void Load_ShowsDeclarativeAvailability_BeforeBlockedStateLands()
     {
         var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
         var gate = new ManualResetEventSlim(false);
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).WithOperationLifetime(new DeferredOperationLifetime()).Build();
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(GatedProcesses(gate, new AgentProcessInstance(1, @"C:\tools\a.exe", DateTime.Now))).WithOperationLifetime(new DeferredOperationLifetime()).Build();
 
         viewModel.Load(null);
 
         var card = viewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(SpinWait.SpinUntil(
+            () => card.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable,
+            TimeSpan.FromSeconds(5)));
         Assert.True(card.CanUpdate);
         Assert.Null(card.Message);
 
         gate.Set();
         SpinWait.SpinUntil(() => !card.CanUpdate, TimeSpan.FromSeconds(5));
 
+        Assert.True(card.IsBlockedByRunningAgent);
         Assert.False(card.CanUpdate);
         Assert.Equal("Agent is running — stop it to update", card.Message);
     }
@@ -427,6 +520,10 @@ public partial class AgentManagementViewModelTests
     public void Load_SecondLoadCancelsBlockedStatePass()
     {
         var a = Launchable("a", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
         var gate = new ManualResetEventSlim(false);
         var firstCallStarted = new ManualResetEventSlim(false);
         var enumerationCalls = 0;
@@ -444,7 +541,7 @@ public partial class AgentManagementViewModelTests
 
                 return [];
             });
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(inspector).WithOperationLifetime(new DeferredOperationLifetime()).Build();
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(inspector).WithOperationLifetime(new DeferredOperationLifetime()).Build();
 
         viewModel.Load(null);
         var firstLoadCard = viewModel.Cards.Single(c => c.PluginId == "a");
@@ -460,6 +557,9 @@ public partial class AgentManagementViewModelTests
 
         // The superseded pass's blocking write is rejected by the generation guard; the new
         // load's own pass settles unblocked (its enumeration returned no processes).
+        Assert.True(SpinWait.SpinUntil(
+            () => firstLoadCard.HasUpdateAvailable && secondLoadCard.HasUpdateAvailable,
+            TimeSpan.FromSeconds(5)));
         Assert.True(firstLoadCard.CanUpdate);
         Assert.True(secondLoadCard.CanUpdate);
         Assert.Null(secondLoadCard.Message);
@@ -467,19 +567,24 @@ public partial class AgentManagementViewModelTests
 
 
     [Fact]
-    public void Load_WhenEnumerationFails_KeepsDeclaredAvailability()
+    public void Load_WhenEnumerationFails_KeepsGatedAvailability()
     {
         var a = Launchable("a", withUpdate: true);
         var b = Launchable("b", withUpdate: true);
+        var availability = new Mock<IAgentUpdateAvailabilityService>();
+        availability
+            .Setup(x => x.CheckAsync(It.IsAny<Plugin>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "1.0.0", "2.0.0"));
         var inspector = new Mock<IAgentProcessInspector>();
         inspector
             .Setup(x => x.GetRunningProcesses(It.IsAny<IReadOnlySet<string>>(), It.IsAny<AgentProcessMatchDetail>()))
             .Throws(new InvalidOperationException("enumeration failed"));
         var processMonitorLogger = new Mock<ILogger<AgentProcessMonitor>>();
-        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithProcessInspector(inspector).WithProcessMonitorLogger(processMonitorLogger.Object).Build();
+        var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(Detection()).WithVersions(Versions()).WithAvailability(availability).WithProcessInspector(inspector).WithProcessMonitorLogger(processMonitorLogger.Object).Build();
 
         viewModel.Load(null);
 
+        Assert.All(viewModel.Cards, card => Assert.True(SpinWait.SpinUntil(() => card.HasUpdateAvailable, TimeSpan.FromSeconds(5))));
         Assert.All(viewModel.Cards, card => Assert.True(card.CanUpdate));
         Assert.All(viewModel.Cards, card => Assert.Null(card.Message));
         processMonitorLogger.Verify(

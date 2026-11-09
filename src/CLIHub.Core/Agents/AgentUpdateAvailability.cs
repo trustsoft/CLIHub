@@ -23,8 +23,8 @@ public enum AgentUpdateStatus
 }
 
 /// <summary>
-///   Result of an agent update availability check. The result is advisory: it never gates or
-///   alters the Update action.
+///   Result of an agent update availability check. The result gates the Settings card Update
+///   action; it is advisory for the launch-window Update action.
 /// </summary>
 /// <param name="Status"> The outcome. </param>
 /// <param name="InstalledVersion"> The extracted installed version, for example "2.0.32", or null when unknown. </param>

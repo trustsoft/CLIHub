@@ -74,7 +74,8 @@ process inspection) behind ports declared in Core.
 - The application enforces one instance with `Local\CLIHub.SingleInstance` and a named-pipe activation signal.
 - Update checking is stable-only (no pre-release channel); updates are coordinated through the application
   `IUpdateWorkflow`, while Core owns Velopack integration and update ports.
-- Agent process monitoring blocks the agent update action while any matching registered agent process is running.
+- The Settings → CLI Agents card Update action is enabled only when CLIHub knows an update is available
+  (`UpdateAvailable`), the agent declares an update command, and no matching registered agent process is running.
 
 ## Documentation Routing
 
