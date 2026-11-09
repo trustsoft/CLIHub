@@ -1,6 +1,7 @@
 namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
@@ -51,6 +52,15 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private bool isDetecting;
     private bool isCheckingUpdates;
     private int runningCardActionCount;
+
+    /// <summary>
+    ///   The ordering source for <see cref="Cards" />: exactly the cards currently in
+    ///   <see cref="Cards" />, in the order <see cref="IPluginCatalog.GetAllPlugins" /> returned
+    ///   them. Both collections are rebuilt only in <see cref="Load" />, so their membership stays
+    ///   identical; <see cref="Cards" /> itself is never used as the ordering source because a
+    ///   reorder makes its positions stop encoding catalog order.
+    /// </summary>
+    private readonly List<AgentCardItem> catalogOrderedCards = new();
 
     /// <summary>
     ///   Creates the section.
@@ -479,6 +489,12 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         }
 
         this.UpdateCheckSummary = null;
+        foreach (var card in this.Cards)
+        {
+            card.PropertyChanged -= this.OnCardPropertyChanged;
+        }
+
+        this.catalogOrderedCards.Clear();
         this.Cards.Clear();
         this.InvalidCards.Clear();
         this.DisabledCards.Clear();
@@ -527,7 +543,17 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 InstalledVersion = stateEntry?.InstalledVersion
             };
 
+            this.catalogOrderedCards.Add(card);
+        }
+
+        foreach (var card in AgentCardOrdering.InstalledFirst(this.catalogOrderedCards))
+        {
             this.Cards.Add(card);
+        }
+
+        foreach (var card in this.catalogOrderedCards)
+        {
+            card.PropertyChanged += this.OnCardPropertyChanged;
         }
 
         this.RefreshAvailabilitySummary();
@@ -544,6 +570,12 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <inheritdoc />
     public void Dispose()
     {
+        foreach (var card in this.Cards)
+        {
+            card.PropertyChanged -= this.OnCardPropertyChanged;
+        }
+
+        this.catalogOrderedCards.Clear();
         this.versionPopulationPass.Dispose();
         this.blockedStatePass.Dispose();
         this.catalog.PluginsChanged -= this.OnPluginsChanged;
@@ -553,6 +585,46 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private void OnPluginsChanged(object? sender, EventArgs e)
     {
         this.Load(this.CurrentDefaultAgentId);
+    }
+
+    /// <summary>
+    ///   Re-applies the AGENTS card order when a card settles to <see cref="AgentInstallState.Installed" />
+    ///   or <see cref="AgentInstallState.NotInstalled" />. A <see cref="AgentInstallState.Detecting" />
+    ///   transition is a no-op for ordering, so a header-wide Detect pass never shuffles the list.
+    /// </summary>
+    /// <param name="sender"> The card that changed. </param>
+    /// <param name="e"> The property-change arguments. </param>
+    private void OnCardPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (this.disposed || e.PropertyName != nameof(AgentCardItem.InstallState))
+        {
+            return;
+        }
+
+        if (sender is not AgentCardItem card || card.InstallState == AgentInstallState.Detecting)
+        {
+            return;
+        }
+
+        this.ApplyCardOrdering();
+    }
+
+    /// <summary>
+    ///   Reconciles <see cref="Cards" /> with the installed-first policy in place: the target order
+    ///   comes from the catalog-ordered source, and displaced cards are moved rather than rebuilt,
+    ///   so card identity, per-card state, and bound commands survive the reorder.
+    /// </summary>
+    private void ApplyCardOrdering()
+    {
+        var ordered = AgentCardOrdering.InstalledFirst(this.catalogOrderedCards);
+        for (var targetIndex = 0; targetIndex < ordered.Count; targetIndex++)
+        {
+            var currentIndex = this.Cards.IndexOf(ordered[targetIndex]);
+            if (currentIndex >= 0 && currentIndex != targetIndex)
+            {
+                this.Cards.Move(currentIndex, targetIndex);
+            }
+        }
     }
 
     private void RebuildDefaultAgentOptions(string? defaultAgentId)

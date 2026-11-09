@@ -67,6 +67,7 @@ public sealed record AgentOption(
 public sealed class AgentCardItem : ObservableObject
 {
     private AgentInstallState installState;
+    private AgentInstallState lastSettledState;
     private string? version;
     private AgentUpdateAvailability? updateAvailability;
     private bool isDetecting;
@@ -89,6 +90,7 @@ public sealed class AgentCardItem : ObservableObject
         this.ConfigPath = configPath;
         this.CommandLabels = BuildCommandLabels(plugin.Commands);
         this.installState = isInstalled ? AgentInstallState.Installed : AgentInstallState.NotInstalled;
+        this.lastSettledState = this.installState;
         this.version = version;
     }
 
@@ -143,9 +145,24 @@ public sealed class AgentCardItem : ObservableObject
                 this.OnPropertyChanged(nameof(this.VersionChipText));
                 this.OnPropertyChanged(nameof(this.CanDetect));
                 this.OnPropertyChanged(nameof(this.CanCheckUpdates));
+
+                if (value != AgentInstallState.Detecting)
+                {
+                    // PropertyChanged handlers raised above can already read the new settled
+                    // value through OrderingState (which reads the live installState); only a
+                    // Detecting value consults this remembered field.
+                    this.lastSettledState = value;
+                }
             }
         }
     }
+
+    /// <summary>
+    ///   The agent's ordering group: the last settled installation state. A card being probed
+    ///   keeps its previous group, so a Detect pass never moves it.
+    /// </summary>
+    internal AgentInstallState OrderingState =>
+        this.installState == AgentInstallState.Detecting ? this.lastSettledState : this.installState;
 
     /// <summary>
     ///   Whether the agent is installed on the host. Derived from <see cref="InstallState" />;

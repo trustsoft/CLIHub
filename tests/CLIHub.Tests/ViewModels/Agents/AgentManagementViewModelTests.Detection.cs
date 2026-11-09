@@ -226,7 +226,6 @@ public partial class AgentManagementViewModelTests
         var b = Launchable("b");
         var c = Launchable("c");
         var detection = Detection();
-        detection.Setup(x => x.IsInstalledInSystem(a)).Returns(false);
         var probe = new Mock<IAgentProbeService>();
         var update = new Mock<IAgentUpdateService>();
         var availability = new Mock<IAgentUpdateAvailabilityService>();
@@ -237,7 +236,7 @@ public partial class AgentManagementViewModelTests
                 : new AgentUpdateAvailability(AgentUpdateStatus.UpToDate)));
         probe
             .Setup(x => x.ProbeAsync(a, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AgentProbeResult(true, "2.0"));
+            .ReturnsAsync(new AgentProbeResult(false, null));
         probe
             .Setup(x => x.ProbeAsync(b, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("probe failed"));
@@ -254,7 +253,7 @@ public partial class AgentManagementViewModelTests
         var cardA = viewModel.Cards.Single(card => card.PluginId == "a");
         var cardB = viewModel.Cards.Single(card => card.PluginId == "b");
         var cardC = viewModel.Cards.Single(card => card.PluginId == "c");
-        Assert.Equal(AgentInstallState.NotInstalled, cardA.InstallState);
+        Assert.Equal(AgentInstallState.Installed, cardA.InstallState);
 
         // b and c carry the settled pre-pass state the Load pass resolved; the pass reaches b
         // and throws before c.
@@ -271,19 +270,19 @@ public partial class AgentManagementViewModelTests
         // a's probe settled before b's threw: the fresh result is self-consistent and survives,
         // so the default-agent summary can never show a version beside an agent the card state
         // calls not installed.
-        Assert.Equal(AgentInstallState.Installed, cardA.InstallState);
-        Assert.Equal("2.0", cardA.Version);
-        Assert.True(cardA.IsInstalled);
-        Assert.Equal("Version 2.0", viewModel.DefaultAgentDetail);
+        Assert.Equal(AgentInstallState.NotInstalled, cardA.InstallState);
+        Assert.Null(cardA.Version);
+        Assert.False(cardA.IsInstalled);
+        Assert.Equal("In the launch window", viewModel.DefaultAgentDetail);
 
         // The derived surfaces are rebuilt after the abort as well: the selector option agrees
-        // with the card instead of keeping the Load-time "(Not installed)" snapshot, and the
-        // header counts are re-raised.
+        // with the card instead of keeping the Load-time snapshot, and the header counts are
+        // re-raised.
         var optionA = viewModel.DefaultAgentOptions.Single(option => option.Id == "a");
         Assert.Equal(cardA.InstallState, optionA.InstallState);
         Assert.Equal(cardA.Version, optionA.Version);
-        Assert.True(optionA.IsInstalled);
-        Assert.Equal("a (2.0)", optionA.DisplayName);
+        Assert.False(optionA.IsInstalled);
+        Assert.Equal("a (Not installed)", optionA.DisplayName);
         Assert.Contains(nameof(AgentManagementViewModel.AvailabilitySummary), raised);
 
         // b threw and c was never probed: both restore to their complete pre-pass state.

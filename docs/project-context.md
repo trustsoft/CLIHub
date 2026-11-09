@@ -65,6 +65,8 @@ process inspection) behind ports declared in Core.
   right-side rail, and favorites sort first in the project list.
 - CLI Agents cards show a version/state chip that an update chip replaces while an update is available;
   plugin origin plus descriptor metadata live in the agent name's tooltip, not in a separate badge.
+  The AGENTS cards list installed agents first and not-installed agents last, preserving the plugin
+  catalog order within each group; the order updates when a Detect settles an agent's installation state.
 - Appearance is Dark, Light, or Deep Blue, plus System, which follows the Windows light/dark mode; one
   application-scoped accent color (Sky by default) is independent of the theme. Theme and accent changes
   apply immediately on a Settings save. With the System theme, a Windows personalization change is
