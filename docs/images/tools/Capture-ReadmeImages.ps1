@@ -414,7 +414,7 @@ try {
 
     $preferences = [pscustomobject]@{
         startWithWindows = $false
-        hotkey = 'Ctrl+Shift+Space'
+        hotkey = 'Ctrl+Alt+Space'
         defaultRuntime = 'ps'
         logLevel = 'Information'
         logRetentionDays = 7

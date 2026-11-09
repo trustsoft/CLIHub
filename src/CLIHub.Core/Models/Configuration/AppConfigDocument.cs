@@ -101,7 +101,7 @@ internal sealed class AppConfigDocument
     internal sealed class PreferencesDocument
     {
         public bool StartWithWindows { get; set; }
-        public string Hotkey { get; set; } = "Ctrl+Shift+Space";
+        public string Hotkey { get; set; } = "Ctrl+Alt+Space";
         public string DefaultRuntime { get; set; } = "ps";
         public string LogLevel { get; set; } = "Information";
         public int LogRetentionDays { get; set; } = 7;

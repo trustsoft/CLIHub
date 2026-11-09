@@ -64,13 +64,13 @@ public class AppConfigSerializationTests
     }
 
     [Fact]
-    public void Hotkey_NewConfiguration_UsesCtrlShiftSpaceDefault()
+    public void Hotkey_NewConfiguration_UsesCtrlAltSpaceDefault()
     {
-        Assert.Equal("Ctrl+Shift+Space", new AppConfig().Preferences.Hotkey);
+        Assert.Equal("Ctrl+Alt+Space", new AppConfig().Preferences.Hotkey);
     }
 
     [Fact]
-    public void Hotkey_AbsentFromStoredDocument_UsesCtrlShiftSpaceDefault()
+    public void Hotkey_AbsentFromStoredDocument_UsesCtrlAltSpaceDefault()
     {
         const string json = """
         { "projects": [], "preferences": {}, "currentProjectId": null }
@@ -78,7 +78,7 @@ public class AppConfigSerializationTests
 
         var config = JsonSerializer.Deserialize<AppConfigDocument>(json, CoreJson.Options)!.ToAppConfig();
 
-        Assert.Equal("Ctrl+Shift+Space", config.Preferences.Hotkey);
+        Assert.Equal("Ctrl+Alt+Space", config.Preferences.Hotkey);
     }
 
     [Fact]

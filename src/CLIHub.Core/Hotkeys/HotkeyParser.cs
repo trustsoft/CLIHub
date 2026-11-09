@@ -7,10 +7,10 @@ namespace CLIHub.Core.Hotkeys;
 public static class HotkeyParser
 {
     /// <summary>
-    ///   The default hotkey: Ctrl+Shift+Space (virtual key 0x20).
+    ///   The default hotkey: Ctrl+Alt+Space (virtual key 0x20).
     /// </summary>
     public static HotkeyDefinition Default { get; } =
-        new(HotkeyModifiers.Control | HotkeyModifiers.Shift, 0x20);
+        new(HotkeyModifiers.Control | HotkeyModifiers.Alt, 0x20);
 
     private static readonly (string Name, int VirtualKey, string[] Aliases)[] NamedKeys =
     [

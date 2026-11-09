@@ -33,9 +33,9 @@ public class AppPreferences
     public bool StartWithWindows { get; set; }
 
     /// <summary>
-    ///   Global hotkey combination (e.g., "Ctrl+Shift+Space").
+    ///   Global hotkey combination (e.g., "Ctrl+Alt+Space").
     /// </summary>
-    public string Hotkey { get; set; } = "Ctrl+Shift+Space";
+    public string Hotkey { get; set; } = "Ctrl+Alt+Space";
 
     /// <summary>
     ///   Runtime used to launch interactive agent commands. Defaults to Windows PowerShell.

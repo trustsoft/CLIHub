@@ -121,7 +121,7 @@ See [project-scanning](../openspec/specs/project-scanning/spec.md) and
 - **Tray** — the system tray (notification area) icon with the context menu: current project,
   recent projects, Add Project…, Launch Agent, Settings, What's New, an update check or download
   action, Show CLIHub, and Exit.
-- **Global hotkey** — a configurable key combination (default `Ctrl+Shift+Space`) that toggles the
+- **Global hotkey** — a configurable key combination (default `Ctrl+Alt+Space`) that toggles the
   launch window from any application, configured on the Launch Window Settings page. See
   [hotkey-support](../openspec/specs/hotkey-support/spec.md).
 - **Single instance** — a second CLIHub launch does not start a new process; it activates the
