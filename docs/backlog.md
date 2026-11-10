@@ -504,3 +504,17 @@ snapshot.
   "Maximize" while the button restores. The Browse Plugins dialog no longer has a maximize button.
 - Proposed remedy: switch the tooltip with the same `WindowState` trigger used for the glyph.
 - Trigger: an accessibility/tooltip polish pass, or the next change that touches the Settings header.
+
+### Pattern-chip remove button gives screen readers no hint before reveal
+
+- Severity: Low (mouse and keyboard flows work; only the screen-reader discovery path is affected)
+- Evidence (2026-11-11, `pattern-chip-hover-remove`): the ignored-pattern chip's remove button is
+  `Visibility="Collapsed"` until the chip is hovered or keyboard-focused
+  (`src/CLIHub/Views/SettingsProjectsPage.xaml` chip `ControlTemplate` triggers), so UIA/screen
+  readers announce "Remove pattern" only while it is revealed. The chip itself carries no persistent
+  automation name hinting that a remove action exists or that Tab reveals it — recorded as the
+  resolved "screen reader announcement" open question in the change's design.md.
+- Proposed remedy: set a persistent `AutomationProperties.Name` on the focusable chip border, e.g.
+  "Ignored pattern &lt;name&gt;, Tab reveals the remove button", so screen-reader users can discover
+  the affordance before revealing it.
+- Trigger: an accessibility requirement or audit, or the next change touching chip automation names.

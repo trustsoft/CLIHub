@@ -220,29 +220,54 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Margin="0,0,8,8"
-                                    Padding="8,4,4,4"
-                                    Background="{DynamicResource ChipBgBrush}"
-                                    BorderBrush="{DynamicResource FieldStrokeBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock VerticalAlignment="Center"
-                                               FontSize="{StaticResource Sizing.FontSize.Chip}"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
-                                               Text="{Binding}"/>
-                                    <Button Margin="4,0,0,0"
-                                            AutomationProperties.Name="Remove pattern"
-                                            Command="{Binding DataContext.Scanning.RemoveIgnoredPatternCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                            CommandParameter="{Binding}"
-                                            Style="{StaticResource ChipRemoveButton}"
-                                            ToolTip="Remove pattern">
-                                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                                                   FontSize="8"
-                                                   Text="{x:Static themes:IconGlyphs.Close}"/>
-                                    </Button>
-                                </StackPanel>
-                            </Border>
+                            <ContentControl Content="{Binding}">
+                                <ContentControl.Template>
+                                    <ControlTemplate TargetType="ContentControl">
+                                        <Border x:Name="ChipBorder"
+                                                Margin="0,0,8,8"
+                                                Padding="8,4"
+                                                Background="{DynamicResource ChipBgBrush}"
+                                                BorderBrush="{DynamicResource FieldStrokeBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                                                Focusable="True"
+                                                FocusVisualStyle="{x:Null}">
+                                            <Grid>
+                                                <!-- Sizing layer: TextBlock only (chip hugs text) -->
+                                                <TextBlock x:Name="PatternText"
+                                                           VerticalAlignment="Center"
+                                                           FontSize="{StaticResource Sizing.FontSize.Chip}"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           Text="{TemplateBinding Content}"/>
+                                                <!-- Overlay layer: centered remove button -->
+                                                <Button x:Name="RemoveButton"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Visibility="Hidden"
+                                                        AutomationProperties.Name="Remove pattern"
+                                                        Command="{Binding DataContext.Scanning.RemoveIgnoredPatternCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Content}"
+                                                        Style="{StaticResource ChipRemoveButton}"
+                                                        ToolTip="Remove pattern">
+                                                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                                               FontSize="8"
+                                                               Text="{x:Static themes:IconGlyphs.Close}"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger SourceName="ChipBorder" Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="PatternText" Property="Visibility" Value="Hidden"/>
+                                                <Setter TargetName="RemoveButton" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                            <Trigger SourceName="ChipBorder" Property="IsKeyboardFocusWithin" Value="True">
+                                                <Setter TargetName="PatternText" Property="Visibility" Value="Hidden"/>
+                                                <Setter TargetName="RemoveButton" Property="Visibility" Value="Visible"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ContentControl.Template>
+                            </ContentControl>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
