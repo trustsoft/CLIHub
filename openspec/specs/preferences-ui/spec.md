@@ -330,6 +330,8 @@ The Project Scanning page SHALL offer a watched-directories list with add, per-d
 
 Changes to the scanning settings SHALL apply immediately, without requiring the footer Save: adding or removing a watched directory, changing a row's depth or discovery chip, changing the default depth or discovery mode, and adding or removing an ignored pattern SHALL each persist atomically, reconfigure the background scanner, and trigger a scan. A newly added watched directory SHALL therefore be scanned while the page is open, the page-header scan action and the summary cards SHALL always describe the list shown on the page, and the page SHALL state that scanning changes apply immediately. The footer Save and Cancel SHALL continue to govern the remaining settings, and Cancel SHALL NOT revert scanning changes that were already applied.
 
+**Each ignored-pattern chip SHALL show the pattern text at rest and a hover-reveal or focus-reveal remove button.** The remove button SHALL be hidden by default (not visible when the chip is neither hovered nor keyboard-focused). When the mouse cursor is over a specific ignored-pattern chip OR when that chip receives keyboard focus (Tab navigation), that chip's remove button SHALL appear centered over the chip (both horizontally and vertically), the pattern text SHALL be hidden, and the chip's outer dimensions SHALL remain unchanged (the WrapPanel layout SHALL NOT reflow). The revealed "×" button serves as the focus indicator when the chip is keyboard-focused (no additional dotted focus rectangle is shown). Tabbing again moves focus to the remove button itself, which remains visible while focused; pressing Enter or Space on the focused button removes the pattern. Removing a pattern via the revealed button (mouse click or keyboard activation) SHALL immediately persist the change and trigger a scan, consistent with the existing immediate-apply behavior for scanning settings. Other chips and watched-folder row action buttons (Rescan, Remove with distinct glyphs) SHALL remain always-visible and unaffected by the hover-reveal or focus-reveal behavior.
+
 #### Scenario: Options offered
 
 - **WHEN** the Settings window opens on "Project Scanning"
@@ -402,8 +404,21 @@ Changes to the scanning settings SHALL apply immediately, without requiring the 
 #### Scenario: Per-directory scan
 
 - **WHEN** the user chooses the scan action on one watched directory
-- **THEN** only that watched root is rescanned with that row's settings
-- **AND** the other watched roots keep their current discovered projects
+- **THEN** only that directory is scanned
+- **AND** the other watched directories are not rescanned
+- **AND** the summary cards reflect any newly discovered projects in that directory
+
+#### Scenario: Changing the default depth or discovery does not affect existing rows
+
+- **WHEN** the user changes the default depth or discovery mode
+- **THEN** existing watched-directory rows keep their current values
+- **AND** the new default applies to directories added after the change
+
+#### Scenario: Page-header scan rescans all watched directories
+
+- **WHEN** the user chooses the page-header scan action
+- **THEN** every watched directory is rescanned
+- **AND** the summary cards reflect the results
 
 #### Scenario: Row summary shows the per-directory count
 
@@ -422,6 +437,99 @@ Changes to the scanning settings SHALL apply immediately, without requiring the 
 - **WHEN** the user changes a scanning setting and then closes the window with Cancel
 - **THEN** the scanning change remains stored and scanned
 - **AND** the remaining unsaved settings are discarded
+
+#### Scenario: Ignored-pattern chip at-rest state
+
+- **WHEN** the Settings → Project Scanning page is displayed with one or more ignored patterns
+- **THEN** each ignored-pattern chip shows the pattern text
+- **AND** no remove button ("×") is visible on any chip
+
+#### Scenario: Hover reveals remove button on one chip
+
+- **WHEN** the user moves the mouse cursor over a specific ignored-pattern chip
+- **THEN** that chip's pattern text is hidden
+- **AND** a centered remove button ("×") appears over that chip
+- **AND** the chip's outer dimensions remain unchanged (no WrapPanel reflow)
+
+#### Scenario: Hover off hides the button
+
+- **WHEN** the user moves the mouse cursor off an ignored-pattern chip that was showing its remove button
+- **THEN** the remove button disappears
+- **AND** the pattern text reappears
+
+#### Scenario: Hover one chip does not affect others
+
+- **WHEN** the user hovers one ignored-pattern chip
+- **THEN** only that chip's remove button appears
+- **AND** other ignored-pattern chips remain in their at-rest state (pattern text visible, no button)
+
+#### Scenario: Hover-revealed button removes the pattern
+
+- **WHEN** the user hovers an ignored-pattern chip, revealing its remove button, and clicks the button
+- **THEN** the pattern is removed from the list immediately
+- **AND** the change is persisted and the next scan uses the updated pattern list
+- **AND** the remaining ignored-pattern chips re-layout in the WrapPanel if needed
+
+#### Scenario: Watched-folder row buttons remain always-visible
+
+- **WHEN** the user views the watched-directories list on the Project Scanning page
+- **THEN** each watched-directory row's action buttons (Rescan, Remove) are always visible
+- **AND** hovering a watched-directory row does not hide or reveal any buttons (no hover-reveal behavior on these rows)
+
+#### Scenario: Chip dimensions stable during hover
+
+- **WHEN** the user hovers and un-hovers multiple ignored-pattern chips in sequence
+- **THEN** no chip changes its width or height between the at-rest and hovered states
+- **AND** the WrapPanel layout does not reflow due to hovering
+
+#### Scenario: Remove button not keyboard-accessible when hidden
+
+- **WHEN** the user navigates the Settings → Project Scanning page using only the keyboard (Tab, Shift+Tab) and no ignored-pattern chip is focused
+- **THEN** the ignored-pattern chips' remove buttons are not in the tab order while the buttons are hidden (at-rest state)
+- **AND** tabbing through the page skips over the hidden remove buttons
+
+#### Scenario: Keyboard focus reveals remove button on chip
+
+- **WHEN** the user presses Tab and focus lands on an ignored-pattern chip
+- **THEN** that chip's pattern text is hidden
+- **AND** a centered remove button ("×") appears over that chip
+- **AND** the chip's outer dimensions remain unchanged (no WrapPanel reflow)
+- **AND** no dotted focus rectangle is shown (the "×" button itself serves as the focus indicator)
+
+#### Scenario: Tabbing to the revealed button
+
+- **WHEN** the user presses Tab while an ignored-pattern chip is focused (remove button revealed)
+- **THEN** focus moves to the remove button itself
+- **AND** the button remains visible (because keyboard focus is within the chip's focus tree)
+- **AND** the pattern text remains hidden
+
+#### Scenario: Keyboard removal via focused button
+
+- **WHEN** the user presses Enter or Space while the remove button is focused
+- **THEN** the pattern is removed from the list immediately
+- **AND** the change is persisted and the next scan uses the updated pattern list
+- **AND** focus moves to the next focusable element (the next chip, or the next element after the list if no chips remain)
+
+#### Scenario: Keyboard focus leaves chip collapses button
+
+- **WHEN** the user presses Shift+Tab or Tab (moving focus away from the chip and its button) after the remove button was revealed via keyboard focus
+- **THEN** the remove button disappears
+- **AND** the pattern text reappears
+- **AND** the chip returns to its at-rest state
+
+#### Scenario: Mouse click on chip body focuses it
+
+- **WHEN** the user clicks the chip body (not the remove button) with the mouse
+- **THEN** the chip receives keyboard focus
+- **AND** the remove button reveals (same behavior as tabbing to the chip)
+- **AND** the pattern text is hidden
+- **AND** the chip's outer dimensions remain unchanged
+
+#### Scenario: Focus one chip does not affect others
+
+- **WHEN** the user tabs to or clicks one ignored-pattern chip (button reveals)
+- **THEN** only that chip's remove button appears
+- **AND** other ignored-pattern chips remain in their at-rest state (pattern text visible, no button)
 
 ### Requirement: Projects and Paths validation
 
