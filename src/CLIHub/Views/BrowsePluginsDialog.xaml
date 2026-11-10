@@ -10,17 +10,19 @@
         Icon="pack://application:,,,/app.ico"
         Background="{DynamicResource ChromeBgBrush}"
         FontFamily="{StaticResource Sizing.FontFamily.Text}"
-        Height="600" Width="800"
-        MinHeight="400" MinWidth="600"
-        ResizeMode="NoResize"
+        Height="480" Width="640"
+        MinHeight="360" MinWidth="520"
+        KeyDown="OnKeyDown"
+        ResizeMode="CanResize"
         ShowInTaskbar="False"
+        SourceInitialized="OnSourceInitialized"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None">
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="0"
                       CornerRadius="0"
                       GlassFrameThickness="0"
-                      ResizeBorderThickness="0"
+                      ResizeBorderThickness="6"
                       UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
 
@@ -36,8 +38,10 @@
             <!-- Top highlight -->
             <Rectangle Grid.Row="0" Height="1" Fill="{DynamicResource TopHighlightBrush}"/>
 
-            <!-- Header: title and close button -->
-            <Grid Grid.Row="1" Style="{StaticResource WindowHeader}">
+            <!-- Drawn header: title, close, drag -->
+            <Grid Grid.Row="1"
+                  MouseLeftButtonDown="OnHeaderMouseDown"
+                  Style="{StaticResource WindowHeader}">
                 <StackPanel Margin="12,0,0,0"
                             HorizontalAlignment="Left"
                             Orientation="Horizontal"
@@ -54,14 +58,15 @@
                                Text="Browse Plugins"/>
                 </StackPanel>
 
-                <Button HorizontalAlignment="Right"
-                        Click="OnCloseClick"
-                        Style="{StaticResource WindowCloseButton}"
-                        ToolTip="Close">
-                    <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
-                               FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
-                               Text="{x:Static themes:IconGlyphs.Close}"/>
-                </Button>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button Click="OnCloseClick"
+                            Style="{StaticResource WindowCloseButton}"
+                            ToolTip="Close">
+                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}"
+                                   FontSize="{StaticResource Sizing.FontSize.GlyphSmall}"
+                                   Text="{x:Static themes:IconGlyphs.Close}"/>
+                    </Button>
+                </StackPanel>
             </Grid>
 
             <Rectangle Grid.Row="2"

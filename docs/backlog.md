@@ -495,3 +495,12 @@ snapshot.
   `InstallState` setter, or add a card-level test that pins the current caller-owns-the-gate contract.
 - Trigger: a new availability writer that can leave a result behind an uninstall, or the next change
   touching `AgentCardItem.CanUpdate`.
+
+### Settings maximize button keeps a static "Maximize" tooltip when maximized
+
+- Severity: Low (cosmetic tooltip text; the glyph already flips to Restore)
+- Evidence (2026-11-10): the maximize/restore button in `SettingsWindow` sets `ToolTip="Maximize"`
+  statically at `src/CLIHub/Views/SettingsWindow.xaml:299`. After maximizing, the tooltip still reads
+  "Maximize" while the button restores. The Browse Plugins dialog no longer has a maximize button.
+- Proposed remedy: switch the tooltip with the same `WindowState` trigger used for the glyph.
+- Trigger: an accessibility/tooltip polish pass, or the next change that touches the Settings header.
