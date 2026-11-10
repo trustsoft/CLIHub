@@ -86,7 +86,7 @@
     "default": {
       "planner": ["relayfast/claude-sonnet-5", "zai-coding-plan/glm-5.3", "relayfast/deepseek-v4-pro"],
       "implementer": ["zai-coding-plan/glm-5.3-flash", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5", "relayfast/deepseek-v4-pro"],
-      "verifier": ["deepseek/deepseek-v4-pro", "zai-coding-plan/glm-5.3", "relayfast/claude-sonnet-5"],
+      "verifier": ["zai-coding-plan/glm-5.3", "deepseek/deepseek-v4-pro", "relayfast/claude-sonnet-5"],
       "explorer": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free", "opencode/deepseek-v4.1-flash-free"],
       "research": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "relayfast/deepseek-v4.1-flash", "opencode/glm-5.3-flash-free"],
       "mechanical": ["deepseek/deepseek-flash", "zai-coding-plan/glm-5.3-flash", "opencode/glm-5.3-flash-free"]
