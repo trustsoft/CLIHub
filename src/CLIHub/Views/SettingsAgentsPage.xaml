@@ -169,7 +169,7 @@
                      in one data-driven Actions menu; Detect and Check updates act on agents and
                      stay standalone buttons to its left. -->
                 <ToggleButton x:Name="PluginActionsButton"
-                              Content="ACTIONS"
+                              Content="Actions"
                               Style="{StaticResource PaneActionsToggle}"/>
             </controls:SpacedPanel>
             <!-- Hosted outside the SpacedPanel so the spacing pass does not add a trailing gap

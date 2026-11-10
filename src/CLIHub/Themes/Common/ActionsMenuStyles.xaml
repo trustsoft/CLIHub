@@ -3,7 +3,7 @@
 
     <!--
         Shared Actions-menu styles: the popover card, the plain and checkable entry styles, and the
-        header "ACTIONS" toggle. Used by the launch-window panes and the Settings CLI Agents page
+        header "Actions" toggle. Used by the launch-window panes and the Settings CLI Agents page
         header. Merged at application level from SettingsStyles.xaml (so Settings page UserControls
         reach the styles before they attach to a window tree) and from LaunchWindow.xaml (window
         scope). Merging Controls.xaml brings the sizing tokens transitively: StaticResource inside a
@@ -99,12 +99,14 @@
         </Setter>
     </Style>
 
-    <!-- Header "Actions" toggle: uppercase and SemiBold like the section label, in a slightly
-         smaller size; chrome appears on hover and stays while its menu is open -->
+    <!-- Header "Actions" toggle: SemiBold at the section-label and header-chip text size, so the
+         label lines up with the adjacent chip buttons; on hover or press the label lifts from the
+         muted section tone to the icon tone those chips use, and chrome appears on hover and stays
+         while its menu is open -->
     <Style x:Key="PaneActionsToggle" TargetType="ToggleButton">
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Foreground" Value="{DynamicResource SectionLabelBrush}"/>
-        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -135,6 +137,7 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverOverlayBrush}"/>
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ChipStrokeBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <!-- Open: merge with the menu into one panel. The bottom edge is left
@@ -149,7 +152,10 @@
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
                         </Trigger>
+                        <!-- Last, so a disabled control keeps the muted tone even while the mouse
+                             pointer still rests over it. -->
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
                         </Trigger>

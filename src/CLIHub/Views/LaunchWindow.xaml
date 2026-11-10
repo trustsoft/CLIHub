@@ -128,7 +128,7 @@
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="PROJECTS"/>
                             <ToggleButton x:Name="ProjectsActionsButton"
                                           HorizontalAlignment="Right"
-                                          Content="ACTIONS"
+                                          Content="Actions"
                                           Style="{StaticResource PaneActionsToggle}"/>
                             <Popup x:Name="ProjectsActionsPopup"
                                    AllowsTransparency="True"
@@ -284,7 +284,7 @@
                             <TextBlock Margin="2,0,0,0" Style="{StaticResource SectionLabel}" Text="AGENTS"/>
                             <ToggleButton x:Name="AgentsActionsButton"
                                           HorizontalAlignment="Right"
-                                          Content="ACTIONS"
+                                          Content="Actions"
                                           Style="{StaticResource PaneActionsToggle}"/>
                             <Popup x:Name="AgentsActionsPopup"
                                    AllowsTransparency="True"
