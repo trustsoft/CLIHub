@@ -143,12 +143,15 @@
                             <!-- Open: merge with the menu into one panel. The bottom edge is left
                                  open and the top corners squared, so the card's top edge continues
                                  the outline as a header divider. The extra bottom padding compensates
-                                 the removed bottom border, so the label and chevron do not move. -->
+                                 the removed bottom border, so the label and chevron do not move.
+                                 The label keeps the chip tone while the menu is open, so the active
+                                 control reads the same as it does on hover and press. -->
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PopoverOpenBrush}"/>
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource ActionsBorderBrush}"/>
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1,1,1,0"/>
                             <Setter TargetName="Bd" Property="Padding" Value="7,0,5,1"/>
                             <Setter TargetName="Bd" Property="CornerRadius" Value="5,5,0,0"/>
+                            <Setter Property="Foreground" Value="{DynamicResource IconBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PressedOverlayBrush}"/>
