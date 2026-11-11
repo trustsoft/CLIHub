@@ -93,6 +93,18 @@ are pruned from this list once their evidence is no longer needed; recover them 
 
 ## Test suite
 
+### Stale prose comment quotes the retired "Detecting…" literal
+
+- Severity: Low (comment-only; no assertion or behavior affected)
+- Evidence: `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.Detection.cs:347`
+  still says `// leaving the cards it announced stuck on "Detecting…" forever.` — found during
+  `busy-marker-control` verification; the change renamed the UI constant to `"Detecting"`
+  (`AgentVersionText.Detecting`) but this comment documents the Detecting *state*, so it was left
+  untouched to keep the change's file scope clean.
+- Proposed remedy: update the quoted string to `"Detecting"` (or reword to name the state, not the
+  literal) whenever the file is next touched for real work; no dedicated change is warranted.
+- Trigger: any edit to `AgentManagementViewModelTests.Detection.cs`.
+
 ### `LaunchWindow` cannot be constructed outside an `Application`
 
 - Severity: Low (test-only; forces workarounds, no product impact)
