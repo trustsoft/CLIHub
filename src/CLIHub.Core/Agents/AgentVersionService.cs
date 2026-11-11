@@ -1,6 +1,5 @@
 namespace CLIHub.Core.Agents;
 
-using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 using CLIHub.Core.Configuration;
@@ -31,8 +30,7 @@ public class AgentVersionService : IAgentVersionService
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentVersionService> logger;
     private readonly TimeProvider timeProvider;
-    private readonly ConcurrentDictionary<string, CacheEntry> cache = new();
-    private readonly ConcurrentDictionary<string, Lazy<Task<string?>>> inFlight = new();
+    private readonly ProbeCache<string?> cache;
 
     /// <summary>
     ///   Creates the service.
@@ -47,42 +45,20 @@ public class AgentVersionService : IAgentVersionService
         this.preferencesStore = preferencesStore;
         this.logger = logger;
         this.timeProvider = timeProvider ?? TimeProvider.System;
+        this.cache = new ProbeCache<string?>(this.timeProvider);
     }
 
     /// <inheritdoc />
     public async Task<string?> GetVersionAsync(Plugin plugin, CancellationToken cancellationToken = default)
     {
-        var now = this.timeProvider.GetUtcNow();
-        if (this.cache.TryGetValue(plugin.Id, out var cached) && now - cached.Timestamp < this.Ttl)
-        {
-            return cached.Value;
-        }
-
-        var lazy = this.inFlight.GetOrAdd(
-            plugin.Id,
-            _ => new Lazy<Task<string?>>(
-                () => this.ProbeAndCacheAsync(plugin),
-                LazyThreadSafetyMode.ExecutionAndPublication));
-
-        try
-        {
-            return await lazy.Value.WaitAsync(cancellationToken);
-        }
-        finally
-        {
-            if (lazy.IsValueCreated && lazy.Value.IsCompleted)
-            {
-                this.inFlight.TryRemove(plugin.Id, out _);
-            }
-        }
+        return await this.cache.GetOrProbeAsync(plugin.Id, this.Ttl, () => this.ProbeAsync(plugin), cancellationToken);
     }
 
-    private async Task<string?> ProbeAndCacheAsync(Plugin plugin)
+    private async Task<string?> ProbeAsync(Plugin plugin)
     {
         var command = plugin.Commands?.Version;
         if (command == null || string.IsNullOrWhiteSpace(command.Executable))
         {
-            this.cache[plugin.Id] = new CacheEntry(null, this.timeProvider.GetUtcNow());
             return null;
         }
 
@@ -101,7 +77,6 @@ public class AgentVersionService : IAgentVersionService
             this.logger.LogWarning("Failed to get version for {PluginId}: {Error}", plugin.Id, result.Error);
         }
 
-        this.cache[plugin.Id] = new CacheEntry(version, this.timeProvider.GetUtcNow());
         return version;
     }
 
@@ -117,7 +92,7 @@ public class AgentVersionService : IAgentVersionService
     public void InvalidateFor(Plugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
-        this.cache.TryRemove(plugin.Id, out _);
+        this.cache.Remove(plugin.Id);
     }
 
     private TimeSpan Ttl => AgentProbePolicy.ResolveTtl(this.preferencesStore.Load().AgentProbeTtlMinutes);
@@ -140,6 +115,4 @@ public class AgentVersionService : IAgentVersionService
         var match = VersionPattern.Match(line);
         return match.Success ? match.Value : line;
     }
-
-    private readonly record struct CacheEntry(string? Value, DateTimeOffset Timestamp);
 }

@@ -1,7 +1,5 @@
 namespace CLIHub.Core.Agents;
 
-using System.Collections.Concurrent;
-
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Models.Plugins;
@@ -21,8 +19,7 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentUpdateAvailabilityService> logger;
     private readonly TimeProvider timeProvider;
-    private readonly ConcurrentDictionary<string, CacheEntry> cache = new();
-    private readonly ConcurrentDictionary<string, Lazy<Task<AgentUpdateAvailability>>> inFlight = new();
+    private readonly ProbeCache<AgentUpdateAvailability> cache;
 
     /// <summary>
     ///   Creates the service.
@@ -43,6 +40,7 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.timeProvider = timeProvider ?? TimeProvider.System;
+        this.cache = new ProbeCache<AgentUpdateAvailability>(this.timeProvider);
     }
 
     /// <inheritdoc />
@@ -50,29 +48,7 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
     {
         ArgumentNullException.ThrowIfNull(plugin);
 
-        var now = this.timeProvider.GetUtcNow();
-        if (this.cache.TryGetValue(plugin.Id, out var cached) && now - cached.Timestamp < this.Ttl)
-        {
-            return cached.Value;
-        }
-
-        var lazy = this.inFlight.GetOrAdd(
-            plugin.Id,
-            _ => new Lazy<Task<AgentUpdateAvailability>>(
-                () => this.CheckAndCacheAsync(plugin),
-                LazyThreadSafetyMode.ExecutionAndPublication));
-
-        try
-        {
-            return await lazy.Value.WaitAsync(cancellationToken);
-        }
-        finally
-        {
-            if (lazy.IsValueCreated && lazy.Value.IsCompleted)
-            {
-                this.inFlight.TryRemove(plugin.Id, out _);
-            }
-        }
+        return await this.cache.GetOrProbeAsync(plugin.Id, this.Ttl, () => this.ComputeAvailabilityAsync(plugin), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -87,14 +63,7 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
     public void InvalidateFor(Plugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
-        this.cache.TryRemove(plugin.Id, out _);
-    }
-
-    private async Task<AgentUpdateAvailability> CheckAndCacheAsync(Plugin plugin)
-    {
-        var availability = await this.ComputeAvailabilityAsync(plugin).ConfigureAwait(false);
-        this.cache[plugin.Id] = new CacheEntry(availability, this.timeProvider.GetUtcNow());
-        return availability;
+        this.cache.Remove(plugin.Id);
     }
 
     private async Task<AgentUpdateAvailability> ComputeAvailabilityAsync(Plugin plugin)
@@ -191,6 +160,4 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
     }
 
     private TimeSpan Ttl => AgentProbePolicy.ResolveTtl(this.preferencesStore.Load().AgentProbeTtlMinutes);
-
-    private readonly record struct CacheEntry(AgentUpdateAvailability Value, DateTimeOffset Timestamp);
 }
