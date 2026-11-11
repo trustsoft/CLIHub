@@ -158,6 +158,27 @@ are pruned from this list once their evidence is no longer needed; recover them 
   `--filter "FullyQualifiedName~ProjectScanningServiceTests"`. No failure name to capture; the
   assertion was not changed. Stays a watch item.
 
+### Release-gate test can degrade on a starved CI runner (`GetRunningProcesses_CommandLineDetail_AttachesCommandLineByProcessId`)
+
+- Severity: Medium (blocks a release run when it fires; one occurrence in 6 release runs)
+- Evidence: the v1.1.3 Release workflow (run `42979752090`, 2026-11-11) failed its test job with
+  `WindowsAgentProcessInspectorTests.GetRunningProcesses_CommandLineDetail_AttachesCommandLineByProcessId`
+  (`Assert.Equal` expected the injected `node.exe ...` command line, actual null). The test uses the
+  default 2-second `commandLineTimeout` (`WindowsAgentProcessInspectorTests.cs:132`); the inspector's
+  bulk command-line query runs through `Task.Run` + `Wait(budget)` and degrades to null command lines
+  when the budget expires (`WindowsAgentProcessInspector.cs:26`, `:170-200`). On the loaded runner
+  (three test assemblies in parallel right after the Release build) the stub query exceeded the
+  budget, the degradation path fired, and the happy-path join assertion saw null. The same test is
+  green locally in Debug and Release, green in the Debug CI run on the same commit (`c24fed5`), and
+  green in all five previous release runs (v1.0.6–v1.1.2).
+- Proposed remedy: make the happy-path test independent of the wall clock — inject an effectively
+  unbounded budget (`Timeout.InfiniteTimeSpan`) for this test while the dedicated 200 ms timeout test
+  (`WindowsAgentProcessInspectorTests.cs:211`) keeps covering the degradation path; optionally assert
+  the source was called and did not time out before the join assertion so a timeout cannot masquerade
+  as a join bug. Test-only change.
+- Trigger: the next Release workflow test-job failure naming this test (re-run the failed job to
+  unblock the release; then apply the remedy as a small test-only change).
+
 ### Speculative test-infrastructure ideas from `tests/CLIHub.Tests/README.md`
 
 - Severity: Low (speculative; the current suite works without any of them)
