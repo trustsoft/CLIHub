@@ -1,7 +1,5 @@
 namespace CLIHub.Views;
 
-using System.Runtime.InteropServices;
-
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -29,17 +27,16 @@ public partial class BrowsePluginsDialog : Window
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
+        WindowChromeHelper.ApplyRoundedCorners(this);
         var handle = new WindowInteropHelper(this).EnsureHandle();
-        DwmApi.TryRoundCorners(handle);
         HwndSource.FromHwnd(handle)?.AddHook(this.OnWindowMessage);
     }
 
     /// <summary>
     ///   Enforces <see cref="System.Windows.FrameworkElement.MinWidth" />/
-    ///   <see cref="System.Windows.FrameworkElement.MinHeight" /> as the minimum tracking size, so
-    ///   the dialog cannot be dragged below them. WPF's own handler is bypassed here because the
-    ///   message is marked handled, so the size conversion from layout units to physical pixels
-    ///   (using the window's DPI) is done explicitly.
+    ///   <see cref="System.Windows.FrameworkElement.MinHeight" /> as the minimum tracking size,
+    ///   so the dialog cannot be dragged below them, by delegating to
+    ///   <see cref="WindowChromeHelper.ApplyMinTrackSize" />.
     /// </summary>
     private IntPtr OnWindowMessage(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
@@ -48,13 +45,7 @@ public partial class BrowsePluginsDialog : Window
             return IntPtr.Zero;
         }
 
-        var dpi = User32.GetDpiForWindow(hwnd);
-        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-
-        var minMax = Marshal.PtrToStructure<User32.MINMAXINFO>(lParam);
-        minMax.ptMinTrackSize.X = (int)Math.Ceiling(this.MinWidth * scale);
-        minMax.ptMinTrackSize.Y = (int)Math.Ceiling(this.MinHeight * scale);
-        Marshal.StructureToPtr(minMax, lParam, false);
+        WindowChromeHelper.ApplyMinTrackSize(this, hwnd, lParam);
         handled = true;
         return IntPtr.Zero;
     }

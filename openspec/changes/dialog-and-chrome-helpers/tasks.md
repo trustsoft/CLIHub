@@ -8,7 +8,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
 
 ## Stage 1: `MessageBoxHelper` (design.md D1, D2, D3, D6)
 
-- [ ] 1.1 Create `src/CLIHub/Launching/MessageBoxHelper.cs`: `namespace CLIHub.Launching;`, then
+- [x] 1.1 Create `src/CLIHub/Launching/MessageBoxHelper.cs`: `namespace CLIHub.Launching;`, then
   `using System.Windows;`, then `internal static class MessageBoxHelper` with four fully documented
   members — (a) `internal const string ApplicationTitle = "CLIHub";` with a doc comment naming it
   the caption for modal dialogs; (b) `internal static Window? Owner` implementing **master's**
@@ -23,14 +23,14 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   `UserNotificationService.cs:18-30`); (d) `internal static MessageBoxResult Show(string message,
   string title, MessageBoxButton buttons, MessageBoxImage image)` with the same two branches
   returning the result (branch shape from `ProjectDialogService.cs:37-47`)
-- [ ] 1.2 In `src/CLIHub/Launching/ProjectDialogService.cs`: change `SelectFolder`'s
+- [x] 1.2 In `src/CLIHub/Launching/ProjectDialogService.cs`: change `SelectFolder`'s
   `dialog.ShowDialog(ResolveOwner())` (`:23`) to `dialog.ShowDialog(MessageBoxHelper.Owner)`;
   change `ConfirmProjectRemoval` (`:29-35`) to call `MessageBoxHelper.Show(...)` with the message
   text character-for-character unchanged and the title argument `"CLIHub"` (`:32`) replaced by
   `MessageBoxHelper.ApplicationTitle`; delete the private `Show` (`:37-47`) and the private
   `ResolveOwner` with its doc comment (`:49-71`); keep `using System.Windows;` (still needed for
   `MessageBoxButton`/`MessageBoxImage`/`MessageBoxResult`) and `using Microsoft.Win32;`
-- [ ] 1.3 In `src/CLIHub/Launching/PluginDialogService.cs`: change `PickPluginPackage`'s
+- [x] 1.3 In `src/CLIHub/Launching/PluginDialogService.cs`: change `PickPluginPackage`'s
   `dialog.ShowDialog(ResolveOwner())` (`:40`) to `MessageBoxHelper.Owner`; change the four
   private-`Show` call sites — `ShowInstallConfirmation` (`:85-88`), `ShowValidationError` (`:100`),
   `ShowInstallOutcome` (`:110` and `:114-119`) — from `Show(...)` to `MessageBoxHelper.Show(...)`
@@ -40,14 +40,14 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   `dialog.Owner = MessageBoxHelper.Owner;` keeping `dialog.ShowDialog();`; delete the private `Show`
   (`:130-140`) and the private `ResolveOwner` with its doc comment (`:142-164`); keep all five
   using directives
-- [ ] 1.4 In `src/CLIHub/Launching/UserNotificationService.cs`: change `ShowInformation` (`:11-12`)
+- [x] 1.4 In `src/CLIHub/Launching/UserNotificationService.cs`: change `ShowInformation` (`:11-12`)
   to `MessageBoxHelper.Show(message, title, MessageBoxImage.Information);` (caller-supplied title
   stays), change `ShowWarning` (`:15-16`) to
   `MessageBoxHelper.Show(message, MessageBoxHelper.ApplicationTitle, MessageBoxImage.Warning);`,
   and delete the private `Show` (`:18-30`); keep `using System.Windows;` (still needed for
   `MessageBoxImage`). This deliberately unifies the service's owner on the helper's
   active-window-first policy (design.md D2)
-- [ ] 1.5 In `tests/CLIHub.Tests/Architecture/ArchitectureBoundaryTests.cs` add exactly one entry
+- [x] 1.5 In `tests/CLIHub.Tests/Architecture/ArchitectureBoundaryTests.cs` add exactly one entry
   to `WpfAllowedApplicationFiles` (`:7-25`) immediately after the
   `"Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",` line (`:17`):
   `"Launching" + Path.DirectorySeparatorChar + "MessageBoxHelper.cs",` — same literal style, no
@@ -55,7 +55,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   `ApplicationWpfReferences_AreLimitedToExplicitUiAdapters` (`:41-53`) fails for any non-allow-listed
   file containing that string; `Views/WindowChromeHelper.cs` needs no entry (the `Views/` prefix is
   auto-allowed at `:158`) (design.md D6)
-- [ ] 1.6 Gate (dialog helper): run `dotnet build CLIHub.sln` (expect 0 errors) and
+- [x] 1.6 Gate (dialog helper): run `dotnet build CLIHub.sln` (expect 0 errors) and
   `dotnet test CLIHub.sln` (expect 0 failed, 0 skipped; baseline **1563** passed = 839
   `CLIHub.Core.Tests` + 67 `CLIHub.Core.Windows.Tests` + 657 `CLIHub.Tests` — if the concurrent
   `probe-cache-extraction` change has landed, add its documented test additions; the invariant is
@@ -67,7 +67,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
 
 ## Stage 2: `WindowChromeHelper` (design.md D4, D5)
 
-- [ ] 2.1 Create `src/CLIHub/Views/WindowChromeHelper.cs` by porting
+- [x] 2.1 Create `src/CLIHub/Views/WindowChromeHelper.cs` by porting
   `git show backup-before-reset:src/CLIHub/Views/WindowChromeHelper.cs` with exactly three
   adaptations: drop the 4-line `// --- <file name= …>` header block; change `public static class`
   and the three `public` members to `internal`; keep the bodies, names, and XML docs verbatim —
@@ -79,7 +79,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   Normal`; `Activate`), and `ApplyRoundedCorners(Window window)`
   (`new WindowInteropHelper(window).EnsureHandle()` + `DwmApi.TryRoundCorners(handle)`)
   (design.md D3, D4)
-- [ ] 2.2 In `src/CLIHub/Views/LaunchWindow.xaml.cs`: change the expression-bodied
+- [x] 2.2 In `src/CLIHub/Views/LaunchWindow.xaml.cs`: change the expression-bodied
   `OnSourceInitialized` (`:102-103`) to
   `=> WindowChromeHelper.ApplyRoundedCorners(this);`; remove the two now-unused using directives
   `System.Windows.Interop` (`:7`) and `CLIHub.Interop` (`:13`) after confirming neither
@@ -87,7 +87,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   particular `ShowOnPointerMonitor` (`:56-84`) keeps its inline `Show`/restore/`MarkShown`/
   `Activate` sequence because `viewModel.MarkShown()` (`:74`) sits between the restore and
   `Activate`, so `ShowAndActivate` cannot replace it behavior-identically (design.md D5)
-- [ ] 2.3 In `src/CLIHub/Views/SettingsWindow.xaml.cs`: in `ShowSettings` (`:38-62`) replace the
+- [x] 2.3 In `src/CLIHub/Views/SettingsWindow.xaml.cs`: in `ShowSettings` (`:38-62`) replace the
   comment plus guarded owner assignment (`:42-47`) with `WindowChromeHelper.EnsureOwnedByLaunchWindow(this);`,
   keep the launch-window height sync (`:49-52`) exactly where it is (between the two helper calls),
   and replace the `Show`/restore/`Activate` block (`:54-61`) with
@@ -98,13 +98,13 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   `EnsureHandle` is idempotent); leave the `WM_GETMINMAXINFO` hook (`OnWindowMessage`, `:78-110`)
   and all using directives untouched at this stage (stage 3 rewires the hook's min-track fragment
   and re-checks the usings)
-- [ ] 2.4 In `src/CLIHub/Views/WhatsNewWindow.xaml.cs`: in `ShowNotes` (`:33-50`) replace the
+- [x] 2.4 In `src/CLIHub/Views/WhatsNewWindow.xaml.cs`: in `ShowNotes` (`:33-50`) replace the
   comment plus guarded owner assignment (`:35-40`) with `WindowChromeHelper.EnsureOwnedByLaunchWindow(this);`
   and the `Show`/restore/`Activate` block (`:42-49`) with
   `WindowChromeHelper.ShowAndActivate(this);`; change the expression-bodied `OnSourceInitialized`
   (`:52-53`) to `=> WindowChromeHelper.ApplyRoundedCorners(this);`; remove the two now-unused using
   directives `System.Windows.Interop` (`:5`) and `CLIHub.Interop` (`:7`)
-- [ ] 2.5 In `src/CLIHub/Views/BrowsePluginsDialog.xaml.cs`: in `OnSourceInitialized` (`:30-35`)
+- [x] 2.5 In `src/CLIHub/Views/BrowsePluginsDialog.xaml.cs`: in `OnSourceInitialized` (`:30-35`)
   apply the same edit as SettingsWindow — `WindowChromeHelper.ApplyRoundedCorners(this);` replacing
   the `DwmApi.TryRoundCorners(handle);` line (`:33`), keeping the `EnsureHandle` + `AddHook` lines
   (`:32`, `:34`); leave the `WM_GETMINMAXINFO` hook (`OnWindowMessage`, `:44-60`) and all using
@@ -112,7 +112,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   `System.Runtime.InteropServices`) — this
   window gets no `EnsureOwnedByLaunchWindow`/`ShowAndActivate`: its owner is assigned by
   `PluginDialogService.ShowBrowsePluginsDialog` and it is shown via `ShowDialog` (design.md D4)
-- [ ] 2.6 Gate (chrome helper): run `dotnet build CLIHub.sln` (expect 0 errors, no unused-using
+- [x] 2.6 Gate (chrome helper): run `dotnet build CLIHub.sln` (expect 0 errors, no unused-using
   warnings) and `dotnet test CLIHub.sln` (expect 0 failed, 0 skipped, and no count delta
   attributable to this change — baseline **1563**, see 1.6 for the concurrent-change note);
   grep `src/CLIHub/Views/` for `DwmApi.TryRoundCorners` and `new WindowInteropHelper` — the only
@@ -121,7 +121,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
 
 ## Stage 3: `WM_GETMINMAXINFO` min-track consolidation and final gates (design.md D7, D8)
 
-- [ ] 3.1 In `src/CLIHub/Views/WindowChromeHelper.cs` (created in 2.1) add
+- [x] 3.1 In `src/CLIHub/Views/WindowChromeHelper.cs` (created in 2.1) add
   `using System.Runtime.InteropServices;` (position per `.editorconfig` ordering) and a fourth
   member `internal static void ApplyMinTrackSize(Window window, IntPtr hwnd, IntPtr lParam)`
   whose body is the shared fragment copied verbatim from `BrowsePluginsDialog.OnWindowMessage`
@@ -134,7 +134,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   (`:37-43`: handling the message bypasses WPF's own size conversion, so layout units are
   converted to physical pixels via the window DPI); no boundary allow-list change (the `Views/`
   prefix is auto-allowed) (design.md D7)
-- [ ] 3.2 In `src/CLIHub/Views/BrowsePluginsDialog.xaml.cs` rewire `OnWindowMessage`
+- [x] 3.2 In `src/CLIHub/Views/BrowsePluginsDialog.xaml.cs` rewire `OnWindowMessage`
   (`:44-60` pre-change): keep the `User32.WM_GETMINMAXINFO` guard (`:46-49`) and the trailing
   `handled = true;` / `return IntPtr.Zero;` (`:58-59`); replace the DPI-scale, marshal, and
   `ptMinTrackSize` statements between them (`:51-57`) with the single call
@@ -144,7 +144,7 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   nowhere else in the file; keep `System.Windows.Interop` and `CLIHub.Interop`
   (`OnSourceInitialized` still uses `HwndSource`/`WindowInteropHelper`, the guard still uses
   `User32.WM_GETMINMAXINFO`) (design.md D7)
-- [ ] 3.3 In `src/CLIHub/Views/SettingsWindow.xaml.cs` rewire `OnWindowMessage` (`:78-110`
+- [x] 3.3 In `src/CLIHub/Views/SettingsWindow.xaml.cs` rewire `OnWindowMessage` (`:78-110`
   pre-change): keep the guard (`:80-83`), the monitor lookup with both early returns that leave
   `handled` unset (`:85-95`), `Marshal.PtrToStructure` (`:100`), and the four
   `ptMaxPosition`/`ptMaxSize` work-area assignments (`:101-104`); delete the DPI-scale pair
@@ -155,26 +155,26 @@ the named symbol. Stages 1 and 2 touch disjoint files and are independently buil
   accepted trade-off, design.md D7); keep the hook's doc comment (`:71-77`) and every using
   directive (`Marshal.SizeOf`/`PtrToStructure`/`StructureToPtr` and the `User32` monitor APIs
   are still used) (design.md D7)
-- [ ] 3.4 Gate (min-track consolidation): run `dotnet build CLIHub.sln` (expect 0 errors, no
+- [x] 3.4 Gate (min-track consolidation): run `dotnet build CLIHub.sln` (expect 0 errors, no
   unused-using warnings) and `dotnet test CLIHub.sln` (expect 0 failed, 0 skipped, and no count
   delta attributable to this change — baseline **1563**, see 1.6); grep `src/CLIHub/Views/` for
   `ptMinTrackSize` — occurrences may exist only inside `WindowChromeHelper.cs`; confirm
   `ArchitectureBoundaryTests` still passes with no further allow-list edit
-- [ ] 3.5 Final build gate: run `dotnet build CLIHub.sln` and confirm 0 errors / 0 warnings
-- [ ] 3.6 Final test gate: run `dotnet test CLIHub.sln` and confirm 0 failed, 0 skipped, and no
+- [x] 3.5 Final build gate: run `dotnet build CLIHub.sln` and confirm 0 errors / 0 warnings
+- [x] 3.6 Final test gate: run `dotnet test CLIHub.sln` and confirm 0 failed, 0 skipped, and no
   count delta attributable to this change (baseline **1563** = 839 + 67 + 657; add the concurrent
   `probe-cache-extraction` change's documented additions if it landed first — this change adds,
   removes, and weakens no test); any delta you cannot attribute to a concurrent change means a test
   was touched — stop and report instead of adjusting expectations
-- [ ] 3.7 Run `openspec validate --all` and confirm **0 failed** with
+- [x] 3.7 Run `openspec validate --all` and confirm **0 failed** with
   `✓ change/dialog-and-chrome-helpers` in the output (32 specs at baseline plus one item per
   active change; observed **35 items** at revision time with this change,
   `probe-cache-extraction`, and `simplify-mechanical-sweep` all active); fix any structural
   finding only inside `openspec/changes/dialog-and-chrome-helpers/`, never in
   `openspec/specs/`
-- [ ] 3.8 Run `graphify update .` so the knowledge graph reflects the two new helper files and the
+- [x] 3.8 Run `graphify update .` so the knowledge graph reflects the two new helper files and the
   rewired services and windows
-- [ ] 3.9 Scope check: `git status --short` lists, for this change, only
+- [x] 3.9 Scope check: `git status --short` lists, for this change, only
   `src/CLIHub/Launching/MessageBoxHelper.cs` (new), `src/CLIHub/Views/WindowChromeHelper.cs`
   (new), the three `Launching` services, the four `Views` windows,
   `tests/CLIHub.Tests/Architecture/ArchitectureBoundaryTests.cs` (one allow-list line),

@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 
@@ -100,7 +99,7 @@ public partial class LaunchWindow : Window
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
-        DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
+        WindowChromeHelper.ApplyRoundedCorners(this);
 
     private void OnWindowActivated(object? sender, EventArgs e) => this.viewModel.PrepareForActivation();
 

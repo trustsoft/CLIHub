@@ -37,7 +37,7 @@ public sealed class PluginDialogService : IPluginDialogService
             DefaultExt = ".clihub-plugin.zip"
         };
 
-        return dialog.ShowDialog(ResolveOwner()) == true
+        return dialog.ShowDialog(MessageBoxHelper.Owner) == true
             ? dialog.FileName
             : null;
     }
@@ -82,7 +82,7 @@ public sealed class PluginDialogService : IPluginDialogService
         message.AppendLine()
             .Append("Only plugin.json and logo.png are installed; CLIHub never runs plugin code.");
 
-        return Show(message.ToString(),
+        return MessageBoxHelper.Show(message.ToString(),
                     "Install Agent Plugin",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question) == MessageBoxResult.Yes;
@@ -97,7 +97,7 @@ public sealed class PluginDialogService : IPluginDialogService
             ? "The plugin package is invalid."
             : string.Join("\n", errors.Select(error => $"• {error}"));
 
-        Show(message, "Plugin package invalid", MessageBoxButton.OK, MessageBoxImage.Warning);
+        MessageBoxHelper.Show(message, "Plugin package invalid", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
     /// <inheritdoc />
@@ -107,11 +107,11 @@ public sealed class PluginDialogService : IPluginDialogService
 
         if (result.Success)
         {
-            Show($"Installed {pluginName ?? result.InstalledPluginId}.", "Plugin installed", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBoxHelper.Show($"Installed {pluginName ?? result.InstalledPluginId}.", "Plugin installed", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        Show(result.Errors.Count == 0
+        MessageBoxHelper.Show(result.Errors.Count == 0
             ? "The installation failed."
             : string.Join("\n", result.Errors.Select(error => $"• {error}")),
             "Plugin installation failed",
@@ -123,43 +123,7 @@ public sealed class PluginDialogService : IPluginDialogService
     public void ShowBrowsePluginsDialog()
     {
         var dialog = this.serviceProvider.GetRequiredService<BrowsePluginsDialog>();
-        dialog.Owner = ResolveOwner();
+        dialog.Owner = MessageBoxHelper.Owner;
         dialog.ShowDialog();
-    }
-
-    private static MessageBoxResult Show(string message,
-                                         string title,
-                                         MessageBoxButton buttons,
-                                         MessageBoxImage image)
-    {
-        var owner = ResolveOwner();
-
-        return owner is null
-            ? MessageBox.Show(message, title, buttons, image)
-            : MessageBox.Show(owner, message, title, buttons, image);
-    }
-
-    /// <summary>
-    ///   Resolves the window that owns the next dialog: the currently active application window
-    ///   (so a prompt triggered from the Settings window is modal to Settings), then the
-    ///   application main window, then none.
-    /// </summary>
-    /// <returns> The owner window, or null when no application window is available. </returns>
-    private static Window? ResolveOwner()
-    {
-        if (Application.Current is not { } application)
-        {
-            return null;
-        }
-
-        foreach (Window window in application.Windows)
-        {
-            if (window.IsActive)
-            {
-                return window;
-            }
-        }
-
-        return application.MainWindow;
     }
 }

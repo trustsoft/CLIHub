@@ -39,32 +39,20 @@ public partial class SettingsWindow : Window
     {
         this.viewModel.Load();
 
-        // The launch window stays on top of other windows, so the Settings window has to be owned
-        // by it to be visible above it.
-        if (this.Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
-        {
-            this.Owner = owner;
-        }
+        WindowChromeHelper.EnsureOwnedByLaunchWindow(this);
 
         if (Application.Current?.MainWindow is { } launch && launch.ActualHeight > this.Height)
         {
             this.Height = launch.ActualHeight;
         }
 
-        this.Show();
-
-        if (this.WindowState == WindowState.Minimized)
-        {
-            this.WindowState = WindowState.Normal;
-        }
-
-        this.Activate();
+        WindowChromeHelper.ShowAndActivate(this);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e)
     {
+        WindowChromeHelper.ApplyRoundedCorners(this);
         var handle = new WindowInteropHelper(this).EnsureHandle();
-        DwmApi.TryRoundCorners(handle);
         HwndSource.FromHwnd(handle)?.AddHook(this.OnWindowMessage);
     }
 
@@ -94,17 +82,12 @@ public partial class SettingsWindow : Window
             return IntPtr.Zero;
         }
 
-        var dpi = User32.GetDpiForWindow(hwnd);
-        var scale = dpi == 0 ? 1.0 : dpi / 96.0;
-
         var minMax = Marshal.PtrToStructure<User32.MINMAXINFO>(lParam);
         minMax.ptMaxPosition.X = info.rcWork.Left - info.rcMonitor.Left;
         minMax.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
         minMax.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
         minMax.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
-        minMax.ptMinTrackSize.X = (int)Math.Ceiling(this.MinWidth * scale);
-        minMax.ptMinTrackSize.Y = (int)Math.Ceiling(this.MinHeight * scale);
-        Marshal.StructureToPtr(minMax, lParam, false);
+        WindowChromeHelper.ApplyMinTrackSize(this, hwnd, lParam);
         handled = true;
         return IntPtr.Zero;
     }

@@ -2,9 +2,7 @@ namespace CLIHub.Views;
 
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Interop;
 
-using CLIHub.Interop;
 using CLIHub.ViewModels;
 
 /// <summary>
@@ -32,25 +30,12 @@ public partial class WhatsNewWindow : Window
     /// </summary>
     public void ShowNotes()
     {
-        // The launch window stays on top of other windows, so this window has to be owned by it
-        // to be visible above it.
-        if (this.Owner is null && Application.Current?.MainWindow is { } owner && !ReferenceEquals(owner, this))
-        {
-            this.Owner = owner;
-        }
-
-        this.Show();
-
-        if (this.WindowState == WindowState.Minimized)
-        {
-            this.WindowState = WindowState.Normal;
-        }
-
-        this.Activate();
+        WindowChromeHelper.EnsureOwnedByLaunchWindow(this);
+        WindowChromeHelper.ShowAndActivate(this);
     }
 
     private void OnSourceInitialized(object? sender, EventArgs e) =>
-        DwmApi.TryRoundCorners(new WindowInteropHelper(this).EnsureHandle());
+        WindowChromeHelper.ApplyRoundedCorners(this);
 
     /// <summary>
     ///   Moves the window while the drawn header is dragged. The close button handles the press

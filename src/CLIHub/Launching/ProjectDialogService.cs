@@ -20,7 +20,7 @@ public sealed class ProjectDialogService : IProjectDialogService
             Title = title
         };
 
-        return dialog.ShowDialog(ResolveOwner()) == true
+        return dialog.ShowDialog(MessageBoxHelper.Owner) == true
             ? dialog.FolderName
             : null;
     }
@@ -28,45 +28,10 @@ public sealed class ProjectDialogService : IProjectDialogService
     /// <inheritdoc />
     public bool ConfirmProjectRemoval(string projectName)
     {
-        return Show($"Remove \"{projectName}\" from CLIHub?\n\nThe folder and its files are not deleted.",
-                   "CLIHub",
+        return MessageBoxHelper.Show(
+                   $"Remove \"{projectName}\" from CLIHub?\n\nThe folder and its files are not deleted.",
+                   MessageBoxHelper.ApplicationTitle,
                    MessageBoxButton.YesNo,
                    MessageBoxImage.Question) == MessageBoxResult.Yes;
-    }
-
-    private static MessageBoxResult Show(string message,
-                                         string title,
-                                         MessageBoxButton buttons,
-                                         MessageBoxImage image)
-    {
-        var owner = ResolveOwner();
-
-        return owner is null
-            ? MessageBox.Show(message, title, buttons, image)
-            : MessageBox.Show(owner, message, title, buttons, image);
-    }
-
-    /// <summary>
-    ///   Resolves the window that owns the next dialog: the currently active application window
-    ///   (so a prompt triggered from the Settings window is modal to Settings), then the
-    ///   application main window, then none.
-    /// </summary>
-    /// <returns> The owner window, or null when no application window is available. </returns>
-    private static Window? ResolveOwner()
-    {
-        if (Application.Current is not { } application)
-        {
-            return null;
-        }
-
-        foreach (Window window in application.Windows)
-        {
-            if (window.IsActive)
-            {
-                return window;
-            }
-        }
-
-        return application.MainWindow;
     }
 }

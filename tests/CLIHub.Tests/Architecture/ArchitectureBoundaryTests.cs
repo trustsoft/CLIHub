@@ -15,6 +15,7 @@ public sealed class ArchitectureBoundaryTests
         "Startup" + Path.DirectorySeparatorChar + "ApplicationHost.cs",
         "Tray" + Path.DirectorySeparatorChar + "TrayIconController.cs",
         "Launching" + Path.DirectorySeparatorChar + "UserNotificationService.cs",
+        "Launching" + Path.DirectorySeparatorChar + "MessageBoxHelper.cs",
         "Lifetime" + Path.DirectorySeparatorChar + "WpfApplicationLifetime.cs",
         "Startup" + Path.DirectorySeparatorChar + "WpfApplicationStartupUi.cs",
         "Settings" + Path.DirectorySeparatorChar + "AccentApplier.cs",
