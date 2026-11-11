@@ -80,6 +80,34 @@ are pruned from this list once their evidence is no longer needed; recover them 
 - Trigger: the next new enum mapper, or a config-corruption incident where a bogus enum value got
   persisted as a valid token.
 
+### AgentReleaseClient null-forgiving suppressions removable via a TryResolve out-parameter
+
+- Severity: Low (nullability hygiene; behavior is correct today)
+- Evidence: `src/CLIHub.Core/Agents/AgentReleaseClient.cs:119-120` still uses
+  `updateCheck.Package!` / `updateCheck.Repo!`. Validation lives in
+  `UpdateCheckSource.TryResolve` (`src/CLIHub.Core/Models/Plugins/UpdateCheckSource.cs`), which
+  since `simplify-mechanical-sweep` routes its predicates through the attributed
+  `PluginUpdateCheck.HasPackage`/`HasRepo` — but the indirection breaks Roslyn's flow analysis,
+  so the suppressions cannot be removed honestly without reshaping the API.
+- Proposed remedy: extend `UpdateCheckSource.TryResolve` with an `out string? address` (or
+  equivalent) so callers receive the validated values directly and drop the `!` operators.
+  Touches 3 production call sites and 14 test call sites in `UpdateCheckSourceTests.cs`.
+- Trigger: the next change touching `AgentReleaseClient` or `UpdateCheckSource`.
+
+### Optional spec scenario pinning the in-flight probe eviction invariant
+
+- Severity: Low (spec hardening; the behavior is implemented and regression-tested)
+- Evidence: `probe-cache-extraction` fixed the delayed-`finally` race where an awaited probe's
+  continuation could evict a newer probe's in-flight entry (`ProbeCache.cs:66` uses
+  compare-and-remove). The `agent-version` and `agent-update-detection` specs already pin
+  coalescing as SHALLs, and the race is pinned by
+  `ProbeCacheTests.GetOrProbe_HeldCallerContinuationAfterNewerProbePublished_DoesNotEvictNewerInFlightProbe`.
+  The change's design deferred adding an explicit spec scenario for the invariant itself.
+- Proposed remedy: when either spec is next touched by a delta-bearing change, add a scenario
+  stating that a delayed continuation of an awaited probe cannot evict a newer probe's in-flight
+  request.
+- Trigger: the next MODIFIED delta to `agent-version` or `agent-update-detection`.
+
 ## DI and lifetime
 
 ### Transient IDisposable chain retained by the root provider
