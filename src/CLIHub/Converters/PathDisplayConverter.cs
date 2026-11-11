@@ -3,7 +3,6 @@ namespace CLIHub.Converters;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media;
 
 using CLIHub.Core.Formatting;
@@ -14,7 +13,7 @@ using CLIHub.Core.Models;
 ///   the configured path display style. The longest fitting form is found by measuring candidate
 ///   texts with the row's own typeface, so the row is filled without clipping.
 /// </summary>
-public sealed class PathDisplayConverter : IMultiValueConverter
+public sealed class PathDisplayConverter : OneWayMultiValueConverter
 {
     /// <summary>
     ///   Fallback character width, used only when no text element is available for measuring.
@@ -31,7 +30,7 @@ public sealed class PathDisplayConverter : IMultiValueConverter
     /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
     /// <returns> The text, shortened when needed; empty for missing text. </returns>
-    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+    public override object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values.Length == 0 || values[0] is not string text || string.IsNullOrEmpty(text))
         {
@@ -64,12 +63,6 @@ public sealed class PathDisplayConverter : IMultiValueConverter
             ? text
             : Format(text, budget, style);
     }
-
-    /// <summary>
-    ///   Not supported; the converter is used in one-way bindings only.
-    /// </summary>
-    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
 
     private static string Format(string text, int budget, PathDisplayStyle style) =>
         style == PathDisplayStyle.MiddleEllipsis

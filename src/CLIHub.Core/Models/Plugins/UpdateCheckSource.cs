@@ -71,7 +71,7 @@ internal static class UpdateCheckSource
 
         if (string.Equals(updateCheck.Source, Npm, StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(updateCheck.Package))
+            if (!updateCheck.HasPackage)
             {
                 kind = SourceKind.None;
                 problem = Problem.MissingPackage;
@@ -85,7 +85,7 @@ internal static class UpdateCheckSource
 
         if (string.Equals(updateCheck.Source, GitHubReleases, StringComparison.OrdinalIgnoreCase))
         {
-            if (string.IsNullOrWhiteSpace(updateCheck.Repo))
+            if (!updateCheck.HasRepo)
             {
                 kind = SourceKind.None;
                 problem = Problem.MissingRepo;

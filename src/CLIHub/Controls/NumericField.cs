@@ -258,15 +258,9 @@ public sealed class NumericField : Control
 
     private int ResolveNextValue(int delta)
     {
-        if (TryParseNumber(this.Text, out var value))
+        if (this.TryResolveBaseValue(out var value))
         {
-            return (int)Math.Clamp((long)value + delta, this.Minimum, this.Maximum);
-        }
-
-        // An empty field whose placeholder is a number shows the effective default; step from it.
-        if (TryParseNumber(this.Placeholder, out var placeholder))
-        {
-            return (int)Math.Clamp((long)placeholder + delta, this.Minimum, this.Maximum);
+            return (int)Math.Clamp(value + delta, this.Minimum, this.Maximum);
         }
 
         return Math.Clamp(this.Minimum, this.Minimum, this.Maximum);
@@ -274,14 +268,9 @@ public sealed class NumericField : Control
 
     private int ResolveCurrentValue()
     {
-        if (TryParseNumber(this.Text, out var value))
+        if (this.TryResolveBaseValue(out var value))
         {
-            return Math.Clamp(value, this.Minimum, this.Maximum);
-        }
-
-        if (TryParseNumber(this.Placeholder, out var placeholder))
-        {
-            return Math.Clamp(placeholder, this.Minimum, this.Maximum);
+            return (int)Math.Clamp(value, this.Minimum, this.Maximum);
         }
 
         return Math.Clamp(0, this.Minimum, this.Maximum);
@@ -305,6 +294,25 @@ public sealed class NumericField : Control
         {
             this.increaseButton.IsEnabled = current < this.Maximum;
         }
+    }
+
+    private bool TryResolveBaseValue(out long value)
+    {
+        if (TryParseNumber(this.Text, out var text))
+        {
+            value = text;
+            return true;
+        }
+
+        // An empty field whose placeholder is a number shows the effective default; step from it.
+        if (TryParseNumber(this.Placeholder, out var placeholder))
+        {
+            value = placeholder;
+            return true;
+        }
+
+        value = 0;
+        return false;
     }
 
     private static bool TryParseNumber(string? text, out int value) =>

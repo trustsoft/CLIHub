@@ -1,7 +1,6 @@
 namespace CLIHub.Converters;
 
 using System.Globalization;
-using System.Windows.Data;
 
 using CLIHub.Imaging;
 
@@ -10,7 +9,7 @@ using CLIHub.Imaging;
 ///   through the application-wide <see cref="LogoImageSourceCache" />. Null, missing, and
 ///   undecodable paths yield the default logo image instead of null.
 /// </summary>
-public class PathToImageConverter : IValueConverter
+public class PathToImageConverter : OneWayValueConverter
 {
     /// <summary>
     ///   The application resource key the converter is registered under at startup.
@@ -36,12 +35,6 @@ public class PathToImageConverter : IValueConverter
     /// <param name="parameter"> Unused. </param>
     /// <param name="culture"> Unused. </param>
     /// <returns> The shared frozen image for the path, or the default logo image. </returns>
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+    public override object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         this.imageCache.GetOrLoad(value as string);
-
-    /// <summary>
-    ///   Not supported; the converter is used in one-way bindings only.
-    /// </summary>
-    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
 }

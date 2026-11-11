@@ -1,5 +1,7 @@
 namespace CLIHub.Core.Models;
 
+using System.Diagnostics.CodeAnalysis;
+
 /// <summary>
 ///   Descriptor-declared update source for an agent: where the latest published version
 ///   can be read from.
@@ -11,4 +13,19 @@ namespace CLIHub.Core.Models;
 /// </param>
 /// <param name="Package"> The npm package name when <paramref name="Source" /> is "npm". </param>
 /// <param name="Repo"> The "owner/repository" when <paramref name="Source" /> is "githubReleases". </param>
-public sealed record PluginUpdateCheck(string Source, string? Package = null, string? Repo = null);
+public sealed record PluginUpdateCheck(string Source, string? Package = null, string? Repo = null)
+{
+    /// <summary>
+    ///   Whether <see cref="Package" /> is present; a guard on this property also proves the
+    ///   package name non-null to the compiler.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(Package))]
+    public bool HasPackage => !string.IsNullOrWhiteSpace(this.Package);
+
+    /// <summary>
+    ///   Whether <see cref="Repo" /> is present; a guard on this property also proves the
+    ///   repository non-null to the compiler.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(Repo))]
+    public bool HasRepo => !string.IsNullOrWhiteSpace(this.Repo);
+}

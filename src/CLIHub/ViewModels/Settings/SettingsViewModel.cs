@@ -307,14 +307,13 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     }
 
     private int ResolveProbeTtlMinutes() =>
-        int.TryParse(this.probeTtlText.Trim(), out var minutes) && minutes > 0
-            ? minutes
-            : (int)AgentVersionService.DefaultTtl.TotalMinutes;
+        ResolvePositiveIntOr(this.probeTtlText, (int)AgentVersionService.DefaultTtl.TotalMinutes);
 
     private int ResolveProbeTimeoutSeconds() =>
-        int.TryParse(this.probeTimeoutText.Trim(), out var seconds) && seconds > 0
-            ? seconds
-            : (int)AgentVersionService.DefaultProbeTimeout.TotalSeconds;
+        ResolvePositiveIntOr(this.probeTimeoutText, (int)AgentVersionService.DefaultProbeTimeout.TotalSeconds);
+
+    private static int ResolvePositiveIntOr(string? text, int fallback) =>
+        int.TryParse(text?.Trim(), out var value) && value > 0 ? value : fallback;
 
     private void RaiseProbePolicyChanges()
     {

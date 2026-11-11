@@ -2,7 +2,6 @@ namespace CLIHub.Converters;
 
 using System.Globalization;
 using System.Windows;
-using System.Windows.Data;
 
 /// <summary>
 ///   Resolves a template resource key carried by page metadata, such as
@@ -14,7 +13,7 @@ using System.Windows.Data;
 ///   in its own resources, and those are not reachable through
 ///   <see cref="Application.TryFindResource" /> alone.
 /// </remarks>
-public sealed class ResourceKeyToTemplateConverter : IMultiValueConverter
+public sealed class ResourceKeyToTemplateConverter : OneWayMultiValueConverter
 {
     /// <summary>
     ///   Looks the key up in the resource scope of the bound element.
@@ -30,7 +29,7 @@ public sealed class ResourceKeyToTemplateConverter : IMultiValueConverter
     ///   The resolved template, or <see cref="DependencyProperty.UnsetValue" /> when the key is
     ///   missing, empty, or not declared as a <see cref="DataTemplate" />.
     /// </returns>
-    public object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture)
+    public override object Convert(object[] values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values.Length == 0 || values[0] is not string key || string.IsNullOrWhiteSpace(key))
         {
@@ -44,15 +43,4 @@ public sealed class ResourceKeyToTemplateConverter : IMultiValueConverter
 
         return Application.Current?.TryFindResource(key) as DataTemplate ?? DependencyProperty.UnsetValue;
     }
-
-    /// <summary>
-    ///   Not supported; the converter is used in one-way bindings only.
-    /// </summary>
-    /// <param name="value"> Unused. </param>
-    /// <param name="targetTypes"> Unused. </param>
-    /// <param name="parameter"> Unused. </param>
-    /// <param name="culture"> Unused. </param>
-    /// <returns> Never returns. </returns>
-    public object[] ConvertBack(object value, Type[] targetTypes, object? parameter, CultureInfo culture) =>
-        throw new NotSupportedException();
 }
