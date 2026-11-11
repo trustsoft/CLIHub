@@ -235,6 +235,7 @@
                                             <Grid>
                                                 <!-- Sizing layer: TextBlock only (chip hugs text) -->
                                                 <TextBlock x:Name="PatternText"
+                                                           HorizontalAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            FontSize="{StaticResource Sizing.FontSize.Chip}"
                                                            Foreground="{DynamicResource TextPrimaryBrush}"
