@@ -201,7 +201,9 @@
         changes. The slot collapses while the marker is not busy, so resolved labels keep today's
         layout. MinWidth holds the slot fixed while frames cycle. Tone triggers switch the glyph
         and its brush; the animation state itself is driven by the control's timer, which writes
-        CurrentFrame.
+        CurrentFrame. While busy, the glyph takes the control's Foreground, which the host supplies
+        (the update button's muted/accent foreground, the agent chip's muted text brush), so the
+        marker always matches the label text beside it.
     -->
     <Style TargetType="{x:Type controls:BusyMarker}">
         <Setter Property="Focusable" Value="False"/>
@@ -213,7 +215,7 @@
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Focusable="False"
-                               Foreground="{DynamicResource TextPrimaryBrush}"
+                               Foreground="{TemplateBinding Foreground}"
                                Text="{TemplateBinding CurrentFrame}"
                                TextAlignment="Center"/>
                     <ControlTemplate.Triggers>

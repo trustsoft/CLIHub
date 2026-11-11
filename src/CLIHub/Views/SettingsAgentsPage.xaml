@@ -243,7 +243,10 @@
                                     <Border Margin="8,0,0,0"
                                             Style="{StaticResource AgentStateChip}">
                                         <StackPanel Orientation="Horizontal">
+                                            <!-- Glyph takes the chip text brush (VersionChipText) so the
+                                                 spinner matches "Detecting" while the probe runs -->
                                             <controls:BusyMarker FontSize="{StaticResource Sizing.FontSize.Chip}"
+                                                                 Foreground="{DynamicResource TextMutedBrush}"
                                                                  IsBusy="{Binding IsProbeRunning}"
                                                                  Margin="0,0,4,0"
                                                                  VerticalAlignment="Center"/>
