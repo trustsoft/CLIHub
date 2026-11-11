@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLIHub — busy marker mockup</title>
+<!--
+  Mockup only: demonstrates replacing trailing-ellipsis busy labels ("Detecting…")
+  with an animated glyph marker + plain label, the way OpenCode does in its CLI.
+  Not wired into the app. Open in a browser.
+
+  Related app literals:
+  - AgentVersionText.Detecting            ("Detecting…")        agent card state chip
+  - UpdateControlViewModel.UpdateButtonText ("Checking…", "Downloading…")
+  - BrowsePluginsDialog.xaml              ("Loading plugins...")
+  - WhatsNewViewModel.CheckActionText     ("Checking for updates...")
+  - AgentManagementViewModel              ("Updating {name}…")
+  - LaunchCommandCoordinator              ("{kind} {name}...")
+  - TrayMenuBuilder                       (text-only; see notes below)
+-->
+<style>
+  :root { font-size: 16px; }
+
+  /* ---- Theme palettes (copied from src/CLIHub/Themes) ---- */
+  body[data-theme="dark"] {
+    --bg: #26262C; --popover: #2B2B31; --popover-open: #1E1E23;
+    --text: #E9E9E9; --muted: #9A9A9A; --label: #8B8B8B;
+    --chip-bg: rgba(255,255,255,0.05); --chip-stroke: rgba(255,255,255,0.08);
+    --hairline: rgba(255,255,255,0.06); --border: #38383C;
+    --success: #4ADE80; --danger: #D97B7B;
+  }
+  body[data-theme="light"] {
+    --bg: #F3F3F5; --popover: #FFFFFF; --popover-open: #EDEDF0;
+    --text: #1B1B1F; --muted: #5F5F66; --label: #6B6B72;
+    --chip-bg: rgba(0,0,0,0.05); --chip-stroke: rgba(0,0,0,0.09);
+    --hairline: rgba(0,0,0,0.08); --border: #D0D0D6;
+    --success: #107C41; --danger: #C0392B;
+  }
+  body[data-theme="blue"] {
+    --bg: #232833; --popover: #2A3140; --popover-open: #1C212B;
+    --text: #E8EBF1; --muted: #9BA4B5; --label: #8D97A9;
+    --chip-bg: rgba(255,255,255,0.05); --chip-stroke: rgba(255,255,255,0.08);
+    --hairline: rgba(255,255,255,0.06); --border: #353C4A;
+    --success: #4ADE80; --danger: #D98282;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  header p.lede { color: var(--muted); margin: 0 0 16px; max-width: 72ch; line-height: 1.45; }
+
+  section { margin-top: 28px; }
+  h2 {
+    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--label); margin: 0 0 10px; font-weight: 600;
+  }
+  .card {
+    background: var(--popover); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 16px;
+  }
+
+  /* ---- Controls ---- */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    background: var(--popover); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+  }
+  .controls .group { display: flex; gap: 6px; align-items: center; }
+  .controls .group-label { font-size: 0.72rem; color: var(--label); margin-right: 2px; }
+  button.chip {
+    font: inherit; font-size: 0.82rem; color: var(--text);
+    background: var(--chip-bg); border: 1px solid var(--chip-stroke);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  }
+  button.chip:hover { border-color: var(--border); }
+  button.chip[aria-pressed="true"] {
+    background: var(--popover-open); border-color: var(--border); font-weight: 600;
+  }
+  input[type="range"] { accent-color: var(--text); width: 130px; }
+  .range-value { font-size: 0.78rem; color: var(--muted); min-width: 52px; }
+
+  /* ---- Hero demo (the screenshot pattern) ---- */
+  .hero {
+    display: flex; align-items: center; gap: 18px;
+    background: var(--popover-open); border: 1px solid var(--hairline);
+    border-radius: 8px; padding: 28px 24px;
+  }
+  .hero .marker {
+    font-family: "Cascadia Mono", "Consolas", "Segoe UI Symbol", monospace;
+    font-size: 2.1rem; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.5em; height: 1.5em;
+    border: 2px solid var(--danger); border-radius: 6px;
+    color: var(--text);
+  }
+  .hero .marker.unboxed { border-color: transparent; width: 1.2em; }
+  .hero .hero-label { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 2.1rem; font-weight: 700; }
+  .hero-meta { font-size: 0.78rem; color: var(--muted); margin-left: auto; text-align: right; line-height: 1.5; }
+
+  /* ---- Before / after rows ---- */
+  table.rows { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  table.rows th {
+    text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--label); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--hairline);
+  }
+  table.rows td { padding: 9px 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+  td.surface { color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+  td.before { color: var(--muted); white-space: nowrap; }
+  td.after { white-space: nowrap; }
+  .marker {
+    font-family: "Cascadia Mono", "Consolas", "Segoe UI Symbol", monospace;
+    display: inline-block; width: 1.35em; text-align: center; color: var(--text);
+  }
+  .marker.done-ok { color: var(--success); }
+  .marker.done-fail { color: var(--danger); }
+  td.after .label-text.done-ok { color: var(--success); }
+  td.after .label-text.done-fail { color: var(--danger); }
+  .run-btn {
+    font: inherit; font-size: 0.75rem; color: var(--muted);
+    background: transparent; border: 1px solid var(--chip-stroke);
+    border-radius: 5px; padding: 2px 8px; cursor: pointer;
+  }
+  .run-btn:hover { color: var(--text); border-color: var(--border); }
+
+  /* ---- States strip ---- */
+  .states { display: flex; gap: 12px; flex-wrap: wrap; }
+  .state-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--chip-bg); border: 1px solid var(--chip-stroke);
+    border-radius: 999px; padding: 5px 14px 5px 10px; font-size: 0.85rem;
+  }
+  .state-chip .marker { width: 1.2em; }
+  .state-chip.ok .marker, .state-chip.ok { color: var(--success); }
+  .state-chip.fail .marker, .state-chip.fail { color: var(--danger); }
+  .state-caption { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+
+  /* ---- Sets grid ---- */
+  .sets { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .set-card {
+    background: var(--popover); border: 1px solid var(--hairline); border-radius: 8px;
+    padding: 12px; cursor: pointer; text-align: left; color: var(--text); font: inherit;
+  }
+  .set-card:hover { border-color: var(--border); }
+  .set-card[aria-pressed="true"] { border-color: var(--danger); box-shadow: 0 0 0 1px var(--danger) inset; }
+  .set-glyph {
+    font-family: "Cascadia Mono", "Consolas", "Segoe UI Symbol", monospace;
+    font-size: 1.5rem; width: 1.6em; text-align: center; display: inline-block;
+  }
+  .set-name { font-size: 0.8rem; margin-top: 6px; }
+  .set-note { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+  /* ---- Notes ---- */
+  ul.notes { margin: 0; padding-left: 20px; color: var(--text); line-height: 1.55; font-size: 0.9rem; }
+  ul.notes li { margin-bottom: 7px; }
+  ul.notes li b { color: var(--text); }
+  ul.notes .dim { color: var(--muted); }
+
+  footer { margin-top: 36px; font-size: 0.75rem; color: var(--muted); }
+  code { font-family: "Cascadia Mono", "Consolas", monospace; font-size: 0.85em; }
+</style>
+</head>
+<body data-theme="dark">
+<main>
+  <header>
+    <h1>Busy marker mockup</h1>
+    <p class="lede">
+      Replace trailing-ellipsis busy labels (<i>“Detecting…”</i>) with an animated glyph marker
+      followed by a plain label — the pattern OpenCode uses in its terminal output
+      (the boxed braille glyph from the reference screenshots). The marker communicates
+      <b>busy</b>; the label stays calm and stops competing with punctuation.
+    </p>
+    <div class="controls">
+      <div class="group">
+        <span class="group-label">Theme</span>
+        <button class="chip theme-btn" data-theme-value="dark" aria-pressed="true">Dark</button>
+        <button class="chip theme-btn" data-theme-value="light" aria-pressed="false">Light</button>
+        <button class="chip theme-btn" data-theme-value="blue" aria-pressed="false">Blue</button>
+      </div>
+      <div class="group">
+        <span class="group-label">Speed</span>
+        <input type="range" id="speed" min="40" max="160" step="10" value="80">
+        <span class="range-value" id="speed-value">80 ms</span>
+      </div>
+      <div class="group">
+        <span class="group-label">End state</span>
+        <button class="chip end-btn" data-end="ok" aria-pressed="true">✓ success</button>
+        <button class="chip end-btn" data-end="fail" aria-pressed="false">✗ failure</button>
+      </div>
+      <div class="group">
+        <span class="group-label">Motion</span>
+        <button class="chip" id="reduced-motion" aria-pressed="false">Reduced (static ⣿)</button>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <h2>The marker — reference pattern</h2>
+    <div class="hero">
+      <span class="marker" id="hero-marker">⠋</span>
+      <span class="hero-label" id="hero-label">Detecting</span>
+      <div class="hero-meta">
+        <div id="hero-frame">frame 1/10 · 80 ms</div>
+        <div><label><input type="checkbox" id="hero-boxed"> boxed (as in screenshot)</label></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Before / after — real CLIHub labels</h2>
+    <div class="card" style="padding: 4px 8px;">
+      <table class="rows">
+        <thead>
+          <tr>
+            <th>Surface</th>
+            <th>Today</th>
+            <th>Proposed</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows-body"><!-- populated by script --></tbody>
+      </table>
+    </div>
+    <p class="state-caption">
+      Rows animate continuously; the <b>Run</b> button replays a 2&nbsp;s busy phase and lands on the
+      configured end state (✓ / ✗ above), then returns to busy — showing how the marker replaces itself
+      on completion instead of a text swap.
+    </p>
+  </section>
+
+  <section>
+    <h2>Lifecycle states</h2>
+    <div class="card">
+      <div class="states">
+        <span class="state-chip"><span class="marker live">⠋</span> Detecting</span>
+        <span class="state-chip ok"><span class="marker">✓</span> 1.2.3</span>
+        <span class="state-chip fail"><span class="marker">✗</span> Not installed</span>
+      </div>
+      <p class="state-caption">
+        Busy → animated glyph; resolved → static glyph in the status tone
+        (<span style="color:var(--success)">SuccessBrush</span> /
+        <span style="color:var(--danger)">DangerBrush</span>); idle (version known) → marker removed entirely.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Candidate glyph sets</h2>
+    <div class="sets" id="sets-grid"><!-- populated by script --></div>
+    <p class="state-caption">The selected set drives every animated marker on this page. Braille sets are the
+      OpenCode-style candidates; box-drawing and arc sets are single-codepoint alternatives if braille font
+      coverage becomes a concern.</p>
+  </section>
+
+  <section>
+    <h2>Implementation notes (WPF)</h2>
+    <div class="card">
+      <ul class="notes">
+        <li><b>Fixed-width slot.</b> The marker lives in its own <code>TextBlock</code> (or small
+          <code>BusyMarker</code> control) with a fixed <code>Width</code>, so cycling glyphs never shift the
+          label or neighboring layout. Keep it a separate control rather than concatenating text, so the
+          literal stays in <code>AgentVersionText</code>-style constants and stays testable.</li>
+        <li><b>Animation.</b> A single <code>DispatcherTimer</code> per visible control (or one shared ticker)
+          at ~80&nbsp;ms/frame. Pause when the control is not visible and honor
+          <code>SystemParameters.ClientAreaAnimation</code>.</li>
+        <li><b>Label loses the ellipsis.</b> The marker already says “busy”; keep the label plain
+          (“Detecting”, “Checking”). Update <code>AgentVersionText.Detecting</code> and the
+          <code>UpdateButtonText</code> states accordingly.</li>
+        <li><b>Completion.</b> Swap the glyph, not the text pattern: ✓ in <code>SuccessBrush</code>,
+          ✗ in <code>DangerBrush</code> — or drop the marker when idle.</li>
+        <li><b>Accessibility.</b> Expose state via <code>AutomationProperties</code> (e.g. status text still
+          “Detecting” / “Not installed”); the animation must never be the only signal, and screen readers
+          should not announce frame changes.</li>
+        <li><b>Reduced motion.</b> Static full-cell glyph (e.g. <code>⣿</code> or <code>●</code>) instead of
+          cycling when animations are disabled.</li>
+        <li><b>Fonts.</b> Braille renders from Segoe UI Symbol / Cascadia Mono on Windows 10/11; verify in all
+          three palettes and at high-contrast. Fallback sets above are single-codepoint and safe in any font.</li>
+        <li><b class="dim">Tray menu stays text-only.</b> <span class="dim">Native Win32 menus don't repaint
+          per-frame; keep “Checking for updates…” as text there.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Mockup only — not wired into the app. Source labels:
+    <code>AgentVersionText.Detecting</code>,
+    <code>UpdateControlViewModel.UpdateButtonText</code>,
+    <code>BrowsePluginsDialog.xaml</code>,
+    <code>WhatsNewViewModel</code>,
+    <code>AgentManagementViewModel</code>,
+    <code>LaunchCommandCoordinator</code>,
+    <code>TrayMenuBuilder</code>.
+  </footer>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var SETS = {
+    braille:  { name: "Braille classic", note: "OpenCode-style, 10 frames", frames: ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"] },
+    braillePair: { name: "Braille pair", note: "two-cell, closest to the screenshots", frames: ["⠂⠂","⠄⠄","⡀⡀","⢀⢀","⠠⠠","⠐⠐","⠈⠈"] },
+    brailleBounce: { name: "Braille bounce", note: "4 frames, minimal motion", frames: ["⠁","⠂","⠄","⠂"] },
+    line:     { name: "Line", note: "box-drawing, 4 frames", frames: ["▖","▘","▝","▗"] },
+    arc:      { name: "Arc", note: "single-codepoint, 4 frames", frames: ["◜","◝","◞","◟"] },
+    moon:     { name: "Moon", note: "emoji — colored, likely too playful", frames: ["🌘","🌒","🌓","🌔"] },
+    clock:    { name: "Clock", note: "emoji — colored, 12 frames", frames: ["🕐","🕑","🕒","🕓","🕔","🕕","🕖","🕗","🕘","🕙","🕚","🕛"] }
+  };
+
+  var state = {
+    setId: "braille",
+    speed: 80,
+    endState: "ok",       // "ok" | "fail"
+    reducedMotion: false,
+    boxed: true,
+    frame: 0,
+    timer: null
+  };
+
+  // Real CLIHub busy labels and where they live.
+  var ROWS = [
+    { surface: "Agent card · state chip", before: "Detecting…",           after: "Detecting" },
+    { surface: "Update control",          before: "Checking…",            after: "Checking" },
+    { surface: "Update control",          before: "Downloading 0.4.2…",   after: "Downloading 0.4.2" },
+    { surface: "Browse plugins dialog",   before: "Loading plugins...",   after: "Loading plugins" },
+    { surface: "Agent card · message",    before: "Updating Claude Code…",after: "Updating Claude Code" },
+    { surface: "Launch window · status",  before: "Launching Codex...",   after: "Launching Codex" }
+  ];
+
+  var liveMarkers = []; // { el, rowFrame, phase, timeout }
+
+  function frames() { return SETS[state.setId].frames; }
+
+  function currentGlyph(rowFrame) {
+    if (state.reducedMotion) return "⣿";
+    var f = frames();
+    return f[rowFrame % f.length];
+  }
+
+  function endGlyph() { return state.endState === "ok" ? "✓" : "✗"; }
+
+  // ---- Global ticker: advances the hero + all live row markers ----
+  function tick() {
+    if (state.reducedMotion) return;
+    state.frame += 1;
+    var f = frames();
+    document.getElementById("hero-marker").textContent = f[state.frame % f.length];
+    document.getElementById("hero-frame").textContent =
+      "frame " + (state.frame % f.length + 1) + "/" + f.length + " · " + state.speed + " ms";
+    liveMarkers.forEach(function (m) {
+      if (m.phase !== "busy") return;
+      m.rowFrame += 1;
+      m.el.textContent = currentGlyph(m.rowFrame);
+    });
+  }
+
+  function restartTimer() {
+    if (state.timer) clearInterval(state.timer);
+    state.timer = setInterval(tick, state.speed);
+  }
+
+  // ---- Row construction ----
+  function buildRows() {
+    var tbody = document.getElementById("rows-body");
+    ROWS.forEach(function (row) {
+      var tr = document.createElement("tr");
+
+      var tdSurface = document.createElement("td");
+      tdSurface.className = "surface";
+      tdSurface.textContent = row.surface;
+
+      var tdBefore = document.createElement("td");
+      tdBefore.className = "before";
+      tdBefore.textContent = row.before;
+
+      var tdAfter = document.createElement("td");
+      tdAfter.className = "after";
+      var marker = document.createElement("span");
+      marker.className = "marker live";
+      marker.textContent = currentGlyph(0);
+      var label = document.createElement("span");
+      label.className = "label-text";
+      label.textContent = " " + row.after;
+      tdAfter.appendChild(marker);
+      tdAfter.appendChild(label);
+
+      var tdRun = document.createElement("td");
+      var btn = document.createElement("button");
+      btn.className = "run-btn";
+      btn.textContent = "Run";
+      tdRun.appendChild(btn);
+
+      tr.appendChild(tdSurface);
+      tr.appendChild(tdBefore);
+      tr.appendChild(tdAfter);
+      tr.appendChild(tdRun);
+      tbody.appendChild(tr);
+
+      var entry = { el: marker, label: label, rowFrame: 0, phase: "busy", timeout: null };
+      liveMarkers.push(entry);
+
+      btn.addEventListener("click", function () {
+        if (entry.timeout) { clearTimeout(entry.timeout); entry.timeout = null; }
+        entry.phase = "busy";
+        entry.rowFrame = 0;
+        marker.className = "marker live";
+        label.className = "label-text";
+        marker.textContent = currentGlyph(0);
+        entry.timeout = setTimeout(function () {
+          entry.phase = "done";
+          marker.className = "marker done-" + state.endState;
+          marker.textContent = endGlyph();
+          label.className = "label-text done-" + state.endState;
+          entry.timeout = setTimeout(function () {
+            entry.phase = "busy";
+            entry.rowFrame = 0;
+            marker.className = "marker live";
+            label.className = "label-text";
+            marker.textContent = currentGlyph(0);
+            entry.timeout = null;
+          }, 1800);
+        }, 2000);
+      });
+    });
+  }
+
+  // ---- Glyph sets grid ----
+  function buildSets() {
+    var grid = document.getElementById("sets-grid");
+    Object.keys(SETS).forEach(function (id) {
+      var set = SETS[id];
+      var card = document.createElement("button");
+      card.className = "set-card";
+      card.setAttribute("aria-pressed", id === state.setId ? "true" : "false");
+      card.dataset.setId = id;
+
+      var glyph = document.createElement("span");
+      glyph.className = "set-glyph";
+      glyph.textContent = set.frames[0];
+
+      var name = document.createElement("div");
+      name.className = "set-name";
+      name.textContent = set.name + "  (" + set.frames.length + ")";
+
+      var note = document.createElement("div");
+      note.className = "set-note";
+      note.textContent = set.note;
+
+      card.appendChild(glyph);
+      card.appendChild(name);
+      card.appendChild(note);
+      grid.appendChild(card);
+
+      // mini-animation per card
+      var i = 0;
+      setInterval(function () {
+        if (state.reducedMotion) return;
+        i += 1;
+        glyph.textContent = set.frames[i % set.frames.length];
+      }, state.speed);
+
+      card.addEventListener("click", function () {
+        state.setId = id;
+        Array.prototype.forEach.call(grid.children, function (c) {
+          c.setAttribute("aria-pressed", c.dataset.setId === id ? "true" : "false");
+        });
+      });
+    });
+  }
+
+  // ---- Controls wiring ----
+  function wireControls() {
+    Array.prototype.forEach.call(document.querySelectorAll(".theme-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        document.body.dataset.theme = btn.dataset.themeValue;
+        Array.prototype.forEach.call(document.querySelectorAll(".theme-btn"), function (b) {
+          b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+      });
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll(".end-btn"), function (btn) {
+      btn.addEventListener("click", function () {
+        state.endState = btn.dataset.end;
+        Array.prototype.forEach.call(document.querySelectorAll(".end-btn"), function (b) {
+          b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        });
+      });
+    });
+
+    var speed = document.getElementById("speed");
+    speed.addEventListener("input", function () {
+      state.speed = parseInt(speed.value, 10);
+      document.getElementById("speed-value").textContent = state.speed + " ms";
+      restartTimer();
+      // re-time the set-card minis by clearing and rebuilding intervals is overkill;
+      // they read state.speed is not used per-card (kept at build time) — acceptable for a mockup.
+    });
+
+    var rm = document.getElementById("reduced-motion");
+    rm.addEventListener("click", function () {
+      state.reducedMotion = !state.reducedMotion;
+      rm.setAttribute("aria-pressed", state.reducedMotion ? "true" : "false");
+      if (state.reducedMotion) {
+        document.getElementById("hero-marker").textContent = "⣿";
+        liveMarkers.forEach(function (m) {
+          if (m.phase === "busy") m.el.textContent = "⣿";
+        });
+      }
+    });
+
+    var boxed = document.getElementById("hero-boxed");
+    boxed.addEventListener("change", function () {
+      document.getElementById("hero-marker").classList.toggle("unboxed", !boxed.checked);
+    });
+  }
+
+  buildRows();
+  buildSets();
+  wireControls();
+  restartTimer();
+})();
+</script>
+</body>
+</html>
