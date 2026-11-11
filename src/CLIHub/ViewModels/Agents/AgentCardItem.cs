@@ -142,6 +142,7 @@ public sealed class AgentCardItem : ObservableObject
             if (this.SetProperty(ref this.installState, value))
             {
                 this.OnPropertyChanged(nameof(this.IsInstalled));
+                this.OnPropertyChanged(nameof(this.IsProbeRunning));
                 this.OnPropertyChanged(nameof(this.VersionChipText));
                 this.OnPropertyChanged(nameof(this.CanDetect));
                 this.OnPropertyChanged(nameof(this.CanCheckUpdates));
@@ -171,7 +172,14 @@ public sealed class AgentCardItem : ObservableObject
     public bool IsInstalled => this.InstallState == AgentInstallState.Installed;
 
     /// <summary>
-    ///   The state chip text: "Detecting…" while an installation probe runs, "Not installed"
+    ///   Whether an installation probe is running for this card: true while
+    ///   <see cref="InstallState" /> is <see cref="AgentInstallState.Detecting" />. Drives the
+    ///   state chip's braille busy marker.
+    /// </summary>
+    public bool IsProbeRunning => this.InstallState == AgentInstallState.Detecting;
+
+    /// <summary>
+    ///   The state chip text: "Detecting" while an installation probe runs, "Not installed"
     ///   for a missing agent, the resolved version as "v{version}" when installed with one, and
     ///   "Installed" when installed without one.
     /// </summary>

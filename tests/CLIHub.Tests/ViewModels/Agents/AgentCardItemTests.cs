@@ -38,7 +38,7 @@ public sealed class AgentCardItemTests
     {
         var card = CreateCard(AgentInstallState.Detecting, null);
 
-        Assert.Equal("Detecting…", card.VersionChipText);
+        Assert.Equal("Detecting", card.VersionChipText);
     }
 
     [Fact]

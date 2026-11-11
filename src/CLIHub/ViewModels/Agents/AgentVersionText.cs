@@ -8,9 +8,10 @@ namespace CLIHub.ViewModels;
 public static class AgentVersionText
 {
     /// <summary>
-    ///   The chip text shown while an installation probe is running.
+    ///   The chip text shown while an installation probe runs, next to the chip's braille busy
+    ///   marker.
     /// </summary>
-    public const string Detecting = "Detecting…";
+    public const string Detecting = "Detecting";
 
     /// <summary>
     ///   The chip text shown when the agent is not installed on the host.

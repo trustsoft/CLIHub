@@ -242,8 +242,14 @@
                                     </Border>
                                     <Border Margin="8,0,0,0"
                                             Style="{StaticResource AgentStateChip}">
-                                        <TextBlock Style="{StaticResource AgentStateChipText}"
-                                                   Text="{Binding VersionChipText}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <controls:BusyMarker FontSize="{StaticResource Sizing.FontSize.Chip}"
+                                                                 IsBusy="{Binding IsProbeRunning}"
+                                                                 Margin="0,0,4,0"
+                                                                 VerticalAlignment="Center"/>
+                                            <TextBlock Style="{StaticResource AgentStateChipText}"
+                                                       Text="{Binding VersionChipText}"/>
+                                        </StackPanel>
                                     </Border>
                                 </StackPanel>
                                 <TextBlock Margin="0,3,0,0"

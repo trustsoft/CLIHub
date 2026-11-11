@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:themes="clr-namespace:CLIHub.Theming"
+        xmlns:controls="clr-namespace:CLIHub.Controls"
         mc:Ignorable="d"
         Title="CLIHub"
         Background="{DynamicResource ChromeBgBrush}"
@@ -413,9 +414,16 @@
                         Margin="10,2,0,0"
                         VerticalAlignment="Center"
                         Command="{Binding UpdateControl.UpdateControlCommand}"
-                        Content="{Binding UpdateControl.UpdateButtonText}"
                         Style="{StaticResource FooterTextButton}"
-                        ToolTip="Check for updates"/>
+                        ToolTip="Check for updates">
+                    <StackPanel Orientation="Horizontal">
+                        <controls:BusyMarker IsBusy="{Binding UpdateControl.IsUpdateControlBusy}"
+                                             Margin="0,0,4,0"
+                                             VerticalAlignment="Center"/>
+                        <TextBlock VerticalAlignment="Center"
+                                   Text="{Binding UpdateControl.UpdateButtonText}"/>
+                    </StackPanel>
+                </Button>
 
                 <TextBlock Grid.Column="2"
                            Margin="12,0"

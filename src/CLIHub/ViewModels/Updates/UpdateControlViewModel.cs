@@ -73,15 +73,23 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
     public string UpdateButtonText => this.state switch
     {
         UpdateControlState.Available => $"Update to {this.workflow.LastKnownAvailableVersion}",
-        UpdateControlState.Checking => "Checking…",
+        UpdateControlState.Checking => "Checking",
         UpdateControlState.Downloading => this.workflow.LastKnownAvailableVersion is { } downloading
-            ? $"Downloading {downloading}…"
-            : "Downloading…",
+            ? $"Downloading {downloading}"
+            : "Downloading",
         UpdateControlState.ReadyToApply => this.workflow.LastKnownAvailableVersion is { } ready
             ? $"Restart to update to {ready}"
             : "Restart to update",
         _ => this.CurrentVersion,
     };
+
+    /// <summary>
+    ///   Whether the control is in a busy state (checking or downloading). Drives the update
+    ///   control's braille busy marker; it is false in every other state, including the
+    ///   update-available and restart states.
+    /// </summary>
+    public bool IsUpdateControlBusy =>
+        this.state is UpdateControlState.Checking or UpdateControlState.Downloading;
 
     /// <summary>
     ///   Whether the control currently offers an update action, which drives its accent styling.
@@ -246,6 +254,7 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
         this.state = updateState;
         this.OnPropertyChanged(nameof(this.UpdateButtonText));
         this.OnPropertyChanged(nameof(this.IsUpdateActionAvailable));
+        this.OnPropertyChanged(nameof(this.IsUpdateControlBusy));
         CommandManager.InvalidateRequerySuggested();
     }
 

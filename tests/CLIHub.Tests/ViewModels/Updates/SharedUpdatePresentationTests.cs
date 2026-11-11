@@ -49,7 +49,7 @@ public class SharedUpdatePresentationTests
         Assert.True(projection.GetState().IsCheckingForUpdates);
         Assert.Equal("Checking for updates...", notes.CheckActionText);
         Assert.False(notes.CanCheckForUpdates);
-        Assert.Equal("Checking…", control.UpdateButtonText);
+        Assert.Equal("Checking", control.UpdateButtonText);
         Assert.False(control.UpdateControlCommand.CanExecute(null));
 
         var joiningCheck = workflow.CheckForUpdatesAsync();

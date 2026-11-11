@@ -9,7 +9,7 @@ public sealed class AgentVersionTextTests
     [Fact]
     public void Detecting_Constant_HoldsTheDetectingChipText()
     {
-        Assert.Equal("Detecting…", AgentVersionText.Detecting);
+        Assert.Equal("Detecting", AgentVersionText.Detecting);
     }
 
     [Fact]
