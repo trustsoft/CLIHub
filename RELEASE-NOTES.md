@@ -3,6 +3,22 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.3 — 2026-11-11
+
+### New
+
+- Work in progress is now visible: agent cards show an animated braille marker while detecting, and the update control shows one while checking for or downloading an update, instead of static labels ending in an ellipsis.
+- The Browse Plugins dialog can be resized and dragged by its header, has rounded corners, and closes with Escape.
+- The default global hotkey is now Ctrl+Alt+Space; a hotkey you configured yourself is left untouched.
+
+### Improved
+
+- The CLI Agents page lists installed agents first and keeps not-installed agents at the end of the list, refreshing the order when detection settles an agent's state.
+- The Update action on the CLI Agents page is enabled only once CLIHub knows an update is available; a failed or unavailable check no longer leaves it clickable.
+- The launch window's Actions label is quieter and more compact at rest and keeps its bright color while the menu is open.
+- Ignored-pattern chips on Project Scanning reveal their remove button on hover or keyboard focus, so the chips look cleaner at rest.
+- The launch window's pane headers are slimmer, moving the PROJECTS and AGENTS labels closer to the panes' top edge.
+
 ## 1.1.2 — 2026-11-09
 
 ### New

@@ -8,11 +8,23 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## Unreleased
+## 1.1.3 - 2026-11-11
+
+### Added
+
+- `BusyMarker` WPF control with the UI-independent `BusyGlyphSequence` in Core: an animated braille glyph in a fixed-width slot, clamped frame speed, a static glyph when Windows reduced motion is requested, and Success/Failure tones; adopted on the agent card state chip ("Detecting" without the trailing ellipsis) and inside the update control ("Checking"/"Downloading" without the ellipsis); the frame timer runs only while the marker is busy and visible (`busy-marker-control`, `agent-ui`, `update-checking`).
+- Browse Plugins dialog drawn chrome: header drag to move, 6 px resize borders, rounded corners via `DwmApi.TryRoundCorners`, a `WM_GETMINMAXINFO` hook enforcing the minimum tracking size with DPI scaling, and Escape-to-close; default size 640x480, minimum 520x360; the dialog stays modal, owned, and hidden from the taskbar (`browse-plugins-window-chrome`, `plugin-feed`).
 
 ### Changed
 
+- The default global hotkey is Ctrl+Alt+Space instead of Ctrl+Shift+Space; the invalid-configuration fallback, the persisted default, startup registration, the README, the glossary, the configuration documentation, and the screenshot harness mock stay aligned; explicitly configured hotkeys are not migrated (`default-hotkey-ctrl-alt-space`, `hotkey-support`).
+- Settings CLI Agents cards are stably partitioned installed-first and not-installed-last by `AgentCardOrdering.InstalledFirst`, and the order refreshes when the header Detect pass or a card's Detect action settles an installation state (`settings-agents-installed-first`, `agent-ui`).
+- The Settings Update action is computed from state instead of declaration: enabled only when availability is `UpdateAvailable`, the agent declares an `update` command, and no matching agent process is running; `UpToDate` and `Unknown` keep it disabled, including before the first availability result arrives (`agent-update-button-gated`, `agent-ui`, `agent-update-detection`).
+- The launch window's Actions toggle label is quieter and more compact at rest and keeps its bright foreground while the actions menu is open (ae9a430, 37ef2dc).
+- Ignored-pattern chips on Project Scanning reveal their remove button on hover or keyboard focus while the chip's dimensions stay constant (`pattern-chip-hover-remove`, `preferences-ui`).
 - The launch window's pane headers are 24 DIP tall instead of 32, so the PROJECTS/AGENTS labels sit closer to the pane's top edge; the Actions chip keeps its full height and both panes stay aligned (`launch-window-layout`).
+- Agent tooling: the dispatch-gate fallback reorder is recorded in the subagent model policy (99c7808).
+- Internal: the application folder structure is tidied — `ReadmeImageCapture` moves to `Diagnostics`, `AgentVersionText` to `ViewModels/Agents`, and `MenuAction`/`PreferenceSyncHelper` to `ViewModels/Shared`, with stray `using` directives dropped (`tidy-application-folders`).
 
 ## 1.1.2 - 2026-11-09
 
