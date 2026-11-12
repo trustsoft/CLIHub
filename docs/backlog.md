@@ -298,47 +298,6 @@ snapshot.
 - Trigger: a request for effort-aware quota handling, or the first plan-model exhaustion that
   recovers too slowly for the workload.
 
-### `pipe/verifier` allowlist has no output-shaping cmdlets
-
-- Severity: Low (degrades verifier reports, not correctness; the orchestrator re-runs every gate)
-- Evidence: `~/.config/opencode/agents/pipe/verifier.md` (global user config, outside this repo)
-  allows a read-only cmdlet set — `Get-Content`, `Get-ChildItem`, `Test-Path`, `Select-String`,
-  `Select-Object`, `Measure-Object`, `Sort-Object`, `Format-Table`, `Format-List`, `Out-String`
-  (lines 84-110) — but deliberately excludes `ForEach-Object` and `Where-Object`, because a
-  scriptblock argument would let the "read-only" agent run arbitrary code. Shell permissions are
-  matched per pipeline segment, so a verifier that shapes gate output with a filter/loop segment
-  gets `permission.rejected` for the whole command. A second, prompt-level residual: the rule that
-  a denial must be quoted verbatim instead of generalized into "shell unavailable" (`## When a
-  command is denied`, line 124) is enforced by instruction only — the same failure that produced a
-  false `UNVERIFIABLE` verdict on 2026-10-22 is not structurally prevented.
-- Proposed remedy: either add a small allowlist of side-effect-free scriptblock-free alternatives
-  (for example `Measure-Object -Line`, `Select-String`, `-First`/`-Last` on `Select-Object`, which
-  are already allowed) and document them in the prompt's "Permitted commands" section, or give the
-  verifier a first-class read-only inspection tool so it never needs shell plumbing for reads.
-  For the reporting residual, prefer a structural fix (verifier returns a machine-readable gate
-  record with per-gate status and command) over more prompt wording.
-- Trigger: the next verifier report that quotes a denial for a pipeline-shaped read, or any verify
-  stage where a gate ends up `NOT RUN`.
-
-### Pipe agent definitions live in the global OpenCode config
-
-- Severity: Medium (unversioned, unreviewed, and silently drifts per machine)
-- Evidence: `pipe/planner`, `pipe/implementer`, and `pipe/verifier` are defined only under
-  `~/.config/opencode/agents/pipe/` (`planner.md`, `implementer.md`, `verifier.md`), outside any git
-  repository. The 2026-10-22 shell-permission fix to `verifier.md` therefore has no commit, no
-  diff, no review, and no history; a fresh machine or a reinstall restores the old, narrower
-  allowlist. The same applies to the pipeline contract they implement, which is documented in the
-  global `pipeline-protocol` skill rather than in this repo.
-- Proposed remedy: move the pipe agents (and, if the decision extends that far, the whole pipeline
-  mechanism — agents, `pipeline-protocol` skill, state-file convention) to the project level under
-  `.opencode/agents/` and `.opencode/skills/`, so they are versioned with the repository, reviewable
-  in a diff, and covered by the same approval gates as code. Project definitions override global
-  ones, so a move is reversible by deleting the project copies.
-- Trigger: any further change to a `pipe/*` agent definition, a second machine/agent host that needs
-  the same behaviour, or an explicit decision to version the pipeline mechanism per project.
-- Decision (2026-10-22): deliberately deferred. The agents stay global for now; relocating the whole
-  mechanism to project level is a later, separate decision.
-
 ### `pipeline-state check` cannot validate commit shas from foreign repositories
 
 - Severity: Low (informational warning only; `check` still exits 0 and the sidebar is unaffected)
@@ -358,24 +317,6 @@ snapshot.
   `pipeline-state check` reports 10 ok / 0 warnings, so the standing symptom is gone. The check path
   still validates shas against a single repo root, so the item stays open latently until the first
   foreign-repo sha returns.
-
-### Pipeline protocol has no documented close-out for stages that do not apply
-
-- Severity: Medium (a finished entry stays visible as unfinished and can never be pruned)
-- Evidence (2026-11-03): the `docs-actualization` entry sat at `commit`/`done` with the `archive` row
-  `pending` because docs-only work has no OpenSpec change to archive; the orchestrator had no
-  documented way to close it. The same class of record (`2026-11-03-launch-window-copy`, pointer
-  `archive` with a frozen `pending` `commit` row) came from stage jumps in `update`. The repo script
-  now backfills passed stage rows and warns via `no-archive-path` / `inconsistent-stages`
-  (`.opencode/scripts/pipeline-state.mjs`), but the global `pipeline-protocol` skill still describes
-  only the OpenSpec archive path.
-- Proposed remedy: in `D:\Projects\opencode-sidebar-suite`, add the rule to the skill — every entry
-  finishes at `archive`/`done`; a stage that does not apply is recorded `done` with a note beginning
-  `n/a: <reason>`; advancing the pointer closes earlier rows. Decide whether the skill source moves
-  into that repository and is deployed by `install.ps1`, which currently copies only `plugins/` and
-  `shared/`.
-- Trigger: the next docs-only or tooling entry that has to be closed, or the next edit of the global
-  `pipeline-protocol` skill.
 
 ### Plugin feed cancellation is reported as a download failure
 
