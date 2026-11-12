@@ -3,6 +3,19 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.1.4 — 2026-11-12
+
+### Improved
+
+- The Settings window's maximize button tooltip follows the window state and reads "Restore" while the window is maximized.
+- Installed agent versions read cleaner: version chips drop the "v" prefix, so an installed Cline shows "3.0.74" instead of "v3.0.74".
+- The busy marker inside an agent's state chip uses the same text color as its label, and chips no longer reserve an empty gap for the animation while idle.
+- Ignored-pattern chips on Project Scanning center their text.
+
+### Fixed
+
+- Overlapping agent checks no longer spawn duplicate probe processes: a race in the shared probe cache could retire a newer probe's in-flight entry and start a redundant version or update-availability probe for the same agent.
+
 ## 1.1.3 — 2026-11-11
 
 ### New

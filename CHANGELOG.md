@@ -8,6 +8,26 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.1.4 - 2026-11-12
+
+### Added
+
+- `ProbeCache<TValue>` in Core: the shared per-key TTL cache with in-flight dedup behind agent version and update-availability probing; an in-flight entry is removed only by its own key-value pair, fixing the race where a delayed continuation removed a newer probe's entry and let a duplicate probe process start (probe-cache-extraction, agent-version, agent-update-detection).
+- `AtomicFileWriter` in Core.Infrastructure: one atomic temp-file-plus-replace helper shared by the configuration, plugin-state, and logo-cache persistence paths (core-cleanup-and-shell-factory, configuration-snapshot).
+- `UpdateVersionText` and `UpdateOutcomeText` helpers: the update control's button, title, and outcome texts come from a single place (core-cleanup-and-shell-factory, update-checking).
+
+### Changed
+
+- Agent version chips render the plain version without the "v" prefix in the launch window and on CLI Agents cards, and chips no longer reserve a fixed gap before the busy marker while idle (8fd4e85, agent-ui).
+- The Settings window maximize button tooltip is state-aware: "Maximize" at rest, "Restore" while maximized (quick-wins-sweep).
+- The BusyMarker glyph inside the agent state chip inherits the adjacent label's text color instead of a hardcoded brush (ebb0049, agent-ui).
+- Ignored-pattern chips on Project Scanning center their content (8ca4c3f, preferences-ui).
+- Internal: dialog owner and window-chrome logic consolidated into shared helpers (dialog-and-chrome-helpers), command and converter boilerplate collapsed behind shared bases (simplify-mechanical-sweep), preference reading and shell launching consolidated (core-cleanup-and-shell-factory), and the plugin feed client honors cancellation between feed pages (quick-wins-sweep).
+
+### Fixed
+
+- Agent detection: concurrent version or update checks for the same agent reliably share one in-flight probe instead of starting duplicate probe processes (probe-cache-extraction, agent-version, agent-update-detection).
+
 ## 1.1.3 - 2026-11-11
 
 ### Added
