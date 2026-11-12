@@ -129,7 +129,7 @@ public sealed class WindowsAgentProcessInspectorTests
     [Fact]
     public void GetRunningProcesses_CommandLineDetail_AttachesCommandLineByProcessId()
     {
-        var inspector = this.CreateInspector();
+        var inspector = this.CreateInspector(Timeout.InfiniteTimeSpan);
         var snapshot = inspector.GetRunningProcesses(Candidates(CommonCandidateNames), AgentProcessMatchDetail.ExecutableName);
         Assert.NotEmpty(snapshot);
         var taggedProcessId = snapshot[0].ProcessId;
@@ -140,6 +140,7 @@ public sealed class WindowsAgentProcessInspectorTests
         var processes = inspector.GetRunningProcesses(Candidates(CommonCandidateNames), AgentProcessMatchDetail.CommandLine);
 
         // Assert — the mapped PID carries the command line; every other instance carries null.
+        Assert.Equal(1, this.commandLineSource.CallCount);
         var tagged = processes.Single(p => p.ProcessId == taggedProcessId);
         Assert.Equal(this.commandLineSource.CommandLines[taggedProcessId], tagged.CommandLine);
         Assert.All(
