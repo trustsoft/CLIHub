@@ -418,7 +418,6 @@
                         ToolTip="Check for updates">
                     <StackPanel Orientation="Horizontal">
                         <controls:BusyMarker IsBusy="{Binding UpdateControl.IsUpdateControlBusy}"
-                                             Margin="0,0,4,0"
                                              VerticalAlignment="Center"/>
                         <TextBlock VerticalAlignment="Center"
                                    Text="{Binding UpdateControl.UpdateButtonText}"/>

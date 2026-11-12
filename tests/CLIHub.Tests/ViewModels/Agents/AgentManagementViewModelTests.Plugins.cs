@@ -199,7 +199,7 @@ public partial class AgentManagementViewModelTests
         Assert.True(viewModel.HasDisabledPlugins);
         var installed = viewModel.DisabledCards.Single(c => c.PluginId == "installed-one");
         Assert.StartsWith("Origin: Installed", installed.IdentityTooltip, StringComparison.Ordinal);
-        Assert.Equal("v1.0.0", installed.VersionChipText);
+        Assert.Equal("1.0.0", installed.VersionChipText);
         var unknown = viewModel.DisabledCards.Single(c => c.PluginId == "unknown-one");
         Assert.StartsWith("Origin: Unknown", unknown.IdentityTooltip, StringComparison.Ordinal);
         Assert.Equal("Unknown version", unknown.VersionChipText);

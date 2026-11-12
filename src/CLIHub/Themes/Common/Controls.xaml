@@ -199,7 +199,9 @@
         decorative (the adjacent label carries the meaning) and the control's automation peer
         removes it from the automation tree, so screen readers never announce it or its per-frame
         changes. The slot collapses while the marker is not busy, so resolved labels keep today's
-        layout. MinWidth holds the slot fixed while frames cycle. Tone triggers switch the glyph
+        layout: the slot's trailing spacing lives on the template glyph (not on host-placed
+        margins), so it collapses together with the slot instead of reserving a gap while idle.
+        MinWidth holds the slot fixed while frames cycle. Tone triggers switch the glyph
         and its brush; the animation state itself is driven by the control's timer, which writes
         CurrentFrame. While busy, the glyph takes the control's Foreground, which the host supplies
         (the update button's muted/accent foreground, the agent chip's muted text brush), so the
@@ -212,6 +214,7 @@
                 <ControlTemplate TargetType="{x:Type controls:BusyMarker}">
                     <TextBlock x:Name="Glyph"
                                MinWidth="12"
+                               Margin="0,0,4,0"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center"
                                Focusable="False"

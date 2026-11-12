@@ -74,5 +74,5 @@ public sealed class DisabledAgentCardItem
     }
 
     /// <summary> The version chip text, or "Unknown version" when the version is not known. </summary>
-    public string VersionChipText => this.Version is { } version ? $"v{version}" : "Unknown version";
+    public string VersionChipText => this.Version is { } version ? $"{version}" : "Unknown version";
 }

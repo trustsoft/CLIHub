@@ -180,14 +180,14 @@ public sealed class AgentCardItem : ObservableObject
 
     /// <summary>
     ///   The state chip text: "Detecting" while an installation probe runs, "Not installed"
-    ///   for a missing agent, the resolved version as "v{version}" when installed with one, and
+    ///   for a missing agent, the resolved version as "{version}" when installed with one, and
     ///   "Installed" when installed without one.
     /// </summary>
     public string VersionChipText => this.InstallState switch
     {
         AgentInstallState.Detecting => AgentVersionText.Detecting,
         AgentInstallState.NotInstalled => AgentVersionText.NotInstalled,
-        AgentInstallState.Installed when this.version is { } version => $"v{version}",
+        AgentInstallState.Installed when this.version is { } version => $"{version}",
         _ => AgentVersionText.Installed
     };
 

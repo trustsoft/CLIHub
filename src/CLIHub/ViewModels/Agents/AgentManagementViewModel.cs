@@ -826,7 +826,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             this.ApplyProbeResult(card, result);
             card.Message = (result.IsInstalled, result.Version) switch
             {
-                (true, { } version) => $"Installed · v{version}",
+                (true, { } version) => $"Installed · {version}",
                 (true, null) => "Installed",
                 _ => "Not installed on this PC"
             };

@@ -34,7 +34,7 @@ public partial class AgentManagementViewModelTests
 
         Assert.True(card.IsInstalled);
         Assert.Equal("9.9", card.Version);
-        Assert.Equal("Installed · v9.9", card.Message);
+        Assert.Equal("Installed · 9.9", card.Message);
         Assert.True(card.HasUpdateAvailable);
         Assert.Equal("0.9.0 → 1.0.0", card.UpdateAvailabilityText);
         Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);

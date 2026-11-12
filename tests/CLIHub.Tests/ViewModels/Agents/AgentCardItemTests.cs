@@ -13,7 +13,7 @@ public sealed class AgentCardItemTests
     {
         var card = CreateCard(AgentInstallState.Installed, "1.2.3");
 
-        Assert.Equal("v1.2.3", card.VersionChipText);
+        Assert.Equal("1.2.3", card.VersionChipText);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public sealed class AgentCardItemTests
 
         Assert.Contains(nameof(AgentCardItem.Version), properties);
         Assert.Contains(nameof(AgentCardItem.VersionChipText), properties);
-        Assert.Equal("v2.0.0", card.VersionChipText);
+        Assert.Equal("2.0.0", card.VersionChipText);
     }
 
     [Fact]
