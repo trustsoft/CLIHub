@@ -21,8 +21,6 @@ internal static class IconGlyphs
     public const string KeyboardShortcut = "\uEDA7";
     public const string Robot = "\uE99A";
     public const string Palette = "\uE790";
-    public const string Diagnostic = "\uE9D9";
-    public const string Process = "\uE9F3";
     public const string Radar = "\uEB44";
     public const string Recent = "\uE823";
     public const string Stopwatch = "\uE916";

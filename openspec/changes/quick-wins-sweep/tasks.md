@@ -1,45 +1,45 @@
-# Quick Wins Sweep — Tasks
+# Quick Wins Sweep â€” Tasks
 
 ## Stage 1: Remove unused glyph constants
 
-- [ ] 1.1 Delete `IconGlyphs.Diagnostic` and `IconGlyphs.Process` from `src/CLIHub/Theming/IconGlyphs.cs` (lines 24-25)
-- [ ] 1.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 1.3 Test gate: `dotnet test CLIHub.sln` (all pass)
+- [x] 1.1 Delete `IconGlyphs.Diagnostic` and `IconGlyphs.Process` from `src/CLIHub/Theming/IconGlyphs.cs` (lines 24-25)
+- [x] 1.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 1.3 Test gate: `dotnet test CLIHub.sln` (all pass)
 
 ## Stage 2: Switch Settings maximize button tooltip with WindowState
 
-- [ ] 2.1 In `src/CLIHub/Views/SettingsWindow.xaml`, replace the static `ToolTip="Maximize"` attribute on the maximize/restore button (line 299) with an inline `Button.Style` that includes:
+- [x] 2.1 In `src/CLIHub/Views/SettingsWindow.xaml`, replace the static `ToolTip="Maximize"` attribute on the maximize/restore button (line 299) with an inline `Button.Style` that includes:
   - `BasedOn="{StaticResource WindowCloseButton}"`
   - `Setter Property="ToolTip" Value="Maximize"` (baseline)
   - `Style.Triggers > DataTrigger` on `WindowState == Maximized` that sets `ToolTip="Restore"`
-- [ ] 2.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 2.3 Manual smoke: open Settings, maximize the window, hover the button, confirm tooltip reads "Restore"; restore the window, hover the button, confirm tooltip reads "Maximize"
+- [x] 2.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 2.3 Manual smoke: open Settings, maximize the window, hover the button, confirm tooltip reads "Restore"; restore the window, hover the button, confirm tooltip reads "Maximize"
 
 ## Stage 3: Propagate external cancellation in PluginFeedClient
 
-- [ ] 3.1 In `src/CLIHub.Core/Plugins/PluginFeedClient.cs`, add `catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }` immediately before the general `catch (Exception ex)` block in `GetFeedAsync` (before line 122)
-- [ ] 3.2 In the same file, add the same cancellation catch immediately before the general `catch (Exception ex)` block in `DownloadPackageAsync` (before line 204)
-- [ ] 3.3 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 3.4 Test gate: `dotnet test CLIHub.sln` (all pass)
+- [x] 3.1 In `src/CLIHub.Core/Plugins/PluginFeedClient.cs`, add `catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }` immediately before the general `catch (Exception ex)` block in `GetFeedAsync` (before line 122)
+- [x] 3.2 In the same file, add the same cancellation catch immediately before the general `catch (Exception ex)` block in `DownloadPackageAsync` (before line 204)
+- [x] 3.3 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 3.4 Test gate: `dotnet test CLIHub.sln` (all pass)
 
 ## Stage 4: Align redirect hop limit message with docs
 
-- [ ] 4.1 In `src/CLIHub.Core/Plugins/PluginFeedClient.cs`, change the error message at line 255 from `$"Too many redirects (more than {MaxRedirectHops} hops)"` to `$"Redirect limit exceeded (maximum {MaxRedirectHops} hops)"`
-- [ ] 4.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 4.3 Test gate: `dotnet test CLIHub.sln` (all pass)
+- [x] 4.1 In `src/CLIHub.Core/Plugins/PluginFeedClient.cs`, change the error message at line 255 from `$"Too many redirects (more than {MaxRedirectHops} hops)"` to `$"Redirect limit exceeded (maximum {MaxRedirectHops} hops)"`
+- [x] 4.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 4.3 Test gate: `dotnet test CLIHub.sln` (all pass)
 
 ## Stage 5: Reword stale comment
 
-- [ ] 5.1 In `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.Detection.cs`, reword the comment at line 347 from `"leaving the cards it announced stuck on \"Detecting…\" forever."` to `"leaving the cards it announced stuck in the Detecting state forever."`
-- [ ] 5.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 5.3 Test gate: `dotnet test CLIHub.sln` (all pass)
+- [x] 5.1 In `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.Detection.cs`, reword the comment at line 347 from `"leaving the cards it announced stuck on \"Detectingâ€¦\" forever."` to `"leaving the cards it announced stuck in the Detecting state forever."`
+- [x] 5.2 Build gate: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 5.3 Test gate: `dotnet test CLIHub.sln` (all pass)
 
 ## Final Gates
 
-- [ ] 6.1 Full build: `dotnet build CLIHub.sln` (zero warnings, zero errors)
-- [ ] 6.2 Full test suite: `dotnet test CLIHub.sln` (all pass)
-- [ ] 6.3 OpenSpec validation: `openspec validate --all` (zero errors)
-- [ ] 6.4 Graphify refresh: `graphify update .` (success, no stale graph)
+- [x] 6.1 Full build: `dotnet build CLIHub.sln` (zero warnings, zero errors)
+- [x] 6.2 Full test suite: `dotnet test CLIHub.sln` (all pass)
+- [x] 6.3 OpenSpec validation: `openspec validate --all` (zero errors)
+- [x] 6.4 Graphify refresh: `graphify update .` (success, no stale graph)
 
 ## Notes
 

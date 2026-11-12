@@ -240,7 +240,7 @@ public class PluginFeedClientTests
         var result = await client.GetFeedAsync();
 
         Assert.False(result.Success);
-        Assert.Contains("Too many redirects (more than 5 hops)", result.Errors);
+        Assert.Contains("Redirect limit exceeded (maximum 5 hops)", result.Errors);
         Assert.Equal(5, this.handler.Requests.Count);
     }
 

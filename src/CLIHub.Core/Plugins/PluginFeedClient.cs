@@ -119,6 +119,10 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             this.logger.LogWarning(ex, "Feed request failed");
             return new PluginFeedResult(false, null, ["Could not load plugin feed. Check your network connection."]);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             // A malformed redirect Location (UriFormatException) or any other unexpected failure
@@ -201,6 +205,10 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             this.DeleteTempFile(tempFilePath);
             return new PluginDownloadResult(false, null, ["Package download failed"]);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             this.logger.LogError(ex, "Unexpected error during package download");
@@ -252,7 +260,7 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         }
 
         this.logger.LogWarning("Maximum redirect hops ({MaxHops}) exceeded", MaxRedirectHops);
-        return (null, $"Too many redirects (more than {MaxRedirectHops} hops)");
+        return (null, $"Redirect limit exceeded (maximum {MaxRedirectHops} hops)");
     }
 
     /// <summary>

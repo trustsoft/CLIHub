@@ -294,9 +294,17 @@
                 </StackPanel>
 
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button Click="OnMaximizeRestoreClick"
-                            Style="{StaticResource WindowCloseButton}"
-                            ToolTip="Maximize">
+                    <Button Click="OnMaximizeRestoreClick">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource WindowCloseButton}">
+                                <Setter Property="ToolTip" Value="Maximize"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                        <Setter Property="ToolTip" Value="Restore"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
                         <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="10">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

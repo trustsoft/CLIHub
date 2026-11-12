@@ -344,7 +344,7 @@ public partial class AgentManagementViewModelTests
         Assert.Equal(AgentInstallState.Detecting, cardC.InstallState);
 
         // Torn down mid-pass: the abandoned pass must settle like a thrown probe instead of
-        // leaving the cards it announced stuck on "Detecting…" forever.
+        // leaving the cards it announced stuck in the Detecting state forever.
         viewModel.Dispose();
         gateB.SetResult(new AgentProbeResult(true, "5.0"));
 
