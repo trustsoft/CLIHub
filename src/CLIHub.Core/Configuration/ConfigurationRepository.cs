@@ -237,13 +237,6 @@ public sealed class ConfigurationRepository : IConfigurationRepository
         try
         {
             // Atomic write: write to temp file, then rename to avoid corruption
-            var tempPath = this.configFilePath + ".tmp";
-            var directory = Path.GetDirectoryName(this.configFilePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
             lock (this.writeLock)
             {
                 lock (this.writerGate)
@@ -254,8 +247,7 @@ public sealed class ConfigurationRepository : IConfigurationRepository
                     }
                 }
 
-                File.WriteAllText(tempPath, pendingWrite.Json);
-                File.Move(tempPath, this.configFilePath, overwrite: true);
+                AtomicFileWriter.Write(this.configFilePath, pendingWrite.Json);
             }
 
             this.logger.LogDebug("Saved configuration to {Path}", this.configFilePath);

@@ -79,17 +79,9 @@ public sealed class PluginStateRepository : IPluginStateRepository
 
         try
         {
-            var directory = Path.GetDirectoryName(this.stateFilePath);
-            if (!string.IsNullOrEmpty(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
             // Atomic write: write to a temp file next to the target, then rename so a crash
             // mid-write can never leave a truncated state file behind.
-            var tempPath = this.stateFilePath + ".tmp";
-            File.WriteAllText(tempPath, JsonSerializer.Serialize(document, CoreJson.Options));
-            File.Move(tempPath, this.stateFilePath, overwrite: true);
+            AtomicFileWriter.Write(this.stateFilePath, JsonSerializer.Serialize(document, CoreJson.Options));
         }
         catch (Exception ex)
         {

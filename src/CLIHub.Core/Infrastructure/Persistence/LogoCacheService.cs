@@ -164,15 +164,7 @@ public sealed class LogoCacheService : ILogoCacheService
 
         // Atomic write: write to a temp file, then rename,
         // so an interrupted save cannot corrupt the previous state.
-        var directory = Path.GetDirectoryName(this.stateFilePath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        var tempPath = this.stateFilePath + ".tmp";
-        File.WriteAllText(tempPath, json);
-        File.Move(tempPath, this.stateFilePath, overwrite: true);
+        AtomicFileWriter.Write(this.stateFilePath, json);
         this.isDirty = false;
         this.logger.LogDebug("Saved {Count} logo cache entries to {Path}", state.Logos.Count, this.stateFilePath);
     }

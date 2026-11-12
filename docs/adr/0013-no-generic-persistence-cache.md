@@ -66,3 +66,8 @@ revisited with three real data points.
    backends or a directory-swap transaction.
 3. A fourth agent-domain cache appears with the exact TTL + invalidation shape, and the boilerplate
    becomes the dominant cost of adding a cache.
+
+**2026-11-12:** Trigger 1 exercised by the change `core-cleanup-and-shell-factory` —
+`PluginStateRepository` became the third JSON-persisted atomic-write consumer; extracted the
+minimal two-statement `AtomicFileWriter` deduplication. The decision stands: still no generic
+persistence or cache abstraction.

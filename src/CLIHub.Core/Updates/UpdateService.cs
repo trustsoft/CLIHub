@@ -15,9 +15,8 @@ using Velopack.Sources;
 /// </summary>
 public class UpdateService : IUpdateService
 {
-    // The release repository used as the Velopack update feed (GitHub Releases).
-    // A non-GitHub URL or local folder is also supported (see CreateDefaultManager).
-    internal const string RepositoryUrl = "https://github.com/trustsoft/clihub";
+    // The GitHub repository whose Releases feed is the Velopack update source (GitHub Releases only).
+    private const string RepositoryUrl = "https://github.com/trustsoft/clihub";
 
     private static readonly TimeSpan CheckTimeout = TimeSpan.FromSeconds(15);
 
@@ -88,15 +87,8 @@ public class UpdateService : IUpdateService
     {
         try
         {
-            // A GitHub repository URL uses the GitHub Releases source; any other URL or a local
-            // folder (useful for testing and self-hosted mirrors) uses Velopack's default source.
             // Only stable releases are published, so the source never includes pre-release builds.
-            if (RepositoryUrl.Contains("github.com", StringComparison.OrdinalIgnoreCase))
-            {
-                return new UpdateManager(new GithubSource(RepositoryUrl, null, prerelease: false));
-            }
-
-            return new UpdateManager(RepositoryUrl);
+            return new UpdateManager(new GithubSource(RepositoryUrl, null, prerelease: false));
         }
         catch (Exception ex)
         {
@@ -112,14 +104,14 @@ public class UpdateService : IUpdateService
     {
         if (this.Manager?.CurrentVersion is { } version)
         {
-            return Normalize(version.ToString());
+            return UpdateVersionText.StripBuildMetadata(version.ToString());
         }
 
         var informational = Assembly.GetEntryAssembly()
             ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion;
 
-        return string.IsNullOrWhiteSpace(informational) ? "unknown" : Normalize(informational);
+        return string.IsNullOrWhiteSpace(informational) ? "unknown" : UpdateVersionText.StripBuildMetadata(informational);
     }
 
     /// <inheritdoc />
@@ -250,7 +242,7 @@ public class UpdateService : IUpdateService
             var update = await checkTask;
             if (update?.TargetFullRelease?.Version is { } version)
             {
-                var available = Normalize(version.ToString());
+                var available = UpdateVersionText.StripBuildMetadata(version.ToString());
                 this.logger.LogInformation("Update available: {Version}", available);
                 this.SetAvailableVersion(available);
                 return (new UpdateCheckResult(UpdateStatus.UpdateAvailable, current, available), update);
@@ -303,14 +295,4 @@ public class UpdateService : IUpdateService
     }
 
     private void RaiseStateChanged() => this.UpdateStateChanged?.Invoke(this, EventArgs.Empty);
-
-    /// <summary>
-    ///   Strips build metadata (for example, the "+commit" suffix)
-    ///   so the version displays as a plain semantic version.
-    /// </summary>
-    private static string Normalize(string version)
-    {
-        var plus = version.IndexOf('+');
-        return plus >= 0 ? version[..plus] : version;
-    }
 }

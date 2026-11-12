@@ -89,6 +89,31 @@ public class ApplicationSessionTests
         fixture.StartupUi.Verify(x => x.NotifyUpdateFailed("2.0"), Times.Once);
     }
 
+    [Fact]
+    public void Start_CalledTwice_InvokesShellFactoryOnce()
+    {
+        var fixture = new SessionFixture();
+        var context = new ApplicationStartupContext(_ => { }, _ => { });
+
+        var first = fixture.Session.Start(context);
+        var second = fixture.Session.Start(context);
+
+        Assert.Same(first, second);
+        Assert.Same(fixture.StartupUi.Object, first);
+        Assert.Equal(1, fixture.ShellFactoryInvocations);
+    }
+
+    [Fact]
+    public void Start_PassesSameContextInstanceToShellFactory()
+    {
+        var fixture = new SessionFixture();
+        var context = new ApplicationStartupContext(_ => { }, _ => { });
+
+        fixture.Session.Start(context);
+
+        Assert.Same(context, Assert.Single(fixture.ShellFactoryContexts));
+    }
+
     private sealed class SessionFixture
     {
         public Mock<IApplicationOperationLifetime> OperationLifetime { get; } = new(MockBehavior.Strict);
@@ -98,6 +123,9 @@ public class ApplicationSessionTests
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
         public List<UserPreferenceChangedEventHandler> ThemeFollowerSubscribed { get; } = [];
         public List<UserPreferenceChangedEventHandler> ThemeFollowerUnsubscribed { get; } = [];
+        public SystemThemeFollower ThemeFollower { get; }
+        public List<ApplicationStartupContext> ShellFactoryContexts { get; } = [];
+        public int ShellFactoryInvocations => this.ShellFactoryContexts.Count;
         public ApplicationSession Session { get; }
 
         public SessionFixture()
@@ -115,18 +143,25 @@ public class ApplicationSessionTests
                 .Setup(x => x.DownloadAndApplyAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            this.Session = new ApplicationSession(
-                this.OperationLifetime.Object,
-                () => this.StartupUi.Object,
-                () => this.UpdateRequests.Object,
-                this.Guard.Object,
-                this.UpdateDownload.Object,
-                new SystemThemeFollower(
-                    new PaletteSwitcher(_ => new ResourceDictionary()),
-                    () => null,
-                    () => false,
-                    this.ThemeFollowerSubscribed.Add,
-                    this.ThemeFollowerUnsubscribed.Add));
+            this.ThemeFollower = new SystemThemeFollower(
+                new PaletteSwitcher(_ => new ResourceDictionary()),
+                () => null,
+                () => false,
+                this.ThemeFollowerSubscribed.Add,
+                this.ThemeFollowerUnsubscribed.Add);
+
+            this.Session = new ApplicationSession(context =>
+            {
+                this.ShellFactoryContexts.Add(context);
+                return new ShellCoordinator(
+                    this.OperationLifetime.Object,
+                    () => this.StartupUi.Object,
+                    () => this.UpdateRequests.Object,
+                    this.Guard.Object,
+                    this.UpdateDownload.Object,
+                    this.ThemeFollower,
+                    context);
+            });
         }
     }
 }

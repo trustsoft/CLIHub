@@ -775,13 +775,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     {
         var lastChecked = DateTimeOffset.Now.ToString("t");
 
-        this.UpdateMessage = result.Status switch
-        {
-            UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
-            UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
-            UpdateStatus.NotInstalled => "Updates apply to installed builds only.",
-            _ => "Update check failed or timed out."
-        };
+        this.UpdateMessage = UpdateOutcomeText.ForCheck(result);
 
         switch (result.Status)
         {

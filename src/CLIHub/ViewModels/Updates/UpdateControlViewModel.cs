@@ -141,13 +141,7 @@ public sealed class UpdateControlViewModel : ObservableObject, IDisposable
             return;
         }
 
-        this.ReportOutcome(result.Status switch
-        {
-            UpdateStatus.UpdateAvailable => $"Update available: {result.AvailableVersion} (current v{result.CurrentVersion})",
-            UpdateStatus.UpToDate => $"Up to date (v{result.CurrentVersion})",
-            UpdateStatus.NotInstalled => "Updates apply to installed builds only.",
-            _ => "Update check failed or timed out."
-        });
+        this.ReportOutcome(UpdateOutcomeText.ForCheck(result));
 
         this.SetState(result.Status == UpdateStatus.UpdateAvailable && result.AvailableVersion is not null
             ? UpdateControlState.Available

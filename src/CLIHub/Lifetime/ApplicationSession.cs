@@ -1,9 +1,6 @@
 namespace CLIHub.Lifetime;
 
-using CLIHub.Core.Windows;
 using CLIHub.Startup;
-using CLIHub.Theming;
-using CLIHub.Updates;
 
 /// <summary>
 ///   Owns application-level event subscriptions for the running first-instance session.
@@ -11,39 +8,19 @@ using CLIHub.Updates;
 /// </summary>
 public sealed class ApplicationSession : IApplicationSession
 {
-    private readonly IApplicationOperationLifetime operationLifetime;
-    private readonly Func<IApplicationStartupUi> startupUiFactory;
-    private readonly Func<IUpdateRequestSource> updateRequestSourceFactory;
-    private readonly ISingleInstanceGuard singleInstanceGuard;
-    private readonly IUpdateWorkflow updateWorkflow;
-    private readonly SystemThemeFollower themeFollower;
+    private readonly Func<ApplicationStartupContext, IShellCoordinator> shellFactory;
 
     private IShellCoordinator? shellCoordinator;
     private bool disposed;
 
     /// <summary>
-    ///   Creates the application session with lazy shell factories, update workflow, and the
-    ///   theme follower disposed with the session.
+    ///   Creates the application session with the lazy shell coordinator factory invoked on first
+    ///   start.
     /// </summary>
-    /// <param name="operationLifetime"> Application lifetime for tracked asynchronous work. </param>
-    /// <param name="startupUiFactory"> Lazy startup UI factory. </param>
-    /// <param name="updateRequestSourceFactory"> Lazy presentation update-request source factory. </param>
-    /// <param name="singleInstanceGuard"> Single-instance activation source. </param>
-    /// <param name="updateWorkflow"> Shared application update workflow. </param>
-    /// <param name="themeFollower"> Session-owned Windows personalization theme follower. </param>
-    public ApplicationSession(IApplicationOperationLifetime operationLifetime,
-                              Func<IApplicationStartupUi> startupUiFactory,
-                              Func<IUpdateRequestSource> updateRequestSourceFactory,
-                              ISingleInstanceGuard singleInstanceGuard,
-                              IUpdateWorkflow updateWorkflow,
-                              SystemThemeFollower themeFollower)
+    /// <param name="shellFactory"> Lazy shell coordinator factory. </param>
+    public ApplicationSession(Func<ApplicationStartupContext, IShellCoordinator> shellFactory)
     {
-        this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
-        this.startupUiFactory = startupUiFactory ?? throw new ArgumentNullException(nameof(startupUiFactory));
-        this.updateRequestSourceFactory = updateRequestSourceFactory ?? throw new ArgumentNullException(nameof(updateRequestSourceFactory));
-        this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
-        this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
-        this.themeFollower = themeFollower ?? throw new ArgumentNullException(nameof(themeFollower));
+        this.shellFactory = shellFactory ?? throw new ArgumentNullException(nameof(shellFactory));
     }
 
     /// <inheritdoc />
@@ -62,14 +39,7 @@ public sealed class ApplicationSession : IApplicationSession
             return this.shellCoordinator.StartupUi;
         }
 
-        this.shellCoordinator = new ShellCoordinator(
-            this.operationLifetime,
-            this.startupUiFactory,
-            this.updateRequestSourceFactory,
-            this.singleInstanceGuard,
-            this.updateWorkflow,
-            this.themeFollower,
-            context);
+        this.shellCoordinator = this.shellFactory(context);
 
         return this.shellCoordinator.StartupUi;
     }

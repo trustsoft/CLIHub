@@ -74,7 +74,7 @@ internal sealed class UpdateDownloader
                 return new UpdateDownloadResult(UpdateDownloadStatus.Failed, null);
             }
 
-            var version = Normalize(asset.Version.ToString());
+            var version = UpdateVersionText.StripBuildMetadata(asset.Version.ToString());
 
             try
             {
@@ -106,15 +106,5 @@ internal sealed class UpdateDownloader
                 this.isDownloading = false;
             }
         }
-    }
-
-    /// <summary>
-    ///   Strips build metadata (for example, the "+commit" suffix)
-    ///   so the version displays as a plain semantic version.
-    /// </summary>
-    private static string Normalize(string version)
-    {
-        var plus = version.IndexOf('+');
-        return plus >= 0 ? version[..plus] : version;
     }
 }
