@@ -237,7 +237,7 @@ only after the user approves them following the stage 7 report (repository appro
       files, `tests/CLIHub.Tests/Views/ChromeWindowBaseMigrationTests.cs` (new),
       `docs/architecture/ui.md`, and `openspec/changes/add-chrome-window-base/` — no `.csproj`,
       no theme dictionary, no `LaunchWindow` file, no `WindowChromeHelper.cs`, nothing else
-- [ ] 7.7 Manual smoke (blocks commit/archive per repository policy — run gates first, then wait
+- [x] 7.7 Manual smoke (blocks commit/archive per repository policy — run gates first, then wait
       for the user's result): run the app and verify — Settings: opens centered, header shows icon
       + "CLIHub - Settings", drag moves the window, resize stops at 640x480, maximize fills the
       work area with the footer above the taskbar and the button flips to restore, Esc and the
@@ -247,6 +247,8 @@ only after the user approves them following the stage 7 report (repository appro
       still present; Browse Plugins (Settings → CLI Agents page action): title with icon, modal,
       no taskbar entry, drag works, resize stops at 520x360, Esc closes, separator directly under
       the header; Launch window: unchanged (Escape hides, rounded corners, no resize borders)
-- [ ] 7.8 Report the gate results and smoke outcome to the user, then ask for explicit `git
+      **(confirmed by the user 2026-11-13: headers, drag, resize OK in all windows, taskbar stays
+      visible on maximize; required the smoke-fix round — design.md deviation 6)**
+- [x] 7.8 Report the gate results and smoke outcome to the user, then ask for explicit `git
       commit` and `openspec archive` approval (approval never carries over; nothing is staged
-      before it)
+      before it) **(approved 2026-11-13)**
