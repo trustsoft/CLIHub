@@ -84,7 +84,7 @@
     <Style x:Key="FooterTextButton" TargetType="Button" BasedOn="{StaticResource QuietChipButton}">
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
         <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Section}"/>
-        <Setter Property="Padding" Value="10,2"/>
+        <Setter Property="Padding" Value="8,2"/>
         <Style.Triggers>
             <DataTrigger Binding="{Binding UpdateControl.IsUpdateActionAvailable}" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
