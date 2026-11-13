@@ -520,3 +520,23 @@ snapshot.
   "Ignored pattern &lt;name&gt;, Tab reveals the remove button", so screen-reader users can discover
   the affordance before revealing it.
 - Trigger: an accessibility requirement or audit, or the next change touching chip automation names.
+
+### Maximize work-area clamp writes a copy that is never marshalled back
+
+- Severity: Low (dead window-message writes; runtime behavior verified fine by smoke, code-hygiene
+  issue only)
+- Evidence (2026-11-13, `add-chrome-window-base` verification): the unified `WM_GETMINMAXINFO`
+  handler in `ChromeWindow.cs:110-137` (the Settings shape, byte-identical to HEAD's
+  `SettingsWindow`) assigns `ptMaxPosition`/`ptMaxSize` on the managed `MINMAXINFO` copy but never
+  marshals it back to `lParam`; the subsequent `WindowChromeHelper.ApplyMinTrackSize`
+  (`src/CLIHub/Views/WindowChromeHelper.cs:74-77`) re-reads the structure from `lParam` and writes
+  back the **original** `ptMax` values with only `ptMinTrackSize` changed, so the clamp assignments
+  are dead writes. Runtime smoke (2026-11-13, user-confirmed) showed a maximized Settings window
+  keeps the taskbar visible, so the dead assignments currently cause no user-visible problem; the
+  intended clamp simply never applies.
+- Proposed remedy: either remove the dead `ptMax*` assignments (and the now-unneeded
+  `MonitorFromWindow`/`GetMonitorInfo` calls) with the smoke evidence recorded, or make the handler
+  marshal the clamped structure back once if the clamp is actually wanted for multi-monitor/DPI
+  edge cases — decide which contract the base class documents.
+- Trigger: the next change touching `ChromeWindow`'s window-message handling, or a report of a
+  maximized window covering the taskbar on a multi-monitor or DPI-scaled setup.

@@ -1,0 +1,114 @@
+<UserControl x:Class="CLIHub.Views.WindowHeaderBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:themes="clr-namespace:CLIHub.Theming"
+             mc:Ignorable="d">
+
+    <!--
+        The drawn header strip shared by the chromeless windows. It references only
+        application-level keyed styles (WindowHeader, WindowTitle, WindowCloseButton) and palette
+        brushes through DynamicResource, because a UserControl's XAML loads before the control
+        attaches to a hosting window's tree and window-scoped keys are unreachable then.
+    -->
+    <Grid MouseLeftButtonDown="OnHeaderMouseDown"
+          Style="{StaticResource WindowHeader}">
+
+        <!-- Icon + compact title variant (Settings, Browse Plugins) -->
+        <StackPanel Margin="12,0,0,0"
+                    HorizontalAlignment="Left"
+                    Orientation="Horizontal"
+                    VerticalAlignment="Center">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IconSource, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Image Width="16"
+                   Height="16"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Source="{Binding IconSource, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <TextBlock Margin="8,0,0,0"
+                       VerticalAlignment="Center"
+                       FontSize="13"
+                       FontWeight="Medium"
+                       Foreground="{DynamicResource TextPrimaryBrush}"
+                       Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+        </StackPanel>
+
+        <!-- Text-only title variant (What's New) -->
+        <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource WindowTitle}">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IconSource, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <!-- Window-specific actions render ahead of the maximize and close buttons -->
+            <ContentPresenter Content="{Binding Actions, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+            <!-- Maximize/restore toggle: only shown when a window requests it (Settings) -->
+            <Button Click="OnMaximizeClick">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource WindowCloseButton}">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Setter Property="ToolTip" Value="Maximize"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowMaximize, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                <Setter Property="ToolTip" Value="Restore"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="10">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Text" Value="{x:Static themes:IconGlyphs.Maximize}"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                    <Setter Property="Text" Value="{x:Static themes:IconGlyphs.Restore}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Button>
+
+            <Button Click="OnCloseClick"
+                    Style="{StaticResource WindowCloseButton}"
+                    ToolTip="Close">
+                <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="{StaticResource Sizing.FontSize.GlyphSmall}" Text="{x:Static themes:IconGlyphs.Close}"/>
+            </Button>
+        </StackPanel>
+
+        <!-- Separator hairline: hidden when a window has none under its header (What's New) -->
+        <Rectangle Height="1"
+                   VerticalAlignment="Bottom"
+                   Fill="{DynamicResource HairlineBrush}">
+            <Rectangle.Style>
+                <Style TargetType="Rectangle">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowSeparator, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="False">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Rectangle.Style>
+        </Rectangle>
+    </Grid>
+</UserControl>

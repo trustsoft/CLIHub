@@ -1,7 +1,6 @@
 namespace CLIHub.Views;
 
 using System.Windows;
-using System.Windows.Input;
 
 using CLIHub.ViewModels;
 
@@ -9,10 +8,11 @@ using CLIHub.ViewModels;
 ///   The What's New window: the user-facing release notes, newest version first.
 /// </summary>
 /// <remarks>
-///   The window draws its own chrome — no OS title bar — following the launch window, but it is an
-///   ordinary window otherwise: not always on top, and it stays open while the user works in it.
+///   The window draws its own chrome — no OS title bar — through the <see cref="ChromeWindow" />
+///   base, but it is an ordinary window otherwise: not always on top, and it stays open while the
+///   user works in it.
 /// </remarks>
-public partial class WhatsNewWindow : Window
+public partial class WhatsNewWindow : ChromeWindow
 {
     /// <summary>
     ///   Creates the window and binds it to the What's New view model.
@@ -34,30 +34,6 @@ public partial class WhatsNewWindow : Window
         WindowChromeHelper.ShowAndActivate(this);
     }
 
-    private void OnSourceInitialized(object? sender, EventArgs e) =>
-        WindowChromeHelper.ApplyRoundedCorners(this);
-
-    /// <summary>
-    ///   Moves the window while the drawn header is dragged. The close button handles the press
-    ///   itself, so a click on it never starts a drag.
-    /// </summary>
-    private void OnHeaderMouseDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left)
-        {
-            return;
-        }
-
-        try
-        {
-            this.DragMove();
-        }
-        catch (InvalidOperationException)
-        {
-            // The button was released before the move started.
-        }
-    }
-
     private void OnCloseClick(object sender, RoutedEventArgs e) => this.Close();
 
     private void OnInstallClick(object sender, RoutedEventArgs e)
@@ -74,16 +50,5 @@ public partial class WhatsNewWindow : Window
         {
             viewModel.RequestCheckForUpdates();
         }
-    }
-
-    private void OnKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Escape)
-        {
-            return;
-        }
-
-        this.Close();
-        e.Handled = true;
     }
 }

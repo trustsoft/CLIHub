@@ -1,18 +1,19 @@
 ## Purpose
 
-Shared construction contract for the application's chromeless secondary windows: an internal C#
+Shared construction contract for the application's chromeless secondary windows: a C#
 base class (`ChromeWindow`) that owns the borderless window profile — no OS chrome, the shared
 `WindowChrome` metrics, themed background and text font, DWM rounded corners, minimum-size and
-maximized work-area enforcement, Escape-to-close, and header drag — and an internal reusable drawn
+maximized work-area enforcement, Escape-to-close, and header drag — and a reusable drawn
 header control (`WindowHeaderBar`) that renders the title, optional window icon, action slot,
-optional maximize/restore toggle, close button, and optional separator. The Settings, What's New,
+optional maximize/restore toggle, close button, and optional separator. Both live in the
+application assembly. The Settings, What's New,
 and Browse Plugins windows are built on it; the launch window is deliberately not.
 
 ## ADDED Requirements
 
 ### Requirement: Chromeless window base class
 
-The system SHALL provide an internal `ChromeWindow` WPF base class whose constructor sets the shared chromeless profile in code: `WindowStyle` None, `WindowChrome` with `CaptionHeight` 0, `CornerRadius` 0, `GlassFrameThickness` 0, `ResizeBorderThickness` 6, `UseAeroCaptionButtons` false, a background bound to the `ChromeBgBrush` palette brush, and the shared text font. Derived windows SHALL NOT redeclare these in XAML and keep their own title, icon, sizes, and show policy.
+The system SHALL provide a `ChromeWindow` WPF base class whose constructor sets the shared chromeless profile in code: `WindowStyle` None, `WindowChrome` with `CaptionHeight` 0, `CornerRadius` 0, `GlassFrameThickness` 0, `ResizeBorderThickness` 6, `UseAeroCaptionButtons` false, a background bound to the `ChromeBgBrush` palette brush, and the shared text font. Derived windows SHALL NOT redeclare these in XAML and keep their own title, icon, sizes, and show policy.
 
 #### Scenario: Derived window renders without OS chrome
 
@@ -82,7 +83,7 @@ The `WM_GETMINMAXINFO` handler SHALL enforce the window's declared `MinWidth`/`M
 
 ### Requirement: WindowHeaderBar shared drawn header
 
-The system SHALL provide an internal `WindowHeaderBar` control that renders the drawn header strip on the shared `WindowHeader` style, with bindable properties `Title`, `IconSource`, `Actions`, `ShowMaximize` (default off), and `ShowSeparator` (default on).
+The system SHALL provide a `WindowHeaderBar` control that renders the drawn header strip on the shared `WindowHeader` style, with bindable properties `Title`, `IconSource`, `Actions`, `ShowMaximize` (default off), and `ShowSeparator` (default on).
 
 #### Scenario: Title renders in the matching variant
 

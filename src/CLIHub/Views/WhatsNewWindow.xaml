@@ -1,30 +1,16 @@
-<Window x:Class="CLIHub.Views.WhatsNewWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:themes="clr-namespace:CLIHub.Theming"
-        mc:Ignorable="d"
-        Title="What's New"
-        Background="{DynamicResource ChromeBgBrush}"
-        FontFamily="{StaticResource Sizing.FontFamily.Text}"
-        Height="620" Width="520"
-        MinHeight="280" MinWidth="380"
-        KeyDown="OnKeyDown"
-        ResizeMode="CanResize"
-        ShowInTaskbar="True"
-        SourceInitialized="OnSourceInitialized"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None">
-    <WindowChrome.WindowChrome>
-        <!-- Removes the native WS_THICKFRAME border the DWM draws around a resizable
-             borderless window, so the visible border matches the launch window's 1px line. -->
-        <WindowChrome CaptionHeight="0"
-                      CornerRadius="0"
-                      GlassFrameThickness="0"
-                      ResizeBorderThickness="6"
-                      UseAeroCaptionButtons="False"/>
-    </WindowChrome.WindowChrome>
+<views:ChromeWindow x:Class="CLIHub.Views.WhatsNewWindow"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:views="clr-namespace:CLIHub.Views"
+                    mc:Ignorable="d"
+                    Title="What's New"
+                    Height="620" Width="520"
+                    MinHeight="280" MinWidth="380"
+                    ResizeMode="CanResize"
+                    ShowInTaskbar="True"
+                    WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <!-- Window-scoped styles: this window's drawn chrome and notes typography. -->
         <ResourceDictionary Source="/Themes/Common/WhatsNewStyles.xaml"/>
@@ -38,30 +24,27 @@
             </Grid.RowDefinitions>
 
             <!-- Drawn header: the title bar a chromeless window does not get from the OS -->
-            <Grid Grid.Row="0"
-                  MouseLeftButtonDown="OnHeaderMouseDown"
-                  Style="{StaticResource WindowHeader}">
-                <TextBlock Style="{StaticResource WindowTitle}" Text="What's New"/>
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button Click="OnCheckClick"
-                            Content="{Binding CheckActionText}"
-                            IsEnabled="{Binding CanCheckForUpdates}"
-                            Style="{StaticResource NotesInstallButton}"
-                            ToolTip="Check for updates"
-                            Visibility="{Binding ShowCheckForUpdates, Converter={StaticResource BoolToVisibility}}"/>
-                    <Button Click="OnInstallClick"
-                            Content="{Binding InstallActionText}"
-                            IsEnabled="{Binding CanDownloadUpdate}"
-                            Style="{StaticResource NotesInstallButton}"
-                            ToolTip="Download the update and restart CLIHub"
-                            Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"/>
-                    <Button Click="OnCloseClick"
-                            Style="{StaticResource WindowCloseButton}"
-                            ToolTip="Close">
-                        <TextBlock FontFamily="{StaticResource Sizing.FontFamily.Icon}" FontSize="{StaticResource Sizing.FontSize.GlyphSmall}" Text="{x:Static themes:IconGlyphs.Close}"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
+            <views:WindowHeaderBar Grid.Row="0"
+                                   Title="What's New"
+                                   ShowSeparator="False"
+                                   CloseRequested="OnCloseClick">
+                <views:WindowHeaderBar.Actions>
+                    <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                        <Button Click="OnCheckClick"
+                                Content="{Binding CheckActionText}"
+                                IsEnabled="{Binding CanCheckForUpdates}"
+                                Style="{StaticResource NotesInstallButton}"
+                                ToolTip="Check for updates"
+                                Visibility="{Binding ShowCheckForUpdates, Converter={StaticResource BoolToVisibility}}"/>
+                        <Button Click="OnInstallClick"
+                                Content="{Binding InstallActionText}"
+                                IsEnabled="{Binding CanDownloadUpdate}"
+                                Style="{StaticResource NotesInstallButton}"
+                                ToolTip="Download the update and restart CLIHub"
+                                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource BoolToVisibility}}"/>
+                    </StackPanel>
+                </views:WindowHeaderBar.Actions>
+            </views:WindowHeaderBar>
 
             <Rectangle Grid.Row="1"
                        Height="1"
@@ -123,4 +106,4 @@
             </ScrollViewer>
         </Grid>
     </Border>
-</Window>
+</views:ChromeWindow>

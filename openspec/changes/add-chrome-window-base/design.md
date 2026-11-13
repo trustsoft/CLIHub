@@ -252,11 +252,13 @@ The change creates a durable construction capability (like `spaced-panel-layout`
 A new `tests/CLIHub.Tests/Views/ChromeWindowBaseMigrationTests.cs` (naming per
 `MethodOrScenario_Condition_ExpectedResult`) reads the three window XAML files and
 `WindowHeaderBar.xaml` as text, mirroring `BrowsePluginsDialogBindingTests`: each window is rooted
-in `views:ChromeWindow` with `x:ClassModifier="NotPublic"` and declares `views:WindowHeaderBar`
-with its expected `Title`; the duplicated chrome markers
-(`WindowChrome.WindowChrome`, `WindowStyle="None"`, `KeyDown=`, `SourceInitialized=`,
-`Background="{DynamicResource ChromeBgBrush}"`, `FontFamily="{StaticResource Sizing.FontFamily.Text}"`)
-are gone from the three windows; the header bar uses the shared keyed styles. This guards against
+in `views:ChromeWindow` (root element plus the `partial class ... : ChromeWindow` base derivation
+in code-behind) and declares `views:WindowHeaderBar` with its expected `Title`; the duplicated
+chrome markers (`WindowChrome.WindowChrome` elements anywhere, `WindowStyle="None"`, `KeyDown=`,
+`SourceInitialized=`) are gone from the three windows, and the root element carries no
+`Background`/`FontFamily` attributes (checked as parsed root-element attributes, not whole-file
+text: preserved content such as Browse's footer legitimately paints `ChromeBgBrush`, so a
+whole-file literal would false-positive); the header bar uses the shared keyed styles. This guards against
 reintroducing the duplication and against a future window silently skipping the base. Visual
 preservation cannot be unit-tested: the manual smoke (Settings maximize/min-size/Esc, WhatsNew
 actions + drag + no separator, Browse modal/min-size/Esc, LaunchWindow Esc-hides) is the visual
@@ -303,6 +305,30 @@ gate and, per repository policy, commit/archive wait for the user's smoke confir
 4. **`x:ClassModifier` ripple** is an addition the brief did not mention: making `ChromeWindow`
    internal forces the three window classes internal (D2). Mechanically small (one attribute per
    XAML + `internal partial`), caught by the compiler if missed.
+5. **D2's internal-accessibility ripple is impossible on .NET 10 WPF — `ChromeWindow` and
+   `WindowHeaderBar` are public (recorded during implementation).** The planned mechanism
+   (`x:ClassModifier="NotPublic"` + `internal partial class`) fails at compile time: the .NET
+   markup compiler resolves `x:ClassModifier` through the CodeDom provider's `TypeAttributes`
+   converter, which throws `NotSupportedException` on .NET Core, so **any** `x:ClassModifier`
+   value fails the build with `MC6013: x:ClassModifier="NotPublic" is not valid for the language
+   C#.` (dotnet/wpf #2379, unfixed; no AppContext switch). Without the modifier the generated
+   partial is always `public partial class <Window> : <RootElement>` (verified in the generated
+   `WhatsNewWindow.g.cs`), so a hand-written `internal partial` is CS0262 and an internal base
+   under a public derived class is CS0060. The alternative documented under D2 and open question 2
+   is applied: `ChromeWindow` and `WindowHeaderBar` are public with full XML docs, and the three
+   windows stay public exactly as at HEAD — no accessibility regression relative to HEAD. The
+    migration guard test asserts the root and base derivation instead of the unsatisfiable
+   `x:ClassModifier` literal; the `chrome-window-base` delta was corrected from "internal" to
+   "public" in this change's working tree (already applied, no archive-time action).
+6. **Smoke fix: `WindowHeaderBar` was missing its `InitializeComponent()` constructor (recorded
+   after the manual smoke).** The hand-written partial declared no constructor, so the
+   markup-compiler-generated `InitializeComponent()` in the `.g.cs` partial was never called, the
+   BAML never loaded, the control rendered empty at zero size, and the entire drawn header strip
+   (title, icon, actions, maximize, close, separator, drag surface) was gone in all three windows
+   while the build and the XAML text guards stayed green. Fixed with the standard
+   `public WindowHeaderBar() { this.InitializeComponent(); }` (ctor first, per the
+   `SettingsGeneralPage` UserControl convention) and pinned by the
+   `WindowHeaderBar_CodeBehind_CallsInitializeComponent` text guard.
 
 ## Open Questions
 
