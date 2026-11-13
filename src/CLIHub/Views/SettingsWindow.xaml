@@ -95,7 +95,7 @@
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource HeaderChipLabel}" Text="Version: "/>
                             <TextBlock Style="{StaticResource HeaderChipValue}"
-                                       Text="{Binding Version, StringFormat=v{0}}"/>
+                                       Text="{Binding Version, StringFormat={}{0}}"/>
                         </StackPanel>
                     </Border>
                     <Button VerticalAlignment="Center"
