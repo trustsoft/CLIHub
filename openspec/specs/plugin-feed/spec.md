@@ -116,6 +116,19 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP 
 - **AND** the feed result includes an error "Redirect to non-HTTPS URL rejected"
 - **AND** Success is false
 
+#### Scenario: Exactly five redirects are followed
+
+- **WHEN** a feed fetch encounters a chain of exactly 5 HTTPS redirects
+- **THEN** all 5 redirects are followed and the terminal response determines success or failure
+- **AND** no redirect-limit error is produced
+
+#### Scenario: Redirect beyond the hop limit is rejected
+
+- **WHEN** a feed fetch encounters a chain of 6 or more HTTPS redirects
+- **THEN** the fetch is rejected after the sixth redirect
+- **AND** the feed result includes an error "Redirect limit exceeded (maximum 5 hops)"
+- **AND** Success is false
+
 #### Scenario: Network timeout
 
 - **WHEN** the feed fetch exceeds the configured agent probe timeout
