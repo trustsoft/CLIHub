@@ -200,24 +200,68 @@ public class PluginFeedClientTests
     [Fact]
     public async Task GetFeedAsync_RedirectToHttps_IsFollowed()
     {
-        this.handler.Enqueue(RedirectResponse("https://example.com/redirected"));
-        this.handler.Enqueue(new HttpResponseMessage(HttpStatusCode.OK));
-        this.handler.Enqueue(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(RedirectResponse("https://example.com/redirected"));
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
         var client = this.CreateClient();
 
         var result = await client.GetFeedAsync();
 
         Assert.True(result.Success);
         Assert.Single(result.Index!.Plugins);
-        Assert.Equal(3, this.handler.Requests.Count);
+        Assert.Equal(2, this.handler.Requests.Count);
+        Assert.Equal("https://example.com/feed.json", this.handler.Requests[0].RequestUri!.AbsoluteUri);
         Assert.Equal("https://example.com/redirected", this.handler.Requests[1].RequestUri!.AbsoluteUri);
-        Assert.Equal("https://example.com/redirected", this.handler.Requests[2].RequestUri!.AbsoluteUri);
+        Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_NoRedirects_SendsSingleGetRequest()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal("https://example.com/feed.json", request.RequestUri!.AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_RedirectWithoutLocation_ReturnsStructuredError()
+    {
+        // Decision D2: a 3xx without a Location header is terminal; the caller's status check
+        // turns it into the regular structured request error (not a redirect-specific string).
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.Redirect));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Could not load plugin feed", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_RelativeRedirectLocation_IsResolvedAgainstCurrentUrl()
+    {
+        var redirect = new HttpResponseMessage(HttpStatusCode.Redirect);
+        redirect.Headers.Location = new Uri("redirected", UriKind.Relative);
+        this.EnqueueFeed(redirect);
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Single(result.Index!.Plugins);
+        Assert.Equal("https://example.com/redirected", this.handler.Requests[1].RequestUri!.AbsoluteUri);
     }
 
     [Fact]
     public async Task GetFeedAsync_RedirectToHttp_IsRejected()
     {
-        this.handler.Enqueue(RedirectResponse("http://evil.example.com/feed"));
+        this.EnqueueFeed(RedirectResponse("http://evil.example.com/feed"));
         var client = this.CreateClient();
 
         var result = await client.GetFeedAsync();
@@ -225,6 +269,7 @@ public class PluginFeedClientTests
         Assert.False(result.Success);
         Assert.Contains("Redirect to non-HTTPS URL rejected", result.Errors);
         Assert.Single(this.handler.Requests);
+        Assert.Equal(HttpMethod.Get, this.handler.Requests[0].Method);
     }
 
     [Fact]
@@ -232,7 +277,7 @@ public class PluginFeedClientTests
     {
         for (var i = 0; i < 5; i++)
         {
-            this.handler.Enqueue(RedirectResponse($"https://example.com/redirect-{i}"));
+            this.EnqueueFeed(RedirectResponse($"https://example.com/redirect-{i}"));
         }
 
         var client = this.CreateClient();
@@ -242,6 +287,7 @@ public class PluginFeedClientTests
         Assert.False(result.Success);
         Assert.Contains("Redirect limit exceeded (maximum 5 hops)", result.Errors);
         Assert.Equal(5, this.handler.Requests.Count);
+        Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
     }
 
     [Fact]
@@ -298,6 +344,9 @@ public class PluginFeedClientTests
             Assert.True(result.Success);
             Assert.NotNull(result.TempFilePath);
             Assert.True(File.Exists(result.TempFilePath));
+            var request = Assert.Single(this.handler.Requests);
+            Assert.Equal(HttpMethod.Get, request.Method);
+            Assert.Equal("https://example.com/pkg.zip", request.RequestUri!.AbsoluteUri);
             tempFile = result.TempFilePath;
         }
         finally
@@ -307,6 +356,53 @@ public class PluginFeedClientTests
                 File.Delete(tempFile);
             }
         }
+    }
+
+    [Fact]
+    public async Task DownloadPackageAsync_RedirectToHttps_IsFollowed()
+    {
+        var package = new byte[] { 1, 2, 3, 4 };
+        var expectedSha256 = Convert.ToHexString(SHA256.HashData(package));
+        this.EnqueuePackage(RedirectResponse("https://example.com/pkg-redirected.zip"));
+        this.EnqueuePackage(ByteResponse(package));
+        var client = this.CreateClient();
+
+        string? tempFile = null;
+        try
+        {
+            var result = await client.DownloadPackageAsync("https://example.com/pkg.zip", expectedSha256);
+
+            Assert.True(result.Success);
+            Assert.Equal(2, this.handler.Requests.Count);
+            Assert.Equal("https://example.com/pkg-redirected.zip", this.handler.Requests[1].RequestUri!.AbsoluteUri);
+            Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
+            tempFile = result.TempFilePath;
+        }
+        finally
+        {
+            if (tempFile is not null && File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task DownloadPackageAsync_RedirectToHttp_IsRejected()
+    {
+        var expectedSha256 = Convert.ToHexString(SHA256.HashData([1, 2, 3]));
+        this.EnqueuePackage(RedirectResponse("http://evil.example.com/pkg.zip"));
+        var client = this.CreateClient();
+
+        var tempFilesBefore = ListTempFiles();
+        var result = await client.DownloadPackageAsync("https://example.com/pkg.zip", expectedSha256);
+
+        Assert.False(result.Success);
+        Assert.Null(result.TempFilePath);
+        Assert.Contains("Redirect to non-HTTPS URL rejected", result.Errors);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal(tempFilesBefore.Count, ListTempFiles().Count);
     }
 
     [Fact]
@@ -342,17 +438,9 @@ public class PluginFeedClientTests
         Assert.Equal(tempFilesBefore.Count, ListTempFiles().Count);
     }
 
-    private void EnqueueFeed(HttpResponseMessage response)
-    {
-        this.handler.Enqueue(new HttpResponseMessage(HttpStatusCode.OK)); // HEAD
-        this.handler.Enqueue(response); // GET
-    }
+    private void EnqueueFeed(HttpResponseMessage response) => this.handler.Enqueue(response);
 
-    private void EnqueuePackage(HttpResponseMessage response)
-    {
-        this.handler.Enqueue(new HttpResponseMessage(HttpStatusCode.OK)); // HEAD
-        this.handler.Enqueue(response); // GET
-    }
+    private void EnqueuePackage(HttpResponseMessage response) => this.handler.Enqueue(response);
 
     private static HttpResponseMessage JsonResponse(string json) =>
         new(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") };

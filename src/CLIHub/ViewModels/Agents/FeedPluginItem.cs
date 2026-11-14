@@ -3,10 +3,16 @@ namespace CLIHub.ViewModels;
 using CLIHub.Core.Plugins;
 
 /// <summary>
-///   A plugin entry from the remote feed, displayed in the Browse Plugins dialog.
+///   A plugin entry from the remote feed, displayed in the Browse Plugins dialog. Items are
+///   immutable except for the post-install status refresh, which updates the installed status
+///   in place after a successful install from the feed.
 /// </summary>
 public sealed class FeedPluginItem : ObservableObject
 {
+    private PluginUpdateStatus status;
+    private string? installedVersion;
+    private bool isDowngrade;
+
     /// <summary>
     ///   Creates a feed plugin item.
     /// </summary>
@@ -50,10 +56,10 @@ public sealed class FeedPluginItem : ObservableObject
         this.Sha256 = sha256;
         this.MinAppVersion = minAppVersion;
         this.ReleaseNotesUrl = releaseNotesUrl;
-        this.Status = status;
-        this.InstalledVersion = installedVersion;
+        this.status = status;
+        this.installedVersion = installedVersion;
         this.CanInstall = canInstall;
-        this.IsDowngrade = isDowngrade;
+        this.isDowngrade = isDowngrade;
     }
 
     /// <summary>
@@ -107,14 +113,39 @@ public sealed class FeedPluginItem : ObservableObject
     public string? ReleaseNotesUrl { get; }
 
     /// <summary>
-    ///   Plugin status: Available, Current, UpdateAvailable, or DifferentVersionAvailable.
+    ///   Plugin status: Available, Current, UpdateAvailable, or DifferentVersionAvailable. Mutable
+    ///   only for the post-install status refresh.
     /// </summary>
-    public PluginUpdateStatus Status { get; }
+    public PluginUpdateStatus Status
+    {
+        get => this.status;
+        private set
+        {
+            if (this.SetProperty(ref this.status, value))
+            {
+                this.OnPropertyChanged(nameof(this.StatusText));
+                this.OnPropertyChanged(nameof(this.VersionText));
+                this.OnPropertyChanged(nameof(this.ActionText));
+                this.OnPropertyChanged(nameof(this.ShowActionButton));
+            }
+        }
+    }
 
     /// <summary>
-    ///   Currently installed version, or null if not installed.
+    ///   Currently installed version, or null if not installed. Mutable only for the post-install
+    ///   status refresh.
     /// </summary>
-    public string? InstalledVersion { get; }
+    public string? InstalledVersion
+    {
+        get => this.installedVersion;
+        private set
+        {
+            if (this.SetProperty(ref this.installedVersion, value))
+            {
+                this.OnPropertyChanged(nameof(this.VersionText));
+            }
+        }
+    }
 
     /// <summary>
     ///   Whether the plugin can be installed (minAppVersion check passed).
@@ -122,9 +153,39 @@ public sealed class FeedPluginItem : ObservableObject
     public bool CanInstall { get; }
 
     /// <summary>
-    ///   Whether installing this version would be a downgrade.
+    ///   Whether installing this version would be a downgrade. Mutable only for the post-install
+    ///   status refresh.
     /// </summary>
-    public bool IsDowngrade { get; }
+    public bool IsDowngrade
+    {
+        get => this.isDowngrade;
+        private set
+        {
+            if (this.SetProperty(ref this.isDowngrade, value))
+            {
+                this.OnPropertyChanged(nameof(this.WarningMessage));
+                this.OnPropertyChanged(nameof(this.HasWarning));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Marks the item as installed from the feed, refreshing the installed version, status, and
+    ///   downgrade warning in place so the card re-renders without rebuilding the collection. The
+    ///   status is recomputed through <see cref="PluginFeedVersionComparator.Compare" /> so a
+    ///   descriptor version that drifted from the feed entry is displayed truthfully; a null
+    ///   descriptor version maps to <see cref="PluginUpdateStatus.UpdateAvailable" />, matching
+    ///   what the next feed load would compute for an installed entry without a recorded version.
+    /// </summary>
+    /// <param name="installedVersion"> Version declared by the installed package's descriptor, or null. </param>
+    public void MarkInstalled(string? installedVersion)
+    {
+        this.InstalledVersion = installedVersion;
+        this.Status = installedVersion is null
+            ? PluginUpdateStatus.UpdateAvailable
+            : PluginFeedVersionComparator.Compare(installedVersion, this.Version);
+        this.IsDowngrade = PluginFeedVersionComparator.IsDowngrade(installedVersion, this.Version);
+    }
 
     /// <summary>
     ///   Status display text.

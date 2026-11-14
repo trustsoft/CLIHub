@@ -245,11 +245,15 @@ public class BrowsePluginsDialogViewModelTests
         vm.InstallCommand.Execute(item);
 
         // Assert
+        feedClient.Verify(x => x.GetFeedAsync(It.IsAny<CancellationToken>()), Times.Once);
         feedClient.Verify(x => x.DownloadPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
         installer.Verify(x => x.Inspect(It.IsAny<string>()), Times.Once);
         installer.Verify(x => x.Install(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
         Assert.Single(dialogService.ConfirmationPreviews);
         Assert.Single(dialogService.Outcomes);
+        Assert.Equal(PluginUpdateStatus.Current, item.Status);
+        Assert.Equal("1.0.0", item.InstalledVersion);
+        Assert.False(item.ShowActionButton);
     }
 
     [Fact]
@@ -291,6 +295,49 @@ public class BrowsePluginsDialogViewModelTests
         // Assert
         installer.Verify(x => x.Install(It.IsAny<string>(), true), Times.Once);
         installer.Verify(x => x.Install(It.IsAny<string>(), false), Times.Never);
+    }
+
+    [Fact]
+    public async Task InstallCommand_UpdateAvailable_Success_MarksCardCurrentWithoutRefetchingFeed()
+    {
+        // Arrange
+        var feedClient = new Mock<IPluginFeedClient>();
+        var installer = new Mock<IPluginInstaller>();
+        var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
+        var stateRepository = new InMemoryPluginStateRepository();
+
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 1,
+            LastUpdated: null,
+            Plugins: [
+                new("update-plugin", "Update Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+            ]);
+
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+        feedClient.Setup(x => x.DownloadPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginDownloadResult(true, "temp.zip", []));
+
+        var doc = stateRepository.Document;
+        doc.Plugins["update-plugin"] = new PluginStateEntry { InstalledVersion = "1.0.0" };
+
+        var preview = new PluginInstallPreview(true, "update-plugin", "Update Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
+        installer.Setup(x => x.Inspect(It.IsAny<string>())).Returns(preview);
+        installer.Setup(x => x.Install(It.IsAny<string>(), true)).Returns(PluginInstallResult.Succeeded("update-plugin"));
+
+        var vm = CreateViewModel(feedClient.Object, installer.Object, dialogService, stateRepository);
+        await vm.LoadAsync();
+
+        // Act
+        var item = vm.Plugins.Single(p => p.Id == "update-plugin");
+        Assert.Equal(PluginUpdateStatus.UpdateAvailable, item.Status);
+        vm.InstallCommand.Execute(item);
+
+        // Assert
+        feedClient.Verify(x => x.GetFeedAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal(PluginUpdateStatus.Current, item.Status);
+        Assert.Equal("2.0.0", item.InstalledVersion);
+        Assert.False(item.IsDowngrade);
     }
 
     [Fact]

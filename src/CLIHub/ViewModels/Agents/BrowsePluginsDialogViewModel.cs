@@ -196,13 +196,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                 }
 
                 var canInstall = AppVersionComparator.IsSatisfied(currentVersion, entry.MinAppVersion);
-                var isDowngrade = status == PluginUpdateStatus.DifferentVersionAvailable &&
-                                  installedVersion is not null &&
-                                  PluginFeedVersionComparator.TryParseVersion(installedVersion).HasValue &&
-                                  PluginFeedVersionComparator.TryParseVersion(entry.Version).HasValue &&
-                                  PluginFeedVersionComparator.CompareVersions(
-                                      PluginFeedVersionComparator.TryParseVersion(installedVersion)!.Value,
-                                      PluginFeedVersionComparator.TryParseVersion(entry.Version)!.Value) > 0;
+                var isDowngrade = PluginFeedVersionComparator.IsDowngrade(installedVersion, entry.Version);
 
                 var item = new FeedPluginItem(
                     entry.Id,
@@ -282,8 +276,8 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                 this.dialogService.ShowInstallOutcome(installResult, item.Name);
                 this.logger.LogInformation("Successfully installed {PluginId} from feed", item.Id);
 
-                // Reload feed to update status
-                await this.LoadFeedAsync(cancellationToken);
+                // Update the card in place instead of re-fetching the whole feed index.
+                item.MarkInstalled(preview.Version);
             }
             else
             {

@@ -19,6 +19,22 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     private const int MaxPackageSizeBytes = 10 * 1024 * 1024; // 10 MB
     private const int MaxRedirectHops = 5;
 
+    private static readonly StructuredErrorProfile FeedErrorProfile = new(
+        TimeoutError: "Feed request timed out",
+        RequestError: "Could not load plugin feed. Check your network connection.",
+        TimeoutLogMessage: "Feed request timed out",
+        RequestLogMessage: "Feed request failed",
+        UnexpectedLogMessage: "Feed request failed unexpectedly",
+        UnexpectedLogLevel: LogLevel.Warning);
+
+    private static readonly StructuredErrorProfile PackageErrorProfile = new(
+        TimeoutError: "Package download timed out",
+        RequestError: "Package download failed",
+        TimeoutLogMessage: "Package download timed out",
+        RequestLogMessage: "Package download failed",
+        UnexpectedLogMessage: "Unexpected error during package download",
+        UnexpectedLogLevel: LogLevel.Error);
+
     private readonly HttpClient httpClient;
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<PluginFeedClient> logger;
@@ -74,62 +90,43 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             return new PluginFeedResult(false, null, ["Feed URL must use HTTPS"]);
         }
 
-        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        timeoutCts.CancelAfter(this.ProbeTimeout);
-
-        try
-        {
-            var (finalUrl, redirectError) = await this.FollowRedirectsAsync(feedUrl, timeoutCts.Token).ConfigureAwait(false);
-            if (finalUrl is null)
+        return await this.ExecuteWithStructuredErrorsAsync(
+            async token =>
             {
-                return new PluginFeedResult(false, null, [redirectError ?? "Redirect rejected"]);
-            }
+                var (response, redirectError) = await this.SendFollowingRedirectsAsync(feedUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+                if (response is null)
+                {
+                    return new PluginFeedResult(false, null, [redirectError ?? "Redirect rejected"]);
+                }
 
-            using var response = await this.httpClient.GetAsync(finalUrl, timeoutCts.Token).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                this.logger.LogWarning("Feed request failed with status {StatusCode}", response.StatusCode);
-                return new PluginFeedResult(false, null, ["Could not load plugin feed"]);
-            }
+                using var finalResponse = response;
+                if (!finalResponse.IsSuccessStatusCode)
+                {
+                    this.logger.LogWarning("Feed request failed with status {StatusCode}", finalResponse.StatusCode);
+                    return new PluginFeedResult(false, null, ["Could not load plugin feed"]);
+                }
 
-            // Fast-path rejection when the server declares the size up front. This is an
-            // optimization only; the bounded read below enforces the limit during streaming.
-            if (response.Content.Headers.ContentLength is > MaxIndexSizeBytes)
-            {
-                this.logger.LogError("Feed index too large: {Size} bytes", response.Content.Headers.ContentLength);
-                return new PluginFeedResult(false, null, ["Feed index too large"]);
-            }
+                // Fast-path rejection when the server declares the size up front. This is an
+                // optimization only; the bounded read below enforces the limit during streaming.
+                if (finalResponse.Content.Headers.ContentLength is > MaxIndexSizeBytes)
+                {
+                    this.logger.LogError("Feed index too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
+                    return new PluginFeedResult(false, null, ["Feed index too large"]);
+                }
 
-            var body = await ReadBoundedAsync(response.Content, MaxIndexSizeBytes, timeoutCts.Token).ConfigureAwait(false);
-            if (body is null)
-            {
-                this.logger.LogError("Feed index exceeds the {Limit} byte limit", MaxIndexSizeBytes);
-                return new PluginFeedResult(false, null, ["Feed index too large"]);
-            }
+                var body = await ReadBoundedAsync(finalResponse.Content, MaxIndexSizeBytes, token).ConfigureAwait(false);
+                if (body is null)
+                {
+                    this.logger.LogError("Feed index exceeds the {Limit} byte limit", MaxIndexSizeBytes);
+                    return new PluginFeedResult(false, null, ["Feed index too large"]);
+                }
 
-            return this.ParseFeedIndex(body);
-        }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-        {
-            this.logger.LogWarning("Feed request timed out");
-            return new PluginFeedResult(false, null, ["Feed request timed out"]);
-        }
-        catch (HttpRequestException ex)
-        {
-            this.logger.LogWarning(ex, "Feed request failed");
-            return new PluginFeedResult(false, null, ["Could not load plugin feed. Check your network connection."]);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            // A malformed redirect Location (UriFormatException) or any other unexpected failure
-            // must degrade to a structured error rather than escape to the caller.
-            this.logger.LogWarning(ex, "Feed request failed unexpectedly");
-            return new PluginFeedResult(false, null, ["Could not load plugin feed. Check your network connection."]);
-        }
+                return this.ParseFeedIndex(body);
+            },
+            errors => new PluginFeedResult(false, null, [errors]),
+            FeedErrorProfile,
+            onFailure: null,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -146,64 +143,96 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
 
         var tempFilePath = Path.Combine(Path.GetTempPath(), $"clihub-plugin-{Guid.NewGuid():N}.zip");
 
+        return await this.ExecuteWithStructuredErrorsAsync(
+            async token =>
+            {
+                var (response, redirectError) = await this.SendFollowingRedirectsAsync(packageUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+                if (response is null)
+                {
+                    return new PluginDownloadResult(false, null, [redirectError ?? "Redirect rejected"]);
+                }
+
+                using var finalResponse = response;
+                if (!finalResponse.IsSuccessStatusCode)
+                {
+                    this.logger.LogWarning("Package download failed with status {StatusCode}", finalResponse.StatusCode);
+                    return new PluginDownloadResult(false, null, ["Package download failed"]);
+                }
+
+                // Fast-path rejection when the server declares the size up front. This is an
+                // optimization only; the bounded copy below enforces the limit during streaming.
+                if (finalResponse.Content.Headers.ContentLength is > MaxPackageSizeBytes)
+                {
+                    this.logger.LogError("Package too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
+                    return new PluginDownloadResult(false, null, ["Package too large"]);
+                }
+
+                // Download to the temp file, aborting mid-stream once the package exceeds the limit so
+                // a missing/lying Content-Length or chunked response cannot stream unbounded data.
+                var tooLarge = await CopyBoundedAsync(finalResponse.Content, tempFilePath, MaxPackageSizeBytes, token).ConfigureAwait(false);
+                if (tooLarge)
+                {
+                    this.logger.LogError("Downloaded package exceeds the {Limit} byte limit", MaxPackageSizeBytes);
+                    this.DeleteTempFile(tempFilePath);
+                    return new PluginDownloadResult(false, null, ["Package too large"]);
+                }
+
+                // Verify checksum
+                var actualSha256 = await ComputeSha256Async(tempFilePath).ConfigureAwait(false);
+                if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.logger.LogError("Package checksum mismatch. Expected {Expected}, got {Actual}", expectedSha256, actualSha256);
+                    File.Delete(tempFilePath);
+                    return new PluginDownloadResult(false, null, ["Package checksum mismatch. The downloaded file may be corrupted or tampered with."]);
+                }
+
+                return new PluginDownloadResult(true, tempFilePath, []);
+            },
+            errors => new PluginDownloadResult(false, null, [errors]),
+            PackageErrorProfile,
+            () => this.DeleteTempFile(tempFilePath),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///   Runs a feed transport operation under the probe timeout, converting cancellations, network
+    ///   failures, and unexpected exceptions into structured errors. Caller cancellation rethrows;
+    ///   a timeout logs without an exception object; the other two catches log with the exception.
+    ///   A malformed redirect Location (UriFormatException) or any other unexpected failure degrades
+    ///   to a structured error rather than escaping to the caller.
+    /// </summary>
+    /// <typeparam name="T"> The result type produced by <paramref name="operation" />. </typeparam>
+    /// <param name="operation"> Transport operation to run under the linked timeout token. </param>
+    /// <param name="failure"> Builds the failure result from a structured error message. </param>
+    /// <param name="profile"> Per-operation error and log-message strings and the unexpected-catch log level. </param>
+    /// <param name="onFailure"> Optional cleanup run before every structured-error return. </param>
+    /// <param name="cancellationToken"> Caller cancellation token. </param>
+    /// <returns> The operation result, or a structured failure result. </returns>
+    private async Task<T> ExecuteWithStructuredErrorsAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        Func<string, T> failure,
+        StructuredErrorProfile profile,
+        Action? onFailure,
+        CancellationToken cancellationToken)
+    {
         try
         {
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeoutCts.CancelAfter(this.ProbeTimeout);
 
-            var (finalUrl, redirectError) = await this.FollowRedirectsAsync(packageUrl, timeoutCts.Token).ConfigureAwait(false);
-            if (finalUrl is null)
-            {
-                return new PluginDownloadResult(false, null, [redirectError ?? "Redirect rejected"]);
-            }
-
-            using var response = await this.httpClient.GetAsync(finalUrl, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode)
-            {
-                this.logger.LogWarning("Package download failed with status {StatusCode}", response.StatusCode);
-                return new PluginDownloadResult(false, null, ["Package download failed"]);
-            }
-
-            // Fast-path rejection when the server declares the size up front. This is an
-            // optimization only; the bounded copy below enforces the limit during streaming.
-            if (response.Content.Headers.ContentLength is > MaxPackageSizeBytes)
-            {
-                this.logger.LogError("Package too large: {Size} bytes", response.Content.Headers.ContentLength);
-                return new PluginDownloadResult(false, null, ["Package too large"]);
-            }
-
-            // Download to the temp file, aborting mid-stream once the package exceeds the limit so
-            // a missing/lying Content-Length or chunked response cannot stream unbounded data.
-            var tooLarge = await CopyBoundedAsync(response.Content, tempFilePath, MaxPackageSizeBytes, timeoutCts.Token).ConfigureAwait(false);
-            if (tooLarge)
-            {
-                this.logger.LogError("Downloaded package exceeds the {Limit} byte limit", MaxPackageSizeBytes);
-                this.DeleteTempFile(tempFilePath);
-                return new PluginDownloadResult(false, null, ["Package too large"]);
-            }
-
-            // Verify checksum
-            var actualSha256 = await ComputeSha256Async(tempFilePath).ConfigureAwait(false);
-            if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
-            {
-                this.logger.LogError("Package checksum mismatch. Expected {Expected}, got {Actual}", expectedSha256, actualSha256);
-                File.Delete(tempFilePath);
-                return new PluginDownloadResult(false, null, ["Package checksum mismatch. The downloaded file may be corrupted or tampered with."]);
-            }
-
-            return new PluginDownloadResult(true, tempFilePath, []);
+            return await operation(timeoutCts.Token).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            this.logger.LogWarning("Package download timed out");
-            this.DeleteTempFile(tempFilePath);
-            return new PluginDownloadResult(false, null, ["Package download timed out"]);
+            this.logger.LogWarning(profile.TimeoutLogMessage);
+            onFailure?.Invoke();
+            return failure(profile.TimeoutError);
         }
         catch (HttpRequestException ex)
         {
-            this.logger.LogWarning(ex, "Package download failed");
-            this.DeleteTempFile(tempFilePath);
-            return new PluginDownloadResult(false, null, ["Package download failed"]);
+            this.logger.LogWarning(ex, profile.RequestLogMessage);
+            onFailure?.Invoke();
+            return failure(profile.RequestError);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -211,39 +240,70 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "Unexpected error during package download");
-            this.DeleteTempFile(tempFilePath);
-            return new PluginDownloadResult(false, null, ["Package download failed"]);
+            this.logger.Log(profile.UnexpectedLogLevel, ex, profile.UnexpectedLogMessage);
+            onFailure?.Invoke();
+            return failure(profile.RequestError);
         }
     }
 
     /// <summary>
-    ///   Manually follows HTTP redirects up to the maximum hop count, rejecting any redirect to
-    ///   non-HTTPS and rejecting chains longer than the maximum.
+    ///   Per-operation strings for <see cref="ExecuteWithStructuredErrorsAsync{T}" />: the user-facing
+    ///   timeout and request errors plus the log messages, with the log level of the unexpected
+    ///   catch (Warning for the feed, Error for package downloads).
+    /// </summary>
+    /// <param name="TimeoutError"> Structured error returned on a timeout. </param>
+    /// <param name="RequestError"> Structured error returned on a request or unexpected failure. </param>
+    /// <param name="TimeoutLogMessage"> Log message written on a timeout (no exception object). </param>
+    /// <param name="RequestLogMessage"> Log message written on an HttpRequestException. </param>
+    /// <param name="UnexpectedLogMessage"> Log message written on an unexpected exception. </param>
+    /// <param name="UnexpectedLogLevel"> Log level of the unexpected catch. </param>
+    private sealed record StructuredErrorProfile(
+        string TimeoutError,
+        string RequestError,
+        string TimeoutLogMessage,
+        string RequestLogMessage,
+        string UnexpectedLogMessage,
+        LogLevel UnexpectedLogLevel);
+
+    /// <summary>
+    ///   Sends the GET request and manually follows HTTP redirects up to the maximum hop count,
+    ///   rejecting any redirect to non-HTTPS and chains longer than the maximum. A 3xx response
+    ///   without a Location header is treated as terminal. Ownership of the returned terminal
+    ///   response transfers to the caller, which must dispose it; intermediate responses are
+    ///   disposed here.
     /// </summary>
     /// <param name="url"> Initial URL. </param>
+    /// <param name="completionOption"> HTTP completion option for reading the response. </param>
     /// <param name="cancellationToken"> Cancellation token. </param>
     /// <returns>
-    ///   The final HTTPS URL and a null error, or a null URL with the rejection reason.
+    ///   The terminal response and a null error — owned and disposed by the caller — or a null
+    ///   response with the rejection reason.
     /// </returns>
-    private async Task<(string? FinalUrl, string? Error)> FollowRedirectsAsync(string url, CancellationToken cancellationToken)
+    private async Task<(HttpResponseMessage? Response, string? Error)> SendFollowingRedirectsAsync(
+        string url,
+        HttpCompletionOption completionOption,
+        CancellationToken cancellationToken)
     {
         var currentUrl = url;
         for (var hop = 0; hop < MaxRedirectHops; hop++)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Head, currentUrl);
-            using var response = await this.httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
+            var response = await this.httpClient.SendAsync(request, completionOption, cancellationToken).ConfigureAwait(false);
 
             if ((int)response.StatusCode < 300 || (int)response.StatusCode >= 400)
             {
-                // Not a redirect
-                return (currentUrl, null);
+                // Not a redirect; the caller owns and disposes the terminal response.
+                return (response, null);
             }
 
             if (response.Headers.Location is null)
             {
                 this.logger.LogWarning("Redirect response without Location header");
-                return (currentUrl, null);
+
+                // Terminal per decision D2: the caller's status check turns this 3xx into the
+                // regular request error, reproducing the observable outcome of the previous
+                // HEAD-probe flow. The caller owns and disposes the response.
+                return (response, null);
             }
 
             var nextUrl = response.Headers.Location.IsAbsoluteUri
@@ -253,9 +313,11 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             if (!IsHttpsUrl(nextUrl))
             {
                 this.logger.LogError("Redirect to non-HTTPS URL rejected: {NextUrl}", nextUrl);
+                response.Dispose();
                 return (null, "Redirect to non-HTTPS URL rejected");
             }
 
+            response.Dispose();
             currentUrl = nextUrl;
         }
 

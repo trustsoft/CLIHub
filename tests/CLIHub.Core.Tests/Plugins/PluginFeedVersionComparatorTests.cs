@@ -57,4 +57,53 @@ public class PluginFeedVersionComparatorTests
 
         Assert.Equal(PluginUpdateStatus.Available, result);
     }
+
+    [Theory]
+    [InlineData("2.0.0", "1.0.0")]
+    [InlineData("1.2.3", "1.2.0")]
+    [InlineData("1.10.0", "1.9.99")]
+    public void IsDowngrade_InstalledNumericallyGreaterThanFeed_ReturnsTrue(string installed, string feed)
+    {
+        var result = PluginFeedVersionComparator.IsDowngrade(installed, feed);
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void IsDowngrade_InstalledMatchesFeed_ReturnsFalse()
+    {
+        var result = PluginFeedVersionComparator.IsDowngrade("1.2.3", "1.2.3");
+
+        Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData("1.0.0", "1.2.3")]
+    [InlineData("0.9.0", "1.0.0")]
+    public void IsDowngrade_FeedNewerThanInstalled_ReturnsFalse(string installed, string feed)
+    {
+        var result = PluginFeedVersionComparator.IsDowngrade(installed, feed);
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void IsDowngrade_InstalledVersionNull_ReturnsFalse()
+    {
+        var result = PluginFeedVersionComparator.IsDowngrade(null, "1.0.0");
+
+        Assert.False(result);
+    }
+
+    [Theory]
+    [InlineData("abc", "1.0.0")]
+    [InlineData("1.0", "1.0.0")]
+    [InlineData("1.0.0", "abc")]
+    [InlineData("1.0.0", "1.0")]
+    public void IsDowngrade_NonParseableVersion_ReturnsFalse(string installed, string feed)
+    {
+        var result = PluginFeedVersionComparator.IsDowngrade(installed, feed);
+
+        Assert.False(result);
+    }
 }

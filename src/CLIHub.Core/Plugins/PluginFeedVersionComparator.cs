@@ -72,6 +72,22 @@ public static class PluginFeedVersionComparator
             : PluginUpdateStatus.DifferentVersionAvailable;
     }
 
+    /// <summary>
+    ///   Determines whether the installed version is numerically greater than the feed version
+    ///   (i.e., taking the feed version would be a downgrade). Non-parseable versions and a null
+    ///   installed version never count as a downgrade.
+    /// </summary>
+    /// <param name="installedVersion"> Currently installed version, or null if not installed. </param>
+    /// <param name="feedVersion"> Version available in the feed. </param>
+    /// <returns> True when the installed version is numerically greater than the feed version. </returns>
+    public static bool IsDowngrade(string? installedVersion, string feedVersion)
+    {
+        return installedVersion is not null &&
+               TryParseVersion(installedVersion) is { } a &&
+               TryParseVersion(feedVersion) is { } b &&
+               CompareVersions(a, b) > 0;
+    }
+
     internal static (int Major, int Minor, int Patch)? TryParseVersion(string version)
     {
         var parts = version.Split('.');
