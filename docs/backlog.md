@@ -96,6 +96,8 @@ are pruned from this list once their evidence is no longer needed; recover them 
 
 ### Optional spec scenario pinning the in-flight probe eviction invariant
 
+**Status: Resolved by `spec-copy-accuracy-sweep` (2026-11-14)** — added scenario "No eviction of newer in-flight probe" to the "Concurrent version probes are coalesced" requirement in `agent-version`; the test at `ProbeCacheTests.cs:194` is the durable regression pin.
+
 - Severity: Low (spec hardening; the behavior is implemented and regression-tested)
 - Evidence: `probe-cache-extraction` fixed the delayed-`finally` race where an awaited probe's
   continuation could evict a newer probe's in-flight entry (`ProbeCache.cs:66` uses
@@ -462,6 +464,8 @@ snapshot.
 
 ### plugin-seeding spec example still names a feed agent
 
+**Status: Resolved by `spec-copy-accuracy-sweep` (2026-11-14)** — replaced `copilot --continue` with `omp --continue` in the "Commands match the agent CLI surface" scenario.
+
 - Severity: Low (documentation accuracy only; the example is illustrative)
 - Evidence (2026-11-05): `openspec/specs/plugin-seeding/spec.md:322` — the "Commands match the agent
   CLI surface" scenario uses `copilot --continue` as its example, but GitHub Copilot is no longer a
@@ -528,6 +532,8 @@ snapshot.
   pre-existing pattern gained one more member; the evidence and trigger stand.
 
 ### Release notes requirement says "status card" but the link is on the title row
+
+**Status: Resolved by `spec-copy-accuracy-sweep` (2026-11-14)** — reworded requirement body from "from the status card" to "from the title row"; the link lives in `UpdatesHeaderTitleExtra` on the page title row.
 
 - Severity: Low (spec accuracy; no behavior or UI defect)
 - Evidence: `openspec/specs/preferences-ui/spec.md:651-659` — the "Release notes from Settings"
