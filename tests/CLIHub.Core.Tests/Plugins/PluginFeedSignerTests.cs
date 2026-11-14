@@ -1,5 +1,7 @@
 namespace CLIHub.Core.Tests.Plugins;
 
+using System.Security.Cryptography;
+
 using CLIHub.Core.Plugins;
 
 /// <summary>
@@ -72,6 +74,17 @@ public class PluginFeedSignerTests
 
         Assert.False(valid);
         Assert.Contains("BEGIN PUBLIC KEY", PluginFeedSigner.PublicKeyPem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PublicKeyPem_IsValidEcKey_ImportsSuccessfully()
+    {
+        // A broken paste (malformed PEM, non-EC key, wrong curve) still passes the header check above
+        // but fails to import, which surfaces the paste error instead of a silent verification failure.
+        using var ecdsa = ECDsa.Create();
+        var exception = Record.Exception(() => ecdsa.ImportFromPem(PluginFeedSigner.PublicKeyPem));
+
+        Assert.Null(exception);
     }
 
     [Fact]

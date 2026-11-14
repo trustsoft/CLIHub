@@ -119,9 +119,9 @@ Replacing the reserved block in the workflow: the commented-out `ED25519_PRIVATE
 ## Public Key Publication
 
 `public.pem` (SubjectPublicKeyInfo, `-----BEGIN PUBLIC KEY-----`) is committed at the repository root.
-Its exact content is pasted into `PluginFeedSigner.PublicKeyPem` in CLIHub. Keep the two in sync:
-`PluginFeedSigner.PublicKeyPem` currently holds a placeholder, and a CI check that compares it with
-`public.pem` is a reasonable later addition.
+Its exact content is pasted into `PluginFeedSigner.PublicKeyPem` in CLIHub, which is the embedded
+production anchor (set 2026-11-14). Keep the two in sync: a CI check that compares them is a reasonable
+later addition.
 
 ## Transition Timeline
 
@@ -130,15 +130,15 @@ Its exact content is pasted into `PluginFeedSigner.PublicKeyPem` in CLIHub. Keep
    index regeneration.
 3. Wait at least one regeneration cycle so `index.sig` and `index.json` are known to travel together.
 4. Replace the placeholder in `PluginFeedSigner.PublicKeyPem` with the real `public.pem` content and
-   ship the CLIHub release that verifies signatures. The transition window is open: a missing
-   signature is logged as a warning and accepted.
+   ship the CLIHub release that verifies signatures. **Done (2026-11-14):** the placeholder was
+   replaced with the real `public.pem` content. The transition window is open: a missing signature is
+   logged as a warning and accepted.
 5. On and after `PluginFeedSigner.SignatureRequiredAfter` (2026-12-15 UTC), a missing signature is a
    hard error. A follow-up slice flips `RequireFeedSignature` to `true` to enforce it regardless of the
    date.
 
-**Release gate:** step 4 must not ship with the placeholder key in place. With a mismatched key, every
-signed index fails verification — a hard error with no cache fallback — so the client release that
-enables verification and the key replacement ship together.
+**Release gate: satisfied (2026-11-14).** The real key is embedded; the client release that enables
+verification and the key replacement ship together.
 
 ## Key Rotation
 

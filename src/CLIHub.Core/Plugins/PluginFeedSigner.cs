@@ -45,15 +45,15 @@ public static class PluginFeedSigner
     ///   release, matching the manual rotation procedure in <c> docs/architecture/plugins.md </c>.
     /// </summary>
     /// <remarks>
-    ///   Placeholder until the signing key pair is generated for <c> trustsoft/CLIHub-plugins-v2 </c>:
-    ///   the public half of that pair must be pasted here, and the matching <c> public.pem </c>
-    ///   published in the feed repository, before a CLIHub release ships with verification enabled.
-    ///   Until then a real signed feed fails verification (a hard error, never an accepted state).
+    ///   The production trust anchor since 2026-11-14: the public half of the key pair whose private
+    ///   half is the <c> INDEX_SIGNING_KEY </c> secret of <c> trustsoft/CLIHub-plugins-v2 </c>, matching
+    ///   the <c> public.pem </c> published there. Key rotation is manual and documented in
+    ///   <c> docs/architecture/plugin-index-signing-repo.md </c> under Key Rotation.
     /// </remarks>
     public const string PublicKeyPem = """
         -----BEGIN PUBLIC KEY-----
-        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvfe3Dc5TjrjbJw/TWUzPS7xIl/CT
-        FX66o1ieA0Zl2gLlAxtRQ9nG3nOmaOwHzigiyJsIJGxNgse6OqnM2bZsAg==
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOHK1Rt/rH6LgLrUD/IkvGj+dDUb8
+        RSm8qjVVhybAhOZpy277i5Lk4ycFCJal6gXhQFJaHpPb2DLy71I4qyOUxg==
         -----END PUBLIC KEY-----
         """;
 

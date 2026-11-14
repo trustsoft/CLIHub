@@ -1,11 +1,11 @@
 # Embed the real signing key: Tasks
 
-- [ ] 1.0 Read the key source files one more time before editing:
+- [x] 1.0 Read the key source files one more time before editing:
   `src/CLIHub.Core/Plugins/PluginFeedSigner.cs`,
   `docs/architecture/plugin-index-signing-repo.md` (lines 120-140),
   `tests/CLIHub.Core.Tests/Plugins/PluginFeedSignerTests.cs` (the guard-test insertion point).
 
-- [ ] 1.1 Replace `PublicKeyPem` in `PluginFeedSigner.cs`:
+- [x] 1.1 Replace `PublicKeyPem` in `PluginFeedSigner.cs`:
   - Swap the PEM string literal body (lines 54-57) with the real key:
     ```
     MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOHK1Rt/rH6LgLrUD/IkvGj+dDUb8
@@ -21,7 +21,7 @@
   - **Gate:** `dotnet build CLIHub.sln` — must succeed (the constant is a `const string` with no
     runtime import until `Verify` is called; a syntax error here fails the build).
 
-- [ ] 1.2 Add the guard test in `PluginFeedSignerTests.cs`:
+- [x] 1.2 Add the guard test in `PluginFeedSignerTests.cs`:
   - Add `using System.Security.Cryptography;` if not already present (it is — `ECDsa` is used in
     the test data file but not in the signer tests).
   - Insert a new `[Fact]` after the existing `Verify_NoKeyOverride_VerifiesAgainstTheEmbeddedTrustAnchor`
@@ -40,7 +40,7 @@
     curve) fails `ImportFromPem` with `ArgumentException` → `Record.Exception` returns non-null →
     `Assert.Null` fails.
 
-- [ ] 1.3 Update `docs/architecture/plugin-index-signing-repo.md`:
+- [x] 1.3 Update `docs/architecture/plugin-index-signing-repo.md`:
   - **Line 123** (~"currently holds a placeholder"): change to:
     > `PluginFeedSigner.PublicKeyPem` is the embedded production anchor (set 2026-11-14).
     > A CI check that compares it with `public.pem` is a reasonable later addition.
@@ -54,17 +54,17 @@
   - **Gate:** Read the section back — the timeline flows logically and the release-gate wording
     is past tense.
 
-- [ ] 1.4 Run the full build and test suite:
+- [x] 1.4 Run the full build and test suite:
   ```powershell
   dotnet build CLIHub.sln
   dotnet test CLIHub.sln
   ```
   All 36 spec suites pass; the new guard test is green; no unrelated failures.
 
-- [ ] 1.5 Run `openspec validate --all` — must report 0 failures (36 passed, pre-existing warnings
+- [x] 1.5 Run `openspec validate --all` — must report 0 failures (36 passed, pre-existing warnings
   only, same as before this change).
 
-- [ ] 1.6 Run `graphify update .` to refresh the knowledge graph with the changed source file.
+- [x] 1.6 Run `graphify update .` to refresh the knowledge graph with the changed source file.
 
 - [ ] 1.7 **Manual smoke (blocks commit/archive):**
   - Delete `%APPDATA%\CLIHub\cache\feed-index.json` (and `feed-sync.json`) to force a fresh

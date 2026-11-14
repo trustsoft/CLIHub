@@ -157,3 +157,16 @@ of the archived change). The feed cache at `%APPDATA%\CLIHub\cache\feed-index.js
 signature verification. If it's populated, the cached bytes were verified before caching. In neither
 case is a stale unverified index served. However, the smoke task should note: delete
 `%APPDATA%\CLIHub\cache\feed-index.json` before smoke to guarantee a fresh signature fetch.
+
+## Implementation Notes
+
+- `PluginFeedSignerTests.cs` needed `using System.Security.Cryptography;`: the task 1.2 parenthetical
+  claimed it was already present, but `ECDsa` was only used by `PluginFeedSignatureTestData.cs`. The
+  using is placed System-first with a separating blank line, matching `PluginFeedClientTests.cs`.
+- The constant was verified byte-for-byte against `trustsoft/CLIHub-plugins-v2/public.pem` (fetched
+  from `master`): identical lines, no trailing whitespace, no BOM. The raw string literal compiles to
+  the four PEM lines plus one trailing newline.
+- Out-of-band read-only check (does not replace the smoke): the fetched live `index.json` verifies
+  against the fetched `index.sig` with the embedded constant (ECDsa, SHA-256, RFC 3279 DER, P-256).
+- `openspec validate --all` reports 37 passed / 0 failed. The baseline was 36; the extra item is this
+  active change, which now validates alongside every spec.
