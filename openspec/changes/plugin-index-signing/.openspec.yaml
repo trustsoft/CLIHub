@@ -1,0 +1,6 @@
+schema: 1
+goal: "Cryptographic signature verification of the plugin feed index (the final slice of the plugin registry v2 roadmap, ADR-0015) — client-side ECDSA P-256 verification before parse, trust-anchor constant, CI-side signing in the v2 repo, and a time-bounded transition window for the missing-signature case."
+affected_areas:
+  - "Plugin feed signing and verification"
+  - "Plugin feed transport"
+  - "CI/CD (v2 repo artifacts, specified only)"
