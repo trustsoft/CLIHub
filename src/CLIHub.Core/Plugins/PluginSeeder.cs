@@ -20,7 +20,7 @@ public class PluginSeeder : IPluginSeeder
     private const string LogoFileName = "logo.png";
 
     private readonly ILogger<PluginSeeder> logger;
-    private readonly IPluginStateRepository stateRepository;
+    private readonly IPluginRegistry stateRepository;
     private readonly string pluginsPath;
 
     /// <summary>
@@ -30,7 +30,7 @@ public class PluginSeeder : IPluginSeeder
     /// <param name="stateRepository"> The plugin lifecycle state repository. </param>
     /// <param name="pluginsPath"> Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>. </param>
     public PluginSeeder(ILogger<PluginSeeder> logger,
-                        IPluginStateRepository stateRepository,
+                        IPluginRegistry stateRepository,
                         string? pluginsPath = null)
     {
         this.logger = logger;
@@ -81,7 +81,7 @@ public class PluginSeeder : IPluginSeeder
                 }
 
                 // A disabled built-in keeps its files exactly as they are.
-                if (entry is { Disabled: true })
+                if (entry is { Enabled: false })
                 {
                     continue;
                 }
@@ -90,7 +90,7 @@ public class PluginSeeder : IPluginSeeder
                 var diskHash = PluginHasher.ComputeFileHash(descriptorPath);
                 var storedHash = entry?.ContentHash;
                 var hadEntry = entry is not null;
-                entry ??= new PluginStateEntry(PluginOrigin.Unknown);
+                entry ??= new PluginRegistryEntry(PluginOrigin.Unknown);
                 state.Plugins[id] = entry;
 
                 if (diskHash is null)

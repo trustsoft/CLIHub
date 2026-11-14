@@ -27,7 +27,7 @@ public sealed class PluginInstaller : IPluginInstaller
     private const string StagingPrefix = ".staging-";
 
     private readonly ILogger<PluginInstaller> logger;
-    private readonly IPluginStateRepository stateRepository;
+    private readonly IPluginRegistry stateRepository;
     private readonly IPluginCatalog catalog;
     private readonly IPluginDescriptorReader descriptorReader;
     private readonly IPluginDescriptorValidator descriptorValidator;
@@ -47,7 +47,7 @@ public sealed class PluginInstaller : IPluginInstaller
     ///   Overrides the plugins root; defaults to <c> %APPDATA%\CLIHub\plugins </c>.
     /// </param>
     public PluginInstaller(ILogger<PluginInstaller> logger,
-                           IPluginStateRepository stateRepository,
+                           IPluginRegistry stateRepository,
                            IPluginCatalog catalog,
                            IPluginDescriptorReader? descriptorReader = null,
                            IPluginDescriptorValidator? descriptorValidator = null,
@@ -501,12 +501,13 @@ public sealed class PluginInstaller : IPluginInstaller
     private void RecordInstalledState(string pluginDirectory, Plugin plugin)
     {
         var document = this.stateRepository.Load();
-        document.Plugins[plugin.Id] = new PluginStateEntry(PluginOrigin.Installed)
+        document.Plugins[plugin.Id] = new PluginRegistryEntry(PluginOrigin.Installed)
         {
             ContentHash = PluginHasher.ComputeFileHash(Path.Combine(pluginDirectory, DescriptorFileName)),
             LogoHash = PluginHasher.ComputeFileHash(Path.Combine(pluginDirectory, LogoFileName)),
             InstalledVersion = plugin.Version,
-            Disabled = false
+            Enabled = true,
+            InstalledAt = DateTimeOffset.UtcNow
         };
         this.stateRepository.Save(document);
     }

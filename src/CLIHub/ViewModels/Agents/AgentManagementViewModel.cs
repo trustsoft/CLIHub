@@ -42,7 +42,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IApplicationOperationLifetime operationLifetime;
     private readonly IPluginInstaller pluginInstaller;
     private readonly IPluginDialogService pluginDialogs;
-    private readonly IPluginStateRepository pluginState;
+    private readonly IPluginRegistry pluginState;
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentManagementViewModel> logger;
 
@@ -90,7 +90,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IApplicationOperationLifetime operationLifetime,
                                     IPluginInstaller pluginInstaller,
                                     IPluginDialogService pluginDialogs,
-                                    IPluginStateRepository pluginState,
+                                    IPluginRegistry pluginState,
                                     IPreferencesStore preferencesStore,
                                     ILogger<AgentManagementViewModel> logger)
     {
@@ -1167,15 +1167,16 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <summary>
-    ///   Marks a plugin disabled in the state file (files stay on disk) and reloads the catalog
-    ///   so the plugin leaves the active list and appears in the Disabled section.
+    ///   Marks a plugin disabled (enabled: false in the registry; files stay on disk) and
+    ///   reloads the catalog so the plugin leaves the active list and appears in the Disabled
+    ///   section.
     /// </summary>
     /// <param name="card"> The card of the plugin to disable. </param>
     private void DisablePlugin(AgentCardItem card)
     {
         try
         {
-            this.UpdatePluginStateEntry(card.PluginId, entry => entry.Disabled = true);
+            this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = false);
             this.catalog.ReloadPlugins();
         }
         catch (Exception ex)
@@ -1186,7 +1187,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <summary>
-    ///   Clears a plugin's disabled flag in the state file and reloads the catalog so the
+    ///   Marks a plugin enabled (enabled: true in the registry) and reloads the catalog so the
     ///   plugin returns to the active list without re-installation.
     /// </summary>
     /// <param name="card"> The disabled card of the plugin to enable. </param>
@@ -1194,7 +1195,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     {
         try
         {
-            this.UpdatePluginStateEntry(card.PluginId, entry => entry.Disabled = false);
+            this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = true);
             this.catalog.ReloadPlugins();
         }
         catch (Exception ex)
@@ -1250,10 +1251,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// </summary>
     /// <param name="pluginId"> The plugin id whose entry is updated. </param>
     /// <param name="update"> The mutation applied to the entry. </param>
-    private void UpdatePluginStateEntry(string pluginId, Action<PluginStateEntry> update)
+    private void UpdatePluginRegistryEntry(string pluginId, Action<PluginRegistryEntry> update)
     {
         var document = this.pluginState.Load();
-        var entry = document.Plugins.GetValueOrDefault(pluginId) ?? new PluginStateEntry(PluginOrigin.Unknown);
+        var entry = document.Plugins.GetValueOrDefault(pluginId) ?? new PluginRegistryEntry(PluginOrigin.Unknown);
         update(entry);
         document.Plugins[pluginId] = entry;
         this.pluginState.Save(document);

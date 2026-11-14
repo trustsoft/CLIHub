@@ -1,7 +1,7 @@
 namespace CLIHub.Core.Plugins;
 
 /// <summary>
-///   The well-known origin values recorded in <c> plugin-state.json </c>.
+///   The well-known origin values recorded in the registry document.
 /// </summary>
 public static class PluginOrigin
 {
@@ -16,32 +16,38 @@ public static class PluginOrigin
     public const string Installed = "installed";
 
     /// <summary>
-    ///   The plugin's origin is not known: it predates the state file or its content did not
+    ///   The plugin's origin is not known: it predates the registry or its content did not
     ///   match any content CLIHub wrote.
     /// </summary>
     public const string Unknown = "unknown";
 }
 
 /// <summary>
-///   The per-plugin lifecycle state recorded in <c> plugin-state.json </c>: where the plugin
-///   came from, the content hashes CLIHub last wrote, the installed version, and the disabled
-///   flag. Lifecycle state is operational plugin metadata, not user preference, so it lives in
-///   its own state file rather than the single configuration document.
+///   The per-plugin lifecycle state recorded in <c> registry.json </c>: where the plugin came
+///   from, the content hashes CLIHub last wrote, the installed version, the enabled flag, and
+///   the install timestamp. Lifecycle state is operational plugin metadata, not user
+///   preference, so it lives in the registry document rather than the single configuration
+///   document.
 /// </summary>
-public sealed record PluginStateEntry
+public sealed record PluginRegistryEntry
 {
     /// <summary>
-    ///   Creates an entry with the specified origin and no recorded hashes.
+    ///   Creates an entry with the specified origin and enabled state.
     /// </summary>
     /// <param name="origin"> One of the <see cref="PluginOrigin" /> values. </param>
-    public PluginStateEntry(string origin = PluginOrigin.Unknown)
+    /// <param name="enabled">
+    ///   Whether the plugin is enabled; defaults to true so a registry entry whose JSON omits
+    ///   <c> enabled </c> fails safe (the plugin loads).
+    /// </param>
+    public PluginRegistryEntry(string origin = PluginOrigin.Unknown, bool enabled = true)
     {
         this.Origin = origin;
+        this.Enabled = enabled;
     }
 
     /// <summary>
     ///   The plugin origin: one of the <see cref="PluginOrigin" /> values. Defaults to
-    ///   <see cref="PluginOrigin.Unknown" /> so a partially populated state file degrades
+    ///   <see cref="PluginOrigin.Unknown" /> so a partially populated registry entry degrades
     ///   gracefully.
     /// </summary>
     public string Origin { get; set; } = PluginOrigin.Unknown;
@@ -65,8 +71,16 @@ public sealed record PluginStateEntry
     public string? InstalledVersion { get; set; }
 
     /// <summary>
-    ///   Whether the plugin is disabled: disabled plugins stay on disk but are not loaded by
-    ///   the catalog and are not launchable.
+    ///   Whether the plugin is enabled; a disabled plugin stays on disk but is not loaded by
+    ///   the catalog and is not launchable. Absent JSON field defaults to true (fail-safe).
     /// </summary>
-    public bool Disabled { get; set; }
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    ///   The UTC time the plugin was installed by the installer, or null when the plugin was
+    ///   not installed through an install flow: built-ins ship with the application and adopted
+    ///   or legacy entries have no knowable install time, so their value stays null rather than
+    ///   being fabricated.
+    /// </summary>
+    public DateTimeOffset? InstalledAt { get; set; }
 }

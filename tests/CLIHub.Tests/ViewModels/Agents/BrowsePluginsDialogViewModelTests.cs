@@ -19,7 +19,7 @@ public class BrowsePluginsDialogViewModelTests
     {
         // Arrange
         var feedClient = new Mock<IPluginFeedClient>();
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
         var versionProvider = new Mock<IUpdateVersionProvider>();
 
         var feedIndex = new PluginFeedIndex(
@@ -36,9 +36,9 @@ public class BrowsePluginsDialogViewModelTests
             .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
 
         var doc = stateRepository.Document;
-        doc.Plugins["current-plugin"] = new PluginStateEntry { InstalledVersion = "2.0.0" };
-        doc.Plugins["update-plugin"] = new PluginStateEntry { InstalledVersion = "1.5.0" };
-        doc.Plugins["downgrade-plugin"] = new PluginStateEntry { InstalledVersion = "2.0.0" };
+        doc.Plugins["current-plugin"] = new PluginRegistryEntry { InstalledVersion = "2.0.0" };
+        doc.Plugins["update-plugin"] = new PluginRegistryEntry { InstalledVersion = "1.5.0" };
+        doc.Plugins["downgrade-plugin"] = new PluginRegistryEntry { InstalledVersion = "2.0.0" };
 
         versionProvider.Setup(x => x.GetCurrentVersion()).Returns("2.0.0");
 
@@ -60,7 +60,7 @@ public class BrowsePluginsDialogViewModelTests
     {
         // Arrange
         var feedClient = new Mock<IPluginFeedClient>();
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
         var versionProvider = new Mock<IUpdateVersionProvider>();
 
         var feedIndex = new PluginFeedIndex(
@@ -74,7 +74,7 @@ public class BrowsePluginsDialogViewModelTests
             .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
 
         var doc = stateRepository.Document;
-        doc.Plugins["unknown-version-plugin"] = new PluginStateEntry { InstalledVersion = null };
+        doc.Plugins["unknown-version-plugin"] = new PluginRegistryEntry { InstalledVersion = null };
 
         versionProvider.Setup(x => x.GetCurrentVersion()).Returns("2.0.0");
 
@@ -218,7 +218,7 @@ public class BrowsePluginsDialogViewModelTests
         var feedClient = new Mock<IPluginFeedClient>();
         var installer = new Mock<IPluginInstaller>();
         var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
 
         var feedIndex = new PluginFeedIndex(
             SchemaVersion: 1,
@@ -263,7 +263,7 @@ public class BrowsePluginsDialogViewModelTests
         var feedClient = new Mock<IPluginFeedClient>();
         var installer = new Mock<IPluginInstaller>();
         var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
 
         var feedIndex = new PluginFeedIndex(
             SchemaVersion: 1,
@@ -278,7 +278,7 @@ public class BrowsePluginsDialogViewModelTests
             .ReturnsAsync(new PluginDownloadResult(true, "temp.zip", []));
 
         var doc = stateRepository.Document;
-        doc.Plugins["update-plugin"] = new PluginStateEntry { InstalledVersion = "1.0.0" };
+        doc.Plugins["update-plugin"] = new PluginRegistryEntry { InstalledVersion = "1.0.0" };
 
         var preview = new PluginInstallPreview(true, "update-plugin", "Update Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
         installer.Setup(x => x.Inspect(It.IsAny<string>())).Returns(preview);
@@ -304,7 +304,7 @@ public class BrowsePluginsDialogViewModelTests
         var feedClient = new Mock<IPluginFeedClient>();
         var installer = new Mock<IPluginInstaller>();
         var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
 
         var feedIndex = new PluginFeedIndex(
             SchemaVersion: 1,
@@ -319,7 +319,7 @@ public class BrowsePluginsDialogViewModelTests
             .ReturnsAsync(new PluginDownloadResult(true, "temp.zip", []));
 
         var doc = stateRepository.Document;
-        doc.Plugins["update-plugin"] = new PluginStateEntry { InstalledVersion = "1.0.0" };
+        doc.Plugins["update-plugin"] = new PluginRegistryEntry { InstalledVersion = "1.0.0" };
 
         var preview = new PluginInstallPreview(true, "update-plugin", "Update Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
         installer.Setup(x => x.Inspect(It.IsAny<string>())).Returns(preview);
@@ -481,7 +481,7 @@ public class BrowsePluginsDialogViewModelTests
         var feedClient = new Mock<IPluginFeedClient>();
         var installer = new Mock<IPluginInstaller>();
         var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
-        var stateRepository = new InMemoryPluginStateRepository();
+        var stateRepository = new InMemoryPluginRegistry();
 
         const string descriptorJson = """{"id":"desc-plugin","name":"Desc Plugin","version":"2.0.0","commands":{"launch":{"executable":"dp"}}}""";
         var feedIndex = new PluginFeedIndex(
@@ -602,13 +602,13 @@ public class BrowsePluginsDialogViewModelTests
         IPluginFeedClient? feedClient = null,
         IPluginInstaller? installer = null,
         IPluginDialogService? dialogService = null,
-        IPluginStateRepository? stateRepository = null,
+        IPluginRegistry? stateRepository = null,
         IUpdateVersionProvider? versionProvider = null)
     {
         return new BrowsePluginsDialogViewModel(
             feedClient ?? Mock.Of<IPluginFeedClient>(),
             installer ?? Mock.Of<IPluginInstaller>(),
-            stateRepository ?? new InMemoryPluginStateRepository(),
+            stateRepository ?? new InMemoryPluginRegistry(),
             dialogService ?? new FakePluginDialogService(),
             versionProvider ?? Mock.Of<IUpdateVersionProvider>(v => v.GetCurrentVersion() == "1.0.0"),
             new InlineOperationLifetime(),

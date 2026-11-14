@@ -83,55 +83,67 @@ Security constraints:
    - Validates the extracted descriptor through `PluginDescriptorReader` and `PluginDescriptorValidator`
    - For replacement: backs up the existing plugin directory to `<id>.backup-<guid>`
    - Atomically moves staging directory to `<id>`
-   - On success: deletes backup, updates `plugin-state.json`, triggers catalog reload
+   - On success: deletes backup, updates `registry.json`, triggers catalog reload
    - On failure: deletes staging directory, restores backup if move completed
 
 ### Plugin Lifecycle State
 
-CLIHub tracks plugin origin, content integrity, and lifecycle state in `%APPDATA%\CLIHub\plugin-state.json`:
+CLIHub tracks plugin origin, content integrity, and lifecycle state in one registry document, `%APPDATA%\CLIHub\registry.json` — the single local source of truth for that state:
 
 ```jsonc
 {
-  "schemaVersion": 1,
   "plugins": {
     "opencode": {
       "origin": "builtin",             // "builtin", "installed", or "unknown"
-      "contentHash": "sha256:...",     // SHA-256 of plugin.json content
-      "logoHash": "sha256:..." | null, // SHA-256 of logo.png content, or null if absent
+      "contentHash": "sha256...",      // SHA-256 of plugin.json content, or null if not recorded
+      "logoHash": "sha256..." | null,  // SHA-256 of logo.png content, or null if absent
       "installedVersion": "1.0.0",     // from descriptor "version" field, or null
-      "disabled": false
+      "enabled": true,                 // absent field defaults to true (fail-safe)
+      "installedAt": "2026-11-14T..." | null // UTC install time; null for built-ins and adopted entries
     }
   }
 }
 ```
 
+Reads are tolerant: missing fields are defaulted (`origin` degrades to `unknown`, `enabled` defaults to `true`), unknown fields are ignored, and a corrupt file degrades to an empty registry without throwing. Writes are atomic (temp file + rename). There is no schema-version field.
+
+**One-time legacy adoption:** when `registry.json` is absent and the pre-registry `plugin-state.json` exists, CLIHub adopts it: origin, content hashes, and installed version are preserved, the inverted `disabled` flag becomes `enabled`, and `installedAt` stays null (not fabricated). A successful adoption writes `registry.json` once and deletes `plugin-state.json`; a failed write keeps the legacy file and retries on the next start. Once a registry exists, the legacy file is never read again. A corrupt registry with a legacy file present recovers by adopting the legacy content.
+
 **Origin values:**
 
 - `builtin`: written by this CLIHub build from embedded built-in descriptors
 - `installed`: installed from a `.clihub-plugin.zip` package or a descriptor-only feed install
-- `unknown`: origin not recognized (predates state file or content differs from what CLIHub wrote)
+- `unknown`: origin not recognized (predates the registry or content differs from what CLIHub wrote)
 
 **Hash semantics:** `contentHash` and `logoHash` are SHA-256 hashes (hex-encoded) of the raw file bytes. They detect **content drift and user modifications** relative to what CLIHub last wrote. They are NOT cryptographic signatures and do NOT provide authenticity verification or tamper-evidence against motivated attackers.
 
-**Disabled plugins:** Plugins marked `disabled: true` remain on disk but are not loaded by the catalog, are not launchable, and are displayed in a separate "Disabled" section of the CLI Agents page. They can be re-enabled without reinstallation.
+**Disabled plugins:** Plugins marked `enabled: false` remain on disk but are not loaded by the catalog, are not launchable, and are displayed in a separate "Disabled" section of the CLI Agents page. They can be re-enabled without reinstallation.
+
+### Scan Verification and Reconciliation
+
+During each catalog load, every processed plugin's stored `contentHash` is verified against the descriptor on disk — uniformly for every origin (`builtin`, `installed`, `unknown`), including disabled plugins in the skip path:
+
+- **Mismatch:** the descriptor was modified after CLIHub last wrote it. A warning is logged and the plugin is exposed as user-modified through `IPluginCatalog.GetUserModifiedPlugins()` (id, directory, origin, stored hash, disk hash). The plugin still loads normally, and the stored hash is never rewritten — the modification stays detectable on every later scan. A null stored hash means "cannot verify", not "modified".
+- **Folder without a registry entry:** adopted with origin `unknown`, the disk hash, the descriptor's version, and `enabled: true`; the registry is saved at most once per scan. A clean scan that adopts nothing does not rewrite the registry.
+- **Registry entry whose folder is gone:** the entry is kept (logged, never pruned) — built-in re-seeding and disabled-state preservation depend on entries surviving missing folders.
 
 ### Plugin Seeding (Three-Hash Refresh Logic)
 
 Built-in descriptors are seeded at startup using three-hash comparison to distinguish application updates from user modifications:
 
 - **`embeddedHash`** — SHA-256 hash of the built-in descriptor embedded in the current CLIHub build
-- **`storedHash`** — hash recorded in `plugin-state.json` of the content CLIHub last wrote
+- **`storedHash`** — hash recorded in `registry.json` of the content CLIHub last wrote
 - **`diskHash`** — hash of the current on-disk `plugin.json` file
 
 **Decision table for each built-in plugin:**
 
-| State entry | Directory | Condition | Action | Update state |
+| Registry entry | Directory | Condition | Action | Update registry |
 |-------------|-----------|-----------|--------|--------------|
 | None | Missing | — | Write embedded descriptor and logo | Record `embeddedHash`, `logoHash`, origin=`builtin` |
 | None | Exists | `diskHash == embeddedHash` | Adopt as built-in | Record `diskHash` as `storedHash`, origin=`builtin` |
 | None | Exists | `diskHash != embeddedHash` | Preserve user content, log warning | Record `diskHash` as `storedHash`, origin=`unknown` |
 | origin=`installed` | Any | — | Never touch | No change |
-| origin=`builtin`, disabled=`true` | Any | — | Do not write files | No change (keep state) |
+| origin=`builtin`, `enabled: false` | Any | — | Do not write files | No change (keep state) |
 | origin=`builtin` | Missing | — | Write embedded descriptor and logo | Record `embeddedHash`, `logoHash` |
 | origin=`builtin` | Exists | `diskHash == storedHash` and `embeddedHash == storedHash` | No-op (already current) | No change |
 | origin=`builtin` | Exists | `diskHash == storedHash` and `embeddedHash != storedHash` | Overwrite with embedded (app update) | Record `embeddedHash` as new `storedHash` |
@@ -148,8 +160,8 @@ Built-in descriptors are seeded at startup using three-hash comparison to distin
 
 From the CLI Agents settings page, users can:
 
-- **Disable** an enabled plugin: sets `disabled: true` in state, reloads catalog, plugin removed from active list
-- **Enable** a disabled plugin: sets `disabled: false` in state, reloads catalog, plugin returned to active list
+- **Disable** an enabled plugin: sets `enabled: false` in the registry, reloads catalog, plugin removed from active list
+- **Enable** a disabled plugin: sets `enabled: true` in the registry, reloads catalog, plugin returned to active list
 
 Disabled plugins stay on disk and can be re-enabled without reinstallation. Disabled built-in plugins are not re-seeded (files not overwritten).
 

@@ -29,18 +29,33 @@ public class PluginCatalogTests : IDisposable
         File.WriteAllText(Path.Combine(dir, "plugin.json"), json);
     }
 
-    private PluginCatalog CreateManager(IPluginStateRepository? stateRepository = null) =>
+    private PluginCatalog CreateManager(IPluginRegistry? stateRepository = null) =>
         new(NullLogger<PluginCatalog>.Instance, this.CreateResolver(), this.root, stateRepository: stateRepository);
 
-    private PluginStateRepository CreateStateRepository() =>
-        new(NullLogger<PluginStateRepository>.Instance, Path.Combine(this.root, "plugin-state.json"));
+    private PluginRegistryRepository CreateStateRepository()
+    {
+        // The legacy state path is a file inside the test's temp root, never the real
+        // %APPDATA% location: a Load with a missing registry must not adopt (or delete) the
+        // developer's actual plugin-state.json.
+        return new PluginRegistryRepository(
+            NullLogger<PluginRegistryRepository>.Instance,
+            Path.Combine(this.root, "plugin-state.json"),
+            Path.Combine(this.root, "legacy-plugin-state.json"));
+    }
 
-    private void WriteState(string pluginId, PluginStateEntry entry)
+    private void WriteState(string pluginId, PluginRegistryEntry entry)
     {
         var repository = this.CreateStateRepository();
         var document = repository.Load();
         document.Plugins[pluginId] = entry;
         repository.Save(document);
+    }
+
+    private PluginRegistryEntry ReadRegistryEntry(string pluginId)
+    {
+        var entry = this.CreateStateRepository().Load().Plugins.GetValueOrDefault(pluginId);
+        Assert.NotNull(entry);
+        return entry;
     }
 
     private PluginLogoResolver CreateResolver() =>
@@ -404,7 +419,7 @@ public class PluginCatalogTests : IDisposable
     public void LoadPlugins_DisabledPlugin_NotLoadedByGetAllPlugins()
     {
         this.WritePlugin("opencode", ValidJson);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed) { Disabled = true });
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed) { Enabled = false });
         var manager = this.CreateManager(this.CreateStateRepository());
 
         manager.LoadPlugins();
@@ -424,7 +439,7 @@ public class PluginCatalogTests : IDisposable
           "commands": { "launch": { "executable": "opencode" } }
         }
         """);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed) { InstalledVersion = "1.2.3", Disabled = true });
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.2.3", Enabled = false });
         var manager = this.CreateManager(this.CreateStateRepository());
 
         manager.LoadPlugins();
@@ -441,7 +456,7 @@ public class PluginCatalogTests : IDisposable
     public void LoadPlugins_EnabledPluginWithStateEntry_LoadsNormally()
     {
         this.WritePlugin("opencode", ValidJson);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin));
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin));
         var manager = this.CreateManager(this.CreateStateRepository());
 
         manager.LoadPlugins();
@@ -467,19 +482,169 @@ public class PluginCatalogTests : IDisposable
     public void ReloadPlugins_AfterEnable_DisabledPluginReturnsToCatalog()
     {
         this.WritePlugin("opencode", ValidJson);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin) { Disabled = true });
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin) { Enabled = false });
         var repository = this.CreateStateRepository();
         var manager = this.CreateManager(repository);
         manager.LoadPlugins();
         Assert.Single(manager.GetDisabledPlugins());
 
         var document = repository.Load();
-        document.Plugins["opencode"].Disabled = false;
+        document.Plugins["opencode"].Enabled = true;
         repository.Save(document);
         manager.ReloadPlugins();
 
         Assert.Single(manager.GetAllPlugins());
         Assert.Empty(manager.GetDisabledPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_FolderWithoutEntry_AdoptedAsUnknownWithDiskHash()
+    {
+        this.WritePlugin("opencode", """
+        {
+          "id": "opencode",
+          "name": "OpenCode",
+          "version": "1.4.0",
+          "commands": { "launch": { "executable": "opencode" } }
+        }
+        """);
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        // The adoption writes the registry during the scan and the plugin still loads.
+        Assert.Single(manager.GetAllPlugins());
+        var entry = this.ReadRegistryEntry("opencode");
+        Assert.Equal(PluginOrigin.Unknown, entry.Origin);
+        Assert.Equal(
+            PluginHasher.ComputeFileHash(Path.Combine(this.root, "opencode", "plugin.json")),
+            entry.ContentHash);
+        Assert.Equal("1.4.0", entry.InstalledVersion);
+        Assert.True(entry.Enabled);
+        Assert.Null(entry.InstalledAt);
+        Assert.Empty(manager.GetUserModifiedPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_InstalledDescriptorModified_FlaggedUserModified()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed) { ContentHash = "stale-hash" });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        // The plugin still loads normally; the modification is recorded with both hashes.
+        Assert.Single(manager.GetAllPlugins());
+        var modified = Assert.Single(manager.GetUserModifiedPlugins());
+        Assert.Equal("opencode", modified.PluginId);
+        Assert.Equal(Path.Combine(this.root, "opencode"), modified.PluginDirectory);
+        Assert.Equal(PluginOrigin.Installed, modified.Origin);
+        Assert.Equal("stale-hash", modified.StoredContentHash);
+        Assert.Equal(
+            PluginHasher.ComputeFileHash(Path.Combine(this.root, "opencode", "plugin.json")),
+            modified.DiskContentHash);
+
+        // Verification never rewrites the stored hash: the marker survives a reload.
+        manager.ReloadPlugins();
+        Assert.Single(manager.GetUserModifiedPlugins());
+        Assert.Equal("stale-hash", this.ReadRegistryEntry("opencode").ContentHash);
+    }
+
+    [Fact]
+    public void LoadPlugins_BuiltinDescriptorModified_FlaggedUniformly()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin) { ContentHash = "stale-hash" });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        var modified = Assert.Single(manager.GetUserModifiedPlugins());
+        Assert.Equal("opencode", modified.PluginId);
+        Assert.Equal(PluginOrigin.Builtin, modified.Origin);
+        Assert.Single(manager.GetAllPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_MatchingHash_NotFlagged()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var diskHash = PluginHasher.ComputeFileHash(Path.Combine(this.root, "opencode", "plugin.json"));
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed) { ContentHash = diskHash });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        Assert.Single(manager.GetAllPlugins());
+        Assert.Empty(manager.GetUserModifiedPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_NullStoredHash_NotFlagged()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed));
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        // A null stored hash is "cannot verify", not "modified".
+        Assert.Single(manager.GetAllPlugins());
+        Assert.Empty(manager.GetUserModifiedPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_RegistryEntryWithoutFolder_EntryKeptNotPruned()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        this.WriteState("gone", new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" });
+        var manager = this.CreateManager(this.CreateStateRepository());
+
+        manager.LoadPlugins();
+
+        var entry = this.ReadRegistryEntry("gone");
+        Assert.Equal(PluginOrigin.Installed, entry.Origin);
+        Assert.Equal("1.0.0", entry.InstalledVersion);
+
+        // A subsequent load keeps the entry too.
+        manager.ReloadPlugins();
+        Assert.Equal(PluginOrigin.Installed, this.ReadRegistryEntry("gone").Origin);
+        Assert.Single(manager.GetAllPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_CleanScan_DoesNotRewriteRegistry()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var diskHash = PluginHasher.ComputeFileHash(Path.Combine(this.root, "opencode", "plugin.json"));
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin) { ContentHash = diskHash });
+        var stateFile = Path.Combine(this.root, "plugin-state.json");
+        var contentBefore = File.ReadAllText(stateFile);
+
+        this.CreateManager(this.CreateStateRepository()).LoadPlugins();
+
+        Assert.Equal(contentBefore, File.ReadAllText(stateFile));
+    }
+
+    [Fact]
+    public void ReloadPlugins_AfterModification_StateReflectsNewScan()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var diskHash = PluginHasher.ComputeFileHash(Path.Combine(this.root, "opencode", "plugin.json"));
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed) { ContentHash = diskHash });
+        var manager = this.CreateManager(this.CreateStateRepository());
+        manager.LoadPlugins();
+        Assert.Empty(manager.GetUserModifiedPlugins());
+
+        this.WritePlugin("opencode", ValidJson.Replace("OpenCode", "Edited OpenCode", StringComparison.Ordinal));
+        manager.ReloadPlugins();
+
+        var modified = Assert.Single(manager.GetUserModifiedPlugins());
+        Assert.Equal("opencode", modified.PluginId);
+        Assert.Equal(diskHash, modified.StoredContentHash);
+        Assert.NotEqual(diskHash, modified.DiskContentHash);
+        Assert.Single(manager.GetAllPlugins());
     }
 
     private sealed class RecordingLogger<T> : ILogger<T>

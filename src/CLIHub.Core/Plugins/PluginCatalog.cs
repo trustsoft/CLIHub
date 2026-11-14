@@ -18,11 +18,12 @@ public sealed class PluginCatalog : IPluginCatalog
     private readonly IPluginDescriptorValidator descriptorValidator;
     private readonly IPluginDescriptorSource source;
     private readonly ILoggingContextProvider loggingContext;
-    private readonly IPluginStateRepository? stateRepository;
+    private readonly IPluginRegistry? stateRepository;
     private readonly string pluginsPath;
     private IReadOnlyList<Plugin> plugins = Array.Empty<Plugin>();
     private IReadOnlyList<InvalidPluginEntry> invalidPlugins = Array.Empty<InvalidPluginEntry>();
     private IReadOnlyList<DisabledPluginEntry> disabledPlugins = Array.Empty<DisabledPluginEntry>();
+    private IReadOnlyList<UserModifiedPluginEntry> userModifiedPlugins = Array.Empty<UserModifiedPluginEntry>();
 
     /// <inheritdoc />
     public event EventHandler? PluginsChanged;
@@ -37,7 +38,10 @@ public sealed class PluginCatalog : IPluginCatalog
     /// <param name="descriptorValidator"> The validator for plugin descriptors. </param>
     /// <param name="source"> The source of plugin descriptors. </param>
     /// <param name="loggingContext"> The provider for operation logging scopes. </param>
-    /// <param name="stateRepository"> The plugin lifecycle state repository used to skip disabled plugins. </param>
+    /// <param name="stateRepository">
+    ///   The plugin registry repository used to skip disabled plugins, verify descriptor
+    ///   content, and adopt folders the registry does not know about.
+    /// </param>
     public PluginCatalog(ILogger<PluginCatalog> logger,
                          PluginLogoResolver logoResolver,
                          string? pluginsPath = null,
@@ -45,7 +49,7 @@ public sealed class PluginCatalog : IPluginCatalog
                          IPluginDescriptorValidator? descriptorValidator = null,
                          IPluginDescriptorSource? source = null,
                          ILoggingContextProvider? loggingContext = null,
-                         IPluginStateRepository? stateRepository = null)
+                         IPluginRegistry? stateRepository = null)
     {
         this.logger = logger;
         this.logoResolver = logoResolver ?? throw new ArgumentNullException(nameof(logoResolver));
@@ -76,7 +80,14 @@ public sealed class PluginCatalog : IPluginCatalog
         var plugins = new List<Plugin>();
         var invalidPlugins = new List<InvalidPluginEntry>();
         var disabledPlugins = new List<DisabledPluginEntry>();
-        PluginStateDocument? state = null;
+        var userModifiedPlugins = new List<UserModifiedPluginEntry>();
+
+        // The registry document is loaded once per scan when a repository is present: the skip
+        // check, content verification, and folder adoption all read the same snapshot, and the
+        // adoption writes it back at most once after the enumeration.
+        var state = this.stateRepository?.Load();
+        var stateDirty = false;
+        var seenPluginIds = new HashSet<string>(StringComparer.Ordinal);
         using var scope = this.loggingContext.BeginOperation("PluginCatalogLoad");
 
         foreach (var entry in this.source.EnumerateDescriptors())
@@ -95,11 +106,19 @@ public sealed class PluginCatalog : IPluginCatalog
 
                 if (plugin is not null)
                 {
-                    // Disabled plugins are not loaded, not validated, and not launchable; they
-                    // surface separately so the UI can offer enabling them again.
-                    state ??= this.stateRepository?.Load();
-                    if (state is not null && state.Plugins.TryGetValue(plugin.Id, out var stateEntry) && stateEntry.Disabled)
+                    seenPluginIds.Add(plugin.Id);
+
+                    PluginRegistryEntry? stateEntry = null;
+                    state?.Plugins.TryGetValue(plugin.Id, out stateEntry);
+                    var diskHash = PluginHasher.ComputeFileHash(Path.Combine(entry.PluginDirectory, "plugin.json"));
+
+                    // Disabled plugins (enabled: false) are not loaded, not validated, and not
+                    // launchable; they surface separately so the UI can offer enabling them
+                    // again. Their descriptor content is still verified: a modification is
+                    // logged whichever side of the skip the plugin falls on.
+                    if (stateEntry is not null && !stateEntry.Enabled)
                     {
+                        this.VerifyContentHash(plugin.Id, entry.PluginDirectory, stateEntry, diskHash, userModifiedPlugins);
                         disabledPlugins.Add(new DisabledPluginEntry(
                             plugin.Id,
                             entry.PluginDirectory,
@@ -131,6 +150,29 @@ public sealed class PluginCatalog : IPluginCatalog
                         continue;
                     }
 
+                    if (state is not null)
+                    {
+                        if (stateEntry is null)
+                        {
+                            // The registry does not know this folder (hand-created, or its
+                            // earlier entry was lost): adopt it as unknown-origin content with
+                            // the hash of what is on disk right now.
+                            state.Plugins[plugin.Id] = new PluginRegistryEntry(PluginOrigin.Unknown)
+                            {
+                                ContentHash = diskHash,
+                                InstalledVersion = plugin.Version,
+                                Enabled = true,
+                                InstalledAt = null
+                            };
+                            stateDirty = true;
+                            this.logger.LogInformation("Adopted plugin folder {PluginId} into the registry with unknown origin", plugin.Id);
+                        }
+                        else
+                        {
+                            this.VerifyContentHash(plugin.Id, entry.PluginDirectory, stateEntry, diskHash, userModifiedPlugins);
+                        }
+                    }
+
                     plugin.PluginDirectory = entry.PluginDirectory;
                     plugin.LogoPath = this.logoResolver.Resolve(plugin.Id, entry.PluginDirectory);
 
@@ -145,10 +187,62 @@ public sealed class PluginCatalog : IPluginCatalog
             }
         }
 
+        if (state is not null)
+        {
+            // Entries whose folder did not show up are kept, not pruned: the seeder's re-seed
+            // and disabled-preservation semantics depend on entries surviving missing folders.
+            foreach (var pluginId in state.Plugins.Keys)
+            {
+                if (!seenPluginIds.Contains(pluginId))
+                {
+                    this.logger.LogInformation("Registry entry {PluginId} has no plugin folder on disk; the entry is kept", pluginId);
+                }
+            }
+
+            if (stateDirty)
+            {
+                this.stateRepository!.Save(state);
+            }
+        }
+
         this.logger.LogInformation("Loaded {Count} plugin(s)", plugins.Count);
         this.invalidPlugins = invalidPlugins;
         this.disabledPlugins = disabledPlugins;
+        this.userModifiedPlugins = userModifiedPlugins;
         return plugins;
+    }
+
+    /// <summary>
+    ///   Compares the stored content hash with the descriptor hash on disk and records a
+    ///   user-modified entry on mismatch. A null stored hash means nothing CLIHub wrote is
+    ///   recorded for this plugin: it is "cannot verify", not "modified". Verification never
+    ///   rewrites the stored hash, so the modification stays detectable on later scans.
+    /// </summary>
+    /// <param name="pluginId"> The plugin id. </param>
+    /// <param name="pluginDirectory"> The plugin's directory on disk. </param>
+    /// <param name="stateEntry"> The registry entry holding the stored hash. </param>
+    /// <param name="diskHash"> The hash of the descriptor currently on disk. </param>
+    /// <param name="userModifiedPlugins"> The list collecting the scan's user-modified entries. </param>
+    private void VerifyContentHash(
+        string pluginId,
+        string pluginDirectory,
+        PluginRegistryEntry stateEntry,
+        string? diskHash,
+        List<UserModifiedPluginEntry> userModifiedPlugins)
+    {
+        if (stateEntry.ContentHash is null || diskHash is null ||
+            string.Equals(stateEntry.ContentHash, diskHash, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        this.logger.LogWarning("Plugin descriptor {PluginId} was modified locally; preserving the modified content", pluginId);
+        userModifiedPlugins.Add(new UserModifiedPluginEntry(
+            pluginId,
+            pluginDirectory,
+            stateEntry.Origin,
+            stateEntry.ContentHash,
+            diskHash));
     }
 
     /// <inheritdoc />
@@ -159,6 +253,9 @@ public sealed class PluginCatalog : IPluginCatalog
 
     /// <inheritdoc />
     public IReadOnlyList<DisabledPluginEntry> GetDisabledPlugins() => this.disabledPlugins;
+
+    /// <inheritdoc />
+    public IReadOnlyList<UserModifiedPluginEntry> GetUserModifiedPlugins() => this.userModifiedPlugins;
 
     private static string? FindLoadedPluginDirectory(IReadOnlyList<Plugin> plugins,
                                                      string pluginId,

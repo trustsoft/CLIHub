@@ -50,4 +50,12 @@ public interface IPluginCatalog
     /// </summary>
     /// <returns> The disabled plugins and their state metadata. </returns>
     IReadOnlyList<DisabledPluginEntry> GetDisabledPlugins();
+
+    /// <summary>
+    ///   Gets user-modified plugin entries retained from the last load: plugins whose on-disk
+    ///   descriptor no longer matches the content hash CLIHub last recorded. A plugin reported
+    ///   here still loads normally; the entry documents the modification.
+    /// </summary>
+    /// <returns> The user-modified plugins with their stored and on-disk hashes. </returns>
+    IReadOnlyList<UserModifiedPluginEntry> GetUserModifiedPlugins();
 }

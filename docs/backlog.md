@@ -154,6 +154,30 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   surfaces user-modified descriptors uniformly.
 - Trigger: after the client v2 slice; ideally before background sync, which wants the registry's
   sync metadata.
+- **Slice complete (2026-11-14, `plugin-registry-consolidation`): `registry.json` is the single
+  local source of truth — tolerant reads, atomic writes, one-time adoption of
+  `plugin-state.json` (inverted `disabled` → `enabled`, deleted on success, retry on failure,
+  corrupt-registry recovery), `contentHash` coverage for every managed plugin, scan-time
+  verification exposing user-modified descriptors via `IPluginCatalog.GetUserModifiedPlugins()`,
+  folder adoption with origin `unknown`, and gone-folder entries kept (see the prune-semantics
+  entry below). `feedUrlAtInstall` is deferred to the background-sync slice.**
+
+### Prune semantics for registry entries whose plugin folder is gone
+
+- Severity: Low (deliberate behavior, recorded decision; only becomes a question with a delete flow)
+- Evidence (2026-11-14, `plugin-registry-consolidation` design D5/OQ-2): catalog reconciliation
+  keeps registry entries whose plugin folder disappeared and logs them Information per scan
+  (`src/CLIHub.Core/Plugins/PluginCatalog.cs:198`); nothing prunes them, because the seeder's
+  re-seed and disabled-preservation semantics depend on entries surviving missing folders. A
+  gone-folder entry still shows "Installed (current)" in Browse Plugins (accepted for this slice,
+  design OQ-3).
+- Proposed remedy: when a user-driven plugin delete flow lands (none exists today — disable is the
+  only "removal"), have that flow prune the registry entry explicitly at delete time and decide
+  whether Browse statuses should consult folder presence; keep scan-time reconciliation
+  keep-only so transient folder absence (cloud-sync hiccup, antivirus quarantine) never destroys
+  origin/disabled state irreversibly.
+- Trigger: a future user-driven plugin delete flow (the first flow that deletes plugin folders
+  through CLIHub).
 
 ### Background feed sync and update badges
 

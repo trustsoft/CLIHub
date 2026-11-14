@@ -50,9 +50,17 @@ public static class AppPaths
     public static string ConfigFile { get; } = Path.Combine(Root, "config.json");
 
     /// <summary>
-    ///   The plugin lifecycle state file: <c> %APPDATA%\CLIHub\plugin-state.json </c>.
+    ///   The plugin registry document: <c> %APPDATA%\CLIHub\registry.json </c>, the single local
+    ///   source of truth for plugin lifecycle state.
     /// </summary>
-    public static string PluginStateFile { get; } = Path.Combine(Root, "plugin-state.json");
+    public static string RegistryFile { get; } = Path.Combine(Root, "registry.json");
+
+    /// <summary>
+    ///   The legacy pre-registry plugin state file: <c> %APPDATA%\CLIHub\plugin-state.json </c>.
+    ///   Its content is adopted into <see cref="RegistryFile" /> once; the file is only read
+    ///   while no registry document exists.
+    /// </summary>
+    public static string LegacyPluginStateFile { get; } = Path.Combine(Root, "plugin-state.json");
 
     /// <summary>
     ///   The persistent logo cache state file: <c> %APPDATA%\CLIHub\cache\logos.json </c>.

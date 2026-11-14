@@ -12,21 +12,25 @@ public class PluginSeederTests : IDisposable
 
     private readonly string pluginsPath;
     private readonly string stateFilePath;
+    private readonly string legacyStateFilePath;
 
     public PluginSeederTests()
     {
         this.pluginsPath = Path.Combine(Path.GetTempPath(), "clihub-seed-" + Guid.NewGuid().ToString("N"));
         this.stateFilePath = Path.Combine(Path.GetTempPath(), "clihub-seedstate-" + Guid.NewGuid().ToString("N") + ".json");
+        this.legacyStateFilePath = Path.Combine(Path.GetTempPath(), "clihub-seedlegacy-" + Guid.NewGuid().ToString("N") + ".json");
     }
 
     public void Dispose()
     {
         try { Directory.Delete(this.pluginsPath, recursive: true); } catch { }
         try { File.Delete(this.stateFilePath); } catch { }
+        try { File.Delete(this.stateFilePath + ".tmp"); } catch { }
+        try { File.Delete(this.legacyStateFilePath); } catch { }
     }
 
-    private PluginStateRepository CreateStateRepository() =>
-        new(NullLogger<PluginStateRepository>.Instance, this.stateFilePath);
+    private PluginRegistryRepository CreateStateRepository() =>
+        new(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath);
 
     private PluginSeeder CreateSeeder() =>
         new(NullLogger<PluginSeeder>.Instance, this.CreateStateRepository(), this.pluginsPath);
@@ -43,7 +47,7 @@ public class PluginSeederTests : IDisposable
         File.WriteAllText(Path.Combine(directory, "plugin.json"), json);
     }
 
-    private void WriteState(string id, PluginStateEntry entry)
+    private void WriteState(string id, PluginRegistryEntry entry)
     {
         var repository = this.CreateStateRepository();
         var document = repository.Load();
@@ -51,7 +55,7 @@ public class PluginSeederTests : IDisposable
         repository.Save(document);
     }
 
-    private PluginStateEntry ReadState(string id)
+    private PluginRegistryEntry ReadState(string id)
     {
         var entry = this.CreateStateRepository().Load().Plugins.GetValueOrDefault(id);
         Assert.NotNull(entry);
@@ -96,6 +100,21 @@ public class PluginSeederTests : IDisposable
         Assert.Equal(PluginOrigin.Builtin, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(EmbeddedDescriptor("opencode")), entry.ContentHash);
         Assert.Equal(PluginHasher.ComputeFileHash(Path.Combine(this.pluginsPath, "opencode", "logo.png")), entry.LogoHash);
+    }
+
+    [Fact]
+    public void EnsureBuiltinsExist_EmptyFolder_RecordsEnabledEntryWithNullInstalledAt()
+    {
+        this.CreateSeeder().EnsureBuiltinsExist();
+
+        var entry = this.ReadState("opencode");
+        Assert.True(entry.Enabled);
+        Assert.Null(entry.InstalledAt);
+        // The stored hash equals the hash of the written plugin.json file bytes: the seeder's
+        // embedded-string hash and the disk-file hash are the same SHA-256 over the same bytes.
+        Assert.Equal(
+            PluginHasher.ComputeFileHash(Path.Combine(this.pluginsPath, "opencode", "plugin.json")),
+            entry.ContentHash);
     }
 
     [Fact]
@@ -185,7 +204,7 @@ public class PluginSeederTests : IDisposable
         // disk still holds that unmodified old content, and the embedded content differs.
         const string oldContent = """{ "id": "opencode", "name": "OpenCode (old)", "commands": { "launch": { "executable": "opencode" } } }""";
         this.WriteDescriptor("opencode", oldContent);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin)
         {
             ContentHash = PluginHasher.ComputeHash(oldContent)
         });
@@ -204,7 +223,7 @@ public class PluginSeederTests : IDisposable
         const string oldContent = """{ "id": "opencode", "name": "OpenCode (old)", "commands": { "launch": { "executable": "opencode" } } }""";
         var editedContent = ModifiedDescriptor("opencode");
         this.WriteDescriptor("opencode", editedContent);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin)
         {
             ContentHash = PluginHasher.ComputeHash(oldContent)
         });
@@ -222,7 +241,7 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void EnsureBuiltinsExist_InstalledPlugin_NeverTouched()
     {
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed)
         {
             ContentHash = "irrelevant"
         });
@@ -240,7 +259,7 @@ public class PluginSeederTests : IDisposable
     {
         const string content = """{ "id": "opencode", "name": "Installed variant", "commands": { "launch": { "executable": "opencode" } } }""";
         this.WriteDescriptor("opencode", content);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Installed)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Installed)
         {
             ContentHash = PluginHasher.ComputeHash(content)
         });
@@ -254,16 +273,16 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void EnsureBuiltinsExist_DisabledBuiltin_NotReSeeded()
     {
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin)
         {
-            Disabled = true
+            Enabled = false
         });
 
         var written = this.CreateSeeder().EnsureBuiltinsExist();
 
         Assert.Equal(4, written);
         Assert.False(Directory.Exists(Path.Combine(this.pluginsPath, "opencode")));
-        Assert.True(this.ReadState("opencode").Disabled);
+        Assert.False(this.ReadState("opencode").Enabled);
     }
 
     [Fact]
@@ -282,7 +301,7 @@ public class PluginSeederTests : IDisposable
     [Fact]
     public void EnsureBuiltinsExist_UnknownOriginDirectoryMissing_WritesEmbeddedAndAdoptsAsBuiltin()
     {
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Unknown)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Unknown)
         {
             ContentHash = "gone-content"
         });
@@ -301,7 +320,7 @@ public class PluginSeederTests : IDisposable
     public void EnsureBuiltinsExist_UnknownOriginDiskMatchesEmbedded_AdoptsAsBuiltin()
     {
         this.WriteDescriptor("opencode", EmbeddedDescriptor("opencode"));
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Unknown)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Unknown)
         {
             ContentHash = "stale-content"
         });
@@ -320,7 +339,7 @@ public class PluginSeederTests : IDisposable
     {
         var content = ModifiedDescriptor("opencode");
         this.WriteDescriptor("opencode", content);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Unknown)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Unknown)
         {
             ContentHash = "older-content"
         });
@@ -362,7 +381,7 @@ public class PluginSeederTests : IDisposable
         const string oldDescriptor = """{ "id": "opencode", "name": "OpenCode (old)", "commands": { "launch": { "executable": "opencode" } } }""";
         var modifiedLogo = new byte[] { 9, 8, 7, 6 };
         this.WriteDescriptor("opencode", oldDescriptor);
-        this.WriteState("opencode", new PluginStateEntry(PluginOrigin.Builtin)
+        this.WriteState("opencode", new PluginRegistryEntry(PluginOrigin.Builtin)
         {
             ContentHash = PluginHasher.ComputeHash(oldDescriptor),
             LogoHash = PluginHasher.ComputeHash(new byte[] { 1, 2, 3, 4 })

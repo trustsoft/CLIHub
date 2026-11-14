@@ -34,7 +34,7 @@ public class AgentManagementViewModelBuilder
     private Mock<IAgentProcessInspector>? processInspector;
     private Mock<IPluginInstaller>? pluginInstaller;
     private FakePluginDialogService? pluginDialogs;
-    private InMemoryPluginStateRepository? pluginState;
+    private InMemoryPluginRegistry? pluginState;
     private Mock<IPreferencesStore>? preferencesStore;
     private IApplicationOperationLifetime? operationLifetime;
     private ILogger<AgentManagementViewModel>? logger;
@@ -164,7 +164,7 @@ public class AgentManagementViewModelBuilder
     /// <summary>
     ///   Provides a custom in-memory plugin state repository.
     /// </summary>
-    public AgentManagementViewModelBuilder WithPluginState(InMemoryPluginStateRepository pluginState)
+    public AgentManagementViewModelBuilder WithPluginState(InMemoryPluginRegistry pluginState)
     {
         this.pluginState = pluginState;
         return this;
@@ -235,7 +235,7 @@ public class AgentManagementViewModelBuilder
         var processInspector = this.processInspector ?? this.CreateDefaultProcessInspector();
         var pluginInstaller = this.pluginInstaller ?? new Mock<IPluginInstaller>();
         var pluginDialogs = this.pluginDialogs ?? new FakePluginDialogService();
-        var pluginState = this.pluginState ?? new InMemoryPluginStateRepository();
+        var pluginState = this.pluginState ?? new InMemoryPluginRegistry();
         var preferencesStore = this.preferencesStore ?? new Mock<IPreferencesStore>();
 
         var processMonitor = new AgentProcessMonitor(

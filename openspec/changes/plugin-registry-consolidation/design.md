@@ -344,4 +344,63 @@ the only new strings are log messages and API surface).
 
 ## Implementation Notes (filled during implementation)
 
-- None yet.
+Implemented 2026-11-14 at plan commit `6f94599` (working tree left dirty; the orchestrator owns
+commits). All gates green: build 0 warnings / 0 errors; tests 948 + 67 + 673 = 1,688 passed,
+0 failed, 0 skipped (baseline 935 + 67 + 673 = 1,675; delta exactly +13: the rewritten repository
+test file grows 6 → 10 tests, +1 seeder test, +8 catalog tests); `openspec validate --all`
+`Totals: 34 passed, 0 failed (34 items)` with `✓ change/plugin-registry-consolidation` and no new
+warnings versus the baseline (all warnings are the pre-existing long-requirement /
+placeholder-purpose warnings on other specs).
+
+### Open-question resolutions (user decisions, final)
+
+- **OQ-1 — `feedUrlAtInstall` DEFERRED** to the background-sync slice; `registry.json` ships
+  without it (D8/DEV-4 unchanged; tolerant reads make later addition free).
+- **OQ-2 — prune semantics DEFERRED and parked**: `docs/backlog.md` gained the entry
+  "Prune semantics for registry entries whose plugin folder is gone" (evidence
+  `PluginCatalog.cs:198`, trigger: a future user-driven plugin delete flow) directly below the
+  consolidation entry, which now carries a `Slice complete` marker.
+- **OQ-3 — gone-folder-shows-Installed ACCEPTED** for this slice; Browse does not consult folder
+  presence (D5 unchanged).
+
+### Notes and micro-deviations (code reality over task text)
+
+- **GitNexus impact before edits** (tasks preamble): `PluginStateRepository` CRITICAL (54),
+  `PluginCatalog` CRITICAL (45), `AgentManagementViewModel` CRITICAL (47),
+  `BrowsePluginsDialogViewModel` CRITICAL (35) — expected for a seam rename; the compile gate is
+  the mitigation. `PluginStateDocument`/`PluginStateEntry`/`PluginInstaller`/`PluginSeeder`
+  reported UNKNOWN (0/29/0/0 impacted); backed by a full-solution text search: all references
+  live in the 18 files the design enumerates, and DI resolves through the swept registration
+  (`ServiceCollectionExtensions.cs:109`), so no caller is invisible to the compiler.
+- **Stage 1**: the mechanical identifier sweep also renamed the private helper
+  `UpdatePluginStateEntry` → `UpdatePluginRegistryEntry` in `AgentManagementViewModel`
+  (substring of a swept type name; the method is inside task 1.5's swept region). Field/param
+  names (`pluginState`, `WithPluginState`, test helpers `WriteState`/`CreateStateRepository`)
+  were deliberately kept — D7's scope is type names.
+- **Stage 2**: the compile-driven polarity sweep additionally converted the two installer
+  assertions `Assert.False(entry.Disabled)` → `Assert.True(entry.Enabled)` and the installer's
+  `RecordInstalledState` `Disabled = false` → `Enabled = true` (the property is gone; same
+  semantics; formalized as task 3.1 in Stage 3). The repository test rewrite kept the
+  pre-existing `SaveCreatesMissingParentDirectory` coverage (adapted to the registry path)
+  alongside the (a)–(i) matrix — no coverage was removed.
+- **Adoption write-failure simulation** (task 2.6g): implemented as a directory occupying the
+  registry path (blocks the temp-file rename); the test then removes it and proves a second
+  repository over the writable path completes the adoption — matching the "second repository over
+  a writable path succeeds" wording.
+- **Catalog reconciliation** (Stage 4): implemented per D5/D6/D9 — registry loaded once per scan
+  when a repository is present; verification in both the disabled branch and the post-dedupe
+  loaded path; adoption only for valid, non-duplicate plugins with no entry; at most one `Save`
+  per scan; unseen-entry Information log per id; seen-id tracking includes validation-invalid and
+  duplicate ids so a folder that exists is never reported as missing.
+- **Micro-fix round (verifier pre-commit findings, 2026-11-14):** (1) real-file footgun — every
+  test construction of `PluginRegistryRepository` now passes an explicit legacy path inside the
+  test's temp location, never defaulting to the real `%APPDATA%\CLIHub\plugin-state.json` (fixed
+  in `PluginInstallerTests` — a new `legacyStateFilePath` field passed at all six sites,
+  `PluginSeederTests` — a new field plus Dispose cleanup at its helper,
+  `PluginCatalogTests` — legacy path inside the temp root at its helper, and
+  `PluginRegistryRepositoryTests.SaveCreatesMissingParentDirectory` — a nested legacy path even
+  though that test only saves; sweep found four more load-calling sites beyond the three helpers
+  the finding named); (2) `IPluginRegistry` XML docs updated to `registry.json` wording (the
+  stale `plugin-state.json` path reference and "state file" phrasing predated the Stage-2
+  document rename); (3) task 5.12 unticked — its tail (wait for the smoke result, ask for
+  explicit commit/archive approval) is outstanding until the user confirms the manual smoke.

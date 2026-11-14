@@ -14,6 +14,7 @@ public class PluginInstallerTests : IDisposable
     private readonly string root;
     private readonly string pluginsPath;
     private readonly string stateFilePath;
+    private readonly string legacyStateFilePath;
     private readonly Mock<IPluginCatalog> catalog = new();
 
     public PluginInstallerTests()
@@ -21,6 +22,7 @@ public class PluginInstallerTests : IDisposable
         this.root = Path.Combine(Path.GetTempPath(), "clihub-installer-" + Guid.NewGuid().ToString("N"));
         this.pluginsPath = Path.Combine(this.root, "plugins");
         this.stateFilePath = Path.Combine(this.root, "plugin-state.json");
+        this.legacyStateFilePath = Path.Combine(this.root, "legacy-plugin-state.json");
     }
 
     public void Dispose()
@@ -30,7 +32,7 @@ public class PluginInstallerTests : IDisposable
 
     private PluginInstaller CreateInstaller(IPluginDescriptorReader? reader = null) =>
         new(NullLogger<PluginInstaller>.Instance,
-            new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath),
+            new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath),
             this.catalog.Object,
             reader,
             pluginsPath: this.pluginsPath);
@@ -81,9 +83,9 @@ public class PluginInstallerTests : IDisposable
         File.WriteAllText(Path.Combine(directory, "plugin.json"), json);
         if (installedVersion is not null)
         {
-            var repository = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath);
+            var repository = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath);
             var document = repository.Load();
-            document.Plugins[id] = new PluginStateEntry(PluginOrigin.Installed) { InstalledVersion = installedVersion };
+            document.Plugins[id] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = installedVersion };
             repository.Save(document);
         }
     }
@@ -372,7 +374,7 @@ public class PluginInstallerTests : IDisposable
     public void Inspect_WritesNoFilesToPluginsOrStagingDirectories()
     {
         this.WriteExistingPlugin("community", ValidDescriptor);
-        var repository = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath);
+        var repository = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath);
         repository.Save(repository.Load());
         var stateBefore = File.ReadAllText(this.stateFilePath);
 
@@ -399,13 +401,15 @@ public class PluginInstallerTests : IDisposable
         Assert.Equal(ValidDescriptor, File.ReadAllText(pluginJson));
         Assert.Equal(LogoBytes, File.ReadAllBytes(logo));
 
-        var state = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath).Load();
+        var state = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath).Load();
         var entry = state.Plugins["community"];
         Assert.Equal(PluginOrigin.Installed, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(ValidDescriptor), entry.ContentHash);
         Assert.Equal(PluginHasher.ComputeHash(LogoBytes), entry.LogoHash);
         Assert.Equal("1.2.3", entry.InstalledVersion);
-        Assert.False(entry.Disabled);
+        Assert.True(entry.Enabled);
+        Assert.NotNull(entry.InstalledAt);
+        Assert.True(entry.InstalledAt >= DateTimeOffset.UtcNow - TimeSpan.FromMinutes(1), "the install time must be recorded at install time");
 
         this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
     }
@@ -602,13 +606,15 @@ public class PluginInstallerTests : IDisposable
         Assert.Equal(Encoding.UTF8.GetBytes(descriptor), File.ReadAllBytes(pluginJson));
         Assert.Equal(LogoBytes, File.ReadAllBytes(logo));
 
-        var state = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath).Load();
+        var state = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath).Load();
         var entry = state.Plugins["community"];
         Assert.Equal(PluginOrigin.Installed, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(descriptor), entry.ContentHash);
         Assert.Equal(PluginHasher.ComputeHash(LogoBytes), entry.LogoHash);
         Assert.Equal("1.2.3", entry.InstalledVersion);
-        Assert.False(entry.Disabled);
+        Assert.True(entry.Enabled);
+        Assert.NotNull(entry.InstalledAt);
+        Assert.True(entry.InstalledAt >= DateTimeOffset.UtcNow - TimeSpan.FromMinutes(1), "the install time must be recorded at install time");
 
         this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
     }
@@ -621,11 +627,13 @@ public class PluginInstallerTests : IDisposable
         Assert.True(result.Success);
         Assert.False(File.Exists(Path.Combine(this.pluginsPath, "community", "logo.png")));
 
-        var state = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath).Load();
+        var state = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath).Load();
         var entry = state.Plugins["community"];
         Assert.Equal(PluginOrigin.Installed, entry.Origin);
         Assert.Equal(PluginHasher.ComputeHash(ValidDescriptor), entry.ContentHash);
         Assert.Null(entry.LogoHash);
+        Assert.True(entry.Enabled);
+        Assert.NotNull(entry.InstalledAt);
     }
 
     [Fact]

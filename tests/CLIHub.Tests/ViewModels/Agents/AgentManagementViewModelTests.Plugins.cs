@@ -127,7 +127,7 @@ public partial class AgentManagementViewModelTests
     [Fact]
     public void DisablePluginCommand_OnEnabledCard_MarksDisabledInStateAndReloadsCatalog()
     {
-        var state = new InMemoryPluginStateRepository();
+        var state = new InMemoryPluginRegistry();
         var viewModel = new AgentManagementViewModelBuilder()
             .WithPlugins([Launchable("a")])
             .WithDetection(Detection())
@@ -139,7 +139,7 @@ public partial class AgentManagementViewModelTests
 
         viewModel.ViewModel.DisablePluginCommand.Execute(card);
 
-        Assert.True(state.Document.Plugins["a"].Disabled);
+        Assert.False(state.Document.Plugins["a"].Enabled);
         Assert.Equal(1, state.SaveCount);
         viewModel.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
     }
@@ -147,8 +147,8 @@ public partial class AgentManagementViewModelTests
     [Fact]
     public void EnablePluginCommand_OnDisabledCard_ClearsDisabledInStateAndReloadsCatalog()
     {
-        var state = new InMemoryPluginStateRepository();
-        state.Document.Plugins["a"] = new PluginStateEntry(PluginOrigin.Installed) { Disabled = true };
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { Enabled = false };
         var viewModel = new AgentManagementViewModelBuilder()
             .WithDisabledPlugins(new DisabledPluginEntry("a", @"C:\plugins\a", PluginOrigin.Installed, "1.0.0"))
             .WithPluginState(state)
@@ -158,7 +158,7 @@ public partial class AgentManagementViewModelTests
 
         viewModel.ViewModel.EnablePluginCommand.Execute(disabledCard);
 
-        Assert.False(state.Document.Plugins["a"].Disabled);
+        Assert.True(state.Document.Plugins["a"].Enabled);
         Assert.Equal(1, state.SaveCount);
         viewModel.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
     }
@@ -223,9 +223,9 @@ public partial class AgentManagementViewModelTests
     [Fact]
     public void Load_WithOriginsFromState_PopulatesOriginDataAndCatalogSummary()
     {
-        var state = new InMemoryPluginStateRepository();
-        state.Document.Plugins["a"] = new PluginStateEntry(PluginOrigin.Builtin);
-        state.Document.Plugins["b"] = new PluginStateEntry(PluginOrigin.Installed) { InstalledVersion = "1.2.0" };
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Builtin);
+        state.Document.Plugins["b"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.2.0" };
         var viewModel = new AgentManagementViewModelBuilder()
             .WithPlugins([Launchable("a"), Launchable("b"), Launchable("c")])
             .WithDetection(Detection())
@@ -251,8 +251,8 @@ public partial class AgentManagementViewModelTests
         plugin.Version = "1.2.0";
         plugin.Publisher = "Community";
         plugin.Homepage = "https://example.com/a";
-        var state = new InMemoryPluginStateRepository();
-        state.Document.Plugins["a"] = new PluginStateEntry(PluginOrigin.Installed);
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed);
         var viewModel = new AgentManagementViewModelBuilder()
             .WithPlugins([plugin])
             .WithDetection(Detection())

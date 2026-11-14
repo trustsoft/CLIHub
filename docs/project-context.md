@@ -41,11 +41,13 @@ process inspection) behind ports declared in Core.
 - .NET 10 and C# 14.0 are the development baseline; nullable reference types and implicit usings are enabled.
 - The application uses WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Serilog, System.Text.Json,
   and Velopack.
-- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `plugin-state.json`, `logs\`, `plugins\`, and `cache\`.
+- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `registry.json`, `logs\`, `plugins\`, and `cache\`.
 - Configuration is one camelCase JSON document with an atomic write path. Preferences and project state expose
   narrower store interfaces over that document.
-- Plugin lifecycle state (origin, content hash, disabled flag) is tracked in a separate `plugin-state.json` under
-  `%APPDATA%\CLIHub\`.
+- Plugin lifecycle state (origin, content hashes, installed version, enabled flag, install timestamp) is tracked in
+  `registry.json` under `%APPDATA%\CLIHub\` — the single local source of truth. Reads are tolerant; writes are
+  atomic; the legacy `plugin-state.json` is adopted into it once and deleted; the catalog verifies each plugin's
+  stored content hash against the descriptor on scan and adopts entry-less folders as `unknown`.
 - Plugins are JSON descriptors under `%APPDATA%\CLIHub\plugins\<id>\`; they contain command definitions and
   detection markers. Plugins do not load DLLs or execute code in-process.
 - Users can install plugins from local `.clihub-plugin.zip` packages, browse and install from the remote

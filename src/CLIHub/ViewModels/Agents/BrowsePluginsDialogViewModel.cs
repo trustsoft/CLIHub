@@ -19,7 +19,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
 {
     private readonly IPluginFeedClient feedClient;
     private readonly IPluginInstaller installer;
-    private readonly IPluginStateRepository stateRepository;
+    private readonly IPluginRegistry stateRepository;
     private readonly IPluginDialogService dialogService;
     private readonly IUpdateVersionProvider versionProvider;
     private readonly IApplicationOperationLifetime operationLifetime;
@@ -41,7 +41,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
     public BrowsePluginsDialogViewModel(
         IPluginFeedClient feedClient,
         IPluginInstaller installer,
-        IPluginStateRepository stateRepository,
+        IPluginRegistry stateRepository,
         IPluginDialogService dialogService,
         IUpdateVersionProvider versionProvider,
         IApplicationOperationLifetime operationLifetime,
