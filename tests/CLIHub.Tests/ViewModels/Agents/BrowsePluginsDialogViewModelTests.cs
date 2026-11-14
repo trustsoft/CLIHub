@@ -26,10 +26,10 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("new-plugin", "New Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null),
-                new("current-plugin", "Current Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg2.zip", "def456", null, null),
-                new("update-plugin", "Update Plugin", "Desc", "3.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg3.zip", "ghi789", null, null),
-                new("downgrade-plugin", "Downgrade Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg4.zip", "jkl012", null, null)
+                new("new-plugin", "New Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null),
+                new("current-plugin", "Current Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg2.zip", "def456", null, null, ">=1.0.0", null, null, null),
+                new("update-plugin", "Update Plugin", "Desc", "3.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg3.zip", "ghi789", null, null, ">=1.0.0", null, null, null),
+                new("downgrade-plugin", "Downgrade Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg4.zip", "jkl012", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -67,7 +67,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("unknown-version-plugin", "Unknown Version Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("unknown-version-plugin", "Unknown Version Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -98,8 +98,8 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("opencode", "Built-in OpenCode", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null),
-                new("custom-plugin", "Custom", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg2.zip", "def456", null, null)
+                new("opencode", "Built-in OpenCode", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null),
+                new("custom-plugin", "Custom", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg2.zip", "def456", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -127,7 +127,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("future-plugin", "Future Plugin", "Desc", "1.0.0", 1, "99.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("future-plugin", "Future Plugin", "Desc", "1.0.0", 1, "99.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=99.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -195,7 +195,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -224,7 +224,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -269,7 +269,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("update-plugin", "Update Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("update-plugin", "Update Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -310,7 +310,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("update-plugin", "Update Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("update-plugin", "Update Plugin", "Desc", "2.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -352,7 +352,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -388,7 +388,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -422,7 +422,7 @@ public class BrowsePluginsDialogViewModelTests
             SchemaVersion: 1,
             LastUpdated: null,
             Plugins: [
-                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null)
+                new("plugin1", "Plugin 1", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
             ]);
 
         feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
@@ -441,6 +441,161 @@ public class BrowsePluginsDialogViewModelTests
         installer.Verify(x => x.Inspect(It.IsAny<string>()), Times.Never);
         Assert.Single(dialogService.ValidationErrorsShown);
         Assert.Contains("Checksum verification failed", dialogService.ValidationErrorsShown[0]);
+    }
+
+    [Fact]
+    public async Task LoadAsync_V2DescriptorOnlyEntry_CanInstallFromRangeAndShowsBlockedRange()
+    {
+        // Arrange
+        var feedClient = new Mock<IPluginFeedClient>();
+        var versionProvider = new Mock<IUpdateVersionProvider>();
+
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 2,
+            LastUpdated: null,
+            Plugins: [
+                new("future-v2", "Future V2", "Desc", "1.0.0", 1, null, "Pub", "https://example.com", null, null, null, null, ">=2.0.0", "stable", """{"id":"future-v2","name":"Future V2","commands":{"launch":{"executable":"fv2"}}}""", null)
+            ]);
+
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+
+        versionProvider.Setup(x => x.GetCurrentVersion()).Returns("1.0.0");
+
+        var vm = CreateViewModel(feedClient.Object, versionProvider: versionProvider.Object);
+
+        // Act
+        await vm.LoadAsync();
+
+        // Assert
+        Assert.Single(vm.Plugins);
+        Assert.True(vm.Plugins[0].UsesDescriptorInstall);
+        Assert.False(vm.Plugins[0].CanInstall);
+        Assert.Equal("Requires CLIHub >=2.0.0. Update CLIHub to install this plugin.", vm.Plugins[0].BlockedReason);
+    }
+
+    [Fact]
+    public async Task InstallCommand_DescriptorOnly_InspectsConfirmsInstallsWithoutPackageDownload()
+    {
+        // Arrange
+        var feedClient = new Mock<IPluginFeedClient>();
+        var installer = new Mock<IPluginInstaller>();
+        var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
+        var stateRepository = new InMemoryPluginStateRepository();
+
+        const string descriptorJson = """{"id":"desc-plugin","name":"Desc Plugin","version":"2.0.0","commands":{"launch":{"executable":"dp"}}}""";
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 2,
+            LastUpdated: null,
+            Plugins: [
+                new("desc-plugin", "Desc Plugin", "Desc", "2.0.0", 1, null, "Pub", "https://example.com", null, null, null, null, ">=1.0.0", "stable", descriptorJson, "https://example.com/logo.png")
+            ]);
+
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+        feedClient.Setup(x => x.DownloadLogoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginLogoDownloadResult(true, [1, 2, 3], []));
+
+        var preview = new PluginInstallPreview(true, "desc-plugin", "Desc Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
+        installer.Setup(x => x.InspectDescriptor(It.IsAny<PluginDescriptorInstallSource>())).Returns(preview);
+        installer.Setup(x => x.InstallDescriptor(It.IsAny<PluginDescriptorInstallSource>(), It.IsAny<bool>()))
+            .Returns(PluginInstallResult.Succeeded("desc-plugin"));
+
+        var vm = CreateViewModel(feedClient.Object, installer.Object, dialogService, stateRepository);
+        await vm.LoadAsync();
+
+        // Act
+        var item = vm.Plugins[0];
+        vm.InstallCommand.Execute(item);
+
+        // Assert
+        feedClient.Verify(x => x.GetFeedAsync(It.IsAny<CancellationToken>()), Times.Once);
+        feedClient.Verify(x => x.DownloadPackageAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        feedClient.Verify(x => x.DownloadLogoAsync("https://example.com/logo.png", It.IsAny<CancellationToken>()), Times.Once);
+        installer.Verify(x => x.InspectDescriptor(It.IsAny<PluginDescriptorInstallSource>()), Times.Once);
+        installer.Verify(x => x.InstallDescriptor(It.IsAny<PluginDescriptorInstallSource>(), It.IsAny<bool>()), Times.Once);
+        installer.Verify(x => x.Install(It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+        Assert.Single(dialogService.ConfirmationPreviews);
+        Assert.Single(dialogService.Outcomes);
+        Assert.Equal(PluginUpdateStatus.Current, item.Status);
+        Assert.Equal("2.0.0", item.InstalledVersion);
+        Assert.False(item.ShowActionButton);
+    }
+
+    [Fact]
+    public async Task InstallCommand_DescriptorOnly_LogoDownloadFailure_InstallsWithoutLogo()
+    {
+        // Arrange
+        var feedClient = new Mock<IPluginFeedClient>();
+        var installer = new Mock<IPluginInstaller>();
+        var dialogService = new FakePluginDialogService { ConfirmInstallation = true };
+
+        const string descriptorJson = """{"id":"desc-plugin","name":"Desc Plugin","version":"2.0.0","commands":{"launch":{"executable":"dp"}}}""";
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 2,
+            LastUpdated: null,
+            Plugins: [
+                new("desc-plugin", "Desc Plugin", "Desc", "2.0.0", 1, null, "Pub", "https://example.com", null, null, null, null, ">=1.0.0", "stable", descriptorJson, "https://example.com/logo.png")
+            ]);
+
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+        feedClient.Setup(x => x.DownloadLogoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginLogoDownloadResult(false, null, ["Logo download failed"]));
+
+        var preview = new PluginInstallPreview(true, "desc-plugin", "Desc Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
+        installer.Setup(x => x.InspectDescriptor(It.IsAny<PluginDescriptorInstallSource>())).Returns(preview);
+        installer.Setup(x => x.InstallDescriptor(It.IsAny<PluginDescriptorInstallSource>(), It.IsAny<bool>()))
+            .Returns(PluginInstallResult.Succeeded("desc-plugin"));
+
+        var vm = CreateViewModel(feedClient.Object, installer.Object, dialogService);
+        await vm.LoadAsync();
+
+        // Act
+        var item = vm.Plugins[0];
+        vm.InstallCommand.Execute(item);
+
+        // Assert: the failed logo fetch is tolerated and the install proceeds without logo bytes.
+        feedClient.Verify(x => x.DownloadLogoAsync("https://example.com/logo.png", It.IsAny<CancellationToken>()), Times.Once);
+        installer.Verify(x => x.InstallDescriptor(It.Is<PluginDescriptorInstallSource>(s => s.LogoBytes == null), It.IsAny<bool>()), Times.Once);
+        Assert.Single(dialogService.Outcomes);
+        Assert.Equal(PluginUpdateStatus.Current, item.Status);
+    }
+
+    [Fact]
+    public async Task InstallCommand_DescriptorOnly_UserCancels_NoInstall()
+    {
+        // Arrange
+        var feedClient = new Mock<IPluginFeedClient>();
+        var installer = new Mock<IPluginInstaller>();
+        var dialogService = new FakePluginDialogService { ConfirmInstallation = false };
+
+        const string descriptorJson = """{"id":"desc-plugin","name":"Desc Plugin","version":"2.0.0","commands":{"launch":{"executable":"dp"}}}""";
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 2,
+            LastUpdated: null,
+            Plugins: [
+                new("desc-plugin", "Desc Plugin", "Desc", "2.0.0", 1, null, "Pub", "https://example.com", null, null, null, null, ">=1.0.0", "stable", descriptorJson, "https://example.com/logo.png")
+            ]);
+
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+
+        var preview = new PluginInstallPreview(true, "desc-plugin", "Desc Plugin", "2.0.0", "Pub", "https://example.com", [], false, null, []);
+        installer.Setup(x => x.InspectDescriptor(It.IsAny<PluginDescriptorInstallSource>())).Returns(preview);
+
+        var vm = CreateViewModel(feedClient.Object, installer.Object, dialogService);
+        await vm.LoadAsync();
+
+        // Act
+        var item = vm.Plugins[0];
+        vm.InstallCommand.Execute(item);
+
+        // Assert: no install and no logo fetch — the logo is fetched only after confirmation.
+        installer.Verify(x => x.InstallDescriptor(It.IsAny<PluginDescriptorInstallSource>(), It.IsAny<bool>()), Times.Never);
+        feedClient.Verify(x => x.DownloadLogoAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Single(dialogService.ConfirmationPreviews);
+        Assert.Empty(dialogService.Outcomes);
     }
 
     private static BrowsePluginsDialogViewModel CreateViewModel(

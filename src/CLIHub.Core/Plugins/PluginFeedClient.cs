@@ -35,8 +35,18 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         UnexpectedLogMessage: "Unexpected error during package download",
         UnexpectedLogLevel: LogLevel.Error);
 
+    private static readonly StructuredErrorProfile LogoErrorProfile = new(
+        TimeoutError: "Logo download timed out",
+        RequestError: "Logo download failed",
+        TimeoutLogMessage: "Logo download timed out",
+        RequestLogMessage: "Logo download failed",
+        UnexpectedLogMessage: "Unexpected error during logo download",
+        UnexpectedLogLevel: LogLevel.Warning);
+
     private readonly HttpClient httpClient;
     private readonly IPreferencesStore preferencesStore;
+    private readonly IPluginDescriptorReader descriptorReader;
+    private readonly IPluginDescriptorValidator descriptorValidator;
     private readonly ILogger<PluginFeedClient> logger;
 
     /// <summary>
@@ -44,9 +54,13 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// </summary>
     /// <param name="preferencesStore"> Preferences store for timeout and feed URL. </param>
     /// <param name="logger"> Logger. </param>
+    /// <param name="descriptorReader"> Reader validating v2 inline descriptors at parse time. </param>
+    /// <param name="descriptorValidator"> Validator checking v2 inline descriptors at parse time. </param>
     public PluginFeedClient(IPreferencesStore preferencesStore,
-                            ILogger<PluginFeedClient> logger)
-        : this(CreateDefaultHandler(), preferencesStore, logger)
+                            ILogger<PluginFeedClient> logger,
+                            IPluginDescriptorReader? descriptorReader = null,
+                            IPluginDescriptorValidator? descriptorValidator = null)
+        : this(CreateDefaultHandler(), preferencesStore, logger, descriptorReader, descriptorValidator)
     {
     }
 
@@ -57,12 +71,18 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// <param name="handler"> HTTP handler for the feed client's requests. </param>
     /// <param name="preferencesStore"> Preferences store for timeout and feed URL. </param>
     /// <param name="logger"> Logger. </param>
+    /// <param name="descriptorReader"> Reader validating v2 inline descriptors at parse time. </param>
+    /// <param name="descriptorValidator"> Validator checking v2 inline descriptors at parse time. </param>
     internal PluginFeedClient(HttpMessageHandler handler,
                               IPreferencesStore preferencesStore,
-                              ILogger<PluginFeedClient> logger)
+                              ILogger<PluginFeedClient> logger,
+                              IPluginDescriptorReader? descriptorReader = null,
+                              IPluginDescriptorValidator? descriptorValidator = null)
     {
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        this.descriptorReader = descriptorReader ?? new PluginDescriptorReader();
+        this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
 
         this.httpClient = new HttpClient(handler ?? throw new ArgumentNullException(nameof(handler)));
         this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -191,6 +211,57 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             errors => new PluginDownloadResult(false, null, [errors]),
             PackageErrorProfile,
             () => this.DeleteTempFile(tempFilePath),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<PluginLogoDownloadResult> DownloadLogoAsync(string logoUrl, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(logoUrl);
+
+        if (!IsHttpsUrl(logoUrl))
+        {
+            this.logger.LogError("Logo URL must use HTTPS: {LogoUrl}", logoUrl);
+            return new PluginLogoDownloadResult(false, null, ["Logo URL must use HTTPS"]);
+        }
+
+        return await this.ExecuteWithStructuredErrorsAsync(
+            async token =>
+            {
+                var (response, redirectError) = await this.SendFollowingRedirectsAsync(logoUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
+                if (response is null)
+                {
+                    return new PluginLogoDownloadResult(false, null, [redirectError ?? "Redirect rejected"]);
+                }
+
+                using var finalResponse = response;
+                if (!finalResponse.IsSuccessStatusCode)
+                {
+                    this.logger.LogWarning("Logo download failed with status {StatusCode}", finalResponse.StatusCode);
+                    return new PluginLogoDownloadResult(false, null, ["Logo download failed"]);
+                }
+
+                // Fast-path rejection when the server declares the size up front. This is an
+                // optimization only; the bounded read below enforces the limit during streaming.
+                // A standalone logo is held to the same 10 MB bound a packaged logo may reach.
+                if (finalResponse.Content.Headers.ContentLength is > MaxPackageSizeBytes)
+                {
+                    this.logger.LogError("Logo too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
+                    return new PluginLogoDownloadResult(false, null, ["Logo download failed"]);
+                }
+
+                var logoBytes = await ReadBoundedBytesAsync(finalResponse.Content, MaxPackageSizeBytes, token).ConfigureAwait(false);
+                if (logoBytes is null)
+                {
+                    this.logger.LogError("Downloaded logo exceeds the {Limit} byte limit", MaxPackageSizeBytes);
+                    return new PluginLogoDownloadResult(false, null, ["Logo download failed"]);
+                }
+
+                return new PluginLogoDownloadResult(true, logoBytes, []);
+            },
+            errors => new PluginLogoDownloadResult(false, null, [errors]),
+            LogoErrorProfile,
+            onFailure: null,
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -357,6 +428,37 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     }
 
     /// <summary>
+    ///   Reads the response body as a bounded byte array, returning null once the stream exceeds
+    ///   <paramref name="maxBytes" />. This enforces the size limit during streaming for responses
+    ///   with a missing or lying <c> Content-Length </c> (or chunked transfer encoding).
+    /// </summary>
+    private static async Task<byte[]?> ReadBoundedBytesAsync(HttpContent content, int maxBytes, CancellationToken cancellationToken)
+    {
+        using var stream = await content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        using var buffer = new MemoryStream();
+        var chunk = new byte[81920];
+        var total = 0;
+        while (true)
+        {
+            var read = await stream.ReadAsync(chunk, cancellationToken).ConfigureAwait(false);
+            if (read == 0)
+            {
+                break;
+            }
+
+            total += read;
+            if (total > maxBytes)
+            {
+                return null;
+            }
+
+            buffer.Write(chunk, 0, read);
+        }
+
+        return buffer.ToArray();
+    }
+
+    /// <summary>
     ///   Copies the response body to the destination file in chunks, returning true once the stream
     ///   exceeds <paramref name="maxBytes" />. On an oversized result the partial file is left for
     ///   the caller to delete.
@@ -401,7 +503,7 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
                 return new PluginFeedResult(false, null, ["Feed index missing or invalid schemaVersion"]);
             }
 
-            if (schemaVersion > 1)
+            if (schemaVersion > 2)
             {
                 this.logger.LogError("Unsupported feed schema version {Version}", schemaVersion);
                 return new PluginFeedResult(false, null, [$"Unsupported feed schema version {schemaVersion}"]);
@@ -425,7 +527,11 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
 
             foreach (var entryElem in pluginsElem.EnumerateArray())
             {
-                var entry = this.TryParseEntry(entryElem, seenIds);
+                // Entry shape follows the index schemaVersion; no per-entry sniffing. Values
+                // below 2 parse under the v1 rules exactly as before.
+                var entry = schemaVersion < 2
+                    ? this.TryParseEntry(entryElem, seenIds)
+                    : this.TryParseEntryV2(entryElem, seenIds);
                 if (entry is not null)
                 {
                     plugins.Add(entry);
@@ -480,7 +586,118 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             var releaseNotesUrl = TryGetString(entryElem, "releaseNotesUrl", out var rnu) ? rnu : null;
             var signature = TryGetString(entryElem, "signature", out var sig) ? sig : null;
 
-            return new PluginFeedEntry(id, name, description, version, schemaVersion, minAppVersion, publisher, homepage, packageUrl, sha256, releaseNotesUrl, signature);
+            // The v1 minAppVersion floor is carried as a synthesized compatibility range so both
+            // schemas gate through one evaluator (AppCompatibilityRange); equivalence is by
+            // construction (design D4).
+            return new PluginFeedEntry(id, name, description, version, schemaVersion, minAppVersion, publisher, homepage, packageUrl, sha256, releaseNotesUrl, signature, ">=" + minAppVersion, null, null, null);
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Failed to parse feed entry, skipping");
+            return null;
+        }
+    }
+
+    private PluginFeedEntry? TryParseEntryV2(JsonElement entryElem, HashSet<string> seenIds)
+    {
+        try
+        {
+            // Required fields
+            if (!TryGetString(entryElem, "id", out var id) ||
+                !TryGetString(entryElem, "name", out var name) ||
+                !TryGetString(entryElem, "description", out var description) ||
+                !TryGetString(entryElem, "version", out var version) ||
+                !TryGetString(entryElem, "publisher", out var publisher) ||
+                !TryGetString(entryElem, "homepage", out var homepage) ||
+                !TryGetString(entryElem, "compatibility", out var compatibility))
+            {
+                this.logger.LogWarning("Feed entry missing required fields, skipping");
+                return null;
+            }
+
+            if (!AppCompatibilityRange.TryParse(compatibility, out _))
+            {
+                this.logger.LogWarning("Feed entry has malformed compatibility for id {Id}, skipping", id);
+                return null;
+            }
+
+            // The inline descriptor is required and must be a JSON object; its raw text is kept
+            // verbatim as the descriptor-only install source (the index is the integrity anchor
+            // per ADR-0015). An entry whose descriptor fails validation is not installable, so
+            // it is skipped here rather than at install time.
+            if (!TryGetObject(entryElem, "descriptor", out var descriptorElem))
+            {
+                this.logger.LogWarning("Feed entry missing or invalid descriptor for id {Id}, skipping", id);
+                return null;
+            }
+
+            var descriptorJson = descriptorElem.GetRawText();
+            var readResult = this.descriptorReader.ReadContent(descriptorJson);
+            if (readResult.Error is not null || readResult.Plugin is null)
+            {
+                this.logger.LogWarning("Feed entry has invalid descriptor for id {Id}, skipping", id);
+                return null;
+            }
+
+            var plugin = readResult.Plugin;
+            if (!this.descriptorValidator.Validate(plugin).IsValid)
+            {
+                this.logger.LogWarning("Feed entry has invalid descriptor for id {Id}, skipping", id);
+                return null;
+            }
+
+            if (!string.Equals(plugin.Id, id, StringComparison.Ordinal))
+            {
+                this.logger.LogWarning("Feed entry descriptor id {DescriptorId} does not match entry id {Id}, skipping", plugin.Id, id);
+                return null;
+            }
+
+            // Channel: absent, null, or non-string is tolerated as stable; any other string
+            // value skips the entry (design DEV-1).
+            var channel = "stable";
+            if (entryElem.TryGetProperty("channel", out var channelElem) &&
+                channelElem.ValueKind == JsonValueKind.String &&
+                channelElem.GetString() is { } channelValue)
+            {
+                if (!string.Equals(channelValue, "stable", StringComparison.Ordinal))
+                {
+                    this.logger.LogWarning("Feed entry has unsupported channel {Channel} for id {Id}, skipping", channelValue, id);
+                    return null;
+                }
+
+                channel = channelValue;
+            }
+
+            // Package: absent or null makes the entry descriptor-only; otherwise both url and
+            // sha256 are required. HTTPS for the package URL stays download-time-enforced,
+            // exactly as for v1 entries.
+            string? packageUrl = null;
+            string? sha256 = null;
+            if (entryElem.TryGetProperty("package", out var packageElem) &&
+                packageElem.ValueKind == JsonValueKind.Object)
+            {
+                if (!TryGetString(packageElem, "url", out packageUrl) ||
+                    !TryGetString(packageElem, "sha256", out sha256))
+                {
+                    this.logger.LogWarning("Feed entry has incomplete package for id {Id}, skipping", id);
+                    return null;
+                }
+            }
+
+            // Optional fields
+            var logoUrl = TryGetString(entryElem, "logoUrl", out var lu) ? lu : null;
+            var releaseNotesUrl = TryGetString(entryElem, "releaseNotesUrl", out var rnu) ? rnu : null;
+            var signature = TryGetString(entryElem, "signature", out var sig) ? sig : null;
+
+            // Check for duplicate IDs — the id is claimed only after all entry-level validation
+            // passes, so an invalid entry does not block a valid entry with the same id.
+            if (!seenIds.Add(id))
+            {
+                this.logger.LogWarning("Feed entry with duplicate id {Id} skipped", id);
+                return null;
+            }
+
+            return new PluginFeedEntry(id, name, description, version, plugin.SchemaVersion ?? 1, null, publisher, homepage, packageUrl, sha256, releaseNotesUrl, signature, compatibility, channel, descriptorJson, logoUrl);
         }
         catch (Exception ex)
         {
@@ -501,6 +718,19 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         }
 
         value = string.Empty;
+        return false;
+    }
+
+    private static bool TryGetObject(JsonElement element, string propertyName, out JsonElement value)
+    {
+        if (element.TryGetProperty(propertyName, out var prop) &&
+            prop.ValueKind == JsonValueKind.Object)
+        {
+            value = prop;
+            return true;
+        }
+
+        value = default;
         return false;
     }
 

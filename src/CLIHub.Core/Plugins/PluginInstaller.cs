@@ -9,13 +9,13 @@ using CLIHub.Core.Models;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-///   Installs agent plugins from local <c> .clihub-plugin.zip </c> packages. Inspection
-///   validates the archive and parses the descriptor entirely in memory (no writes);
-///   installation stages the extraction under a temporary <c> .staging-&lt;guid&gt; </c>
-///   directory, moves it into place atomically with a backup of any replaced plugin, rolls
-///   back on failure, records lifecycle state, and reloads the catalog. Only
-///   <c> plugin.json </c> and <c> logo.png </c> may ever be written: no DLLs, no code
-///   execution.
+///   Installs agent plugins from local <c> .clihub-plugin.zip </c> packages or, for schema
+///   version 2 feed entries without a package, directly from an inline descriptor. Inspection
+///   validates the source entirely in memory (no writes); installation stages the payload under
+///   a temporary <c> .staging-&lt;guid&gt; </c> directory, moves it into place atomically with a
+///   backup of any replaced plugin, rolls back on failure, records lifecycle state, and reloads
+///   the catalog. Only <c> plugin.json </c> and <c> logo.png </c> may ever be written: no DLLs,
+///   no code execution.
 /// </summary>
 public sealed class PluginInstaller : IPluginInstaller
 {
@@ -93,6 +93,140 @@ public sealed class PluginInstaller : IPluginInstaller
         }
 
         var pluginId = preview.PluginId!;
+        return this.CommitInstall(pluginId, replaceExisting, stagingPath =>
+        {
+            using var archive = ZipFile.OpenRead(packagePath);
+            foreach (var entry in archive.Entries)
+            {
+                if (EntryIsDirectory(entry))
+                {
+                    continue;
+                }
+
+                var fileName = GetFileName(entry.FullName);
+                if (fileName == DescriptorFileName)
+                {
+                    WriteEntry(entry, Path.Combine(stagingPath, DescriptorFileName));
+                }
+                else if (fileName == LogoFileName)
+                {
+                    WriteEntry(entry, Path.Combine(stagingPath, LogoFileName));
+                }
+            }
+        }, packagePath);
+    }
+
+    /// <inheritdoc />
+    public PluginInstallPreview InspectDescriptor(PluginDescriptorInstallSource source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        if (string.IsNullOrWhiteSpace(source.DescriptorJson))
+        {
+            return PluginInstallPreview.Invalid(["Descriptor JSON is required"]);
+        }
+
+        // Parse and validate the descriptor entirely in memory: no file is written during
+        // inspection.
+        var readResult = this.descriptorReader.ReadContent(source.DescriptorJson);
+        if (readResult.Error is not null)
+        {
+            return PluginInstallPreview.Invalid([$"Descriptor could not be read: {readResult.Error.Message}"]);
+        }
+
+        var plugin = readResult.Plugin;
+        if (plugin is null)
+        {
+            return PluginInstallPreview.Invalid(["Descriptor is empty"]);
+        }
+
+        var errors = new List<string>();
+        errors.AddRange(this.descriptorValidator.Validate(plugin).Errors);
+
+        if (EmbeddedPluginResources.BuiltinPluginIds(typeof(PluginSeeder).Assembly)
+            .Contains(plugin.Id, StringComparer.Ordinal))
+        {
+            errors.Add($"Plugin id '{plugin.Id}' is reserved for the built-in agent '{plugin.Id}' and cannot be installed");
+        }
+
+        if (errors.Count > 0)
+        {
+            return new PluginInstallPreview(
+                false,
+                plugin.Id,
+                plugin.Name,
+                plugin.Version,
+                plugin.Publisher,
+                plugin.Homepage,
+                BuildDeclaredCommands(plugin),
+                false,
+                null,
+                errors);
+        }
+
+        // The target folder name is the descriptor id, so the zip-only id==folder-name check has
+        // no descriptor-only equivalent: a mismatch is not representable.
+        var targetPath = Path.Combine(this.pluginsPath, plugin.Id);
+        var replacesExisting = this.PluginDirectoryExists(targetPath);
+        var existingVersion = replacesExisting
+            ? this.stateRepository.Load().Plugins.GetValueOrDefault(plugin.Id)?.InstalledVersion
+            : null;
+
+        return new PluginInstallPreview(
+            true,
+            plugin.Id,
+            plugin.Name,
+            plugin.Version,
+            plugin.Publisher,
+            plugin.Homepage,
+            BuildDeclaredCommands(plugin),
+            replacesExisting,
+            existingVersion,
+            []);
+    }
+
+    /// <inheritdoc />
+    public PluginInstallResult InstallDescriptor(PluginDescriptorInstallSource source, bool replaceExisting)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        // Defense in depth: validate exactly as during inspection before anything is staged.
+        var preview = this.InspectDescriptor(source);
+        if (!preview.IsValid)
+        {
+            return PluginInstallResult.Failed(preview.Errors);
+        }
+
+        var pluginId = preview.PluginId!;
+        return this.CommitInstall(pluginId, replaceExisting, stagingPath =>
+        {
+            // The descriptor is written verbatim, byte-for-byte as carried by the feed index:
+            // the index is the integrity anchor, and fields the local model does not map (e.g.
+            // minAppVersion) must survive into the installed plugin.json.
+            File.WriteAllText(Path.Combine(stagingPath, DescriptorFileName), source.DescriptorJson);
+            if (source.LogoBytes is not null)
+            {
+                File.WriteAllBytes(Path.Combine(stagingPath, LogoFileName), source.LogoBytes);
+            }
+        }, $"descriptor {pluginId}");
+    }
+
+    /// <summary>
+    ///   Shared commit tail of both install sources: replace-consent check, staging creation,
+    ///   staging population through <paramref name="populateStaging" />, missing-descriptor
+    ///   check, staged-descriptor re-read + validation from disk, id check, backup,
+    ///   <see cref="BeforeStagingMoveForTests" />, atomic move, backup delete, state recording,
+    ///   and the tolerated catalog reload — with catch → rollback and the structured error
+    ///   shapes. Order invariants: consent before staging; validation before backup; backup
+    ///   before move; reload failure never rolls back.
+    /// </summary>
+    /// <param name="pluginId"> Target folder name and installed plugin id. </param>
+    /// <param name="replaceExisting"> Whether an existing plugin with the same id may be replaced. </param>
+    /// <param name="populateStaging"> Writes only <c> plugin.json </c> (+ optional <c> logo.png </c>) into the staging directory. </param>
+    /// <param name="logSource"> Source description for the install log messages. </param>
+    /// <returns> The install result. </returns>
+    private PluginInstallResult CommitInstall(string pluginId, bool replaceExisting, Action<string> populateStaging, string logSource)
+    {
         var targetPath = Path.Combine(this.pluginsPath, pluginId);
         var existingPluginExists = this.PluginDirectoryExists(targetPath);
 
@@ -110,34 +244,16 @@ public sealed class PluginInstaller : IPluginInstaller
             Directory.CreateDirectory(this.pluginsPath);
             Directory.CreateDirectory(stagingPath);
 
-            using (var archive = ZipFile.OpenRead(packagePath))
-            {
-                foreach (var entry in archive.Entries)
-                {
-                    if (EntryIsDirectory(entry))
-                    {
-                        continue;
-                    }
-
-                    var fileName = GetFileName(entry.FullName);
-                    if (fileName == DescriptorFileName)
-                    {
-                        WriteEntry(entry, Path.Combine(stagingPath, DescriptorFileName));
-                    }
-                    else if (fileName == LogoFileName)
-                    {
-                        WriteEntry(entry, Path.Combine(stagingPath, LogoFileName));
-                    }
-                }
-            }
+            populateStaging(stagingPath);
 
             if (!File.Exists(Path.Combine(stagingPath, DescriptorFileName)))
             {
                 throw new PluginInstallException([$"Package is missing {DescriptorFileName}"]);
             }
 
-            // Re-validate the extracted descriptor from disk through the standard reader and
-            // validator path, so a package cannot install a descriptor the catalog would reject.
+            // Re-validate the staged descriptor from disk through the standard reader and
+            // validator path, so a mutated source cannot install a descriptor the catalog
+            // would reject.
             var readResult = this.descriptorReader.Read(stagingPath);
             if (readResult.Error is not null || readResult.Plugin is null)
             {
@@ -151,6 +267,9 @@ public sealed class PluginInstaller : IPluginInstaller
                 throw new PluginInstallException(validationResult.Errors);
             }
 
+            // For packages the staged descriptor id must match the package directory name the
+            // preview validated; a descriptor-only source derives both from the same JSON, so
+            // the check passes by construction there.
             if (!string.Equals(plugin.Id, pluginId, StringComparison.Ordinal))
             {
                 throw new PluginInstallException([$"Plugin id '{plugin.Id}' does not match the package directory name '{pluginId}'"]);
@@ -174,7 +293,7 @@ public sealed class PluginInstaller : IPluginInstaller
             }
 
             this.RecordInstalledState(targetPath, plugin);
-            this.logger.LogInformation("Installed plugin {PluginId} from {Path}", pluginId, packagePath);
+            this.logger.LogInformation("Installed plugin {PluginId} from {Path}", pluginId, logSource);
 
             // The install is committed: a reload failure must not roll the files back. The
             // catalog reload refreshes the UI; any next reload picks the plugin up as well.
@@ -195,7 +314,7 @@ public sealed class PluginInstaller : IPluginInstaller
             var errors = ex is PluginInstallException installException
                 ? installException.Errors
                 : [$"Installation failed: {ex.Message}"];
-            this.logger.LogWarning(ex, "Plugin installation failed for {Path}", packagePath);
+            this.logger.LogWarning(ex, "Plugin installation failed for {Path}", logSource);
             return PluginInstallResult.Failed(errors);
         }
     }

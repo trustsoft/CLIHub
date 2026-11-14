@@ -11,8 +11,9 @@ using CLIHub.Lifetime;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-///   Browse Plugins dialog: fetches the remote feed, displays available plugins with status,
-///   and handles install/update workflows with checksum verification.
+///   Browse Plugins dialog: fetches the remote feed, displays available plugins with status, and
+///   handles install/update workflows — package-backed entries with checksum verification and
+///   descriptor-only entries directly from their inline descriptor.
 /// </summary>
 public sealed class BrowsePluginsDialogViewModel : ObservableObject
 {
@@ -195,7 +196,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                     status = PluginFeedVersionComparator.Compare(installedVersion, entry.Version);
                 }
 
-                var canInstall = AppVersionComparator.IsSatisfied(currentVersion, entry.MinAppVersion);
+                var canInstall = AppCompatibilityRange.IsSatisfied(currentVersion, entry.Compatibility);
                 var isDowngrade = PluginFeedVersionComparator.IsDowngrade(installedVersion, entry.Version);
 
                 var item = new FeedPluginItem(
@@ -208,6 +209,9 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                     entry.PackageUrl,
                     entry.Sha256,
                     entry.MinAppVersion,
+                    entry.Compatibility,
+                    entry.DescriptorJson,
+                    entry.LogoUrl,
                     entry.ReleaseNotesUrl,
                     status,
                     installedVersion,
@@ -235,8 +239,16 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
         string? tempFilePath = null;
         try
         {
+            if (item.UsesDescriptorInstall)
+            {
+                // Descriptor-only install: no package download, no checksum; the inline
+                // descriptor is the source and no temp file is created.
+                await this.InstallDescriptorOnlyAsync(item, cancellationToken);
+                return;
+            }
+
             // Download package with checksum verification
-            var downloadResult = await this.feedClient.DownloadPackageAsync(item.PackageUrl, item.Sha256, cancellationToken);
+            var downloadResult = await this.feedClient.DownloadPackageAsync(item.PackageUrl!, item.Sha256!, cancellationToken);
             if (!downloadResult.Success)
             {
                 var errorMsg = downloadResult.Errors.Count > 0
@@ -309,6 +321,72 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                     this.logger.LogWarning(ex, "Failed to delete temporary package file {Path}", tempFilePath);
                 }
             }
+        }
+    }
+
+    /// <summary>
+    ///   Installs a descriptor-only entry directly from its inline descriptor: inspect, confirm
+    ///   (same dialog shape as packages), fetch the logo only after confirmation (failure is
+    ///   tolerated — the install proceeds without the logo), then install through the same
+    ///   installer guarantees. Exceptions propagate to the shared catch shape of
+    ///   <see cref="InstallPluginAsync" />.
+    /// </summary>
+    /// <param name="item"> The descriptor-only feed item to install. </param>
+    /// <param name="cancellationToken"> Cancellation token. </param>
+    /// <returns> A task completing when the install flow finishes. </returns>
+    private async Task InstallDescriptorOnlyAsync(FeedPluginItem item, CancellationToken cancellationToken)
+    {
+        // Inspect the inline descriptor without writing files
+        var preview = this.installer.InspectDescriptor(new PluginDescriptorInstallSource(item.DescriptorJson!, null));
+        if (!preview.IsValid)
+        {
+            this.dialogService.ShowValidationError(preview.Errors);
+            this.logger.LogWarning("Descriptor inspection failed for {PluginId}: {Errors}", item.Id, string.Join("; ", preview.Errors));
+            return;
+        }
+
+        // Show confirmation dialog built from the inline descriptor with all declared commands
+        if (!this.dialogService.ShowInstallConfirmation(preview))
+        {
+            this.logger.LogInformation("User cancelled installation of {PluginId}", item.Id);
+            return;
+        }
+
+        // The logo is fetched only after confirmation, so a cancelled install performs no logo
+        // fetch. A failed fetch is tolerated: the install proceeds without logo.png and the
+        // default logo is shown.
+        byte[]? logoBytes = null;
+        if (item.LogoUrl is not null)
+        {
+            var logoResult = await this.feedClient.DownloadLogoAsync(item.LogoUrl, cancellationToken);
+            if (logoResult.Success && logoResult.LogoBytes is not null)
+            {
+                logoBytes = logoResult.LogoBytes;
+            }
+            else
+            {
+                this.logger.LogWarning("Logo download failed for {PluginId}: {Errors}; installing without logo", item.Id, string.Join("; ", logoResult.Errors));
+            }
+        }
+
+        // Install the plugin through the same guarantees as a package install
+        var replaceExisting = item.Status == PluginUpdateStatus.UpdateAvailable ||
+                              item.Status == PluginUpdateStatus.DifferentVersionAvailable ||
+                              item.Status == PluginUpdateStatus.Current;
+
+        var installResult = this.installer.InstallDescriptor(new PluginDescriptorInstallSource(item.DescriptorJson!, logoBytes), replaceExisting);
+        if (installResult.Success)
+        {
+            this.dialogService.ShowInstallOutcome(installResult, item.Name);
+            this.logger.LogInformation("Successfully installed {PluginId} from feed", item.Id);
+
+            // Update the card in place instead of re-fetching the whole feed index.
+            item.MarkInstalled(preview.Version);
+        }
+        else
+        {
+            this.dialogService.ShowValidationError(installResult.Errors);
+            this.logger.LogWarning("Installation failed for {PluginId}: {Errors}", item.Id, string.Join("; ", installResult.Errors));
         }
     }
 

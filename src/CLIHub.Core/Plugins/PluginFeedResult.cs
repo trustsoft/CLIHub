@@ -23,33 +23,52 @@ public sealed record PluginFeedIndex(
     IReadOnlyList<PluginFeedEntry> Plugins);
 
 /// <summary>
-///   A single plugin entry from the feed index.
+///   A single plugin entry from the feed index, normalized across index schema versions 1 and 2.
+///   v1 entries keep their package fields and synthesize <see cref="Compatibility" /> as
+///   <c> "&gt;=" + MinAppVersion </c>; v2 entries carry the raw compatibility range, the inline
+///   descriptor JSON, an optional package, channel, and logo URL.
 /// </summary>
 /// <param name="Id"> Plugin ID. </param>
 /// <param name="Name"> Plugin name. </param>
 /// <param name="Description"> Plugin description. </param>
 /// <param name="Version"> Plugin version. </param>
-/// <param name="SchemaVersion"> Plugin descriptor schema version. </param>
-/// <param name="MinAppVersion"> Minimum CLIHub version required. </param>
+/// <param name="SchemaVersion">
+///   Descriptor schema version: the per-entry value for v1 entries; for v2 entries the inline
+///   descriptor's <c> schemaVersion </c> (1 when absent).
+/// </param>
+/// <param name="MinAppVersion"> Minimum CLIHub version required; v1 entries only, null for v2. </param>
 /// <param name="Publisher"> Plugin publisher. </param>
 /// <param name="Homepage"> Plugin homepage URL. </param>
-/// <param name="PackageUrl"> HTTPS URL to the plugin package. </param>
-/// <param name="Sha256"> Hex-encoded SHA-256 checksum of the package. </param>
+/// <param name="PackageUrl">
+///   HTTPS URL to the plugin package; null for descriptor-only v2 entries.
+/// </param>
+/// <param name="Sha256"> Hex-encoded SHA-256 checksum of the package; null for descriptor-only v2 entries. </param>
 /// <param name="ReleaseNotesUrl"> Optional release notes URL. </param>
-/// <param name="Signature"> Reserved for future signing; always null in this change. </param>
+/// <param name="Signature"> Reserved for future signing; never verified. </param>
+/// <param name="Compatibility">
+///   Compatibility range the current app version must satisfy: <c> "&gt;=" + MinAppVersion </c>
+///   for v1 entries, the raw range text for v2 entries.
+/// </param>
+/// <param name="Channel"> Release channel; v2 entries only, null for v1. </param>
+/// <param name="DescriptorJson"> Verbatim inline descriptor JSON; v2 entries only, null for v1. </param>
+/// <param name="LogoUrl"> Optional logo image URL; v2 entries only, null for v1. </param>
 public sealed record PluginFeedEntry(
     string Id,
     string Name,
     string Description,
     string Version,
     int SchemaVersion,
-    string MinAppVersion,
+    string? MinAppVersion,
     string Publisher,
     string Homepage,
-    string PackageUrl,
-    string Sha256,
+    string? PackageUrl,
+    string? Sha256,
     string? ReleaseNotesUrl,
-    string? Signature);
+    string? Signature,
+    string Compatibility,
+    string? Channel,
+    string? DescriptorJson,
+    string? LogoUrl);
 
 /// <summary>
 ///   Result of a package download operation.
@@ -60,4 +79,18 @@ public sealed record PluginFeedEntry(
 public sealed record PluginDownloadResult(
     bool Success,
     string? TempFilePath,
+    IReadOnlyList<string> Errors);
+
+/// <summary>
+///   Result of a logo download operation for a descriptor-only install.
+/// </summary>
+/// <param name="Success"> Whether the logo was successfully downloaded. </param>
+/// <param name="LogoBytes">
+///   Logo image bytes, or null on failure. Display-only; no checksum is verified — the feed
+///   index is the integrity anchor per ADR-0015.
+/// </param>
+/// <param name="Errors"> Error messages, if any. </param>
+public sealed record PluginLogoDownloadResult(
+    bool Success,
+    byte[]? LogoBytes,
     IReadOnlyList<string> Errors);

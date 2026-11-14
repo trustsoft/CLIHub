@@ -511,4 +511,169 @@ public class PluginInstallerTests : IDisposable
         Assert.False(result.Success);
         Assert.Contains(result.Errors, error => error.Contains("not found", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void InspectDescriptor_ValidDescriptor_ReturnsPreviewWithAllDeclaredCommands()
+    {
+        var preview = this.CreateInstaller().InspectDescriptor(new PluginDescriptorInstallSource(ValidDescriptor, null));
+
+        Assert.True(preview.IsValid);
+        Assert.Empty(preview.Errors);
+        Assert.Equal("community", preview.PluginId);
+        Assert.Equal("Community Agent", preview.PluginName);
+        Assert.Equal("1.2.3", preview.Version);
+        Assert.Equal("Community", preview.Publisher);
+        Assert.Equal("https://example.com/community", preview.Homepage);
+        Assert.False(preview.ReplacesExistingPlugin);
+        Assert.Null(preview.ExistingPluginVersion);
+
+        Assert.Equal(3, preview.DeclaredCommands.Count);
+        Assert.Equal(new CommandPreview("launch", "community", null), preview.DeclaredCommands[0]);
+        Assert.Equal(new CommandPreview("resume", "community", "--continue"), preview.DeclaredCommands[1]);
+        Assert.Equal(new CommandPreview("version", "community", "--version"), preview.DeclaredCommands[2]);
+
+        // Inspection never writes to the plugins root.
+        Assert.Empty(this.PluginRootSubdirectories());
+    }
+
+    [Fact]
+    public void InspectDescriptor_MissingLaunchCommand_Rejected()
+    {
+        const string descriptor = """
+        {
+          "id": "community",
+          "name": "Community Agent",
+          "commands": { "version": { "executable": "community" } }
+        }
+        """;
+
+        var preview = this.CreateInstaller().InspectDescriptor(new PluginDescriptorInstallSource(descriptor, null));
+
+        Assert.False(preview.IsValid);
+        Assert.Contains(preview.Errors, error => error.Contains("launch", StringComparison.Ordinal));
+        Assert.Empty(this.PluginRootSubdirectories());
+    }
+
+    [Fact]
+    public void InspectDescriptor_BuiltInId_Rejected()
+    {
+        var descriptor = ValidDescriptor.Replace("community", "opencode", StringComparison.Ordinal);
+
+        var preview = this.CreateInstaller().InspectDescriptor(new PluginDescriptorInstallSource(descriptor, null));
+
+        Assert.False(preview.IsValid);
+        Assert.Contains(preview.Errors, error => error.Contains("reserved", StringComparison.Ordinal));
+        Assert.Empty(this.PluginRootSubdirectories());
+    }
+
+    [Fact]
+    public void InstallDescriptor_ValidSource_WritesDescriptorAndLogoAndRecordsState()
+    {
+        // The inline descriptor carries schemaVersion and minAppVersion exactly as the live v2
+        // index does; the local model ignores minAppVersion, and the installed plugin.json must
+        // keep it verbatim (the index is the integrity anchor).
+        const string descriptor = """
+        {
+          "schemaVersion": 1,
+          "id": "community",
+          "name": "Community Agent",
+          "version": "1.2.3",
+          "publisher": "Community",
+          "homepage": "https://example.com/community",
+          "minAppVersion": "1.1.0",
+          "commands": {
+            "launch": { "executable": "community" },
+            "resume": { "executable": "community", "arguments": "--continue" },
+            "version": { "executable": "community", "arguments": "--version" }
+          }
+        }
+        """;
+        var installer = this.CreateInstaller();
+
+        var result = installer.InstallDescriptor(new PluginDescriptorInstallSource(descriptor, LogoBytes), replaceExisting: false);
+
+        Assert.True(result.Success);
+        Assert.Equal("community", result.InstalledPluginId);
+        Assert.Empty(result.Errors);
+
+        var pluginJson = Path.Combine(this.pluginsPath, "community", "plugin.json");
+        var logo = Path.Combine(this.pluginsPath, "community", "logo.png");
+        Assert.Equal(descriptor, File.ReadAllText(pluginJson));
+        Assert.Equal(Encoding.UTF8.GetBytes(descriptor), File.ReadAllBytes(pluginJson));
+        Assert.Equal(LogoBytes, File.ReadAllBytes(logo));
+
+        var state = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath).Load();
+        var entry = state.Plugins["community"];
+        Assert.Equal(PluginOrigin.Installed, entry.Origin);
+        Assert.Equal(PluginHasher.ComputeHash(descriptor), entry.ContentHash);
+        Assert.Equal(PluginHasher.ComputeHash(LogoBytes), entry.LogoHash);
+        Assert.Equal("1.2.3", entry.InstalledVersion);
+        Assert.False(entry.Disabled);
+
+        this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void InstallDescriptor_DescriptorOnlyNoLogo_RecordsNullLogoHash()
+    {
+        var result = this.CreateInstaller().InstallDescriptor(new PluginDescriptorInstallSource(ValidDescriptor, null), replaceExisting: false);
+
+        Assert.True(result.Success);
+        Assert.False(File.Exists(Path.Combine(this.pluginsPath, "community", "logo.png")));
+
+        var state = new PluginStateRepository(NullLogger<PluginStateRepository>.Instance, this.stateFilePath).Load();
+        var entry = state.Plugins["community"];
+        Assert.Equal(PluginOrigin.Installed, entry.Origin);
+        Assert.Equal(PluginHasher.ComputeHash(ValidDescriptor), entry.ContentHash);
+        Assert.Null(entry.LogoHash);
+    }
+
+    [Fact]
+    public void InstallDescriptor_ExistingPluginNoConsent_RejectedWithoutWrites()
+    {
+        this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal));
+        var before = File.ReadAllText(Path.Combine(this.pluginsPath, "community", "plugin.json"));
+
+        var result = this.CreateInstaller().InstallDescriptor(new PluginDescriptorInstallSource(ValidDescriptor, LogoBytes), replaceExisting: false);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, error => error.Contains("already exists", StringComparison.Ordinal));
+        Assert.Equal(before, File.ReadAllText(Path.Combine(this.pluginsPath, "community", "plugin.json")));
+        Assert.Equal(["community"], this.PluginRootSubdirectories());
+        this.catalog.Verify(x => x.ReloadPlugins(), Times.Never);
+    }
+
+    [Fact]
+    public void InstallDescriptor_MoveFailure_RollsBackAndRestoresBackup()
+    {
+        this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal));
+        var originalContent = File.ReadAllText(Path.Combine(this.pluginsPath, "community", "plugin.json"));
+        var installer = this.CreateInstaller();
+        installer.BeforeStagingMoveForTests = () => throw new InvalidOperationException("simulated move failure");
+
+        var result = installer.InstallDescriptor(new PluginDescriptorInstallSource(ValidDescriptor, LogoBytes), replaceExisting: true);
+
+        Assert.False(result.Success);
+        Assert.Contains(result.Errors, error => error.Contains("simulated move failure", StringComparison.Ordinal));
+
+        // The previous plugin is restored verbatim and no staging or backup directories remain.
+        Assert.Equal(originalContent, File.ReadAllText(Path.Combine(this.pluginsPath, "community", "plugin.json")));
+        Assert.Equal(["community"], this.PluginRootSubdirectories());
+    }
+
+    [Fact]
+    public void InstallDescriptor_EmptyDescriptorJson_ReturnsStructuredError()
+    {
+        var installer = this.CreateInstaller();
+
+        var emptyResult = installer.InstallDescriptor(new PluginDescriptorInstallSource("", null), replaceExisting: false);
+        var whitespaceResult = installer.InstallDescriptor(new PluginDescriptorInstallSource("   ", null), replaceExisting: false);
+
+        Assert.False(emptyResult.Success);
+        Assert.Contains("Descriptor JSON is required", emptyResult.Errors);
+        Assert.False(whitespaceResult.Success);
+        Assert.Contains("Descriptor JSON is required", whitespaceResult.Errors);
+        Assert.Empty(this.PluginRootSubdirectories());
+        this.catalog.Verify(x => x.ReloadPlugins(), Times.Never);
+    }
 }

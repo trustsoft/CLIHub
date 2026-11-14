@@ -438,6 +438,293 @@ public class PluginFeedClientTests
         Assert.Equal(tempFilesBefore.Count, ListTempFiles().Count);
     }
 
+    [Fact]
+    public async Task GetFeedAsync_ValidV2Index_ParsesEntries()
+    {
+        this.EnqueueFeed(JsonResponse(ValidV2IndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.Index);
+        Assert.Equal(2, result.Index!.SchemaVersion);
+        Assert.Equal(2, result.Index.Plugins.Count);
+
+        var packageEntry = result.Index.Plugins.Single(p => p.Id == "antigravity");
+        Assert.Equal("https://example.com/antigravity-1.0.0.clihub-plugin.zip", packageEntry.PackageUrl);
+        Assert.Equal("ff1d3a87", packageEntry.Sha256);
+        Assert.NotNull(packageEntry.DescriptorJson);
+        Assert.Contains("minAppVersion", packageEntry.DescriptorJson, StringComparison.Ordinal);
+        Assert.Contains("detection", packageEntry.DescriptorJson, StringComparison.Ordinal);
+        Assert.Equal(">=1.1.0", packageEntry.Compatibility);
+        Assert.Equal("stable", packageEntry.Channel);
+        Assert.Equal("https://example.com/antigravity/logo.png", packageEntry.LogoUrl);
+        Assert.Null(packageEntry.MinAppVersion);
+        Assert.Equal(1, packageEntry.SchemaVersion);
+
+        var descriptorEntry = result.Index.Plugins.Single(p => p.Id == "descriptor-only");
+        Assert.Null(descriptorEntry.PackageUrl);
+        Assert.Null(descriptorEntry.Sha256);
+        Assert.NotNull(descriptorEntry.DescriptorJson);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2DescriptorOnlyEntry_HasNullPackageFields()
+    {
+        this.EnqueueFeed(JsonResponse(ValidV2IndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        var descriptorEntry = result.Index!.Plugins.Single(p => p.Id == "descriptor-only");
+        Assert.Null(descriptorEntry.PackageUrl);
+        Assert.Null(descriptorEntry.Sha256);
+        Assert.Equal(">=1.0.0", descriptorEntry.Compatibility);
+        Assert.Equal("stable", descriptorEntry.Channel);
+        Assert.NotNull(descriptorEntry.DescriptorJson);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2NonStableChannel_EntrySkipped()
+    {
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"preview-plugin","name":"Preview","description":"D","version":"1.0.0",
+               "compatibility":">=1.0.0","channel":"beta","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"preview-plugin","name":"Preview","commands":{"launch":{"executable":"p"}}}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Index!.Plugins);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2MalformedCompatibility_EntrySkipped()
+    {
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"bad-range","name":"Bad Range","description":"D","version":"1.0.0",
+               "compatibility":"~1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"bad-range","name":"Bad Range","commands":{"launch":{"executable":"b"}}}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Index!.Plugins);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2InvalidDescriptor_EntrySkipped()
+    {
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"no-launch","name":"No Launch","description":"D","version":"1.0.0",
+               "compatibility":">=1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"no-launch","name":"No Launch","commands":{"version":{"executable":"n"}}}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Index!.Plugins);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2DescriptorIdMismatch_EntrySkipped()
+    {
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"entry-id","name":"Mismatch","description":"D","version":"1.0.0",
+               "compatibility":">=1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"other-id","name":"Mismatch","commands":{"launch":{"executable":"m"}}}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Index!.Plugins);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2DuplicateIdAfterInvalidEntry_KeepsValidEntry()
+    {
+        // The first entry shares its id with the second but fails descriptor validation; the id
+        // is claimed only after validation, so the valid entry must not be skipped as a duplicate.
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"twice","name":"First","description":"D","version":"1.0.0",
+               "compatibility":">=1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"twice","name":"First","commands":{"version":{"executable":"f"}}}},
+              {"id":"twice","name":"Second","description":"D","version":"2.0.0",
+               "compatibility":">=1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"twice","name":"Second","commands":{"launch":{"executable":"s"}}}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        var entry = Assert.Single(result.Index!.Plugins);
+        Assert.Equal("Second", entry.Name);
+        Assert.Equal("2.0.0", entry.Version);
+        Assert.NotNull(entry.DescriptorJson);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_V2PackageMissingSha256_EntrySkipped()
+    {
+        var json = """
+            {"schemaVersion":2,"plugins":[
+              {"id":"incomplete-package","name":"Incomplete","description":"D","version":"1.0.0",
+               "compatibility":">=1.0.0","channel":"stable","publisher":"P","homepage":"https://e.com",
+               "descriptor":{"id":"incomplete-package","name":"Incomplete","commands":{"launch":{"executable":"i"}}},
+               "package":{"url":"https://example.com/pkg.zip"}}
+            ]}
+            """;
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Empty(result.Index!.Plugins);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SchemaVersion3_ReturnsUnsupportedError()
+    {
+        var json = "{\"schemaVersion\":3,\"plugins\":[]}";
+        this.EnqueueFeed(JsonResponse(json));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Null(result.Index);
+        Assert.Contains("Unsupported feed schema version 3", result.Errors);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_HttpsLogo_ReturnsBytes()
+    {
+        var logoBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A };
+        this.EnqueueFeed(ByteResponse(logoBytes));
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.True(result.Success);
+        Assert.Equal(logoBytes, result.LogoBytes);
+        Assert.Empty(result.Errors);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal("https://example.com/logo.png", request.RequestUri!.AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_HttpLogoUrl_ReturnsErrorBeforeAnyRequest()
+    {
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("http://example.com/logo.png");
+
+        Assert.False(result.Success);
+        Assert.Null(result.LogoBytes);
+        Assert.Contains("Logo URL must use HTTPS", result.Errors);
+        Assert.Empty(this.handler.Requests);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_RedirectToHttp_IsRejected()
+    {
+        this.EnqueueFeed(RedirectResponse("http://evil.example.com/logo.png"));
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.False(result.Success);
+        Assert.Null(result.LogoBytes);
+        Assert.Contains("Redirect to non-HTTPS URL rejected", result.Errors);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(HttpMethod.Get, request.Method);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_RedirectToHttps_IsFollowed()
+    {
+        var logoBytes = new byte[] { 0x89, 0x50, 0x4E, 0x47 };
+        this.EnqueueFeed(RedirectResponse("https://example.com/logo-redirected.png"));
+        this.EnqueueFeed(ByteResponse(logoBytes));
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.True(result.Success);
+        Assert.Equal(logoBytes, result.LogoBytes);
+        Assert.Equal(2, this.handler.Requests.Count);
+        Assert.Equal("https://example.com/logo-redirected.png", this.handler.Requests[1].RequestUri!.AbsoluteUri);
+        Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_OverLimit_ReturnsError()
+    {
+        var oversized = new byte[MaxPackageSizeBytes + 1];
+        this.EnqueueFeed(ChunkedResponse(oversized));
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.False(result.Success);
+        Assert.Null(result.LogoBytes);
+        Assert.Contains("Logo download failed", result.Errors);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_NetworkFailure_ReturnsStructuredError()
+    {
+        this.handler.Throw = new HttpRequestException("connection refused");
+        var client = this.CreateClient();
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.False(result.Success);
+        Assert.Null(result.LogoBytes);
+        Assert.Contains("Logo download failed", result.Errors);
+    }
+
+    [Fact]
+    public async Task DownloadLogoAsync_Timeout_ReturnsStructuredError()
+    {
+        this.handler.Delay = TimeSpan.FromSeconds(30);
+        var client = this.CreateClient(timeoutSeconds: 1);
+
+        var result = await client.DownloadLogoAsync("https://example.com/logo.png");
+
+        Assert.False(result.Success);
+        Assert.Null(result.LogoBytes);
+        Assert.Contains("Logo download timed out", result.Errors);
+    }
+
     private void EnqueueFeed(HttpResponseMessage response) => this.handler.Enqueue(response);
 
     private void EnqueuePackage(HttpResponseMessage response) => this.handler.Enqueue(response);
@@ -484,6 +771,71 @@ public class PluginFeedClientTests
               "sha256": "abc123",
               "releaseNotesUrl": "https://example.com/a/releases",
               "signature": null
+            }
+          ]
+        }
+        """;
+
+    // Mirrors the live v2 index shape (design "Verified Ground Truth"): the package-backed entry's
+    // inline descriptor carries schemaVersion and minAppVersion; the descriptor-only entry omits
+    // the package key entirely.
+    private const string ValidV2IndexJson = """
+        {
+          "schemaVersion": 2,
+          "lastUpdated": "2026-11-14T01:55:08Z",
+          "plugins": [
+            {
+              "id": "antigravity",
+              "name": "Antigravity",
+              "description": "Google Antigravity CLI (agy)",
+              "version": "1.0.0",
+              "compatibility": ">=1.1.0",
+              "channel": "stable",
+              "publisher": "CLIHub",
+              "homepage": "https://antigravity.google/docs/cli/overview",
+              "descriptor": {
+                "schemaVersion": 1,
+                "id": "antigravity",
+                "name": "Antigravity",
+                "description": "Google Antigravity CLI (agy)",
+                "version": "1.0.0",
+                "publisher": "CLIHub",
+                "homepage": "https://antigravity.google/docs/cli/overview",
+                "minAppVersion": "1.1.0",
+                "commands": {
+                  "launch": { "executable": "agy" },
+                  "resume": { "executable": "agy", "arguments": "--continue" },
+                  "version": { "executable": "agy", "arguments": "--version" }
+                },
+                "detection": { "systemPaths": ["%USERPROFILE%\\.gemini\\antigravity-cli"] }
+              },
+              "package": {
+                "url": "https://example.com/antigravity-1.0.0.clihub-plugin.zip",
+                "sha256": "ff1d3a87"
+              },
+              "logoUrl": "https://example.com/antigravity/logo.png",
+              "releaseNotesUrl": null,
+              "signature": null
+            },
+            {
+              "id": "descriptor-only",
+              "name": "Descriptor Only",
+              "description": "Descriptor-only plugin",
+              "version": "0.9.0",
+              "compatibility": ">=1.0.0",
+              "channel": "stable",
+              "publisher": "CLIHub",
+              "homepage": "https://example.com/descriptor-only",
+              "descriptor": {
+                "id": "descriptor-only",
+                "name": "Descriptor Only",
+                "version": "0.9.0",
+                "publisher": "CLIHub",
+                "homepage": "https://example.com/descriptor-only",
+                "commands": {
+                  "launch": { "executable": "donly" }
+                }
+              }
             }
           ]
         }

@@ -20,4 +20,16 @@ public interface IPluginFeedClient
     /// <param name="cancellationToken"> Cancellation token. </param>
     /// <returns> Download result with temporary file path or errors. </returns>
     Task<PluginDownloadResult> DownloadPackageAsync(string packageUrl, string expectedSha256, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///   Downloads a plugin logo for a descriptor-only install under the same transport rules as
+    ///   feed and package fetches: HTTPS-only pre-check, manually followed redirects with
+    ///   per-hop HTTPS and a maximum of 5 hops, a 10 MB size bound, and the probe timeout. No
+    ///   checksum is verified — the feed index is the integrity anchor and the logo is
+    ///   display-only.
+    /// </summary>
+    /// <param name="logoUrl"> HTTPS URL to the logo image. </param>
+    /// <param name="cancellationToken"> Cancellation token. </param>
+    /// <returns> Download result with logo bytes or errors. </returns>
+    Task<PluginLogoDownloadResult> DownloadLogoAsync(string logoUrl, CancellationToken cancellationToken = default);
 }

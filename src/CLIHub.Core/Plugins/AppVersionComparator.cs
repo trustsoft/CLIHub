@@ -30,7 +30,14 @@ public static class AppVersionComparator
         return current.Patch >= required.Patch;
     }
 
-    private static (int Major, int Minor, int Patch) ParseVersion(string version)
+    /// <summary>
+    ///   Parses a version string tolerantly: missing or unparseable segments become 0
+    ///   (e.g., "1.1" parses as (1, 1, 0)). <see cref="AppCompatibilityRange" /> reuses this
+    ///   parser so both sides of a compatibility comparison share the same tolerance.
+    /// </summary>
+    /// <param name="version"> Version string with one to three dot-separated segments. </param>
+    /// <returns> The parsed major, minor, and patch components. </returns>
+    internal static (int Major, int Minor, int Patch) ParseVersion(string version)
     {
         var parts = version.Split('.');
         var major = parts.Length > 0 && int.TryParse(parts[0], out var m) ? m : 0;

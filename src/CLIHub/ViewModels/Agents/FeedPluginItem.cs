@@ -22,13 +22,16 @@ public sealed class FeedPluginItem : ObservableObject
     /// <param name="version"> Feed version. </param>
     /// <param name="publisher"> Publisher. </param>
     /// <param name="homepage"> Homepage URL. </param>
-    /// <param name="packageUrl"> Package download URL. </param>
-    /// <param name="sha256"> Package checksum. </param>
-    /// <param name="minAppVersion"> Minimum required CLIHub version. </param>
+    /// <param name="packageUrl"> Package download URL, or null for a descriptor-only entry. </param>
+    /// <param name="sha256"> Package checksum, or null for a descriptor-only entry. </param>
+    /// <param name="minAppVersion"> Minimum required CLIHub version (v1 entries), or null for v2. </param>
+    /// <param name="compatibility"> Compatibility range the current app version must satisfy. </param>
+    /// <param name="descriptorJson"> Inline descriptor JSON (v2 entries), or null. </param>
+    /// <param name="logoUrl"> Optional logo image URL (v2 entries), or null. </param>
     /// <param name="releaseNotesUrl"> Optional release notes URL. </param>
     /// <param name="status"> Plugin status (Available/Current/UpdateAvailable/DifferentVersionAvailable). </param>
     /// <param name="installedVersion"> Currently installed version, or null. </param>
-    /// <param name="canInstall"> Whether the plugin can be installed (minAppVersion satisfied). </param>
+    /// <param name="canInstall"> Whether the plugin can be installed (compatibility satisfied). </param>
     /// <param name="isDowngrade"> Whether installing would be a downgrade. </param>
     public FeedPluginItem(
         string id,
@@ -37,9 +40,12 @@ public sealed class FeedPluginItem : ObservableObject
         string version,
         string publisher,
         string homepage,
-        string packageUrl,
-        string sha256,
-        string minAppVersion,
+        string? packageUrl,
+        string? sha256,
+        string? minAppVersion,
+        string compatibility,
+        string? descriptorJson,
+        string? logoUrl,
         string? releaseNotesUrl,
         PluginUpdateStatus status,
         string? installedVersion,
@@ -55,6 +61,9 @@ public sealed class FeedPluginItem : ObservableObject
         this.PackageUrl = packageUrl;
         this.Sha256 = sha256;
         this.MinAppVersion = minAppVersion;
+        this.Compatibility = compatibility;
+        this.DescriptorJson = descriptorJson;
+        this.LogoUrl = logoUrl;
         this.ReleaseNotesUrl = releaseNotesUrl;
         this.status = status;
         this.installedVersion = installedVersion;
@@ -93,19 +102,41 @@ public sealed class FeedPluginItem : ObservableObject
     public string Homepage { get; }
 
     /// <summary>
-    ///   Package download URL (HTTPS).
+    ///   Package download URL (HTTPS), or null for a descriptor-only entry.
     /// </summary>
-    public string PackageUrl { get; }
+    public string? PackageUrl { get; }
 
     /// <summary>
-    ///   SHA-256 checksum of the package.
+    ///   SHA-256 checksum of the package, or null for a descriptor-only entry.
     /// </summary>
-    public string Sha256 { get; }
+    public string? Sha256 { get; }
 
     /// <summary>
-    ///   Minimum required CLIHub version.
+    ///   Minimum required CLIHub version (v1 entries), or null for v2 entries.
     /// </summary>
-    public string MinAppVersion { get; }
+    public string? MinAppVersion { get; }
+
+    /// <summary>
+    ///   Compatibility range the current app version must satisfy: <c> "&gt;=" + minAppVersion </c>
+    ///   for v1 entries, the raw range text for v2 entries.
+    /// </summary>
+    public string Compatibility { get; }
+
+    /// <summary>
+    ///   Verbatim inline descriptor JSON for a v2 descriptor-only entry, or null.
+    /// </summary>
+    public string? DescriptorJson { get; }
+
+    /// <summary>
+    ///   Optional logo image URL for a v2 entry, or null.
+    /// </summary>
+    public string? LogoUrl { get; }
+
+    /// <summary>
+    ///   Whether this item installs from the inline descriptor instead of a downloaded package:
+    ///   true when the entry carries a descriptor and no package URL.
+    /// </summary>
+    public bool UsesDescriptorInstall => this.DescriptorJson is not null && this.PackageUrl is null;
 
     /// <summary>
     ///   Optional release notes URL.
@@ -148,7 +179,7 @@ public sealed class FeedPluginItem : ObservableObject
     }
 
     /// <summary>
-    ///   Whether the plugin can be installed (minAppVersion check passed).
+    ///   Whether the plugin can be installed (compatibility range satisfied).
     /// </summary>
     public bool CanInstall { get; }
 
@@ -241,9 +272,12 @@ public sealed class FeedPluginItem : ObservableObject
     public bool HasWarning => this.WarningMessage is not null;
 
     /// <summary>
-    ///   Reason why installation is blocked, or null if it can be installed.
+    ///   Reason why installation is blocked, or null if it can be installed. v1 entries keep the
+    ///   verbatim minAppVersion message; v2 entries show the raw compatibility range.
     /// </summary>
     public string? BlockedReason => !this.CanInstall
-        ? $"Requires CLIHub {this.MinAppVersion} or newer. Update CLIHub to install this plugin."
+        ? this.MinAppVersion is not null
+            ? $"Requires CLIHub {this.MinAppVersion} or newer. Update CLIHub to install this plugin."
+            : $"Requires CLIHub {this.Compatibility}. Update CLIHub to install this plugin."
         : null;
 }

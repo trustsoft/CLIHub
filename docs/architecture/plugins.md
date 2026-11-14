@@ -108,7 +108,7 @@ CLIHub tracks plugin origin, content integrity, and lifecycle state in `%APPDATA
 **Origin values:**
 
 - `builtin`: written by this CLIHub build from embedded built-in descriptors
-- `installed`: installed from a `.clihub-plugin.zip` package
+- `installed`: installed from a `.clihub-plugin.zip` package or a descriptor-only feed install
 - `unknown`: origin not recognized (predates state file or content differs from what CLIHub wrote)
 
 **Hash semantics:** `contentHash` and `logoHash` are SHA-256 hashes (hex-encoded) of the raw file bytes. They detect **content drift and user modifications** relative to what CLIHub last wrote. They are NOT cryptographic signatures and do NOT provide authenticity verification or tamper-evidence against motivated attackers.
@@ -174,11 +174,13 @@ The "Reload Catalog" command triggers `IPluginCatalog.ReloadPlugins()`, rescanni
 
 ## Remote Plugin Feed
 
-CLIHub can browse and install plugins from a remote HTTPS index. By default, the official feed at `https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json` is used. The feed URL can be customized or disabled in Preferences.
+CLIHub can browse and install plugins from a remote HTTPS index. By default, the official v2 feed at `https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.json` is used. The feed URL can be customized or disabled in Preferences; a custom URL pointing at a v1-style index keeps working end-to-end.
 
 ### Index Schema
 
-The feed index is JSON with `schemaVersion: 1`:
+The feed index is JSON with `schemaVersion` 1 or 2. CLIHub rejects indexes with a `schemaVersion` greater than 2.
+
+Schema version 1 (the frozen v1 registry; still served to older clients and custom feeds):
 
 ```jsonc
 {
@@ -197,11 +199,47 @@ The feed index is JSON with `schemaVersion: 1`:
       "packageUrl": "https://example.com/example-plugin-1.0.0.clihub-plugin.zip",
       "sha256": "abc123...",  // hex-encoded SHA-256 of the package
       "releaseNotesUrl": "https://example.com/release-notes",  // optional
-      "signature": null  // reserved for future signing; always null in this change
+      "signature": null  // reserved for future signing; never verified
     }
   ]
 }
 ```
+
+Schema version 2 (the default registry, CI-generated; ADR-0015):
+
+```jsonc
+{
+  "schemaVersion": 2,
+  "lastUpdated": "2026-11-14T01:55:08Z",  // optional
+  "plugins": [
+    {
+      "id": "example-plugin",
+      "name": "Example Plugin",
+      "description": "An example plugin",
+      "version": "1.0.0",
+      "compatibility": ">=1.1.0 <2.0.0",   // constraint list: >= <= > < =, separated by commas and/or whitespace
+      "channel": "stable",                  // only "stable" is listed; anything else skips the entry
+      "publisher": "Community",
+      "homepage": "https://example.com",
+      "descriptor": {                        // inline plugin.json descriptor (required JSON object; id must match the entry id)
+        "schemaVersion": 1,
+        "id": "example-plugin",
+        "name": "Example Plugin",
+        "commands": { "launch": { "executable": "example" } }
+      },
+      "package": {                           // optional; without it the plugin installs descriptor-only
+        "url": "https://example.com/example-plugin-1.0.0.clihub-plugin.zip",
+        "sha256": "abc123..."
+      },
+      "logoUrl": "https://example.com/logo.png",  // optional
+      "releaseNotesUrl": null,               // optional
+      "signature": null                      // reserved for future signing; never verified
+    }
+  ]
+}
+```
+
+Invalid v2 entries (missing required fields, malformed compatibility range, non-`stable` channel, invalid inline descriptor, descriptor/entry id mismatch, incomplete `package`) are skipped with a logged warning, like invalid v1 entries. The entry shape follows the index `schemaVersion`; the two schemas are never mixed within one index.
 
 All URLs must be HTTPS. Manual redirects (3xx responses) are followed up to 5 hops; every redirected URL must also be HTTPS.
 
@@ -220,15 +258,16 @@ Downloaded packages are verified:
    - **Installed (Current):** Installed, versions match
    - **Update available:** Installed, feed version newer
    - **Different version available:** Installed, versions differ (downgrade or different build)
-3. **minAppVersion gating:** If `minAppVersion` is present and the current CLIHub version does not satisfy it (numeric major.minor.patch comparison), the plugin is shown but the Install/Update button is disabled with a message.
-4. **Download → Inspect → Confirm → Install:** User clicks Install/Update. CLIHub downloads the package to a temporary file, verifies the SHA-256 checksum, inspects the package structure, and shows the same confirmation dialog as local installation (plugin name, version, publisher, homepage, every declared command). On confirmation, the package is installed through the same `IPluginInstaller` workflow as local packages.
-5. **Install outcome:** Success or failure is shown in a dialog. On success, the catalog reloads and the plugin card reflects the new state.
+3. **Compatibility gating:** The current CLIHub version must satisfy the entry's compatibility range (v1 entries synthesize the floor `>=minAppVersion`; v2 entries carry the range directly; both are evaluated by the same numeric major.minor.patch constraint evaluator). Unsatisfied entries are shown with the Install/Update button disabled and a message — the v1 floor keeps the verbatim "Requires CLIHub <min> or newer." message; v2 entries show the raw range (e.g. "Requires CLIHub >=1.1.0 <2.0.0.").
+4. **Package-backed install — Download → Inspect → Confirm → Install:** User clicks Install/Update. CLIHub downloads the package to a temporary file, verifies the SHA-256 checksum, inspects the package structure, and shows the same confirmation dialog as local installation (plugin name, version, publisher, homepage, every declared command). On confirmation, the package is installed through the same `IPluginInstaller` workflow as local packages.
+5. **Descriptor-only install — Inspect → Confirm → Install:** For a v2 entry without a `package`, CLIHub builds the confirmation dialog directly from the inline descriptor — no download and no checksum step (the feed index in the git repository is the integrity anchor). On confirmation, the verbatim descriptor JSON (plus the `logoUrl` logo when it downloads successfully) is staged, re-validated from disk, and installed through the same backup/atomic-move/rollback/state/catalog-reload path as a package install. A failed or non-HTTPS logo fetch is logged as a warning and the install proceeds without `logo.png` (the default logo is shown).
+6. **Install outcome:** Success or failure is shown in a dialog. On success, the catalog reloads and the plugin card reflects the new state.
 
 ### Feed URL Preference
 
 The `PluginFeedUrl` preference in `AppPreferences` controls the feed URL:
 
-- **Absent or JSON `null`:** Use the default official URL (`https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json`).
+- **Absent or JSON `null`:** Use the default official URL (`https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.json`).
 - **Explicit empty string (`""`):** Feed is disabled. The "Browse Plugins" button is grayed out (disabled) on the CLI Agents page.
 - **Non-empty HTTPS URL:** Use the custom feed URL. Non-HTTPS URLs are rejected at validation.
 
@@ -238,14 +277,19 @@ Feed entries whose `id` matches a built-in plugin ID (the set of IDs embedded in
 
 ### Publishing Contract
 
-The official feed at `trustsoft/CLIHub-plugins` is a curated index of community plugins. To publish a plugin:
+The official v2 feed at `trustsoft/CLIHub-plugins-v2` is a CI-generated index of community plugins (ADR-0015). To publish a plugin there:
+
+1. Add a per-plugin folder with the plugin's descriptor (and logo) under `plugins/<plugin-id>/`.
+2. If the plugin ships files beyond the descriptor and logo, package them as a `.clihub-plugin.zip` following the format rules, host it at a public HTTPS URL, and record its SHA-256 hash in the entry's `package` object. Descriptor-only plugins omit `package` and install directly from the inline descriptor.
+3. Declare the entry metadata: `id`, `name`, `description`, `version`, `compatibility` range, `channel: "stable"`, `publisher`, `homepage`, and optional `logoUrl`/`releaseNotesUrl`.
+4. Open a pull request to `trustsoft/CLIHub-plugins-v2`. The maintainers review the plugin for safety and quality, and merge if approved; CI regenerates `index.json`.
+
+The older `trustsoft/CLIHub-plugins` registry is frozen: it keeps serving already-shipped clients and historical custom feeds but receives no new plugins. The v1 publishing flow below is kept for those users:
 
 1. Package your plugin as a `.clihub-plugin.zip` following the format rules.
 2. Host the package at a public HTTPS URL (GitHub Releases, CDN, etc.).
 3. Compute its SHA-256 hash (`certutil -hashfile <file> SHA256` on Windows, `shasum -a 256 <file>` on Unix).
 4. Open a pull request to `trustsoft/CLIHub-plugins` adding your entry to `index.json`, including the package URL and SHA-256 hash.
-
-The maintainers review the package for safety and quality, and merge if approved. The updated index is immediately available to all CLIHub users who use the default feed URL.
 
 ### Error Handling
 

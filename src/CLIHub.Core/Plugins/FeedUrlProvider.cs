@@ -10,7 +10,7 @@ public static class FeedUrlProvider
     /// <summary>
     ///   Default official feed URL.
     /// </summary>
-    public const string DefaultFeedUrl = "https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json";
+    public const string DefaultFeedUrl = "https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.json";
 
     /// <summary>
     ///   Resolves the effective feed URL from preferences.

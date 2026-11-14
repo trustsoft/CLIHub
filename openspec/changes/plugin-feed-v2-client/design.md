@@ -496,6 +496,34 @@ nothing channel-aware ships in this slice beyond the parse-time filter.
   installer"; placed on `IPluginFeedClient` instead so the new fetch inherits the existing
   transport-rule machinery (D7). Same guarantee set; the installer remains HTTP-free.
 
+## Implementation Notes (recorded during execution)
+
+- **4.11a fixture count and one non-mechanical value.** The ViewModel test file holds **15**
+  positional `PluginFeedEntry` constructions, not the 13 the brief/design counted; all 15 were
+  extended. The design's blanket instruction "each gains `\">=1.0.0\"`" is wrong for exactly one
+  fixture: `LoadAsync_MinAppVersionUnsatisfied_CanInstallFalse` uses `minAppVersion "99.0.0"`, so
+  its synthesized compatibility is `">=99.0.0"` (the v1 synthesis invariant `">=" + minAppVersion`).
+  All other fixtures keep `">=1.0.0"` matching their `"1.0.0"` floor. No behavior assertion changed.
+- **Logo oversize error string.** Task 3.3's fast-path/bounded-read rejections return
+  `"Logo download failed"` (with a distinct log message "Logo too large: …" / "Downloaded logo
+  exceeds the … byte limit") instead of introducing a third new string: design D8 limits new
+  user-facing strings to the v2 blocked message, the two logo structured errors, and
+  `"Descriptor JSON is required"` — `"Logo URL must use HTTPS"` is additionally sanctioned by
+  task 3.3 and the spec delta's "Logo URL must use HTTPS" scenario. Test (e)
+  `DownloadLogoAsync_OverLimit_ReturnsError` asserts that string.
+- **Task 2.6 test count.** The "(a)–(g)" bullets name **8** test methods (bullet (b) names two);
+  the Core.Tests suite grew by exactly 8 installer tests, plus 43 range tests (Stage 1), 7 logo
+  tests (Stage 3), 8 v2 feed-client tests (4.10), and 4 ViewModel tests (4.11b–e).
+- **Verifier finding: v2 duplicate-id claim ordering.** `TryParseEntryV2` called `seenIds.Add(id)`
+  before descriptor/channel/package validation, so in a feed `[A(invalid), A(valid)]` the valid
+  entry was skipped as a duplicate. Fix: the id is claimed immediately before the successful
+  return (matching the v1 ordering) — pinned by
+  `GetFeedAsync_V2DuplicateIdAfterInvalidEntry_KeepsValidEntry`.
+- **OQ-1..4 resolutions honored:** only the `plugin-feed` delta (OQ-1); the v2 blocked message is
+  the raw-range form `"Requires CLIHub {compatibility}. Update CLIHub to install this plugin."`
+  (OQ-2); logo failure warns and installs without `logo.png` (OQ-3); logo bound = 10 MB via
+  `MaxPackageSizeBytes` (OQ-4).
+
 ## Open Questions
 
 - **OQ-1** Should the descriptor install seam also be pinned in the `plugin-installation`
