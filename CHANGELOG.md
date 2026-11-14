@@ -8,6 +8,28 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.2.0 - 2026-11-14
+
+### Added
+
+- Plugin registry v2 client: dual-format index parsing (`schemaVersion` 1 and 2), `compatibility` ranges replacing the v1 `minAppVersion` floor (v1 floored entries evaluate as `>=minAppVersion`), descriptor-only installs from the inline descriptor plus optional logo, the v2 default feed, and continued support for custom v1 feeds (plugin-feed-v2-client, plugin-feed, plugin-installation).
+- `IPluginFeedSyncService`: a non-blocking startup refresh followed by hourly conditional fetches (ETag/If-None-Match, else Last-Modified/If-Modified-Since), a last-good index cache with a stale-data fallback, change detection that publishes `PluginFeedUpdatedEvent`, and the plugin update chip on agent cards (plugin-feed-background-sync, plugin-feed-sync).
+- Plugin index signing: ECDSA P-256 verification of the `index.sig` envelope over the exact index bytes before parsing, an embedded production trust anchor for the default feed only, and a missing-signature transition window ending 2026-12-15 (plugin-index-signing, embed-signing-key).
+- One local plugin registry (`%APPDATA%\CLIHub\registry.json`) with per-plugin content hash: tolerant reads, atomic writes, one-time adoption of the legacy `plugin-state.json`, scan-time hash verification that flags user-modified plugins, and adoption of descriptor folders with no registry entry (plugin-registry-consolidation, plugin-registry).
+- Shared chromeless-window base `ChromeWindow` and header control `WindowHeaderBar` for the Settings, What's New, and Browse Plugins windows, with one `WM_GETMINMAXINFO` handler, rounded corners, Escape-to-close, and header drag (add-chrome-window-base, chrome-window-base).
+- Accessibility surface: `DecorativeGlyph` (a `TextBlock` that returns a null automation peer) applied at 20 decorative sites, `MenuAction.Tooltip`/`AccessibleName`/`EffectiveAccessibleName` bound in both windows' action menus, a named ACTIONS toggle, and a persistent ignored-pattern chip name (a11y-sweep, preferences-ui, launch-window-layout).
+- `DomainEventBus` now synchronizes its subscription map with a `ReaderWriterLockSlim`: read-lock publish snapshots, write locks for subscribe/unsubscribe, handlers invoked outside the lock (followups-quick-wins).
+
+### Changed
+
+- Feed and package fetches use a single GET with in-flight redirect following instead of a HEAD preflight, share one structured-error path, and stop re-downloading the index after an install; superseded the two-pass probe and duplicated catch blocks (simplify-plugin-feed-flow).
+- Version gating in Browse Plugins and the CLI Agents update chip evaluates compatibility ranges rather than a single version floor.
+- `IAgentManagementSection` now declares the plugin-management surface it already implemented (`InvalidCards`, `DisabledCards`, `HasDisabledPlugins`, `PluginCatalogSummary`, `EnablePluginCommand`), so interface-typed consumers no longer rely on WPF reflection (followups-quick-wins).
+
+### Fixed
+
+- A successful plugin install no longer clears the Browse list and reports an error when the follow-up catalog refresh fails.
+
 ## 1.1.4 - 2026-11-12
 
 ### Added

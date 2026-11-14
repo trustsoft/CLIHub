@@ -3,6 +3,25 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.0 — 2026-11-14
+
+### New
+
+- Plugin browsing now uses the new plugin catalog and keeps itself up to date: CLIHub checks the catalog at startup and every hour, and an installed plugin with a newer version shows the same update chip as an agent update.
+- The plugin catalog index is cryptographically signed and verified before it is used, so a tampered catalog is rejected instead of installed.
+
+### Improved
+
+- Installing a catalog plugin is faster: plugins that are a descriptor plus a logo no longer download a package, and the catalog is no longer re-downloaded after every install.
+- When the catalog cannot be reached, Browse Plugins shows the last downloaded catalog with its timestamp instead of an error.
+- Plugins are tracked in one local registry: a plugin whose files you edited is detected and logged, and plugins you disabled stay disabled across updates.
+- Settings, What's New, and Browse Plugins share one window chrome: rounded corners, a consistent minimum size, maximized windows that stay inside the screen, and Escape closes them.
+- Screen readers no longer announce decorative icons: page-header emblems, sidebar and card icons, status glyphs, and menu chevrons are skipped, while icon-only buttons keep their names. The Actions menus and the ignored-pattern chips now announce what they do.
+
+### Fixed
+
+- A successful plugin install is no longer followed by an error dialog when the catalog refresh happens to fail.
+
 ## 1.1.4 — 2026-11-12
 
 ### Improved
