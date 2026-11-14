@@ -7,17 +7,17 @@ Allows users to browse, download, and install AI agent CLI plugin descriptors fr
 
 ### Requirement: Fetch and parse feed index
 
-The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate its schema, and return available plugins with metadata.
+The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate its schema (index `schemaVersion` 1 or 2), and return available plugins with metadata normalized across both schema versions.
 
 #### Scenario: Valid index fetched successfully
 
-- **WHEN** the feed URL is reachable and returns a valid `index.json` with `schemaVersion: 1` and a `plugins` array
+- **WHEN** the feed URL is reachable and returns a valid `index.json` with `schemaVersion` 1 or 2 and a `plugins` array
 - **THEN** the feed result includes a parsed `PluginFeedIndex` with the list of plugins
 - **AND** Success is true
 
 #### Scenario: Index schema version unsupported
 
-- **WHEN** the feed index has `schemaVersion` greater than 1
+- **WHEN** the feed index has `schemaVersion` greater than 2
 - **THEN** the feed result includes an error "Unsupported feed schema version X"
 - **AND** Success is false
 
@@ -35,7 +35,7 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate i
 
 #### Scenario: Index entry with invalid fields skipped
 
-- **WHEN** a feed index entry is missing required fields (e.g., `id`, `name`, `packageUrl`, `sha256`)
+- **WHEN** a feed index entry is missing required fields for its schema version (v1: e.g. `id`, `name`, `minAppVersion`, `packageUrl`, `sha256`; v2: e.g. `id`, `name`, `compatibility`, `descriptor`)
 - **THEN** that entry is skipped with a logged warning
 - **AND** the rest of the index entries are loaded successfully
 - **AND** the feed result Success is true if the index itself is valid
@@ -78,6 +78,37 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate i
 - **THEN** the feed result includes an error "Could not load plugin feed"
 - **AND** Success is false
 - **AND** no exception is thrown
+
+#### Scenario: Schema version 2 index parsed
+
+- **WHEN** the feed index has `schemaVersion: 2` and entries with `id`, `name`, `description`, `version`, `publisher`, `homepage`, `compatibility`, `channel`, an inline `descriptor` object, and a `package` object with `url` and `sha256`
+- **THEN** each entry exposes the package URL and checksum from `package`, the inline descriptor, the compatibility range, the channel, and `logoUrl`
+- **AND** the entry's descriptor schema version comes from `descriptor.schemaVersion` (1 when absent)
+- **AND** Success is true
+
+#### Scenario: Descriptor-only v2 entry parsed
+
+- **WHEN** a schema version 2 entry omits `package` entirely but carries a valid inline `descriptor`
+- **THEN** the entry is parsed with null package URL and null checksum and the inline descriptor available for installation
+- **AND** the entry is listed like any other feed entry
+
+#### Scenario: Non-stable channel entry skipped
+
+- **WHEN** a schema version 2 entry carries a `channel` value other than "stable" (absent, null, or "stable" are accepted)
+- **THEN** that entry is skipped with a logged warning
+- **AND** the rest of the index entries are loaded successfully
+
+#### Scenario: Malformed compatibility range entry skipped
+
+- **WHEN** a schema version 2 entry carries a `compatibility` value that does not parse as a list of `>=|<=|>|<|= major.minor.patch` constraints
+- **THEN** that entry is skipped with a logged warning
+- **AND** the rest of the index entries are loaded successfully
+
+#### Scenario: Invalid inline descriptor entry skipped
+
+- **WHEN** a schema version 2 entry's inline `descriptor` fails descriptor validation (e.g. no launch command, unsupported descriptor schema version) or its `id` differs from the entry's `id`
+- **THEN** that entry is skipped with a logged warning
+- **AND** the rest of the index entries are loaded successfully
 
 ### Requirement: Download package and verify checksum
 
@@ -165,9 +196,14 @@ The system SHALL display plugins from the feed with their installation status: A
 - **THEN** the plugin is displayed with status "Update Available"
 - **AND** the feed version is shown as available
 
+#### Scenario: Descriptor-only entries displayed like package entries
+
+- **WHEN** the feed contains schema version 2 entries without a `package` alongside entries with one
+- **THEN** both kinds of entry render the same card: same statuses from the same version comparison, same Install/Update action, and no visible distinction between zip-backed and descriptor-only entries
+
 ### Requirement: Install plugin from feed
 
-The system SHALL download a plugin package from the feed, verify its checksum, show a confirmation dialog with all declared commands, and install the plugin if confirmed.
+The system SHALL install a plugin from the feed if confirmed — for package-backed entries by downloading the package, verifying its checksum, and showing a confirmation dialog with all declared commands; for schema version 2 entries without a `package`, directly from the inline descriptor with no download and no checksum step (the feed index is the integrity anchor).
 
 #### Scenario: Install from feed succeeds
 
@@ -200,9 +236,34 @@ The system SHALL download a plugin package from the feed, verify its checksum, s
 - **AND** the feed index is not re-fetched as part of the install
 - **AND** changes made to the feed after the dialog was loaded are reflected only when the user clicks Refresh
 
+#### Scenario: Descriptor-only install succeeds without package download
+
+- **WHEN** a user selects an available schema version 2 entry without a `package` and clicks Install
+- **THEN** no package is downloaded and no checksum verification occurs
+- **AND** a confirmation dialog built from the inline descriptor is shown with the descriptor's name, version, publisher, homepage, and every declared command
+- **AND** if the user confirms, the plugin is installed with origin = "installed" and the card updates in place exactly as a package install
+
+#### Scenario: Descriptor-only install uses the package installation guarantees
+
+- **WHEN** a descriptor-only install is confirmed
+- **THEN** the descriptor passes the same reader, validator, and reserved built-in ID checks as a package inspection, and is re-validated from the staging directory before being moved into place
+- **AND** the install stages under `.staging-<guid>`, backs up any existing plugin with the same id, moves atomically, rolls back on failure, records lifecycle state, and reloads the catalog — identical to a package install
+
+#### Scenario: Descriptor-only install cancelled by user
+
+- **WHEN** a user selects a descriptor-only entry, clicks Install, and clicks Cancel in the confirmation dialog
+- **THEN** no installation occurs and no files are written
+- **AND** no logo is fetched
+
+#### Scenario: Descriptor-only install proceeds without logo on fetch failure
+
+- **WHEN** a confirmed descriptor-only install has a `logoUrl` and the logo download fails (network error, non-HTTPS redirect, oversize body)
+- **THEN** a warning is logged and the installation completes without `logo.png`
+- **AND** the plugin displays the default logo
+
 ### Requirement: Update plugin from feed
 
-The system SHALL download an updated plugin package from the feed, verify its checksum, show a confirmation dialog, and replace the existing installed plugin if confirmed.
+The system SHALL install an update from the feed and replace the existing installed plugin if confirmed — for package-backed entries by downloading the updated package and verifying its checksum; for schema version 2 entries without a `package`, directly from the inline descriptor.
 
 #### Scenario: Update from feed succeeds
 
@@ -220,9 +281,15 @@ The system SHALL download an updated plugin package from the feed, verify its ch
 - **THEN** no installation or replacement occurs
 - **AND** the temporary package file is deleted
 
+#### Scenario: Descriptor-only update replaces existing plugin
+
+- **WHEN** a user selects a descriptor-only entry with "Update Available" status and clicks Update, then confirms
+- **THEN** the existing plugin is replaced with `replaceExisting=true` through the same backup, atomic-move, and rollback path as a package update
+- **AND** the plugin's `installedVersion` in `plugin-state.json` is updated to the installed descriptor's version
+
 ### Requirement: Minimum app version gating
 
-The system SHALL prevent installation of plugins whose `minAppVersion` is greater than the current CLIHub version, showing a message and disabling the Install button.
+The system SHALL prevent installation of plugins whose compatibility requirement — a v1 `minAppVersion` floor or a v2 `compatibility` range — is not satisfied by the current CLIHub version, showing a message and disabling the Install button.
 
 #### Scenario: Current CLIHub version satisfies minAppVersion
 
@@ -243,6 +310,31 @@ The system SHALL prevent installation of plugins whose `minAppVersion` is greate
 - **WHEN** comparing current CLIHub version with `minAppVersion`
 - **THEN** the comparison uses numeric major, minor, and patch segments (e.g., "1.10.0" > "1.9.5")
 - **AND** major version takes precedence over minor and patch
+
+#### Scenario: Compatibility range satisfied
+
+- **WHEN** a schema version 2 entry has `compatibility` ">=1.1.0 <2.0.0"
+- **AND** the current CLIHub version is "1.5.0"
+- **THEN** the plugin can be installed
+- **AND** the Install button is enabled
+
+#### Scenario: Compatibility range not satisfied shows the range
+
+- **WHEN** a schema version 2 entry has `compatibility` ">=1.1.0 <2.0.0"
+- **AND** the current CLIHub version is "2.1.0"
+- **THEN** a message is shown: "Requires CLIHub >=1.1.0 <2.0.0. Update CLIHub to install this plugin."
+- **AND** the Install button is disabled
+
+#### Scenario: v1 minAppVersion gating identical under range evaluation
+
+- **WHEN** a v1 entry has `minAppVersion` "M" and the current version is "C"
+- **THEN** the entry is gated exactly as the range ">=M": the Install button is enabled if and only if C >= M under numeric major.minor.patch comparison
+- **AND** the blocked message remains "Requires CLIHub M or newer. Update CLIHub to install this plugin."
+
+#### Scenario: Range constraints separated by commas or spaces
+
+- **WHEN** a `compatibility` value separates constraints with commas (">=1.1.0,<2.0.0"), spaces (">=1.1.0 <2.0.0"), or both (">=1.1.0, <2.0.0")
+- **THEN** all three forms are accepted and evaluate to the same satisfaction result
 
 ### Requirement: Refresh feed on demand
 
@@ -274,7 +366,7 @@ The system SHALL allow users to configure the feed URL via a preference in `conf
 #### Scenario: Feed URL configuration absent or null
 
 - **WHEN** the `PluginFeedUrl` field in `config.json` is absent or JSON `null`
-- **THEN** the default official feed URL is used: `https://raw.githubusercontent.com/trustsoft/CLIHub-plugins/main/index.json`
+- **THEN** the default official feed URL is used: `https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.json`
 
 #### Scenario: Custom feed URL used
 
@@ -348,6 +440,12 @@ The system SHALL display every declared command (launch, resume, version, update
 
 **Security rationale:** All command kinds execute arbitrary binaries specified in the descriptor. A package could hide its payload in `resume`, `version`, or `update` while showing a harmless `launch` command. Listing every declared command ensures the user can inspect all execution paths before approving installation.
 
+#### Scenario: Descriptor-only confirmation lists inline descriptor commands
+
+- **WHEN** a user is shown the confirmation dialog for a descriptor-only install
+- **THEN** the dialog is built from the inline descriptor and lists every command kind it declares with the exact executable and arguments
+- **AND** no package download is required to populate the dialog
+
 ### Requirement: Temporary file cleanup
 
 The system SHALL delete temporary package files after installation completes (success or failure) or if an exception occurs during the workflow.
@@ -403,3 +501,24 @@ The Browse Plugins dialog SHALL provide drawn window chrome with header drag to 
 #### Scenario: Default size is 640x480
 - **WHEN** the Browse Plugins dialog is opened
 - **THEN** its initial size is 640 pixels wide by 480 pixels tall
+
+### Requirement: Logo download for descriptor-only installs
+
+The system SHALL fetch the logo for a confirmed descriptor-only install over HTTPS under the same transport rules as feed and package fetches (HTTPS-only, redirects followed manually with per-hop HTTPS and a maximum of 5 hops, response bounded to 10 MB, probe timeout), and SHALL NOT abort the installation when the logo cannot be fetched.
+
+#### Scenario: Logo downloaded and staged
+
+- **WHEN** a confirmed descriptor-only install has an HTTPS `logoUrl`
+- **THEN** the logo bytes are downloaded under the redirect, hop-cap, and size rules and written to the installed plugin folder as `logo.png`
+- **AND** the logo is served through the existing plugin logo resolution after the catalog reloads
+
+#### Scenario: Logo URL must use HTTPS
+
+- **WHEN** a `logoUrl` has `http://` scheme or redirects to a non-HTTPS URL
+- **THEN** the logo fetch is rejected and the installation proceeds without a logo
+
+#### Scenario: Logo download failure does not abort install
+
+- **WHEN** the logo download fails for any reason (network error, timeout, oversize body)
+- **THEN** the failure is reported as a structured error, a warning is logged, and the descriptor-only installation completes without `logo.png`
+- **AND** the plugin displays the default logo

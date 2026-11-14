@@ -290,7 +290,7 @@ Reference decision IDs (D1–D9) and deviations (DEV-1–DEV-4) live in `design.
        `tests/CLIHub.Tests/ViewModels/Agents/BrowsePluginsDialogViewModelTests.cs`,
        `docs/architecture/plugins.md`, `docs/project-context.md`, and
        `openspec/changes/plugin-feed-v2-client/` — anything else is a stop-and-report signal
-- [ ] 5.9 Report the gate results together with a recommended manual smoke (close CLIHub, reopen,
+- [x] 5.9 Report the gate results together with a recommended manual smoke (close CLIHub, reopen,
        open Browse Plugins against the live v2 default feed: cards render with statuses; install
        one package-backed plugin end-to-end with confirmation and checksum; install one
        descriptor-only plugin — confirmation lists the descriptor's commands, logo appears,
@@ -299,3 +299,6 @@ Reference decision IDs (D1–D9) and deviations (DEV-1–DEV-4) live in `design.
        lowering/raising a test feed's compatibility), then wait for the smoke result and ask for
        explicit `git commit` and `openspec archive` approval (approval never carries over;
        nothing is staged before it)
+       **(smoke confirmed by the user 2026-11-14: 7 plugins from the live v2 feed render and
+       install; approved 2026-11-14; includes the verifier-finding fix — seenIds ordering pin
+       test, design.md Implementation Notes)**
