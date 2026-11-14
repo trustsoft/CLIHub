@@ -108,6 +108,74 @@ are pruned from this list once their evidence is no longer needed; recover them 
   request.
 - Trigger: the next MODIFIED delta to `agent-version` or `agent-update-detection`.
 
+## Plugin registry v2
+
+Roadmap for the plugin registry redesign (ADR-0015: separate feed repository
+`trustsoft/CLIHub-plugins-v2`, CI-generated index, parallel-feed migration). Slices are ordered;
+each is a separate OpenSpec change except the repo bootstrap, which is out-of-repo infrastructure.
+
+### Bootstrap the CLIHub-plugins-v2 repository
+
+- Severity: Medium (blocks every other registry v2 slice; the client default cannot point at a
+  non-existent feed)
+- Evidence: ADR-0015 (2026-11-14) fixes the v2 design: per-plugin `plugins/<id>/plugin.json`
+  folders as the source of truth, a GitHub Actions workflow that validates descriptors and
+  generates `index.json` (schemaVersion 2) on merge to `master`, branch protection on `master`.
+- Proposed remedy: create `trustsoft/CLIHub-plugins-v2` with the layout, the
+  validation/generation workflow, the v2 entry schema (inline `descriptor`, `compatibility`
+  range, `channel`, null `signature`), and migrate the current v1 entries as the seed set;
+  reserve `index.sig`.
+- Trigger: the decision to start registry v2 implementation; must complete before the client
+  default switch (next slice).
+
+### Client v2 feed support: dual-format parser, default switch, descriptor-only install
+
+- Severity: Medium (the first CLIHub-side slice of ADR-0015)
+- Evidence: ADR-0015; `PluginFeedClient.ParseFeedIndex` accepts only `schemaVersion` 1;
+  `FeedUrlProvider.DefaultFeedUrl` points at the frozen v1 index; descriptor-only plugins
+  currently require a zip package although most are a single JSON descriptor plus an optional
+  logo.
+- Proposed remedy: one OpenSpec change — parse `schemaVersion` 2 entries (inline descriptor;
+  zip entries stay checksum-verified as today), switch `DefaultFeedUrl` to the v2 index,
+  add the descriptor-only install fast path (write descriptor files directly, logo through the
+  logo cache, no per-package checksum step), and a spec delta on `plugin-feed`.
+- Trigger: the v2 repository bootstrap is complete and seeded.
+
+### Consolidate local plugin state into a single registry document
+
+- Severity: Medium (removes the folder/state/feed drift class; larger refactor of
+  Catalog/Installer/Seeder seams)
+- Evidence: ADR-0015 and the registry discussion (2026-11-14): three sources of truth exist today
+  — the plugins folder, `plugin-state.json`, and the feed; content hashes exist only for
+  built-ins (`PluginSeeder` three-hash logic), so installed plugins are never re-verified on scan.
+- Proposed remedy: one registry document as the single local source of truth (version, origin,
+  contentHash for every installed plugin, enabled, timestamps), tolerant read with adoption of
+  existing `plugin-state.json` contents — no migration runner (ADR-0014); scan verifies hashes and
+  surfaces user-modified descriptors uniformly.
+- Trigger: after the client v2 slice; ideally before background sync, which wants the registry's
+  sync metadata.
+
+### Background feed sync and update badges
+
+- Severity: Low (quality-of-life; update availability becomes visible without opening Browse)
+- Evidence: the feed is fetched only when the Browse Plugins dialog opens
+  (`BrowsePluginsDialogViewModel.LoadAsync`); no background refresh, no caching, no
+  "update available" surface outside the dialog.
+- Proposed remedy: a feed sync service (refresh on start plus an interval, ETag/If-None-Match,
+  last-good index cache), a domain event on the existing bus, and an update badge on the
+  affected agent card(s).
+- Trigger: after the registry consolidation slice.
+
+### Index signing for the v2 feed
+
+- Severity: Low (trust hardening; the trust anchor is currently "whoever controls the repository")
+- Evidence: ADR-0015 reserves `index.sig` and a null `signature` field; the signing slice was
+  deliberately deferred.
+- Proposed remedy: generate an ed25519 key pair, sign `index.json` in the CI workflow (key in
+  Actions secrets), and verify the signature on the client before parsing; treat a missing
+  signature as valid only during a defined transition window.
+- Trigger: after the default switch has settled; can proceed in parallel with later slices.
+
 ## DI and lifetime
 
 ### Transient IDisposable chain retained by the root provider
