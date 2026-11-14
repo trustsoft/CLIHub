@@ -1,0 +1,6 @@
+schema: 1
+goal: "Background plugin-feed synchronization with conditional requests, last-good index cache, domain event on feed changes, and update available surface on agent cards"
+affected_areas:
+  - "Plugin feed and synchronization"
+  - "Agent update detection"
+  - "Domain events"
