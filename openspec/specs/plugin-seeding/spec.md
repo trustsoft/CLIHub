@@ -319,7 +319,7 @@ expose the interactive and maintenance commands that agent's CLI actually suppor
 #### Scenario: Commands match the agent CLI surface
 
 - **WHEN** a built-in descriptor defines a command
-- **THEN** the command invocation matches the agent CLI's documented interface (for example `copilot --continue` resumes the most recent session)
+- **THEN** the command invocation matches the agent CLI's documented interface (for example `omp --continue` resumes the most recent session)
 
 #### Scenario: Unsupported command kinds are omitted
 

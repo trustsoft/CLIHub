@@ -767,7 +767,7 @@ Each agent card SHALL offer "Test", "Update", and "Edit Config" actions, and SHA
 
 ### Requirement: Release notes from Settings
 
-The Updates page SHALL let the user open the application release notes from the status card.
+The Updates page SHALL let the user open the application release notes from the title row.
 
 #### Scenario: Open release notes
 
