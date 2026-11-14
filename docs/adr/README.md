@@ -32,3 +32,5 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 | 0012  | [Process domain unification](ADR-0012-process-domain-unification.md)    | Accepted |
 | 0013  | [No generic persistence or cache abstraction](0013-no-generic-persistence-cache.md) | Accepted |
 | 0014  | [Remove configuration migrations](0014-remove-configuration-migrations.md) | Accepted |
+| 0015  | [Plugin registry v2 — separate feed repository](0015-plugin-registry-v2.md) | Accepted (amended ECDSA P-256) |
+| 0016  | [Plugin lifecycle manager rejected](0016-plugin-lifecycle-manager-rejected.md) | Accepted |

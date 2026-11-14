@@ -40,12 +40,19 @@ are pruned from this list once their evidence is no longer needed; recover them 
   user-visible behavior change, 1,240 tests). Adoption catalogue pending Proposal 2 follow-up.** **Proposal 2
   catalogue complete: `domain-events-adoption` `49f6511` (`docs/architecture/domain-events.md` adoption
   rules + candidate triggers; `AgentLaunched` on Launch/Resume with audit subscriber; lazy-singleton
-  subscriber activation fixed and pinned; 1,248 tests, smoke confirmed). Remaining proposals 3, 5, 6 open.**
+  subscriber activation fixed and pinned; 1,248 tests, smoke confirmed).**
   **Proposal 3 first slice complete: `capability-service-slice` `774d468` (IAgentManagementService split
   into IAgentProbeService + IAgentUpdateService, `AgentManagementViewModel` composes both; zero behavior
   change, 1,248 tests). Further decompositions deferred until consumer/test subset-use evidence appears.**
 - Trigger: Q1 2027 planning cycle, onboarding new contributors, or next major refactoring that would
   benefit from architectural clarity.
+- Status (2026-11-14): Proposals 3, 5 and 6 are no longer open. Proposal 3 is delivered in substance
+  by `capability-service-slice` — `IUpdateService` is now a composite of five capability interfaces
+  (`src/CLIHub.Core/Updates/IUpdateService.cs:6-10`), so agent management and update checking are
+  consumed through the slices consumers actually use; deeper splits stay deferred until subset-use
+  evidence appears. Proposal 5 was audited on 2026-11-14 and rejected — the lifecycle responsibilities
+  already have owners; see ADR-0016 and the "Plugin lifecycle" section below. Proposal 6 slice 1
+  delivered (`config-decomposition-slice`, above) with its follow-ups deferred.
 
 ### Configuration decomposition (Proposal 6) - first slice done, follow-ups deferred
 
@@ -235,6 +242,53 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   `tools/sign-index.ps1` (sign + `-Verify`), LF-pinned index files, CI signing with the
   `INDEX_SIGNING_KEY` secret, `public.pem` published, first signature live and verified
   end-to-end. Release gate satisfied 2026-11-14.**
+
+## Plugin lifecycle
+
+Independent gaps surfaced by the 2026-11-14 audit of Proposal 5 (rejected as a load/validate facade;
+see ADR-0016). Each is parked here rather than being absorbed into a new lifecycle abstraction.
+
+### Built-in repair never runs after startup
+
+- Severity: Low (self-heals on restart; no data loss)
+- Evidence: `EnsureBuiltinsExist` is called only from
+  `src/CLIHub/Startup/PluginInitializationService.cs:27`, and `Initialize` runs once from
+  `StartupStateLoader` (`src/CLIHub/Startup/StartupStateLoader.cs:32`). The manual reload path,
+  `PluginCatalog.ReloadPlugins` (`src/CLIHub.Core/Plugins/PluginCatalog.cs:71-76`), only rescans the
+  plugins folder. Delete a built-in descriptor, run "Reload Catalog", and the built-in stays absent
+  until the next restart.
+- Proposed remedy: seed on the manual reload path (needs a spec delta on reload semantics) or
+  document the limitation as intended behavior.
+- Trigger: a user report of a missing built-in after reload, or the next change to the reload
+  contract.
+
+### Locally modified plugins are reported but never consulted
+
+- Severity: Medium-Low (silent loss of a user's hand edit on the next feed update)
+- Evidence: `PluginCatalog.VerifyContentHash` records user-modified entries
+  (`src/CLIHub.Core/Plugins/PluginCatalog.cs:226-246`) and `GetUserModifiedPlugins` exposes them
+  (`:258`), but no consumer under `src/` reads the getter; the update path derives replace-consent
+  only from feed status
+  (`src/CLIHub/ViewModels/Agents/BrowsePluginsDialogViewModel.cs:214-230,314-318,406-410`), and
+  `RecordInstalledState` rewrites the content hash unconditionally
+  (`src/CLIHub.Core/Plugins/PluginInstaller.cs:501-513`), so the modification stops being detectable.
+- Proposed remedy: surface a "locally modified" flag in `PluginInstallPreview` and require explicit
+  confirmation before overwriting a modified descriptor.
+- Trigger: the next change to the install/update confirmation flow, or a user report of a lost edit.
+
+### Registry save failures are invisible
+
+- Severity: Low-Medium (the UI reports a state change that did not persist)
+- Evidence: `IPluginRegistry.Save` returns `void` (`src/CLIHub.Core/Plugins/IPluginRegistry.cs:21`)
+  and swallows write failures with a log line
+  (`src/CLIHub.Core/Plugins/PluginRegistryRepository.cs:97-105`). Disable and enable
+  (`AgentManagementViewModel.cs:1320-1326`, `:1339-1345`) reload the catalog straight after the
+  save, so a failed write leaves the previous state in effect while the surrounding `catch` cannot
+  fire — the user sees only a log entry.
+- Proposed remedy: return a success flag and surface "could not save the plugin state" in the UI;
+  use it for the persist-then-reload idiom repeated in the installer, disable, and enable paths.
+- Trigger: a report of a plugin re-enabling itself after restart, or the next change to registry
+  persistence.
 
 ## DI and lifetime
 
