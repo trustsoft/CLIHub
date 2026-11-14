@@ -77,6 +77,30 @@ public class ApplicationBootstrapperTests
     }
 
     [Fact]
+    public void Start_FirstInstance_StartsTheFeedSyncAfterOptionalStartup()
+    {
+        var sequence = new MockSequence();
+        var fixture = new BootstrapperFixture();
+        var startupState = new StartupState(new AppPreferences
+        {
+            StartMinimized = true,
+            CheckForUpdatesOnStartup = false
+        });
+
+        fixture.StartupStateLoader.InSequence(sequence).Setup(x => x.Load()).Returns(startupState);
+        fixture.Session.InSequence(sequence).Setup(x => x.Start(It.IsAny<ApplicationStartupContext>())).Returns(fixture.Ui.Object);
+        fixture.HotkeyFactory.InSequence(sequence).Setup(x => x()).Returns(fixture.Hotkey.Object);
+        fixture.Ui.InSequence(sequence).SetupGet(x => x.LaunchWindow).Returns((LaunchWindow)null!);
+        fixture.Hotkey.InSequence(sequence).Setup(x => x.Register(startupState.Preferences));
+        fixture.OptionalStartup.InSequence(sequence).Setup(x => x.RunOptionalStartup(startupState, fixture.Ui.Object, It.IsAny<ApplicationStartupContext>()));
+        fixture.FeedSync.InSequence(sequence).Setup(x => x.Start());
+
+        fixture.Bootstrapper.Start(CreateContext());
+
+        fixture.FeedSync.Verify(x => x.Start(), Times.Once);
+    }
+
+    [Fact]
     public void AddClIHubServices_RegistersBootstrapperAndGuardPort()
     {
         var services = new ServiceCollection();
@@ -105,6 +129,7 @@ public class ApplicationBootstrapperTests
         public Mock<Func<IHotkeyStartupRegistrar>> HotkeyFactory { get; } = new(MockBehavior.Strict);
         public Mock<IOptionalStartupCoordinator> OptionalStartup { get; } = new(MockBehavior.Strict);
         public Mock<Core.Scanning.IProjectScanner> ProjectScanner { get; } = new();
+        public Mock<Core.Plugins.IPluginFeedSyncService> FeedSync { get; } = new();
         public Mock<IApplicationStartupUi> Ui { get; } = new(MockBehavior.Strict);
 
         public ApplicationBootstrapper Bootstrapper { get; }
@@ -117,6 +142,7 @@ public class ApplicationBootstrapperTests
                 this.HotkeyFactory.Object,
                 this.OptionalStartup.Object,
                 this.ProjectScanner.Object,
+                this.FeedSync.Object,
                 NullLogger<ApplicationBootstrapper>.Instance);
         }
     }

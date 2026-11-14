@@ -41,7 +41,8 @@ process inspection) behind ports declared in Core.
 - .NET 10 and C# 14.0 are the development baseline; nullable reference types and implicit usings are enabled.
 - The application uses WPF, H.NotifyIcon.Wpf, Microsoft.Extensions.DependencyInjection, Serilog, System.Text.Json,
   and Velopack.
-- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `registry.json`, `logs\`, `plugins\`, and `cache\`.
+- Application data is under `%APPDATA%\CLIHub\`: `config.json`, `registry.json`, `logs\`, `plugins\`, and `cache\`
+  (logo cache plus the last-good plugin feed index and its sync metadata).
 - Configuration is one camelCase JSON document with an atomic write path. Preferences and project state expose
   narrower store interfaces over that document.
 - Plugin lifecycle state (origin, content hashes, installed version, enabled flag, install timestamp) is tracked in
@@ -58,6 +59,14 @@ process inspection) behind ports declared in Core.
   `>=minAppVersion` ranges). Built-in plugins are refreshed on app update using three-hash logic
   that preserves user modifications. The feed URL preference (absent/null = default official; explicit `""` = disabled;
   non-empty = custom HTTPS URL) controls Browse Plugins visibility.
+- The plugin feed is refreshed in the background (`IPluginFeedSyncService`): once at startup without
+  blocking it, then hourly. Fetches are conditional (ETag/If-None-Match, else Last-Modified/
+  If-Modified-Since), and the last-good index is cached in `%APPDATA%\CLIHub\cache\`
+  (`feed-index.json` plus `feed-sync.json` holding the validators, timestamp, and change-detection hash).
+  A change publishes `PluginFeedUpdatedEvent`, which makes the CLI Agents cards re-resolve their
+  update chip; an installed plugin with a newer compatible feed version shows the same chip as an
+  agent version update, with the agent update taking precedence. A failed fetch serves the cached list
+  with a stale-data notice instead of the hard error; 304s, unchanged feeds, and failures publish nothing.
 - Project discovery watches configured roots, registers repositories as `discovered` projects, and leaves
   manually added projects untouched. Scanning settings apply immediately from the Project Scanning page.
 - The Settings Projects page lists every registered project with its provenance, registers, removes, and

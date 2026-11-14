@@ -2,11 +2,13 @@ namespace CLIHub.Tests.Builders;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.Logging;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Processes;
+using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Tests.Support;
@@ -35,6 +37,9 @@ public class AgentManagementViewModelBuilder
     private Mock<IPluginInstaller>? pluginInstaller;
     private FakePluginDialogService? pluginDialogs;
     private InMemoryPluginRegistry? pluginState;
+    private Mock<IPluginFeedClient>? feedClient;
+    private Mock<IUpdateVersionProvider>? versionProvider;
+    private DomainEventBus? eventBus;
     private Mock<IPreferencesStore>? preferencesStore;
     private IApplicationOperationLifetime? operationLifetime;
     private ILogger<AgentManagementViewModel>? logger;
@@ -171,6 +176,34 @@ public class AgentManagementViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom plugin feed client mock (feed change badge resolution).
+    /// </summary>
+    public AgentManagementViewModelBuilder WithFeedClient(Mock<IPluginFeedClient> feedClient)
+    {
+        this.feedClient = feedClient;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom current-version provider mock (feed compatibility gating).
+    /// </summary>
+    public AgentManagementViewModelBuilder WithVersionProvider(Mock<IUpdateVersionProvider> versionProvider)
+    {
+        this.versionProvider = versionProvider;
+        return this;
+    }
+
+    /// <summary>
+    ///   Provides a custom domain event bus, so tests can publish a feed change and observe the
+    ///   view model's subscription.
+    /// </summary>
+    public AgentManagementViewModelBuilder WithEventBus(DomainEventBus eventBus)
+    {
+        this.eventBus = eventBus;
+        return this;
+    }
+
+    /// <summary>
     ///   Provides a custom preferences store mock.
     /// </summary>
     public AgentManagementViewModelBuilder WithPreferencesStore(Mock<IPreferencesStore> preferencesStore)
@@ -236,6 +269,9 @@ public class AgentManagementViewModelBuilder
         var pluginInstaller = this.pluginInstaller ?? new Mock<IPluginInstaller>();
         var pluginDialogs = this.pluginDialogs ?? new FakePluginDialogService();
         var pluginState = this.pluginState ?? new InMemoryPluginRegistry();
+        var feedClient = this.feedClient ?? CreateDefaultFeedClient();
+        var versionProvider = this.versionProvider ?? CreateDefaultVersionProvider();
+        var eventBus = this.eventBus ?? new DomainEventBus(NullLogger<DomainEventBus>.Instance);
         var preferencesStore = this.preferencesStore ?? new Mock<IPreferencesStore>();
 
         var processMonitor = new AgentProcessMonitor(
@@ -264,6 +300,9 @@ public class AgentManagementViewModelBuilder
             pluginInstaller.Object,
             pluginDialogs,
             pluginState,
+            feedClient.Object,
+            versionProvider.Object,
+            eventBus,
             preferencesStore.Object,
             this.logger ?? NullLogger<AgentManagementViewModel>.Instance);
 
@@ -277,10 +316,32 @@ public class AgentManagementViewModelBuilder
             Update = update,
             Launcher = launcher,
             ProcessInspector = processInspector,
-            PluginInstaller = pluginInstaller
+            PluginInstaller = pluginInstaller,
+            FeedClient = feedClient,
+            VersionProvider = versionProvider,
+            EventBus = eventBus
         };
 
         return (viewModel, mocks);
+    }
+
+    private static Mock<IPluginFeedClient> CreateDefaultFeedClient()
+    {
+        // A feed that is not enabled: no plugin-update badge is ever resolved unless a test opts in,
+        // so the existing card assertions keep their meaning.
+        var mock = new Mock<IPluginFeedClient>();
+        mock.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(false, null, ["Feed is disabled in configuration"]));
+        return mock;
+    }
+
+    private static Mock<IUpdateVersionProvider> CreateDefaultVersionProvider()
+    {
+        // A very old app version fails every realistic compatibility floor, so no plugin-update badge
+        // appears unless a test configures a version.
+        var mock = new Mock<IUpdateVersionProvider>();
+        mock.Setup(x => x.GetCurrentVersion()).Returns("0.0.0");
+        return mock;
     }
 
     private Mock<IPluginCatalog> CreateDefaultPluginCatalog()
@@ -313,5 +374,8 @@ public class AgentManagementViewModelBuilder
         public required Mock<IExternalLauncher> Launcher { get; init; }
         public required Mock<IAgentProcessInspector> ProcessInspector { get; init; }
         public required Mock<IPluginInstaller> PluginInstaller { get; init; }
+        public required Mock<IPluginFeedClient> FeedClient { get; init; }
+        public required Mock<IUpdateVersionProvider> VersionProvider { get; init; }
+        public required DomainEventBus EventBus { get; init; }
     }
 }

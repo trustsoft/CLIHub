@@ -1,12 +1,17 @@
 namespace CLIHub.Tests.ViewModels;
 
+using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Tests.Builders;
 using CLIHub.Tests.Support;
+
+using Microsoft.Extensions.Logging.Abstractions;
 
 using Moq;
 
@@ -319,6 +324,230 @@ public partial class AgentManagementViewModelTests
 
         Assert.True(viewModel.BrowsePluginsCommand.CanExecute(null));
     }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WhenPublished_ReloadsThePluginCatalog()
+    {
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder().WithEventBus(eventBus).BuildWithMocks();
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        built.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WithACompatibleNewerFeedVersion_ShowsThePluginUpdateChip()
+    {
+        var plugin = Launchable("a", withUpdate: true);
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" };
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .WithFeedClient(FeedWith(FeedEntry("a", "1.2.0", ">=1.0.0")))
+            .WithVersionProvider(CurrentVersion("1.0.0"))
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        var card = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(card.HasPluginUpdate);
+        Assert.Equal("1.0.0 → 1.2.0", card.PluginUpdateVersionText);
+        Assert.Equal("1.0.0 → 1.2.0", card.UpdateAvailabilityText);
+        Assert.True(card.HasUpdateAvailable);
+
+        // The chip is advisory for plugins: the card's Update action runs the agent CLI updater, so
+        // a plugin update never enables it.
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WhenAnAgentUpdateIsAlsoAvailable_KeepsTheAgentChip()
+    {
+        var plugin = Launchable("a", withUpdate: true);
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" };
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .WithFeedClient(FeedWith(FeedEntry("a", "1.2.0", ">=1.0.0")))
+            .WithVersionProvider(CurrentVersion("1.0.0"))
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+        var card = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "0.9.0", "1.0.0");
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        // Both updates are known, but the agent update takes the chip slot and its versions.
+        Assert.True(card.HasPluginUpdate);
+        Assert.Equal("1.0.0 → 1.2.0", card.PluginUpdateVersionText);
+        Assert.Equal("0.9.0 → 1.0.0", card.UpdateAvailabilityText);
+        Assert.True(card.HasUpdateAvailable);
+    }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WhenTheFeedEntryIsIncompatible_ShowsNoPluginChip()
+    {
+        var plugin = Launchable("a");
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" };
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .WithFeedClient(FeedWith(FeedEntry("a", "1.2.0", ">=2.0.0")))
+            .WithVersionProvider(CurrentVersion("1.0.0"))
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        var card = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.HasPluginUpdate);
+        Assert.Null(card.PluginUpdateVersionText);
+        Assert.False(card.HasUpdateAvailable);
+        Assert.Null(card.UpdateAvailabilityText);
+    }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WhenTheFeedIsNotInstalledFromTheRegistry_ShowsNoPluginChip()
+    {
+        var plugin = Launchable("a");
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithFeedClient(FeedWith(FeedEntry("a", "1.2.0", ">=1.0.0")))
+            .WithVersionProvider(CurrentVersion("1.0.0"))
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        // No registry entry means the plugin was never installed from a package or the feed, so
+        // there is no recorded version to update from (Browse lists it as merely available).
+        var card = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.HasPluginUpdate);
+    }
+
+    [Fact]
+    public void PluginFeedUpdatedEvent_WhenTheFeedCannotBeLoaded_LeavesTheCardsUnchanged()
+    {
+        var plugin = Launchable("a");
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" };
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        var card = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.False(card.HasPluginUpdate);
+        built.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void Dispose_UnsubscribesFromPluginFeedUpdated()
+    {
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder().WithEventBus(eventBus).BuildWithMocks();
+        built.ViewModel.Dispose();
+
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+
+        built.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Never);
+    }
+
+    [Fact]
+    public void Load_AfterAFeedUpdate_ReappliesThePluginUpdateChip()
+    {
+        var plugin = Launchable("a");
+        var state = new InMemoryPluginRegistry();
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = "1.0.0" };
+        var eventBus = CreateEventBus();
+        var built = new AgentManagementViewModelBuilder()
+            .WithPlugins([plugin])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .WithFeedClient(FeedWith(FeedEntry("a", "1.2.0", ">=1.0.0")))
+            .WithVersionProvider(CurrentVersion("1.0.0"))
+            .WithEventBus(eventBus)
+            .BuildWithMocks();
+        built.ViewModel.Load(null);
+        eventBus.Publish(new PluginFeedUpdatedEvent("feed-hash"));
+        var firstCard = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.True(firstCard.HasPluginUpdate);
+
+        // A catalog reload rebuilds the cards; the known feed entries are re-applied to the new
+        // instances so the indicator survives the rebuild.
+        built.ViewModel.Load(null);
+
+        var secondCard = built.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.NotSame(firstCard, secondCard);
+        Assert.True(secondCard.HasPluginUpdate);
+        Assert.Equal("1.0.0 → 1.2.0", secondCard.PluginUpdateVersionText);
+    }
+
+    private static DomainEventBus CreateEventBus() => new(NullLogger<DomainEventBus>.Instance);
+
+    private static Mock<IPluginFeedClient> FeedWith(params PluginFeedEntry[] entries)
+    {
+        var feedClient = new Mock<IPluginFeedClient>();
+        feedClient
+            .Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, new PluginFeedIndex(2, null, entries), []));
+        return feedClient;
+    }
+
+    private static Mock<IUpdateVersionProvider> CurrentVersion(string version)
+    {
+        var versionProvider = new Mock<IUpdateVersionProvider>();
+        versionProvider.Setup(x => x.GetCurrentVersion()).Returns(version);
+        return versionProvider;
+    }
+
+    private static PluginFeedEntry FeedEntry(string id, string version, string compatibility) =>
+        new(
+            id,
+            id,
+            "Description",
+            version,
+            1,
+            null,
+            "Publisher",
+            "https://example.com",
+            null,
+            null,
+            null,
+            null,
+            compatibility,
+            "stable",
+            "{}",
+            null);
 
     /// <summary>
     ///   Creates a valid inspection preview for the demo package used by the install

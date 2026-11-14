@@ -2,13 +2,16 @@ namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 
 using CLIHub.Controls;
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Events;
 using CLIHub.Core.Infrastructure.FileSystem;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
+using CLIHub.Core.Updates;
 using CLIHub.Launching;
 using CLIHub.Lifetime;
 using CLIHub.Theming;
@@ -43,6 +46,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IPluginInstaller pluginInstaller;
     private readonly IPluginDialogService pluginDialogs;
     private readonly IPluginRegistry pluginState;
+    private readonly IPluginFeedClient feedClient;
+    private readonly IUpdateVersionProvider versionProvider;
+    private readonly IDomainEventSubscriber eventSubscriber;
     private readonly IPreferencesStore preferencesStore;
     private readonly ILogger<AgentManagementViewModel> logger;
 
@@ -52,6 +58,20 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private bool isDetecting;
     private bool isCheckingUpdates;
     private int runningCardActionCount;
+
+    /// <summary>
+    ///   The feed entries known from the last background feed refresh, keyed by plugin id. Empty
+    ///   until the first <see cref="PluginFeedUpdatedEvent" /> resolves the index, so the cards carry
+    ///   no plugin-update indicator before the sync service reports a change. Re-applied on every
+    ///   catalog reload so a rebuilt card keeps the indicator.
+    /// </summary>
+    private IReadOnlyDictionary<string, PluginFeedEntry> pluginFeedEntries =
+        new Dictionary<string, PluginFeedEntry>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    ///   The <see cref="PluginFeedUpdatedEvent" /> subscription; disposed with the surface.
+    /// </summary>
+    private IDisposable? feedUpdateSubscription;
 
     /// <summary>
     ///   The ordering source for <see cref="Cards" />: exactly the cards currently in
@@ -77,6 +97,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="pluginInstaller"> Installs agent plugins from local packages. </param>
     /// <param name="pluginDialogs"> Plugin installation dialogs. </param>
     /// <param name="pluginState"> Plugin lifecycle state shown on the cards and updated by the lifecycle actions. </param>
+    /// <param name="feedClient"> Feed client used to resolve the plugin-update indicators after a feed change. </param>
+    /// <param name="versionProvider"> Current application version for feed-entry compatibility gating. </param>
+    /// <param name="eventSubscriber"> Domain event subscriber for the background feed change notifications. </param>
     /// <param name="preferencesStore"> Preferences store for feed URL checking. </param>
     /// <param name="logger"> Logger. </param>
     public AgentManagementViewModel(IPluginCatalog catalog,
@@ -91,6 +114,9 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IPluginInstaller pluginInstaller,
                                     IPluginDialogService pluginDialogs,
                                     IPluginRegistry pluginState,
+                                    IPluginFeedClient feedClient,
+                                    IUpdateVersionProvider versionProvider,
+                                    IDomainEventSubscriber eventSubscriber,
                                     IPreferencesStore preferencesStore,
                                     ILogger<AgentManagementViewModel> logger)
     {
@@ -106,9 +132,13 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.pluginInstaller = pluginInstaller ?? throw new ArgumentNullException(nameof(pluginInstaller));
         this.pluginDialogs = pluginDialogs ?? throw new ArgumentNullException(nameof(pluginDialogs));
         this.pluginState = pluginState ?? throw new ArgumentNullException(nameof(pluginState));
+        this.feedClient = feedClient ?? throw new ArgumentNullException(nameof(feedClient));
+        this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
+        this.eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.catalog.PluginsChanged += this.OnPluginsChanged;
+        this.feedUpdateSubscription = this.eventSubscriber.Subscribe<PluginFeedUpdatedEvent>(this.OnPluginFeedUpdated);
 
         this.DetectCardCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent detect", ct => this.DetectCardAsync(card, ct)), card => this.CanDetectCard(card));
         this.CheckCardUpdatesCommand = new RelayCommand<AgentCardItem>(card => _ = this.RunAsync("Agent card update check", ct => this.CheckCardUpdatesAsync(card, ct)), card => this.CanCheckCardUpdates(card));
@@ -554,6 +584,8 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             card.PropertyChanged += this.OnCardPropertyChanged;
         }
 
+        this.ApplyPluginFeedUpdates(this.catalogOrderedCards, pluginState);
+
         this.RefreshAvailabilitySummary();
         this.RebuildDefaultAgentOptions(defaultAgentId);
 
@@ -577,12 +609,125 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.versionPopulationPass.Dispose();
         this.blockedStatePass.Dispose();
         this.catalog.PluginsChanged -= this.OnPluginsChanged;
+        this.feedUpdateSubscription?.Dispose();
+        this.feedUpdateSubscription = null;
         this.disposed = true;
     }
 
     private void OnPluginsChanged(object? sender, EventArgs e)
     {
         this.Load(this.CurrentDefaultAgentId);
+    }
+
+    /// <summary>
+    ///   Reacts to a background plugin feed change: reloads the catalog (the card surface is
+    ///   rebuilt from it) and then re-resolves the per-card plugin-update indicators from the
+    ///   refreshed feed index. The event is published from the background sync loop, so the work is
+    ///   marshaled to the UI thread before anything bound or observable is touched.
+    /// </summary>
+    /// <param name="evt"> The feed change event; its hash identifies the new index. </param>
+    private void OnPluginFeedUpdated(PluginFeedUpdatedEvent evt)
+    {
+        if (this.disposed)
+        {
+            return;
+        }
+
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.BeginInvoke(new Action(() => this.OnPluginFeedUpdated(evt)));
+            return;
+        }
+
+        this.logger.LogInformation("Plugin feed changed ({IndexHash}); refreshing the agent cards", evt.IndexHash);
+
+        this.catalog.ReloadPlugins();
+        _ = this.RunAsync("Plugin feed badge refresh", this.RefreshPluginFeedUpdatesAsync);
+    }
+
+    /// <summary>
+    ///   Loads the refreshed feed index through the same client Browse uses (a conditional request,
+    ///   so a follow-up fetch after the sync's own fetch is cheap) and applies the plugin-update
+    ///   indicators to the current cards. A failed or disabled feed leaves the previous indicators
+    ///   untouched rather than clearing them.
+    /// </summary>
+    /// <param name="cancellationToken"> Application operation token. </param>
+    /// <returns> A task completing when the indicators are applied. </returns>
+    private async Task RefreshPluginFeedUpdatesAsync(CancellationToken cancellationToken)
+    {
+        var result = await this.feedClient.GetFeedAsync(cancellationToken);
+        if (this.disposed || !result.Success || result.Index is null)
+        {
+            if (!result.Success)
+            {
+                this.logger.LogDebug("Plugin feed badge refresh skipped: {Errors}", string.Join("; ", result.Errors));
+            }
+
+            return;
+        }
+
+        var builtinIds = EmbeddedPluginResources.BuiltinPluginIds(typeof(EmbeddedPluginResources).Assembly);
+        this.pluginFeedEntries = result.Index.Plugins
+            .Where(entry => !builtinIds.Contains(entry.Id))
+            .GroupBy(entry => entry.Id, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+
+        this.ApplyPluginFeedUpdates(this.catalogOrderedCards, this.pluginState.Load());
+        this.RefreshAvailabilitySummary();
+    }
+
+    /// <summary>
+    ///   Sets or clears each card's plugin-update indicator from the last known feed entries. The
+    ///   indication mirrors the Browse status rules: an installed plugin whose recorded version is
+    ///   older than a compatible feed version (or unknown) shows the update chip; an agent update,
+    ///   when one is known, keeps the chip slot.
+    /// </summary>
+    /// <param name="cards"> The cards to update. </param>
+    /// <param name="pluginRegistry"> The loaded registry document supplying installed versions. </param>
+    private void ApplyPluginFeedUpdates(IReadOnlyList<AgentCardItem> cards, PluginRegistryDocument pluginRegistry)
+    {
+        var currentVersion = this.versionProvider.GetCurrentVersion();
+
+        foreach (var card in cards)
+        {
+            card.PluginUpdateVersionText = this.ResolvePluginUpdateText(card, pluginRegistry, currentVersion);
+        }
+    }
+
+    /// <summary>
+    ///   Resolves the update chip text for one card: null when the card has no feed update, otherwise
+    ///   the installed-to-feed version text (or the generic "Update available" wording when the
+    ///   installed version is unknown).
+    /// </summary>
+    /// <param name="card"> The card to resolve. </param>
+    /// <param name="pluginRegistry"> The loaded registry document. </param>
+    /// <param name="currentVersion"> The current application version for compatibility gating. </param>
+    /// <returns> The chip text, or null when no plugin update is known for the card. </returns>
+    private string? ResolvePluginUpdateText(AgentCardItem card, PluginRegistryDocument pluginRegistry, string currentVersion)
+    {
+        if (!card.IsInstalled
+            || !this.pluginFeedEntries.TryGetValue(card.PluginId, out var feedEntry)
+            || !AppCompatibilityRange.IsSatisfied(currentVersion, feedEntry.Compatibility))
+        {
+            return null;
+        }
+
+        // No registry entry means the plugin was not installed from a package or the feed, so there
+        // is no recorded version to update from (Browse reports it as merely available).
+        var stateEntry = pluginRegistry.Plugins.GetValueOrDefault(card.PluginId);
+        if (stateEntry is null)
+        {
+            return null;
+        }
+
+        if (stateEntry.InstalledVersion is null)
+        {
+            return "Update available";
+        }
+
+        return PluginFeedVersionComparator.Compare(stateEntry.InstalledVersion, feedEntry.Version) == PluginUpdateStatus.UpdateAvailable
+            ? $"{stateEntry.InstalledVersion} → {feedEntry.Version}"
+            : null;
     }
 
     /// <summary>

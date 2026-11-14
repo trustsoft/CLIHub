@@ -598,6 +598,132 @@ public class BrowsePluginsDialogViewModelTests
         Assert.Empty(dialogService.Outcomes);
     }
 
+    [Fact]
+    public async Task LoadAsync_WhenTheFeedComesFromTheCache_SetsTheStaleCacheMessage()
+    {
+        var feedClient = new Mock<IPluginFeedClient>();
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 1,
+            LastUpdated: null,
+            Plugins: [
+                new("new-plugin", "New Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
+            ]);
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, [])
+            {
+                FromCache = true,
+                CachedAt = DateTimeOffset.Now.AddHours(-2).AddMinutes(-5)
+            });
+        var vm = CreateViewModel(feedClient.Object);
+
+        await vm.LoadAsync();
+
+        Assert.True(vm.HasCacheStatusMessage);
+        Assert.Equal(
+            "Using cached plugin list (last updated 2 hours ago). Check your internet connection to refresh.",
+            vm.CacheStatusMessage);
+        Assert.Single(vm.Plugins);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenTheFeedIsFresh_DoesNotSetTheStaleCacheMessage()
+    {
+        var feedClient = new Mock<IPluginFeedClient>();
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 1,
+            LastUpdated: null,
+            Plugins: [
+                new("new-plugin", "New Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
+            ]);
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+        var vm = CreateViewModel(feedClient.Object);
+
+        await vm.LoadAsync();
+
+        Assert.False(vm.HasCacheStatusMessage);
+        Assert.Null(vm.CacheStatusMessage);
+        Assert.Single(vm.Plugins);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenTheFeedFails_ShowsTheExistingErrorWithoutACacheMessage()
+    {
+        var feedClient = new Mock<IPluginFeedClient>();
+        feedClient.Setup(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(false, null, ["Could not load plugin feed. Check your network connection."]));
+        var vm = CreateViewModel(feedClient.Object);
+
+        await vm.LoadAsync();
+
+        // The hard-error path keeps its existing string; the stale-cache note is cache-only.
+        Assert.True(vm.HasError);
+        Assert.Equal("Could not load plugin feed. Check your network connection.", vm.ErrorMessage);
+        Assert.False(vm.HasCacheStatusMessage);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenARefreshReturnsAFreshFeed_ClearsTheStaleCacheMessage()
+    {
+        var feedClient = new Mock<IPluginFeedClient>();
+        var feedIndex = new PluginFeedIndex(
+            SchemaVersion: 1,
+            LastUpdated: null,
+            Plugins: [
+                new("new-plugin", "New Plugin", "Desc", "1.0.0", 1, "1.0.0", "Pub", "https://example.com", "https://example.com/pkg.zip", "abc123", null, null, ">=1.0.0", null, null, null)
+            ]);
+        feedClient.SetupSequence(x => x.GetFeedAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, [])
+            {
+                FromCache = true,
+                CachedAt = DateTimeOffset.Now.AddMinutes(-30)
+            })
+            .ReturnsAsync(new PluginFeedResult(true, feedIndex, []));
+        var vm = CreateViewModel(feedClient.Object);
+
+        await vm.LoadAsync();
+        Assert.True(vm.HasCacheStatusMessage);
+
+        await vm.LoadAsync();
+
+        Assert.False(vm.HasCacheStatusMessage);
+        Assert.Null(vm.CacheStatusMessage);
+    }
+
+    [Theory]
+    [InlineData(20, "20 minutes ago")]
+    [InlineData(60, "1 hour ago")]
+    [InlineData(150, "2 hours ago")]
+    [InlineData(2880, "2 days ago")]
+    public void FormatCacheAge_ForARecentCache_ReturnsAReadableAge(int minutesAgo, string expected)
+    {
+        var now = new DateTimeOffset(2026, 11, 14, 12, 0, 0, TimeSpan.Zero);
+
+        var text = BrowsePluginsDialogViewModel.FormatCacheAge(now.AddMinutes(-minutesAgo), now);
+
+        Assert.Equal(expected, text);
+    }
+
+    [Fact]
+    public void FormatCacheAge_ForACacheOlderThanAWeek_ReturnsTheLocalTimestamp()
+    {
+        var now = new DateTimeOffset(2026, 11, 14, 12, 0, 0, TimeSpan.Zero);
+        var cachedAt = now.AddDays(-10);
+
+        var text = BrowsePluginsDialogViewModel.FormatCacheAge(cachedAt, now);
+
+        Assert.DoesNotContain("ago", text, StringComparison.Ordinal);
+        Assert.Contains(cachedAt.ToLocalTime().Day.ToString(), text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FormatCacheAge_WhenTheTimestampIsUnknown_ReturnsRecently()
+    {
+        var text = BrowsePluginsDialogViewModel.FormatCacheAge(null, DateTimeOffset.Now);
+
+        Assert.Equal("recently", text);
+    }
+
     private static BrowsePluginsDialogViewModel CreateViewModel(
         IPluginFeedClient? feedClient = null,
         IPluginInstaller? installer = null,

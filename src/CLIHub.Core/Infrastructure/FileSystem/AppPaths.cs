@@ -4,6 +4,8 @@ namespace CLIHub.Core.Infrastructure.FileSystem;
 ///   The CLIHub data layout under <c> %APPDATA%\CLIHub </c>, as documented in
 ///   <c> docs/architecture.md → File System Layout </c>:
 ///   the single place where the folder and file names are written down.
+///   The cache directory holds the disposable plugin feed state: the raw last-good index
+///   (<c> feed-index.json </c>), its sync metadata (<c> feed-sync.json </c>), and the logo cache.
 /// </summary>
 public static class AppPaths
 {
@@ -66,4 +68,19 @@ public static class AppPaths
     ///   The persistent logo cache state file: <c> %APPDATA%\CLIHub\cache\logos.json </c>.
     /// </summary>
     public static string LogosCacheFile { get; } = Path.Combine(CacheDirectory, "logos.json");
+
+    /// <summary>
+    ///   The last-good plugin feed index cache: <c> %APPDATA%\CLIHub\cache\feed-index.json </c>.
+    ///   Holds the raw index bytes of the last successful fetch, bounded to 2 MB, so a failed
+    ///   refresh can degrade to stale-but-usable data.
+    /// </summary>
+    public static string FeedCacheFile { get; } = Path.Combine(CacheDirectory, "feed-index.json");
+
+    /// <summary>
+    ///   The plugin feed sync metadata file: <c> %APPDATA%\CLIHub\cache\feed-sync.json </c>.
+    ///   Holds the HTTP validators (ETag, Last-Modified), the cache timestamp, and the index hash
+    ///   used for change detection. Kept separate from the cached index so a 304 response never
+    ///   touches the index file.
+    /// </summary>
+    public static string FeedSyncMetadataFile { get; } = Path.Combine(CacheDirectory, "feed-sync.json");
 }

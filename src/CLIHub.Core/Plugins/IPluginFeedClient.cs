@@ -6,7 +6,10 @@ namespace CLIHub.Core.Plugins;
 public interface IPluginFeedClient
 {
     /// <summary>
-    ///   Fetches and parses the plugin feed index from the configured URL.
+    ///   Fetches and parses the plugin feed index from the configured URL. When prior sync metadata
+    ///   exists the request is conditional (<c> If-None-Match </c>, else <c> If-Modified-Since </c>);
+    ///   a 304 Not Modified reports success from the cached index without re-parsing, and a failed
+    ///   fetch reports success from the last-good cache with <c> FromCache </c> set when one exists.
     /// </summary>
     /// <param name="cancellationToken"> Cancellation token. </param>
     /// <returns> Feed result with index or errors. </returns>

@@ -40,6 +40,21 @@ public class ServiceCollectionExtensionsTests
         Assert.NotNull(provider.GetRequiredService<IAgentReleaseClient>());
         Assert.NotNull(provider.GetRequiredService<IAgentUpdateAvailabilityService>());
         Assert.NotNull(provider.GetRequiredService<IReleaseNotesService>());
+        Assert.NotNull(provider.GetRequiredService<IPluginFeedSyncService>());
+    }
+
+    [Fact]
+    public void PluginFeedSyncService_IsSingleton()
+    {
+        var services = new ServiceCollection();
+        services.AddClIHubCoreServices();
+
+        using var provider = services.BuildServiceProvider();
+
+        var first = provider.GetRequiredService<IPluginFeedSyncService>();
+        var second = provider.GetRequiredService<IPluginFeedSyncService>();
+
+        Assert.Same(first, second);
     }
 
     [Fact]

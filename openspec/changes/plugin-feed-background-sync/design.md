@@ -357,3 +357,55 @@ Investigate whether the existing `UpdateAvailable` chip is already covered by `a
 ✓ Atomic writes (use existing `AtomicFileWriter` for metadata, or tolerate overwrites for small JSON)  
 ✓ Silent failures logged (failures logged at Warning level, no exceptions thrown)  
 ✓ Domain event adoption rules followed (synchronous dispatch, exceptions caught/logged, subscribers idempotent)
+
+## Implementation Notes
+
+Implementation followed the decisions above. Deviations forced by code reality, and the resolutions of the
+open questions:
+
+1. **Lifecycle ownership (tasks 2.2, 3.2, 6.4; guarantee 4).** `IApplicationOperationLifetime` lives in the WPF
+   application project (`src/CLIHub/Lifetime`), which `CLIHub.Core` must not reference. The service therefore
+   owns its loop, `CancellationTokenSource`, and interval wait in Core and exposes `Start()` /
+   `StopAsync(timeout)`; `IDisposable` — invoked by the service-provider disposal step of
+   `ApplicationHost.Shutdown` — cancels the loop and performs the same bounded wait (2 seconds).
+   `ApplicationHost` itself is unchanged, as task 3.2 anticipated. The observable guarantee is unchanged:
+   startup never waits for the network, and shutdown cancels the in-flight refresh and waits at most the
+   shutdown budget.
+2. **Additional dependencies beyond the plan's `IDomainEventSubscriber`.** The view model receives
+   `IPluginFeedClient` (D8 expects subscribers to fetch details through the same client Browse uses; the
+   follow-up fetch after the sync's own fetch is a conditional 304 served from the cache) and
+   `IUpdateVersionProvider` (D3's "compatibility gating allows the feed version"). The sync service receives
+   `IPreferencesStore` so it re-checks a disabled feed on every refresh (OQ-3's simpler alternative).
+3. **Metadata JSON casing.** Tasks 1.2 said snake_case; approved decision D5/D2 and the reviewed proposal fix
+   the flat camelCase record `{ etag, lastModified, timestamp, indexHash }`. The decision wins.
+4. **Change-detection hash and the fresh-200 write.** The client writes the complete metadata on a
+   fresh 200 — validators, timestamp, and the comparison hash of the index it just parsed — so a cache is
+   self-consistent no matter who fetched it. The sync service reads the previous hash before the fetch,
+   recomputes it from the parsed index, and only when it differs saves the new hash and then publishes. A
+   304 writes nothing, and the hash of the served cached index equals the stored hash, so nothing is
+   published (task 1.5 fixes `FromCache: false` for 304, so the result alone cannot distinguish it from a
+   200).
+5. **Cache-fallback scope.** Fallback applies to transport failures, HTTP error statuses, and parse errors
+   (`FromCache: true`, `CachedAt` set). Redirect-policy rejections and the 2 MB index bound never fall back to
+   stale data, so the security guarantees stay visible and every existing user-facing error string is
+   unchanged.
+6. **Testable paths.** The cache file paths are overridable through the `internal` `PluginFeedClient`
+   constructor, and the sync metadata path and interval through the `internal` `PluginFeedSyncService`
+   constructor, matching the existing `PluginRegistryRepository` / `LogoCacheService` optional-path seams.
+   Production composition uses `AppPaths` and the fixed one-hour interval.
+7. **Verifier finding a (fixed in the micro-fix round).** The client previously preserved a stored
+   `indexHash` and only the sync service wrote it, so a cache populated by Browse before the service's first
+   successful refresh left the hash null; the service's next 304 then published one spurious
+   `PluginFeedUpdatedEvent`. The client now writes the hash on every fresh 200 (a stale value is replaced),
+   so the 304 ⇒ no-event guarantee holds regardless of who populated the cache. Pinned by
+   `GetFeedAsync_SuccessfulFetch_WritesTheComparisonHashOfTheParsedIndex`,
+   `GetFeedAsync_SuccessfulFetch_ReplacesAStaleStoredHash`, and the service test
+   `RefreshAsync_AfterAClientOnlyFreshFetch_MatchesTheClientsHashAndPublishesNothingOn304`. The 304 path is
+   unchanged and still writes neither cache file.
+
+Open questions resolved in implementation: OQ-1 — constructor subscription alongside `PluginsChanged`, with
+the subscription disposed in `Dispose`; the event arrives from the background loop, so the handler marshals to
+the UI dispatcher before touching bound state. OQ-2 — no debounce added: a feed change is rare and the existing
+`PluginsChanged` rebuild is already restartable (`RestartablePass` supersedes an in-flight pass). OQ-3 — the
+service re-checks the feed URL per refresh and returns without a request when disabled (no preference
+subscription). OQ-4 — Warning level, as planned. OQ-5 — flat record.

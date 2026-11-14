@@ -1,8 +1,10 @@
 namespace CLIHub.Core.Tests.Plugins;
 
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Plugins;
@@ -10,13 +12,35 @@ using CLIHub.Core.Tests.Fakes;
 
 using Microsoft.Extensions.Logging.Abstractions;
 
-public class PluginFeedClientTests
+public class PluginFeedClientTests : IDisposable
 {
     private const string FeedUrl = "https://example.com/feed.json";
     private const int MaxIndexSizeBytes = 2 * 1024 * 1024; // 2 MB
     private const int MaxPackageSizeBytes = 10 * 1024 * 1024; // 10 MB
 
+    private static readonly JsonSerializerOptions MetadataOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
     private readonly StubHandler handler = new();
+    private readonly string cacheDirectory = Path.Combine(
+        Path.GetTempPath(),
+        $"clihub-feed-cache-{Guid.NewGuid():N}");
+
+    private string CacheFilePath => Path.Combine(this.cacheDirectory, "feed-index.json");
+
+    private string SyncMetadataFilePath => Path.Combine(this.cacheDirectory, "feed-sync.json");
+
+    public void Dispose()
+    {
+        if (Directory.Exists(this.cacheDirectory))
+        {
+            Directory.Delete(this.cacheDirectory, recursive: true);
+        }
+
+        GC.SuppressFinalize(this);
+    }
 
     private PluginFeedClient CreateClient(string feedUrl = FeedUrl, int? timeoutSeconds = null)
     {
@@ -27,7 +51,12 @@ public class PluginFeedClientTests
             preferences.Update(p => p.AgentProbeTimeoutSeconds = timeoutSeconds.Value);
         }
 
-        return new PluginFeedClient(this.handler, preferences, NullLogger<PluginFeedClient>.Instance);
+        return new PluginFeedClient(
+            this.handler,
+            preferences,
+            NullLogger<PluginFeedClient>.Instance,
+            cacheFilePath: this.CacheFilePath,
+            syncMetadataFilePath: this.SyncMetadataFilePath);
     }
 
     [Fact]
@@ -723,6 +752,331 @@ public class PluginFeedClientTests
         Assert.False(result.Success);
         Assert.Null(result.LogoBytes);
         Assert.Contains("Logo download timed out", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_FirstFetch_SendsNoConditionalHeaders()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        await client.GetFeedAsync();
+
+        var request = Assert.Single(this.handler.Requests);
+        Assert.False(request.Headers.Contains("If-None-Match"));
+        Assert.False(request.Headers.Contains("If-Modified-Since"));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SuccessfulFetch_StoresCachedIndexAndSyncMetadata()
+    {
+        this.EnqueueFeed(WithEtag(JsonResponse(ValidIndexJson), "\"v1\""));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.False(result.FromCache);
+        Assert.Null(result.CachedAt);
+        Assert.Equal(ValidIndexJson, File.ReadAllText(this.CacheFilePath));
+
+        var metadata = this.ReadMetadata();
+        Assert.NotNull(metadata);
+        Assert.Equal("\"v1\"", metadata.ETag);
+        Assert.NotNull(metadata.Timestamp);
+        Assert.False(string.IsNullOrWhiteSpace(metadata.IndexHash));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SuccessfulFetch_WritesTheComparisonHashOfTheParsedIndex()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        var metadata = this.ReadMetadata();
+        Assert.NotNull(metadata);
+        Assert.NotNull(metadata.IndexHash);
+        Assert.Equal(
+            PluginFeedSyncMetadata.ComputeIndexHash(result.Index!.Plugins),
+            metadata.IndexHash);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SuccessfulFetch_ReplacesAStaleStoredHash()
+    {
+        // A cache written before the sync service ever ran (or by an older build) must not leave a
+        // stale hash behind: the next 304 would otherwise read a mismatch and publish a spurious
+        // change event (verifier finding a).
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { IndexHash = "stale-hash" });
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.Equal(
+            PluginFeedSyncMetadata.ComputeIndexHash(result.Index!.Plugins),
+            this.ReadMetadata()!.IndexHash);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_WithStoredEtag_SendsIfNoneMatchAndUsesCachedIndexOn304()
+    {
+        var fetchedAt = new DateTimeOffset(2026, 11, 14, 10, 0, 0, TimeSpan.Zero);
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"", Timestamp = fetchedAt });
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotModified));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        // A 304 is a fresh confirmation, not stale data: success without the FromCache flag, and
+        // the cached index is served without re-fetching or rewriting it.
+        Assert.True(result.Success);
+        Assert.False(result.FromCache);
+        Assert.Null(result.CachedAt);
+        Assert.Equal("plugin-a", Assert.Single(result.Index!.Plugins).Id);
+        Assert.Equal(ValidIndexJson, File.ReadAllText(this.CacheFilePath));
+        Assert.Equal(fetchedAt, this.ReadMetadata()!.Timestamp);
+
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal("\"v1\"", Assert.Single(request.Headers.GetValues("If-None-Match")));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_WithStoredLastModified_SendsIfModifiedSinceAndUsesCachedIndexOn304()
+    {
+        var lastModified = new DateTimeOffset(2026, 11, 13, 8, 15, 0, TimeSpan.Zero);
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { LastModified = lastModified.ToString("r") });
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotModified));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.False(result.FromCache);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(lastModified.ToString("r"), Assert.Single(request.Headers.GetValues("If-Modified-Since")));
+        Assert.False(request.Headers.Contains("If-None-Match"));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_WithEtagAndLastModified_PrefersIfNoneMatch()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata
+        {
+            ETag = "\"v1\"",
+            LastModified = new DateTimeOffset(2026, 11, 13, 8, 15, 0, TimeSpan.Zero).ToString("r")
+        });
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        await client.GetFeedAsync();
+
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal("\"v1\"", Assert.Single(request.Headers.GetValues("If-None-Match")));
+        Assert.False(request.Headers.Contains("If-Modified-Since"));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_RedirectedConditionalFetch_SendsTheValidatorOnEveryHop()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"" });
+        this.EnqueueFeed(RedirectResponse("https://example.com/redirected"));
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        await client.GetFeedAsync();
+
+        Assert.Equal(2, this.handler.Requests.Count);
+        Assert.All(this.handler.Requests,
+            request => Assert.Equal("\"v1\"", Assert.Single(request.Headers.GetValues("If-None-Match"))));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_UnconditionalResponseWithLastModified_StoresItForTheNextFetch()
+    {
+        var lastModified = new DateTimeOffset(2026, 11, 12, 7, 0, 0, TimeSpan.Zero);
+        var response = JsonResponse(ValidIndexJson);
+        response.Content.Headers.LastModified = lastModified;
+        this.EnqueueFeed(response);
+        var client = this.CreateClient();
+
+        await client.GetFeedAsync();
+
+        var metadata = this.ReadMetadata();
+        Assert.NotNull(metadata);
+        Assert.Equal(lastModified.ToString("r"), metadata.LastModified);
+        Assert.Null(metadata.ETag);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_NetworkFailureWithCachedIndex_ServesCacheWithFromCacheAndTimestamp()
+    {
+        var cachedAt = new DateTimeOffset(2026, 11, 14, 10, 30, 0, TimeSpan.Zero);
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"", Timestamp = cachedAt });
+        this.handler.Throw = new HttpRequestException("connection refused");
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.FromCache);
+        Assert.Equal(cachedAt, result.CachedAt);
+        Assert.Equal("plugin-a", Assert.Single(result.Index!.Plugins).Id);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ServerErrorWithCachedIndex_ServesCache()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.FromCache);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ParseErrorWithCachedIndex_ServesCache()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        this.EnqueueFeed(JsonResponse("{\"schemaVersion\":9,\"plugins\":[]}"));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.FromCache);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_NetworkFailureWithoutCache_ReturnsStructuredError()
+    {
+        this.handler.Throw = new HttpRequestException("connection refused");
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Null(result.Index);
+        Assert.False(result.FromCache);
+        Assert.Contains("Could not load plugin feed. Check your network connection.", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_RedirectPolicyRejection_DoesNotFallBackToCache()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        this.EnqueueFeed(RedirectResponse("http://evil.example.com/feed"));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        // A redirect-policy rejection is a security failure, not a transient network failure: the
+        // rejection stays visible even with a usable cache.
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.Contains("Redirect to non-HTTPS URL rejected", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_LiveIndexOverLimitWithCachedIndex_DoesNotFallBackToCache()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        var oversized = Encoding.UTF8.GetBytes(OversizedIndexJson(MaxIndexSizeBytes + 1));
+        this.EnqueueFeed(ChunkedResponse(oversized));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.Contains("Feed index too large", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_304WithoutCachedIndex_ReturnsStructuredError()
+    {
+        // Metadata without an index is orphaned and dropped, so the request goes out
+        // unconditionally; a 304 still cannot be served without cached content.
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"" });
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotModified));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Could not load plugin feed", result.Errors);
+        Assert.False(File.Exists(this.SyncMetadataFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_CorruptCachedIndex_IsDeletedWithMetadataAndNotUsed()
+    {
+        Directory.CreateDirectory(this.cacheDirectory);
+        File.WriteAllText(this.CacheFilePath, "{ this is not the feed index");
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"", Timestamp = DateTimeOffset.UtcNow });
+        this.handler.Throw = new HttpRequestException("offline");
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.False(File.Exists(this.CacheFilePath));
+        Assert.False(File.Exists(this.SyncMetadataFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_CachedIndexOverLimit_IsDeletedAndNotUsed()
+    {
+        Directory.CreateDirectory(this.cacheDirectory);
+        File.WriteAllBytes(this.CacheFilePath, new byte[MaxIndexSizeBytes + 1]);
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"", Timestamp = DateTimeOffset.UtcNow });
+        this.handler.Throw = new HttpRequestException("offline");
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.False(File.Exists(this.CacheFilePath));
+    }
+
+    private void WriteCachedIndex(string json)
+    {
+        Directory.CreateDirectory(this.cacheDirectory);
+        File.WriteAllText(this.CacheFilePath, json);
+    }
+
+    private void WriteMetadata(PluginFeedSyncMetadata metadata)
+    {
+        Directory.CreateDirectory(this.cacheDirectory);
+        File.WriteAllText(this.SyncMetadataFilePath, JsonSerializer.Serialize(metadata, MetadataOptions));
+    }
+
+    private PluginFeedSyncMetadata? ReadMetadata() =>
+        File.Exists(this.SyncMetadataFilePath)
+            ? JsonSerializer.Deserialize<PluginFeedSyncMetadata>(File.ReadAllText(this.SyncMetadataFilePath), MetadataOptions)
+            : null;
+
+    private static HttpResponseMessage WithEtag(HttpResponseMessage response, string etag)
+    {
+        response.Headers.ETag = new EntityTagHeaderValue(etag);
+        return response;
     }
 
     private void EnqueueFeed(HttpResponseMessage response) => this.handler.Enqueue(response);

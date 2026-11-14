@@ -69,6 +69,7 @@ public sealed class AgentCardItem : ObservableObject
     private AgentInstallState lastSettledState;
     private string? version;
     private AgentUpdateAvailability? updateAvailability;
+    private string? pluginUpdateVersionText;
     private bool isBlockedByRunningAgent;
     private bool isDetecting;
     private bool isCheckingUpdates;
@@ -254,20 +255,51 @@ public sealed class AgentCardItem : ObservableObject
     }
 
     /// <summary>
-    ///   The update indicator text ("installed → latest"), or null when availability is
-    ///   unknown or the agent is up to date, so no placeholder is ever rendered. The indicator and
-    ///   <see cref="CanUpdate" /> derive from the same availability result.
+    ///   The update indicator text: the agent's "installed → latest" versions when availability
+    ///   reports an update, else the plugin-update text resolved from the feed, or null when neither
+    ///   is known, so no placeholder is ever rendered. The indicator and <see cref="CanUpdate" />
+    ///   derive from the same agent availability result.
     /// </summary>
     public string? UpdateAvailabilityText =>
         this.UpdateAvailability is { Status: AgentUpdateStatus.UpdateAvailable, InstalledVersion: { } installed, LatestVersion: { } latest }
             ? $"{installed} → {latest}"
-            : null;
+            : this.PluginUpdateVersionText;
 
     /// <summary>
-    ///   Whether an update is known to be available. Reflects the availability status; see
-    ///   <see cref="CanUpdate" /> for the gated enablement rule.
+    ///   Whether an update is known to be available: an agent version update from the availability
+    ///   result, or a plugin update from the background feed refresh. Agent updates take the chip
+    ///   slot when both are known (see <see cref="UpdateAvailabilityText" />). See
+    ///   <see cref="CanUpdate" /> for the gated enablement rule, which stays on the agent result.
     /// </summary>
-    public bool HasUpdateAvailable => this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable;
+    public bool HasUpdateAvailable =>
+        this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable || this.HasPluginUpdate;
+
+    /// <summary>
+    ///   The plugin-update chip text resolved from the background feed refresh — the installed and
+    ///   feed versions, or "Update available" when the installed version is unknown — or null when
+    ///   the card's plugin has no known update. Written by the management view model; the chip
+    ///   itself is the existing update chip, shared with agent version updates.
+    /// </summary>
+    public string? PluginUpdateVersionText
+    {
+        get => this.pluginUpdateVersionText;
+        set
+        {
+            if (this.SetProperty(ref this.pluginUpdateVersionText, value))
+            {
+                this.OnPropertyChanged(nameof(this.HasPluginUpdate));
+                this.OnPropertyChanged(nameof(this.HasUpdateAvailable));
+                this.OnPropertyChanged(nameof(this.UpdateAvailabilityText));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Whether a newer compatible feed version is known for this card's installed plugin. Part of
+    ///   <see cref="HasUpdateAvailable" /> but never part of <see cref="CanUpdate" />: the card's
+    ///   Update action runs the agent CLI updater, while plugin updates are installed from Browse.
+    /// </summary>
+    public bool HasPluginUpdate => this.pluginUpdateVersionText is not null;
 
     /// <summary>
     ///   Whether the per-card "Detect" action is currently running for this card: the per-card

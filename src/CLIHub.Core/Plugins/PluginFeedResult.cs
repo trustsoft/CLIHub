@@ -9,7 +9,21 @@ namespace CLIHub.Core.Plugins;
 public sealed record PluginFeedResult(
     bool Success,
     PluginFeedIndex? Index,
-    IReadOnlyList<string> Errors);
+    IReadOnlyList<string> Errors)
+{
+    /// <summary>
+    ///   Whether the index was served from the last-good cache because the live fetch failed.
+    ///   False for a fresh 200 response and for a 304 Not Modified (a 304 confirms the cached
+    ///   content is still current, it does not fall back to it).
+    /// </summary>
+    public bool FromCache { get; init; }
+
+    /// <summary>
+    ///   When the cached index was stored, set only when <see cref="FromCache" /> is true; null
+    ///   otherwise, so the UI can show the age of genuinely stale data.
+    /// </summary>
+    public DateTimeOffset? CachedAt { get; init; }
+}
 
 /// <summary>
 ///   Parsed plugin feed index.

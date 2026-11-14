@@ -108,6 +108,13 @@ are pruned from this list once their evidence is no longer needed; recover them 
   request.
 - Trigger: the next MODIFIED delta to `agent-version` or `agent-update-detection`.
 
+### DomainEventBus subscription lists are not synchronized
+
+- Severity: Low (latent race; not clearly reachable in normal operation — windows are sub-microsecond and publishes are rare)
+- Evidence (2026-11-14, `plugin-feed-background-sync` verification): `DomainEventBus` keeps its subscription map and per-type lists unsynchronized (`src/CLIHub.Core/Events/DomainEventBus.cs:12,59-74`); `Publish` snapshots via `ToList()` (:36). Before this change every publish ran on the UI thread (`ProjectSelected`, `AgentLaunched`); the new `PluginFeedSyncService` publishes `PluginFeedUpdatedEvent` from a background thread, so a background `Publish` racing a UI-thread `Subscribe`/`Dispose` of the same event type could throw `InvalidOperationException` from the snapshot. Normal operation is safe (the view model subscribes once at construction, disposes once at teardown; publishes happen on the first fetch and hourly on change only).
+- Proposed remedy: replace the list with a copy-on-write snapshot (immutable array swap) or lock around subscribe/unsubscribe/publish-snapshot, whichever matches the bus's simplicity.
+- Trigger: the first background publisher whose subscription lifetime overlaps the UI subscribe window (e.g. a per-page subscriber), or a report of a collection-modified exception from `DomainEventBus`.
+
 ## Plugin registry v2
 
 Roadmap for the plugin registry redesign (ADR-0015: separate feed repository

@@ -109,6 +109,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPluginRegistry, PluginRegistryRepository>();
         services.AddSingleton<IPluginInstaller, PluginInstaller>();
         services.AddSingleton<IPluginFeedClient, PluginFeedClient>();
+        services.AddSingleton<IPluginFeedSyncService>(sp => new PluginFeedSyncService(
+            sp.GetRequiredService<IPluginFeedClient>(),
+            sp.GetRequiredService<IDomainEventPublisher>(),
+            sp.GetRequiredService<IPreferencesStore>(),
+            sp.GetRequiredService<ILogger<PluginFeedSyncService>>()));
         return services;
     }
 

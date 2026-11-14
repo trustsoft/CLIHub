@@ -275,6 +275,25 @@ Downloaded packages are verified:
 5. **Descriptor-only install — Inspect → Confirm → Install:** For a v2 entry without a `package`, CLIHub builds the confirmation dialog directly from the inline descriptor — no download and no checksum step (the feed index in the git repository is the integrity anchor). On confirmation, the verbatim descriptor JSON (plus the `logoUrl` logo when it downloads successfully) is staged, re-validated from disk, and installed through the same backup/atomic-move/rollback/state/catalog-reload path as a package install. A failed or non-HTTPS logo fetch is logged as a warning and the install proceeds without `logo.png` (the default logo is shown).
 6. **Install outcome:** Success or failure is shown in a dialog. On success, the catalog reloads and the plugin card reflects the new state.
 
+### Background Feed Sync and Conditional Fetch
+
+A background service (`IPluginFeedSyncService`, registered in Core) refreshes the feed once at application start and then hourly. It starts from `ApplicationBootstrapper` after the optional startup work and before the project scanner; `Start()` returns immediately and the first refresh runs on a background task, so startup never waits for the network. Shutdown cancels the in-flight refresh and waits at most the shutdown budget (2 seconds). The interval is fixed in this slice; a preference is future work.
+
+Each refresh re-checks the `PluginFeedUrl` preference, so a disabled feed (`""`) is skipped without a request.
+
+`PluginFeedClient.GetFeedAsync` performs conditional requests. The response `ETag` (or `Last-Modified` when there is no ETag) is stored in `%APPDATA%\CLIHub\cache\feed-sync.json` and sent back as `If-None-Match` (or `If-Modified-Since`) on the next fetch — including on every followed redirect hop. A `304 Not Modified` reports success from the cached index without re-parsing, without writing either cache file, and without publishing a change event.
+
+Two cache files hold the last-good state, both under `%APPDATA%\CLIHub\cache\`:
+
+- `feed-index.json`: the raw index bytes of the last successful fetch (bounded by the same 2 MB index limit), written atomically.
+- `feed-sync.json`: a flat record `{ etag, lastModified, timestamp, indexHash }`. `indexHash` is the SHA-256 hash of the sorted `{ id, version, compatibility }` tuples and drives change detection; it is written with the validators and timestamp on every fresh 200 (so a cache populated by Browse alone is self-consistent) and rewritten by the sync service when it publishes a change.
+
+Reads are tolerant: a missing cache means an unconditional fetch, a corrupt file is deleted with a logged warning, and sync metadata without its index is dropped. A cached index larger than 2 MB is never served.
+
+When the feed changes, the service publishes `PluginFeedUpdatedEvent` carrying the new index hash (never the index itself). A 304, an unchanged index, a fetch served from the cache, and a failed fetch publish nothing. `AgentManagementViewModel` subscribes, reloads the catalog, and re-resolves the per-card plugin-update chip from the refreshed index; an agent version update takes the chip slot when both are available. Failures are logged at Warning and never thrown.
+
+On a failed live fetch (network error, timeout, HTTP error status, parse error) the client serves the cached index with `FromCache: true` and `CachedAt`, so Browse degrades to stale-but-usable data instead of a hard error. Redirect-policy rejections and the 2 MB bound never fall back to stale data.
+
 ### Feed URL Preference
 
 The `PluginFeedUrl` preference in `AppPreferences` controls the feed URL:
@@ -305,8 +324,8 @@ The older `trustsoft/CLIHub-plugins` registry is frozen: it keeps serving alread
 
 ### Error Handling
 
-- **Network failure:** If the feed cannot be fetched, the Browse Plugins dialog shows an error message and an empty plugin list.
-- **Invalid index JSON:** If the index is malformed or has an unsupported `schemaVersion`, an error is shown.
+- **Network failure:** If the feed cannot be fetched and no cached index exists, the Browse Plugins dialog shows an error message and an empty plugin list. When a cached index exists, the list is shown with an inline stale-data notice ("Using cached plugin list (last updated …). Check your internet connection to refresh.") instead of the hard error.
+- **Invalid index JSON:** If the index is malformed or has an unsupported `schemaVersion`, an error is shown (or the cached list with the stale-data notice when a cache exists).
 - **Download failure:** If a package download fails, an error dialog is shown and installation is aborted.
 - **Checksum mismatch:** If the downloaded package's SHA-256 does not match the index entry, an error is shown and the package is discarded without extraction.
 

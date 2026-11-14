@@ -1,6 +1,7 @@
 namespace CLIHub.ViewModels;
 
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 
 using CLIHub.Core.Plugins;
@@ -27,6 +28,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
 
     private bool isLoading;
     private string? errorMessage;
+    private string? cacheStatusMessage;
 
     /// <summary>
     ///   Creates the dialog view model.
@@ -114,6 +116,28 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
     public bool HasError => !string.IsNullOrEmpty(this.ErrorMessage);
 
     /// <summary>
+    ///   The stale-cache notice shown when the plugin list was served from the last-good cache
+    ///   because the live fetch failed, or null. Only a cache-served result sets it; a fresh fetch
+    ///   and a 304 Not Modified leave it null.
+    /// </summary>
+    public string? CacheStatusMessage
+    {
+        get => this.cacheStatusMessage;
+        private set
+        {
+            if (this.SetProperty(ref this.cacheStatusMessage, value))
+            {
+                this.OnPropertyChanged(nameof(this.HasCacheStatusMessage));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Whether the stale-cache notice should be shown.
+    /// </summary>
+    public bool HasCacheStatusMessage => !string.IsNullOrEmpty(this.CacheStatusMessage);
+
+    /// <summary>
     ///   Whether plugins are available to display.
     /// </summary>
     public bool HasPlugins => this.Plugins.Count > 0;
@@ -145,6 +169,7 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
     {
         this.IsLoading = true;
         this.ErrorMessage = null;
+        this.CacheStatusMessage = null;
         this.Plugins.Clear();
 
         try
@@ -157,6 +182,14 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
                     : "Could not load plugin feed.";
                 this.logger.LogWarning("Feed load failed: {Errors}", string.Join("; ", feedResult.Errors));
                 return;
+            }
+
+            if (feedResult.FromCache)
+            {
+                // The live fetch failed and the client degraded to the last-good cache: show the
+                // list with an explicit stale-data note instead of the hard error.
+                this.CacheStatusMessage = BuildCacheStatusMessage(feedResult.CachedAt);
+                this.logger.LogInformation("Feed load served the cached plugin list (stored {CachedAt})", feedResult.CachedAt);
             }
 
             if (feedResult.Index is null || feedResult.Index.Plugins.Count == 0)
@@ -388,6 +421,56 @@ public sealed class BrowsePluginsDialogViewModel : ObservableObject
             this.dialogService.ShowValidationError(installResult.Errors);
             this.logger.LogWarning("Installation failed for {PluginId}: {Errors}", item.Id, string.Join("; ", installResult.Errors));
         }
+    }
+
+    /// <summary>
+    ///   Builds the stale-cache notice: states that the list is cached, how old it is, and that the
+    ///   network connection is what to check (design D9 wording).
+    /// </summary>
+    /// <param name="cachedAt"> When the cached index was stored, or null when unknown. </param>
+    /// <returns> The user-facing notice. </returns>
+    internal static string BuildCacheStatusMessage(DateTimeOffset? cachedAt) =>
+        $"Using cached plugin list (last updated {FormatCacheAge(cachedAt, DateTimeOffset.Now)}). Check your internet connection to refresh.";
+
+    /// <summary>
+    ///   Formats a cache age for the stale-cache notice: minutes, hours, or days for a recent cache,
+    ///   an absolute local timestamp beyond a week, and "recently" when the timestamp is unknown.
+    /// </summary>
+    /// <param name="cachedAt"> When the cached index was stored, or null. </param>
+    /// <param name="now"> The reference time. </param>
+    /// <returns> The age text. </returns>
+    internal static string FormatCacheAge(DateTimeOffset? cachedAt, DateTimeOffset now)
+    {
+        if (cachedAt is not { } stored)
+        {
+            return "recently";
+        }
+
+        var elapsed = now - stored;
+        if (elapsed < TimeSpan.FromMinutes(1))
+        {
+            return "just now";
+        }
+
+        if (elapsed < TimeSpan.FromHours(1))
+        {
+            var minutes = (int)elapsed.TotalMinutes;
+            return minutes == 1 ? "1 minute ago" : $"{minutes} minutes ago";
+        }
+
+        if (elapsed < TimeSpan.FromDays(1))
+        {
+            var hours = (int)elapsed.TotalHours;
+            return hours == 1 ? "1 hour ago" : $"{hours} hours ago";
+        }
+
+        if (elapsed < TimeSpan.FromDays(7))
+        {
+            var days = (int)elapsed.TotalDays;
+            return days == 1 ? "1 day ago" : $"{days} days ago";
+        }
+
+        return stored.ToLocalTime().ToString("MMM d, h:mm tt", CultureInfo.CurrentCulture);
     }
 
     private Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>

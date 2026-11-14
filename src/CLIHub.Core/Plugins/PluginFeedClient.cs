@@ -1,11 +1,13 @@
 namespace CLIHub.Core.Plugins;
 
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
 using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
+using CLIHub.Core.Infrastructure.FileSystem;
 
 using Microsoft.Extensions.Logging;
 
@@ -48,6 +50,8 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     private readonly IPluginDescriptorReader descriptorReader;
     private readonly IPluginDescriptorValidator descriptorValidator;
     private readonly ILogger<PluginFeedClient> logger;
+    private readonly string cacheFilePath;
+    private readonly string syncMetadataFilePath;
 
     /// <summary>
     ///   Creates the feed client with a dedicated HTTP handler that does not auto-redirect.
@@ -73,16 +77,28 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// <param name="logger"> Logger. </param>
     /// <param name="descriptorReader"> Reader validating v2 inline descriptors at parse time. </param>
     /// <param name="descriptorValidator"> Validator checking v2 inline descriptors at parse time. </param>
+    /// <param name="cacheFilePath">
+    ///   Overrides the cached index location; defaults to <c> AppPaths.FeedCacheFile </c>.
+    /// </param>
+    /// <param name="syncMetadataFilePath">
+    ///   Overrides the sync metadata location; defaults to <c> AppPaths.FeedSyncMetadataFile </c>.
+    /// </param>
     internal PluginFeedClient(HttpMessageHandler handler,
                               IPreferencesStore preferencesStore,
                               ILogger<PluginFeedClient> logger,
                               IPluginDescriptorReader? descriptorReader = null,
-                              IPluginDescriptorValidator? descriptorValidator = null)
+                              IPluginDescriptorValidator? descriptorValidator = null,
+                              string? cacheFilePath = null,
+                              string? syncMetadataFilePath = null)
     {
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
         this.descriptorReader = descriptorReader ?? new PluginDescriptorReader();
         this.descriptorValidator = descriptorValidator ?? new PluginDescriptorValidator();
+        this.cacheFilePath = string.IsNullOrWhiteSpace(cacheFilePath) ? AppPaths.FeedCacheFile : cacheFilePath;
+        this.syncMetadataFilePath = string.IsNullOrWhiteSpace(syncMetadataFilePath)
+            ? AppPaths.FeedSyncMetadataFile
+            : syncMetadataFilePath;
 
         this.httpClient = new HttpClient(handler ?? throw new ArgumentNullException(nameof(handler)));
         this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -110,43 +126,308 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
             return new PluginFeedResult(false, null, ["Feed URL must use HTTPS"]);
         }
 
-        return await this.ExecuteWithStructuredErrorsAsync(
-            async token =>
-            {
-                var (response, redirectError) = await this.SendFollowingRedirectsAsync(feedUrl, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-                if (response is null)
-                {
-                    return new PluginFeedResult(false, null, [redirectError ?? "Redirect rejected"]);
-                }
+        var conditionalHeaders = BuildConditionalRequestHeaders(this.LoadSyncMetadata());
 
-                using var finalResponse = response;
-                if (!finalResponse.IsSuccessStatusCode)
-                {
-                    this.logger.LogWarning("Feed request failed with status {StatusCode}", finalResponse.StatusCode);
-                    return new PluginFeedResult(false, null, ["Could not load plugin feed"]);
-                }
-
-                // Fast-path rejection when the server declares the size up front. This is an
-                // optimization only; the bounded read below enforces the limit during streaming.
-                if (finalResponse.Content.Headers.ContentLength is > MaxIndexSizeBytes)
-                {
-                    this.logger.LogError("Feed index too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
-                    return new PluginFeedResult(false, null, ["Feed index too large"]);
-                }
-
-                var body = await ReadBoundedAsync(finalResponse.Content, MaxIndexSizeBytes, token).ConfigureAwait(false);
-                if (body is null)
-                {
-                    this.logger.LogError("Feed index exceeds the {Limit} byte limit", MaxIndexSizeBytes);
-                    return new PluginFeedResult(false, null, ["Feed index too large"]);
-                }
-
-                return this.ParseFeedIndex(body);
-            },
-            errors => new PluginFeedResult(false, null, [errors]),
+        var outcome = await this.ExecuteWithStructuredErrorsAsync(
+            token => this.FetchFeedAsync(feedUrl, conditionalHeaders, token),
+            errors => new FeedFetchOutcome(new PluginFeedResult(false, null, [errors]), AllowCacheFallback: true),
             FeedErrorProfile,
             onFailure: null,
             cancellationToken).ConfigureAwait(false);
+
+        if (outcome.Result.Success || !outcome.AllowCacheFallback)
+        {
+            return outcome.Result;
+        }
+
+        return this.TryGetCachedFeedResult(outcome.Result);
+    }
+
+    /// <summary>
+    ///   Performs one conditional feed fetch: follows redirects (conditional headers on every hop),
+    ///   turns a 304 into success from the cached index without parsing or writing, and on a fresh
+    ///   200 parses the index and refreshes the cache and sync metadata. The returned outcome tells
+    ///   the caller whether a failure may degrade to the last-good cache.
+    /// </summary>
+    /// <param name="feedUrl"> The configured HTTPS feed URL. </param>
+    /// <param name="conditionalHeaders"> Conditional request headers from the sync metadata, or null. </param>
+    /// <param name="cancellationToken"> The linked timeout token from the structured-error scope. </param>
+    /// <returns> The fetch outcome and whether a cache fallback is permitted on failure. </returns>
+    private async Task<FeedFetchOutcome> FetchFeedAsync(
+        string feedUrl,
+        IReadOnlyDictionary<string, string>? conditionalHeaders,
+        CancellationToken cancellationToken)
+    {
+        var (response, redirectError) = await this.SendFollowingRedirectsAsync(
+            feedUrl,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken,
+            conditionalHeaders).ConfigureAwait(false);
+        if (response is null)
+        {
+            // A rejected redirect is a transport-policy failure, not a transient network failure:
+            // it is reported without a cache fallback so the rejection stays visible.
+            return new FeedFetchOutcome(
+                new PluginFeedResult(false, null, [redirectError ?? "Redirect rejected"]),
+                AllowCacheFallback: false);
+        }
+
+        using var finalResponse = response;
+
+        if (finalResponse.StatusCode == HttpStatusCode.NotModified)
+        {
+            // 304 Not Modified: the cached index is confirmed current. No parse, no cache write,
+            // no metadata write, and no fallback (this is a fresh confirmation, not stale data).
+            var cachedIndex = this.LoadCachedIndex();
+            if (cachedIndex is null)
+            {
+                this.logger.LogWarning("Feed returned 304 Not Modified but no usable cached index exists");
+                return new FeedFetchOutcome(
+                    new PluginFeedResult(false, null, ["Could not load plugin feed"]),
+                    AllowCacheFallback: false);
+            }
+
+            return new FeedFetchOutcome(
+                new PluginFeedResult(true, cachedIndex.Value.Index, []),
+                AllowCacheFallback: false);
+        }
+
+        if (!finalResponse.IsSuccessStatusCode)
+        {
+            this.logger.LogWarning("Feed request failed with status {StatusCode}", finalResponse.StatusCode);
+            return new FeedFetchOutcome(
+                new PluginFeedResult(false, null, ["Could not load plugin feed"]),
+                AllowCacheFallback: true);
+        }
+
+        // Fast-path rejection when the server declares the size up front. This is an
+        // optimization only; the bounded read below enforces the limit during streaming.
+        if (finalResponse.Content.Headers.ContentLength is > MaxIndexSizeBytes)
+        {
+            this.logger.LogError("Feed index too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
+
+            // The size bound is a security guarantee, so it never degrades to stale data.
+            return new FeedFetchOutcome(
+                new PluginFeedResult(false, null, ["Feed index too large"]),
+                AllowCacheFallback: false);
+        }
+
+        var body = await ReadBoundedAsync(finalResponse.Content, MaxIndexSizeBytes, cancellationToken).ConfigureAwait(false);
+        if (body is null)
+        {
+            this.logger.LogError("Feed index exceeds the {Limit} byte limit", MaxIndexSizeBytes);
+            return new FeedFetchOutcome(
+                new PluginFeedResult(false, null, ["Feed index too large"]),
+                AllowCacheFallback: false);
+        }
+
+        var parsed = this.ParseFeedIndex(body);
+        if (!parsed.Success)
+        {
+            return new FeedFetchOutcome(parsed, AllowCacheFallback: true);
+        }
+
+        this.SaveCachedIndex(body);
+
+        // A fresh 200 writes the complete metadata: the validators, the cache timestamp, AND the
+        // comparison hash of the parsed index. Writing the hash here keeps a cache created without
+        // the sync service (for example an open Browse dialog after a failed background refresh)
+        // self-consistent, so the service's next 304 compares equal and publishes no spurious
+        // change event (verifier finding a). A 304 writes nothing at all.
+        this.SaveSyncMetadata(new PluginFeedSyncMetadata
+        {
+            ETag = ReadResponseHeaderValue(finalResponse, "ETag"),
+            LastModified = ReadResponseHeaderValue(finalResponse, "Last-Modified"),
+            Timestamp = DateTimeOffset.UtcNow,
+            IndexHash = parsed.Index is { } index
+                ? PluginFeedSyncMetadata.ComputeIndexHash(index.Plugins)
+                : null
+        });
+
+        return new FeedFetchOutcome(parsed, AllowCacheFallback: false);
+    }
+
+    /// <summary>
+    ///   Builds the conditional request headers: <c> If-None-Match </c> from a stored ETag, else
+    ///   <c> If-Modified-Since </c> from a stored Last-Modified, else none (an unconditional fetch).
+    /// </summary>
+    /// <param name="metadata"> The stored sync metadata, or null. </param>
+    /// <returns> The headers to send, or null when no validator is stored. </returns>
+    private static IReadOnlyDictionary<string, string>? BuildConditionalRequestHeaders(PluginFeedSyncMetadata? metadata)
+    {
+        if (metadata is null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(metadata.ETag))
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal) { ["If-None-Match"] = metadata.ETag };
+        }
+
+        if (!string.IsNullOrWhiteSpace(metadata.LastModified))
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal) { ["If-Modified-Since"] = metadata.LastModified };
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    ///   Reads the sync metadata tolerantly and drops it when the cached index it validates is
+    ///   missing: conditional requests against content the client cannot serve are meaningless
+    ///   (design D2).
+    /// </summary>
+    /// <returns> The sync metadata, or null when absent, corrupt, or orphaned. </returns>
+    private PluginFeedSyncMetadata? LoadSyncMetadata()
+    {
+        var metadata = PluginFeedSyncMetadata.Load(this.syncMetadataFilePath, this.logger);
+        if (metadata is null)
+        {
+            return null;
+        }
+
+        if (!File.Exists(this.cacheFilePath))
+        {
+            this.logger.LogWarning(
+                "Plugin feed sync metadata exists without a cached index; deleting the metadata at {Path}",
+                this.syncMetadataFilePath);
+            PluginFeedSyncMetadata.TryDelete(this.syncMetadataFilePath, this.logger);
+            return null;
+        }
+
+        return metadata;
+    }
+
+    /// <summary>
+    ///   Writes the sync metadata atomically. A write failure only costs the next conditional fetch,
+    ///   so it is logged as a warning rather than failing the successful feed load.
+    /// </summary>
+    /// <param name="metadata"> The metadata to persist. </param>
+    private void SaveSyncMetadata(PluginFeedSyncMetadata metadata)
+    {
+        try
+        {
+            metadata.Save(this.syncMetadataFilePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            this.logger.LogWarning(ex, "Could not write the plugin feed sync metadata to {Path}", this.syncMetadataFilePath);
+        }
+    }
+
+    /// <summary>
+    ///   Loads the cached index when it is usable: an index larger than the 2 MB bound is deleted
+    ///   and never served, a corrupt file is deleted with a warning, and a missing file is absent.
+    ///   The cache timestamp prefers the sync metadata, falling back to the file's write time.
+    /// </summary>
+    /// <returns> The parsed cached index and when it was stored, or null when no usable cache exists. </returns>
+    private (PluginFeedIndex Index, DateTimeOffset CachedAt)? LoadCachedIndex()
+    {
+        if (!File.Exists(this.cacheFilePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            var file = new FileInfo(this.cacheFilePath);
+            if (file.Length > MaxIndexSizeBytes)
+            {
+                this.logger.LogWarning(
+                    "Cached feed index at {Path} exceeds the {Limit} byte limit; deleting it",
+                    this.cacheFilePath,
+                    MaxIndexSizeBytes);
+                this.DeleteCachedIndexAndMetadata();
+                return null;
+            }
+
+            var parsed = this.ParseFeedIndex(File.ReadAllText(this.cacheFilePath));
+            if (!parsed.Success || parsed.Index is null)
+            {
+                this.logger.LogWarning("Cached feed index at {Path} is corrupt; deleting it", this.cacheFilePath);
+                this.DeleteCachedIndexAndMetadata();
+                return null;
+            }
+
+            var cachedAt = this.LoadSyncMetadata()?.Timestamp
+                           ?? new DateTimeOffset(file.LastWriteTimeUtc, TimeSpan.Zero);
+            return (parsed.Index, cachedAt);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            this.logger.LogWarning(ex, "Could not read the cached feed index at {Path}", this.cacheFilePath);
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///   Deletes the unusable cached index together with its sync metadata: the two files describe
+    ///   one state, so metadata left behind would point at content the client cannot serve.
+    /// </summary>
+    private void DeleteCachedIndexAndMetadata()
+    {
+        PluginFeedSyncMetadata.TryDelete(this.cacheFilePath, this.logger);
+        PluginFeedSyncMetadata.TryDelete(this.syncMetadataFilePath, this.logger);
+    }
+
+    /// <summary>
+    ///   Writes the raw index bytes to the last-good cache atomically. A write failure only costs
+    ///   the fallback path, so it is logged as a warning rather than failing the fetch.
+    /// </summary>
+    /// <param name="body"> The raw index JSON of a successful fetch. </param>
+    private void SaveCachedIndex(string body)
+    {
+        try
+        {
+            AtomicFileWriter.Write(this.cacheFilePath, body);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            this.logger.LogWarning(ex, "Could not write the cached plugin feed index to {Path}", this.cacheFilePath);
+        }
+    }
+
+    /// <summary>
+    ///   Serves the last-good cache in place of a failed live fetch: success with
+    ///   <c> FromCache </c> and the cache timestamp when a usable cache exists, otherwise the
+    ///   original live failure (which keeps every existing user-facing error string).
+    /// </summary>
+    /// <param name="liveFailure"> The structured failure of the live fetch. </param>
+    /// <returns> The cached success, or the live failure when no usable cache exists. </returns>
+    private PluginFeedResult TryGetCachedFeedResult(PluginFeedResult liveFailure)
+    {
+        var cachedIndex = this.LoadCachedIndex();
+        if (cachedIndex is null)
+        {
+            return liveFailure;
+        }
+
+        this.logger.LogWarning("Feed request failed; serving the cached plugin index instead");
+        return new PluginFeedResult(true, cachedIndex.Value.Index, [])
+        {
+            FromCache = true,
+            CachedAt = cachedIndex.Value.CachedAt
+        };
+    }
+
+    /// <summary>
+    ///   Reads a response header value, checking the response headers first and the content headers
+    ///   second (servers send <c> Last-Modified </c> as a content header).
+    /// </summary>
+    /// <param name="response"> The terminal response. </param>
+    /// <param name="headerName"> The header name. </param>
+    /// <returns> The first header value, or null when the header is absent. </returns>
+    private static string? ReadResponseHeaderValue(HttpResponseMessage response, string headerName)
+    {
+        if (response.Headers.TryGetValues(headerName, out var values))
+        {
+            return values.FirstOrDefault();
+        }
+
+        return response.Content.Headers.TryGetValues(headerName, out var contentValues)
+            ? contentValues.FirstOrDefault()
+            : null;
     }
 
     /// <inheritdoc />
@@ -337,15 +618,26 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         LogLevel UnexpectedLogLevel);
 
     /// <summary>
+    ///   The outcome of one feed fetch: the result plus whether a failure may degrade to the
+    ///   last-good cache. Transport and parse failures allow the fallback; redirect-policy and
+    ///   size-bound rejections do not, so the security guarantees stay visible.
+    /// </summary>
+    /// <param name="Result"> The feed result produced by the fetch. </param>
+    /// <param name="AllowCacheFallback"> Whether a failure may be replaced by the cached index. </param>
+    private sealed record FeedFetchOutcome(PluginFeedResult Result, bool AllowCacheFallback);
+
+    /// <summary>
     ///   Sends the GET request and manually follows HTTP redirects up to the maximum hop count,
-    ///   rejecting any redirect to non-HTTPS and chains longer than the maximum. A 3xx response
-    ///   without a Location header is treated as terminal. Ownership of the returned terminal
-    ///   response transfers to the caller, which must dispose it; intermediate responses are
-    ///   disposed here.
+    ///   rejecting any redirect to non-HTTPS and chains longer than the maximum. Any supplied
+    ///   conditional headers are attached to every hop's request, so a redirected fetch keeps its
+    ///   validator. A 3xx response without a Location header is treated as terminal. Ownership of
+    ///   the returned terminal response transfers to the caller, which must dispose it;
+    ///   intermediate responses are disposed here.
     /// </summary>
     /// <param name="url"> Initial URL. </param>
     /// <param name="completionOption"> HTTP completion option for reading the response. </param>
     /// <param name="cancellationToken"> Cancellation token. </param>
+    /// <param name="requestHeaders"> Optional request headers applied to every hop (conditional fetch). </param>
     /// <returns>
     ///   The terminal response and a null error — owned and disposed by the caller — or a null
     ///   response with the rejection reason.
@@ -353,12 +645,21 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     private async Task<(HttpResponseMessage? Response, string? Error)> SendFollowingRedirectsAsync(
         string url,
         HttpCompletionOption completionOption,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IReadOnlyDictionary<string, string>? requestHeaders = null)
     {
         var currentUrl = url;
         for (var hop = 0; hop < MaxRedirectHops; hop++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
+            if (requestHeaders is not null)
+            {
+                foreach (var (name, value) in requestHeaders)
+                {
+                    request.Headers.TryAddWithoutValidation(name, value);
+                }
+            }
+
             var response = await this.httpClient.SendAsync(request, completionOption, cancellationToken).ConfigureAwait(false);
 
             if ((int)response.StatusCode < 300 || (int)response.StatusCode >= 400)

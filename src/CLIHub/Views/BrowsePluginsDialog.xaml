@@ -194,21 +194,42 @@
                 </Grid>
             </ScrollViewer>
 
-            <!-- Footer: Refresh and Close buttons -->
+            <!-- Footer: stale-cache notice, then Refresh and Close buttons -->
             <Border Grid.Row="3"
                     Background="{DynamicResource ChromeBgBrush}"
                     BorderBrush="{DynamicResource HairlineBrush}"
                     BorderThickness="0,1,0,0"
                     Padding="16">
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                    <Button Command="{Binding RefreshCommand}"
-                            Content="Refresh"
-                            Margin="0,0,8,0"
-                            Style="{StaticResource NeutralButton}"/>
-                    <Button Click="OnCloseClick"
-                            Content="Close"
-                            Style="{StaticResource NeutralButton}"/>
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Shown only when the feed was served from the last-good cache because the
+                         live fetch failed; a fresh load and a 304 leave it collapsed -->
+                    <TextBlock Grid.Column="0"
+                               Margin="0,0,16,0"
+                               VerticalAlignment="Center"
+                               AutomationProperties.Name="Cached plugin list notice"
+                               FontSize="12"
+                               Foreground="{DynamicResource AccentBrush}"
+                               Text="{Binding CacheStatusMessage}"
+                               TextWrapping="Wrap"
+                               Visibility="{Binding HasCacheStatusMessage, Converter={StaticResource BoolToVisibility}}"/>
+
+                    <StackPanel Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                Orientation="Horizontal">
+                        <Button Command="{Binding RefreshCommand}"
+                                Content="Refresh"
+                                Margin="0,0,8,0"
+                                Style="{StaticResource NeutralButton}"/>
+                        <Button Click="OnCloseClick"
+                                Content="Close"
+                                Style="{StaticResource NeutralButton}"/>
+                    </StackPanel>
+                </Grid>
             </Border>
         </Grid>
     </Border>

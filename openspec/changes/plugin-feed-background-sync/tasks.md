@@ -13,30 +13,30 @@ Add ETag/Last-Modified handling, cache file paths, and conditional-request mecha
 
 ### Tasks
 
-- [ ] 1.1 — Update `AppPaths.cs`
+- [x] 1.1 — Update `AppPaths.cs`
   - Add `FeedCacheFile` property: `%APPDATA%\CLIHub\cache\feed-index.json`
   - Add `FeedSyncMetadataFile` property: `%APPDATA%\CLIHub\cache\feed-sync.json`
   - Document both in the class comment
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.2 — Add `PluginFeedSyncMetadata.cs` record (in CLIHub.Core/Plugins)
+- [x] 1.2 — Add `PluginFeedSyncMetadata.cs` record (in CLIHub.Core/Plugins)
   - Record: `PluginFeedSyncMetadata { ETag, LastModified, Timestamp, IndexHash }`
   - All fields nullable (tolerate partial reads)
   - JSON-serializable with `[JsonPropertyName]` attributes (snake_case in JSON)
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.3 — Modify `PluginFeedResult.cs`
+- [x] 1.3 — Modify `PluginFeedResult.cs`
   - Add `FromCache: bool` property (default false)
   - Add `CachedAt: DateTimeOffset?` property (when the cache was stored)
   - Document the fields
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.4 — Modify `IPluginFeedClient.cs`
+- [x] 1.4 — Modify `IPluginFeedClient.cs`
   - Update `GetFeedAsync` return type to include the `FromCache` flag (already in `PluginFeedResult`)
   - No signature change needed if result already includes the flag
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.5 — Extend `PluginFeedClient.cs` with conditional-request and cache logic
+- [x] 1.5 — Extend `PluginFeedClient.cs` with conditional-request and cache logic
   - Add private methods:
     - `LoadSyncMetadataAsync(CancellationToken)`: Read `feed-sync.json` (tolerant parse, return null on missing/corrupt).
     - `SaveSyncMetadataAsync(metadata, CancellationToken)`: Write `feed-sync.json` (atomic via temp+rename or direct overwrite for small file).
@@ -53,7 +53,7 @@ Add ETag/Last-Modified handling, cache file paths, and conditional-request mecha
     - Corrupt cache handling: delete corrupt files with a logged warning.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.6 — Add `PluginFeedClientTests` covering conditional requests and cache
+- [x] 1.6 — Add `PluginFeedClientTests` covering conditional requests and cache
   - Test: valid request with ETag returns 304, cache used (mock 304 response).
   - Test: valid request with Last-Modified returns 304.
   - Test: successful fetch stores cache and metadata.
@@ -64,7 +64,7 @@ Add ETag/Last-Modified handling, cache file paths, and conditional-request mecha
   - All existing 24+ `PluginFeedClientTests` pass unchanged.
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
+- [x] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
 
 ---
 
@@ -75,12 +75,12 @@ Implement the `PluginFeedUpdatedEvent` domain event and the background sync serv
 
 ### Tasks
 
-- [ ] 2.1 — Add `PluginFeedUpdatedEvent.cs` (new record in CLIHub.Core/Events)
+- [x] 2.1 — Add `PluginFeedUpdatedEvent.cs` (new record in CLIHub.Core/Events)
   - Record: `PluginFeedUpdatedEvent(string IndexHash) : IDomainEvent`
   - Document the event purpose
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 2.2 — Add `IPluginFeedSyncService.cs` and `PluginFeedSyncService.cs` (new in CLIHub.Core/Plugins)
+- [x] 2.2 — Add `IPluginFeedSyncService.cs` and `PluginFeedSyncService.cs` (new in CLIHub.Core/Plugins)
   - Interface: `IPluginFeedSyncService`
     - `void Start()`: Begin background refresh loop (or no-op if already started).
     - `async Task StopAsync(TimeSpan timeout)`: Cancel pending refresh and wait for completion.
@@ -98,7 +98,7 @@ Implement the `PluginFeedUpdatedEvent` domain event and the background sync serv
     - Implement `IDisposable`: dispose timer and CTS.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 2.3 — Add `PluginFeedSyncServiceTests.cs` (in tests/CLIHub.Core.Tests/Plugins)
+- [x] 2.3 — Add `PluginFeedSyncServiceTests.cs` (in tests/CLIHub.Core.Tests/Plugins)
   - Test: `Start()` initializes timer and triggers first refresh.
   - Test: `StopAsync(timeout)` cancels in-flight refresh and disposes timer.
   - Test: successful fetch with changed index publishes `PluginFeedUpdatedEvent`.
@@ -109,11 +109,11 @@ Implement the `PluginFeedUpdatedEvent` domain event and the background sync serv
   - Test: service is cancellation-aware (StopAsync cancels pending refresh).
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] 2.4 — Register `IPluginFeedSyncService` in DI (src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs or src/CLIHub/Composition/ServiceRegistration.cs)
+- [x] 2.4 — Register `IPluginFeedSyncService` in DI (src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs or src/CLIHub/Composition/ServiceRegistration.cs)
   - Add singleton registration: `services.AddSingleton<IPluginFeedSyncService, PluginFeedSyncService>();`
   - Verify: `dotnet build CLIHub.sln` and `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass; `openspec validate --all`
+- [x] Gate: All tests pass; `openspec validate --all`
 
 ---
 
@@ -124,20 +124,20 @@ Wire the sync service into application startup and shutdown, and add the event s
 
 ### Tasks
 
-- [ ] 3.1 — Integrate `IPluginFeedSyncService` into startup (src/CLIHub/Startup/ApplicationBootstrapper.cs)
+- [x] 3.1 — Integrate `IPluginFeedSyncService` into startup (src/CLIHub/Startup/ApplicationBootstrapper.cs)
   - Inject `IPluginFeedSyncService` via constructor.
   - In `Start(context)`, after `this.optionalStartup.RunOptionalStartup(...)` (line 71) and before or after `this.projectScanner.Start()` (line 73), call `this.pluginFeedSyncService.Start()`.
   - The sync service runs asynchronously; it does not block startup.
   - Document the startup order in code comment.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 3.2 — Integrate `IPluginFeedSyncService` into shutdown (src/CLIHub/Startup/ApplicationHost.cs)
+- [x] 3.2 — Integrate `IPluginFeedSyncService` into shutdown (src/CLIHub/Startup/ApplicationHost.cs)
   - The service is a singleton and will be disposed by the DI container at step 4 of shutdown (line 81 in docs/architecture/startup.md).
   - Verify that the service's `Dispose` is called and any in-flight refresh is cancelled.
   - No code change needed if the service is registered as singleton; verify via test.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 3.3 — Add event subscription in `AgentManagementViewModel` (src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs)
+- [x] 3.3 — Add event subscription in `AgentManagementViewModel` (src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs)
   - Inject `IDomainEventSubscriber` via constructor (alongside existing `IDomainEventPublisher` if present, or inject the bus directly).
   - In constructor, subscribe to `PluginFeedUpdatedEvent`:
     ```csharp
@@ -149,7 +149,7 @@ Wire the sync service into application startup and shutdown, and add the event s
   - In `Dispose`, if using `Subscribe` that returns `IDisposable`, dispose the subscription.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 3.4 — Update `AgentManagementViewModelTests.Plugins.cs` to cover the subscription
+- [x] 3.4 — Update `AgentManagementViewModelTests.Plugins.cs` to cover the subscription
   - Test: `OnPluginFeedUpdated` calls `ReloadCatalog()` and refreshes badges.
   - Test: event handlers are registered and disposed correctly.
   - All existing plugin-related tests pass unchanged.
@@ -166,7 +166,7 @@ Update `BrowsePluginsDialogViewModel` to handle the `FromCache` flag and display
 
 ### Tasks
 
-- [ ] 4.1 — Modify `BrowsePluginsDialogViewModel.cs`
+- [x] 4.1 — Modify `BrowsePluginsDialogViewModel.cs`
   - Search for `LoadFeedAsync` or the method that calls `this.pluginFeedClient.GetFeedAsync`.
   - After fetching, check `result.FromCache`.
   - If `result.FromCache && result.Success`, set a status message (or UI field) to: "Using cached plugin list (last updated {cachedAt:format}). Check your internet connection to refresh."
@@ -175,14 +175,14 @@ Update `BrowsePluginsDialogViewModel` to handle the `FromCache` flag and display
   - If `!result.FromCache`, do not show the stale-data message (show existing success or error as today).
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 4.2 — Update Browse Plugins UI (XAML or code-behind in src/CLIHub/Views or ViewModels)
+- [x] 4.2 — Update Browse Plugins UI (XAML or code-behind in src/CLIHub/Views or ViewModels)
   - Locate the Browse Plugins dialog view/ViewModel (e.g., `BrowsePluginsDialog.xaml` and its code-behind or the ViewModel).
   - Add a field/property to hold the cache status message (e.g., `CacheStatusMessage: string`).
   - Bind the message to a UI element (e.g., a `TextBlock` below the plugin list or in a status bar).
   - The message is shown only when `BrowsePluginsDialogViewModel.CacheStatusMessage` is non-empty.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 4.3 — Add tests for cache-fallback message (BrowsePluginsDialogViewModelTests.cs)
+- [x] 4.3 — Add tests for cache-fallback message (BrowsePluginsDialogViewModelTests.cs)
   - Test: `LoadFeedAsync` with `FromCache: true` sets cache-status message.
   - Test: cache-status message is formatted correctly (time-ago or readable timestamp).
   - Test: cache-status message is not set if `FromCache: false`.
@@ -200,7 +200,7 @@ Write the OpenSpec spec deltas for `plugin-feed` (modified) and `plugin-feed-syn
 
 ### Tasks
 
-- [ ] 5.1 — Create `specs/plugin-feed-sync/spec.md` (new capability)
+- [x] 5.1 — Create `specs/plugin-feed-sync/spec.md` (new capability)
   - Copy the structure from an existing spec (e.g., `plugin-feed` or `plugin-registry`).
   - **Purpose:** Allows automatic refresh of the plugin feed in the background with HTTP conditional requests to reduce network usage, maintains a last-good index cache for resilience, and publishes domain events when the feed changes so subscribers can update UI state.
   - **Requirements:**
@@ -211,20 +211,20 @@ Write the OpenSpec spec deltas for `plugin-feed` (modified) and `plugin-feed-syn
   - Scenarios: (see design.md `plugin-feed-sync` section for the list)
   - Verify: `openspec validate --all`
 
-- [ ] 5.2 — Modify `specs/plugin-feed/spec.md` (delta)
+- [x] 5.2 — Modify `specs/plugin-feed/spec.md` (delta)
   - Preserve all 16 original scenario names.
   - Add new scenarios: conditional-request 304, cache fallback.
   - Update "Network unavailable" scenario to note cache fallback behavior.
   - Update "Fetch and parse feed index" requirement to mention conditional headers.
   - Verify: `openspec validate --all`
 
-- [ ] 5.3 — Investigate and possibly modify agent-update or agent-ui spec for plugin-update badge
+- [x] 5.3 — Investigate and possibly modify agent-update or agent-ui spec for plugin-update badge
   - If `UpdateAvailable` chip is covered by `agent-update-detection`, add a delta scenario.
   - If not, clarify where the chip behavior is documented and add an appropriate delta.
   - Scenarios: "Plugin update available", "Agent update takes precedence over plugin update", "Update chip shows when installed version < feed version and compatible".
   - Verify: `openspec validate --all`
 
-- [ ] Gate: `openspec validate --all` passes; all spec deltas are coherent with code changes.
+- [x] Gate: `openspec validate --all` passes; all spec deltas are coherent with code changes.
 
 ---
 
@@ -235,11 +235,11 @@ Final integration tests, graphify update, and verification that all guarantees h
 
 ### Tasks
 
-- [ ] 6.1 — Integration tests
+- [x] 6.1 — Integration tests
   - Full `dotnet test CLIHub.sln` (all tests pass).
   - Verify no regressions in existing feed, agent, or plugin tests.
 
-- [ ] 6.2 — Graphify update
+- [x] 6.2 — Graphify update
   - Run `graphify update .` to refresh the knowledge graph.
   - Verify: no errors, graph reflects new service and event.
 
@@ -251,7 +251,7 @@ Final integration tests, graphify update, and verification that all guarantees h
   - Re-enable internet; verify next refresh (within 1 hour, or manually trigger via a test interval) refreshes feed and clears cache message.
   - Check that agent card badges update when feed changes (compare before/after sync).
 
-- [ ] 6.4 — Code review checklist
+- [x] 6.4 — Code review checklist
   - ✓ HTTPS-only enforced on every hop (no new HTTP calls).
   - ✓ 2 MB index bound respected (cache check in place).
   - ✓ Startup not blocked (sync runs via `IApplicationOperationLifetime.RunAsync`).

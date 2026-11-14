@@ -1,5 +1,6 @@
 namespace CLIHub.Startup;
 
+using CLIHub.Core.Plugins;
 using CLIHub.Core.Scanning;
 using CLIHub.Lifetime;
 
@@ -15,6 +16,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     private readonly Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory;
     private readonly IOptionalStartupCoordinator optionalStartup;
     private readonly IProjectScanner projectScanner;
+    private readonly IPluginFeedSyncService feedSyncService;
     private readonly ILogger<ApplicationBootstrapper> logger;
 
     /// <summary>
@@ -25,12 +27,14 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
     /// <param name="hotkeyStartupRegistrarFactory"> Lazy hotkey startup workflow factory. </param>
     /// <param name="optionalStartup"> Optional startup operations coordinator. </param>
     /// <param name="projectScanner"> Background repository scanner. </param>
+    /// <param name="feedSyncService"> Background plugin feed refresh service. </param>
     /// <param name="logger"> Logger for fatal and unexpected startup failures. </param>
     public ApplicationBootstrapper(IStartupStateLoader startupStateLoader,
                                    IApplicationSession session,
                                    Func<IHotkeyStartupRegistrar> hotkeyStartupRegistrarFactory,
                                    IOptionalStartupCoordinator optionalStartup,
                                    IProjectScanner projectScanner,
+                                   IPluginFeedSyncService feedSyncService,
                                    ILogger<ApplicationBootstrapper> logger)
     {
         this.startupStateLoader = startupStateLoader ?? throw new ArgumentNullException(nameof(startupStateLoader));
@@ -38,6 +42,7 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
         this.hotkeyStartupRegistrarFactory = hotkeyStartupRegistrarFactory ?? throw new ArgumentNullException(nameof(hotkeyStartupRegistrarFactory));
         this.optionalStartup = optionalStartup ?? throw new ArgumentNullException(nameof(optionalStartup));
         this.projectScanner = projectScanner ?? throw new ArgumentNullException(nameof(projectScanner));
+        this.feedSyncService = feedSyncService ?? throw new ArgumentNullException(nameof(feedSyncService));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -69,6 +74,13 @@ public sealed class ApplicationBootstrapper : IApplicationBootstrapper
             hotkeyStartupRegistrar.Register(startupState.Preferences);
 
             this.optionalStartup.RunOptionalStartup(startupState, startupUi, context);
+
+            // Startup order: plugin initialization already ran inside the state loader, the UI is
+            // live, and the optional network work is dispatched. The feed sync then starts here,
+            // before the project scanner, joining the best-effort background services in one place.
+            // Start() returns immediately; the first refresh runs on a background task, so startup
+            // never waits for the network.
+            this.feedSyncService.Start();
 
             this.projectScanner.Start();
 
