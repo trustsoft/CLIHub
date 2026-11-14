@@ -244,7 +244,7 @@ pre-existing long-requirement and placeholder-purpose warnings).
         `docs/architecture/plugins.md`, `docs/project-context.md`, `docs/backlog.md`, and
         `openspec/changes/plugin-registry-consolidation/` — anything else is a stop-and-report
         signal
-- [ ] 5.12 Report the gate results together with a recommended manual smoke (with CLIHub closed,
+- [x] 5.12 Report the gate results together with a recommended manual smoke (with CLIHub closed,
         place a populated `%APPDATA%\CLIHub\plugin-state.json` including a `disabled: true` entry
         and delete any `registry.json`; start CLIHub; confirm `registry.json` appears with
         `enabled: false` for the disabled plugin, `plugin-state.json` is deleted, the agent list
@@ -254,3 +254,7 @@ pre-existing long-requirement and placeholder-purpose warnings).
         entry and a built-in is re-seeded while a disabled+deleted built-in is not), then wait for
         the smoke result and ask for explicit `git commit` and `openspec archive` approval
         (approval never carries over; nothing is staged before it)
+        **(smoke confirmed by the user 2026-11-14: adoption from a real plugin-state.json,
+        persistence, disable/enable, user-modification warning, gone-folder retention; approved
+        2026-11-14; includes the verifier-fix round — test-helper legacy paths, IPluginRegistry
+        doc, 5.12 tick)**

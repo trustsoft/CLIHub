@@ -153,19 +153,19 @@ The system SHALL display plugins from the feed with their installation status: A
 
 #### Scenario: Plugin not installed
 
-- **WHEN** a plugin in the feed has no matching entry in `plugin-state.json`
+- **WHEN** a plugin in the feed has no matching entry in `registry.json`
 - **THEN** the plugin is displayed with status "Available"
 - **AND** an Install button is shown
 
 #### Scenario: Installed plugin matches feed version
 
-- **WHEN** a plugin in the feed has a matching entry in `plugin-state.json` with `installedVersion` equal to the feed `version`
+- **WHEN** a plugin in the feed has a matching entry in `registry.json` with `installedVersion` equal to the feed `version`
 - **THEN** the plugin is displayed with status "Installed"
 - **AND** no Install or Update button is shown (or Install button is disabled)
 
 #### Scenario: Installed plugin older than feed version (numeric comparison)
 
-- **WHEN** a plugin in the feed has a matching entry in `plugin-state.json` with `installedVersion` "1.0.0"
+- **WHEN** a plugin in the feed has a matching entry in `registry.json` with `installedVersion` "1.0.0"
 - **AND** the feed `version` is "1.2.0"
 - **AND** both versions parse as major.minor.patch
 - **THEN** the plugin is displayed with status "Update Available"
@@ -174,7 +174,7 @@ The system SHALL display plugins from the feed with their installation status: A
 
 #### Scenario: Installed plugin newer than feed version (downgrade case)
 
-- **WHEN** a plugin in the feed has a matching entry in `plugin-state.json` with `installedVersion` "2.0.0"
+- **WHEN** a plugin in the feed has a matching entry in `registry.json` with `installedVersion` "2.0.0"
 - **AND** the feed `version` is "1.0.0"
 - **AND** both versions parse as major.minor.patch
 - **THEN** the plugin is displayed with status "Different Version Available"
@@ -183,7 +183,7 @@ The system SHALL display plugins from the feed with their installation status: A
 
 #### Scenario: Installed and feed versions differ but are not comparable (non-numeric)
 
-- **WHEN** a plugin in the feed has a matching entry in `plugin-state.json` with `installedVersion` that does not parse as major.minor.patch
+- **WHEN** a plugin in the feed has a matching entry in `registry.json` with `installedVersion` that does not parse as major.minor.patch
 - **AND** the feed `version` also does not parse as major.minor.patch (or either fails to parse)
 - **AND** the versions differ as strings
 - **THEN** the plugin is displayed with status "Different Version Available"
@@ -192,7 +192,7 @@ The system SHALL display plugins from the feed with their installation status: A
 
 #### Scenario: Installed plugin has unknown version
 
-- **WHEN** a plugin in the feed has a matching entry in `plugin-state.json` with `installedVersion` null
+- **WHEN** a plugin in the feed has a matching entry in `registry.json` with `installedVersion` null
 - **THEN** the plugin is displayed with status "Update Available"
 - **AND** the feed version is shown as available
 
@@ -272,7 +272,7 @@ The system SHALL install an update from the feed and replace the existing instal
 - **AND** a confirmation dialog is shown with the new version metadata and all declared commands
 - **AND** if the user confirms, the plugin is installed with `replaceExisting=true`
 - **AND** the temporary package file is deleted after installation
-- **AND** the plugin's `installedVersion` in `plugin-state.json` is updated to the feed version
+- **AND** the plugin's `installedVersion` in `registry.json` is updated to the feed version
 
 #### Scenario: Update cancelled by user
 
@@ -285,7 +285,7 @@ The system SHALL install an update from the feed and replace the existing instal
 
 - **WHEN** a user selects a descriptor-only entry with "Update Available" status and clicks Update, then confirms
 - **THEN** the existing plugin is replaced with `replaceExisting=true` through the same backup, atomic-move, and rollback path as a package update
-- **AND** the plugin's `installedVersion` in `plugin-state.json` is updated to the installed descriptor's version
+- **AND** the plugin's `installedVersion` in `registry.json` is updated to the installed descriptor's version
 
 ### Requirement: Minimum app version gating
 
