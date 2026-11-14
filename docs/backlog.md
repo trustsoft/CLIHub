@@ -134,6 +134,11 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   reserve `index.sig`.
 - Trigger: the decision to start registry v2 implementation; must complete before the client
   default switch (next slice).
+- **Slice complete (2026-11-14): `trustsoft/CLIHub-plugins-v2` created on `master` with the
+  descriptor-folder layout, CI validation/generation workflow, seed migration of the 7 v1 plugins
+  (sha256 verified), branch protection with the required `generate-index` check, and the
+  auto-PR/`workflow_dispatch` regeneration flow. Signing workflow added by the index-signing
+  slice.**
 
 ### Client v2 feed support: dual-format parser, default switch, descriptor-only install
 
@@ -147,6 +152,10 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   add the descriptor-only install fast path (write descriptor files directly, logo through the
   logo cache, no per-package checksum step), and a spec delta on `plugin-feed`.
 - Trigger: the v2 repository bootstrap is complete and seeded.
+- **Slice complete (2026-11-14, `plugin-feed-v2-client`): dual-format parsing (schema 1 and 2),
+  v2 `DefaultFeedUrl`, inline-descriptor validation, `compatibility` range gating
+  (`AppCompatibilityRange`), and the descriptor-only install fast path (logo over HTTPS, failure
+  tolerated). v1 custom feeds keep working end-to-end.**
 
 ### Consolidate local plugin state into a single registry document
 
@@ -196,16 +205,30 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   last-good index cache), a domain event on the existing bus, and an update badge on the
   affected agent card(s).
 - Trigger: after the registry consolidation slice.
+- **Slice complete (2026-11-14, `plugin-feed-background-sync`): `PluginFeedSyncService` refreshes
+  on start plus a fixed hourly interval off the UI thread, conditional fetch (`If-None-Match`,
+  `If-Modified-Since` fallback, 304 = unchanged), `cache/feed-index.json` + `cache/feed-sync.json`
+  last-good cache with stale-fallback in Browse, tuple change detection, `PluginFeedUpdatedEvent`
+  on the existing bus, and the shared update chip gaining plugin versions (agent update wins the
+  slot). Transition-window refreshes persist no hash (verifier finding a).**
 
 ### Index signing for the v2 feed
 
 - Severity: Low (trust hardening; the trust anchor is currently "whoever controls the repository")
 - Evidence: ADR-0015 reserves `index.sig` and a null `signature` field; the signing slice was
   deliberately deferred.
-- Proposed remedy: generate an ed25519 key pair, sign `index.json` in the CI workflow (key in
+- Proposed remedy: generate a signing key pair, sign `index.json` in the CI workflow (key in
   Actions secrets), and verify the signature on the client before parsing; treat a missing
-  signature as valid only during a defined transition window.
+  signature as valid only during a defined transition window. **Implementation uses ECDSA P-256,
+  not Ed25519 — .NET 10 has no standalone Ed25519 signer (ADR-0015 amendment, 2026-11-14).**
 - Trigger: after the default switch has settled; can proceed in parallel with later slices.
+- **Slice complete (2026-11-14, `plugin-index-signing` + `embed-signing-key`): client verifies
+  `index.sig` (ECDSA P-256/SHA-256, RFC 3279 DER, JSON envelope with the `algorithm` rotation
+  field) before parsing, trust anchor embedded, custom feeds skip verification, transition
+  window open until 2026-12-15 (`RequireFeedSignature` flips in a later slice). Repo side:
+  `tools/sign-index.ps1` (sign + `-Verify`), LF-pinned index files, CI signing with the
+  `INDEX_SIGNING_KEY` secret, `public.pem` published, first signature live and verified
+  end-to-end. Release gate satisfied 2026-11-14.**
 
 ## DI and lifetime
 
