@@ -7,7 +7,7 @@ Allows users to browse, download, and install AI agent CLI plugin descriptors fr
 
 ### Requirement: Fetch and parse feed index
 
-The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate its schema (index `schemaVersion` 1 or 2), and return available plugins with metadata normalized across both schema versions.
+The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP conditional requests (if prior sync metadata exists), validate its schema (index `schemaVersion` 1 or 2), and return available plugins with metadata normalized across both schema versions. A 304 Not Modified response indicates no change and is treated as success without re-parsing.
 
 #### Scenario: Valid index fetched successfully
 
@@ -75,8 +75,9 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate i
 #### Scenario: Network unavailable
 
 - **WHEN** the network is unavailable or the feed URL is unreachable
-- **THEN** the feed result includes an error "Could not load plugin feed"
-- **AND** Success is false
+- **THEN** if a cached index exists, the feed result reports success with `FromCache: true`
+- **AND** if no cache exists, the feed result includes an error "Could not load plugin feed"
+- **AND** Success is false when no cache is available
 - **AND** no exception is thrown
 
 #### Scenario: Schema version 2 index parsed
@@ -109,6 +110,31 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL, validate i
 - **WHEN** a schema version 2 entry's inline `descriptor` fails descriptor validation (e.g. no launch command, unsupported descriptor schema version) or its `id` differs from the entry's `id`
 - **THEN** that entry is skipped with a logged warning
 - **AND** the rest of the index entries are loaded successfully
+
+#### Scenario: Conditional request with ETag returns 304
+
+- **WHEN** a prior fetch stored an ETag header
+- **AND** the next fetch sends `If-None-Match: <etag>` and receives HTTP 304 Not Modified
+- **THEN** the feed result reports success
+- **AND** the cached index is used without re-parsing
+- **AND** no new data is written to cache
+
+#### Scenario: Conditional request with Last-Modified returns 304
+
+- **WHEN** a prior fetch stored a Last-Modified header (no ETag)
+- **AND** the next fetch sends `If-Modified-Since: <date>` and receives HTTP 304 Not Modified
+- **THEN** the feed result reports success
+- **AND** the cached index is used without re-parsing
+
+#### Scenario: Fetch fails, cached index used
+
+- **WHEN** a feed fetch fails (network error, timeout, server error, parse error)
+- **AND** a valid cached index exists
+- **THEN** the feed result reports success
+- **AND** the cached index is returned with a `FromCache: true` flag
+- **AND** a timestamp indicating when the cache was created is included
+
+---
 
 ### Requirement: Download package and verify checksum
 
@@ -522,3 +548,14 @@ The system SHALL fetch the logo for a confirmed descriptor-only install over HTT
 - **WHEN** the logo download fails for any reason (network error, timeout, oversize body)
 - **THEN** the failure is reported as a structured error, a warning is logged, and the descriptor-only installation completes without `logo.png`
 - **AND** the plugin displays the default logo
+
+### Requirement: Stale cached index message
+
+When Browse Plugins is opened and the feed result is from cache, the system SHALL display an inline message indicating the cache age and suggesting the user check their internet connection.
+
+#### Scenario: Stale cached index shown with timestamp
+
+- **WHEN** Browse Plugins is opened and the feed result has `FromCache: true`
+- **THEN** the plugin list is displayed normally
+- **AND** an inline message is shown: "Using cached plugin list (last updated {timestamp}). Check your internet connection to refresh."
+- **AND** the message is visible until the user closes the dialog or successfully fetches a fresh index

@@ -155,7 +155,7 @@ Wire the sync service into application startup and shutdown, and add the event s
   - All existing plugin-related tests pass unchanged.
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass; `openspec validate --all`; manual smoke: launch app, verify sync starts in background (check logs or wait 5 seconds and see badge update if feed has changes).
+- [x] Gate: All tests pass; `openspec validate --all`; manual smoke: launch app, verify sync starts in background (check logs or wait 5 seconds and see badge update if feed has changes).
 
 ---
 
@@ -189,7 +189,7 @@ Update `BrowsePluginsDialogViewModel` to handle the `FromCache` flag and display
   - All existing Browse tests pass unchanged.
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass; `openspec validate --all`; manual smoke: disable internet, open Browse, verify cache message appears (or fake a 304 response to test cache load without disabling internet).
+- [x] Gate: All tests pass; `openspec validate --all`; manual smoke: disable internet, open Browse, verify cache message appears (or fake a 304 response to test cache load without disabling internet).
 
 ---
 
@@ -243,7 +243,7 @@ Final integration tests, graphify update, and verification that all guarantees h
   - Run `graphify update .` to refresh the knowledge graph.
   - Verify: no errors, graph reflects new service and event.
 
-- [ ] 6.3 — Manual smoke testing
+- [x] 6.3 — Manual smoke testing
   - Launch CLIHub with the updated code.
   - Verify app starts normally and sync service begins in background (check logs or wait 5 seconds).
   - Open Browse Plugins; verify fresh feed loads (no cache message).
@@ -261,14 +261,14 @@ Final integration tests, graphify update, and verification that all guarantees h
   - ✓ Core WPF-free (sync service in Core; subscription in ViewModel).
   - ✓ Domain events follow adoption rules (idempotent, exceptions caught, no behavior change).
 
-- [ ] 6.5 — Commit and archive
+- [x] 6.5 — Commit and archive
   - Stage changes for commit (verify no extraneous edits).
   - Commit with message summarizing the feature (background sync, conditional requests, cache, event, badges).
   - Run `openspec archive plugin-feed-background-sync --message "Background feed sync with conditional requests, cache, domain event, and update badges; satisfies ADR-0015 roadmap slice 3."` (or similar).
   - Verify: change is moved to `openspec/changes/archive/`, no errors.
   - Verify post-archive integrity: `git status --porcelain` is empty, `openspec list` does not include the change, `openspec validate --all` passes, `node .opencode/scripts/pipeline-state.mjs check` reports no warnings (or expected warnings only).
 
-- [ ] Gate: All tests pass; smoke tests confirm feature works; archive successful; integrity checks pass.
+- [x] Gate: All tests pass; smoke tests confirm feature works; archive successful; integrity checks pass.
 
 ---
 

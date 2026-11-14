@@ -225,7 +225,7 @@ THEN all agent-specific commands SHALL be disabled
 
 ### Requirement: Agent card displayed content
 
-An agent's management card SHALL present its declared identity and current state: display name, logo, a state chip next to the name that shows the installed version when the agent is installed with a resolved version, an "Installed" state when it is installed without one, a "Not installed" state when it is missing, or a "Detecting" state with an animated braille marker while the card's installation state is being probed, and the declared command set listed after a "Supported commands" label. While a probe runs, the chip SHALL render the text "Detecting" (no trailing ellipsis) alongside an animated braille glyph marker that cycles frames to indicate work in progress. The state chip text SHALL be derived from the card's installation state, never from version placeholder text; the "Not installed" state SHALL keep its danger styling, and the "Detecting" state SHALL use the chip's default styling. The card SHALL NOT present the plugin folder path or the declared detection markers, and SHALL NOT render a separate origin badge. The agent name's tooltip SHALL present the recorded origin (one of "Built-in", "Installed", or "Unknown") as a labelled line, followed by the descriptor's version, publisher, and homepage as labelled lines when declared. When an update is known to be available, the card SHALL render the update chip in the state chip's position (immediately after the name) with the installed and latest versions, and SHALL NOT render the state chip while the update chip is shown. When availability is unknown or the agent is up to date, the card SHALL show the state chip in that position and SHALL NOT show an update indicator, and a probe that reports the agent not installed on the host SHALL clear any update indicator the card was showing and SHALL show the state chip again. The update indicator and Update action enablement both derive from the card's `UpdateAvailability` result; when availability reports `UpdateAvailable`, the indicator is shown and Update becomes available (subject to declaration and running-agent gating).
+An agent's management card SHALL present its declared identity and current state: display name, logo, a state chip next to the name that shows the installed version when the agent is installed with a resolved version, an "Installed" state when it is installed without one, a "Not installed" state when it is missing, or a "Detecting" state with an animated braille marker while the card's installation state is being probed, and the declared command set listed after a "Supported commands" label. While a probe runs, the chip SHALL render the text "Detecting" (no trailing ellipsis) alongside an animated braille glyph marker that cycles frames to indicate work in progress. The state chip text SHALL be derived from the card's installation state, never from version placeholder text; the "Not installed" state SHALL keep its danger styling, and the "Detecting" state SHALL use the chip's default styling. The card SHALL NOT present the plugin folder path or the declared detection markers, and SHALL NOT render a separate origin badge. The agent name's tooltip SHALL present the recorded origin (one of "Built-in", "Installed", or "Unknown") as a labelled line, followed by the descriptor's version, publisher, and homepage as labelled lines when declared. When an agent version update is known to be available, the card SHALL render the update chip in the state chip's position (immediately after the name) with the installed and latest agent versions, and SHALL NOT render the state chip while the update chip is shown. When no agent version update is known but the background plugin feed refresh reports a newer compatible version for the card's installed plugin, the card SHALL render the same update chip with the plugin's installed and feed versions (or "Update available" when the installed plugin version is unknown), and SHALL NOT render the state chip while it is shown; an agent version update SHALL take precedence in that slot when both kinds are known. When neither an agent version update nor a compatible plugin update is known, the card SHALL show the state chip in that position and SHALL NOT show an update indicator, and a probe that reports the agent not installed on the host SHALL clear any update indicator the card was showing and SHALL show the state chip again. The agent update indicator and Update action enablement both derive from the card's `UpdateAvailability` result; when availability reports `UpdateAvailable`, the indicator is shown and Update becomes available (subject to declaration and running-agent gating). A plugin update indicator SHALL NOT by itself enable the Update action: plugin updates are installed from the Browse Plugins dialog, not by the card's agent CLI update command.
 
 #### Scenario: Identity shown
 
@@ -269,13 +269,13 @@ An agent's management card SHALL present its declared identity and current state
 
 #### Scenario: No indicator when availability is unknown
 
-- **WHEN** availability is `Unknown`
+- **WHEN** availability is `Unknown` and no plugin update is known
 - **THEN** the card shows no update indicator and no placeholder text for it
 - **AND** the state chip is shown in its usual position
 
 #### Scenario: No indicator when up to date
 
-- **WHEN** availability is `UpToDate`
+- **WHEN** availability is `UpToDate` and no plugin update is known
 - **THEN** the card shows no update indicator
 - **AND** the state chip is shown in its usual position
 
@@ -305,6 +305,45 @@ An agent's management card SHALL present its declared identity and current state
 - **WHEN** a card is showing the update chip in place of the state chip and a later check settles availability to `UpToDate` or `Unknown`
 - **THEN** the update chip is no longer shown
 - **AND** the state chip is shown again, in its usual position immediately after the name, reflecting the card's current installation state
+
+#### Scenario: Plugin update available
+
+- **WHEN** the background plugin feed refresh reports a newer feed version that the current application version satisfies for an installed plugin whose registry entry records version `1.0.0` and the feed offers `1.2.0`
+- **AND** no agent version update is known
+- **THEN** the card shows `1.0.0 → 1.2.0` in place of the state chip, immediately after the name
+- **AND** the state chip is not shown
+- **AND** the Update action stays unavailable unless the agent update availability independently enables it
+
+#### Scenario: Plugin update with an unknown installed version
+
+- **WHEN** the background plugin feed refresh reports a compatible newer feed version for an installed plugin whose registry entry records no installed version
+- **THEN** the card shows the update chip with the text "Update available"
+- **AND** the state chip is not shown
+
+#### Scenario: Agent update takes precedence over a plugin update
+
+- **WHEN** an agent version update is known with installed version `0.9.0` and latest version `1.0.0`
+- **AND** a compatible newer feed version for the same installed plugin is also known
+- **THEN** the card shows the agent versions `0.9.0 → 1.0.0` in the update chip
+- **AND** the plugin update is not rendered in the chip while the agent update occupies the slot
+
+#### Scenario: No plugin indicator when the feed entry is incompatible
+
+- **WHEN** the background plugin feed refresh reports a newer feed version whose compatibility range the current application version does not satisfy
+- **THEN** the card shows no plugin update indicator
+- **AND** the state chip is shown in its usual position
+
+#### Scenario: No plugin indicator for a plugin without a registry entry
+
+- **WHEN** the feed lists a newer version for a plugin that has no registry entry (it was never installed from a package or the feed)
+- **THEN** the card shows no plugin update indicator
+- **AND** the state chip is shown in its usual position
+
+#### Scenario: Plugin update indicator survives a catalog reload
+
+- **WHEN** a card shows a plugin update indicator and the plugin catalog is reloaded, rebuilding the cards
+- **THEN** the rebuilt card shows the same plugin update indicator
+- **AND** a feed refresh that no longer reports a newer compatible version clears the indicator and shows the state chip again
 
 #### Scenario: Agent identity shown in name tooltip
 
