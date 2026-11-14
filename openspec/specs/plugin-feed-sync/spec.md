@@ -7,7 +7,7 @@ Allows the application to automatically refresh the plugin feed in the backgroun
 
 ### Requirement: Background feed refresh
 
-The system SHALL run a background service that refreshes the plugin feed on application startup and then at regular intervals without blocking the application or the UI.
+The system SHALL run a background service that refreshes the plugin feed on application startup and then at regular intervals without blocking the application or the UI. The background refresh SHALL include the same signature verification pipeline as a foreground fetch: the index is verified before parsing, and a signature verification failure prevents the index from being used or cached.
 
 #### Scenario: Service starts on application startup
 
@@ -33,6 +33,22 @@ The system SHALL run a background service that refreshes the plugin feed on appl
 - **WHEN** the application requests shutdown while a refresh is in progress
 - **THEN** the cancellation token supplied to the refresh is signalled
 - **AND** the refresh operation exits promptly on cancellation
+
+#### Scenario: Background refresh verifies index signature
+
+- **WHEN** the background refresh fetches a fresh index (HTTP 200) from the default feed
+- **THEN** the signature is fetched and verified before the index is parsed
+- **AND** a valid signature proceeds to parsing, change detection, and optional event publication
+- **AND** an invalid signature logs at Error and publishes no event
+
+#### Scenario: Background refresh with missing signature during transition
+
+- **WHEN** the background refresh fetches the index from the default feed
+- **AND** the `index.sig` file is missing
+- **AND** the current UTC date is before `SignatureRequiredAfter` and `RequireFeedSignature` is false
+- **THEN** a warning is logged
+- **AND** the index is parsed and change detection proceeds normally
+- **AND** a change event may be published if the index differs
 
 ---
 
@@ -71,13 +87,14 @@ The system SHALL store the `ETag` response header (or `Last-Modified` if ETag is
 
 ### Requirement: Last-good index cache
 
-The system SHALL store the raw index bytes in a cache file and fall back to the cached index if the network is unavailable or the server returns an error.
+The system SHALL store the raw index bytes in a cache file and fall back to the cached index if the network is unavailable or the server returns an error. Only verified index bytes are stored in the cache; the cached index is trusted on a 304 response or a cache fallback without re-verification.
 
 #### Scenario: Index bytes stored in cache
 
 - **WHEN** the feed index is successfully fetched
 - **THEN** the raw response bytes are written to `%APPDATA%\CLIHub\cache\feed-index.json`
 - **AND** the sync metadata is written to `%APPDATA%\CLIHub\cache\feed-sync.json`
+- **AND** the index was verified (for the default feed) before caching
 
 #### Scenario: Corrupt cache file deleted
 
@@ -97,6 +114,21 @@ The system SHALL store the raw index bytes in a cache file and fall back to the 
 - **WHEN** the application starts and no cache files exist
 - **THEN** the feed is fetched unconditionally
 - **AND** the index bytes and metadata are cached for future refreshes
+
+#### Scenario: 304 trusts verified cached state
+
+- **WHEN** a conditional request returns 304 Not Modified
+- **THEN** the cached index is used without re-parsing
+- **AND** the signature is NOT re-fetched
+- **AND** the cached index was verified when it was first cached
+
+#### Scenario: Cache fallback trusts verified cached state
+
+- **WHEN** a live feed fetch fails
+- **AND** a valid cached index exists
+- **THEN** the cached index is returned with `FromCache: true`
+- **AND** the signature is NOT re-fetched
+- **AND** the cached index was verified when it was first cached
 
 ---
 
@@ -126,6 +158,13 @@ The system SHALL compare the current feed index with the last known one and publ
 
 - **WHEN** a refresh fails
 - **THEN** no `PluginFeedUpdatedEvent` is published
+
+#### Scenario: Signature verification failure, event not published
+
+- **WHEN** a refresh fetches a fresh index but signature verification fails
+- **THEN** the failure is logged at Error
+- **AND** no `PluginFeedUpdatedEvent` is published
+- **AND** the index is not cached
 
 #### Scenario: Change detection uses correct comparison key
 

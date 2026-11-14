@@ -7,13 +7,63 @@ Allows users to browse, download, and install AI agent CLI plugin descriptors fr
 
 ### Requirement: Fetch and parse feed index
 
-The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP conditional requests (if prior sync metadata exists), validate its schema (index `schemaVersion` 1 or 2), and return available plugins with metadata normalized across both schema versions. A 304 Not Modified response indicates no change and is treated as success without re-parsing.
+The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP conditional requests (if prior sync metadata exists), validate its schema (index `schemaVersion` 1 or 2), and return available plugins with metadata normalized across both schema versions. For the default official feed, the system SHALL fetch and verify an ECDSA P-256 cryptographic signature (`index.sig`) over the raw index body bytes before parsing; an invalid signature is a hard error, and a missing signature is accepted with a warning only during a time-bounded transition window. A 304 Not Modified response trusts the cached verified index without re-fetching the signature. Custom feed URLs skip signature verification.
 
 #### Scenario: Valid index fetched successfully
 
 - **WHEN** the feed URL is reachable and returns a valid `index.json` with `schemaVersion` 1 or 2 and a `plugins` array
+- **AND** for the default feed, the associated `index.sig` contains a valid ECDSA P-256 signature over the index body
 - **THEN** the feed result includes a parsed `PluginFeedIndex` with the list of plugins
 - **AND** Success is true
+
+#### Scenario: Valid signature verified before parse
+
+- **WHEN** the feed URL is the default official URL
+- **AND** the index body is fetched successfully
+- **THEN** the `index.sig` file is fetched from the same URL directory over the same HTTPS/redirect/hop transport
+- **AND** the ECDSA P-256 signature in the envelope is verified against the raw index body bytes using the embedded public key
+- **AND** only after successful verification is the body parsed
+
+#### Scenario: Invalid signature is a hard error
+
+- **WHEN** the default feed's `index.sig` is fetched but the signature does not verify (tampered body, wrong key, algorithm mismatch, malformed envelope)
+- **THEN** the feed result includes an error "Plugin feed signature is invalid. The feed may have been tampered with."
+- **AND** Success is false
+- **AND** the cached index is NOT used as a fallback
+
+#### Scenario: Missing signature accepted during transition window
+
+- **WHEN** the current UTC date is before the `SignatureRequiredAfter` cutoff
+- **AND** the `RequireFeedSignature` flag is false
+- **AND** the default feed's `index.sig` file is missing (HTTP 404)
+- **THEN** a warning is logged
+- **AND** the index is parsed normally with `SignatureWarning` set
+
+#### Scenario: Missing signature rejected after transition window
+
+- **WHEN** the current UTC date is on or after the `SignatureRequiredAfter` cutoff, or the `RequireFeedSignature` flag is true
+- **AND** the default feed's `index.sig` file is missing
+- **THEN** the feed result includes an error "Plugin feed signature is required but missing."
+- **AND** Success is false
+
+#### Scenario: Custom feed URL skips signature verification
+
+- **WHEN** the resolved feed URL is a custom URL (not the default)
+- **THEN** no `index.sig` is fetched
+- **AND** the index is parsed without signature verification
+- **AND** the feed result has `SignatureValid: true`
+
+#### Scenario: Signature file exceeds 4 KB bound
+
+- **WHEN** the `index.sig` response body exceeds 4 KB
+- **THEN** the feed result includes an error "Plugin feed signature file too large"
+- **AND** Success is false
+
+#### Scenario: Signature fetch uses HTTPS and redirect rules
+
+- **WHEN** the signature file URL has `http://` scheme or redirects to a non-HTTPS URL
+- **THEN** the signature fetch is rejected
+- **AND** the rejection is treated as a missing signature (transition-window logic applies)
 
 #### Scenario: Index schema version unsupported
 
@@ -117,6 +167,7 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP 
 - **AND** the next fetch sends `If-None-Match: <etag>` and receives HTTP 304 Not Modified
 - **THEN** the feed result reports success
 - **AND** the cached index is used without re-parsing
+- **AND** the signature is NOT re-fetched (the cached index was verified before it was cached)
 - **AND** no new data is written to cache
 
 #### Scenario: Conditional request with Last-Modified returns 304
@@ -133,8 +184,7 @@ The system SHALL fetch a JSON feed index from a configured HTTPS URL using HTTP 
 - **THEN** the feed result reports success
 - **AND** the cached index is returned with a `FromCache: true` flag
 - **AND** a timestamp indicating when the cache was created is included
-
----
+- **AND** no signature re-fetch is performed (the cached index was verified before caching)
 
 ### Requirement: Download package and verify checksum
 
