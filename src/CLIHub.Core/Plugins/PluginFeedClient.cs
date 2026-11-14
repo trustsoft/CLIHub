@@ -861,7 +861,7 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     }
 
     /// <summary>
-    ///   Sends the GET request and manually follows HTTP redirects up to the maximum hop count,
+    ///   Sends the GET request and manually follows up to the maximum hop count of HTTP redirects,
     ///   rejecting any redirect to non-HTTPS and chains longer than the maximum. Any supplied
     ///   conditional headers are attached to every hop's request, so a redirected fetch keeps its
     ///   validator. A 3xx response without a Location header is treated as terminal. Ownership of
@@ -883,7 +883,7 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         IReadOnlyDictionary<string, string>? requestHeaders = null)
     {
         var currentUrl = url;
-        for (var hop = 0; hop < MaxRedirectHops; hop++)
+        for (var hop = 0; hop <= MaxRedirectHops; hop++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, currentUrl);
             if (requestHeaders is not null)

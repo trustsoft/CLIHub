@@ -310,7 +310,7 @@ public class PluginFeedClientTests : IDisposable
     [Fact]
     public async Task GetFeedAsync_TooManyRedirects_IsRejected()
     {
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 6; i++)
         {
             this.EnqueueFeed(RedirectResponse($"https://example.com/redirect-{i}"));
         }
@@ -321,7 +321,26 @@ public class PluginFeedClientTests : IDisposable
 
         Assert.False(result.Success);
         Assert.Contains("Redirect limit exceeded (maximum 5 hops)", result.Errors);
-        Assert.Equal(5, this.handler.Requests.Count);
+        Assert.Equal(6, this.handler.Requests.Count);
+        Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_FiveRedirects_AreFollowedAndSucceed()
+    {
+        for (var i = 0; i < 5; i++)
+        {
+            this.EnqueueFeed(RedirectResponse($"https://example.com/redirect-{i}"));
+        }
+
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Single(result.Index!.Plugins);
+        Assert.Equal(6, this.handler.Requests.Count);
         Assert.All(this.handler.Requests, request => Assert.Equal(HttpMethod.Get, request.Method));
     }
 
@@ -1316,7 +1335,7 @@ public class PluginFeedClientTests : IDisposable
     public async Task GetFeedAsync_SignatureRedirectChainOverTheHopLimit_IsTreatedAsMissing()
     {
         this.EnqueueFeed(JsonResponse(ValidIndexJson));
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < 6; i++)
         {
             this.EnqueueFeed(RedirectResponse($"https://example.com/signature-hop-{i}"));
         }
@@ -1327,7 +1346,7 @@ public class PluginFeedClientTests : IDisposable
 
         Assert.True(result.Success);
         Assert.NotNull(result.SignatureWarning);
-        Assert.Equal(6, this.handler.Requests.Count);
+        Assert.Equal(7, this.handler.Requests.Count);
     }
 
     private static HttpResponseMessage SignatureResponse(byte[] body)

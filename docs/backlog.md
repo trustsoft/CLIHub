@@ -446,7 +446,7 @@ snapshot.
 
 ### Plugin feed cancellation is reported as a download failure
 
-**Status: Already resolved** — `src/CLIHub.Core/Plugins/PluginFeedClient.cs:794-796` already rethrows `OperationCanceledException when (cancellationToken.IsCancellationRequested)` before the general catch, so caller-requested cancellation propagates correctly.
+**Status: Resolved by `feed-redirect-hop-limit` (2026-11-14)** — both sub-items addressed: cancellation was already resolved (`src/CLIHub.Core/Plugins/PluginFeedClient.cs:794-796` already rethrows `OperationCanceledException when (cancellationToken.IsCancellationRequested)` before the general catch, so caller-requested cancellation propagates correctly); the redirect off-by-one is fixed by the loop correction in `PluginFeedClient.SendFollowingRedirectsAsync` (`hop <= MaxRedirectHops`).
 
 - Severity: Low (edge-case UX; no data loss, temp files are cleaned)
 - Evidence (2026-11-04): `src/CLIHub.Core/Plugins/PluginFeedClient.cs` catches timeout cancellation
