@@ -110,6 +110,8 @@ are pruned from this list once their evidence is no longer needed; recover them 
 
 ### DomainEventBus subscription lists are not synchronized
 
+**Status: Resolved by `followups-quick-wins` (2026-11-14)** — added `ReaderWriterLockSlim` with read locks for publishes and write locks for subscribes/unsubscribes, with a concurrency test covering 1000+ concurrent publishes and subscribe/unsubscribe operations.
+
 - Severity: Low (latent race; not clearly reachable in normal operation — windows are sub-microsecond and publishes are rare)
 - Evidence (2026-11-14, `plugin-feed-background-sync` verification): `DomainEventBus` keeps its subscription map and per-type lists unsynchronized (`src/CLIHub.Core/Events/DomainEventBus.cs:12,59-74`); `Publish` snapshots via `ToList()` (:36). Before this change every publish ran on the UI thread (`ProjectSelected`, `AgentLaunched`); the new `PluginFeedSyncService` publishes `PluginFeedUpdatedEvent` from a background thread, so a background `Publish` racing a UI-thread `Subscribe`/`Dispose` of the same event type could throw `InvalidOperationException` from the snapshot. Normal operation is safe (the view model subscribes once at construction, disposes once at teardown; publishes happen on the first fetch and hourly on change only).
 - Proposed remedy: replace the list with a copy-on-write snapshot (immutable array swap) or lock around subscribe/unsubscribe/publish-snapshot, whichever matches the bus's simplicity.
@@ -442,6 +444,8 @@ snapshot.
 
 ### Plugin feed cancellation is reported as a download failure
 
+**Status: Already resolved** — `src/CLIHub.Core/Plugins/PluginFeedClient.cs:794-796` already rethrows `OperationCanceledException when (cancellationToken.IsCancellationRequested)` before the general catch, so caller-requested cancellation propagates correctly.
+
 - Severity: Low (edge-case UX; no data loss, temp files are cleaned)
 - Evidence (2026-11-04): `src/CLIHub.Core/Plugins/PluginFeedClient.cs` catches timeout cancellation
   with a `when (!cancellationToken.IsCancellationRequested)` filter, but the subsequent general
@@ -501,6 +505,8 @@ snapshot.
   remains deferred.
 
 ### Plugin-management bindings bypass the agent-management interface
+
+**Status: Resolved by `followups-quick-wins` (2026-11-14)** — added `InvalidCards`, `DisabledCards`, `HasDisabledPlugins`, `PluginCatalogSummary`, and `EnablePluginCommand` to `IAgentManagementSection` (all were already present in `AgentManagementViewModel`).
 
 - Severity: Low (maintenance and type-safety; the UI works through WPF reflection)
 - Evidence (2026-11-04): `src/CLIHub/Views/SettingsAgentsPage.xaml:329-399` binds
@@ -595,6 +601,8 @@ snapshot.
 
 ### Two glyph constants went unused after the Agent Detection icon swap
 
+**Status: Already resolved** — `src/CLIHub/Theming/IconGlyphs.cs` no longer contains the `Diagnostic` or `Process` constants; they were already removed.
+
 - Severity: Low (dead constants only; no behavioral or build impact, and the compiler does not warn
   on an unused `const` member)
 - Evidence (2026-11-08): the `agent-detection-page-icons` change replaced every reference to
@@ -621,6 +629,8 @@ snapshot.
   touching `AgentCardItem.CanUpdate`.
 
 ### Settings maximize button keeps a static "Maximize" tooltip when maximized
+
+**Status: Already resolved** — `src/CLIHub/Views/WindowHeaderBar.xaml:67-74` already switches the tooltip between "Maximize" and "Restore" via a `WindowState` data trigger.
 
 - Severity: Low (cosmetic tooltip text; the glyph already flips to Restore)
 - Evidence (2026-11-10): the maximize/restore button in `SettingsWindow` sets `ToolTip="Maximize"`

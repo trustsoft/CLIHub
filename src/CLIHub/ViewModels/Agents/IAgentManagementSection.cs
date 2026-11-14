@@ -17,6 +17,22 @@ public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
     ObservableCollection<AgentCardItem> Cards { get; }
 
     /// <summary>
+    ///   Invalid plugin entries, rendered without actions.
+    /// </summary>
+    ObservableCollection<InvalidAgentCardItem> InvalidCards { get; }
+
+    /// <summary>
+    ///   Plugins disabled in the plugin state file, rendered in the separate Disabled section
+    ///   with an Enable action. Populated during <see cref="Load" /> and every catalog reload.
+    /// </summary>
+    ObservableCollection<DisabledAgentCardItem> DisabledCards { get; }
+
+    /// <summary>
+    ///   Whether any disabled plugin is rendered: gates the Disabled section's visibility.
+    /// </summary>
+    bool HasDisabledPlugins { get; }
+
+    /// <summary>
     ///   The number of agents installed on this machine.
     /// </summary>
     int InstalledAgentCount { get; }
@@ -30,6 +46,12 @@ public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
     ///   The supported/not-installed split shown under the installed count.
     /// </summary>
     string AvailabilitySummary { get; }
+
+    /// <summary>
+    ///   The plugin origin mix for the AGENTS summary card: how many loaded plugins are
+    ///   built-in, installed from packages, and of unknown origin.
+    /// </summary>
+    string PluginCatalogSummary { get; }
 
     /// <summary>
     ///   The selected default agent name, or "None".
@@ -98,6 +120,12 @@ public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
     ///   command.
     /// </summary>
     RelayCommand CheckUpdatesCommand { get; }
+
+    /// <summary>
+    ///   Re-enables a disabled plugin: clears the disabled flag in the plugin state file and
+    ///   reloads the catalog so the card returns to the active list.
+    /// </summary>
+    RelayCommand<DisabledAgentCardItem> EnablePluginCommand { get; }
 
     /// <summary>
     ///   Whether a detection pass is currently running.
