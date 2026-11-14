@@ -34,3 +34,6 @@ Each ADR is a numbered markdown file using a lightweight Nygard-style structure:
 | 0014  | [Remove configuration migrations](0014-remove-configuration-migrations.md) | Accepted |
 | 0015  | [Plugin registry v2 — separate feed repository](0015-plugin-registry-v2.md) | Accepted (amended ECDSA P-256) |
 | 0016  | [Plugin lifecycle manager rejected](0016-plugin-lifecycle-manager-rejected.md) | Accepted |
+| 0017  | [Synchronous domain event bus](0017-synchronous-domain-event-bus.md)    | Accepted |
+| 0018  | [Capability-based service boundaries](0018-capability-based-service-boundaries.md) | Accepted |
+| 0019  | [Logging operation scopes](0019-logging-operation-scopes.md)            | Accepted |

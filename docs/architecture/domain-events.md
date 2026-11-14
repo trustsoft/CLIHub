@@ -91,14 +91,14 @@ The following events are candidates for future changes. Each is listed with its 
 
 ## Exception Policy
 
-Subscriber exceptions are caught by `DomainEventBus` and logged with the event type and correlation ID (see `DomainEventBus.Publish` at lines 24-50). Other subscribers continue to receive the event. The bus does not retry, does not stop publication, and does not propagate the exception to the publisher.
+Subscriber exceptions are caught by `DomainEventBus` and logged with the event type and correlation ID (`DomainEventBus.Publish` at `src/CLIHub.Core/Events/DomainEventBus.cs:28-69`, with the per-subscriber `catch` at `:57-67`). Other subscribers continue to receive the event. The bus does not retry, does not stop publication, and does not propagate the exception to the publisher.
 
 A subscriber that throws is a bug in the subscriber, not the publisher or bus. Fix the subscriber.
 
 ## Ordering and Thread-Safety Assumptions
 
-- **Synchronous dispatch:** `DomainEventBus.Publish` dispatches events synchronously in subscription order (see lines 24-50). A subscriber runs inline with the publisher's call stack.
-- **Single-threaded subscription model:** Subscribers are registered as DI singletons and subscribe in their constructors; DI constructs them lazily when the publisher is first resolved. Their subscriptions are disposed with the container at shutdown. The bus does not support concurrent subscription/unsubscription.
-- **Subscription order:** Subscribers are notified in the order they subscribed. No priority or ordering configuration is exposed. If ordering matters, revisit this design.
+- **Synchronous dispatch:** `DomainEventBus.Publish` dispatches events synchronously in subscription order (`src/CLIHub.Core/Events/DomainEventBus.cs:55-68`). A subscriber runs inline with the publisher's call stack, so the publisher's thread executes subscriber code: a background publisher such as `PluginFeedSyncService` runs its subscribers on a background thread.
+- **Singleton subscriptions:** Subscribers are registered as DI singletons and subscribe in their constructors (`src/CLIHub.Core/Composition/ServiceCollectionExtensions.cs:182-183`), activated before the first publish through the publisher registration (`:185-195`), and their subscriptions are disposed with the container at shutdown (`ProjectSelectionLoggingSubscriber.cs:35-38`).
+- **Subscription order:** Subscribers are notified in the order they subscribed — within one publish, the order of the handler list snapshot taken under the read lock (`DomainEventBus.cs:42`). No priority or ordering configuration is exposed. If ordering matters, revisit this design.
 
-**Thread-safety:** The bus does not guard the subscription dictionary with locks. A single `Publish` call copies the handler list with `ToList()` at line 36 before dispatch, so handlers added during that dispatch are not invoked by it; concurrent `Subscribe` and `Publish` is still not supported. Register subscribers before `Publish` can be called.
+**Thread-safety:** the bus guards the subscription map with a `ReaderWriterLockSlim` (`DomainEventBus.cs:16`). `Publish` snapshots the handler list under a read lock and invokes the snapshot outside the lock, so handlers added during a dispatch are not invoked by it (`:35-48`); `Subscribe` and the returned subscription's `Dispose` take the write lock (`:78-92`, `:98-116`), and `Dispose` tears the lock down while late subscription disposal no-ops (`:100-104`, `:126-137`). Concurrent `Publish` and `Subscribe`/`Dispose` are therefore supported — a requirement, because `PluginFeedSyncService` publishes `PluginFeedUpdatedEvent` from a background thread while the UI thread subscribes. The rationale is recorded in [ADR-0017](../adr/0017-synchronous-domain-event-bus.md).
