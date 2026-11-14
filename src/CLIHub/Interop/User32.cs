@@ -49,12 +49,6 @@ internal static partial class User32
     internal static partial IntPtr MonitorFromPoint(POINT point, uint flags);
 
     /// <summary>
-    ///   Returns the handle of the monitor that contains the window, or the nearest one.
-    /// </summary>
-    [LibraryImport("user32.dll", SetLastError = true)]
-    internal static partial IntPtr MonitorFromWindow(IntPtr hwnd, uint flags);
-
-    /// <summary>
     ///   Returns the dots-per-inch of the window's monitor, used to convert layout units to pixels.
     /// </summary>
     [LibraryImport("user32.dll")]

@@ -92,7 +92,7 @@ public class AgentReleaseClient : IAgentReleaseClient
 
     private bool TryBuildRequest(PluginUpdateCheck updateCheck, out HttpRequestMessage request)
     {
-        if (!UpdateCheckSource.TryResolve(updateCheck, out var kind, out var problem))
+        if (!UpdateCheckSource.TryResolve(updateCheck, out var kind, out var address, out var problem))
         {
             switch (problem)
             {
@@ -114,10 +114,12 @@ public class AgentReleaseClient : IAgentReleaseClient
             return false;
         }
 
-        // The resolver only succeeds for a kind whose address field is present.
+        // The resolver returns the validated address for the resolved kind. Only the npm package
+        // name is escaped: a GitHub repository is addressed as owner/repository, so escaping the
+        // separator would produce the wrong API route.
         var url = kind == UpdateCheckSource.SourceKind.Npm
-            ? string.Format(CultureInfo.InvariantCulture, NpmLatestUrl, Uri.EscapeDataString(updateCheck.Package!))
-            : string.Format(CultureInfo.InvariantCulture, GitHubLatestUrl, updateCheck.Repo!);
+            ? string.Format(CultureInfo.InvariantCulture, NpmLatestUrl, Uri.EscapeDataString(address))
+            : string.Format(CultureInfo.InvariantCulture, GitHubLatestUrl, address);
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
         {

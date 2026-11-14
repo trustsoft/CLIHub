@@ -142,7 +142,7 @@ public sealed class AgentProcessMatcher
     /// <param name="plugin"> The plugin to inspect. </param>
     /// <returns> True when the plugin declares an npm update check with a package name. </returns>
     private static bool DeclaresNpmUpdateCheck(Plugin plugin) =>
-        UpdateCheckSource.TryResolve(plugin.UpdateCheck, out var kind, out _)
+        UpdateCheckSource.TryResolve(plugin.UpdateCheck, out var kind, out _, out _)
         && kind == UpdateCheckSource.SourceKind.Npm;
 
     /// <summary>

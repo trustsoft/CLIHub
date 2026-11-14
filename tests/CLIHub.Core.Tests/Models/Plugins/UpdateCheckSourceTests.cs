@@ -8,10 +8,11 @@ public class UpdateCheckSourceTests
     [Fact]
     public void TryResolve_Null_ReturnsFalseWithNone()
     {
-        var resolved = UpdateCheckSource.TryResolve(null, out var kind, out var problem);
+        var resolved = UpdateCheckSource.TryResolve(null, out var kind, out var address, out var problem);
 
         Assert.False(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.None, kind);
+        Assert.Null(address);
         Assert.Equal(UpdateCheckSource.Problem.None, problem);
     }
 
@@ -19,10 +20,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_NpmWithPackage_ReturnsTrueWithNpm()
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck("npm", Package: "@scope/agent"), out var kind, out var problem);
+            new PluginUpdateCheck("npm", Package: "@scope/agent"), out var kind, out var address, out var problem);
 
         Assert.True(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.Npm, kind);
+        Assert.Equal("@scope/agent", address);
         Assert.Equal(UpdateCheckSource.Problem.None, problem);
     }
 
@@ -33,10 +35,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_NpmWithBlankPackage_ReturnsFalseWithMissingPackage(string? package)
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck("npm", Package: package), out var kind, out var problem);
+            new PluginUpdateCheck("npm", Package: package), out var kind, out var address, out var problem);
 
         Assert.False(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.None, kind);
+        Assert.Null(address);
         Assert.Equal(UpdateCheckSource.Problem.MissingPackage, problem);
     }
 
@@ -44,10 +47,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_GitHubReleasesWithRepo_ReturnsTrueWithGitHubReleases()
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck("githubReleases", Repo: "owner/repository"), out var kind, out var problem);
+            new PluginUpdateCheck("githubReleases", Repo: "owner/repository"), out var kind, out var address, out var problem);
 
         Assert.True(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.GitHubReleases, kind);
+        Assert.Equal("owner/repository", address);
         Assert.Equal(UpdateCheckSource.Problem.None, problem);
     }
 
@@ -58,10 +62,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_GitHubReleasesWithBlankRepo_ReturnsFalseWithMissingRepo(string? repo)
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck("githubReleases", Repo: repo), out var kind, out var problem);
+            new PluginUpdateCheck("githubReleases", Repo: repo), out var kind, out var address, out var problem);
 
         Assert.False(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.None, kind);
+        Assert.Null(address);
         Assert.Equal(UpdateCheckSource.Problem.MissingRepo, problem);
     }
 
@@ -69,10 +74,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_UnknownSource_ReturnsFalseWithUnknownSource()
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck("pypi", Package: "agent"), out var kind, out var problem);
+            new PluginUpdateCheck("pypi", Package: "agent"), out var kind, out var address, out var problem);
 
         Assert.False(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.None, kind);
+        Assert.Null(address);
         Assert.Equal(UpdateCheckSource.Problem.UnknownSource, problem);
     }
 
@@ -83,10 +89,11 @@ public class UpdateCheckSourceTests
     public void TryResolve_BlankSource_ReturnsFalseWithUnknownSource(string? source)
     {
         var resolved = UpdateCheckSource.TryResolve(
-            new PluginUpdateCheck(source!), out var kind, out var problem);
+            new PluginUpdateCheck(source!), out var kind, out var address, out var problem);
 
         Assert.False(resolved);
         Assert.Equal(UpdateCheckSource.SourceKind.None, kind);
+        Assert.Null(address);
         Assert.Equal(UpdateCheckSource.Problem.UnknownSource, problem);
     }
 }

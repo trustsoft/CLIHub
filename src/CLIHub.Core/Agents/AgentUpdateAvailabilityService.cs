@@ -129,7 +129,7 @@ public class AgentUpdateAvailabilityService : IAgentUpdateAvailabilityService
 
     private bool IsSupportedBlock(Plugin plugin, PluginUpdateCheck updateCheck)
     {
-        if (UpdateCheckSource.TryResolve(updateCheck, out _, out var problem))
+        if (UpdateCheckSource.TryResolve(updateCheck, out _, out _, out var problem))
         {
             return true;
         }

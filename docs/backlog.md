@@ -82,6 +82,8 @@ are pruned from this list once their evidence is no longer needed; recover them 
 
 ### AgentReleaseClient null-forgiving suppressions removable via a TryResolve out-parameter
 
+**Status: Resolved by `followups-quick-wins-2` — API reshaped to return validated addresses directly, suppressions removed from all call sites, test assertions extended to verify resolved address.**
+
 - Severity: Low (nullability hygiene; behavior is correct today)
 - Evidence: `src/CLIHub.Core/Agents/AgentReleaseClient.cs:119-120` still uses
   `updateCheck.Package!` / `updateCheck.Repo!`. Validation lives in
@@ -249,6 +251,8 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
 
 ### Stale prose comment quotes the retired "Detecting…" literal
 
+**Status: Resolved by `quick-wins-sweep` (2026-11-12, commit `ad74bd9`, archived `openspec/changes/archive/2026-11-12-quick-wins-sweep`) — comment now reads "Detecting" (state name).**
+
 - Severity: Low (comment-only; no assertion or behavior affected)
 - Evidence: `tests/CLIHub.Tests/ViewModels/Agents/AgentManagementViewModelTests.Detection.cs:347`
   still says `// leaving the cards it announced stuck on "Detecting…" forever.` — found during
@@ -313,6 +317,8 @@ each is a separate OpenSpec change except the repo bootstrap, which is out-of-re
   assertion was not changed. Stays a watch item.
 
 ### Release-gate test can degrade on a starved CI runner (`GetRunningProcesses_CommandLineDetail_AttachesCommandLineByProcessId`)
+
+**Status: Resolved by `release-gate-commandline-flake` (2026-11-12, commit `dc78f7f`, archived `openspec/changes/archive/2026-11-12-release-gate-commandline-flake`) — happy path now uses `Timeout.InfiniteTimeSpan` while dedicated 200 ms test keeps covering degradation.**
 
 - Severity: Medium (blocks a release run when it fires; one occurrence in 6 release runs)
 - Evidence: the v1.1.3 Release workflow (run `42979752090`, 2026-11-11) failed its test job with
@@ -666,6 +672,8 @@ snapshot.
 - Trigger: an accessibility requirement or audit, or the next change touching chip automation names.
 
 ### Maximize work-area clamp writes a copy that is never marshalled back
+
+**Status: Resolved by `followups-quick-wins-2` — dead `ptMax*` assignments removed; monitor lookup block removed; minimum tracking size behavior unchanged; XML doc updated to accurately describe actual behavior; smoke test evidence recorded.**
 
 - Severity: Low (dead window-message writes; runtime behavior verified fine by smoke, code-hygiene
   issue only)

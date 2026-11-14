@@ -1,5 +1,7 @@
 namespace CLIHub.Core.Models.Plugins;
 
+using System.Diagnostics.CodeAnalysis;
+
 /// <summary>
 ///   Resolves a plugin's declared update-check source into the supported source kind and the
 ///   reason a declaration is unusable, so every caller applies the same rule and only the
@@ -55,16 +57,24 @@ internal static class UpdateCheckSource
     /// </summary>
     /// <param name="updateCheck"> The declared update check, or null when the plugin declares none. </param>
     /// <param name="kind"> The resolved source kind, or <see cref="SourceKind.None" /> on failure. </param>
+    /// <param name="address">
+    ///   The validated npm package name or GitHub repository the resolved kind is addressed by, or
+    ///   null on every failure path.
+    /// </param>
     /// <param name="problem">
     ///   The reason resolution failed, or <see cref="Problem.None" /> when it succeeded or no
     ///   update check was declared.
     /// </param>
     /// <returns> True only when a supported source was resolved. </returns>
-    internal static bool TryResolve(PluginUpdateCheck? updateCheck, out SourceKind kind, out Problem problem)
+    internal static bool TryResolve(PluginUpdateCheck? updateCheck,
+                                    out SourceKind kind,
+                                    [NotNullWhen(true)] out string? address,
+                                    out Problem problem)
     {
         if (updateCheck is null)
         {
             kind = SourceKind.None;
+            address = null;
             problem = Problem.None;
             return false;
         }
@@ -74,11 +84,13 @@ internal static class UpdateCheckSource
             if (!updateCheck.HasPackage)
             {
                 kind = SourceKind.None;
+                address = null;
                 problem = Problem.MissingPackage;
                 return false;
             }
 
             kind = SourceKind.Npm;
+            address = updateCheck.Package;
             problem = Problem.None;
             return true;
         }
@@ -88,16 +100,19 @@ internal static class UpdateCheckSource
             if (!updateCheck.HasRepo)
             {
                 kind = SourceKind.None;
+                address = null;
                 problem = Problem.MissingRepo;
                 return false;
             }
 
             kind = SourceKind.GitHubReleases;
+            address = updateCheck.Repo;
             problem = Problem.None;
             return true;
         }
 
         kind = SourceKind.None;
+        address = null;
         problem = Problem.UnknownSource;
         return false;
     }

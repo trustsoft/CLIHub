@@ -1,7 +1,5 @@
 namespace CLIHub.Views;
 
-using System.Runtime.InteropServices;
-
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -14,7 +12,7 @@ using CLIHub.Interop;
 ///   constructor applies the borderless profile in code — no OS window chrome, the shared
 ///   <see cref="WindowChrome"/> metrics, the palette's chrome background, and the shared text font —
 ///   and the base owns DWM rounded corners, the window message hook enforcing the minimum tracking
-///   size and the maximized work area, Escape-to-close, and the drawn header's drag move. The launch
+///   size, Escape-to-close, and the drawn header's drag move. The launch
 ///   window deliberately does not use this base: it is a topmost content-sized popup with no resize
 ///   borders, and Escape hides it instead of closing it.
 /// </summary>
@@ -94,10 +92,9 @@ public abstract class ChromeWindow : Window
     }
 
     /// <summary>
-    ///   Enforces the window's declared minimum size as the minimum tracking size and constrains a
-    ///   maximized window to the monitor work area, so the taskbar never hides the window's bottom.
-    ///   Because handling <see cref="User32.WM_GETMINMAXINFO" /> bypasses WPF's own handler, the
-    ///   minimum tracking size is set here too, so the window cannot be resized below
+    ///   Enforces the window's declared minimum size as the minimum tracking size. Because handling
+    ///   <see cref="User32.WM_GETMINMAXINFO" /> bypasses WPF's own handler, the minimum tracking
+    ///   size is set here so the window cannot be resized below
     ///   <see cref="System.Windows.FrameworkElement.MinWidth" />/
     ///   <see cref="System.Windows.FrameworkElement.MinHeight" />.
     /// </summary>
@@ -114,23 +111,6 @@ public abstract class ChromeWindow : Window
             return IntPtr.Zero;
         }
 
-        var monitor = User32.MonitorFromWindow(hwnd, User32.MONITOR_DEFAULTTONEAREST);
-        if (monitor == IntPtr.Zero)
-        {
-            return IntPtr.Zero;
-        }
-
-        var info = new User32.MONITORINFO { cbSize = Marshal.SizeOf<User32.MONITORINFO>() };
-        if (!User32.GetMonitorInfo(monitor, ref info))
-        {
-            return IntPtr.Zero;
-        }
-
-        var minMax = Marshal.PtrToStructure<User32.MINMAXINFO>(lParam);
-        minMax.ptMaxPosition.X = info.rcWork.Left - info.rcMonitor.Left;
-        minMax.ptMaxPosition.Y = info.rcWork.Top - info.rcMonitor.Top;
-        minMax.ptMaxSize.X = info.rcWork.Right - info.rcWork.Left;
-        minMax.ptMaxSize.Y = info.rcWork.Bottom - info.rcWork.Top;
         WindowChromeHelper.ApplyMinTrackSize(this, hwnd, lParam);
         handled = true;
         return IntPtr.Zero;
