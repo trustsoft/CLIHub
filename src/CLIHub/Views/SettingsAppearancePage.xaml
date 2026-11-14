@@ -100,7 +100,7 @@
                                             BorderThickness="1"
                                             CornerRadius="13"
                                             Visibility="Collapsed">
-                                        <TextBlock x:Name="CustomGlyph"
+                                        <controls:DecorativeGlyph x:Name="CustomGlyph"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"

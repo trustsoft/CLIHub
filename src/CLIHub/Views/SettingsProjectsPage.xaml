@@ -46,7 +46,7 @@
                                     BorderBrush="{DynamicResource ControlStrokeBrush}"
                                     BorderThickness="1"
                                     CornerRadius="9">
-                                <TextBlock HorizontalAlignment="Center"
+                                <controls:DecorativeGlyph HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                            FontSize="15"
@@ -130,7 +130,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0"
+                <controls:DecorativeGlyph Grid.Column="0"
                            VerticalAlignment="Center"
                            FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                            FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
@@ -231,7 +231,8 @@
                                                 BorderThickness="1"
                                                 CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
                                                 Focusable="True"
-                                                FocusVisualStyle="{x:Null}">
+                                                FocusVisualStyle="{x:Null}"
+                                                AutomationProperties.Name="{Binding StringFormat='Ignored pattern {0}, Tab reveals the remove button'}">
                                             <Grid>
                                                 <!-- Sizing layer: TextBlock only (chip hugs text) -->
                                                 <TextBlock x:Name="PatternText"
@@ -280,7 +281,7 @@
                                StrokeDashArray="3 3"
                                StrokeThickness="1"/>
                     <StackPanel Margin="8,0" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
+                        <controls:DecorativeGlyph VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="10"
                                    Foreground="{DynamicResource TextMutedBrush}"

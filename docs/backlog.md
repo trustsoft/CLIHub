@@ -550,6 +550,8 @@ snapshot.
 
 ### Decorative icon glyphs are exposed to assistive technology across the windows
 
+**Status: Resolved by `a11y-sweep` (2026-11-14)** — `CLIHub.Controls.DecorativeGlyph` (a `TextBlock` subclass returning a null automation peer) is applied to the 20 decorative glyph sites across the Settings pages, sidebar, page header, summary/setting cards, status chip, input decorations and Actions-menu item glyphs; icon-only buttons keep their glyphs and their accessible names.
+
 - Severity: Low (no interactive control is affected; the glyphs are non-focusable text)
 - Evidence: every decorative icon `TextBlock` carries its private-use glyph as text, and WPF exposes an
   undecorated `TextBlock` in the automation tree with that text as its accessible name —
@@ -572,6 +574,8 @@ snapshot.
   screen-reader-facing surface.
 
 ### Actions-menu entries lost the removed buttons' tooltips and accessible names
+
+**Status: Resolved by `a11y-sweep` (2026-11-14)** — `MenuAction` gained optional `Tooltip` and `AccessibleName` (with an `EffectiveAccessibleName` label fallback); both windows' action templates bind them, and the Settings ACTIONS toggle is named "Plugin catalog actions".
 
 - Severity: Low (accessibility and discoverability parity regression; no functional impact)
 - Evidence (2026-11-05): the four plugin-management buttons removed from the CLI Agents header by
@@ -640,6 +644,8 @@ snapshot.
 - Trigger: an accessibility/tooltip polish pass, or the next change that touches the Settings header.
 
 ### Pattern-chip remove button gives screen readers no hint before reveal
+
+**Status: Resolved by `a11y-sweep` (2026-11-14)** — the focusable chip border carries a persistent `AutomationProperties.Name` ("Ignored pattern <name>, Tab reveals the remove button") bound with a `StringFormat`, so the affordance is announced before the remove button is revealed.
 
 - Severity: Low (mouse and keyboard flows work; only the screen-reader discovery path is affected)
 - Evidence (2026-11-11, `pattern-chip-hover-remove`): the ignored-pattern chip's remove button is

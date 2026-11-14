@@ -20,7 +20,7 @@
                         Style="{StaticResource SectionHeaderChipButton}"
                         ToolTip="Restore the built-in defaults">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
+                        <controls:DecorativeGlyph VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                                    Text="{x:Static themes:IconGlyphs.Refresh}"/>

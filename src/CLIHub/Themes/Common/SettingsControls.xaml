@@ -273,7 +273,7 @@
                                 Background="{DynamicResource ThumbBgBrush}"
                                 BorderBrush="{DynamicResource ControlStrokeBrush}"
                                 BorderThickness="1">
-                            <TextBlock x:Name="Check"
+                            <controls:DecorativeGlyph x:Name="Check"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center"
                                        FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -411,7 +411,7 @@
                                             BorderBrush="{DynamicResource FieldStrokeBrush}"
                                             BorderThickness="1"
                                             CornerRadius="{StaticResource Sizing.CornerRadius.Chip}">
-                                        <TextBlock Margin="0,0,10,0"
+                                        <controls:DecorativeGlyph Margin="0,0,10,0"
                                                    HorizontalAlignment="Right"
                                                    VerticalAlignment="Center"
                                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -549,7 +549,7 @@
                         <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
                             <TextBlock VerticalAlignment="Center"
                                        Text="{TemplateBinding Content}"/>
-                            <TextBlock x:Name="Chevron"
+                            <controls:DecorativeGlyph x:Name="Chevron"
                                        Margin="5,0,0,0"
                                        VerticalAlignment="Center"
                                        FontFamily="{StaticResource Sizing.FontFamily.Icon}"

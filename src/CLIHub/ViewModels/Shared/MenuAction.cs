@@ -34,6 +34,21 @@ public sealed class MenuAction : ObservableObject
     public bool IsSeparator { get; init; }
 
     /// <summary>
+    ///   Optional tooltip text for the menu entry.
+    /// </summary>
+    public string? Tooltip { get; init; }
+
+    /// <summary>
+    ///   Optional accessible name for the menu entry; falls back to Label when null or empty.
+    /// </summary>
+    public string? AccessibleName { get; init; }
+
+    /// <summary>
+    ///   The effective accessible name for the menu entry; returns AccessibleName if provided, otherwise Label.
+    /// </summary>
+    public string EffectiveAccessibleName => string.IsNullOrEmpty(this.AccessibleName) ? this.Label : this.AccessibleName;
+
+    /// <summary>
     ///   The checked state of a checkable entry.
     /// </summary>
     public bool IsChecked

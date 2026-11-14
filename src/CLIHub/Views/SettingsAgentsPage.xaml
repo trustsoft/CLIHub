@@ -59,9 +59,11 @@
         <DataTemplate x:Key="ActionsMenuActionTemplate">
             <Button Click="OnMenuActionInvoked"
                     Command="{Binding Command}"
+                    ToolTip="{Binding Tooltip}"
+                    AutomationProperties.Name="{Binding EffectiveAccessibleName}"
                     Style="{StaticResource ActionsMenuEntryButton}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Width="16"
+                    <controls:DecorativeGlyph Width="16"
                                Margin="0,0,8,0"
                                VerticalAlignment="Center"
                                FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -139,7 +141,7 @@
                         Style="{StaticResource SectionHeaderChipButton}"
                         ToolTip="Recheck each agent and its version">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
+                        <controls:DecorativeGlyph VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                                    Text="{x:Static themes:IconGlyphs.Refresh}"/>
@@ -155,7 +157,7 @@
                         Style="{StaticResource SectionHeaderChipButton}"
                         ToolTip="Check all installed agents for updates">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center"
+                        <controls:DecorativeGlyph VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                    FontSize="{StaticResource Sizing.FontSize.GlyphTiny}"
                                    Text="{x:Static themes:IconGlyphs.Sync}"/>
@@ -170,6 +172,7 @@
                      stay standalone buttons to its left. -->
                 <ToggleButton x:Name="PluginActionsButton"
                               Content="Actions"
+                              AutomationProperties.Name="Plugin catalog actions"
                               Style="{StaticResource PaneActionsToggle}"/>
             </controls:SpacedPanel>
             <!-- Hosted outside the SpacedPanel so the spacing pass does not add a trailing gap

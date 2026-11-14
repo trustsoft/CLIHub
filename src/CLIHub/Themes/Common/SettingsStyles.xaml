@@ -225,7 +225,7 @@
                                         BorderBrush="{DynamicResource ControlStrokeBrush}"
                                         BorderThickness="1"
                                         CornerRadius="6">
-                                    <TextBlock HorizontalAlignment="Center"
+                                    <controls:DecorativeGlyph HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="13"
@@ -415,7 +415,7 @@
                                         BorderBrush="{DynamicResource ControlStrokeBrush}"
                                         BorderThickness="1"
                                         CornerRadius="{StaticResource Sizing.CornerRadius.IconBox}">
-                                    <TextBlock HorizontalAlignment="Center"
+                                    <controls:DecorativeGlyph HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                FontSize="11"

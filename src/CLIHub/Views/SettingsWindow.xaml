@@ -101,7 +101,7 @@
                             Orientation="Horizontal">
                     <Border Style="{StaticResource StatusChip}" ToolTip="{Binding UpdateCard.Detail}">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Style="{StaticResource StatusChipGlyph}" Text="{Binding UpdateCard.Glyph}"/>
+                            <controls:DecorativeGlyph Style="{StaticResource StatusChipGlyph}" Text="{Binding UpdateCard.Glyph}"/>
                             <TextBlock Margin="4,0,0,0"
                                        Style="{StaticResource StatusChipText}"
                                        Text="{Binding UpdateCard.Badge}"/>
@@ -294,7 +294,7 @@
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Width="18"
+                                        <controls:DecorativeGlyph Width="18"
                                                    VerticalAlignment="Center"
                                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
                                                    FontSize="13"
@@ -356,7 +356,7 @@
                                 block's own Grid, not the outer header Grid, so the header-action column's
                                 height can never move it.
                             -->
-                            <TextBlock Grid.Column="0"
+                            <controls:DecorativeGlyph Grid.Column="0"
                                        Margin="0,0,12,0"
                                        VerticalAlignment="Center"
                                        FontFamily="{StaticResource Sizing.FontFamily.Icon}"

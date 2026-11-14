@@ -49,9 +49,11 @@
             <DataTemplate x:Key="ActionsMenuActionTemplate">
                 <Button Click="OnMenuActionInvoked"
                         Command="{Binding Command}"
+                        ToolTip="{Binding Tooltip}"
+                        AutomationProperties.Name="{Binding EffectiveAccessibleName}"
                         Style="{StaticResource ActionsMenuEntryButton}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="16"
+                        <controls:DecorativeGlyph Width="16"
                                    Margin="0,0,8,0"
                                    VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
@@ -66,9 +68,11 @@
             <DataTemplate x:Key="ActionsMenuToggleTemplate">
                 <ToggleButton Click="OnMenuActionInvoked"
                               IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                              ToolTip="{Binding Tooltip}"
+                              AutomationProperties.Name="{Binding EffectiveAccessibleName}"
                               Style="{StaticResource ActionsMenuEntryToggle}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Width="16"
+                        <controls:DecorativeGlyph Width="16"
                                    Margin="0,0,8,0"
                                    VerticalAlignment="Center"
                                    FontFamily="{StaticResource Sizing.FontFamily.Icon}"
