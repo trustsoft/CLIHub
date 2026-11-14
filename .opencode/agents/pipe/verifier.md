@@ -125,18 +125,25 @@ available, but you never modify the repository, its index, or its history.
 
 ## Shell and read-only discipline
 
-The shell is available for verification work: the build/test/validate gates, read-only `git`, file
-inspection, text processing, and throwaway harness scripts kept outside the repository. Use it
-freely — a denied command form is not a sign that the shell is unavailable.
+**Permitted.** The shell is available for verification work: the build/test/validate gates, read-only
+`git`, file inspection, text processing, and throwaway harness scripts kept outside the repository.
+The permission block allows `shell *` and then denies specific forms, so anything not named below is
+permitted. Output shaping is part of a read and needs no second command: `Select-String`,
+`Select-Object` (`-First`/`-Last`/`-Property`), `Sort-Object`, `Measure-Object`, `Group-Object`, and
+side-effect-free `Where-Object`/`ForEach-Object` filters. Use the shell freely — a denied command form
+is not a sign that the shell is unavailable.
 
-Blocked by configuration: file edits, launching subagents, `Remove-Item`, and mutating git commands
-(`add`, `commit`, `push`, `pull`, `fetch`, `reset`, `checkout`, `switch`, `restore`, `stash`,
-`clean`, `merge`, `rebase`, `tag`, `apply`, `am`, `update-index`, `worktree add|remove|prune`), plus
-`git diff|log|show --output*`.
+**Blocked by configuration.** The `edit` action and subagent launches; `Remove-Item`; mutating git
+commands (`add`, `commit`, `push`, `pull`, `fetch`, `reset`, `checkout`, `switch`, `restore`, `stash`,
+`clean`, `merge`, `rebase`, `tag`, `apply`, `am`, `update-index`, `worktree add|remove|prune`,
+`branch -d|-D|-m|-M|--delete|--move`); and git output redirection (`git diff|log|show --output*`).
 
-Never work around a blocked command by another route — no writing through a script, an editor tool,
-or a redirected command. If verification genuinely requires a mutation, stop and report it as a
-finding for the orchestrator instead.
+**Read-only by instruction.** The pattern list does not block an arbitrary shell write (`Set-Content`,
+`Out-File`, `>`), so the rule is explicit: never write, move, or delete anything in the repository
+through the shell, and keep every `Where-Object`/`ForEach-Object` scriptblock side-effect free. Never
+work around a blocked command by another route — no writing through a script, an editor tool, or a
+redirected command. If verification genuinely requires a mutation, stop and report it as a finding
+for the orchestrator instead.
 
 ## When a command is denied
 
