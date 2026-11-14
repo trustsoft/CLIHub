@@ -369,3 +369,96 @@ Full scenarios in `specs/plugin-index-signing/spec.md`:
 - "304 does not re-fetch signature" — cached verified state is trusted.
 - "Cache fallback trusts verified state" — no re-verification needed.
 - "Sync failure on invalid signature" — error logged at Error, no event published.
+
+---
+
+## Implementation Notes (2026-11-14)
+
+Recorded during implementation; each item is a place where the code reality differs from, or sharpens,
+the decisions above.
+
+### DER signature format must be named explicitly (corrects D1/D3)
+
+`ECDsa.VerifyData(data, signature, HashAlgorithmName)` defaults to `DSASignatureFormat.IeeeP1363FixedFieldConcatenation`
+(raw `r||s`, 64 bytes for P-256). `openssl dgst -sha256 -sign` emits an RFC 3279 **DER SEQUENCE** (~70–72
+bytes), so the parameterless call rejects every signature the repository-side signer produces. Measured
+against the 10.0.15 runtime: the default overload returns `false` for an openssl DER signature, while
+`DSASignatureFormat.Rfc3279DerSequence` returns `true` for the same bytes. `PluginFeedSigner.Verify`
+therefore names the DER format. Decoding failures never throw (`CryptographicException` maps to `false`);
+a malformed embedded key PEM still throws, which is a build-time error surfaced as a structured feed
+failure rather than a silent acceptance.
+
+### Exact body bytes (sharpens D3)
+
+`FetchFeedAsync` now reads the index with the existing bounded **byte** reader and decodes the string from
+those bytes, instead of reading a string and re-encoding it. Verification therefore covers exactly the
+bytes the server sent; the 2 MB bound and `body`-string consumption by `ParseFeedIndex`/`SaveCachedIndex`
+are unchanged.
+
+### Transition window: two-argument rule for the flag (sharpens D7)
+
+`RequireFeedSignature` is a `const`, so no test can flip it. The rule is exposed twice:
+`IsSignatureRequired(DateTimeOffset now)` (the production call, using the constant) and
+`IsSignatureRequired(DateTimeOffset now, bool requireSignature)` (the pure rule, so the flag-true case and
+the follow-up slice share one implementation). The cutoff is final at **2026-12-15T00:00:00Z**.
+
+### `SignatureErrorProfile` maps failures to "missing", not to user-facing errors (clarifies 2.2)
+
+The signature GET runs inside its own `ExecuteWithStructuredErrorsAsync` scope with
+`SignatureErrorProfile`, whose strings are diagnostic only: any timeout, network error, or unexpected
+exception there is routed to the transition-window rule (missing signature) instead of surfacing a second
+user-facing error style. Caller cancellation still rethrows, and an overall probe-timeout that fires while
+the signature GET is in flight resolves to the existing "Feed request timed out" path.
+
+### Malformed envelope reports both strings (resolves the spec tension)
+
+`specs/plugin-index-signing` requires "an error describing the malformation" for a malformed envelope,
+while `specs/plugin-feed` groups a malformed envelope under the "Plugin feed signature is invalid. The feed
+may have been tampered with." scenario. A malformed envelope (invalid JSON, missing `algorithm` or
+`signature`, non-base64 value) therefore returns both errors, in that order; the tampered string is used
+alone for a signature that decodes but does not verify.
+
+### An index accepted without a signature is not cached (resolves the transition/cache tension)
+
+`specs/plugin-feed-sync` ("only verified index bytes are stored in the cache") and design guarantee 5 are
+read literally: a fresh 200 accepted during the transition window is parsed and served, but neither the
+index nor the sync metadata is written. A `304` therefore cannot confirm an unverified cache and a cache
+fallback cannot present unverified data; the previously cached verified index (if any) stays untouched.
+
+### Transition-accepted refresh stores no comparison hash (verifier finding a)
+
+The background service originally persisted the index hash even when the client refused to cache the
+unverified index. The client's orphan check then deleted that hash-only metadata on the next fetch, while
+`RefreshAsync` had already read the previous hash, so the stored value alternated between null and a hash
+and a spurious `PluginFeedUpdatedEvent` was published on every other refresh on a fresh install (plus two
+warnings per refresh). `RefreshAsync` now returns before change detection when
+`PluginFeedResult.SignatureWarning` is not null: no hash is written, so the metadata cannot be orphaned and
+no change event is published for an index that cannot be cached. `SaveIndexHash` remains the only service
+writer of the hash and `PluginFeedClient.SaveSyncMetadata` remains the only client writer (it is
+unreachable for a warning result), so no other path persists it. Pinned by
+`Refresh_TransitionAcceptedIndex_DoesNotPersistHashOrPublishEvent` and by the end-to-end
+`Refresh_MissingSignatureDuringTransition_DoesNotCachePersistHashOrPublishEvent`; the "a change event may be
+published" wording of the `plugin-feed-sync` delta is permissive, and this fix resolves it to "not
+published while the index cannot be cached".
+
+### Signature URL is anchored to the configured feed URL (answers OQ-1)
+
+`new Uri(new Uri(feedUrl, UriKind.Absolute), "index.sig")` resolves against the **configured** feed URL,
+not the URL a redirect chain ended on. If the index redirects to another path or host, the signature is
+still fetched from the official directory, so a redirect cannot relocate the trust anchor; a mismatch
+fails verification (closed), never open.
+
+### Test seams on `PluginFeedClient` (supports OQ-5 without runtime configurability)
+
+The internal constructor gained optional `TimeProvider` and `feedPublicKeyPem` parameters (used only by
+tests, alongside the existing cache-path overrides). Production composition never sets either, so the
+trust anchor remains `PluginFeedSigner.PublicKeyPem`, reachable through no file, registry, or preference.
+Test key material lives in `tests/CLIHub.Core.Tests/Plugins/PluginFeedSignatureTestData.cs`, a new test-only
+helper so the signer, client, and sync tests share one fixture; it holds a test key pair (P-256), a wrong
+pair, and a P-384 key, all generated with `openssl ecparam` and unrelated to the production key.
+
+### `PublicKeyPem` is a placeholder (release gate)
+
+Task 1.2 asks for a placeholder until the feed repository's key pair exists. It must be replaced with the
+real `public.pem` content before the release that ships verification: with a mismatched key every signed
+index fails verification as a hard error.

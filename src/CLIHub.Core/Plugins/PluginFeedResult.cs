@@ -23,6 +23,21 @@ public sealed record PluginFeedResult(
     ///   otherwise, so the UI can show the age of genuinely stale data.
     /// </summary>
     public DateTimeOffset? CachedAt { get; init; }
+
+    /// <summary>
+    ///   Whether the index passed signature verification or needs none. True for a verified default
+    ///   feed, for a custom feed URL (verification is not applicable — the user chose the operator),
+    ///   and for the cached state a 304 or a cache fallback serves (that state was verified before it
+    ///   was cached). False only when a signature check failed; the result then carries the error and
+    ///   no index.
+    /// </summary>
+    public bool SignatureValid { get; init; } = true;
+
+    /// <summary>
+    ///   The transition-window notice when the official feed served no signature and the index was
+    ///   accepted anyway (missing signature before <c> SignatureRequiredAfter </c>); null otherwise.
+    /// </summary>
+    public string? SignatureWarning { get; init; }
 }
 
 /// <summary>

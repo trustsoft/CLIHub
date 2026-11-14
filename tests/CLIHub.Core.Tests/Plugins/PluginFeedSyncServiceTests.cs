@@ -22,6 +22,7 @@ public class PluginFeedSyncServiceTests : IDisposable
 {
     private readonly FakeDomainEventPublisher publisher = new();
     private readonly RecordingLogger<PluginFeedSyncService> logger = new();
+    private readonly RecordingLogger<PluginFeedClient> clientLogger = new();
     private readonly string cacheDirectory = Path.Combine(
         Path.GetTempPath(),
         $"clihub-feed-sync-{Guid.NewGuid():N}");
@@ -301,13 +302,17 @@ public class PluginFeedSyncServiceTests : IDisposable
         preferences.Update(p => p.PluginFeedUrl = FeedUrlProvider.DefaultFeedUrl);
         var handler = new QueueHandler(
             WithEtag(JsonResponse(IndexJson), "\"v1\""),
+            JsonResponse(PluginFeedSignatureTestData.Envelope(
+                Convert.ToBase64String(PluginFeedSignatureTestData.Sign(Encoding.UTF8.GetBytes(IndexJson))))),
             new HttpResponseMessage(HttpStatusCode.NotModified));
         var client = new PluginFeedClient(
             handler,
             preferences,
             NullLogger<PluginFeedClient>.Instance,
             cacheFilePath: Path.Combine(this.cacheDirectory, "feed-index.json"),
-            syncMetadataFilePath: this.MetadataFilePath);
+            syncMetadataFilePath: this.MetadataFilePath,
+            timeProvider: new FakeTimeProvider(PluginFeedSigner.SignatureRequiredAfter.AddDays(-7)),
+            feedPublicKeyPem: PluginFeedSignatureTestData.TestPublicKeyPem);
 
         var direct = await client.GetFeedAsync();
         Assert.True(direct.Success);
@@ -324,9 +329,149 @@ public class PluginFeedSyncServiceTests : IDisposable
         await service.RefreshAsync(CancellationToken.None);
 
         Assert.Empty(this.publisher.PublishedEvents);
-        Assert.Equal(2, handler.RequestCount);
-        Assert.Equal("\"v1\"", Assert.Single(handler.Requests[1].Headers.GetValues("If-None-Match")));
+        Assert.Equal(3, handler.RequestCount);
+        Assert.Equal("\"v1\"", Assert.Single(handler.Requests[2].Headers.GetValues("If-None-Match")));
     }
+
+    [Fact]
+    public async Task Refresh_ValidSignature_PublishesEvent()
+    {
+        var handler = new QueueHandler(
+            JsonResponse(IndexJson),
+            SignatureResponse(IndexJson));
+        var preferences = this.CreateDefaultFeedPreferences();
+        var service = this.CreateServiceFor(this.CreateSignatureAwareClient(handler, preferences), preferences);
+
+        await service.RefreshAsync(CancellationToken.None);
+
+        Assert.Single(this.publisher.PublishedEvents);
+        Assert.Equal(2, handler.RequestCount);
+        Assert.Equal(
+            "https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.sig",
+            handler.Requests[1].RequestUri!.AbsoluteUri);
+        Assert.DoesNotContain(this.clientLogger.Entries, entry => entry.Level == LogLevel.Error);
+    }
+
+    [Fact]
+    public async Task Refresh_InvalidSignature_LogsErrorAndDoesNotPublishEvent()
+    {
+        var otherIndex = IndexJson.Replace("\"plugin-a\"", "\"plugin-z\"", StringComparison.Ordinal);
+        var handler = new QueueHandler(
+            JsonResponse(IndexJson),
+            SignatureResponse(otherIndex));
+        var preferences = this.CreateDefaultFeedPreferences();
+        var service = this.CreateServiceFor(this.CreateSignatureAwareClient(handler, preferences), preferences);
+
+        await service.RefreshAsync(CancellationToken.None);
+
+        Assert.Empty(this.publisher.PublishedEvents);
+        Assert.Contains(this.clientLogger.Entries, entry => entry.Level == LogLevel.Error);
+        Assert.Null(this.ReadMetadata());
+        Assert.False(File.Exists(Path.Combine(this.cacheDirectory, "feed-index.json")));
+    }
+
+    [Fact]
+    public async Task Refresh_304_DoesNotRefetchSignature()
+    {
+        var handler = new QueueHandler(
+            WithEtag(JsonResponse(IndexJson), "\"v1\""),
+            SignatureResponse(IndexJson),
+            new HttpResponseMessage(HttpStatusCode.NotModified));
+        var preferences = this.CreateDefaultFeedPreferences();
+        var service = this.CreateServiceFor(this.CreateSignatureAwareClient(handler, preferences), preferences);
+
+        await service.RefreshAsync(CancellationToken.None);
+        var publishedAfterTheFreshFetch = this.publisher.PublishedEvents.Count;
+
+        await service.RefreshAsync(CancellationToken.None);
+
+        Assert.Equal(publishedAfterTheFreshFetch, this.publisher.PublishedEvents.Count);
+        Assert.Equal(3, handler.RequestCount);
+        Assert.Single(
+            handler.Requests,
+            request => request.RequestUri!.AbsoluteUri.EndsWith("index.sig", StringComparison.Ordinal));
+        Assert.Equal("\"v1\"", Assert.Single(handler.Requests[2].Headers.GetValues("If-None-Match")));
+    }
+
+    [Fact]
+    public async Task Refresh_MissingSignatureDuringTransition_DoesNotCachePersistHashOrPublishEvent()
+    {
+        var handler = new QueueHandler(
+            JsonResponse(IndexJson),
+            new HttpResponseMessage(HttpStatusCode.NotFound),
+            JsonResponse(IndexJson),
+            new HttpResponseMessage(HttpStatusCode.NotFound));
+        var preferences = this.CreateDefaultFeedPreferences();
+        var service = this.CreateServiceFor(this.CreateSignatureAwareClient(handler, preferences), preferences);
+
+        // Two refreshes: before the guard, the second one read a hash written by the first, then the
+        // client deleted that orphaned metadata, so the stored hash alternated and the refresh
+        // republished a spurious event every other cycle (verifier finding a).
+        await service.RefreshAsync(CancellationToken.None);
+        await service.RefreshAsync(CancellationToken.None);
+
+        Assert.Empty(this.publisher.PublishedEvents);
+        Assert.Contains(
+            this.clientLogger.Entries,
+            entry => entry.Level == LogLevel.Warning &&
+                     entry.Message.Contains("accepted during transition window", StringComparison.Ordinal));
+        Assert.DoesNotContain(
+            this.clientLogger.Entries,
+            entry => entry.Message.Contains("without a cached index", StringComparison.Ordinal));
+        Assert.False(File.Exists(Path.Combine(this.cacheDirectory, "feed-index.json")));
+        Assert.False(File.Exists(this.MetadataFilePath));
+        Assert.Equal(4, handler.RequestCount);
+    }
+
+    [Fact]
+    public async Task Refresh_TransitionAcceptedIndex_DoesNotPersistHashOrPublishEvent()
+    {
+        // Pins the service guard directly: a result that carries a signature warning may not be
+        // treated as a change signal, whatever the previous hash state is.
+        this.WriteMetadata(new PluginFeedSyncMetadata { IndexHash = "previous-hash" });
+        var client = new StubFeedClient(_ => Task.FromResult(
+            new PluginFeedResult(true, Index(Entry("a", "1.0.0")), [])
+            {
+                SignatureWarning = "Plugin feed signature is missing; accepted during transition window."
+            }));
+        var service = this.CreateService(client);
+
+        await service.RefreshAsync(CancellationToken.None);
+
+        Assert.Empty(this.publisher.PublishedEvents);
+        Assert.Equal("previous-hash", this.ReadMetadata()!.IndexHash);
+    }
+
+    private PreferencesStore CreateDefaultFeedPreferences()
+    {
+        var preferences = new PreferencesStore(new FakeConfigurationRepository());
+        preferences.Update(p => p.PluginFeedUrl = FeedUrlProvider.DefaultFeedUrl);
+        return preferences;
+    }
+
+    private PluginFeedClient CreateSignatureAwareClient(QueueHandler handler, PreferencesStore preferences) =>
+        new(
+            handler,
+            preferences,
+            this.clientLogger,
+            cacheFilePath: Path.Combine(this.cacheDirectory, "feed-index.json"),
+            syncMetadataFilePath: this.MetadataFilePath,
+            timeProvider: new FakeTimeProvider(PluginFeedSigner.SignatureRequiredAfter.AddDays(-7)),
+            feedPublicKeyPem: PluginFeedSignatureTestData.TestPublicKeyPem);
+
+    private PluginFeedSyncService CreateServiceFor(IPluginFeedClient client, PreferencesStore preferences) =>
+        new(
+            client,
+            this.publisher,
+            preferences,
+            this.logger,
+            timeProvider: null,
+            syncMetadataFilePath: this.MetadataFilePath,
+            interval: null);
+
+    private static HttpResponseMessage SignatureResponse(string body) =>
+        JsonResponse(PluginFeedSignatureTestData.Envelope(
+            Convert.ToBase64String(PluginFeedSignatureTestData.Sign(Encoding.UTF8.GetBytes(body)))));
 
     private PluginFeedSyncService CreateService(
         IPluginFeedClient client,

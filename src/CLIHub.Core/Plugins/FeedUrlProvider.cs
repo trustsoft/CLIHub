@@ -39,4 +39,13 @@ public static class FeedUrlProvider
         // Non-empty: custom URL
         return pluginFeedUrl;
     }
+
+    /// <summary>
+    ///   Whether the URL is the default official feed — the only feed whose index is signature
+    ///   verified. Compared ordinally, because the resolved URL is used verbatim for the request.
+    /// </summary>
+    /// <param name="url"> The resolved feed URL. </param>
+    /// <returns> True when the URL is exactly <see cref="DefaultFeedUrl" />. </returns>
+    public static bool IsDefaultFeedUrl(string? url) =>
+        string.Equals(url, DefaultFeedUrl, StringComparison.Ordinal);
 }

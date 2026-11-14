@@ -275,6 +275,50 @@ Downloaded packages are verified:
 5. **Descriptor-only install — Inspect → Confirm → Install:** For a v2 entry without a `package`, CLIHub builds the confirmation dialog directly from the inline descriptor — no download and no checksum step (the feed index in the git repository is the integrity anchor). On confirmation, the verbatim descriptor JSON (plus the `logoUrl` logo when it downloads successfully) is staged, re-validated from disk, and installed through the same backup/atomic-move/rollback/state/catalog-reload path as a package install. A failed or non-HTTPS logo fetch is logged as a warning and the install proceeds without `logo.png` (the default logo is shown).
 6. **Install outcome:** Success or failure is shown in a dialog. On success, the catalog reloads and the plugin card reflects the new state.
 
+### Feed Index Signing
+
+The official v2 feed's `index.json` is cryptographically signed, and the client verifies the signature
+before it parses a single entry. The trust anchor is the compile-time constant
+`PluginFeedSigner.PublicKeyPem`; the primitive is ECDSA over NIST P-256 with SHA-256, because .NET 10
+ships no standalone Ed25519 signing class (ADR-0015, amendment dated 2026-11-14). The repository-side
+artifacts — key generation, `tools/sign-index.ps1`, the workflow step, `public.pem`, and the rotation
+procedure — are specified in [`plugin-index-signing-repo.md`](plugin-index-signing-repo.md).
+
+**Signature format.** `index.sig` is a JSON envelope next to `index.json`:
+`{ "algorithm": "ecdsa-p256-sha256", "signature": "<base64 DER>", "signedAt": "<ISO 8601 UTC>" }`. The
+`algorithm` field is the rotation seam; unknown envelope fields are ignored. The signature covers the
+**exact bytes** of the index body as served — no canonicalization.
+
+**Verification pipeline.** After a fresh 200 response and after the 2 MB bound is enforced,
+`PluginFeedClient` requests `index.sig` from the same directory (standard URI resolution of
+`index.sig` against the feed URL) over the same transport: HTTPS-only, manual redirects with a 5-hop
+cap and per-hop HTTPS enforcement, the probe timeout, and a 4 KB bound on the envelope. The body bytes
+are verified **before** `ParseFeedIndex`; an unverified body never reaches the parser, the cache, or
+the UI.
+
+| Situation | Result |
+|---|---|
+| Valid signature | Index parsed and cached; `SignatureValid: true`, no warning |
+| Invalid signature (tampered body, wrong key, malformed envelope, non-base64 value) | Hard error "Plugin feed signature is invalid. The feed may have been tampered with." (a malformed envelope also reports "Plugin feed signature envelope is malformed."); no cache fallback |
+| Unsupported `algorithm` value | Hard error "Unsupported signature algorithm: {algorithm}"; no cache fallback |
+| Envelope larger than 4 KB | Hard error "Plugin feed signature file too large"; no cache fallback |
+| Missing signature (404, any other non-200, transport failure, rejected redirect) before the cutoff | Index parsed with `SignatureWarning: "Plugin feed signature is missing; accepted during transition window."`, logged at Warning, **not cached** |
+| Missing signature on or after the cutoff, or with `RequireFeedSignature` | Hard error "Plugin feed signature is required but missing."; no cache fallback |
+
+**Trust anchor scope.** Only the resolved URL that equals `FeedUrlProvider.DefaultFeedUrl` is verified.
+A custom `pluginFeedUrl` is the user's own trust decision and skips the signature step entirely
+(`SignatureValid: true`, no signature request).
+
+**Transition window.** `PluginFeedSigner.SignatureRequiredAfter` is a compile-time cutoff
+(2026-12-15 UTC) and `PluginFeedSigner.RequireFeedSignature` is a compile-time flag, so "missing equals
+accepted" cannot persist indefinitely and cannot be silenced by editing configuration. An index accepted
+without a signature is served once but never written to the cache, so the cached state a 304 or a cache
+fallback serves is always a verified one.
+
+**Cache interplay.** A `304 Not Modified` and a cache fallback trust the cached index without
+re-fetching the signature: only verified bytes ever enter the cache, so the cached state is already the
+verified state.
+
 ### Background Feed Sync and Conditional Fetch
 
 A background service (`IPluginFeedSyncService`, registered in Core) refreshes the feed once at application start and then hourly. It starts from `ApplicationBootstrapper` after the optional startup work and before the project scanner; `Start()` returns immediately and the first refresh runs on a background task, so startup never waits for the network. Shutdown cancels the in-flight refresh and waits at most the shutdown budget (2 seconds). The interval is fixed in this slice; a preference is future work.
@@ -290,7 +334,7 @@ Two cache files hold the last-good state, both under `%APPDATA%\CLIHub\cache\`:
 
 Reads are tolerant: a missing cache means an unconditional fetch, a corrupt file is deleted with a logged warning, and sync metadata without its index is dropped. A cached index larger than 2 MB is never served.
 
-When the feed changes, the service publishes `PluginFeedUpdatedEvent` carrying the new index hash (never the index itself). A 304, an unchanged index, a fetch served from the cache, and a failed fetch publish nothing. `AgentManagementViewModel` subscribes, reloads the catalog, and re-resolves the per-card plugin-update chip from the refreshed index; an agent version update takes the chip slot when both are available. Failures are logged at Warning and never thrown.
+When the feed changes, the service publishes `PluginFeedUpdatedEvent` carrying the new index hash (never the index itself). A 304, an unchanged index, a fetch served from the cache, and a failed fetch publish nothing. `AgentManagementViewModel` subscribes, reloads the catalog, and re-resolves the per-card plugin-update chip from the refreshed index; an agent version update takes the chip slot when both are available. Failures are logged at Warning and never thrown. The refresh uses the same fetch path as Browse Plugins, so the index signature is verified in the background too: a verification failure is logged at Error by the client, produces a failed result, and therefore neither publishes an event nor replaces the cached index.
 
 On a failed live fetch (network error, timeout, HTTP error status, parse error) the client serves the cached index with `FromCache: true` and `CachedAt`, so Browse degrades to stale-but-usable data instead of a hard error. Redirect-policy rejections and the 2 MB bound never fall back to stale data.
 

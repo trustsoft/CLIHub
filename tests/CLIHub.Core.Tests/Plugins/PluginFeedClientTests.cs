@@ -17,6 +17,10 @@ public class PluginFeedClientTests : IDisposable
     private const string FeedUrl = "https://example.com/feed.json";
     private const int MaxIndexSizeBytes = 2 * 1024 * 1024; // 2 MB
     private const int MaxPackageSizeBytes = 10 * 1024 * 1024; // 10 MB
+    private const string DefaultFeedUrl = FeedUrlProvider.DefaultFeedUrl;
+    private const string DefaultSignatureUrl = "https://raw.githubusercontent.com/trustsoft/CLIHub-plugins-v2/master/index.sig";
+
+    private static readonly DateTimeOffset BeforeSignatureCutoff = PluginFeedSigner.SignatureRequiredAfter.AddDays(-7);
 
     private static readonly JsonSerializerOptions MetadataOptions = new()
     {
@@ -42,7 +46,7 @@ public class PluginFeedClientTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private PluginFeedClient CreateClient(string feedUrl = FeedUrl, int? timeoutSeconds = null)
+    private PluginFeedClient CreateClient(string feedUrl = FeedUrl, int? timeoutSeconds = null, DateTimeOffset? now = null)
     {
         var preferences = new PreferencesStore(new FakeConfigurationRepository());
         preferences.Update(p => p.PluginFeedUrl = feedUrl);
@@ -56,7 +60,9 @@ public class PluginFeedClientTests : IDisposable
             preferences,
             NullLogger<PluginFeedClient>.Instance,
             cacheFilePath: this.CacheFilePath,
-            syncMetadataFilePath: this.SyncMetadataFilePath);
+            syncMetadataFilePath: this.SyncMetadataFilePath,
+            timeProvider: new FakeTimeProvider(now ?? BeforeSignatureCutoff),
+            feedPublicKeyPem: PluginFeedSignatureTestData.TestPublicKeyPem);
     }
 
     [Fact]
@@ -1054,6 +1060,281 @@ public class PluginFeedClientTests : IDisposable
         Assert.False(result.Success);
         Assert.False(result.FromCache);
         Assert.False(File.Exists(this.CacheFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ValidSignature_ParsesIndex()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(SignatureResponse(Encoding.UTF8.GetBytes(ValidIndexJson)));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.SignatureValid);
+        Assert.Null(result.SignatureWarning);
+        Assert.Equal("plugin-a", Assert.Single(result.Index!.Plugins).Id);
+        Assert.Equal(2, this.handler.Requests.Count);
+        Assert.Equal(DefaultFeedUrl, this.handler.Requests[0].RequestUri!.AbsoluteUri);
+        Assert.Equal(DefaultSignatureUrl, this.handler.Requests[1].RequestUri!.AbsoluteUri);
+        Assert.Equal(ValidIndexJson, File.ReadAllText(this.CacheFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_TamperedIndexWithValidSignature_ReturnsHardErrorWithoutCacheFallback()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        var tampered = ValidIndexJson.Replace("AI coding assistant", "AI coding assistant!", StringComparison.Ordinal);
+        this.EnqueueFeed(JsonResponse(tampered));
+        this.EnqueueFeed(SignatureResponse(Encoding.UTF8.GetBytes(ValidIndexJson)));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.False(result.SignatureValid);
+        Assert.Contains("Plugin feed signature is invalid. The feed may have been tampered with.", result.Errors);
+        Assert.Equal(ValidIndexJson, File.ReadAllText(this.CacheFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_ValidButUnparseableBody_IsRejectedBeforeParsing()
+    {
+        // The body here is a *valid* index, but the signature covers a different one. Verification
+        // runs before parsing, so no parsed entries ever surface for an unverified body.
+        var otherIndex = ValidIndexJson.Replace("\"plugin-a\"", "\"plugin-z\"", StringComparison.Ordinal);
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(SignatureResponse(Encoding.UTF8.GetBytes(otherIndex)));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Null(result.Index);
+        Assert.Contains("Plugin feed signature is invalid. The feed may have been tampered with.", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_MissingSignatureDuringTransition_AcceptsIndexWithWarning()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: BeforeSignatureCutoff);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.SignatureValid);
+        Assert.Equal(
+            "Plugin feed signature is missing; accepted during transition window.",
+            result.SignatureWarning);
+        Assert.Equal("plugin-a", Assert.Single(result.Index!.Plugins).Id);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_MissingSignatureDuringTransition_DoesNotCacheTheUnverifiedIndex()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: BeforeSignatureCutoff);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.False(File.Exists(this.CacheFilePath));
+        Assert.False(File.Exists(this.SyncMetadataFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_MissingSignatureAfterCutoff_ReturnsHardErrorWithoutCacheFallback()
+    {
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { Timestamp = DateTimeOffset.UtcNow });
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotFound));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: PluginFeedSigner.SignatureRequiredAfter);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.FromCache);
+        Assert.Contains("Plugin feed signature is required but missing.", result.Errors);
+        Assert.Equal(ValidIndexJson, File.ReadAllText(this.CacheFilePath));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureFileExceeds4KB_IsRejected()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(ChunkedResponse(new byte[5000]));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Plugin feed signature file too large", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureDeclaredOver4KB_IsRejectedFromTheContentLength()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(ByteResponse(new byte[5000]));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Plugin feed signature file too large", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureRedirectToHttp_IsTreatedAsMissing()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(RedirectResponse("http://evil.example.com/index.sig"));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: BeforeSignatureCutoff);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.SignatureWarning);
+        Assert.Equal(2, this.handler.Requests.Count);
+        Assert.DoesNotContain(this.handler.Requests, request => request.RequestUri!.Scheme != Uri.UriSchemeHttps);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureRedirectToHttps_IsFollowedAndVerified()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(RedirectResponse("https://example.com/moved/index.sig"));
+        this.EnqueueFeed(SignatureResponse(Encoding.UTF8.GetBytes(ValidIndexJson)));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.Null(result.SignatureWarning);
+        Assert.Equal(3, this.handler.Requests.Count);
+        Assert.Equal("https://example.com/moved/index.sig", this.handler.Requests[2].RequestUri!.AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_CustomFeedUrl_DoesNotFetchASignature()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        var client = this.CreateClient();
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.SignatureValid);
+        Assert.Null(result.SignatureWarning);
+        Assert.DoesNotContain(
+            this.handler.Requests,
+            request => request.RequestUri!.AbsoluteUri.EndsWith("index.sig", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_304_DoesNotFetchTheSignature()
+    {
+        var cachedAt = new DateTimeOffset(2026, 11, 14, 10, 0, 0, TimeSpan.Zero);
+        this.WriteCachedIndex(ValidIndexJson);
+        this.WriteMetadata(new PluginFeedSyncMetadata { ETag = "\"v1\"", Timestamp = cachedAt });
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.NotModified));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.True(result.SignatureValid);
+        Assert.Null(result.SignatureWarning);
+        var request = Assert.Single(this.handler.Requests);
+        Assert.Equal(DefaultFeedUrl, request.RequestUri!.AbsoluteUri);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_UnsupportedAlgorithm_ReturnsHardError()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(JsonResponse(PluginFeedSignatureTestData.Envelope(
+            Convert.ToBase64String(PluginFeedSignatureTestData.Sign(Encoding.UTF8.GetBytes(ValidIndexJson))),
+            "ed25519")));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.False(result.SignatureValid);
+        Assert.Contains("Unsupported signature algorithm: ed25519", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureTransportErrorDuringTransition_AcceptsIndexWithWarning()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(new HttpResponseMessage(HttpStatusCode.InternalServerError));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: BeforeSignatureCutoff);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.SignatureWarning);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_MalformedSignatureEnvelope_ReturnsHardError()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(JsonResponse("{ this is not an envelope"));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Plugin feed signature envelope is malformed.", result.Errors);
+        Assert.Contains("Plugin feed signature is invalid. The feed may have been tampered with.", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureValueNotBase64_ReturnsHardError()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        this.EnqueueFeed(JsonResponse(PluginFeedSignatureTestData.Envelope("!!! not base64 !!!")));
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.False(result.Success);
+        Assert.Contains("Plugin feed signature envelope is malformed.", result.Errors);
+    }
+
+    [Fact]
+    public async Task GetFeedAsync_SignatureRedirectChainOverTheHopLimit_IsTreatedAsMissing()
+    {
+        this.EnqueueFeed(JsonResponse(ValidIndexJson));
+        for (var i = 0; i < 5; i++)
+        {
+            this.EnqueueFeed(RedirectResponse($"https://example.com/signature-hop-{i}"));
+        }
+
+        var client = this.CreateClient(feedUrl: DefaultFeedUrl, now: BeforeSignatureCutoff);
+
+        var result = await client.GetFeedAsync();
+
+        Assert.True(result.Success);
+        Assert.NotNull(result.SignatureWarning);
+        Assert.Equal(6, this.handler.Requests.Count);
+    }
+
+    private static HttpResponseMessage SignatureResponse(byte[] body)
+    {
+        var envelope = PluginFeedSignatureTestData.Envelope(
+            Convert.ToBase64String(PluginFeedSignatureTestData.Sign(body)));
+        return JsonResponse(envelope);
     }
 
     private void WriteCachedIndex(string json)

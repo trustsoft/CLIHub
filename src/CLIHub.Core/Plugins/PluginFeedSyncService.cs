@@ -224,7 +224,10 @@ public sealed class PluginFeedSyncService : IPluginFeedSyncService, IDisposable
     ///   Performs one background refresh: skips when the feed is disabled, fetches conditionally,
     ///   skips cache-served and failed results, computes the comparison hash, and publishes
     ///   <see cref="PluginFeedUpdatedEvent" /> after persisting the new hash when it changed. A 304
-    ///   publishes nothing because the hash of the cached index equals the stored hash.
+    ///   publishes nothing because the hash of the cached index equals the stored hash. The refresh
+    ///   reuses <see cref="IPluginFeedClient.GetFeedAsync" />, so the index signature is verified on
+    ///   the same path as a foreground fetch: a verification failure surfaces as a failed result and
+    ///   therefore neither publishes an event nor replaces the cached index.
     /// </summary>
     /// <param name="cancellationToken"> Cancellation token for the fetch. </param>
     /// <returns> A task completing when the refresh finishes. </returns>
@@ -255,6 +258,10 @@ public sealed class PluginFeedSyncService : IPluginFeedSyncService, IDisposable
 
         if (!result.Success || result.Index is null)
         {
+            // A failed refresh publishes nothing. This includes a signature verification failure:
+            // the client returns the signature error as a hard failure (no index, no cache write),
+            // logs the cause at Error, and the feed is simply not updated — the background path adds
+            // no separate verification of its own.
             this.logger.LogWarning(
                 "Background plugin feed refresh failed: {Errors}",
                 string.Join("; ", result.Errors));
@@ -265,6 +272,16 @@ public sealed class PluginFeedSyncService : IPluginFeedSyncService, IDisposable
         {
             // The live fetch failed and the client served stale data: never a change signal.
             this.logger.LogDebug("Background plugin feed refresh served the cached index; no event");
+            return;
+        }
+
+        if (result.SignatureWarning is not null)
+        {
+            // Verifier finding a: an index accepted without a signature is not cached by the client,
+            // so persisting its hash would orphan the metadata (the client deletes it on the next
+            // fetch) and make the stored hash alternate between null and a value, publishing a
+            // spurious update event every other refresh. Change detection waits for a verified index.
+            this.logger.LogDebug("Background plugin feed refresh accepted an unverified index; no hash stored and no event");
             return;
         }
 

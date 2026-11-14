@@ -13,7 +13,7 @@ Create the `PluginFeedSigner` static class, the `PluginFeedSignature` record, an
 
 ### Tasks
 
-- [ ] 1.1 — Create `PluginFeedSignature.cs` record (in `CLIHub.Core/Plugins`)
+- [x] 1.1 — Create `PluginFeedSignature.cs` record (in `CLIHub.Core/Plugins`)
   - Record: `PluginFeedSignature { Algorithm, Signature, SignedAt }` with `[JsonPropertyName]` attributes.
   - `Algorithm`: string (e.g. `"ecdsa-p256-sha256"`).
   - `Signature`: string (base64 of the DER-encoded ECDSA signature).
@@ -21,7 +21,7 @@ Create the `PluginFeedSigner` static class, the `PluginFeedSignature` record, an
   - Static `Parse(string json)` method that deserializes from the JSON envelope.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.2 — Create `PluginFeedSigner.cs` static class (in `CLIHub.Core/Plugins`)
+- [x] 1.2 — Create `PluginFeedSigner.cs` static class (in `CLIHub.Core/Plugins`)
   - `PublicKeyPem`: const string with the official feed's public key in PEM format. Placeholder value initially; the real key is pasted after the v2 repo key generation.
   - `SignatureRequiredAfter`: `public static readonly DateTimeOffset` constant set to a date ~2 weeks after expected ship (e.g., `2026-12-15`). Document as the transition-window cutoff.
   - `RequireFeedSignature`: `public const bool` = `false` initially. Document as the future flag to flip to `true` in a follow-up slice.
@@ -31,7 +31,7 @@ Create the `PluginFeedSigner` static class, the `PluginFeedSignature` record, an
   - XML documentation on all public members.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.3 — Generate test keys for unit tests
+- [x] 1.3 — Generate test keys for unit tests
   - Run `openssl ecparam -name prime256v1 -genkey -noout` to create a test private key.
   - Run `openssl ec -in <private.pem> -pubout` to extract the public key.
   - Embed the test public key PEM as a test constant (not the production key).
@@ -40,7 +40,7 @@ Create the `PluginFeedSigner` static class, the `PluginFeedSignature` record, an
   - Save the test constants (keys, sample body, valid signature base64, wrong-key signature, tampered-body) in the test file.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 1.4 — Add `PluginFeedSignerTests.cs` (in `tests/CLIHub.Core.Tests/Plugins/`)
+- [x] 1.4 — Add `PluginFeedSignerTests.cs` (in `tests/CLIHub.Core.Tests/Plugins/`)
   - Test: `Verify_ValidSignature_ReturnsTrue` — valid body + valid key → true.
   - Test: `Verify_TamperedBody_ReturnsFalse` — modified body + valid key → false.
   - Test: `Verify_WrongKey_ReturnsFalse` — valid body + wrong key → false.
@@ -54,7 +54,7 @@ Create the `PluginFeedSigner` static class, the `PluginFeedSignature` record, an
   - Test: `Parse_MissingAlgorithm_ThrowsOrReturnsNull` — invalid envelope.
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
+- [x] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
 
 ---
 
@@ -65,13 +65,13 @@ Integrate the signature verification step into `PluginFeedClient.FetchFeedAsync`
 
 ### Tasks
 
-- [ ] 2.1 — Modify `PluginFeedResult.cs`
+- [x] 2.1 — Modify `PluginFeedResult.cs`
   - Add `SignatureValid: bool` init-only property (default `true` — backwards-compatible for non-default feeds).
   - Add `SignatureWarning: string?` init-only property (non-null when a missing signature was accepted during transition).
   - Document both.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 2.2 — Add signature fetch to `PluginFeedClient.FetchFeedAsync`
+- [x] 2.2 — Add signature fetch to `PluginFeedClient.FetchFeedAsync`
   - After `ReadBoundedAsync` returns the body and before `ParseFeedIndex`:
     1. If the feed URL is NOT the default (`feedUrl != FeedUrlProvider.DefaultFeedUrl`), skip verification.
     2. Derive the signature URL: `new Uri(new Uri(feedUrl), "index.sig").AbsoluteUri`.
@@ -89,12 +89,12 @@ Integrate the signature verification step into `PluginFeedClient.FetchFeedAsync`
   - Signature file exceeds 4 KB → hard error ("Plugin feed signature file too large").
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 2.3 — Add `IsDefaultFeedUrl` helper to `FeedUrlProvider`
+- [x] 2.3 — Add `IsDefaultFeedUrl` helper to `FeedUrlProvider`
   - `public static bool IsDefaultFeedUrl(string url)` — compares with `DefaultFeedUrl` using ordinal comparison.
   - Used by `PluginFeedClient` to decide whether to verify.
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 2.4 — Add transport-level tests to `PluginFeedClientTests.cs`
+- [x] 2.4 — Add transport-level tests to `PluginFeedClientTests.cs`
   - Test: `GetFeedAsync_ValidSignature_ParsesIndex` — mock: 200 index + 200 signature (valid test key) → success, `SignatureValid: true`.
   - Test: `GetFeedAsync_InvalidSignature_HardError` — mock: 200 index + 200 signature (tampered) → hard error, no cache fallback.
   - Test: `GetFeedAsync_MissingSignatureDuringTransition_Warning` — mock: 200 index + 404 signature; `IsSignatureRequired` returns false → success, `SignatureWarning` set.
@@ -108,7 +108,7 @@ Integrate the signature verification step into `PluginFeedClient.FetchFeedAsync`
   - Ensure all existing `PluginFeedClientTests` pass with fixture updates only.
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
+- [x] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
 
 ---
 
@@ -119,19 +119,19 @@ Ensure the background sync service's refresh path includes signature verificatio
 
 ### Tasks
 
-- [ ] 3.1 — Verify the sync service integration path
+- [x] 3.1 — Verify the sync service integration path
   - `PluginFeedSyncService` calls `IPluginFeedClient.GetFeedAsync` → which calls `FetchFeedAsync` → which now includes signature verification. No code changes needed in the sync service.
   - Document in code comments that a signature verification failure in the sync path publishes no event and logs at Error (the `GetFeedAsync` error path already handles this — `PluginFeedResult.Success == false` → no event published per existing logic).
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 3.2 — Add sync-level tests to `PluginFeedSyncServiceTests.cs`
+- [x] 3.2 — Add sync-level tests to `PluginFeedSyncServiceTests.cs`
   - Test: `Refresh_ValidSignature_PublishesEvent` — the sync service calls `GetFeedAsync`, which verifies the signature; on success, the event is published as normal.
   - Test: `Refresh_InvalidSignature_DoesNotPublishEvent` — signature verification fails → `Success == false` → no event.
   - Test: `Refresh_304_DoesNotRefetchSignature` — 304 response trusts cached verified state.
   - Test: `Refresh_MissingSignatureDuringTransition_PublishesEvent` — missing signature accepted with warning → `Success == true` → event published (with warning logged).
   - Run: `dotnet test CLIHub.sln`
 
-- [ ] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
+- [x] Gate: All tests pass (`dotnet test CLIHub.sln`); `openspec validate --all`
 
 ---
 
@@ -142,7 +142,7 @@ Document the v2 repo artifacts (key generation, `sign-index.ps1`, workflow chang
 
 ### Tasks
 
-- [ ] 4.1 — Write the repo-side artifact specification
+- [x] 4.1 — Write the repo-side artifact specification
   - Document in a `docs/architecture/plugin-index-signing-repo.md` (or as a section in `docs/architecture/plugins.md`):
     - Key generation procedure (`openssl ecparam -name prime256v1`).
     - `tools/sign-index.ps1` specification (script logic, inputs, outputs, openssl command).
@@ -151,16 +151,16 @@ Document the v2 repo artifacts (key generation, `sign-index.ps1`, workflow chang
     - Transition plan timeline.
   - Verify: `dotnet build CLIHub.sln` (docs-only, no code change)
 
-- [ ] 4.2 — Update `docs/architecture/plugins.md`
+- [x] 4.2 — Update `docs/architecture/plugins.md`
   - Add a "Feed Index Signing" section describing: signature format, verification point, trust anchor, custom-feed behavior, transition window.
   - Add cross-reference to ADR-0015 and the deviation note (ECDSA P-256, not Ed25519).
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 4.3 — Update `docs/project-context.md`
+- [x] 4.3 — Update `docs/project-context.md`
   - Add a sentence to the runtime facts: "The plugin feed index is cryptographically signed (ECDSA P-256); the client verifies the signature before parsing."
   - Verify: `dotnet build CLIHub.sln`
 
-- [ ] 4.4 — Update `docs/adr/0015-plugin-registry-v2.md`
+- [x] 4.4 — Update `docs/adr/0015-plugin-registry-v2.md`
   - Add a note to the Signing section: "Implementation: ECDSA P-256 (not Ed25519 — unavailable in .NET 10 without third-party dependencies). The signature envelope's `algorithm` field allows future rotation."
   - Verify: `dotnet build CLIHub.sln`
 
@@ -169,8 +169,11 @@ Document the v2 repo artifacts (key generation, `sign-index.ps1`, workflow chang
   - Run `openspec validate --all` — 0 errors.
   - Run `graphify update .` — refresh the knowledge graph.
   - Manual smoke: sign a test index with the test key, serve over a local HTTPS endpoint, verify the client verifies it correctly.
+  - Status: the automated parts are run and green; the manual HTTPS smoke is pending, because the client verifies
+    against the embedded trust anchor and the feed repository has not published `index.sig` yet. The verification
+    path itself is covered end-to-end by the signed-fixture tests.
 
-- [ ] Gate: All tests pass; `openspec validate --all` reports 0 errors; `graphify update .` succeeds.
+- [x] Gate: All tests pass; `openspec validate --all` reports 0 errors; `graphify update .` succeeds.
 
 ---
 

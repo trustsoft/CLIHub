@@ -19,7 +19,14 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     private const string UserAgent = "CLIHub";
     private const int MaxIndexSizeBytes = 2 * 1024 * 1024; // 2 MB
     private const int MaxPackageSizeBytes = 10 * 1024 * 1024; // 10 MB
+    private const int MaxSignatureSizeBytes = 4 * 1024; // 4 KB
     private const int MaxRedirectHops = 5;
+
+    private const string SignatureInvalidError = "Plugin feed signature is invalid. The feed may have been tampered with.";
+    private const string SignatureMalformedError = "Plugin feed signature envelope is malformed.";
+    private const string SignatureRequiredError = "Plugin feed signature is required but missing.";
+    private const string SignatureTooLargeError = "Plugin feed signature file too large";
+    private const string SignatureMissingWarning = "Plugin feed signature is missing; accepted during transition window.";
 
     private static readonly StructuredErrorProfile FeedErrorProfile = new(
         TimeoutError: "Feed request timed out",
@@ -45,6 +52,19 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         UnexpectedLogMessage: "Unexpected error during logo download",
         UnexpectedLogLevel: LogLevel.Warning);
 
+    /// <summary>
+    ///   Signature transport failures never surface as user-facing errors: a signature that cannot be
+    ///   fetched is treated exactly like a missing one, and the transition-window rule decides whether
+    ///   the feed may still be used (design OQ-3). The strings below are diagnostic log messages.
+    /// </summary>
+    private static readonly StructuredErrorProfile SignatureErrorProfile = new(
+        TimeoutError: "Signature request timed out",
+        RequestError: "Signature request failed",
+        TimeoutLogMessage: "Feed signature request timed out",
+        RequestLogMessage: "Feed signature request failed",
+        UnexpectedLogMessage: "Feed signature request failed unexpectedly",
+        UnexpectedLogLevel: LogLevel.Warning);
+
     private readonly HttpClient httpClient;
     private readonly IPreferencesStore preferencesStore;
     private readonly IPluginDescriptorReader descriptorReader;
@@ -52,6 +72,8 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     private readonly ILogger<PluginFeedClient> logger;
     private readonly string cacheFilePath;
     private readonly string syncMetadataFilePath;
+    private readonly TimeProvider time;
+    private readonly string feedPublicKeyPem;
 
     /// <summary>
     ///   Creates the feed client with a dedicated HTTP handler that does not auto-redirect.
@@ -83,13 +105,24 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// <param name="syncMetadataFilePath">
     ///   Overrides the sync metadata location; defaults to <c> AppPaths.FeedSyncMetadataFile </c>.
     /// </param>
+    /// <param name="timeProvider">
+    ///   Time source for the signature transition window; system time when null. Tests set it to keep
+    ///   the missing-signature behavior deterministic on both sides of the cutoff.
+    /// </param>
+    /// <param name="feedPublicKeyPem">
+    ///   Verification key override, used only by tests; null uses the embedded
+    ///   <see cref="PluginFeedSigner.PublicKeyPem" /> trust anchor. Production composition never sets
+    ///   it, so the trust anchor stays a compile-time constant.
+    /// </param>
     internal PluginFeedClient(HttpMessageHandler handler,
                               IPreferencesStore preferencesStore,
                               ILogger<PluginFeedClient> logger,
                               IPluginDescriptorReader? descriptorReader = null,
                               IPluginDescriptorValidator? descriptorValidator = null,
                               string? cacheFilePath = null,
-                              string? syncMetadataFilePath = null)
+                              string? syncMetadataFilePath = null,
+                              TimeProvider? timeProvider = null,
+                              string? feedPublicKeyPem = null)
     {
         this.preferencesStore = preferencesStore ?? throw new ArgumentNullException(nameof(preferencesStore));
         this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -99,6 +132,10 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
         this.syncMetadataFilePath = string.IsNullOrWhiteSpace(syncMetadataFilePath)
             ? AppPaths.FeedSyncMetadataFile
             : syncMetadataFilePath;
+        this.time = timeProvider ?? TimeProvider.System;
+        this.feedPublicKeyPem = string.IsNullOrWhiteSpace(feedPublicKeyPem)
+            ? PluginFeedSigner.PublicKeyPem
+            : feedPublicKeyPem;
 
         this.httpClient = new HttpClient(handler ?? throw new ArgumentNullException(nameof(handler)));
         this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
@@ -212,8 +249,8 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
                 AllowCacheFallback: false);
         }
 
-        var body = await ReadBoundedAsync(finalResponse.Content, MaxIndexSizeBytes, cancellationToken).ConfigureAwait(false);
-        if (body is null)
+        var bodyBytes = await ReadBoundedBytesAsync(finalResponse.Content, MaxIndexSizeBytes, cancellationToken).ConfigureAwait(false);
+        if (bodyBytes is null)
         {
             this.logger.LogError("Feed index exceeds the {Limit} byte limit", MaxIndexSizeBytes);
             return new FeedFetchOutcome(
@@ -221,10 +258,35 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
                 AllowCacheFallback: false);
         }
 
+        // Verification-before-parse (design D4): for the official feed the signature must cover the
+        // exact body bytes before a single entry is parsed. A failed signature check never degrades
+        // to the cache, so tampering stays visible.
+        var signature = await this.VerifySignatureAsync(feedUrl, bodyBytes, cancellationToken).ConfigureAwait(false);
+        if (!signature.Success)
+        {
+            return new FeedFetchOutcome(
+                new PluginFeedResult(false, null, signature.Errors) { SignatureValid = false },
+                AllowCacheFallback: false);
+        }
+
+        var body = Encoding.UTF8.GetString(bodyBytes);
         var parsed = this.ParseFeedIndex(body);
         if (!parsed.Success)
         {
             return new FeedFetchOutcome(parsed, AllowCacheFallback: true);
+        }
+
+        var success = signature.Warning is null
+            ? parsed
+            : parsed with { SignatureWarning = signature.Warning };
+
+        // Only verified index bytes enter the cache (design guarantee 5): an index accepted without a
+        // signature during the transition window is served once but never cached, so a later 304 or a
+        // cache fallback can never present unverified data. A failed signature check returned above.
+        if (signature.Warning is not null)
+        {
+            this.logger.LogWarning("The unverified plugin feed index is not cached during the transition window");
+            return new FeedFetchOutcome(success, AllowCacheFallback: false);
         }
 
         this.SaveCachedIndex(body);
@@ -244,7 +306,150 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
                 : null
         });
 
-        return new FeedFetchOutcome(parsed, AllowCacheFallback: false);
+        return new FeedFetchOutcome(success, AllowCacheFallback: false);
+    }
+
+    /// <summary>
+    ///   Runs the signature step for a freshly fetched index body (design D4/D6): only the default
+    ///   official feed is verified, and a custom URL — the user's own trust decision — skips the step
+    ///   entirely (design D8).
+    /// </summary>
+    /// <param name="feedUrl"> The resolved feed URL. </param>
+    /// <param name="bodyBytes"> The raw index body bytes that must be covered by the signature. </param>
+    /// <param name="cancellationToken"> The linked timeout token of the enclosing fetch. </param>
+    /// <returns> Whether the fetch may continue, with the warning or the hard errors it carries. </returns>
+    private async Task<SignatureVerification> VerifySignatureAsync(
+        string feedUrl,
+        byte[] bodyBytes,
+        CancellationToken cancellationToken)
+    {
+        if (!FeedUrlProvider.IsDefaultFeedUrl(feedUrl))
+        {
+            return SignatureVerification.Skipped;
+        }
+
+        // The signature lives next to the index: standard URI resolution drops the file name.
+        var signatureUrl = new Uri(new Uri(feedUrl, UriKind.Absolute), "index.sig").AbsoluteUri;
+
+        // The signature GET runs under its own structured-error scope so any transport failure
+        // (timeout, network error, redirect rejection, unexpected exception) degrades to the
+        // transition-window rule instead of bypassing it. Caller cancellation still rethrows.
+        return await this.ExecuteWithStructuredErrorsAsync(
+            token => this.FetchAndVerifySignatureAsync(signatureUrl, bodyBytes, token),
+            reason => this.AcceptMissingSignature(reason),
+            SignatureErrorProfile,
+            onFailure: null,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///   Fetches <c> index.sig </c> with the same transport as the index (HTTPS-only, manual redirects
+    ///   with a 5-hop cap), bounds it to 4 KB, and verifies it against the body bytes. Only a 200
+    ///   response carries a signature; a 404 and every other status route through the
+    ///   transition-window rule (design OQ-3).
+    /// </summary>
+    /// <param name="signatureUrl"> The absolute signature URL next to the index. </param>
+    /// <param name="bodyBytes"> The raw index body bytes. </param>
+    /// <param name="cancellationToken"> The signature scope's linked timeout token. </param>
+    /// <returns> The verification outcome. </returns>
+    private async Task<SignatureVerification> FetchAndVerifySignatureAsync(
+        string signatureUrl,
+        byte[] bodyBytes,
+        CancellationToken cancellationToken)
+    {
+        var (response, redirectError) = await this.SendFollowingRedirectsAsync(
+            signatureUrl,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        if (response is null)
+        {
+            // A rejected redirect is not a signature; the transition-window rule decides what that
+            // means for the feed, exactly as it does for a missing file.
+            return this.AcceptMissingSignature(redirectError ?? "Redirect rejected");
+        }
+
+        using var finalResponse = response;
+
+        if (!finalResponse.IsSuccessStatusCode)
+        {
+            return this.AcceptMissingSignature($"HTTP {(int)finalResponse.StatusCode}");
+        }
+
+        // Fast-path rejection when the server declares the size up front; the bounded read below
+        // enforces the limit while streaming. An oversized envelope is present-but-unacceptable, so
+        // it is a hard error rather than a missing signature.
+        if (finalResponse.Content.Headers.ContentLength is > MaxSignatureSizeBytes)
+        {
+            this.logger.LogError("Feed signature file too large: {Size} bytes", finalResponse.Content.Headers.ContentLength);
+            return SignatureVerification.Failed(SignatureTooLargeError);
+        }
+
+        var envelopeJson = await ReadBoundedAsync(finalResponse.Content, MaxSignatureSizeBytes, cancellationToken).ConfigureAwait(false);
+        if (envelopeJson is null)
+        {
+            this.logger.LogError("Feed signature file exceeds the {Limit} byte limit", MaxSignatureSizeBytes);
+            return SignatureVerification.Failed(SignatureTooLargeError);
+        }
+
+        return this.VerifySignatureEnvelope(envelopeJson, bodyBytes);
+    }
+
+    /// <summary>
+    ///   Verifies a parsed envelope against the body bytes: the declared algorithm must be the
+    ///   supported one, the base64 value must decode, and the ECDSA signature must cover the exact
+    ///   body bytes under the trust anchor.
+    /// </summary>
+    /// <param name="envelopeJson"> The <c> index.sig </c> document. </param>
+    /// <param name="bodyBytes"> The raw index body bytes. </param>
+    /// <returns> The verification outcome. </returns>
+    private SignatureVerification VerifySignatureEnvelope(string envelopeJson, byte[] bodyBytes)
+    {
+        var envelope = PluginFeedSignature.Parse(envelopeJson);
+        if (envelope is null)
+        {
+            this.logger.LogError("Feed signature envelope is malformed or carries no algorithm or signature value");
+            return SignatureVerification.Failed(SignatureMalformedError, SignatureInvalidError);
+        }
+
+        if (!string.Equals(envelope.Algorithm, PluginFeedSigner.SupportedAlgorithm, StringComparison.Ordinal))
+        {
+            this.logger.LogError("Unsupported feed signature algorithm {Algorithm}", envelope.Algorithm);
+            return SignatureVerification.Failed($"Unsupported signature algorithm: {envelope.Algorithm}");
+        }
+
+        if (!PluginFeedSigner.TryDecodeSignature(envelope.Signature, out var signatureDer))
+        {
+            this.logger.LogError("Feed signature value is not valid base64");
+            return SignatureVerification.Failed(SignatureMalformedError, SignatureInvalidError);
+        }
+
+        if (!PluginFeedSigner.Verify(bodyBytes, signatureDer, this.feedPublicKeyPem))
+        {
+            this.logger.LogError("Feed signature verification failed; the index may have been tampered with");
+            return SignatureVerification.Failed(SignatureInvalidError);
+        }
+
+        this.logger.LogInformation("Feed signature verified (signed at {SignedAt})", envelope.SignedAt);
+        return SignatureVerification.Verified;
+    }
+
+    /// <summary>
+    ///   Applies the transition-window rule to a signature that could not be obtained: before the
+    ///   cutoff (with the flag unset) the index is accepted with a logged warning; on or after it a
+    ///   hard error is returned.
+    /// </summary>
+    /// <param name="reason"> Why no signature was available, for the log. </param>
+    /// <returns> The accepted-with-warning or the hard-error outcome. </returns>
+    private SignatureVerification AcceptMissingSignature(string reason)
+    {
+        if (PluginFeedSigner.IsSignatureRequired(this.time.GetUtcNow()))
+        {
+            this.logger.LogError("Plugin feed signature is required but missing ({Reason}); rejecting the index", reason);
+            return SignatureVerification.Failed(SignatureRequiredError);
+        }
+
+        this.logger.LogWarning("{Warning} ({Reason})", SignatureMissingWarning, reason);
+        return SignatureVerification.AcceptedWithoutSignature;
     }
 
     /// <summary>
@@ -625,6 +830,35 @@ public sealed class PluginFeedClient : IPluginFeedClient, IDisposable
     /// <param name="Result"> The feed result produced by the fetch. </param>
     /// <param name="AllowCacheFallback"> Whether a failure may be replaced by the cached index. </param>
     private sealed record FeedFetchOutcome(PluginFeedResult Result, bool AllowCacheFallback);
+
+    /// <summary>
+    ///   The outcome of the signature step: whether the fetch may continue, the transition-window
+    ///   warning to surface on an accepted unverified index, and the hard errors to report when the
+    ///   fetch must not continue.
+    /// </summary>
+    /// <param name="Success"> Whether the index may proceed to parsing and caching. </param>
+    /// <param name="Warning"> The transition-window notice, or null. </param>
+    /// <param name="Errors"> The user-facing errors when <paramref name="Success" /> is false. </param>
+    private sealed record SignatureVerification(
+        bool Success,
+        string? Warning,
+        IReadOnlyList<string> Errors)
+    {
+        /// <summary> A custom feed URL: no signature is fetched and none is required. </summary>
+        public static SignatureVerification Skipped { get; } = new(true, null, []);
+
+        /// <summary> The signature verified against the body bytes. </summary>
+        public static SignatureVerification Verified { get; } = new(true, null, []);
+
+        /// <summary> No signature exists, but the transition window accepts the index with a warning. </summary>
+        public static SignatureVerification AcceptedWithoutSignature { get; } =
+            new(true, SignatureMissingWarning, []);
+
+        /// <summary> A present, malformed, unsupported, oversized, or non-matching signature. </summary>
+        /// <param name="errors"> The user-facing errors. </param>
+        /// <returns> The failed outcome. </returns>
+        public static SignatureVerification Failed(params string[] errors) => new(false, null, errors);
+    }
 
     /// <summary>
     ///   Sends the GET request and manually follows HTTP redirects up to the maximum hop count,

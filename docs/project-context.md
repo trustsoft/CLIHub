@@ -59,6 +59,11 @@ process inspection) behind ports declared in Core.
   `>=minAppVersion` ranges). Built-in plugins are refreshed on app update using three-hash logic
   that preserves user modifications. The feed URL preference (absent/null = default official; explicit `""` = disabled;
   non-empty = custom HTTPS URL) controls Browse Plugins visibility.
+- The plugin feed index is cryptographically signed (ECDSA P-256 with SHA-256, an `index.sig` JSON
+  envelope next to the index); the default feed's index is signature-verified before parsing, a missing
+  signature is accepted with a logged warning only until the hardcoded cutoff (2026-12-15) and is a hard
+  error after it, and custom feed URLs skip verification. Unverified index bytes are never cached, so a
+  304 or a cache fallback always serves verified data.
 - The plugin feed is refreshed in the background (`IPluginFeedSyncService`): once at startup without
   blocking it, then hourly. Fetches are conditional (ETag/If-None-Match, else Last-Modified/
   If-Modified-Since), and the last-good index is cached in `%APPDATA%\CLIHub\cache\`

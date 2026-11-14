@@ -10,6 +10,11 @@ public interface IPluginFeedClient
     ///   exists the request is conditional (<c> If-None-Match </c>, else <c> If-Modified-Since </c>);
     ///   a 304 Not Modified reports success from the cached index without re-parsing, and a failed
     ///   fetch reports success from the last-good cache with <c> FromCache </c> set when one exists.
+    ///   For the default official feed the index body is signature verified before parsing: an
+    ///   invalid signature is a hard error, and a missing signature is accepted with
+    ///   <see cref="PluginFeedResult.SignatureWarning" /> only until the transition window closes. A
+    ///   304 and a cache fallback trust the already-verified cached index without re-fetching the
+    ///   signature; a custom feed URL skips verification.
     /// </summary>
     /// <param name="cancellationToken"> Cancellation token. </param>
     /// <returns> Feed result with index or errors. </returns>
