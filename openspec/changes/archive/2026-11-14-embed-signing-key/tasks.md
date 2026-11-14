@@ -66,7 +66,7 @@
 
 - [x] 1.6 Run `graphify update .` to refresh the knowledge graph with the changed source file.
 
-- [ ] 1.7 **Manual smoke (blocks commit/archive):**
+- [x] 1.7 **Manual smoke (blocks commit/archive):**
   - Delete `%APPDATA%\CLIHub\cache\feed-index.json` (and `feed-sync.json`) to force a fresh
     signature fetch.
   - Run CLIHub: `dotnet run --project src/CLIHub/CLIHub.csproj`.
@@ -76,3 +76,5 @@
   - Check the log file at `%APPDATA%\CLIHub\logs\` — no signature-related Error entries,
     `SignatureValid: true` in the feed result (if logged).
   - **Only after this smoke passes:** report the result and ask for commit/archive approval.
+  - **(smoke confirmed by the user 2026-11-14: the signed live feed verifies with the embedded
+    anchor — silent load, no warning, cache restored; approved 2026-11-14)**
