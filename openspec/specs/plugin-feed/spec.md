@@ -193,6 +193,13 @@ The system SHALL download a plugin package from the feed, verify its checksum, s
 - **THEN** no installation occurs
 - **AND** the temporary package file is deleted
 
+#### Scenario: Browse card updates in place after install
+
+- **WHEN** a plugin is successfully installed or updated from the Browse Plugins dialog
+- **THEN** that plugin's card updates in place to reflect the installed version: status "Installed", the installed version shown, and no Install/Update action button
+- **AND** the feed index is not re-fetched as part of the install
+- **AND** changes made to the feed after the dialog was loaded are reflected only when the user clicks Refresh
+
 ### Requirement: Update plugin from feed
 
 The system SHALL download an updated plugin package from the feed, verify its checksum, show a confirmation dialog, and replace the existing installed plugin if confirmed.

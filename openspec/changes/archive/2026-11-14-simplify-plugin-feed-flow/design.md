@@ -417,3 +417,26 @@ re-fetch. `PluginFeedVersionComparatorTests` (stage 3): new `IsDowngrade` cases.
 3. **Log fidelity:** D3 preserves all log messages and the Warning-vs-Error level difference
    exactly. If the team would rather unify the unexpected-catch log level (e.g., always Error),
    say so before implementation; tests do not constrain it either way.
+
+## Implementation notes (2026-11-14, recorded at verification)
+
+Open-question resolutions by the user: (1) version-less installs display `UpdateAvailable`; (2)
+**two dedicated `DownloadPackageAsync` redirect tests were added** — `DownloadPackageAsync_RedirectToHttps_IsFollowed`
+and `DownloadPackageAsync_RedirectToHttp_IsRejected` — answering open question 2 with "add"; (3) log
+fidelity preserved byte-identical.
+
+Implementation deviations from tasks.md (code reality per design.md):
+
+1. **Task 2.1's "3xx without Location → dispose and return" is self-contradictory** — a disposed
+   response cannot be consumed by the caller's `IsSuccessStatusCode` check. Implemented per D2: the
+   3xx response is returned terminal and undisposed; the caller owns disposal (`using var
+   finalResponse`). A code comment cites D2.
+2. **Task 2.5(d)'s asserted string was wrong for the D2 path.** The terminal-3xx flows through the
+   `!IsSuccessStatusCode` branch, whose preserved string is `"Could not load plugin feed"` (the
+   task's literal `"…Check your network connection."` is the `HttpRequestException` string). The
+   implemented test asserts the D2-correct string, which is also what the pre-change code produced
+   for this server shape (probe-era trace in D2).
+3. **Test-delta arithmetic** (tasks 2.6/5.2 said "three/four"): actual +5 client tests (2.5c-e plus
+   the two user-decided download-path tests), +11 comparator cases (task 3.3's truth table as
+   InlineData rows), +1 ViewModel test (4.4b). Every added case maps to a task or a user decision;
+   suite 1587 → 1604, 0 failed.
