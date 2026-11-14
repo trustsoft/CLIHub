@@ -1,7 +1,7 @@
 # Quick Wins: Implementation Tasks
 
 Scope note (2026-11-14, re-verified after the interrupted session): three of the five backlog
-candidates were already resolved in the tree and are dropped from implementation Ã¢â‚¬â€ plugin-feed
+candidates were already resolved in the tree and are dropped from implementation ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â plugin-feed
 cancellation (`src/CLIHub.Core/Plugins/PluginFeedClient.cs:794`), the two unused glyph constants
 (`src/CLIHub/Theming/IconGlyphs.cs` has no `Diagnostic`/`Process`), and the maximize/restore
 tooltip (`src/CLIHub/Views/WindowHeaderBar.xaml:67-74` already flips `Maximize`/`Restore` from a
@@ -64,8 +64,8 @@ openspec validate --all
 
 ## Task 5: Commit and Archive Preparation
 
-- [ ] 5.1 Stage only the files that belong to this change (no unrelated working-tree edits)
-- [ ] 5.2 Wait for explicit user approval, then commit and archive
+- [x] 5.1 Stage only the files that belong to this change (no unrelated working-tree edits)
+- [x] 5.2 Wait for explicit user approval, then commit and archive
 
 ---
 
