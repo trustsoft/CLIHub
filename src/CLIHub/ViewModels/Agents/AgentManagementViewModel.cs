@@ -34,6 +34,12 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// </summary>
     private const string UpdateCheckFailureSummary = "Update check failed";
 
+    /// <summary>
+    ///   The card message shown when a plugin disable or enable could not be persisted. The card
+    ///   keeps showing the persisted state, so the message explains why the toggle did not stick.
+    /// </summary>
+    private const string PluginStateSaveFailureMessage = "Could not save the plugin state";
+
     private readonly IPluginCatalog catalog;
     private readonly IAgentDetectionService detection;
     private readonly IAgentVersionService version;
@@ -1314,15 +1320,27 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <summary>
     ///   Marks a plugin disabled (enabled: false in the registry; files stay on disk) and
     ///   reloads the catalog so the plugin leaves the active list and appears in the Disabled
-    ///   section.
+    ///   section. When the registry write fails, the card reports it and the reload shows the
+    ///   persisted (still enabled) truth.
     /// </summary>
     /// <param name="card"> The card of the plugin to disable. </param>
     private void DisablePlugin(AgentCardItem card)
     {
         try
         {
-            this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = false);
+            var saved = this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = false);
             this.catalog.ReloadPlugins();
+
+            if (!saved)
+            {
+                // The reload rebuilds the card collection from the persisted state, so the
+                // message lands on the rebuilt card as well as the invoked instance.
+                card.Message = PluginStateSaveFailureMessage;
+                if (this.Cards.FirstOrDefault(candidate => string.Equals(candidate.PluginId, card.PluginId, StringComparison.Ordinal)) is { } rebuiltCard)
+                {
+                    rebuiltCard.Message = PluginStateSaveFailureMessage;
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -1333,19 +1351,32 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <summary>
     ///   Marks a plugin enabled (enabled: true in the registry) and reloads the catalog so the
-    ///   plugin returns to the active list without re-installation.
+    ///   plugin returns to the active list without re-installation. When the registry write
+    ///   fails, the card reports it and the reload shows the persisted (still disabled) truth.
     /// </summary>
     /// <param name="card"> The disabled card of the plugin to enable. </param>
     private void EnablePlugin(DisabledAgentCardItem card)
     {
         try
         {
-            this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = true);
+            var saved = this.UpdatePluginRegistryEntry(card.PluginId, entry => entry.Enabled = true);
             this.catalog.ReloadPlugins();
+
+            if (!saved)
+            {
+                // The reload rebuilds the card collection from the persisted state, so the
+                // message lands on the rebuilt card as well as the invoked instance.
+                card.Message = PluginStateSaveFailureMessage;
+                if (this.DisabledCards.FirstOrDefault(candidate => string.Equals(candidate.PluginId, card.PluginId, StringComparison.Ordinal)) is { } rebuiltCard)
+                {
+                    rebuiltCard.Message = PluginStateSaveFailureMessage;
+                }
+            }
         }
         catch (Exception ex)
         {
             this.logger.LogWarning(ex, "Could not enable plugin {PluginId}", card.PluginId);
+            card.Message = "Could not enable the plugin";
         }
     }
 
@@ -1392,17 +1423,18 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
     /// <summary>
     ///   Applies a mutation to one plugin's lifecycle state entry, creating the entry when the
-    ///   plugin has none yet, and persists the state document.
+    ///   plugin has none yet, and attempts to persist the state document.
     /// </summary>
     /// <param name="pluginId"> The plugin id whose entry is updated. </param>
     /// <param name="update"> The mutation applied to the entry. </param>
-    private void UpdatePluginRegistryEntry(string pluginId, Action<PluginRegistryEntry> update)
+    /// <returns> Whether the mutated state was written to the registry. </returns>
+    private bool UpdatePluginRegistryEntry(string pluginId, Action<PluginRegistryEntry> update)
     {
         var document = this.pluginState.Load();
         var entry = document.Plugins.GetValueOrDefault(pluginId) ?? new PluginRegistryEntry(PluginOrigin.Unknown);
         update(entry);
         document.Plugins[pluginId] = entry;
-        this.pluginState.Save(document);
+        return this.pluginState.TrySave(document);
     }
 
     private Task RunAsync(string operationName, Func<CancellationToken, Task> operation) =>

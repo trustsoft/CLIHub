@@ -7,6 +7,8 @@ using CLIHub.Core.Plugins;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
+using Moq;
+
 public class PluginCatalogTests : IDisposable
 {
     private readonly string root;
@@ -48,7 +50,7 @@ public class PluginCatalogTests : IDisposable
         var repository = this.CreateStateRepository();
         var document = repository.Load();
         document.Plugins[pluginId] = entry;
-        repository.Save(document);
+        repository.TrySave(document);
     }
 
     private PluginRegistryEntry ReadRegistryEntry(string pluginId)
@@ -490,7 +492,7 @@ public class PluginCatalogTests : IDisposable
 
         var document = repository.Load();
         document.Plugins["opencode"].Enabled = true;
-        repository.Save(document);
+        repository.TrySave(document);
         manager.ReloadPlugins();
 
         Assert.Single(manager.GetAllPlugins());
@@ -523,6 +525,30 @@ public class PluginCatalogTests : IDisposable
         Assert.True(entry.Enabled);
         Assert.Null(entry.InstalledAt);
         Assert.Empty(manager.GetUserModifiedPlugins());
+    }
+
+    [Fact]
+    public void LoadPlugins_AdoptionSaveFails_LogsContextAndContinues()
+    {
+        this.WritePlugin("opencode", ValidJson);
+        var registry = new Mock<IPluginRegistry>();
+        registry.Setup(x => x.Load()).Returns(() => PluginRegistryDocument.Empty());
+        registry.Setup(x => x.TrySave(It.IsAny<PluginRegistryDocument>())).Returns(false);
+        var logger = new RecordingLogger<PluginCatalog>();
+        var manager = new PluginCatalog(logger, this.CreateResolver(), this.root, stateRepository: registry.Object);
+
+        manager.LoadPlugins();
+
+        // The adopted entry lives in memory only: the scan still succeeds and reports the
+        // failure with its own context instead of throwing.
+        Assert.Single(manager.GetAllPlugins());
+        Assert.Contains(logger.Messages, message => message.Contains("Could not write the plugin registry after adopting folders", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("in memory only", StringComparison.Ordinal));
+        registry.Verify(x => x.TrySave(It.IsAny<PluginRegistryDocument>()), Times.Once);
+
+        // Nothing was persisted, so the next scan adopts the folder again.
+        manager.ReloadPlugins();
+        registry.Verify(x => x.TrySave(It.IsAny<PluginRegistryDocument>()), Times.Exactly(2));
     }
 
     [Fact]

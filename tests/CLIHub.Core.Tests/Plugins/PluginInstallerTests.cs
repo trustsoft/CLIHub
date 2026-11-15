@@ -37,6 +37,12 @@ public class PluginInstallerTests : IDisposable
             reader,
             pluginsPath: this.pluginsPath);
 
+    private PluginInstaller CreateInstallerWithRegistry(IPluginRegistry stateRepository) =>
+        new(NullLogger<PluginInstaller>.Instance,
+            stateRepository,
+            this.catalog.Object,
+            pluginsPath: this.pluginsPath);
+
     private static string CreatePackage(params (string EntryName, byte[] Content)[] entries)
     {
         var path = Path.Combine(Path.GetTempPath(), "clihub-package-" + Guid.NewGuid().ToString("N") + ".clihub-plugin.zip");
@@ -86,7 +92,7 @@ public class PluginInstallerTests : IDisposable
             var repository = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath);
             var document = repository.Load();
             document.Plugins[id] = new PluginRegistryEntry(PluginOrigin.Installed) { InstalledVersion = installedVersion };
-            repository.Save(document);
+            repository.TrySave(document);
         }
     }
 
@@ -375,7 +381,7 @@ public class PluginInstallerTests : IDisposable
     {
         this.WriteExistingPlugin("community", ValidDescriptor);
         var repository = new PluginRegistryRepository(NullLogger<PluginRegistryRepository>.Instance, this.stateFilePath, this.legacyStateFilePath);
-        repository.Save(repository.Load());
+        repository.TrySave(repository.Load());
         var stateBefore = File.ReadAllText(this.stateFilePath);
 
         var preview = this.CreateInstaller().Inspect(ValidPackage());
@@ -410,7 +416,64 @@ public class PluginInstallerTests : IDisposable
         Assert.True(entry.Enabled);
         Assert.NotNull(entry.InstalledAt);
         Assert.True(entry.InstalledAt >= DateTimeOffset.UtcNow - TimeSpan.FromMinutes(1), "the install time must be recorded at install time");
+        Assert.Empty(result.Warnings);
 
+        this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void Install_StateSaveFails_ReportsSuccessWithWarning()
+    {
+        // The state write is post-commit: a blocked registry write must not fail or roll back an
+        // install whose files are already in place and whose backup is already deleted.
+        var registry = new Mock<IPluginRegistry>();
+        registry.Setup(x => x.Load()).Returns(PluginRegistryDocument.Empty());
+        registry.Setup(x => x.TrySave(It.IsAny<PluginRegistryDocument>())).Returns(false);
+
+        var result = this.CreateInstallerWithRegistry(registry.Object).Install(ValidPackage(), replaceExisting: false);
+
+        Assert.True(result.Success);
+        Assert.Equal("community", result.InstalledPluginId);
+        Assert.Empty(result.Errors);
+        var warning = Assert.Single(result.Warnings);
+        Assert.Contains("plugin files were installed", warning, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("plugin state could not be saved", warning, StringComparison.Ordinal);
+        Assert.Contains("Unknown origin", warning, StringComparison.Ordinal);
+
+        // The files stay installed and the staged directory is gone; nothing was rolled back.
+        Assert.True(File.Exists(Path.Combine(this.pluginsPath, "community", "plugin.json")));
+        Assert.True(File.Exists(Path.Combine(this.pluginsPath, "community", "logo.png")));
+        Assert.DoesNotContain(this.PluginRootSubdirectories(), name => name.StartsWith(".staging-", StringComparison.Ordinal));
+        this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void Install_ReplacingExisting_StateSaveFails_KeepsNewFilesAndWarns()
+    {
+        // Replacement is the case the spec scenario names: the backup is deleted before the state
+        // write, so a failed write leaves the new files as the only copy of the plugin.
+        this.WriteExistingPlugin("community", ValidDescriptor.Replace("1.2.3", "0.9.0", StringComparison.Ordinal));
+        File.WriteAllBytes(Path.Combine(this.pluginsPath, "community", "logo.png"), Text("old logo"));
+
+        var registry = new Mock<IPluginRegistry>();
+        registry.Setup(x => x.Load()).Returns(PluginRegistryDocument.Empty());
+        registry.Setup(x => x.TrySave(It.IsAny<PluginRegistryDocument>())).Returns(false);
+
+        var result = this.CreateInstallerWithRegistry(registry.Object).Install(ValidPackage(), replaceExisting: true);
+
+        Assert.True(result.Success);
+        Assert.Equal("community", result.InstalledPluginId);
+        Assert.Empty(result.Errors);
+        var warning = Assert.Single(result.Warnings);
+        Assert.Contains("plugin files were installed", warning, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("plugin state could not be saved", warning, StringComparison.Ordinal);
+
+        // The installed content is the package's, not the replaced plugin's, and neither the staging
+        // directory nor the backup survives the tolerated state-write failure.
+        Assert.Equal(ValidDescriptor, File.ReadAllText(Path.Combine(this.pluginsPath, "community", "plugin.json")));
+        Assert.Equal(LogoBytes, File.ReadAllBytes(Path.Combine(this.pluginsPath, "community", "logo.png")));
+        Assert.Equal(["community"], this.PluginRootSubdirectories());
+        registry.Verify(x => x.TrySave(It.IsAny<PluginRegistryDocument>()), Times.Once);
         this.catalog.Verify(x => x.ReloadPlugins(), Times.Once);
     }
 

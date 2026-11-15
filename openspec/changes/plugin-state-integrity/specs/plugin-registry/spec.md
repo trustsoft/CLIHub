@@ -1,0 +1,89 @@
+## MODIFIED Requirements
+
+### Requirement: Single local registry document
+
+The system SHALL track plugin lifecycle state — origin, content hashes, installed version, enabled flag, and install timestamp — in one registry document at `%APPDATA%\CLIHub\registry.json`, the only local source of truth for that state. Reads SHALL be tolerant (missing fields defaulted, unknown fields ignored, corrupt files degraded to an empty registry, never throwing) and writes SHALL be atomic. A write failure SHALL be reported to the caller and SHALL never be presented as persisted.
+
+#### Scenario: Registry records lifecycle state for every managed plugin
+
+- **WHEN** a plugin is installed, seeded as a built-in, or adopted from disk
+- **THEN** the registry contains an entry for its id with origin, contentHash, and enabled flag
+- **AND** the plugins folder is a derived content store, not a second source of truth
+
+#### Scenario: Missing fields default tolerantly
+
+- **WHEN** a registry entry omits `origin` or `enabled`
+- **THEN** origin degrades to "unknown" and enabled defaults to true
+- **AND** the load succeeds without throwing
+
+#### Scenario: Unknown fields ignored
+
+- **WHEN** the registry document contains fields not in the schema
+- **THEN** those fields are ignored (forward compatibility)
+- **AND** parsing succeeds when the required structure is present
+
+#### Scenario: Corrupt registry yields empty state
+
+- **WHEN** `registry.json` exists but cannot be parsed and no legacy `plugin-state.json` exists
+- **THEN** the load returns an empty registry and logs a warning
+- **AND** no exception is thrown
+
+#### Scenario: Registry written atomically
+
+- **WHEN** the registry is saved
+- **THEN** the write lands in a temp file next to the target and is renamed over it
+- **AND** an interrupted write cannot leave a truncated registry document
+
+#### Scenario: Failed write reported to caller
+
+- **WHEN** a registry write fails
+- **THEN** the method returns `false`
+- **AND** the failure is logged as a warning
+- **AND** no exception is thrown for the caller to handle
+- **AND** the caller does not present the unwritten state as persisted
+
+### Requirement: Verify content and reconcile on catalog load
+
+The system SHALL verify each processed plugin's stored contentHash against the on-disk descriptor at catalog load, flag mismatches as user-modified, and reconcile plugin folders that have no registry entry.
+
+#### Scenario: Modified descriptor flagged as user-modified
+
+- **WHEN** a processed plugin's stored contentHash differs from the on-disk descriptor hash
+- **THEN** a warning is logged and the plugin appears in the catalog's user-modified collection with its stored and disk hashes
+- **AND** the plugin still loads normally
+
+#### Scenario: Built-in and installed verified uniformly
+
+- **WHEN** the catalog verifies descriptor content
+- **THEN** the same comparison applies to every origin (builtin, installed, unknown)
+- **AND** disabled plugins are verified in the skip path with mismatches logged
+
+#### Scenario: Matching or unknown hash loads without flag
+
+- **WHEN** the stored contentHash equals the disk hash, or no stored hash exists
+- **THEN** the plugin is not flagged as user-modified
+- **AND** a null stored hash is treated as unverifiable, not modified
+
+#### Scenario: Folder without entry adopted as unknown
+
+- **WHEN** a plugin folder with a valid descriptor has no registry entry
+- **THEN** a registry entry is created with origin "unknown", the disk contentHash, the descriptor's version, and enabled true
+- **AND** the registry is saved at most once per scan
+
+#### Scenario: Registry entry with missing folder retained
+
+- **WHEN** a registry entry's plugin folder is absent from disk
+- **THEN** the entry is kept with an informational log and is not pruned
+- **AND** built-in re-seeding and disabled-state preservation continue to honor the retained entry
+
+#### Scenario: Verification never writes the registry
+
+- **WHEN** a catalog scan completes with nothing to adopt
+- **THEN** the registry document is not rewritten
+
+#### Scenario: Catalog adoption write failure logged
+
+- **WHEN** the catalog adopts folders without registry entries and the registry write fails
+- **THEN** a warning is logged with the context that adopted entries are in memory only
+- **AND** the catalog continues to load normally
+- **AND** the adopted folders are re-adopted on the next scan

@@ -127,6 +127,8 @@ During each catalog load, every processed plugin's stored `contentHash` is verif
 - **Folder without a registry entry:** adopted with origin `unknown`, the disk hash, the descriptor's version, and `enabled: true`; the registry is saved at most once per scan. A clean scan that adopts nothing does not rewrite the registry.
 - **Registry entry whose folder is gone:** the entry is kept (logged, never pruned) — built-in re-seeding and disabled-state preservation depend on entries surviving missing folders.
 
+An install or update replaces the installed descriptor and rewrites the stored `contentHash` by design; the user-modified flag is a diagnostic of drift since the last CLIHub write, not a protection mechanism, and any member of the user-modified collection is cleared by the next install or update that touches that plugin.
+
 ### Plugin Seeding (Three-Hash Refresh Logic)
 
 Built-in descriptors are seeded at startup using three-hash comparison to distinguish application updates from user modifications:

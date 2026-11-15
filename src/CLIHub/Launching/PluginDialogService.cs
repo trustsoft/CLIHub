@@ -108,6 +108,7 @@ public sealed class PluginDialogService : IPluginDialogService
         if (result.Success)
         {
             MessageBoxHelper.Show($"Installed {pluginName ?? result.InstalledPluginId}.", "Plugin installed", MessageBoxButton.OK, MessageBoxImage.Information);
+            ShowInstallWarnings(result.Warnings);
             return;
         }
 
@@ -125,5 +126,24 @@ public sealed class PluginDialogService : IPluginDialogService
         var dialog = this.serviceProvider.GetRequiredService<BrowsePluginsDialog>();
         dialog.Owner = MessageBoxHelper.Owner;
         dialog.ShowDialog();
+    }
+
+    /// <summary>
+    ///   Renders the non-fatal warnings of a successful install as one warning dialog after the
+    ///   success message, so a degraded install (files committed, state unwritten) does not read
+    ///   as a clean one.
+    /// </summary>
+    /// <param name="warnings"> The install warnings; empty when there are none. </param>
+    private static void ShowInstallWarnings(IReadOnlyList<string> warnings)
+    {
+        if (warnings.Count == 0)
+        {
+            return;
+        }
+
+        MessageBoxHelper.Show(string.Join("\n", warnings.Select(warning => $"• {warning}")),
+            "Plugin installed with warnings",
+            MessageBoxButton.OK,
+            MessageBoxImage.Warning);
     }
 }

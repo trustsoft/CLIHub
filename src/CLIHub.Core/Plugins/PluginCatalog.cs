@@ -199,9 +199,9 @@ public sealed class PluginCatalog : IPluginCatalog
                 }
             }
 
-            if (stateDirty)
+            if (stateDirty && !this.stateRepository!.TrySave(state))
             {
-                this.stateRepository!.Save(state);
+                this.logger.LogWarning("Could not write the plugin registry after adopting folders; adopted entries are in memory only");
             }
         }
 

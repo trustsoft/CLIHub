@@ -197,9 +197,9 @@ public class PluginSeeder : IPluginSeeder
                 }
             }
 
-            if (stateDirty)
+            if (stateDirty && !this.stateRepository.TrySave(state))
             {
-                this.stateRepository.Save(state);
+                this.logger.LogWarning("Could not write the plugin registry after seeding; seeded built-ins will be re-applied on next start");
             }
 
             if (descriptorsWritten > 0)

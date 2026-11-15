@@ -7,7 +7,7 @@ using CLIHub.Core.Plugins;
 ///   and not launchable; the card carries the metadata the Disabled section renders and the
 ///   Enable action re-enables the plugin through the management view model.
 /// </summary>
-public sealed class DisabledAgentCardItem
+public sealed class DisabledAgentCardItem : ObservableObject
 {
     /// <summary>
     ///   Creates a card from a catalog disabled-plugin entry.
@@ -75,4 +75,24 @@ public sealed class DisabledAgentCardItem
 
     /// <summary> The version chip text, or "Unknown version" when the version is not known. </summary>
     public string VersionChipText => this.Version is { } version ? $"{version}" : "Unknown version";
+
+    /// <summary>
+    ///   The last action outcome message, or null.
+    /// </summary>
+    public string? Message
+    {
+        get;
+        set
+        {
+            if (this.SetProperty(ref field, value))
+            {
+                this.OnPropertyChanged(nameof(this.HasMessage));
+            }
+        }
+    }
+
+    /// <summary>
+    ///   Whether the card has an action outcome message to show.
+    /// </summary>
+    public bool HasMessage => !string.IsNullOrEmpty(this.Message);
 }

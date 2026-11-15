@@ -94,13 +94,21 @@ public sealed class PluginRegistryRepository : IPluginRegistry
     }
 
     /// <inheritdoc />
-    public void Save(PluginRegistryDocument document)
+    public bool TrySave(PluginRegistryDocument document)
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        if (!this.TrySave(document))
+        try
         {
-            this.logger.LogWarning("Could not write the plugin registry to {Path}", this.registryFilePath);
+            // Atomic write: write to a temp file next to the target, then rename so a crash
+            // mid-write can never leave a truncated registry document behind.
+            AtomicFileWriter.Write(this.registryFilePath, JsonSerializer.Serialize(document, CoreJson.Options));
+            return true;
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogWarning(ex, "Could not write the plugin registry to {Path}", this.registryFilePath);
+            return false;
         }
     }
 
@@ -170,29 +178,6 @@ public sealed class PluginRegistryRepository : IPluginRegistry
         }
 
         return document;
-    }
-
-    /// <summary>
-    ///   Writes the document atomically and reports success, unlike <see cref="Save" /> which
-    ///   swallows failures. Used only by the adoption path, which must know whether the legacy
-    ///   file may be deleted.
-    /// </summary>
-    /// <param name="document"> The registry document to persist. </param>
-    /// <returns> Whether the write succeeded. </returns>
-    private bool TrySave(PluginRegistryDocument document)
-    {
-        try
-        {
-            // Atomic write: write to a temp file next to the target, then rename so a crash
-            // mid-write can never leave a truncated registry document behind.
-            AtomicFileWriter.Write(this.registryFilePath, JsonSerializer.Serialize(document, CoreJson.Options));
-            return true;
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogWarning(ex, "Could not write the plugin registry to {Path}", this.registryFilePath);
-            return false;
-        }
     }
 
     /// <summary>

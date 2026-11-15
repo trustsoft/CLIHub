@@ -26,6 +26,13 @@ public sealed class PluginInstaller : IPluginInstaller
     private const string LogoFileName = "logo.png";
     private const string StagingPrefix = ".staging-";
 
+    /// <summary>
+    ///   The install warning reported when the files are committed but the plugin state document
+    ///   could not be written. The install itself succeeded; the next catalog scan adopts the
+    ///   folder as unknown-origin content.
+    /// </summary>
+    private const string StateSaveWarning = "Plugin files were installed, but the plugin state could not be saved. The plugin will appear as Unknown origin on the next catalog scan.";
+
     private readonly ILogger<PluginInstaller> logger;
     private readonly IPluginRegistry stateRepository;
     private readonly IPluginCatalog catalog;
@@ -292,7 +299,7 @@ public sealed class PluginInstaller : IPluginInstaller
                 TryDeleteDirectory(backupPath);
             }
 
-            this.RecordInstalledState(targetPath, plugin);
+            var warnings = this.RecordInstalledState(targetPath, plugin);
             this.logger.LogInformation("Installed plugin {PluginId} from {Path}", pluginId, logSource);
 
             // The install is committed: a reload failure must not roll the files back. The
@@ -306,7 +313,7 @@ public sealed class PluginInstaller : IPluginInstaller
                 this.logger.LogWarning(ex, "Catalog reload after installing {PluginId} failed", pluginId);
             }
 
-            return PluginInstallResult.Succeeded(pluginId);
+            return PluginInstallResult.Succeeded(pluginId, warnings);
         }
         catch (Exception ex)
         {
@@ -498,7 +505,15 @@ public sealed class PluginInstaller : IPluginInstaller
             []);
     }
 
-    private void RecordInstalledState(string pluginDirectory, Plugin plugin)
+    /// <summary>
+    ///   Records the installed plugin's lifecycle state in the registry. The files are already
+    ///   committed at this point, so a failed state write is non-fatal: it is logged and
+    ///   returned as a warning for the install result instead of failing the install.
+    /// </summary>
+    /// <param name="pluginDirectory"> The installed plugin directory. </param>
+    /// <param name="plugin"> The installed descriptor. </param>
+    /// <returns> The install warnings; empty when the state was saved. </returns>
+    private IReadOnlyList<string> RecordInstalledState(string pluginDirectory, Plugin plugin)
     {
         var document = this.stateRepository.Load();
         document.Plugins[plugin.Id] = new PluginRegistryEntry(PluginOrigin.Installed)
@@ -509,7 +524,14 @@ public sealed class PluginInstaller : IPluginInstaller
             Enabled = true,
             InstalledAt = DateTimeOffset.UtcNow
         };
-        this.stateRepository.Save(document);
+
+        if (this.stateRepository.TrySave(document))
+        {
+            return [];
+        }
+
+        this.logger.LogWarning("Could not save the plugin state after installing {PluginId}; the plugin will be adopted as unknown origin on the next catalog scan", plugin.Id);
+        return [StateSaveWarning];
     }
 
     private void Rollback(string stagingPath, string targetPath, string? backupPath)

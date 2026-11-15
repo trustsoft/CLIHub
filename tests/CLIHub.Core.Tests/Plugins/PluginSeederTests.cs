@@ -4,7 +4,10 @@ using CLIHub.Core.Infrastructure.Persistence;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+
+using Moq;
 
 public class PluginSeederTests : IDisposable
 {
@@ -52,7 +55,7 @@ public class PluginSeederTests : IDisposable
         var repository = this.CreateStateRepository();
         var document = repository.Load();
         document.Plugins[id] = entry;
-        repository.Save(document);
+        repository.TrySave(document);
     }
 
     private PluginRegistryEntry ReadState(string id)
@@ -76,6 +79,26 @@ public class PluginSeederTests : IDisposable
         {
             Assert.True(File.Exists(Path.Combine(this.pluginsPath, id, "plugin.json")), $"missing {id}");
         }
+    }
+
+    [Fact]
+    public void EnsureBuiltinsExist_StateSaveFails_LogsContextAndContinues()
+    {
+        var registry = new Mock<IPluginRegistry>();
+        registry.Setup(x => x.Load()).Returns(PluginRegistryDocument.Empty());
+        registry.Setup(x => x.TrySave(It.IsAny<PluginRegistryDocument>())).Returns(false);
+        var logger = new RecordingLogger<PluginSeeder>();
+        var seeder = new PluginSeeder(logger, registry.Object, this.pluginsPath);
+
+        var written = seeder.EnsureBuiltinsExist();
+
+        // Seeding stays fail-soft: the descriptors are on disk, the write failure is logged
+        // with the seeder's own context, and the next start re-applies the seeded built-ins.
+        Assert.Equal(5, written);
+        Assert.Equal(BuiltinIds.Length, Directory.GetDirectories(this.pluginsPath).Length);
+        Assert.Contains(logger.Messages, message => message.Contains("Could not write the plugin registry after seeding", StringComparison.Ordinal));
+        Assert.Contains(logger.Messages, message => message.Contains("seeded built-ins will be re-applied on next start", StringComparison.Ordinal));
+        registry.Verify(x => x.TrySave(It.IsAny<PluginRegistryDocument>()), Times.Once);
     }
 
     [Fact]
@@ -478,6 +501,34 @@ public class PluginSeederTests : IDisposable
         foreach (var kind in expectedKinds)
         {
             Assert.True(plugin.Commands.Get(kind) is not null, $"{plugin.Id} is missing the {kind} command");
+        }
+    }
+
+    private sealed class RecordingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            this.Messages.Add(formatter(state, exception));
+        }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static NullScope Instance { get; } = new();
+
+            public void Dispose()
+            {
+            }
         }
     }
 }

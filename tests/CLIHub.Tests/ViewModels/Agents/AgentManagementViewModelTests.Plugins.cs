@@ -169,6 +169,101 @@ public partial class AgentManagementViewModelTests
     }
 
     [Fact]
+    public void DisablePlugin_SaveFails_SetsMessage()
+    {
+        var state = new InMemoryPluginRegistry { TrySaveSucceeds = false };
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([Launchable("a")])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .BuildWithMocks();
+        viewModel.ViewModel.Load(null);
+        var card = viewModel.ViewModel.Cards.Single(c => c.PluginId == "a");
+
+        viewModel.ViewModel.DisablePluginCommand.Execute(card);
+
+        // The failed write is reported on the card, and the reload still presents the persisted
+        // (still enabled) truth instead of a phantom disabled state.
+        Assert.Equal("Could not save the plugin state", card.Message);
+        Assert.True(card.HasMessage);
+        Assert.Equal(1, state.SaveCount);
+        viewModel.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void EnablePlugin_SaveFails_SetsMessage()
+    {
+        var state = new InMemoryPluginRegistry { TrySaveSucceeds = false };
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { Enabled = false };
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithDisabledPlugins(new DisabledPluginEntry("a", @"C:\plugins\a", PluginOrigin.Installed, "1.0.0"))
+            .WithPluginState(state)
+            .BuildWithMocks();
+        viewModel.ViewModel.Load(null);
+        var disabledCard = Assert.Single(viewModel.ViewModel.DisabledCards);
+
+        viewModel.ViewModel.EnablePluginCommand.Execute(disabledCard);
+
+        // Disabled cards gained Message/HasMessage for exactly this failure path.
+        Assert.Equal("Could not save the plugin state", disabledCard.Message);
+        Assert.True(disabledCard.HasMessage);
+        Assert.Equal(1, state.SaveCount);
+        viewModel.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void DisablePlugin_SaveFails_RebuiltCardShowsMessage()
+    {
+        var state = new InMemoryPluginRegistry { TrySaveSucceeds = false };
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithPlugins([Launchable("a")])
+            .WithDetection(Detection())
+            .WithVersions(Versions())
+            .WithPluginState(state)
+            .BuildWithMocks();
+        // The real catalog raises PluginsChanged from ReloadPlugins, which makes the view model
+        // rebuild Cards; without the raise the assertion would land on the invoked card only.
+        var catalog = viewModel.Mocks.PluginCatalog;
+        catalog.Setup(x => x.ReloadPlugins()).Callback(() => catalog.Raise(x => x.PluginsChanged += null, EventArgs.Empty));
+        viewModel.ViewModel.Load(null);
+        var card = viewModel.ViewModel.Cards.Single(c => c.PluginId == "a");
+
+        viewModel.ViewModel.DisablePluginCommand.Execute(card);
+
+        var rebuiltCard = viewModel.ViewModel.Cards.Single(c => c.PluginId == "a");
+        Assert.NotSame(card, rebuiltCard);
+        Assert.Equal("Could not save the plugin state", rebuiltCard.Message);
+        Assert.True(rebuiltCard.HasMessage);
+        catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
+    public void EnablePlugin_SaveFails_RebuiltDisabledCardShowsMessage()
+    {
+        var state = new InMemoryPluginRegistry { TrySaveSucceeds = false };
+        state.Document.Plugins["a"] = new PluginRegistryEntry(PluginOrigin.Installed) { Enabled = false };
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithDisabledPlugins(new DisabledPluginEntry("a", @"C:\plugins\a", PluginOrigin.Installed, "1.0.0"))
+            .WithPluginState(state)
+            .BuildWithMocks();
+        var catalog = viewModel.Mocks.PluginCatalog;
+        catalog.Setup(x => x.ReloadPlugins()).Callback(() => catalog.Raise(x => x.PluginsChanged += null, EventArgs.Empty));
+        viewModel.ViewModel.Load(null);
+        var disabledCard = Assert.Single(viewModel.ViewModel.DisabledCards);
+
+        viewModel.ViewModel.EnablePluginCommand.Execute(disabledCard);
+
+        // The reload rebuilds DisabledCards from the persisted (still disabled) state, so the
+        // message has to be set on the rebuilt instance to be visible after the command.
+        var rebuiltCard = Assert.Single(viewModel.ViewModel.DisabledCards);
+        Assert.NotSame(disabledCard, rebuiltCard);
+        Assert.Equal("Could not save the plugin state", rebuiltCard.Message);
+        Assert.True(rebuiltCard.HasMessage);
+        catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
     public void OpenPluginsFolderCommand_OpensThePluginsDirectoryThroughTheLauncher()
     {
         var launcher = new Mock<IExternalLauncher>();

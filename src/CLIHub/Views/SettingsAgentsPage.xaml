@@ -388,6 +388,12 @@
                                 <TextBlock Margin="0,3,0,0"
                                            Style="{StaticResource HintText}"
                                            Text="Disabled"/>
+                                <TextBlock Margin="0,2,0,0"
+                                           MaxWidth="{StaticResource Sizing.AgentRow.TextMaxWidth}"
+                                           Style="{StaticResource StatusLine}"
+                                           FontSize="{StaticResource Sizing.FontSize.Section}"
+                                           Text="{Binding Message}"
+                                           Visibility="{Binding HasMessage, Converter={StaticResource BoolToVisibility}}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Top">

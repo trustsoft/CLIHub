@@ -107,6 +107,8 @@ delivered its first slice, with follow-ups below.
 
 ### Locally modified plugins are reported but never consulted
 
+**Status: Resolved by plugin-state-integrity (Part B — documented as accepted behavior).**
+
 - Severity: Medium-Low (silent loss of a user's hand edit on the next feed update)
 - Evidence: `PluginCatalog.VerifyContentHash` records user-modified entries
   (`src/CLIHub.Core/Plugins/PluginCatalog.cs:226-246`) and `GetUserModifiedPlugins` exposes them
@@ -120,6 +122,8 @@ delivered its first slice, with follow-ups below.
 - Trigger: the next change to the install/update confirmation flow, or a user report of a lost edit.
 
 ### Registry save failures are invisible
+
+**Status: Resolved by plugin-state-integrity (Part A — TrySave returns bool, callers surface failure).**
 
 - Severity: Low-Medium (the UI reports a state change that did not persist)
 - Evidence: `IPluginRegistry.Save` returns `void` (`src/CLIHub.Core/Plugins/IPluginRegistry.cs:21`)

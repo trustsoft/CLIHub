@@ -15,8 +15,11 @@ public interface IPluginRegistry
     PluginRegistryDocument Load();
 
     /// <summary>
-    ///   Persists the plugin registry document atomically through a temp-file-then-rename write.
+    ///   Attempts to persist the plugin registry document atomically through a
+    ///   temp-file-then-rename write. A failed write is logged as a warning and reported through
+    ///   the return value instead of throwing, so callers decide how to present the degradation.
     /// </summary>
     /// <param name="document"> The registry document to persist. </param>
-    void Save(PluginRegistryDocument document);
+    /// <returns> <see langword="true" /> when the document was written; otherwise <see langword="false" />. </returns>
+    bool TrySave(PluginRegistryDocument document);
 }

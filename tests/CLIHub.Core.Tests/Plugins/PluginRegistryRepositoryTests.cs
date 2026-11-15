@@ -56,7 +56,7 @@ public class PluginRegistryRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void Save_WritesAtomicallyViaTempFileThenRename()
+    public void TrySave_WritesAtomicallyViaTempFileThenRename()
     {
         var repository = this.CreateRepository();
         var document = PluginRegistryDocument.Empty();
@@ -66,8 +66,9 @@ public class PluginRegistryRepositoryTests : IDisposable
             LogoHash = "def456"
         };
 
-        repository.Save(document);
+        var saved = repository.TrySave(document);
 
+        Assert.True(saved, "a writable target must report success");
         Assert.True(File.Exists(this.registryFilePath), "the registry file must exist after save");
         Assert.False(File.Exists(this.registryFilePath + ".tmp"), "the temp file must be renamed away, not left behind");
         var written = File.ReadAllText(this.registryFilePath);
@@ -78,7 +79,22 @@ public class PluginRegistryRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void SaveCreatesMissingParentDirectory()
+    public void TrySave_UnwritableTarget_ReturnsFalseAndLogsWarning()
+    {
+        // A directory occupying the registry path blocks the rename, simulating an unwritable
+        // target: the failure is reported through the return value, never thrown.
+        Directory.CreateDirectory(this.registryFilePath);
+        var logger = new RecordingLogger();
+        var repository = new PluginRegistryRepository(logger, this.registryFilePath, this.legacyStateFilePath);
+
+        var saved = repository.TrySave(PluginRegistryDocument.Empty());
+
+        Assert.False(saved, "an unwritable target must report failure");
+        Assert.Contains(logger.Messages, message => message.Contains("Could not write the plugin registry", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void TrySaveCreatesMissingParentDirectory()
     {
         var nestedPath = Path.Combine(
             Path.GetTempPath(),
@@ -93,7 +109,7 @@ public class PluginRegistryRepositoryTests : IDisposable
                 nestedPath,
                 Path.Combine(Path.GetDirectoryName(nestedPath)!, "legacy-plugin-state.json"));
 
-            repository.Save(PluginRegistryDocument.Empty());
+            repository.TrySave(PluginRegistryDocument.Empty());
 
             Assert.True(File.Exists(nestedPath));
         }
@@ -104,7 +120,7 @@ public class PluginRegistryRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void SaveThenLoad_RoundTripPreservesData()
+    public void TrySaveThenLoad_RoundTripPreservesData()
     {
         var repository = this.CreateRepository();
         var installedAt = new DateTimeOffset(2026, 11, 14, 10, 30, 0, TimeSpan.Zero);
@@ -124,7 +140,7 @@ public class PluginRegistryRepositoryTests : IDisposable
             InstalledAt = installedAt
         };
 
-        repository.Save(document);
+        repository.TrySave(document);
         var loaded = repository.Load();
 
         Assert.Equal(2, loaded.Plugins.Count);
