@@ -99,9 +99,10 @@ public static class RuntimeKinds
     /// </summary>
     public static string ToToken(RuntimeKind kind) => kind switch
     {
+        RuntimeKind.PowerShell => PowerShellToken,
         RuntimeKind.PowerShell7 => PowerShell7Token,
         RuntimeKind.CommandPrompt => CommandPromptToken,
         RuntimeKind.GitBash => GitBashToken,
-        _ => PowerShellToken
+        _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "RuntimeKind token is undefined")
     };
 }

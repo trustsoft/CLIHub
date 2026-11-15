@@ -37,6 +37,9 @@ Core service exposes one public constructor (`DependencyRegistration_IsRestricte
 both use a temp-file-then-rename path and neither carries a schema version. Read is version-tolerant: unknown
 fields are ignored, missing fields default ([ADR-0002](adr/0002-single-configuration-document.md),
 [ADR-0014](adr/0014-remove-configuration-migrations.md), [ADR-0015](adr/0015-plugin-registry-v2.md)).
+Enum parsers share that tolerance — an unknown token resolves to the default — while enum token mappers are
+strict: `ToToken` throws `ArgumentOutOfRangeException` for an undefined enum value instead of writing a
+default token.
 **Apply:** add the field with its default and a narrow store accessor; no schema bump or migration.
 **Red flag:** a second `*.json` holding preferences or plugin state, or a direct write under `%APPDATA%\CLIHub\`.
 

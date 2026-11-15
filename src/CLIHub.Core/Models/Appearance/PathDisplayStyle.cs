@@ -55,7 +55,8 @@ public static class PathDisplayStyles
     /// </summary>
     public static string ToToken(PathDisplayStyle style) => style switch
     {
+        PathDisplayStyle.LeftTrim => LeftTrimToken,
         PathDisplayStyle.MiddleEllipsis => MiddleEllipsisToken,
-        _ => LeftTrimToken
+        _ => throw new ArgumentOutOfRangeException(nameof(style), style, "PathDisplayStyle token is undefined")
     };
 }

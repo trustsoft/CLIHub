@@ -24,6 +24,12 @@ public class RuntimeKindsTests
         Assert.Equal(token, RuntimeKinds.ToToken(runtime));
     }
 
+    [Fact]
+    public void ToToken_UndefinedValue_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => RuntimeKinds.ToToken((RuntimeKind)42));
+    }
+
     [Theory]
     [InlineData("ps", RuntimeKind.PowerShell)]
     [InlineData("PS", RuntimeKind.PowerShell)]

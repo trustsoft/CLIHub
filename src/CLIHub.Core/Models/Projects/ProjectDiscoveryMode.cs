@@ -69,6 +69,7 @@ public static class ProjectDiscoveryModes
     {
         ProjectDiscoveryMode.Git => GitToken,
         ProjectDiscoveryMode.Agents => AgentsToken,
-        _ => BothToken
+        ProjectDiscoveryMode.Both => BothToken,
+        _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, "ProjectDiscoveryMode token is undefined")
     };
 }

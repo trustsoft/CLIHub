@@ -99,9 +99,10 @@ public static class AppThemes
     /// <returns> The canonical token. </returns>
     public static string ToToken(AppTheme theme) => theme switch
     {
+        AppTheme.Dark => DarkToken,
         AppTheme.Light => LightToken,
         AppTheme.Blue => BlueToken,
         AppTheme.System => SystemToken,
-        _ => DarkToken
+        _ => throw new ArgumentOutOfRangeException(nameof(theme), theme, "AppTheme token is undefined")
     };
 }

@@ -60,6 +60,8 @@ delivered its first slice, with follow-ups below.
 
 ### Enum mappers silently swallow undefined enum values in `ToToken` (project-wide idiom)
 
+**Status: Resolved by strict-enum-token-mappers.**
+
 - Severity: Low (latent; every mapper coerces an undefined value to its default token)
 - Evidence: review on 2026-11-04 — `RuntimeKinds.ToToken`
   (`src/CLIHub.Core/Models/Processes/RuntimeKind.cs:100-107`) maps an undefined enum value such as

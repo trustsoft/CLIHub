@@ -48,6 +48,10 @@ public static class ProjectSources
     /// </summary>
     /// <param name="source"> The source. </param>
     /// <returns> The stored token. </returns>
-    public static string ToToken(ProjectSource source) =>
-        source == ProjectSource.Discovered ? DiscoveredToken : ManualToken;
+    public static string ToToken(ProjectSource source) => source switch
+    {
+        ProjectSource.Manual => ManualToken,
+        ProjectSource.Discovered => DiscoveredToken,
+        _ => throw new ArgumentOutOfRangeException(nameof(source), source, "ProjectSource token is undefined")
+    };
 }

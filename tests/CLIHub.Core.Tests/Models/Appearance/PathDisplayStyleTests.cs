@@ -57,4 +57,10 @@ public class PathDisplayStyleTests
     {
         Assert.Equal(style, PathDisplayStyles.Parse(PathDisplayStyles.ToToken(style)));
     }
+
+    [Fact]
+    public void ToToken_UndefinedValue_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PathDisplayStyles.ToToken((PathDisplayStyle)42));
+    }
 }

@@ -24,6 +24,12 @@ public class AppThemesTests
     }
 
     [Fact]
+    public void ToToken_UndefinedValue_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => AppThemes.ToToken((AppTheme)42));
+    }
+
+    [Fact]
     public void Parse_RoundTripsEveryTheme()
     {
         foreach (var theme in Enum.GetValues<AppTheme>())

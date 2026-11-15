@@ -49,6 +49,12 @@ public class PopupScreenPositionsTests
     }
 
     [Fact]
+    public void ToToken_UndefinedValue_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => PopupScreenPositions.ToToken((PopupScreenPosition)42));
+    }
+
+    [Fact]
     public void Parse_RoundTripsEveryPosition()
     {
         foreach (var position in Enum.GetValues<PopupScreenPosition>())

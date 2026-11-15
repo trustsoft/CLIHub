@@ -100,9 +100,10 @@ public static class PopupScreenPositions
     /// <returns> The canonical token. </returns>
     public static string ToToken(PopupScreenPosition position) => position switch
     {
+        PopupScreenPosition.Center => CenterToken,
         PopupScreenPosition.TopCenter => TopCenterToken,
         PopupScreenPosition.CursorRelative => CursorRelativeToken,
         PopupScreenPosition.PrimaryScreen => PrimaryToken,
-        _ => CenterToken
+        _ => throw new ArgumentOutOfRangeException(nameof(position), position, "PopupScreenPosition token is undefined")
     };
 }
