@@ -7,7 +7,7 @@ Tracks the local plugin registry document — the single local source of truth f
 
 ### Requirement: Single local registry document
 
-The system SHALL track plugin lifecycle state — origin, content hashes, installed version, enabled flag, and install timestamp — in one registry document at `%APPDATA%\CLIHub\registry.json`, the only local source of truth for that state. Reads SHALL be tolerant (missing fields defaulted, unknown fields ignored, corrupt files degraded to an empty registry, never throwing) and writes SHALL be atomic.
+The system SHALL track plugin lifecycle state — origin, content hashes, installed version, enabled flag, and install timestamp — in one registry document at `%APPDATA%\CLIHub\registry.json`, the only local source of truth for that state. Reads SHALL be tolerant (missing fields defaulted, unknown fields ignored, corrupt files degraded to an empty registry, never throwing) and writes SHALL be atomic. A write failure SHALL be reported to the caller and SHALL never be presented as persisted.
 
 #### Scenario: Registry records lifecycle state for every managed plugin
 
@@ -38,6 +38,14 @@ The system SHALL track plugin lifecycle state — origin, content hashes, instal
 - **WHEN** the registry is saved
 - **THEN** the write lands in a temp file next to the target and is renamed over it
 - **AND** an interrupted write cannot leave a truncated registry document
+
+#### Scenario: Failed write reported to caller
+
+- **WHEN** a registry write fails
+- **THEN** the method returns `false`
+- **AND** the failure is logged as a warning
+- **AND** no exception is thrown for the caller to handle
+- **AND** the caller does not present the unwritten state as persisted
 
 ### Requirement: Adopt legacy plugin-state.json
 
@@ -131,3 +139,10 @@ The system SHALL verify each processed plugin's stored contentHash against the o
 
 - **WHEN** a catalog scan completes with nothing to adopt
 - **THEN** the registry document is not rewritten
+
+#### Scenario: Catalog adoption write failure logged
+
+- **WHEN** the catalog adopts folders without registry entries and the registry write fails
+- **THEN** a warning is logged with the context that adopted entries are in memory only
+- **AND** the catalog continues to load normally
+- **AND** the adopted folders are re-adopted on the next scan

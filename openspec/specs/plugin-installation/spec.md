@@ -113,7 +113,7 @@ The system SHALL enforce structural and security validation on plugin packages.
 
 ### Requirement: Atomic installation with rollback
 
-The system SHALL stage extracted files in a temporary directory and atomically move them into place, with rollback on failure.
+The system SHALL stage extracted files in a temporary directory and atomically move them into place, with rollback on failure. A state-write failure after the atomic move SHALL be a warning, not a rollback trigger.
 
 #### Scenario: Staging directory used
 
@@ -144,9 +144,16 @@ The system SHALL stage extracted files in a temporary directory and atomically m
 - **WHEN** installation succeeds
 - **THEN** any backup directory is deleted
 
+#### Scenario: State write failure after move is a warning not a rollback
+
+- **WHEN** the atomic move succeeds and the backup is deleted, but the subsequent registry write fails
+- **THEN** the install is not rolled back (files stay in place)
+- **AND** the install result carries a warning, not a failure
+- **AND** the backup is not restored (it was already deleted before the state write)
+
 ### Requirement: Plugin lifecycle state tracking
 
-The system SHALL record plugin origin, content hash, logo hash, installed version, enabled flag, and install timestamp in the local plugin registry document (`%APPDATA%\CLIHub\registry.json`), the single local source of truth for plugin lifecycle state.
+The system SHALL record plugin origin, content hash, logo hash, installed version, enabled flag, and install timestamp in the local plugin registry document (`%APPDATA%\CLIHub\registry.json`), the single local source of truth for plugin lifecycle state. A state-write failure after a committed install SHALL add a warning, not a failure.
 
 #### Scenario: State file updated on install
 
@@ -164,9 +171,16 @@ The system SHALL record plugin origin, content hash, logo hash, installed versio
 - **WHEN** CLIHub restarts
 - **THEN** the registry is read and installed plugins retain their origin, hash, version, enabled state, and install timestamp
 
+#### Scenario: State write failure after install adds warning
+
+- **WHEN** a plugin is installed successfully (files committed, backup deleted) and the registry write fails
+- **THEN** the install result reports `Success = true` with a warning that the plugin state could not be saved
+- **AND** the warning states the plugin will appear as Unknown origin on the next catalog scan
+- **AND** the files remain installed and functional
+
 ### Requirement: Disable and enable plugins
 
-The system SHALL allow users to disable plugins (preventing load and launch) and re-enable them later, without deleting files.
+The system SHALL allow users to disable plugins (preventing load and launch) and re-enable them later, without deleting files. A failed registry write during disable or enable SHALL surface the failure to the user and present the persisted truth.
 
 #### Scenario: Disable an enabled plugin
 
@@ -189,6 +203,20 @@ The system SHALL allow users to disable plugins (preventing load and launch) and
 - **WHEN** a plugin is disabled
 - **THEN** the plugin directory and its files remain on disk
 - **AND** the plugin can be re-enabled without re-installation
+
+#### Scenario: Failed save after disable surfaces message
+
+- **WHEN** a user disables an enabled plugin and the registry write fails
+- **THEN** the card displays "Could not save the plugin state"
+- **AND** the catalog is reloaded to present the persisted (pre-attempt) state
+- **AND** the plugin remains enabled on the next restart
+
+#### Scenario: Failed save after enable surfaces message
+
+- **WHEN** a user enables a disabled plugin and the registry write fails
+- **THEN** the card displays "Could not save the plugin state"
+- **AND** the catalog is reloaded to present the persisted (pre-attempt) state
+- **AND** the plugin remains disabled on the next restart
 
 ### Requirement: Open plugins folder
 
@@ -264,7 +292,7 @@ The system SHALL support optional `version`, `publisher`, and `homepage` fields 
 
 ### Requirement: SHA-256 content integrity
 
-The system SHALL compute and store SHA-256 content hashes for `plugin.json` and `logo.png` to detect content drift and user modifications, and SHALL verify the stored contentHash against the descriptor on disk at catalog load.
+The system SHALL compute and store SHA-256 content hashes for `plugin.json` and `logo.png` to detect content drift and user modifications, and SHALL verify the stored contentHash against the descriptor on disk at catalog load. An install or update SHALL replace the descriptor and the stored hash, clearing any user-modified flag for that plugin.
 
 #### Scenario: Hash computed on install
 
@@ -285,6 +313,14 @@ The system SHALL compute and store SHA-256 content hashes for `plugin.json` and 
 - **THEN** it indicates **content drift and user modification detection** relative to what CLIHub last wrote
 - **AND** it does NOT indicate cryptographic authenticity or tamper-evidence against motivated attackers
 - **AND** the user is informed that hashes detect changes, not unauthorized access
+
+#### Scenario: Local modification cleared by install
+
+- **WHEN** a plugin descriptor was locally modified (stored hash and disk hash differ)
+- **AND** the plugin is installed or updated from a package or descriptor-only source
+- **THEN** the installed descriptor and its content hash replace the modified ones
+- **AND** the plugin is no longer reported as user-modified on the next catalog scan
+- **AND** the user-modified flag is a diagnostic of drift since the last CLIHub write, not a protection mechanism
 
 ### Requirement: Disabled plugins rendered in separate UI section
 
