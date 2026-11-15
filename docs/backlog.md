@@ -326,6 +326,8 @@ delivered its first slice, with follow-ups below.
 
 ### AvailabilitySummary is declared but unbound
 
+**Status: Resolved by remove-availability-summary.**
+
 - Severity: Low (dead surface; the property and its tests have no consumer)
 - Evidence: `IAgentManagementSection.AvailabilitySummary`
   (`src/CLIHub/ViewModels/Agents/IAgentManagementSection.cs:48`) is declared on the interface with

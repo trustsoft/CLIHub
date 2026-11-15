@@ -34,7 +34,6 @@ public partial class AgentManagementViewModelTests
         Assert.Equal(2, viewModel.Cards.Count);
         Assert.Equal(1, viewModel.InstalledAgentCount);
         Assert.Equal(2, viewModel.SupportedAgentCount);
-        Assert.Equal("2 supported · 1 not installed", viewModel.AvailabilitySummary);
         Assert.Equal("b", viewModel.CurrentDefaultAgentId);
         Assert.Equal("b", viewModel.DefaultAgentName);
         Assert.True(viewModel.HasDefaultAgent);
@@ -158,7 +157,8 @@ public partial class AgentManagementViewModelTests
 
         viewModel.Load(null);
 
-        Assert.Equal("2 supported · all installed", viewModel.AvailabilitySummary);
+        Assert.Equal(2, viewModel.SupportedAgentCount);
+        Assert.Equal(2, viewModel.InstalledAgentCount);
     }
 
 
@@ -171,7 +171,6 @@ public partial class AgentManagementViewModelTests
 
         Assert.Equal(0, viewModel.InstalledAgentCount);
         Assert.Equal(0, viewModel.SupportedAgentCount);
-        Assert.Equal("No agent plugins found", viewModel.AvailabilitySummary);
     }
 
 

@@ -24,7 +24,8 @@ public partial class AgentManagementViewModelTests
         var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a]).WithDetection(Detection()).WithVersions(Versions()).WithProbe(probe).WithUpdate(update).WithAvailability(availability).Build();
         viewModel.Load(null);
         var card = viewModel.Cards[0];
-        Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);
+        Assert.Equal(1, viewModel.SupportedAgentCount);
+        Assert.Equal(1, viewModel.InstalledAgentCount);
 
         // Pre-seed a stale update indicator; the per-card Detect re-probes installation and
         // version only, so the indicator must survive untouched.
@@ -37,7 +38,7 @@ public partial class AgentManagementViewModelTests
         Assert.Equal("Installed · 9.9", card.Message);
         Assert.True(card.HasUpdateAvailable);
         Assert.Equal("0.9.0 → 1.0.0", card.UpdateAvailabilityText);
-        Assert.Equal("1 supported · all installed", viewModel.AvailabilitySummary);
+        Assert.Equal(1, viewModel.InstalledAgentCount);
 
         // The Load pass checked once; the per-card Detect settle added no availability check.
         availability.Verify(x => x.CheckAsync(a, It.IsAny<CancellationToken>()), Times.Once);
@@ -61,14 +62,15 @@ public partial class AgentManagementViewModelTests
             .ReturnsAsync(new AgentUpdateAvailability(AgentUpdateStatus.Unknown));
         var viewModel = new AgentManagementViewModelBuilder().WithPlugins([a, b]).WithDetection(detection).WithVersions(Versions()).WithProbe(probe).WithUpdate(update).WithAvailability(availability).Build();
         viewModel.Load(null);
-        Assert.Equal("2 supported · 1 not installed", viewModel.AvailabilitySummary);
+        Assert.Equal(2, viewModel.SupportedAgentCount);
+        Assert.Equal(1, viewModel.InstalledAgentCount);
         Assert.Equal(AgentInstallState.NotInstalled, viewModel.DefaultAgentOptions.Single(o => o.Id == "b").InstallState);
 
         viewModel.DetectCommand.Execute(null);
 
         Assert.True(viewModel.Cards.Single(c => c.PluginId == "b").IsInstalled);
         Assert.Equal("0.5", viewModel.Cards.Single(c => c.PluginId == "b").Version);
-        Assert.Equal("2 supported · all installed", viewModel.AvailabilitySummary);
+        Assert.Equal(2, viewModel.InstalledAgentCount);
         Assert.Equal(AgentInstallState.Installed, viewModel.DefaultAgentOptions.Single(o => o.Id == "b").InstallState);
         Assert.True(viewModel.DefaultAgentOptions.Single(o => o.Id == "b").IsInstalled);
         Assert.True(viewModel.CanDetect);
@@ -283,7 +285,7 @@ public partial class AgentManagementViewModelTests
         Assert.Equal(cardA.Version, optionA.Version);
         Assert.False(optionA.IsInstalled);
         Assert.Equal("a (Not installed)", optionA.DisplayName);
-        Assert.Contains(nameof(AgentManagementViewModel.AvailabilitySummary), raised);
+        Assert.Contains(nameof(AgentManagementViewModel.InstalledAgentCount), raised);
 
         // b threw and c was never probed: both restore to their complete pre-pass state.
         Assert.Equal(AgentInstallState.Installed, cardB.InstallState);

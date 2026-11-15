@@ -235,19 +235,6 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// </summary>
     public int SupportedAgentCount => this.Cards.Count;
 
-    /// <summary>
-    ///   The number of supported agents that are not installed on this machine.
-    /// </summary>
-    public int NotInstalledAgentCount => this.SupportedAgentCount - this.InstalledAgentCount;
-
-    /// <inheritdoc />
-    public string AvailabilitySummary => this.SupportedAgentCount switch
-    {
-        0 => "No agent plugins found",
-        var supported when this.NotInstalledAgentCount == 0 => $"{supported} supported · all installed",
-        var supported => $"{supported} supported · {this.NotInstalledAgentCount} not installed"
-    };
-
     /// <inheritdoc />
     public string DefaultAgentName => this.SelectedDefaultAgent.Name;
 
@@ -596,7 +583,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
         this.ApplyPluginFeedUpdates(this.catalogOrderedCards, pluginState);
 
-        this.RefreshAvailabilitySummary();
+        this.RefreshSummarySurfaces();
         this.RebuildDefaultAgentOptions(defaultAgentId);
 
         if (anyDeclaresUpdate)
@@ -683,7 +670,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
         this.ApplyPluginFeedUpdates(this.catalogOrderedCards, this.pluginState.Load());
-        this.RefreshAvailabilitySummary();
+        this.RefreshSummarySurfaces();
     }
 
     /// <summary>
@@ -797,12 +784,10 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.SelectedDefaultAgent = options.FirstOrDefault(o => o.Id == defaultAgentId) ?? NoneOption;
     }
 
-    private void RefreshAvailabilitySummary()
+    private void RefreshSummarySurfaces()
     {
         this.OnPropertyChanged(nameof(this.InstalledAgentCount));
         this.OnPropertyChanged(nameof(this.SupportedAgentCount));
-        this.OnPropertyChanged(nameof(this.NotInstalledAgentCount));
-        this.OnPropertyChanged(nameof(this.AvailabilitySummary));
         this.OnPropertyChanged(nameof(this.DefaultAgentDetail));
         this.OnPropertyChanged(nameof(this.UpdatesAvailableCount));
         this.OnPropertyChanged(nameof(this.UpdatesValue));
@@ -900,7 +885,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
 
             if (this.versionPopulationPass.IsCurrent(generation, cancellationToken))
             {
-                this.RefreshAvailabilitySummary();
+                this.RefreshSummarySurfaces();
                 this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
         }
@@ -985,7 +970,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 (true, null) => "Installed",
                 _ => "Not installed on this PC"
             };
-            this.RefreshAvailabilitySummary();
+            this.RefreshSummarySurfaces();
             this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
         }
         catch (Exception)
@@ -1035,7 +1020,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                     resolved.Add(card);
                 }
 
-                this.RefreshAvailabilitySummary();
+                this.RefreshSummarySurfaces();
                 this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
             }
             catch (Exception)
@@ -1051,7 +1036,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 // gone, so it is left alone.
                 if (!this.disposed)
                 {
-                    this.RefreshAvailabilitySummary();
+                    this.RefreshSummarySurfaces();
                     this.RebuildDefaultAgentOptions(this.SelectedDefaultAgent?.Id);
                 }
 
@@ -1135,7 +1120,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                     this.UpdateCheckSummary = BuildUpdateCheckSummary(
                         checkedCount,
                         cards.Count(card => card.HasUpdateAvailable));
-                    this.RefreshAvailabilitySummary();
+                    this.RefreshSummarySurfaces();
                 }
             }
             // Cancellation is not a failure: the exception still propagates (so the operation
@@ -1150,7 +1135,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 if (!this.disposed)
                 {
                     this.UpdateCheckSummary = UpdateCheckFailureSummary;
-                    this.RefreshAvailabilitySummary();
+                    this.RefreshSummarySurfaces();
                 }
 
                 throw;
@@ -1178,7 +1163,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
             // CLI has no update source to check; clear any stale advisory indicator.
             card.UpdateAvailability = null;
             card.Message = "Not installed on this PC";
-            this.RefreshAvailabilitySummary();
+            this.RefreshSummarySurfaces();
             return;
         }
 
@@ -1195,7 +1180,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                 AgentUpdateStatus.UpToDate => "Up to date",
                 _ => "Update status unknown"
             };
-            this.RefreshAvailabilitySummary();
+            this.RefreshSummarySurfaces();
         }
     }
 

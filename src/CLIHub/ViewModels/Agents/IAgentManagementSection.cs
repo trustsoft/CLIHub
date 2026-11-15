@@ -43,11 +43,6 @@ public interface IAgentManagementSection : IDisposable, INotifyPropertyChanged
     int SupportedAgentCount { get; }
 
     /// <summary>
-    ///   The supported/not-installed split shown under the installed count.
-    /// </summary>
-    string AvailabilitySummary { get; }
-
-    /// <summary>
     ///   The plugin origin mix for the AGENTS summary card: how many loaded plugins are
     ///   built-in, installed from packages, and of unknown origin.
     /// </summary>
