@@ -11,8 +11,9 @@ update capabilities".
 Proposal 3 observed that `IAgentManagementService` combined three unrelated capabilities — on-demand
 probing, update availability, and update execution — behind one interface. A consumer that needed
 only one of them had to depend on the whole surface, and a test that exercised one capability had to
-stub all of them. The audit trail for the slice is recorded in `docs/backlog.md:44-46` and
-`:49-53`, including the explicit decision that further decomposition waits for evidence.
+stub all of them. The change is archived as
+`openspec/changes/archive/2026-10-29-capability-service-slice` (commit `774d468`), which also records
+that further decomposition waits for evidence.
 
 The forces at play:
 
@@ -49,11 +50,12 @@ interfaces therefore does not multiply instances or lifetimes.
 **Split further only with evidence.**
 The rule is consumer evidence: a consumer or a test subset that uses part of an interface. Deeper
 agent-domain splits stay deferred with no date, because no such consumer exists yet
-(`docs/backlog.md:52-53`).
+(the archived slice; commit `774d468`).
 
 **Internal boundary only.**
-The split changed no behavior, no OpenSpec scenario, and no user-visible contract; the backlog
-records it as zero behavior change with the same test count (`docs/backlog.md:44-46`).
+The split changed no behavior, no OpenSpec scenario, and no user-visible contract; the archived
+change records it as zero behavior change with the same test count
+(`openspec/changes/archive/2026-10-29-capability-service-slice`).
 
 Rejected alternatives:
 

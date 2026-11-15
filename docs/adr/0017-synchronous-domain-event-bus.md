@@ -40,8 +40,7 @@ outside the lock (`src/CLIHub.Core/Events/DomainEventBus.cs:35-48`; dispatch at 
 remove the handler (`:98-116`), no-opping if the bus is already disposed (`:100-104`). `Dispose`
 disposes the lock itself (`:126-137`). `ReaderWriterLockSlim` is declared at `:16`, and the type
 summary states the supported concurrency (`:8-10`). Concurrent publish and subscribe are therefore
-supported as of `577b621`, which is also how the backlog closes the earlier latent-race item
-(`docs/backlog.md:122-124`).
+supported as of `577b621`, the commit that also closed the earlier latent-race item.
 
 **Publish only after the fact is durable.**
 `ProjectSelected` is published after the project state is written and only when the selection
