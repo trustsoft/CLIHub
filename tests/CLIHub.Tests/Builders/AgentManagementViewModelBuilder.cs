@@ -37,6 +37,7 @@ public class AgentManagementViewModelBuilder
     private Mock<IPluginInstaller>? pluginInstaller;
     private FakePluginDialogService? pluginDialogs;
     private InMemoryPluginRegistry? pluginState;
+    private Mock<IPluginSeeder>? pluginSeeder;
     private Mock<IPluginFeedClient>? feedClient;
     private Mock<IUpdateVersionProvider>? versionProvider;
     private DomainEventBus? eventBus;
@@ -176,6 +177,15 @@ public class AgentManagementViewModelBuilder
     }
 
     /// <summary>
+    ///   Provides a custom plugin seeder mock (run before the manual catalog reload).
+    /// </summary>
+    public AgentManagementViewModelBuilder WithSeeder(Mock<IPluginSeeder> pluginSeeder)
+    {
+        this.pluginSeeder = pluginSeeder;
+        return this;
+    }
+
+    /// <summary>
     ///   Provides a custom plugin feed client mock (feed change badge resolution).
     /// </summary>
     public AgentManagementViewModelBuilder WithFeedClient(Mock<IPluginFeedClient> feedClient)
@@ -269,6 +279,7 @@ public class AgentManagementViewModelBuilder
         var pluginInstaller = this.pluginInstaller ?? new Mock<IPluginInstaller>();
         var pluginDialogs = this.pluginDialogs ?? new FakePluginDialogService();
         var pluginState = this.pluginState ?? new InMemoryPluginRegistry();
+        var seeder = this.pluginSeeder ?? new Mock<IPluginSeeder>();
         var feedClient = this.feedClient ?? CreateDefaultFeedClient();
         var versionProvider = this.versionProvider ?? CreateDefaultVersionProvider();
         var eventBus = this.eventBus ?? new DomainEventBus(NullLogger<DomainEventBus>.Instance);
@@ -300,6 +311,7 @@ public class AgentManagementViewModelBuilder
             pluginInstaller.Object,
             pluginDialogs,
             pluginState,
+            seeder.Object,
             feedClient.Object,
             versionProvider.Object,
             eventBus,
@@ -317,6 +329,7 @@ public class AgentManagementViewModelBuilder
             Launcher = launcher,
             ProcessInspector = processInspector,
             PluginInstaller = pluginInstaller,
+            PluginSeeder = seeder,
             FeedClient = feedClient,
             VersionProvider = versionProvider,
             EventBus = eventBus
@@ -374,6 +387,7 @@ public class AgentManagementViewModelBuilder
         public required Mock<IExternalLauncher> Launcher { get; init; }
         public required Mock<IAgentProcessInspector> ProcessInspector { get; init; }
         public required Mock<IPluginInstaller> PluginInstaller { get; init; }
+        public required Mock<IPluginSeeder> PluginSeeder { get; init; }
         public required Mock<IPluginFeedClient> FeedClient { get; init; }
         public required Mock<IUpdateVersionProvider> VersionProvider { get; init; }
         public required DomainEventBus EventBus { get; init; }

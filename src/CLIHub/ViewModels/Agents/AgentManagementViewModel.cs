@@ -52,6 +52,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     private readonly IPluginInstaller pluginInstaller;
     private readonly IPluginDialogService pluginDialogs;
     private readonly IPluginRegistry pluginState;
+    private readonly IPluginSeeder pluginSeeder;
     private readonly IPluginFeedClient feedClient;
     private readonly IUpdateVersionProvider versionProvider;
     private readonly IDomainEventSubscriber eventSubscriber;
@@ -103,6 +104,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     /// <param name="pluginInstaller"> Installs agent plugins from local packages. </param>
     /// <param name="pluginDialogs"> Plugin installation dialogs. </param>
     /// <param name="pluginState"> Plugin lifecycle state shown on the cards and updated by the lifecycle actions. </param>
+    /// <param name="pluginSeeder"> Seeder run before the manual catalog reload restores missing built-in descriptors. </param>
     /// <param name="feedClient"> Feed client used to resolve the plugin-update indicators after a feed change. </param>
     /// <param name="versionProvider"> Current application version for feed-entry compatibility gating. </param>
     /// <param name="eventSubscriber"> Domain event subscriber for the background feed change notifications. </param>
@@ -120,6 +122,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
                                     IPluginInstaller pluginInstaller,
                                     IPluginDialogService pluginDialogs,
                                     IPluginRegistry pluginState,
+                                    IPluginSeeder pluginSeeder,
                                     IPluginFeedClient feedClient,
                                     IUpdateVersionProvider versionProvider,
                                     IDomainEventSubscriber eventSubscriber,
@@ -138,6 +141,7 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
         this.pluginInstaller = pluginInstaller ?? throw new ArgumentNullException(nameof(pluginInstaller));
         this.pluginDialogs = pluginDialogs ?? throw new ArgumentNullException(nameof(pluginDialogs));
         this.pluginState = pluginState ?? throw new ArgumentNullException(nameof(pluginState));
+        this.pluginSeeder = pluginSeeder ?? throw new ArgumentNullException(nameof(pluginSeeder));
         this.feedClient = feedClient ?? throw new ArgumentNullException(nameof(feedClient));
         this.versionProvider = versionProvider ?? throw new ArgumentNullException(nameof(versionProvider));
         this.eventSubscriber = eventSubscriber ?? throw new ArgumentNullException(nameof(eventSubscriber));
@@ -1416,10 +1420,16 @@ public sealed class AgentManagementViewModel : ObservableObject, IAgentManagemen
     }
 
     /// <summary>
-    ///   Reloads the plugin catalog on demand; the PluginsChanged notification rebuilds the
-    ///   cards, including any newly installed, modified, or removed plugins.
+    ///   Reloads the plugin catalog on demand; missing built-in descriptors are re-seeded first (as
+    ///   at startup), then the PluginsChanged notification rebuilds the cards, including any newly
+    ///   installed, restored, modified, or removed plugins. Seeding failures are swallowed by the
+    ///   seeder, so the reload always runs.
     /// </summary>
-    private void ReloadCatalog() => this.catalog.ReloadPlugins();
+    private void ReloadCatalog()
+    {
+        this.pluginSeeder.EnsureBuiltinsExist();
+        this.catalog.ReloadPlugins();
+    }
 
     /// <summary>
     ///   Applies a mutation to one plugin's lifecycle state entry, creating the entry when the

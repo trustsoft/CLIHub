@@ -93,6 +93,11 @@ delivered its first slice, with follow-ups below.
 
 ### Built-in repair never runs after startup
 
+**Status: Resolved by seed-builtins-on-manual-reload.**
+
+- Resolution: "Reload Catalog" now calls `IPluginSeeder.EnsureBuiltinsExist()` before
+  `IPluginCatalog.ReloadPlugins()`, so a deleted built-in descriptor is restored by the manual
+  reload instead of waiting for a restart; automatic reloads stay seed-free.
 - Severity: Low (self-heals on restart; no data loss)
 - Evidence: `EnsureBuiltinsExist` is called only from
   `src/CLIHub/Startup/PluginInitializationService.cs:27`, and `Initialize` runs once from

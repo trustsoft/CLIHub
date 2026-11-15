@@ -184,7 +184,7 @@ The "Open Plugins Folder" command opens `%APPDATA%\CLIHub\plugins\` in Windows E
 
 ### Manual Catalog Reload
 
-The "Reload Catalog" command triggers `IPluginCatalog.ReloadPlugins()`, rescanning the plugins directory and updating the UI without restarting the application.
+The "Reload Catalog" command first re-seeds missing built-in descriptors through `IPluginSeeder.EnsureBuiltinsExist()` and then triggers `IPluginCatalog.ReloadPlugins()`, rescanning the plugins directory and updating the UI without restarting the application. Seeding before the rescan matches the startup sequence, so a deleted built-in descriptor is restored in place instead of waiting for a restart, while disabled built-ins and user-modified descriptors keep their existing content. Automatic reloads (install, feed change, disable/enable) do not seed.
 
 ## Remote Plugin Feed
 

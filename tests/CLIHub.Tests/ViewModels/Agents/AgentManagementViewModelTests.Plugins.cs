@@ -285,6 +285,48 @@ public partial class AgentManagementViewModelTests
     }
 
     [Fact]
+    public void ReloadCatalogCommand_SeedsBeforeReloadingCatalog()
+    {
+        // The in-sequence strict setups fail if either call is skipped or if the reload runs
+        // before the seed, proving the manual command mirrors the startup order.
+        var sequence = new MockSequence();
+        var seeder = new Mock<IPluginSeeder>(MockBehavior.Strict);
+        var catalog = new Mock<IPluginCatalog>(MockBehavior.Strict);
+
+        seeder.InSequence(sequence).Setup(x => x.EnsureBuiltinsExist()).Returns(0);
+        catalog.InSequence(sequence).Setup(x => x.ReloadPlugins());
+
+        var viewModel = new AgentManagementViewModelBuilder()
+            .WithSeeder(seeder)
+            .WithPluginCatalog(catalog)
+            .Build();
+
+        viewModel.ReloadCatalogCommand.Execute(null);
+
+        seeder.Verify(x => x.EnsureBuiltinsExist(), Times.Once);
+        catalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3)]
+    public void ReloadCatalogCommand_ReloadsRegardlessOfSeedingResult(int seededCount)
+    {
+        // The seeder returns the number of descriptors written: 0 means nothing needed restoring,
+        // a positive count means built-ins were restored. Neither outcome may suppress the rescan.
+        // Seeding *failure* needs no view-model case: the seeder swallows its own exceptions
+        // (EnsureBuiltinsExist_StateSaveFails_LogsContextAndContinues in PluginSeederTests).
+        var seeder = new Mock<IPluginSeeder>();
+        seeder.Setup(x => x.EnsureBuiltinsExist()).Returns(seededCount);
+        var viewModel = new AgentManagementViewModelBuilder().WithSeeder(seeder).BuildWithMocks();
+
+        viewModel.ViewModel.ReloadCatalogCommand.Execute(null);
+
+        seeder.Verify(x => x.EnsureBuiltinsExist(), Times.Once);
+        viewModel.Mocks.PluginCatalog.Verify(x => x.ReloadPlugins(), Times.Once);
+    }
+
+    [Fact]
     public void Load_WithDisabledPlugins_PopulatesDisabledCardsAndSectionFlag()
     {
         var viewModel = new AgentManagementViewModelBuilder()
