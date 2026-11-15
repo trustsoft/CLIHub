@@ -82,6 +82,7 @@ keep a single `using`; `Infrastructure/` additionally nests namespaces per area.
 
 ## Focused Documents
 
+- [Architecture principles](architecture-principles.md)
 - [Startup and shutdown](architecture/startup.md)
 - [Configuration persistence](architecture/configuration.md)
 - [Plugin descriptors](architecture/plugins.md)

@@ -105,6 +105,7 @@ Read only the documents relevant to the task:
 | User-facing behavior and quickstart | [`README.md`](../README.md) |
 | Terminology | [`docs/glossary.md`](glossary.md) |
 | Current architecture and boundaries | [`docs/architecture.md`](architecture.md) |
+| Architecture principles for new work | [`docs/architecture-principles.md`](architecture-principles.md) |
 | Repository layout and source navigation | [`docs/repo-structure.md`](repo-structure.md) |
 | Startup and shutdown | [`docs/architecture/startup.md`](architecture/startup.md) |
 | Configuration and persistence | [`docs/architecture/configuration.md`](architecture/configuration.md) |
