@@ -298,6 +298,53 @@ public sealed class AgentCardItemTests
         Assert.True(card.CanUpdate);
     }
 
+    [Fact]
+    public void CanUpdate_WhenNotInstalled_IsFalse()
+    {
+        // The other three conditions are all met: only the installation state gates the action.
+        var card = CreateCard(AgentInstallState.NotInstalled, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenInstalledWithAllConditions_IsTrue()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+
+        Assert.True(card.CanUpdate);
+    }
+
+    [Fact]
+    public void InstallState_WhenChangedToNotInstalled_RaisesCanUpdateNotification()
+    {
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+        Assert.True(card.CanUpdate);
+        var properties = new List<string?>();
+        card.PropertyChanged += (_, args) => properties.Add(args.PropertyName);
+
+        card.InstallState = AgentInstallState.NotInstalled;
+
+        Assert.Contains(nameof(AgentCardItem.CanUpdate), properties);
+        Assert.False(card.CanUpdate);
+    }
+
+    [Fact]
+    public void CanUpdate_WhenDetecting_IsFalse()
+    {
+        // A card being probed must not offer an update; it re-derives when the probe settles.
+        var card = CreateCard(AgentInstallState.Installed, "2.0.32", withUpdateCommand: true);
+        card.UpdateAvailability = new AgentUpdateAvailability(AgentUpdateStatus.UpdateAvailable, "2.0.32", "2.0.33");
+        Assert.True(card.CanUpdate);
+
+        card.InstallState = AgentInstallState.Detecting;
+
+        Assert.False(card.CanUpdate);
+    }
+
     [Theory]
     [InlineData(AgentInstallState.Installed, false, false, true)]
     [InlineData(AgentInstallState.Installed, false, true, false)]

@@ -147,6 +147,7 @@ public sealed class AgentCardItem : ObservableObject
                 this.OnPropertyChanged(nameof(this.VersionChipText));
                 this.OnPropertyChanged(nameof(this.CanDetect));
                 this.OnPropertyChanged(nameof(this.CanCheckUpdates));
+                this.OnPropertyChanged(nameof(this.CanUpdate));
 
                 if (value != AgentInstallState.Detecting)
                 {
@@ -212,12 +213,15 @@ public sealed class AgentCardItem : ObservableObject
     /// <summary>
     ///   Whether the Update action is available for the agent: the latest update-availability
     ///   result reports <see cref="AgentUpdateStatus.UpdateAvailable" />, the agent declares an
-    ///   <c> update </c> command, and no matching agent process is running.
+    ///   <c> update </c> command, no matching agent process is running, and the agent is installed
+    ///   on the host. The installation condition is tested last so the three preceding conditions
+    ///   short-circuit identically for an installed card.
     /// </summary>
     public bool CanUpdate =>
         this.UpdateAvailability?.Status == AgentUpdateStatus.UpdateAvailable
         && this.Plugin.Commands?.Get(AgentCommandKind.Update) is not null
-        && !this.IsBlockedByRunningAgent;
+        && !this.IsBlockedByRunningAgent
+        && this.IsInstalled;
 
     /// <summary>
     ///   Whether a process matching the agent is running. Written by the management view model's

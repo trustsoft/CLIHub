@@ -461,6 +461,12 @@ delivered its first slice, with follow-ups below.
 
 ### Settings card CanUpdate does not itself test installation state
 
+**Status: Resolved by agent-card-update-gate.**
+
+- Resolution: `AgentCardItem.CanUpdate` now ends with `&& this.IsInstalled`, and the `InstallState`
+  setter raises `CanUpdate` alongside its other derived-property notifications, so the card owns the
+  not-installed gate instead of relying on every caller clearing availability (`agent-card-update-gate`,
+  2026-11-16).
 - Severity: Low (no reachable wrong state today; the not-installed gate relies on every caller clearing availability)
 - Evidence (2026-11-09): `AgentCardItem.CanUpdate` derives from the availability status, the declared
   `update` command, and `IsBlockedByRunningAgent` only (`src/CLIHub/ViewModels/Agents/AgentCardItem.cs:209-212`).
