@@ -52,8 +52,9 @@ Windows-adapter and application projects use a flat root for small areas plus a 
 area is large. A test that pins a spec scenario keeps the scenario's wording in the condition and result
 segments so the scenario can be found by name.
 
-Style-rule violations, naming included, are reported as build warnings rather than build failures; see the
-"Gate commands" section for what that does and does not mean.
+Style-rule violations, naming included, are reported by a local build as warnings rather than build failures; CI
+runs the same build with `-warnaserror`, so the same violation fails the CI run. See the "Gate commands" section
+for what that does and does not mean.
 
 ## Arrange/Act/Assert and one behavior per test
 
@@ -300,14 +301,15 @@ dotnet test CLIHub.sln
 openspec validate --all
 ```
 
-CI runs the same work in a slightly different shape (`.github/workflows/ci.yml:26-34`): one Release build, then
-three separate test invocations with `--no-build`, and no coverage collection:
+CI runs the same work in a slightly different shape (`.github/workflows/ci.yml:26-53`): one Release build with
+`-warnaserror`, then three separate test steps — one per project, with `--no-build` — each collecting coverage,
+then one coverage artifact upload:
 
 ```powershell
-dotnet build CLIHub.sln -c Release
-dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj -c Release --no-build
-dotnet test tests/CLIHub.Core.Windows.Tests/CLIHub.Core.Windows.Tests.csproj -c Release --no-build
-dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj -c Release --no-build
+dotnet build CLIHub.sln -c Release -warnaserror
+dotnet test tests/CLIHub.Core.Tests/CLIHub.Core.Tests.csproj -c Release --no-build --collect:"XPlat Code Coverage" --results-directory artifacts/coverage/Core.Tests
+dotnet test tests/CLIHub.Core.Windows.Tests/CLIHub.Core.Windows.Tests.csproj -c Release --no-build --collect:"XPlat Code Coverage" --results-directory artifacts/coverage/Core.Windows.Tests
+dotnet test tests/CLIHub.Tests/CLIHub.Tests.csproj -c Release --no-build --collect:"XPlat Code Coverage" --results-directory artifacts/coverage/CLIHub.Tests
 ```
 
 Use the per-project form when a failure needs triage, and `--filter "FullyQualifiedName~<TypeName>"` to run one
@@ -318,12 +320,19 @@ with every change; the commands above produce the current numbers on demand.
 
 `Directory.Build.props` sets `LangVersion=14.0` and `EnforceCodeStyleInBuild=true`, and `.editorconfig` pins the
 style rules `IDE0009`, `IDE0011`, `IDE0065`, `IDE0161`, and `IDE1006` to warning severity. `TreatWarningsAsErrors`
-is not set, so a style or naming violation is reported as a build warning and does not fail `dotnet build` or
-`dotnet test`. The `code-style` spec (`openspec/specs/code-style/spec.md:24-29`) requires violations to be
-*flagged*, not to break the build.
+is not set, so a local `dotnet build` or `dotnet test` reports a style or naming violation as a warning and still
+succeeds. The `code-style` spec (`openspec/specs/code-style/spec.md:24-29`) requires violations to be *flagged*,
+not to break the build, and the local workflow keeps that split.
 
-Read the warning list as part of the gate: a green build with new warnings is not a clean change just because
-CI passes. The suite result is likewise independent of coverage — `coverlet.collector` is referenced by the test
-projects but CI does not collect it, and no threshold compares the current suite against a baseline. Deleting a
-test or letting one stop running produces the same green CI run, so the count in the `dotnet test` output is the
-only signal, and the reviewer has to read it.
+CI is where the flag becomes a gate: the `Build` step runs `dotnet build CLIHub.sln -c Release -warnaserror`, so
+the same compiler, analyzer, or style warning that a local build merely reports fails the CI run. A green local
+build can therefore still carry new warnings; a green CI run cannot, unless a code was deliberately excluded with
+`-warnaserror-:CSXXXX` (the documented escape hatch for an untriaged future analyzer code).
+
+Coverage is collected but not gated: each CI `dotnet test` invocation runs with `--collect:"XPlat Code Coverage"`
+and the run publishes a `coverage-results` artifact holding one `cobertura.xml` per test project. No threshold
+compares that artifact against a baseline (an 80% gate is rejected as arbitrary for a WPF codebase), so deleting a
+test or letting one stop running still produces a green CI run, and the coverage artifact is a number to read
+rather than a gate. The count in the `dotnet test` output remains the only automated signal for test loss, and
+the reviewer has to read it.
+

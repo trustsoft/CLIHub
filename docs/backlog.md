@@ -272,6 +272,13 @@ delivered its first slice, with follow-ups below.
 
 ### CI enforces neither the warning baseline nor coverage
 
+**Status: Resolved by ci-quality-gates.**
+
+- Resolution: the CI `Build` step now runs `dotnet build CLIHub.sln -c Release -warnaserror`, and each
+  `dotnet test` invocation collects `XPlat Code Coverage` into separate `artifacts/coverage/<project>/`
+  directories published as one `coverage-results` artifact with no threshold — both halves of the remedy
+  below, implemented in `.github/workflows/ci.yml` (`ci-quality-gates`, 2026-11-16). Release-pipeline
+  parity is tracked as its own entry in this section.
 - Severity: Low (hardening; the current discipline is social, not enforced by CI)
 - Evidence: `Directory.Build.props` sets `EnforceCodeStyleInBuild` but not `TreatWarningsAsErrors`;
   `.editorconfig` keeps IDE0009, IDE0011, IDE0065, IDE0161, and IDE1006 at `warning`; the CI workflow
@@ -283,6 +290,22 @@ delivered its first slice, with follow-ups below.
   warning does not become build-breaking unintentionally; (b) collect and publish coverage as an
   artifact/trend without a hard threshold (an 80% gate is rejected as arbitrary for a WPF codebase).
 - Trigger: the next CI or toolchain change, or release preparation.
+
+### Release pipeline does not enforce warnings or coverage
+
+- Severity: Low (the CI gates now run on every push to `master`, so a tag is cut from an already-gated
+  commit; the gap only matters for a tag pushed from an ungated branch)
+- Evidence: `.github/workflows/release.yml:29` runs `dotnet build CLIHub.sln -c Release` without
+  `-warnaserror`, and `.github/workflows/release.yml:32` runs
+  `dotnet test CLIHub.sln -c Release --no-build` without `--collect`, so the release `test` job neither
+  fails on a new warning nor produces coverage. `ci-quality-gates` (2026-11-16) added both gates to
+  `.github/workflows/ci.yml` and deliberately left the release pipeline untouched.
+- Proposed remedy: mirror the CI gates in the release pipeline's `test` job — add `-warnaserror` to the
+  `Build` step and `--collect:"XPlat Code Coverage" --results-directory artifacts/coverage/<project>`
+  (or one solution-wide collection, since that job already runs `dotnet test CLIHub.sln`) plus the
+  `coverage-results` upload to the `Test` step; then update the `release-pipeline` spec delta.
+- Trigger: the next release-pipeline change or release-preparation change that touches
+  `.github/workflows/release.yml`.
 
 ## Agent tooling
 

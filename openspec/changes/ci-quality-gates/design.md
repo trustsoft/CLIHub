@@ -202,15 +202,44 @@ The upload-artifact step:
   the path is coupled to the Build.props `BaseOutputPath`. An explicit `--results-directory` under
   `artifacts/coverage/` is independent and simpler to reason about.
 
-### Decision 3: Keep the three separate test invocations
+### Decision 3: Keep the three separate test invocations, one workflow step each
 
-**Chosen:** the three `dotnet test` invocations stay separate, with `--no-build` preserved.
+**Chosen:** the three `dotnet test` invocations stay separate, one per test project, and each runs as its own
+workflow step (`Test CLIHub.Core.Tests`, `Test CLIHub.Core.Windows.Tests`, `Test CLIHub.Tests`) with
+`--no-build` preserved. No `continue-on-error`, no consolidation.
 
 **Rationale:**
 - `CiWorkflow_RunsBothTestProjects` (ArchitectureBoundaryTests.cs:147-154) asserts all three project
   file names appear in `ci.yml`. Consolidating changes the assertion.
 - Per-project invocations make it immediately clear which test project failed from the job log.
-- No restructuring is needed beyond adding the coverage arguments.
+- No restructuring is needed beyond adding the coverage arguments and the step boundaries.
+
+**Why separate steps — a spec-conformance gap, not style (measured 2026-11-16 on the implementation
+machine):**
+
+```
+pwsh -NoProfile -Command "cmd /c exit 1; cmd /c exit 0"                  -> $LASTEXITCODE = 0
+pwsh -NoProfile -Command "$ErrorActionPreference='stop'; $PSNativeCommandUseErrorActionPreference=$true; cmd /c exit 1; cmd /c exit 0"
+                                                                        -> exit 1 (NativeCommandExitException)
+```
+
+GitHub's `pwsh` shell sets `$ErrorActionPreference = 'stop'` and appends an `exit $LASTEXITCODE` check, but it
+does not set `$PSNativeCommandUseErrorActionPreference`, so a native command's non-zero exit is non-terminating
+and only the last command in a `run:` block decides the step. With all three `dotnet test` invocations in one
+`pwsh` block, a failure in `CLIHub.Core.Tests` or `CLIHub.Core.Windows.Tests` followed by a passing
+`CLIHub.Tests` reported a green step — contradicting the `ci-build` delta ("SHALL fail when … any test fails")
+and its "Failing test on a pull request" scenario. The three-in-one-block shape predates `ci-quality-gates`, but
+this change is what promises the failure semantics, so the split ships with it: a failing step fails the job by
+default, and `Upload coverage` keeps `if: always()` so a failed run still publishes what it collected.
+
+**Alternatives considered:**
+
+- **A — One `pwsh` block with `$PSNativeCommandUseErrorActionPreference = $true` as its first line
+  (rejected).** It works locally, but it makes the gate depend on PowerShell 7.3+ native-command error
+  semantics in the runner image, which GitHub does not pin through the shell name. Separate steps need no such
+  dependency and keep the three invocations visible as three named steps.
+- **B — One `dotnet test CLIHub.sln` invocation (rejected).** Still a non-goal: it collapses the per-project
+  signal and the three project-name lines the architecture test reads.
 
 ## Consequences
 
