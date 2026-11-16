@@ -86,8 +86,27 @@ delivered its first slice, with follow-ups below.
   demonstrated partial-use evidence); the view model keeps state, commands, and UI coordination.
   Explicitly not a split behind `IAgentManagementSection` — that is the section facade consumed by
   `SettingsViewModel`, not a decomposition mechanism.
-- Trigger: the next feature that adds a concern to this view model, or a second consumer of one of
-  its sub-areas.
+- Re-checked (2026-11-16, recon before a planned decomposition): the file is 64,378 bytes / 1472
+  lines with an 18-dependency constructor. Concern inventory by line range: catalog/card collections
+  and origin summary (`:174-228`, `:510-617`), plugin install and registry workflows (`:311-352`,
+  `:1273-1433`), feed badge refresh (`:619-728`), detection passes (`:958-1080`, `:1210-1231`),
+  version population (`:833-899`), blocked state (`:901-956`), update availability and per-card
+  checks (`:457-508`, `:1082-1252`), card ordering (`:730-776`), default-agent options (`:778-785`),
+  summary surfaces (`:193-236`, `:787-798`), busy state and command gating (`:1438-1471`), and edit
+  config (`:1254-1271`). Roughly two-thirds is UI state and coordination; the domain policy already
+  lives in Core or in the extracted pure helpers.
+- Re-checked outcome: no remaining concern meets ADR-0018's partial-use bar. Every capability that
+  has a second production consumer is already extracted (`IAgentProbeService`, `IAgentUpdateService`,
+  `IAgentUpdateAvailabilityService`, `AgentProcessMonitor`, `AgentCardOrdering`). The closest
+  candidate — the plugin install/disable/enable workflow, whose services `BrowsePluginsDialogViewModel`
+  also uses — would need a new abstraction unifying two different flows, not a split backed by an
+  existing partial-use consumer. A slice would also need callbacks: every pass writes `Cards` and then
+  calls `RefreshSummarySurfaces()` and `RebuildDefaultAgentOptions()`, and `CardActionScope` shares one
+  busy counter across all card actions. The test surface is ~3,300 lines across 10 partial files plus
+  the 355-line builder, and any constructor change touches all of them.
+- Trigger (refined): a second consumer of a specific workflow (for example a feed-install path reusing
+  the local `InstallPlugin` flow), or a feature that adds a concern to this view model. A size-based
+  split on its own remains rejected by ADR-0018.
 
 ### Settings resource dictionaries are one file per family for every settings page
 
