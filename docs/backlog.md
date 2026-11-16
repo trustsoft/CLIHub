@@ -74,6 +74,47 @@ delivered its first slice, with follow-ups below.
 - Trigger: the next new enum mapper, or a config-corruption incident where a bogus enum value got
   persisted as a valid token.
 
+### `AgentManagementViewModel` still composes several unrelated concerns
+
+- Severity: Medium (maintainability; the file keeps accumulating unrelated concerns)
+- Evidence: `src/CLIHub/ViewModels/Agents/AgentManagementViewModel.cs` is 62.9 KB / 1472 lines and
+  composes plugin install and registry state, detection passes, update availability and per-card
+  update checks, card ordering, default-agent options, and summary surfaces. Parts are already
+  extracted (`IAgentProbeService`, `IAgentUpdateService`, `IAgentUpdateAvailabilityService`,
+  `AgentProcessMonitor`, `AgentCardItem`); the remaining block is UI-facing orchestration.
+- Proposed remedy: move multi-service workflows into Core by capability (per ADR-0018, a split needs
+  demonstrated partial-use evidence); the view model keeps state, commands, and UI coordination.
+  Explicitly not a split behind `IAgentManagementSection` — that is the section facade consumed by
+  `SettingsViewModel`, not a decomposition mechanism.
+- Trigger: the next feature that adds a concern to this view model, or a second consumer of one of
+  its sub-areas.
+
+### Settings resource dictionaries are one file per family for every settings page
+
+- Severity: Low (maintenance ergonomics; XAML churn)
+- Evidence: `src/CLIHub/Themes/Common/SettingsControls.xaml` is 39.7 KB / 665 lines and
+  `SettingsStyles.xaml` is 32.4 KB / 532 lines; both are single merged dictionaries serving all
+  settings pages.
+- Proposed remedy: split into multiple `ResourceDictionary` files merged by control category
+  (buttons, inputs, cards, headers), not by page — the styles are shared across pages, so a per-page
+  split would duplicate definitions. No behavioral change; verify each page still resolves its
+  resources after the split.
+- Trigger: the next addition that pushes a dictionary past roughly 700 lines, or a fifth settings
+  page group.
+
+### `PluginFeedClient` stays whole until a second consumer appears
+
+- Severity: Low (the class is cohesive today; size alone is not a defect)
+- Evidence: `src/CLIHub.Core/Plugins/PluginFeedClient.cs` is 61.5 KB / 1313 lines and covers HTTPS
+  transport with redirect handling, ECDSA signature verification, index/descriptor parsing, index
+  caching, and error mapping; the behavior is pinned by the `plugin-feed` and `plugin-index-signing`
+  specs plus `PluginFeedClientTests` (61.7 KB / 1576 lines).
+- Proposed remedy: extract signature verification, parsing, and cache/transport only when a concrete
+  second consumer or a second transport appears (for example a non-index plugin source); do not split
+  for size alone.
+- Trigger: a second feed transport or plugin source, or a feature that needs one of those concerns
+  independently.
+
 ## Plugins
 
 ### Prune semantics for registry entries whose plugin folder is gone
@@ -228,6 +269,20 @@ delivered its first slice, with follow-ups below.
   separate decisions, each needing its own change and its own dependency review.
 - Trigger: a contributor wants a builder, UI-state verification, or performance measurement that the
   current suite does not provide.
+
+### CI enforces neither the warning baseline nor coverage
+
+- Severity: Low (hardening; the current discipline is social, not enforced by CI)
+- Evidence: `Directory.Build.props` sets `EnforceCodeStyleInBuild` but not `TreatWarningsAsErrors`;
+  `.editorconfig` keeps IDE0009, IDE0011, IDE0065, IDE0161, and IDE1006 at `warning`; the CI workflow
+  (`.github/workflows/ci.yml`) runs plain `dotnet build`/`dotnet test` without `-warnaserror`; and
+  `coverlet.collector` is referenced by all three test projects, yet no workflow collects or publishes
+  coverage.
+- Proposed remedy: decide per item — (a) run the CI build with `-warnaserror`, or narrow
+  `WarningsAsErrors` to the categories the repository already keeps at zero, so a future SDK analyzer
+  warning does not become build-breaking unintentionally; (b) collect and publish coverage as an
+  artifact/trend without a hard threshold (an 80% gate is rejected as arbitrary for a WPF codebase).
+- Trigger: the next CI or toolchain change, or release preparation.
 
 ## Agent tooling
 
