@@ -1,5 +1,6 @@
 namespace CLIHub.Tests.ViewModels;
 
+using CLIHub.Core.Agents;
 using CLIHub.Core.Configuration;
 using CLIHub.Core.Infrastructure.Processes;
 using CLIHub.Core.Models;
@@ -145,9 +146,14 @@ public class SharedUpdatePresentationTests
     private static TrayStateProjection CreateProjection(IUpdateWorkflow workflow)
     {
         var projects = new Mock<IProjectService>();
-        projects.Setup(x => x.GetRecentProjects(10)).Returns([]);
+        projects.Setup(x => x.GetAllProjects()).Returns([]);
         var plugins = new Mock<IPluginCatalog>();
         plugins.Setup(x => x.GetAllPlugins()).Returns([]);
-        return new(projects.Object, plugins.Object, workflow);
+        var detection = new Mock<IAgentDetectionService>();
+        detection.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        detection.Setup(x => x.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>())).Returns(true);
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences());
+        return new(projects.Object, plugins.Object, workflow, detection.Object, preferences.Object);
     }
 }

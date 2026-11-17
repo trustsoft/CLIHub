@@ -1,6 +1,7 @@
 namespace CLIHub.Tray;
 
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 using CLIHub.Views;
@@ -128,10 +129,20 @@ public sealed class TrayIconController : IDisposable
         var commands = this.actions.Commands with
         {
             RequestUpdateDownload = () => this.UpdateDownloadRequested?.Invoke(this, EventArgs.Empty),
-            ShowLaunchWindow = this.ShowLaunchWindow,
             Exit = () => Application.Current?.Shutdown()
         };
-        this.taskbarIcon.ContextMenu = this.menuBuilder.Build(this.actions.GetState(), commands);
+
+        if (this.taskbarIcon.ContextMenu is ContextMenu menu)
+        {
+            // The menu instance is created once and repopulated in place; the Opened handler
+            // attached at creation time keeps the content fresh on every open.
+            this.menuBuilder.Populate(menu, this.actions.GetState(), commands);
+            return;
+        }
+
+        menu = this.menuBuilder.Build(this.actions.GetState(), commands);
+        menu.Opened += (_, _) => this.RefreshMenu();
+        this.taskbarIcon.ContextMenu = menu;
     }
 
     /// <summary>

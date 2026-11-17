@@ -25,7 +25,7 @@ public sealed class TrayActions : ITrayActions, IDisposable
         this.projection = projection ?? throw new ArgumentNullException(nameof(projection));
         this.handlers = handlers ?? throw new ArgumentNullException(nameof(handlers));
         this.projection.StateChanged += this.OnStateChanged;
-        this.Commands = this.handlers.CreateCommands(this.projection.SetCurrentProject);
+        this.Commands = this.handlers.CreateCommands();
     }
 
     /// <inheritdoc />

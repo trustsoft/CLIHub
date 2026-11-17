@@ -1,5 +1,7 @@
 namespace CLIHub.Tests.Services;
 
+using CLIHub.Core.Agents;
+using CLIHub.Core.Configuration;
 using CLIHub.Core.Models;
 using CLIHub.Core.Plugins;
 using CLIHub.Core.Projects;
@@ -14,48 +16,61 @@ using Moq;
 public class TrayActionsTests
 {
     [Fact]
-    public void GetState_ProjectsCurrentRecentLaunchableAndUpdateState()
+    public void GetState_ProjectsFavoritesWithResolvedDefaultInitializedAgentsAndUpdateState()
     {
         var current = CreateProject("current");
-        var recent = CreateProject("recent");
+        var favorite = CreateProject("favorite", isFavorite: true);
         var launchable = CreatePlugin("launchable", hasLaunchCommand: true);
         var nonLaunchable = CreatePlugin("other", hasLaunchCommand: false);
         var projects = new Mock<IProjectService>();
         projects.Setup(x => x.GetCurrentProject()).Returns(current);
-        projects.Setup(x => x.GetRecentProjects(10)).Returns([recent]);
+        projects.Setup(x => x.GetAllProjects()).Returns([current, favorite]);
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns([launchable, nonLaunchable]);
         var updates = new Mock<IUpdateWorkflow>();
         updates.SetupGet(x => x.LastKnownAvailableVersion).Returns("2.0.0");
         updates.SetupGet(x => x.IsDownloading).Returns(false);
-        var actions = CreateActions(projects.Object, catalog.Object, updates.Object);
+        var preferences = new Mock<IPreferencesStore>();
+        preferences.Setup(x => x.Load()).Returns(new AppPreferences { DefaultAgentId = launchable.Id });
+        var actions = CreateActions(
+            projects.Object,
+            catalog.Object,
+            updates.Object,
+            preferences: preferences.Object);
 
         var state = actions.GetState();
 
         Assert.Same(current, state.CurrentProject);
-        Assert.Equal([recent], state.RecentProjects);
-        Assert.Equal([launchable], state.LaunchableAgents);
+        var entry = Assert.Single(state.FavoriteProjects);
+        Assert.Same(favorite, entry.Project);
+        Assert.Same(launchable, entry.DefaultAgent);
+        Assert.Equal([launchable], entry.InitializedAgents);
         Assert.Equal("2.0.0", state.AvailableUpdateVersion);
         Assert.False(state.IsDownloadingUpdate);
     }
 
     [Fact]
-    public async Task LaunchAgentCommand_UsesSharedAgentWorkflow()
+    public async Task SelectProjectAndLaunchAgentCommand_WhenInvoked_SelectsProjectThenLaunches()
     {
         var project = CreateProject("project");
         var plugin = CreatePlugin("agent", hasLaunchCommand: true);
+        var projects = new Mock<IProjectService>(MockBehavior.Strict);
+        projects.Setup(x => x.SetCurrentProject(project.Id));
+        projects.Setup(x => x.GetCurrentProject()).Returns(project);
         var workflow = new Mock<IAgentCommandWorkflow>(MockBehavior.Strict);
         workflow
             .Setup(x => x.ExecuteAsync(plugin, project, AgentCommandKind.Launch, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new AgentCommandResult(true, null, null));
         var actions = CreateActions(
-            new Mock<IProjectService>().Object,
+            projects.Object,
             new Mock<IPluginCatalog>().Object,
             new Mock<IUpdateWorkflow>().Object,
             workflow.Object);
 
-        await actions.Commands.LaunchAgentAsync(plugin, project);
+        await actions.Commands.SelectProjectAndLaunchAgentAsync(project.Id, plugin);
 
+        projects.Verify(x => x.SetCurrentProject(project.Id), Times.Once);
+        projects.Verify(x => x.GetCurrentProject(), Times.Once);
         workflow.Verify(
             x => x.ExecuteAsync(plugin, project, AgentCommandKind.Launch, It.IsAny<CancellationToken>()),
             Times.Once);
@@ -118,14 +133,11 @@ public class TrayActionsTests
             new Mock<IUserNotificationService>(MockBehavior.Strict).Object,
             new Mock<ISettingsLauncher>(MockBehavior.Strict).Object,
             new Mock<IReleaseNotesLauncher>(MockBehavior.Strict).Object);
-        var selectedProject = false;
-        var commands = handlers.CreateCommands(_ => selectedProject = true);
+        var commands = handlers.CreateCommands();
 
         commands.RequestUpdateDownload();
-        commands.ShowLaunchWindow();
         commands.Exit();
 
-        Assert.False(selectedProject);
         projects.VerifyNoOtherCalls();
         updateWorkflow.VerifyNoOtherCalls();
     }
@@ -135,9 +147,21 @@ public class TrayActionsTests
         IPluginCatalog catalog,
         IUpdateWorkflow updates,
         IAgentCommandWorkflow? workflow = null,
-        IApplicationOperationLifetime? operationLifetime = null)
+        IApplicationOperationLifetime? operationLifetime = null,
+        IAgentDetectionService? detection = null,
+        IPreferencesStore? preferences = null)
     {
-        var projection = new TrayStateProjection(projects, catalog, updates);
+        var detectionMock = new Mock<IAgentDetectionService>();
+        detectionMock.Setup(x => x.IsInstalledInSystem(It.IsAny<Plugin>())).Returns(true);
+        detectionMock.Setup(x => x.IsAvailableInProject(It.IsAny<Plugin>(), It.IsAny<string>())).Returns(true);
+        var preferencesMock = new Mock<IPreferencesStore>();
+        preferencesMock.Setup(x => x.Load()).Returns(new AppPreferences());
+        var projection = new TrayStateProjection(
+            projects,
+            catalog,
+            updates,
+            detection ?? detectionMock.Object,
+            preferences ?? preferencesMock.Object);
         var handlers = new TrayCommandHandlers(
             projects,
             workflow ?? new Mock<IAgentCommandWorkflow>().Object,
@@ -150,11 +174,12 @@ public class TrayActionsTests
         return new TrayActions(projection, handlers);
     }
 
-    private static Project CreateProject(string id) => new()
+    private static Project CreateProject(string id, bool isFavorite = false) => new()
     {
         Id = id,
         Name = id,
-        Path = $"C:\\{id}"
+        Path = $"C:\\{id}",
+        IsFavorite = isFavorite
     };
 
     private static Plugin CreatePlugin(string id, bool hasLaunchCommand) => new()

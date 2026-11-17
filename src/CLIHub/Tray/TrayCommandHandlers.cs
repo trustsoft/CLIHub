@@ -52,20 +52,17 @@ public sealed class TrayCommandHandlers
     }
 
     /// <summary>
-    ///   Creates the action set projected into the tray menu. The update-download, show-launch-window,
-    ///   and exit delegates are inert defaults: the tray icon controller owns the final behavior for
-    ///   those slots and replaces them when it builds the menu.
+    ///   Creates the action set projected into the tray menu. The update-download and exit
+    ///   delegates are inert defaults: the tray icon controller owns the final behavior for those
+    ///   slots and replaces them when it builds the menu.
     /// </summary>
-    /// <param name="selectProject"> Selects a registered project. </param>
     /// <returns> Tray menu action delegates. </returns>
-    public TrayMenuCommands CreateCommands(Action<string> selectProject) => new(
-        selectProject,
-        this.LaunchAgentAsync,
+    public TrayMenuCommands CreateCommands() => new(
+        this.SelectProjectAndLaunchAgentAsync,
         this.AddProject,
         this.settingsLauncher.ShowSettings,
         this.releaseNotesLauncher.ShowReleaseNotes,
         this.CheckForUpdates,
-        static () => { },
         static () => { },
         static () => { });
 
@@ -95,6 +92,18 @@ public sealed class TrayCommandHandlers
         {
             this.notifications.ShowWarning(result.Error ?? $"Failed to launch {plugin.Name}");
         }
+    }
+
+    private async Task SelectProjectAndLaunchAgentAsync(string projectId, Plugin plugin)
+    {
+        this.projects.SetCurrentProject(projectId);
+        var project = this.projects.GetCurrentProject();
+        if (project is null || project.Id != projectId)
+        {
+            return;
+        }
+
+        await this.LaunchAgentAsync(plugin, project);
     }
 
     private void CheckForUpdates()
