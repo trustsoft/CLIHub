@@ -115,10 +115,10 @@ graphify update .
 
 ## Manual smoke (user-confirmed, before commit/archive)
 
-- [ ] 8.1 Launch the app; open the tray menu and confirm top to bottom: header, favorite-only project submenus in storage order with the project name alone, `Add Project…`, `Settings`, `Updates`, separator, `Exit` — and no `Show CLIHub`.
-- [ ] 8.2 Confirm every actionable item renders its MDL2 glyph (star on project submenus, play on agent items, folder-add, settings, sync, page, exit) with no clipped or missing glyph, and that the header and placeholders show none; note whether the icon-less header rows line up acceptably.
-- [ ] 8.3 Open `Updates` and confirm the dynamic item first and `What's New` second; run `Check for updates` and confirm the checking and (if an update is published) downloading labels and their `Sync`/`Update` icons.
-- [ ] 8.4 Confirm each project submenu's agent items are labelled with the agent name alone and that invoking one makes that project current (header updates on the next open) and launches the agent in that folder.
-- [ ] 8.5 Confirm the default agent is first with a separator in every project submenu, and that a project with no default and no agents shows `(no agents)`.
-- [ ] 8.6 Confirm left-clicking the tray icon and pressing the global hotkey still show the launch window, since the menu no longer offers `Show CLIHub`.
-- [ ] 8.7 Favorite a project and change the default agent in Settings; reopen the tray menu and confirm both are reflected without restarting.
+- [x] 8.1 Launch the app; open the tray menu and confirm top to bottom: header, favorite-only project submenus in storage order with the project name alone, `Add Project…`, `Settings`, `Updates`, separator, `Exit` — and no `Show CLIHub`.
+- [x] 8.2 Confirm every actionable item renders its MDL2 glyph (star on project submenus, play on agent items, folder-add, settings, sync, page, exit) with no clipped or missing glyph, and that the header and placeholders show none; note whether the icon-less header rows line up acceptably.
+- [x] 8.3 Open `Updates` and confirm the dynamic item first and `What's New` second; run `Check for updates` and confirm the checking and (if an update is published) downloading labels and their `Sync`/`Update` icons.
+- [x] 8.4 Confirm each project submenu's agent items are labelled with the agent name alone and that invoking one makes that project current (header updates on the next open) and launches the agent in that folder.
+- [x] 8.5 Confirm the default agent is first with a separator in every project submenu, and that a project with no default and no agents shows `(no agents)`.
+- [x] 8.6 Confirm left-clicking the tray icon and pressing the global hotkey still show the launch window, since the menu no longer offers `Show CLIHub`.
+- [x] 8.7 Favorite a project and change the default agent in Settings; reopen the tray menu and confirm both are reflected without restarting.
