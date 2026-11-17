@@ -134,6 +134,19 @@ delivered its first slice, with follow-ups below.
 - Trigger: a second feed transport or plugin source, or a feature that needs one of those concerns
   independently.
 
+### Unused `IProjectService.GetRecentProjects` after the tray menu change
+
+- Severity: Low (dead API surface; no behavior impact)
+- Evidence: `IProjectService.GetRecentProjects(int)` (`src/CLIHub.Core/Projects/IProjectService.cs:25`)
+  has no production caller after `tray-project-launchers` replaced the tray's Recent Projects submenu
+  with favorite-project submenus; only `ProjectService`
+  (`src/CLIHub.Core/Projects/ProjectService.cs:43`) and the Core tests reference it. The launch window
+  orders projects with `ProjectListOrdering.FavoritesFirst`, not by recency.
+- Proposed remedy: remove the method, its implementation, and the Core tests, or repurpose it if
+  another surface needs recency — and keep the `project-management` "Recent projects ordering"
+  requirement in sync either way.
+- Trigger: the next change that touches `IProjectService` or the project-list ordering policy.
+
 ## Plugins
 
 ### Prune semantics for registry entries whose plugin folder is gone
