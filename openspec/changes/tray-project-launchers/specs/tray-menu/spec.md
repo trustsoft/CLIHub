@@ -3,8 +3,10 @@
 ### Requirement: Tray menu structure
 
 The tray context menu SHALL show, top to bottom: a disabled current-project header; one submenu per
-favorite project; `Add Project…`; `Settings`; `What's New`; the update item; a separator; `Show CLIHub`;
-and `Exit`.
+favorite project; `Add Project…`; `Settings`; the `Updates` submenu; a separator; and `Exit`. The
+submenu's label is `Updates`; the arrow the platform draws for an item with children is not part of the
+label. The menu SHALL NOT contain a `Show CLIHub` item, because the launch window is already reachable
+by left-clicking the tray icon and by the global hotkey.
 
 #### Scenario: Header reflects the current project
 
@@ -16,16 +18,16 @@ and `Exit`.
 - **WHEN** no project is current
 - **THEN** the first item is a disabled `No project selected` header
 
-#### Scenario: Settings, What's New, update, Show CLIHub, and Exit keep their behavior
+#### Scenario: Tail order is Settings, Updates, separator, Exit
 
 - **WHEN** the menu is shown
-- **THEN** `Settings`, `What's New`, the update item, the separator, `Show CLIHub`, and `Exit` appear
-  below `Add Project…` in that order with unchanged behavior
+- **THEN** `Settings`, the `Updates` submenu, a separator, and `Exit` appear below `Add Project…` in
+  that order
 
 #### Scenario: Recent Projects and Launch Agent are gone
 
 - **WHEN** the menu is shown
-- **THEN** no `Recent Projects` submenu and no `Launch Agent` submenu are present
+- **THEN** no `Recent Projects` submenu, no `Launch Agent` submenu, and no `Show CLIHub` item are present
 
 ### Requirement: Favorite project submenus
 
@@ -42,10 +44,11 @@ returned by `GetAllProjects()`, and SHALL show no project submenu for a project 
 - **WHEN** several projects are favorites
 - **THEN** their submenus appear in the order `GetAllProjects()` returns, not by recency
 
-#### Scenario: Favorite marker in the header
+#### Scenario: Favorite is conveyed by the icon, not the label
 
 - **WHEN** a favorite project submenu is shown
-- **THEN** its label carries the existing favorite marker convention (`<Name> *`)
+- **THEN** its label is the project name only, with no ` *` suffix, and its icon is the favorite-star
+  glyph
 
 #### Scenario: No favorites
 
@@ -81,11 +84,11 @@ default agent.
 - **WHEN** a plugin does not expose a launch command and it is not the configured default agent
 - **THEN** no item for it appears in any project submenu
 
-#### Scenario: Agent item is a Run action
+#### Scenario: Agent item shows the agent name
 
 - **WHEN** an initialized agent appears in a project submenu
-- **THEN** its label expresses a run action (`Run <AgentName>`) and invoking it executes the launch
-  command
+- **THEN** its label is the agent name only, with no `Run ` prefix, and invoking it executes the launch
+  command for that agent in that project
 
 #### Scenario: Empty project submenu
 
@@ -102,7 +105,8 @@ contain a default item or its separator.
 #### Scenario: Default agent is first
 
 - **WHEN** a default agent id is configured and resolves to a catalog plugin
-- **THEN** that agent is the first item of each project submenu, followed by a separator
+- **THEN** that agent is the first item of each project submenu, labelled with the agent name only,
+  followed by a separator
 
 #### Scenario: Default agent shown even when not initialized
 
@@ -130,6 +134,89 @@ contain a default item or its separator.
 
 - **WHEN** `DefaultAgentId` is set but no catalog plugin has that id
 - **THEN** no default item and no separator appear in any project submenu
+
+### Requirement: Actionable menu items carry MDL2 icons
+
+Every item that invokes a command SHALL show a `Segoe MDL2 Assets` glyph in its menu icon slot:
+`FavoriteStar` on a project submenu, `Play` on an agent item including the default agent, `FolderAdd` on
+`Add Project…`, `Settings` on `Settings`, `Sync` on `Updates`, `Sync` or `Update` on the dynamic update
+item according to its state, `Page` on `What's New`, and `Exit` on `Exit`. The header, the disabled
+placeholders, and separators SHALL NOT show an icon.
+
+#### Scenario: Project submenu uses the favorite star
+
+- **WHEN** a favorite project submenu is shown
+- **THEN** its icon is the `FavoriteStar` glyph
+
+#### Scenario: Agent items use the play glyph
+
+- **WHEN** an agent item is shown in a project submenu, including a default agent item
+- **THEN** its icon is the `Play` glyph
+
+#### Scenario: Tail items use their glyphs
+
+- **WHEN** the menu tail is shown
+- **THEN** `Add Project…` uses `FolderAdd`, `Settings` uses `Settings`, `Updates` uses `Sync`, and
+  `Exit` uses `Exit`
+
+#### Scenario: Check item uses the sync glyph
+
+- **WHEN** the dynamic update item offers or runs a check
+- **THEN** its icon is the `Sync` glyph
+
+#### Scenario: Download item uses the update glyph
+
+- **WHEN** the dynamic update item reports a download or offers a download and restart
+- **THEN** its icon is the `Update` glyph
+
+#### Scenario: What's New uses the page glyph
+
+- **WHEN** `What's New` is shown inside the `Updates` submenu
+- **THEN** its icon is the `Page` glyph
+
+#### Scenario: Header and placeholders carry no icon
+
+- **WHEN** the header, a `(no favorite projects)` item, or a `(no agents)` item is shown
+- **THEN** it has no icon
+
+### Requirement: Updates submenu groups update surfaces
+
+The menu SHALL show an `Updates` submenu whose items are, in order, the dynamic update item and
+`What's New`. The dynamic item SHALL be `Check for updates` while idle, `Checking for updates…` while a
+check runs, `Downloading update…` while a download runs, and `Download <version> and restart` when an
+update is available. `Check for updates` SHALL remain reachable from the tray menu through this submenu.
+
+#### Scenario: Updates submenu order
+
+- **WHEN** the menu is shown
+- **THEN** the `Updates` submenu contains the dynamic update item first and `What's New` second
+
+#### Scenario: Check for updates is reachable from the tray
+
+- **WHEN** no check or download is running and no update is known
+- **THEN** the first `Updates` item is a clickable `Check for updates` that starts the shared update
+  check
+
+#### Scenario: Checking shows the progress item
+
+- **WHEN** an update check is running
+- **THEN** the first `Updates` item is a disabled `Checking for updates…`
+
+#### Scenario: Downloading shows the progress item
+
+- **WHEN** an update download is running
+- **THEN** the first `Updates` item is a disabled `Downloading update…`
+
+#### Scenario: Known update offers download and restart
+
+- **WHEN** an update version is known and no download is running
+- **THEN** the first `Updates` item is `Download <version> and restart` and invoking it requests the
+  update download
+
+#### Scenario: What's New remains available
+
+- **WHEN** `What's New` is invoked from the `Updates` submenu
+- **THEN** the release notes open as before
 
 ### Requirement: Launching from a project submenu selects the project
 
