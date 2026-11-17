@@ -3,6 +3,15 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.2.1 — 2026-11-17
+
+### Fixed
+
+- A plugin you disable or enable now shows the state that was actually saved: when the plugin registry cannot be written, CLIHub says so instead of reporting an unsaved change as saved, and a successful install stays successful with a warning that its state could not be recorded.
+- Reload Catalog restores built-in plugins you deleted: the built-ins are re-seeded before the rescan, so the built-in comes back without a restart.
+- Plugin catalog downloads follow all five redirects the feed contract allows; a feed behind a chain of five redirects is no longer rejected.
+- The Update action on a Settings agent card is disabled for agents that are not installed, whatever made an update look available.
+
 ## 1.2.0 — 2026-11-14
 
 ### New

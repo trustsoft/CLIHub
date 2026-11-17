@@ -8,7 +8,23 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
-## 1.2.0 - 2026-11-14
+## 1.2.1 — 2026-11-17
+
+### Changed
+
+- Plugin registry writes report their outcome: `IPluginRegistry.Save` became `TrySave`; disable/enable show the persisted state with a message instead of claiming an unsaved change, installs stay successful with a warning when the state cannot be recorded, and seeding/adoption log their own context. An install or update replacing a locally modified descriptor is now pinned behavior (plugin-state-integrity, plugin-registry).
+- Manual Reload Catalog runs the seeder before rescanning, matching startup, so a deleted built-in descriptor is restored without a restart; automatic reloads (install, feed change, disable/enable) stay seed-free (seed-builtins-on-manual-reload, plugin-seeding, plugin-installation).
+- The Settings agent card raises `CanUpdate` from its own `IsInstalled` check and on `InstallState` changes, so the not-installed gate no longer depends on every availability writer remembering it; existing call-site guards stay as redundant defenses (agent-card-update-gate, agent-update-detection).
+- Enum token mappers are write-strict: `ToToken` throws `ArgumentOutOfRangeException` for an undefined value instead of silently writing a default token, while `Parse` stays tolerant for unknown wire tokens. The read-tolerant/write-strict rule is recorded in the architecture principles (strict-enum-token-mappers).
+- Removed the unbound `AvailabilitySummary` and VM-only `NotInstalledAgentCount`; the refresh helper is now `RefreshSummarySurfaces` (remove-availability-summary, agent-management).
+- Internal: `AgentReleaseClient` builds its URLs from an annotated `TryResolve` out parameter instead of null-forgiving operators, and `ChromeWindow` drops the never-marshalled maximize clamp and the dead `MonitorFromWindow` declaration (followups-quick-wins-2). CI gates warnings with `-warnaserror` in the Release build, runs each test project as its own step, and publishes XPlat Code Coverage as the always-run `coverage-results` artifact without a threshold (ci-quality-gates, ci-build).
+- Docs: architecture principles checklist, retrospective ADRs for the domain event bus, capability boundaries, and logging scopes, ADR-0016 rejecting the plugin lifecycle manager, and a backlog prune against the code (59b825c, 221d32b, fb240c7, 04f0666).
+
+### Fixed
+
+- Plugin feed redirects: the redirect loop now follows the documented five hops and rejects the sixth, matching `MaxRedirectHops` and the feed specs; the boundary scenarios were added to plugin-feed (feed-redirect-hop-limit, plugin-feed).
+
+## 1.2.0 — 2026-11-14
 
 ### Added
 
