@@ -143,6 +143,7 @@ public sealed class TrayMenuBuilder
     private static void PopulateProjectSubmenu(ItemCollection items, TrayProjectAgents entry, TrayMenuCommands commands)
     {
         var project = entry.Project;
+        var otherAgents = entry.InitializedAgents.Where(plugin => entry.DefaultAgent?.Id != plugin.Id).ToList();
         if (entry.DefaultAgent is { } defaultAgent)
         {
             var defaultItem = new MenuItem
@@ -153,24 +154,20 @@ public sealed class TrayMenuBuilder
             };
             defaultItem.Click += async (_, _) => await commands.SelectProjectAndLaunchAgentAsync(project.Id, defaultAgent);
             items.Add(defaultItem);
-            items.Add(new Separator());
+            if (otherAgents.Count > 0)
+            {
+                items.Add(new Separator());
+            }
         }
 
-        var initializedCount = 0;
-        foreach (var plugin in entry.InitializedAgents)
+        foreach (var plugin in otherAgents)
         {
-            if (entry.DefaultAgent?.Id == plugin.Id)
-            {
-                continue;
-            }
-
             var item = new MenuItem { Header = plugin.Name, Icon = CreateGlyph(IconGlyphs.Play) };
             item.Click += async (_, _) => await commands.SelectProjectAndLaunchAgentAsync(project.Id, plugin);
             items.Add(item);
-            initializedCount++;
         }
 
-        if (entry.DefaultAgent is null && initializedCount == 0)
+        if (entry.DefaultAgent is null && otherAgents.Count == 0)
         {
             items.Add(new MenuItem { Header = "(no agents)", IsEnabled = false });
         }

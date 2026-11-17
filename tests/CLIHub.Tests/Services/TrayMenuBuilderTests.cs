@@ -155,6 +155,77 @@ public class TrayMenuBuilderTests
     }
 
     [Fact]
+    public void Build_DefaultAgentOnly_ShowsSingleItemWithoutSeparator()
+    {
+        TestHelpers.RunOnSta(() =>
+        {
+            var project = CreateProject("project", isFavorite: true);
+            var state = CreateState(
+                [project],
+                [CreatePlugin("default", hasLaunchCommand: true)],
+                defaultAgentId: "default",
+                installed: plugin => plugin.Id != "default");
+
+            var menu = new TrayMenuBuilder().Build(state, CreateCommands());
+
+            var submenu = (MenuItem)menu.Items[1];
+            Assert.Single(submenu.Items);
+            var defaultItem = Assert.IsType<MenuItem>(Assert.Single(submenu.Items));
+            Assert.Equal("default", (string)defaultItem.Header);
+            Assert.Empty(submenu.Items.OfType<Separator>());
+        });
+    }
+
+    [Fact]
+    public void Build_InitializedDefaultAgentOnly_ShowsSingleItemWithoutSeparator()
+    {
+        TestHelpers.RunOnSta(() =>
+        {
+            var project = CreateProject("project", isFavorite: true);
+            var state = CreateState(
+                [project],
+                [CreatePlugin("default", hasLaunchCommand: true)],
+                defaultAgentId: "default");
+
+            var menu = new TrayMenuBuilder().Build(state, CreateCommands());
+
+            var submenu = (MenuItem)menu.Items[1];
+            Assert.Single(submenu.Items);
+            var defaultItem = Assert.IsType<MenuItem>(Assert.Single(submenu.Items));
+            Assert.Equal("default", (string)defaultItem.Header);
+            Assert.True(defaultItem.IsEnabled);
+            Assert.Empty(submenu.Items.OfType<Separator>());
+        });
+    }
+
+    [Fact]
+    public void Build_DefaultAgentWithAllOthersExcluded_ShowsSingleItemWithoutSeparator()
+    {
+        TestHelpers.RunOnSta(() =>
+        {
+            var project = CreateProject("project", isFavorite: true);
+            var plugins = new[]
+            {
+                CreatePlugin("default", hasLaunchCommand: true),
+                CreatePlugin("other", hasLaunchCommand: true)
+            };
+            var state = CreateState(
+                [project],
+                plugins,
+                defaultAgentId: "default",
+                available: plugin => plugin.Id == "default");
+
+            var menu = new TrayMenuBuilder().Build(state, CreateCommands());
+
+            var submenu = (MenuItem)menu.Items[1];
+            Assert.Single(submenu.Items);
+            var defaultItem = Assert.IsType<MenuItem>(Assert.Single(submenu.Items));
+            Assert.Equal("default", (string)defaultItem.Header);
+            Assert.Empty(submenu.Items.OfType<Separator>());
+        });
+    }
+
+    [Fact]
     public void Build_NoDefaultConfigured_HasNoDefaultItemOrSeparator()
     {
         TestHelpers.RunOnSta(() =>
