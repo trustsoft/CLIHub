@@ -8,6 +8,22 @@ Groupings: `Added`, `Changed`, `Fixed`, `Removed`. A change that breaks existing
 configuration is marked `**BREAKING**`. Capability names in parentheses refer to `openspec/specs/<name>`;
 internal-refactor names refer to `openspec/changes/archive/<name>`.
 
+## 1.3.0 — 2026-11-18
+
+### Added
+
+- Tray project launchers: each favorite project is a submenu of the agents initialized in it (launch command exposed, installed in the system, available in the project), the configured default agent is first and appears even when it is not initialized, invoking an agent makes that project current before the shared launch workflow runs, and the menu rebuilds from current state on every open (tray-project-launchers, tray-menu).
+- Disabled `Version <version>` tray header fed from `IUpdateWorkflow.GetCurrentVersion()`; `TrayMenuState.Version` replaces `TrayMenuState.CurrentProject`, so the tray no longer surfaces the current project (tray-projects-separator, tray-menu).
+
+### Changed
+
+- Tray menu order is now: version header; separator; favorite-project submenus; separator; `Add Project…`; `Settings`; `Updates`; separator; `Exit`; the `Add Project is placed below the project list` requirement drops "directly below" in favor of "below the project submenus and the separator that closes that group" (tray-projects-separator, tray-default-separator, tray-menu).
+- Context menus are themed from the Windows apps theme: application-level `ContextMenu` and `MenuItem` styles plus the keyed `MenuItem.SeparatorStyleKey` separator style, with the `SystemMenu.*` palette swapped by `SystemMenuTheme` on each apps-mode flip (context-menu-system-theme, application-theme, tray-menu).
+
+### Fixed
+
+- The separator after the default agent is omitted when the submenu lists no other agent, so a lone default agent is not followed by a stray divider (tray-default-separator, tray-menu).
+
 ## 1.2.1 — 2026-11-17
 
 ### Changed

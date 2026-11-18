@@ -3,6 +3,22 @@
 What's new in CLIHub, newest first. These are the short, user-facing notes; the technical record lives in
 [CHANGELOG.md](CHANGELOG.md).
 
+## 1.3.0 — 2026-11-18
+
+### New
+
+- Launch agents straight from the tray: every favorite project is now a submenu listing the agents initialized for that project, with the configured default agent first, and launching from a submenu makes that project current.
+- The tray menu header shows the running version, so you can tell which build you are on without opening Settings.
+
+### Improved
+
+- Context menus follow the Windows apps theme: light and dark menu surfaces with rounded corners, themed separators, and readable disabled entries, in the tray and in text fields.
+- The tray menu is lighter: Recent Projects and Launch Agent are gone, Add Project, Settings, and Updates form one group, and horizontal separators divide the header, the project list, and Exit.
+
+### Fixed
+
+- A project submenu no longer shows an empty divider when its only entry is the default agent.
+
 ## 1.2.1 — 2026-11-17
 
 ### Fixed
