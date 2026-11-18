@@ -28,6 +28,15 @@
                     application, through this entry.
                 -->
                 <ResourceDictionary Source="/Themes/Common/SettingsStyles.xaml"/>
+                <!--
+                    Context menus: like scrollbars and tooltips, menus are popups outside any window's
+                    resource scope, so only application-level implicit styles reach them. This dictionary
+                    provides the implicit ContextMenu and MenuItem templates plus the keyed
+                    MenuItem.SeparatorStyleKey separator style; it merges Sizing.xaml for its own token
+                    lookups. Its SystemMenu.* palette brushes resolve at runtime — SystemMenuTheme swaps
+                    the matching Windows-mode palette (Themes/SystemMenu/) into the application resources.
+                -->
+                <ResourceDictionary Source="/Themes/Common/SystemMenuStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Shared converters, referenced from window content by key. The PathToImage

@@ -1,0 +1,216 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Application-level context-menu styles: implicit ContextMenu and MenuItem templates plus the
+        keyed separator style. Merged from App.xaml because menus are popups outside any window's
+        resource scope — only application-level implicit styles reach them (the scrollbar and tooltip
+        precedent). Covers every WPF menu in the application: the tray menu and the framework TextBox
+        context menus.
+
+        The menu palette (SystemMenu.* brushes) is NOT declared here: SystemMenuTheme swaps exactly
+        one of Themes/SystemMenu/SystemMenuDark.xaml or SystemMenuLight.xaml into the application
+        resources at startup and on each Windows apps-mode flip, so every SystemMenu.* reference
+        below is a DynamicResource — a StaticResource lookup would freeze whichever palette was
+        loaded at parse time. Sizing.* tokens are immutable, so they resolve through StaticResource
+        against the Sizing.xaml merge below (a loose dictionary resolves StaticResource only against
+        its own keys and its own merges).
+
+        Templates: the ContextMenu hosts its card in a Popup with AllowsTransparency=True (created
+        unconditionally by WPF), so the rounded card renders per-pixel and HasDropShadow stays False
+        — the OS-drawn shadow is rectangular and would contradict the rounded corners; the visible
+        shadow comes from the in-template DropShadowEffect instead. The template root carries
+        Margin="7" (and the submenu card its own margin) because the effect draws past layout bounds
+        while the popup window clips to content. Separators inside menus are styled through the
+        keyed MenuItem.SeparatorStyleKey — WPF re-keys every menu child Separator to that resource,
+        so an implicit Separator style would never reach them.
+    -->
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Themes/Common/Sizing.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- Context menu: a rounded card with a one-pixel border and a subtle shadow -->
+    <Style TargetType="ContextMenu">
+        <!-- False: HasDropShadow=True would draw the OS rectangular shadow behind the rounded card. -->
+        <Setter Property="HasDropShadow" Value="False"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemMenu.TextBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <!-- Root margin gives the shadow blur room past the popup window's content bounds. -->
+                    <Grid Margin="7">
+                        <Border CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
+                                Background="{DynamicResource SystemMenu.SurfaceBrush}"
+                                BorderBrush="{DynamicResource SystemMenu.BorderBrush}"
+                                BorderThickness="1"
+                                Padding="4"
+                                MinWidth="{StaticResource Sizing.ActionsMenu.MinWidth}"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="16" ShadowDepth="5" Opacity="0.35"/>
+                            </Border.Effect>
+                            <ScrollViewer CanContentScroll="True">
+                                <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Menu item: a 30-height pill that highlights on hover, press, and keyboard navigation, with
+        a fixed-width icon slot so icon-less entries (the tray header and placeholders) align with
+        iconed ones. One template for every Role: in a ContextMenu items take the SubmenuHeader or
+        SubmenuItem roles; the TopLevel* triggers exist for a future Menu bar only.
+    -->
+    <Style TargetType="MenuItem">
+        <Setter Property="FontFamily" Value="{StaticResource Sizing.FontFamily.Text}"/>
+        <Setter Property="FontSize" Value="{StaticResource Sizing.FontSize.Hint}"/>
+        <Setter Property="Foreground" Value="{DynamicResource SystemMenu.TextBrush}"/>
+        <!-- The hover/pressed pill doubles as the keyboard highlight, matching the app's button styles. -->
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Grid>
+                        <Border x:Name="Bd"
+                                Height="30"
+                                CornerRadius="{StaticResource Sizing.CornerRadius.Chip}"
+                                Padding="8,0"
+                                Background="Transparent"
+                                SnapsToDevicePixels="True">
+                            <DockPanel LastChildFill="True">
+                                <!-- Fixed-width icon slot: tray glyphs inherit the item's Foreground,
+                                     so the hover/pressed/disabled triggers retint them with the text. -->
+                                <ContentPresenter ContentSource="Icon"
+                                                  Width="18"
+                                                  Margin="0,0,6,0"
+                                                  VerticalAlignment="Center"/>
+                                <!-- Check mark: defensive; the application has no checkable items today. -->
+                                <Path x:Name="CheckGlyph"
+                                      Data="M0,4 L3,7 L8,1"
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="1.4"
+                                      StrokeLineJoin="Round"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      Width="12"
+                                      Height="12"
+                                      Stretch="Uniform"
+                                      Margin="0,0,4,0"
+                                      VerticalAlignment="Center"
+                                      Visibility="Collapsed"/>
+                                <TextBlock x:Name="GestureText"
+                                           Text="{TemplateBinding InputGestureText}"
+                                           DockPanel.Dock="Right"
+                                           Margin="24,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource SystemMenu.GestureTextBrush}"/>
+                                <Path x:Name="Chevron"
+                                      Data="M4.5,2.5 L8.5,6 L4.5,9.5"
+                                      Stroke="{TemplateBinding Foreground}"
+                                      StrokeThickness="1.4"
+                                      StrokeLineJoin="Round"
+                                      StrokeStartLineCap="Round"
+                                      StrokeEndLineCap="Round"
+                                      Width="12"
+                                      Height="12"
+                                      Stretch="Uniform"
+                                      Margin="6,0,0,0"
+                                      DockPanel.Dock="Right"
+                                      VerticalAlignment="Center"
+                                      Visibility="Collapsed"/>
+                                <ContentPresenter ContentSource="Header"
+                                                  VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                        <!--
+                            Submenu popup. PART_Popup is the part name MenuItem declares. The IsOpen
+                            binding is deliberately two-way: a popup that dismisses itself must clear
+                            the item's IsSubmenuOpen, which a one-way binding would leave stuck open.
+                            Leaf roles never open it — MenuItem.OpenSubmenu returns without items —
+                            so the binding alone keeps their popups collapsed.
+                        -->
+                        <Popup x:Name="PART_Popup"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               Placement="Right"
+                               IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <!-- Same card look as the context menu, with the same shadow margin. -->
+                            <Border CornerRadius="{StaticResource Sizing.CornerRadius.Card}"
+                                    Background="{DynamicResource SystemMenu.SurfaceBrush}"
+                                    BorderBrush="{DynamicResource SystemMenu.BorderBrush}"
+                                    BorderThickness="1"
+                                    Padding="4"
+                                    Margin="7"
+                                    MinWidth="{StaticResource Sizing.ActionsMenu.MinWidth}"
+                                    SnapsToDevicePixels="True">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="5" Opacity="0.35"/>
+                                </Border.Effect>
+                                <ScrollViewer CanContentScroll="True">
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter TargetName="Chevron" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <!-- Defensive: the application has no Menu bar; a top-level header opens down. -->
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter TargetName="Chevron" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="Chevron" Property="Data" Value="M2.5,4.5 L6,8.5 L9.5,4.5"/>
+                            <Setter TargetName="PART_Popup" Property="Placement" Value="Bottom"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <!-- Collapsed when the gesture column is empty so leaf items do not reserve space. -->
+                        <Trigger Property="InputGestureText" Value="">
+                            <Setter TargetName="GestureText" Property="Visibility" Value="Collapsed"/>
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SystemMenu.HoverOverlayBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SystemMenu.PressedOverlayBrush}"/>
+                        </Trigger>
+                        <!-- Keep the pill highlighted while the child menu is open. -->
+                        <Trigger Property="IsSubmenuOpen" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource SystemMenu.HoverOverlayBrush}"/>
+                        </Trigger>
+                        <!-- Last, so a disabled item stays dimmed even while highlighted or pressed. -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource SystemMenu.DisabledTextBrush}"/>
+                            <Setter Property="Opacity" Value="0.6"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Separator inside menus. Keyed, not implicit: MenuItem re-keys every menu child Separator to
+        MenuItem.SeparatorStyleKey, so only this key reaches the separators of the tray menu, the
+        submenus, and the TextBox context menus. The application has no separators outside menus.
+    -->
+    <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Rectangle Height="1"
+                               Margin="8,4"
+                               Fill="{DynamicResource SystemMenu.SeparatorBrush}"/>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

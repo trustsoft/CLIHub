@@ -65,7 +65,8 @@ public static class ServiceRegistration
     /// <summary>
     ///   Registers the boot and shutdown pipeline: application and operation lifetimes,
     ///   startup state loading, the session and bootstrapper, the session's lazy shell
-    ///   coordinator factory, the session-owned Windows personalization theme follower, startup
+    ///   coordinator factory, the session-owned Windows personalization theme followers (the stored
+    ///   "System" palette follow and the always-on system-menu palette follow), startup
     ///   UI, plugin initialization, startup preferences, and the optional startup coordinators
     ///   executed during boot.
     /// </summary>
@@ -82,9 +83,11 @@ public static class ServiceRegistration
             sp.GetRequiredService<ISingleInstanceGuard>(),
             sp.GetRequiredService<IUpdateWorkflow>(),
             sp.GetRequiredService<SystemThemeFollower>(),
+            sp.GetRequiredService<SystemMenuThemeFollower>(),
             context));
         services.AddSingleton<IApplicationSession, ApplicationSession>();
         services.AddSingleton<SystemThemeFollower>();
+        services.AddSingleton<SystemMenuThemeFollower>();
         services.AddSingleton<IApplicationBootstrapper, ApplicationBootstrapper>();
         services.AddSingleton<IApplicationStartupUi, WpfApplicationStartupUi>();
         services.AddSingleton<Func<IApplicationStartupUi>>(sp =>

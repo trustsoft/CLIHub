@@ -14,7 +14,9 @@ using static CLIHub.Tests.Support.TestHelpers;
 ///   <para>
 ///     A palette is merged at runtime on top of the dark base, so a <c>StaticResource</c> reference to
 ///     a palette brush freezes whichever palette happened to be loaded at parse time. Palette brushes
-///     therefore have to be consumed with <c>DynamicResource</c>.
+///     therefore have to be consumed with <c>DynamicResource</c>. The system-menu palettes
+///     (<c>Themes/SystemMenu/</c>) declare a second, Windows-driven key set that
+///     <c> SystemMenuTheme </c> swaps at runtime; their brushes follow the same rule.
 ///   </para>
 ///   <para>
 ///     The palettes deliberately redefine the same keys and are merged conditionally, so they are
@@ -28,8 +30,10 @@ public sealed class ApplicationResourceKeyTests
         "x:Key=\"(?<key>[^\"]+)\"",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    // (?<!\w) keeps the match on the ResourceDictionary Source attribute only — attributes such as
+    // ContentSource (ContentPresenter template API) end in "Source" but merge no dictionary.
     private static readonly Regex MergedSourcePattern = new(
-        "Source=\"(?<source>[^\"]+)\"",
+        "(?<!\\w)Source=\"(?<source>[^\"]+)\"",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private static readonly Regex StaticResourcePattern = new(
@@ -58,7 +62,22 @@ public sealed class ApplicationResourceKeyTests
             paletteFiles.Length >= 3,
             $"Expected the registered palettes under '{themesDirectory}', but found {paletteFiles.Length}.");
 
+        // The system-menu palettes live in a subdirectory (the parity and palette-key globs treat the
+        // Themes/ root as CLIHub palettes only) and are swapped at runtime by SystemMenuTheme. Their
+        // brushes join the same dynamic-only key set: a StaticResource lookup would freeze whichever
+        // Windows-mode palette happened to be merged when the XAML was parsed.
+        var menuPaletteDirectory = Path.Combine(themesDirectory, "SystemMenu");
+        var menuPaletteFiles = Directory
+            .GetFiles(menuPaletteDirectory, "*.xaml", SearchOption.AllDirectories)
+            .OrderBy(Path.GetFileName, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(
+            menuPaletteFiles.Length >= 2,
+            $"Expected the system-menu palettes under '{menuPaletteDirectory}', but found {menuPaletteFiles.Length}.");
+
         var paletteKeys = paletteFiles
+            .Concat(menuPaletteFiles)
             .SelectMany(path => ReadDeclaredKeys(File.ReadAllText(path)))
             .ToHashSet(StringComparer.Ordinal);
 

@@ -63,7 +63,19 @@ public sealed class XamlResourceReferenceTests
         "AccentSelectionBrush",
 
         // PathToImageConverter.ResourceKey — registered from the DI container in ApplicationHost.
-        "PathToImage"
+        "PathToImage",
+
+        // SystemMenuTheme — merges one of Themes/SystemMenu/SystemMenuDark.xaml or
+        // SystemMenuLight.xaml into the application resources at startup and re-applies it on each
+        // Windows apps-mode flip, so no palette XAML merged from App.xaml declares these keys.
+        "SystemMenu.SurfaceBrush",
+        "SystemMenu.BorderBrush",
+        "SystemMenu.TextBrush",
+        "SystemMenu.HoverOverlayBrush",
+        "SystemMenu.PressedOverlayBrush",
+        "SystemMenu.DisabledTextBrush",
+        "SystemMenu.SeparatorBrush",
+        "SystemMenu.GestureTextBrush"
     };
 
     private static readonly Regex ResourceReferencePattern = new(

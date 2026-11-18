@@ -173,6 +173,23 @@ public class ShellCoordinatorTests
     }
 
     [Fact]
+    public void Dispose_DisposesMenuThemeFollower()
+    {
+        var fixture = new CoordinatorFixture();
+        var dispatched = 0;
+        fixture.SetupDispatch(_ => dispatched++);
+        var handler = Assert.Single(fixture.MenuThemeFollowerSubscribed);
+
+        fixture.Coordinator.Dispose();
+
+        Assert.Same(handler, Assert.Single(fixture.MenuThemeFollowerUnsubscribed));
+
+        fixture.RaiseMenuPreferenceChanged();
+
+        Assert.Equal(0, dispatched);
+    }
+
+    [Fact]
     public void Dispose_MultipleCalls_DoesNotThrow()
     {
         var fixture = new CoordinatorFixture();
@@ -201,9 +218,12 @@ public class ShellCoordinatorTests
         public Mock<ISingleInstanceGuard> Guard { get; } = new(MockBehavior.Strict);
         public List<UserPreferenceChangedEventHandler> ThemeFollowerSubscribed { get; } = [];
         public List<UserPreferenceChangedEventHandler> ThemeFollowerUnsubscribed { get; } = [];
+        public List<UserPreferenceChangedEventHandler> MenuThemeFollowerSubscribed { get; } = [];
+        public List<UserPreferenceChangedEventHandler> MenuThemeFollowerUnsubscribed { get; } = [];
         public ShellCoordinator Coordinator { get; }
 
         private UserPreferenceChangedEventHandler? themeFollowerHandler;
+        private UserPreferenceChangedEventHandler? menuThemeFollowerHandler;
         private Action<Action>? dispatchAction;
 
         public CoordinatorFixture()
@@ -252,6 +272,19 @@ public class ShellCoordinatorTests
                         this.ThemeFollowerUnsubscribed.Add(handler);
                         this.themeFollowerHandler = null;
                     }),
+                new SystemMenuThemeFollower(
+                    new SystemMenuTheme(_ => new ResourceDictionary()),
+                    () => false,
+                    handler =>
+                    {
+                        this.MenuThemeFollowerSubscribed.Add(handler);
+                        this.menuThemeFollowerHandler = handler;
+                    },
+                    handler =>
+                    {
+                        this.MenuThemeFollowerUnsubscribed.Add(handler);
+                        this.menuThemeFollowerHandler = null;
+                    }),
                 context);
         }
 
@@ -268,5 +301,13 @@ public class ShellCoordinatorTests
         /// </summary>
         public void RaisePreferenceChanged() =>
             this.themeFollowerHandler?.Invoke(this, new UserPreferenceChangedEventArgs(UserPreferenceCategory.General));
+
+        /// <summary>
+        ///   Raises the broadcast for the menu follower's own handler only — the two followers'
+        ///   recorded handlers stay separate, so the existing theme-follower assertions are
+        ///   unaffected.
+        /// </summary>
+        public void RaiseMenuPreferenceChanged() =>
+            this.menuThemeFollowerHandler?.Invoke(this, new UserPreferenceChangedEventArgs(UserPreferenceCategory.General));
     }
 }

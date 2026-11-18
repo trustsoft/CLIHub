@@ -11,7 +11,7 @@ theming.
 
 ## XAML Themes and Styles Recipe
 
-Layering, in merge order: `Common/Sizing.xaml` (metrics, font and radius tokens) → `Common/Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `Common/PickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `Common/SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `Common/SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `Common/PickerData.xaml`, then `Common/SettingsControls.xaml`) → `Common/ActionsMenuStyles.xaml` (the shared Actions-menu popover, entry, and header-toggle styles; merges `Controls.xaml`, and is merged both by `SettingsStyles.xaml` at application level — so Settings page `UserControl`s reach it — and by `LaunchWindow.xaml` window-scoped) and per-window dictionaries (`Common/LaunchWindowStyles.xaml`, `Common/WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Common/SlimScrollBar.xaml` (implicit `ScrollBar`), `Common/SettingsStyles.xaml`, the implicit `ToolTip` style, and the shared converters.
+Layering, in merge order: `Common/Sizing.xaml` (metrics, font and radius tokens) → `Common/Controls.xaml` (shared keyed styles; merges `Sizing.xaml` — palette brushes use `DynamicResource` and resolve from the application-level palette) → `Common/PickerData.xaml` (theme/accent picker preview brushes and option styles; merges `Sizing.xaml`, because it uses only tokens) and `Common/SettingsControls.xaml` (shared input/control templates; merges `Sizing.xaml`, because it uses only tokens) → `Common/SettingsStyles.xaml` (settings window/page chrome and custom-control implicit styles; merges `Controls.xaml`, `Common/PickerData.xaml`, then `Common/SettingsControls.xaml`) → `Common/ActionsMenuStyles.xaml` (the shared Actions-menu popover, entry, and header-toggle styles; merges `Controls.xaml`, and is merged both by `SettingsStyles.xaml` at application level — so Settings page `UserControl`s reach it — and by `LaunchWindow.xaml` window-scoped) and per-window dictionaries (`Common/LaunchWindowStyles.xaml`, `Common/WhatsNewStyles.xaml`), which merge `Controls.xaml` only. App.xaml hosts the app-level pieces: the base palette (for window attributes), `Common/SlimScrollBar.xaml` (implicit `ScrollBar`), `Common/SettingsStyles.xaml`, `Common/SystemMenuStyles.xaml` (implicit `ContextMenu`/`MenuItem` styles and the keyed menu separator style; merges `Sizing.xaml`), the implicit `ToolTip` style, and the shared converters.
 
 The application-level merge tree is therefore exactly:
 
@@ -19,18 +19,20 @@ The application-level merge tree is therefore exactly:
 App.xaml
 ├─ Dark.xaml                  base palette (Light/Blue merged on top by PaletteSwitcher)
 ├─ Common/SlimScrollBar.xaml  implicit ScrollBar style
-└─ Common/SettingsStyles.xaml Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
-   ├─ Common/Controls.xaml    shared keyed styles
-   │  └─ Common/Sizing.xaml   Sizing.* tokens
-   ├─ Common/PickerData.xaml  ThemePreview*Brush + ThemeOption*/AccentOption* styles
-   │  └─ Common/Sizing.xaml
-   ├─ Common/SettingsControls.xaml input/control templates + NumericField implicit style
-   │  └─ Common/Sizing.xaml
-   └─ Common/ActionsMenuStyles.xaml shared Actions-menu styles (also merged window-scoped by LaunchWindow.xaml)
-      └─ Common/Controls.xaml
+├─ Common/SettingsStyles.xaml Settings chrome + SectionHeader/SettingCard/SettingsGroup implicit styles
+│  ├─ Common/Controls.xaml    shared keyed styles
+│  │  └─ Common/Sizing.xaml   Sizing.* tokens
+│  ├─ Common/PickerData.xaml  ThemePreview*Brush + ThemeOption*/AccentOption* styles
+│  │  └─ Common/Sizing.xaml
+│  ├─ Common/SettingsControls.xaml input/control templates + NumericField implicit style
+│  │  └─ Common/Sizing.xaml
+│  └─ Common/ActionsMenuStyles.xaml shared Actions-menu styles (also merged window-scoped by LaunchWindow.xaml)
+│     └─ Common/Controls.xaml
+└─ Common/SystemMenuStyles.xaml implicit ContextMenu/MenuItem styles + the keyed MenuItem.SeparatorStyleKey separator (menu brushes resolve at runtime through DynamicResource)
+   └─ Common/Sizing.xaml   Sizing.* tokens
 ```
 
-`SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, and `SettingsStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `PickerData`, and `SettingsControls` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
+`SettingsStyles.xaml` is merged at application level because Settings pages are UserControls built before they attach to the window tree, so window-scoped resources are unreachable during their XAML load. With `App.xaml` merging only the palette, the scrollbar, `SettingsStyles.xaml`, and `SystemMenuStyles.xaml`, `Controls.xaml` is instantiated once at application level (previously three times). `Sizing.xaml` is instantiated once per dictionary that uses a token and cannot reach application-level siblings — `Controls`, `PickerData`, `SettingsControls`, and `SystemMenuStyles` each merge it — which is a few dozen immutable token objects and the price of WPF's `StaticResource` scoping. Every one of those merge lists must stay: a loose dictionary resolves `StaticResource` only against its own keys and its own merges, never against application-level siblings.
 
 To add a chromeless secondary window:
 1. Root the window in `views:ChromeWindow` and derive its partial class from `ChromeWindow`. The base owns the chromeless profile in code: no OS chrome, the shared `WindowChrome` metrics, the chrome background, the shared text font, DWM rounded corners, minimum-size and maximized work-area enforcement, Escape-to-close, and header drag. Keep window-specific sizing, `ResizeMode`, `ShowInTaskbar`, and `WindowStartupLocation` on the window element.
@@ -137,6 +139,8 @@ To add another theme:
 4. The palette parity test enumerates every `Themes/*.xaml` at the root of `Themes/` (non-recursive, so `Common/` is excluded), so the new palette joins the key-set check automatically — no test edit is needed.
 A saved theme applies to every open window immediately through `PaletteSwitcher`; the stored value still applies on the next start, before any window is created. Both startup and a Settings save use the same switcher, so exactly one overlay exists at any time and open windows repaint through their `DynamicResource` references. While the stored theme is System, `SystemThemeFollower` also re-applies the palette through the same switcher when the Windows apps light/dark mode changes during the session; fixed themes ignore personalization changes.
 
+Context menus carry their own, Windows-driven palette: `Themes/SystemMenu/SystemMenuDark.xaml` and `SystemMenuLight.xaml` define one shared `SystemMenu.*` key set approximating the Windows 11 menu neutrals, selected only by `SystemTheme.IsLight()` — the same `AppsUseLightTheme` value the System theme mode reads — and independent of the stored application theme, the applied CLIHub palette, and the accent. `SystemMenuTheme` merges exactly one of the two files as a single tracked overlay at startup (`App.OnStartup`, after the theme and accent, before any menu can open), replacing it in place on each swap. `SystemMenuThemeFollower` — registered beside, and owned and disposed by, `ShellCoordinator` exactly like `SystemThemeFollower`, but with no stored-theme guard — re-applies the palette live on every confirmed Windows mode flip, in any stored theme. The styles in `Common/SystemMenuStyles.xaml` consume the brushes only through `DynamicResource`, so a swap repaints every open menu without rebuilding it; menu separators are styled through the keyed `MenuItem.SeparatorStyleKey` resource, because WPF re-keys every menu child `Separator` to that key and would never see an implicit `Separator` style.
+
 ## Theme Data Locations
 
 | Data | Location |
@@ -145,8 +149,10 @@ A saved theme applies to every open window immediately through `PaletteSwitcher`
 | Accent identity and presets | `src/CLIHub.Core/Models/Appearance/AccentPalette.cs` (`AccentPalette`: the Sky default and the preset names/hex values; UI-independent) |
 | WPF descriptor registry | `src/CLIHub/Theming/ThemeDescriptors.cs` (`ThemeDescriptor`, `ThemeDescriptors.All` in picker order) |
 | Palettes | `src/CLIHub/Themes/Dark.xaml`, `Light.xaml`, `Blue.xaml` (identical structure and key order, differing only in Color values) |
+| System-menu palettes | `src/CLIHub/Themes/SystemMenu/SystemMenuDark.xaml`, `SystemMenuLight.xaml` (identical key set, `SystemMenu.*` brushes approximating the Windows 11 menu neutrals, selected by the Windows apps mode only) |
 | Picker preview data | `src/CLIHub/Themes/Common/PickerData.xaml` (`ThemePreview*Brush` swatches and the picker option styles) |
 | Runtime palette resolution | `src/CLIHub/Theming/ThemeCatalog.cs` (`ResolvePalettePath`, descriptor-driven; System resolves to Dark or Light from the Windows mode) and `src/CLIHub/Theming/PaletteSwitcher.cs` (`Shared.Apply` applies the resolved palette as the single tracked overlay; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfThemePreferenceTarget.cs`). While the stored theme is System, `src/CLIHub/Theming/SystemThemeFollower.cs` follows the Windows personalization setting for the running first-instance session and re-applies through the same switcher |
+| Runtime menu palette application | `src/CLIHub/Theming/SystemMenuTheme.cs` (`Shared.Apply` merges the Windows-mode system-menu palette as a single tracked overlay; startup calls it directly from `App.OnStartup`) and `src/CLIHub/Theming/SystemMenuThemeFollower.cs` (re-applies it live on each Windows mode flip, in any stored theme, for the running first-instance session) |
 | Runtime accent application | `src/CLIHub/Settings/AccentApplier.cs` (writes `AccentBrush` and `AccentSelectionBrush` into `Application.Resources`, never `MergedDictionaries`; startup calls it directly and a Settings save reaches it through `src/CLIHub/Settings/WpfAccentPreferenceTarget.cs`) |
 
 The static guards that keep those files coherent:

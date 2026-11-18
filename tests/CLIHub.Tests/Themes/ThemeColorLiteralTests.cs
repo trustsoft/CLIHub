@@ -11,9 +11,10 @@ using static CLIHub.Tests.Support.TestHelpers;
 /// </summary>
 /// <remarks>
 ///   <para>
-///     Two kinds of file are allowlisted by design: the palettes (<c>Themes/*.xaml</c>, colours only)
-///     and <c>Themes/Common/PickerData.xaml</c> (theme-identity preview swatches that must read the same
-///     under every theme).
+///     Three kinds of file are allowlisted by design: the palettes (<c>Themes/*.xaml</c>, colours only),
+///     <c>Themes/Common/PickerData.xaml</c> (theme-identity preview swatches that must read the same
+///     under every theme), and <c>Themes/SystemMenu/*.xaml</c> — the system-menu palettes, a second
+///     colour source by design because they follow the Windows apps theme instead of the CLIHub palette.
 ///   </para>
 ///   <para>
 ///     The walk and the allowlisted literal count are asserted, so a broken glob or a renamed
@@ -47,6 +48,9 @@ public sealed class ThemeColorLiteralTests
             xamlFiles.Length >= 20,
             $"Expected the full XAML tree under '{appRoot}', but found only {xamlFiles.Length} files.");
         Assert.Contains(xamlFiles, path => IsFile(path, appRoot, "Themes", "Common", "PickerData.xaml"));
+        Assert.Contains(
+            xamlFiles,
+            path => IsFile(path, appRoot, "Themes", "SystemMenu", "SystemMenuDark.xaml"));
 
         var failures = new List<string>();
         var allowlistedLiteralCount = 0;
@@ -105,7 +109,10 @@ public sealed class ThemeColorLiteralTests
             return true;
         }
 
-        return Regex.IsMatch(normalized, "^Themes/(Dark|Light|Blue)\\.xaml$", RegexOptions.IgnoreCase);
+        return Regex.IsMatch(
+            normalized,
+            "^Themes/(Dark|Light|Blue)\\.xaml$|^Themes/SystemMenu/(SystemMenuDark|SystemMenuLight)\\.xaml$",
+            RegexOptions.IgnoreCase);
     }
 
     private static bool IsFile(string path, string appRoot, params string[] relativeSegments)

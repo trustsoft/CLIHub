@@ -7,8 +7,9 @@ using CLIHub.Updates;
 
 /// <summary>
 ///   Coordinates application shell creation (tray and launch window) and event wiring. The
-///   wiring also starts the Windows personalization theme follow for the stored "System" theme,
-///   owned by the first-instance session and removed at its disposal.
+///   wiring also starts the two Windows personalization follows — the stored-"System"-theme
+///   palette follow and the always-on system-menu palette follow — owned by the first-instance
+///   session and removed at its disposal.
 /// </summary>
 public sealed class ShellCoordinator : IShellCoordinator
 {
@@ -18,6 +19,7 @@ public sealed class ShellCoordinator : IShellCoordinator
     private readonly ISingleInstanceGuard singleInstanceGuard;
     private readonly IUpdateWorkflow updateWorkflow;
     private readonly SystemThemeFollower themeFollower;
+    private readonly SystemMenuThemeFollower menuThemeFollower;
     private readonly ApplicationStartupContext context;
 
     private IApplicationStartupUi? startupUi;
@@ -39,6 +41,7 @@ public sealed class ShellCoordinator : IShellCoordinator
     /// <param name="singleInstanceGuard"> Single-instance activation source. </param>
     /// <param name="updateWorkflow"> Shared application update workflow. </param>
     /// <param name="themeFollower"> Session-owned Windows personalization theme follower. </param>
+    /// <param name="menuThemeFollower"> Session-owned system-menu palette follower, always on. </param>
     /// <param name="context"> WPF lifecycle callbacks for dispatcher and window registration. </param>
     public ShellCoordinator(IApplicationOperationLifetime operationLifetime,
                             Func<IApplicationStartupUi> startupUiFactory,
@@ -46,6 +49,7 @@ public sealed class ShellCoordinator : IShellCoordinator
                             ISingleInstanceGuard singleInstanceGuard,
                             IUpdateWorkflow updateWorkflow,
                             SystemThemeFollower themeFollower,
+                            SystemMenuThemeFollower menuThemeFollower,
                             ApplicationStartupContext context)
     {
         this.operationLifetime = operationLifetime ?? throw new ArgumentNullException(nameof(operationLifetime));
@@ -54,6 +58,7 @@ public sealed class ShellCoordinator : IShellCoordinator
         this.singleInstanceGuard = singleInstanceGuard ?? throw new ArgumentNullException(nameof(singleInstanceGuard));
         this.updateWorkflow = updateWorkflow ?? throw new ArgumentNullException(nameof(updateWorkflow));
         this.themeFollower = themeFollower ?? throw new ArgumentNullException(nameof(themeFollower));
+        this.menuThemeFollower = menuThemeFollower ?? throw new ArgumentNullException(nameof(menuThemeFollower));
         this.context = context ?? throw new ArgumentNullException(nameof(context));
 
         this.InitializeShell();
@@ -110,6 +115,7 @@ public sealed class ShellCoordinator : IShellCoordinator
         this.updateWorkflow.UpdateDownloadFailed += updateDownloadFailed;
 
         this.themeFollower.Start(this.context.Dispatch);
+        this.menuThemeFollower.Start(this.context.Dispatch);
     }
 
     /// <inheritdoc />
@@ -153,6 +159,7 @@ public sealed class ShellCoordinator : IShellCoordinator
         }
 
         this.themeFollower.Dispose();
+        this.menuThemeFollower.Dispose();
 
         if (this.startupUi is IDisposable disposableStartupUi)
         {

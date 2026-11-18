@@ -1,0 +1,28 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        System-menu palette for the Windows dark apps mode. Defines the eight SystemMenu.*
+        brushes consumed by the application-level context-menu styles. Selected by
+        SystemTheme.IsLight() only — independent of the CLIHub palette (Dark/Light/Blue) and
+        of the accent color. Swapped at runtime by SystemMenuTheme, which merges exactly one
+        of these two dictionaries (this file or SystemMenuLight.xaml) into the application
+        resources; the styles read the brushes through DynamicResource so the swap repaints
+        every open menu.
+    -->
+
+    <!-- Surfaces and strokes -->
+    <SolidColorBrush x:Key="SystemMenu.SurfaceBrush" Color="#FF2C2C2C"/>
+    <SolidColorBrush x:Key="SystemMenu.BorderBrush" Color="#FF454545"/>
+
+    <!-- Text -->
+    <SolidColorBrush x:Key="SystemMenu.TextBrush" Color="#FFF1F1F1"/>
+    <SolidColorBrush x:Key="SystemMenu.DisabledTextBrush" Color="#FF9D9D9D"/>
+    <SolidColorBrush x:Key="SystemMenu.GestureTextBrush" Color="#FFB4B4B4"/>
+
+    <!-- Overlays -->
+    <SolidColorBrush x:Key="SystemMenu.HoverOverlayBrush" Color="#12FFFFFF"/>
+    <SolidColorBrush x:Key="SystemMenu.PressedOverlayBrush" Color="#20000000"/>
+    <SolidColorBrush x:Key="SystemMenu.SeparatorBrush" Color="#1AFFFFFF"/>
+
+</ResourceDictionary>

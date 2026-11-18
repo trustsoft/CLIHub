@@ -124,6 +124,7 @@ public class ApplicationSessionTests
         public List<UserPreferenceChangedEventHandler> ThemeFollowerSubscribed { get; } = [];
         public List<UserPreferenceChangedEventHandler> ThemeFollowerUnsubscribed { get; } = [];
         public SystemThemeFollower ThemeFollower { get; }
+        public SystemMenuThemeFollower MenuThemeFollower { get; }
         public List<ApplicationStartupContext> ShellFactoryContexts { get; } = [];
         public int ShellFactoryInvocations => this.ShellFactoryContexts.Count;
         public ApplicationSession Session { get; }
@@ -150,6 +151,14 @@ public class ApplicationSessionTests
                 this.ThemeFollowerSubscribed.Add,
                 this.ThemeFollowerUnsubscribed.Add);
 
+            // No-op subscribe/unsubscribe delegates: the menu follower records nothing, so the
+            // theme-follower list assertions above keep exactly their old meaning.
+            this.MenuThemeFollower = new SystemMenuThemeFollower(
+                new SystemMenuTheme(_ => new ResourceDictionary()),
+                () => false,
+                _ => { },
+                _ => { });
+
             this.Session = new ApplicationSession(context =>
             {
                 this.ShellFactoryContexts.Add(context);
@@ -160,6 +169,7 @@ public class ApplicationSessionTests
                     this.Guard.Object,
                     this.UpdateDownload.Object,
                     this.ThemeFollower,
+                    this.MenuThemeFollower,
                     context);
             });
         }

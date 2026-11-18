@@ -27,6 +27,7 @@ public partial class App : Application
 
         ApplyTheme();
         ApplyAccent();
+        ApplySystemMenuTheme();
 
         this.host = new ApplicationHost();
         this.host.Start(
@@ -68,6 +69,22 @@ public partial class App : Application
         if (Current is { } application)
         {
             AccentApplier.Apply(application.Resources, accent);
+        }
+    }
+
+    /// <summary>
+    ///   Applies the system-menu palette matching the current Windows apps mode through
+    ///   <see cref="SystemMenuTheme" />. Runs after the theme and accent, before any window is
+    ///   created, so every context menu — the tray menu and TextBox menus — opens against a menu
+    ///   palette. The menu palette is independent of the stored theme: it follows the Windows apps
+    ///   theme only, and the <c> SystemMenuThemeFollower </c> re-applies it live on a Windows
+    ///   mode flip.
+    /// </summary>
+    private static void ApplySystemMenuTheme()
+    {
+        if (Current is { } application)
+        {
+            SystemMenuTheme.Shared.Apply(application.Resources.MergedDictionaries, SystemTheme.IsLight());
         }
     }
 
