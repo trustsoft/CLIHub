@@ -43,9 +43,11 @@ public sealed class TrayMenuBuilder
 
         menu.Items.Add(new MenuItem
         {
-            Header = state.CurrentProject != null ? $"Current: {state.CurrentProject.Name}" : "No project selected",
+            Header = $"Version {state.Version}",
             IsEnabled = false
         });
+
+        menu.Items.Add(new Separator());
 
         foreach (var entry in state.FavoriteProjects)
         {
@@ -62,6 +64,8 @@ public sealed class TrayMenuBuilder
         {
             menu.Items.Add(new MenuItem { Header = "(no favorite projects)", IsEnabled = false });
         }
+
+        menu.Items.Add(new Separator());
 
         var addItem = new MenuItem { Header = "Add Project...", Icon = CreateGlyph(IconGlyphs.FolderAdd) };
         addItem.Click += (_, _) => commands.AddProject();

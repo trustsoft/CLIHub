@@ -15,12 +15,12 @@ public sealed record TrayProjectAgents(Project Project,
 /// <summary>
 ///   Snapshot of the application state projected into the tray menu.
 /// </summary>
-/// <param name="CurrentProject"> Currently selected project, if any. </param>
+/// <param name="Version"> Current application version shown in the disabled tray header. </param>
 /// <param name="FavoriteProjects"> The default and initialized agents of every favorite project, in storage order. </param>
 /// <param name="AvailableUpdateVersion"> Available update version, if any. </param>
 /// <param name="IsDownloadingUpdate"> Whether an update download is active. </param>
 /// <param name="IsCheckingForUpdates"> Whether an update check is active. </param>
-public sealed record TrayMenuState(Project? CurrentProject,
+public sealed record TrayMenuState(string Version,
                                    IReadOnlyList<TrayProjectAgents> FavoriteProjects,
                                    string? AvailableUpdateVersion,
                                    bool IsDownloadingUpdate,

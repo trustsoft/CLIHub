@@ -55,7 +55,7 @@ public sealed class TrayStateProjection : IDisposable
     public bool IsCheckingForUpdates => this.updates.IsCheckingForUpdates;
 
     /// <summary>
-    ///   Builds a snapshot from the current project, plugin, preference, and update state.
+    ///   Builds a snapshot from the current version, project, plugin, preference, and update state.
     /// </summary>
     public TrayMenuState GetState()
     {
@@ -66,7 +66,7 @@ public sealed class TrayStateProjection : IDisposable
             .ToArray();
 
         return new TrayMenuState(
-            this.projects.GetCurrentProject(),
+            this.updates.GetCurrentVersion(),
             favoriteProjects,
             this.updates.LastKnownAvailableVersion,
             this.updates.IsDownloading,

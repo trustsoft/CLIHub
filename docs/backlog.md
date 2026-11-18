@@ -490,3 +490,20 @@ delivered its first slice, with follow-ups below.
   `InstallState` setter, or add a card-level test that pins the current caller-owns-the-gate contract.
 - Trigger: a new availability writer that can leave a result behind an uninstall, or the next change
   touching `AgentCardItem.CanUpdate`.
+
+### Glossary Tray entry describes a menu that no longer exists
+
+- Severity: Low (documentation only; behavior follows `openspec/specs/tray-menu/spec.md`)
+- Evidence (2026-11-18, found by the `tray-projects-separator` verifier): `docs/glossary.md:121-123`
+  describes the tray context menu as "current project, recent projects, Add Project…, Launch Agent,
+  Settings, What's New, an update check or download action, Show CLIHub, and Exit". The `tray-menu`
+  spec forbids `Recent Projects`, `Launch Agent`, and `Show CLIHub`, puts `What's New` inside the
+  `Updates` submenu, and now also requires a `Version <version>` header and separators below the header
+  and between the project list and `Add Project…`.
+  Stale before the separator change; left untouched to keep that change's scope to the tray menu
+  builder and its tests.
+- Proposed remedy: rewrite the entry as "a disabled `Version <version>` header, a separator, one submenu
+  per favorite project, a separator, Add Project…, Settings, the Updates submenu (`Check for
+  updates`/download, `What's New`), a separator, and Exit", and check neighbouring glossary entries for
+  the same drift.
+- Trigger: the next change that edits `docs/glossary.md` or documents the tray menu.

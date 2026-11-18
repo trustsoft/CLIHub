@@ -23,11 +23,11 @@ public class TrayActionsTests
         var launchable = CreatePlugin("launchable", hasLaunchCommand: true);
         var nonLaunchable = CreatePlugin("other", hasLaunchCommand: false);
         var projects = new Mock<IProjectService>();
-        projects.Setup(x => x.GetCurrentProject()).Returns(current);
         projects.Setup(x => x.GetAllProjects()).Returns([current, favorite]);
         var catalog = new Mock<IPluginCatalog>();
         catalog.Setup(x => x.GetAllPlugins()).Returns([launchable, nonLaunchable]);
         var updates = new Mock<IUpdateWorkflow>();
+        updates.Setup(x => x.GetCurrentVersion()).Returns("1.2.1");
         updates.SetupGet(x => x.LastKnownAvailableVersion).Returns("2.0.0");
         updates.SetupGet(x => x.IsDownloading).Returns(false);
         var preferences = new Mock<IPreferencesStore>();
@@ -40,7 +40,7 @@ public class TrayActionsTests
 
         var state = actions.GetState();
 
-        Assert.Same(current, state.CurrentProject);
+        Assert.Equal("1.2.1", state.Version);
         var entry = Assert.Single(state.FavoriteProjects);
         Assert.Same(favorite, entry.Project);
         Assert.Same(launchable, entry.DefaultAgent);
