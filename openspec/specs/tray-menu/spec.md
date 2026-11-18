@@ -1,7 +1,10 @@
 # tray-menu Specification
 
 ## Purpose
-TBD - created by archiving change tray-project-launchers. Update Purpose after archive.
+Defines the tray icon's context menu: the current-project header, one submenu per favorite project
+with that project's initialized agents and the configured default agent first, the Add Project,
+Settings, Updates, and Exit actions, and the menu's refresh-on-open and Windows-themed rendering
+behavior.
 
 ## Requirements
 
