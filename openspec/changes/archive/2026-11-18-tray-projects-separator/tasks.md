@@ -111,7 +111,7 @@ graphify update .
 
 ## Manual smoke (user-confirmed, before commit/archive)
 
-- [ ] 6.1 Launch the app and open the tray context menu; confirm the first item is a disabled
+- [x] 6.1 Launch the app and open the tray context menu; confirm the first item is a disabled
       `Version <version>` header with the current version, no item names the current project, and three
       horizontal separators render — below the header, below the favorite-project list (or
       `(no favorite projects)` when none exist) and above `Add Project...`, and before `Exit` — in both
